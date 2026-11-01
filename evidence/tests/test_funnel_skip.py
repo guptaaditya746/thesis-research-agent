@@ -16,7 +16,7 @@ from evidence.calls import EngineContext, NotRecorded
 from evidence.contract import DocumentRef, ExtractionTask, ProtocolRef
 from evidence.extractors import gliner
 
-from .conftest import PROTOCOL, corpus_of
+from .conftest import PROTOCOL, corpus_of, pack_words
 from .fake_gliner import FakeGliner
 
 PROTOCOLS = PROTOCOL.parent
@@ -43,7 +43,7 @@ def test_rag_latency_steps_share_the_latency_wording() -> None:
 def metric_config(name: str) -> dict[str, Any]:
     spec = protocol.load(PROTOCOLS / "rag-latency.yaml").evidence_types["metric"]
     ref = next(r for r in spec.extractors if r.name == name)
-    return {**ref.config, "evidence_type": "metric", "field_schema": spec.fields, "roles": list(spec.roles)}
+    return {**pack_words(name, "metric"), **ref.config, "evidence_type": "metric", "field_schema": spec.fields, "roles": list(spec.roles)}
 
 
 def extract(extractor: Any, text: str) -> Any:
@@ -64,7 +64,8 @@ def test_gliner_metric_takes_the_protocols_metric_wording() -> None:
     with FakeGliner(patterns={"evaluation metric": [(r"latency \(Lat\.\)", 0.9)]}) as server:
         cfg = {**metric_config("gliner_metric"), gliner.URL_KEY: server.url}
         result = extract(extractors.get("gliner_metric", cfg), text)
-        plain = extractors.get("gliner_metric", {"evidence_type": "metric", gliner.URL_KEY: server.url})
+        plain = extractors.get("gliner_metric", {**pack_words("gliner_metric", "metric"), "evidence_type": "metric",
+                                                 gliner.URL_KEY: server.url})   # the pack's wording only
         assert plain.spec.extractor_id != extractors.get("gliner_metric", cfg).spec.extractor_id
     assert [i.fields["canonical"] for i in result.items] == ["latency"], result
 

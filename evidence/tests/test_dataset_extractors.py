@@ -6,7 +6,7 @@ from evidence import protocol
 from evidence.contract import DocumentRef, ExtractionTask, ProtocolRef
 from evidence.extractors import get, names, regex
 
-from .conftest import PROTOCOL
+from .conftest import PROTOCOL, pack_words
 
 PROTO = protocol.load(PROTOCOL)
 
@@ -32,7 +32,7 @@ def run(text: str, config: dict | None = None):
     doc = DocumentRef(id="P", file="papers/P.md", sha256=text_sha256(text))
     task = ExtractionTask(protocol=ProtocolRef(id=PROTO.id, sha256=PROTO.sha256), evidence_type="metric",  # type: ignore[arg-type]
                           field_schema_sha256="x", document=doc)
-    return get("regex_dataset", config).extract(task, Ctx(text))
+    return get("regex_dataset", {**pack_words("regex_dataset", "dataset"), **(config or {})}).extract(task, Ctx(text))
 
 
 def test_regex_dataset_finds_names() -> None:

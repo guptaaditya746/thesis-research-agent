@@ -3,7 +3,7 @@
 They live here, not in regex.py and llm.py, so that adding them leaves the code hash (and so the id) of
 every existing regex and LLM extractor unchanged.
 
-`regex_dataset` finds benchmark-like tokens (TriviaCheck, LawFactQA) and any names given in the config; one
+`regex_dataset` finds benchmark-like tokens (TriviaCheck, LawFactQA: the config's `pattern`) and any names given in the config; one
 item `{"name"}` per distinct name, with the first mention as its `dataset_label` span.
 """
 from __future__ import annotations
@@ -17,7 +17,6 @@ from . import base, llm, regex
 VERSION = 1
 SOURCES = (base.HERE / "dataset.py", base.ROOT / "evidence" / "evidence_types.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
-DEFAULT_PATTERN = r"\b[A-Z][A-Za-z]+(?:QA|Bench|Set|Facts|Check|Quest)\b"
 
 
 class DatasetRegex:
@@ -26,7 +25,7 @@ class DatasetRegex:
     def __init__(self, config: dict[str, Any]) -> None:
         given = {k: v for k, v in config.items() if k in regex.INJECTED}
         names = config.get("names") or []
-        pattern = config.get("pattern") or DEFAULT_PATTERN
+        pattern = config["pattern"]   # the pack's dataset_pattern, or the protocol's
         self.names = [str(n) for n in names]
         self.pattern = re.compile(pattern)
         self.named = [re.compile(rf"(?<!\w){re.escape(n)}(?!\w)") for n in self.names]

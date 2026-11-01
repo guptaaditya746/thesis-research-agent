@@ -37,6 +37,7 @@ class RegexExtractor:
                                   code_sha256=CODE_SHA256, config={**given, **self.patterns}, determinism="exact")
 
     def default_patterns(self) -> dict[str, Any]:
+        """Generic settings only; the topic words come from the config (the domain pack, or the protocol)."""
         return {}
 
     def extract(self, task: ExtractionTask, ctx: RunContext) -> ExtractionResult:
@@ -54,14 +55,15 @@ class ConditionRegex(RegexExtractor):
     evidence_type, name = "condition", "regex_condition"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"conditions": terms.CONDITIONS, "alias": terms.ALIAS, "max_spans": 4}
+        return {"alias": terms.ALIAS, "max_spans": 4}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         patterns = terms.condition_patterns(self.patterns["conditions"])
         enum = self.given.get("field_schema", {}).get("properties", {}).get("role", {}).get("enum")
         roles = list(enum or self.patterns["conditions"])   # "other" (a qualified ablation) only if the type has it
         treatment = (self.given.get("compare") or {}).get("treatment")
-        mentions = [m for a, b in parts for m in terms.find_conditions(text, patterns, roles, a, b, treatment)]
+        mentions = [m for a, b in parts for m in terms.find_conditions(text, patterns, roles, a, b, treatment,
+                                                                     not_a_system=self.patterns["not_a_system"])]
         defined = {m: (a, b) for m, _, a, b in terms.aliases(text, mentions)}
         found = []
         for role in dict.fromkeys([*self.patterns["conditions"], *(["other"] if "other" in roles else [])]):
@@ -79,7 +81,7 @@ class MetricRegex(RegexExtractor):
     evidence_type, name = "metric", "regex_metric"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"metrics": [list(m) for m in terms.METRICS], "max_spans": 2}
+        return {"max_spans": 2}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         patterns = [tuple(m) for m in self.patterns["metrics"]]
@@ -100,7 +102,7 @@ class MeasurementRegex(RegexExtractor):
     evidence_type, name = "measurement", "regex_measurement"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"conditions": terms.CONDITIONS, "metrics": [list(m) for m in terms.METRICS], "alias": terms.ALIAS}
+        return {"alias": terms.ALIAS}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         # the question metrics come from the protocol's synthesis block (the engine injects them), never from here
@@ -114,8 +116,7 @@ class AuthorClaimRegex(RegexExtractor):
     evidence_type, name = "author_claim", "regex_author_claim"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"subject": terms.CLAIM_SUBJECT, "claims": [list(c) for c in terms.CLAIMS],
-                "skip": r"(?i)\bwhether\b|\?|\bif\b|\bprior work\b|\bprevious work\b",
+        return {"skip": r"(?i)\bwhether\b|\?|\bif\b|\bprior work\b|\bprevious work\b",
                 "sections": list(terms.CLAIM_SECTIONS), "max_spans": 3}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:

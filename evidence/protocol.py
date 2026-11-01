@@ -105,7 +105,7 @@ SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False
 # Fields added after protocols were hashed (dotted path -> default): left out of `Protocol.sha256` while at
 # their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
 DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject", "kind": "effect", "synthesis": None,
-                                          "inventory": None, "best": None, "consistency": None}
+                                          "inventory": None, "best": None, "consistency": None, "domain": "rag"}
 
 SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
 
@@ -246,6 +246,7 @@ class Protocol(Strict):
     inventory: Inventory | None = None
     best: Best | None = None
     consistency: Consistency | None = None
+    domain: str = Field(default="rag", pattern=r"^[a-z0-9][a-z0-9_-]*$")   # the pack in domains/ (no key: rag)
 
     @model_validator(mode="after")
     def _consistent(self) -> Protocol:

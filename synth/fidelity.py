@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from agent import anchor
 from evidence.extractors import base as extractor_base
-from evidence.extractors import terms
+from evidence.pack import load_pack
 from synth import assoc, levelcheck, vocab
 from synth.levels import Plan, parse_value
 from synth.text import Decoy, Placement
@@ -169,16 +169,17 @@ def added_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy
 
 def added_claims(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     """No sentence outside the claim placements names the question's subject and states an effect in the
-    words the regex claim extractor reads (evidence/extractors/terms.CLAIM_SUBJECT and CLAIMS, over the
-    extractor's own sentence split): a second statement on whether the method helps would be a second
+    words the regex claim extractor reads (the rag domain pack's claim_subject and claims, domains/rag/words.yaml,
+    over the extractor's own sentence split): a second statement on whether the method helps would be a second
     author claim (the writer prompt's rule 4)."""
     claims = [(p.start, p.end) for p in ps if p.role == "claim"]
+    words = load_pack("rag").words
     bad = []
     for a, b in extractor_base.sentences(text):
         if any(a < e and s < b for s, e in claims):
             continue
         sentence = text[a:b]
-        if re.search(terms.CLAIM_SUBJECT, sentence) and any(re.search(p, sentence) for p, _ in terms.CLAIMS):
+        if re.search(words.claim_subject, sentence) and any(re.search(p, sentence) for p, _ in words.claims):
             bad.append(f"{sentence!r} at {a}")
     return bad
 

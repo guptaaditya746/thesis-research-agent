@@ -108,9 +108,8 @@ class NumberMeasurement:
     def __init__(self, config: dict[str, Any]) -> None:
         self.given = {k: v for k, v in config.items() if k in regex.INJECTED}
         rest = {k: v for k, v in config.items() if k not in regex.INJECTED}
-        self.fractions = [str(m) for m in rest.pop("fraction_metrics", units.FRACTION_METRICS)]
-        self.patterns = {"conditions": terms.CONDITIONS, "metrics": [list(m) for m in terms.METRICS],
-                         "alias": terms.ALIAS} | rest
+        self.fractions = [str(m) for m in rest.pop("fraction_metrics")]   # the pack's, or the protocol's
+        self.patterns = {"alias": terms.ALIAS} | rest
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=("measurement",),
                                   code_sha256=CODE_SHA256,
                                   config={**self.given, **self.patterns, "fraction_metrics": self.fractions},

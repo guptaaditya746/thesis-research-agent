@@ -9,7 +9,7 @@ import pytest
 
 from evidence.extractors import terms
 
-from .conftest import PROTOCOL, measurements, regex_run
+from .conftest import PROTOCOL, measurements, pack_words, regex_run
 
 ABSTRACT = "# P\n\n## Abstract\n\nWe compare a closed-book model with a retrieval-augmented model. {}\n"
 
@@ -104,7 +104,9 @@ def test_a_qualified_row_label_resolves_to_its_role(protocol: Path, control: str
 @pytest.mark.parametrize("roles", [["rag", "baseline", "other"], ["rag", "baseline"]])
 def test_a_negated_qualifier_on_a_control_keeps_the_control(roles: list[str]) -> None:
     text = "the closed-book model (no fine-tuning) reaches 40%"
-    found = terms.find_conditions(text, terms.condition_patterns(), roles)
+    words = pack_words("regex_condition", "condition")
+    found = terms.find_conditions(text, terms.condition_patterns(words["conditions"]), roles,
+                                  not_a_system=words["not_a_system"])
     assert [(m.key, m.text) for m in found] == [("baseline", "closed-book model")]
 
 

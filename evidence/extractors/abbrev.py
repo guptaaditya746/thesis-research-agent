@@ -5,7 +5,7 @@ initials of the long form's words (the parts of a hyphenated word count as words
 be left out). It also reads phrase definitions ("hallucination rate, abbreviated HR", "the vanilla LLM, denoted
 by the code B", "hereafter CB", "FLA for short"); a one-letter code only with the "code" wording, and a code
 names a condition, never a metric. The two extractors then find every use of such a short form whose long form names a protocol
-term (the terms the regex extractors use, evidence/extractors/terms.py): "FLA" in a table header is the metric
+term (the terms the regex extractors use, from the config: the domain pack's words or the protocol's): "FLA" in a table header is the metric
 "fact-level accuracy". The item's name is the long form, its role or canonical comes from the term found in the
 long form, and its spans are on the short forms. A definition anywhere in the document is used inside whatever
 parts the task allows. Own module, so every existing extractor keeps its id.
@@ -30,11 +30,6 @@ AFTER_LONG = re.compile(r"\(\s*(" + SHORT + r")\s*\)")                        # 
 BEFORE_LONG = re.compile(r"(?<![\w-])(" + SHORT + r")\s*\(([^()\n]{3,80})\)")  # "LF (long form)"
 BREAK = re.compile(r"[.;:!?\n|()]")
 MAX_WORDS = 8
-# Wording for the question canonicals that terms.METRICS lacks, consulted after it ("unsupported-answer rate").
-SUPPLEMENT: list[tuple[str, str, bool]] = [
-    (r"(?i)\bhallucinat\w*|\bunsupported\b|\binvented\b|\bfabricat\w*", "hallucination_rate", False),
-    (r"(?i)\baccura\w*|\bcorrect\w*", "factual_accuracy", True),
-]
 # a long form that ends in a measure noun, and names no known term, is an "other" metric
 METRIC_NOUN = re.compile(r"(?i)\b(?:rate|score|ratio|frequency|error|accuracy|latency|time)\s*$")
 
@@ -215,15 +210,12 @@ class Abbrev:
 class AbbrevCondition(Abbrev):
     evidence_type, name = "condition", "abbrev_condition"
 
-    def default_patterns(self) -> dict[str, Any]:
-        return super().default_patterns() | {"conditions": terms.CONDITIONS}
-
     def term(self, long: str) -> terms.Mention | None:
         enum = self.given.get("field_schema", {}).get("properties", {}).get("role", {}).get("enum")
         roles = list(enum or self.patterns["conditions"])
         treatment = (self.given.get("compare") or {}).get("treatment")
         mentions = terms.find_conditions(long, terms.condition_patterns(self.patterns["conditions"]), roles,
-                                         treatment=treatment)
+                                         treatment=treatment, not_a_system=self.patterns["not_a_system"])
         return mentions[0] if mentions else None
 
     def fields(self, long: str, mention: terms.Mention) -> dict[str, Any]:
@@ -233,15 +225,12 @@ class AbbrevCondition(Abbrev):
 class AbbrevMetric(Abbrev):
     evidence_type, name = "metric", "abbrev_metric"
 
-    def default_patterns(self) -> dict[str, Any]:
-        return super().default_patterns() | {"metrics": [list(m) for m in terms.METRICS],
-                                             "supplement": [list(m) for m in SUPPLEMENT]}
-
     def term(self, long: str) -> terms.Mention | None:
         found = terms.find_all(long, [tuple(m) for m in self.patterns["metrics"]])  # type: ignore[misc]
         if found:
             return found[0]
-        for pattern, canonical, higher in self.patterns["supplement"]:   # wording terms.METRICS lacks
+        # wording the metric patterns lack, consulted after them ("unsupported-answer rate"; pack metric_supplement)
+        for pattern, canonical, higher in self.patterns["supplement"]:
             if re.search(pattern, long):
                 return terms.Mention(0, len(long), canonical, long, higher)
         enum = self.given.get("field_schema", {}).get("properties", {}).get("canonical", {}).get("enum")

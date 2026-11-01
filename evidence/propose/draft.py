@@ -33,6 +33,7 @@ from typing import Any
 
 from ..extractors import terms as regex_terms
 from ..extractors.screen import term_pattern
+from ..pack import Pack, load_pack
 from ..protocol import parse
 from . import frame as frame_module
 from .common import (DRAFT, FRAME, KIND_TEMPLATES, SOURCES, ProposalError, dump_yaml, need, read_yaml, sha,
@@ -79,19 +80,21 @@ def _names(entry: Any) -> Names:
     return [(entry.label, entry.label), *((s.term, s) for s in entry.synonyms)]
 
 
-def condition_patterns(roles: list[tuple[str, Names]]) -> tuple[dict[str, list[str]] | None, list[tuple[str, Any]]]:
-    """(the regex `conditions` config, or None when the built-ins find every name under its role and know
-    exactly these roles; the names added). `roles`: (role id, its names) for the treatment and the control;
-    the control's added patterns refuse a negated object ("no retrieval failures")."""
-    known = all(r in regex_terms.CONDITIONS for r, _ in roles) and len(roles) == len(regex_terms.CONDITIONS)
-    base = {r: list(regex_terms.CONDITIONS.get(r, [])) for r, _ in roles}
+def condition_patterns(roles: list[tuple[str, Names]],
+                       pack: Pack) -> tuple[dict[str, list[str]] | None, list[tuple[str, Any]]]:
+    """(the regex `conditions` config, or None when the built-ins (the domain pack's patterns) find every name
+    under its role and know exactly these roles; the names added). `roles`: (role id, its names) for the
+    treatment and the control; the control's added patterns refuse a negated object ("no retrieval failures")."""
+    builtin: dict[str, list[str]] = pack.extractor_config("condition", "regex_condition")["conditions"]
+    known = all(r in builtin for r, _ in roles) and len(roles) == len(builtin)
+    base = {r: list(builtin.get(r, [])) for r, _ in roles}
     added: list[tuple[str, Any]] = []
     for i, (role, names) in enumerate(roles):
         for name, term in names:
             found = regex_terms.find_all(name, regex_terms.condition_patterns(base))
             if not any(m.key == role for m in found):
                 pattern = term_pattern(name)
-                base[role].append(regex_terms.control_cue(pattern) if i == 1 else pattern)
+                base[role].append(regex_terms.control_cue(pattern, pack.words.not_a_system) if i == 1 else pattern)
                 added.append((f"conditions.{role}", term))
     return (base if added or not known else None), added
 
@@ -102,8 +105,10 @@ def _same_span(a: str, b: str, surface: str) -> bool:
     return any(m.span() in spans for m in regex_terms._compiled(b).finditer(surface))
 
 
-def metric_patterns(outcomes: list[tuple[str, bool, Names]]) -> tuple[list[list[Any]] | None, list[tuple[str, Any]]]:
-    """(the regex `metrics` config, or None when the built-ins find every name and emit only these metrics;
+def metric_patterns(outcomes: list[tuple[str, bool, Names]],
+                    pack: Pack) -> tuple[list[list[Any]] | None, list[tuple[str, Any]]]:
+    """(the regex `metrics` config, or None when the built-ins (the domain pack's patterns) find every name and
+    emit only these metrics;
     the names added). `outcomes`: (canonical, higher_is_better, names). Built-in patterns of a canonical not
     named here are dropped (their items would fail the enum), and so are those that match the same stretch of
     a name as the pattern of a name of another canonical: the first rule would decide the metric."""
@@ -114,8 +119,9 @@ def metric_patterns(outcomes: list[tuple[str, bool, Names]]) -> tuple[list[list[
     def collides(pattern: str, canonical: str) -> bool:
         return any(c != canonical and _same_span(pattern, fp, s) for s in surfaces for fp, c in frame_rows)
 
-    base = [list(m) for m in regex_terms.METRICS if m[1] in names | {"other"} and not collides(m[0], m[1])]
-    known = len(base) == len(regex_terms.METRICS)
+    builtin = pack.extractor_config("metric", "regex_metric")["metrics"]
+    base = [list(m) for m in builtin if m[1] in names | {"other"} and not collides(m[0], m[1])]
+    known = len(base) == len(builtin)
     added: list[tuple[str, Any]] = []
     for canonical, hib, entries in outcomes:
         for name, term in entries:
@@ -125,16 +131,17 @@ def metric_patterns(outcomes: list[tuple[str, bool, Names]]) -> tuple[list[list[
     return (base if added or not known else None), added
 
 
-def claim_subject(role: str, names: Names) -> tuple[str | None, list[tuple[str, Any]]]:
-    """(the regex author claim `subject`, or None when the built-in one finds every treatment name)."""
-    builtin = re.compile(regex_terms.CLAIM_SUBJECT)
+def claim_subject(role: str, names: Names, pack: Pack) -> tuple[str | None, list[tuple[str, Any]]]:
+    """(the regex author claim `subject`, or None when the built-in one (the domain pack's) finds every
+    treatment name)."""
+    builtin = re.compile(pack.words.claim_subject)
     missing = [(n, t) for n, t in names if not builtin.search(n)]
     if not missing:
         return None, []
     bodies = [re.escape(" ".join(n.split())).replace(r"\ ", r"\s+") for n, _ in missing]
     new = r"(?<!\w)(?:" + "|".join(bodies) + r")(?!\w)"
-    keep = role in regex_terms.CONDITIONS   # the built-in subject is about the built-in treatment
-    subject = regex_terms.CLAIM_SUBJECT + "|" + new if keep else "(?i)" + new
+    keep = role in pack.words.conditions   # the built-in subject is about the built-in treatment
+    subject = pack.words.claim_subject + "|" + new if keep else "(?i)" + new
     return subject, [("subject", t) for _, t in missing]
 
 
@@ -156,9 +163,11 @@ def sync_regex(p: dict[str, Any], f: Frame) -> list[tuple[str, Any]]:
     """Set (or remove) the regex steps' `conditions`, `metrics` and `subject` config from the roles and metrics
     the protocol mapping decides (draft, and freeze after the decisions); returns the names added."""
     roles, outcomes = decided_names(p, f)
+    pack = load_pack(p.get("domain", "rag"))   # a protocol without `domain` is rag
     out: list[tuple[str, Any]] = []
-    for key, (config, added) in (("conditions", condition_patterns(roles)), ("metrics", metric_patterns(outcomes)),
-                                 ("subject", claim_subject(*roles[0]))):
+    for key, (config, added) in (("conditions", condition_patterns(roles, pack)),
+                                 ("metrics", metric_patterns(outcomes, pack)),
+                                 ("subject", claim_subject(*roles[0], pack))):
         for spec in p["evidence_types"].values():
             for step in spec.get("extractors", []):
                 if step["name"] not in REGEX[key]:

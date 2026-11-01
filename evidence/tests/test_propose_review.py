@@ -12,11 +12,12 @@ import yaml
 
 from evidence import cli
 from evidence.extractors import terms as regex_terms
+from evidence.pack import load_pack
 from evidence.propose import amend, cards, critic, frame, freeze
 from evidence.propose.common import ProposalError
 from evidence.protocol import load
 
-from .conftest import PROTOCOL
+from .conftest import PROTOCOL, pack_words
 from .propose_support import QUESTION, RAG_FRAME, Scripted, flow
 
 
@@ -211,7 +212,8 @@ def test_metric_canonical_is_order_invariant() -> None:
     from evidence.extractors import terms
     from evidence.propose import draft
     f = _live_frame()
-    config, _ = draft.metric_patterns([(o.canonical, o.higher_is_better, draft._names(o)) for o in f.outcomes])
+    config, _ = draft.metric_patterns([(o.canonical, o.higher_is_better, draft._names(o)) for o in f.outcomes],
+                                      load_pack("rag"))
     assert config is not None
     rules = [tuple(m) for m in config]
     for surface in ("FActScore", "factuality score", "accuracy", "factual accuracy"):
@@ -405,9 +407,9 @@ def test_a_metric_the_extractors_still_emit_is_checked_though_synthesis_dropped_
     draft["synthesis"]["metrics"] = [m for m in draft["synthesis"]["metrics"] if m["canonical"] != "hallucination_rate"]
     assert "hallucination_rate" in draft["evidence_types"]["metric"]["fields"]["properties"]["canonical"]["enum"]
     draft["evidence_types"]["measurement"]["bounds"] = []
-    from evidence.extractors import terms
     step = next(s for s in draft["evidence_types"]["metric"]["extractors"] if s["name"] == "regex_metric")
-    step["config"] = {"metrics": [list(m) for m in terms.METRICS if m[1] != "hallucination_rate"]}   # no rule for it
+    metrics = pack_words("regex_metric", "metric")["metrics"]
+    step["config"] = {"metrics": [m for m in metrics if m[1] != "hallucination_rate"]}   # no rule for it
     found = {c["id"]: c for c in critic.checks(yaml.safe_dump(draft, sort_keys=False), f)}
     assert found["parses"]["ok"], found["parses"]["message"]
     assert not found["bounds_cover_rate_metrics"]["ok"] and "hallucination_rate" in found["bounds_cover_rate_metrics"]["message"]

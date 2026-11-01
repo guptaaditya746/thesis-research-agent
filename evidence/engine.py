@@ -85,6 +85,7 @@ from .extractors import gliner
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
+from .pack import load_pack
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .recording import Provider, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
@@ -138,7 +139,9 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     under the key `screen` the screening cascade of the protocol's `screen` block (Part D), whose extractors
     get the same injected configuration plus the block's `terms` and `question`. The gliner_* extractors also
     get `gliner_url` (None: unavailable) and, unless their config pins one, `model` = `gliner_model`; only
-    they, so no other extractor's config (and id) changes."""
+    they, so no other extractor's config (and id) changes. Each config starts from the topic words of the
+    protocol's domain pack (`Pack.extractor_config`); the protocol's own config is put over them (it wins)."""
+    pack = load_pack(protocol.domain)
     out: dict[str, list[tuple[ExtractorRef, Extractor]]] = {}
     specs: dict[str, tuple[EvidenceTypeSpec, dict[str, Any]]] = {etype: (spec, {}) for etype, spec in protocol.evidence_types.items()}
     question = kinds.of(protocol).extractor_config(protocol)   # the kind's part (effect: question_metrics, compare)
@@ -147,8 +150,8 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     for etype, (spec, extra) in specs.items():
         chosen = []
         for ref in spec.extractors:
-            config = {**ref.config, "evidence_type": etype, "field_schema": spec.fields, "links": dict(spec.links),
-                      "roles": list(spec.roles), "description": spec.description, **question, **extra}
+            config = {**pack.extractor_config(etype, ref.name), **ref.config, "evidence_type": etype,
+                      "field_schema": spec.fields, "links": dict(spec.links), "roles": list(spec.roles), "description": spec.description, **question, **extra}
             if ref.name in gliner.FACTORIES:
                 config[gliner.URL_KEY] = gliner_url
                 if gliner_model and "model" not in ref.config:

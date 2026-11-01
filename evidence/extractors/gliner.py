@@ -9,8 +9,8 @@ The service (llm-setup, next to a model replica; on this PC the stand-in evidenc
 Each extractor cuts the task's parts into chunks of at most `chunk_chars` (gold/chunks.py, section-aware), sends
 one /predict per chunk with its type's labels, and maps each entity's chunk offsets back to the document. An
 entity whose offsets do not hold its text is rejected (`not_found`), never moved. The item's role (condition)
-or canonical (metric) comes from the regex term lists (terms.py) found in the entity text, `other` when none
-matches; a dataset item is `{name}`. Spans are on the entity text, with the type's first span role.
+or canonical (metric) comes from the regex term lists in the config (the domain pack's words or the protocol's)
+found in the entity text, `other` when none matches; a dataset item is `{name}`. Spans are on the entity text, with the type's first span role.
 
 Kind `model`: every /predict is recorded like a model call (request, response or error; no usage), so it lands
 in the record cache and in the run's calls.jsonl. The extractor's config, and so its id, holds the model name
@@ -50,8 +50,6 @@ SOURCES = (base.HERE / "gliner.py", base.HERE / "terms.py", base.HERE / "regex.p
            base.ROOT / "evidence" / "evidence_types.py", *base.SHARED_SOURCES)   # regex.py: INJECTED
 CODE_SHA256 = base.source_sha256(*SOURCES)
 
-LABELS = {"condition": ["method", "system variant", "baseline model"], "metric": ["evaluation metric"],
-          "dataset": ["dataset"]}
 ROLE = {"condition": "condition_label", "metric": "metric_label", "dataset": "dataset_label"}
 DEFAULTS: dict[str, Any] = {"threshold": 0.5, "chunk_chars": 1500, "max_spans": 8}
 TIMEOUT = 10.0
@@ -100,13 +98,14 @@ def info(url: str | None, timeout: float = TIMEOUT) -> dict[str, Any] | None:
 class GlinerExtractor:
     evidence_type: str = ""
     name: str = ""
+    WORDS: tuple[str, ...] = ()   # the config keys of the topic words `fields` reads
 
     def __init__(self, config: dict[str, Any]) -> None:
         given = {k: v for k, v in config.items() if k in regex.INJECTED}
         url = config[URL_KEY] if URL_KEY in config else os.environ.get("GLINER_URL")
         self.url = url.rstrip("/") if url else None
         self.timeout = float(config.get("timeout", TIMEOUT))
-        self.labels = [str(x) for x in (config.get("labels") or LABELS[self.evidence_type])]
+        self.labels = [str(x) for x in config["labels"]]   # the pack's gliner_labels of the type, or the protocol's
         self.threshold = float(config.get("threshold", DEFAULTS["threshold"]))
         self.chunk_chars = int(config.get("chunk_chars", DEFAULTS["chunk_chars"]))
         self.max_spans = int(config.get("max_spans", DEFAULTS["max_spans"]))
@@ -116,8 +115,9 @@ class GlinerExtractor:
         roles = list(given.get("roles") or [])
         self.role = roles[0] if roles else ROLE[self.evidence_type]
         self.given = given
-        # a protocol's own metric wording ([pattern, canonical, higher_is_better] rows), as regex_metric takes it
-        self.metrics = [(str(p), str(k), bool(h)) for p, k, h in config["metrics"]] if config.get("metrics") else None
+        # the topic words `fields` reads (the pack's or the protocol's): condition patterns and the negated-object
+        # lookahead, or metric [pattern, canonical, higher_is_better] rows, as the regex extractors take them
+        self.words: dict[str, Any] = {k: config[k] for k in self.WORDS}
         self._lock = threading.Lock()
         self.spec = self._spec()
 
@@ -125,9 +125,8 @@ class GlinerExtractor:
         return ExtractorSpec(name=self.name, version=VERSION, kind="model",
                              evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
                              code_sha256=CODE_SHA256,
-                             config={**self.given, **({"metrics": [list(m) for m in self.metrics]} if self.metrics else {}),
-                                     "service": "gliner", "model": self.model, "labels": self.labels,
-                                     "threshold": self.threshold, "chunk_chars": self.chunk_chars,
+                             config={**self.given, **self.words, "service": "gliner", "model": self.model,
+                                     "labels": self.labels, "threshold": self.threshold, "chunk_chars": self.chunk_chars,
                                      "max_spans": self.max_spans},
                              determinism="near_exact")
 
@@ -251,13 +250,15 @@ def _trim(text: str, start: int, end: int) -> tuple[int, int]:
 
 class GlinerCondition(GlinerExtractor):
     evidence_type, name = "condition", "gliner_condition"
+    WORDS = ("conditions", "not_a_system")
 
     def fields(self, name: str) -> dict[str, Any] | None:
         enum = self._enum("role")
-        conditions = terms.CONDITIONS
+        conditions = self.words["conditions"]
         roles = list(enum or [*conditions, "other"])
         treatment = (self.given.get("compare") or {}).get("treatment")
-        found = terms.find_conditions(name, terms.condition_patterns(conditions), roles, treatment=treatment)
+        found = terms.find_conditions(name, terms.condition_patterns(conditions), roles, treatment=treatment,
+                                      not_a_system=self.words["not_a_system"])
         role = found[0].key if found else "other"
         if enum is not None and role not in enum:
             return None
@@ -266,9 +267,10 @@ class GlinerCondition(GlinerExtractor):
 
 class GlinerMetric(GlinerExtractor):
     evidence_type, name = "metric", "gliner_metric"
+    WORDS = ("metrics",)
 
     def fields(self, name: str) -> dict[str, Any] | None:
-        found = terms.find_all(name, self.metrics or terms.METRICS)
+        found = terms.find_all(name, [(str(p), str(k), bool(h)) for p, k, h in self.words["metrics"]])
         canonical, higher = (found[0].key, found[0].higher_is_better) if found else ("other", True)
         enum = self._enum("canonical")
         if enum is not None and canonical not in enum:

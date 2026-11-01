@@ -13,6 +13,7 @@ import pytest
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
+from evidence.pack import load_pack
 from jsonio import sha256_hex
 
 HERE = Path(__file__).resolve().parent
@@ -20,6 +21,12 @@ PAPERS = HERE / "fixtures" / "papers"
 PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"
 POISON = ("ground_truth.json", "corpus.json", "fidelity.json")
 DOCS = ("S001", "S002", "S003", "S004", "S005")
+
+
+def pack_words(extractor: str, evidence_type: str) -> dict[str, Any]:
+    """The rag pack's words for an extractor built directly (the engine fills them; a test calling
+    extractors.get itself must too: the extractors have no word fallback in code)."""
+    return load_pack("rag").extractor_config(evidence_type, extractor)
 
 
 def make_corpus(root: Path, docs: tuple[str, ...] = DOCS) -> Path:

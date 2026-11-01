@@ -2,8 +2,8 @@
 
 regex_measurement treats every question metric as an accuracy or a rate, so a bare 1 < x <= 100 is read as a
 percentage (1.8 s becomes 0.018). This extractor finds the same tables and sentences (evidence/extractors/
-measure.py), but only the metrics in `fraction_metrics` (default factual_accuracy and hallucination_rate: the
-canonicals a protocol bounds to [0, 1]) are rate-like. Any other value stays in its own unit: a table cell as
+measure.py), but only the metrics in `fraction_metrics` (the pack's, or the protocol's: the canonicals a
+protocol bounds to [0, 1]) are rate-like. Any other value stays in its own unit: a table cell as
 written (a cell under a millisecond header, "Latency (ms)", is divided by 1000, so values are seconds), and in a
 sentence a number with a time unit ("1.80 s", "655 ms", "2 seconds") becomes a value of the nearest non-fraction
 metric, linked to a condition as measure.py links sentence values; a difference ("0.45 s slower than") is no
@@ -22,7 +22,6 @@ from .measure import (AFTER, BLOCKERS, DELTA_BEFORE, FROM_TO, HEAD_NOUN, SIGNED,
 VERSION = 1
 SOURCES = (base.HERE / "units.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
-FRACTION_METRICS = ["factual_accuracy", "hallucination_rate"]
 TIME = re.compile(r"(?<![\w.,])(\d+(?:\.\d+)?|\.\d+)\s?(ms|milliseconds?|s|secs?|seconds?)\b")
 # "0.45 s slower than": a difference between two conditions, not a value of either
 DIFFERENCE_AFTER = re.compile(r"(?i)\s+(?:slower|faster|longer|shorter|more|less)\b")
@@ -36,9 +35,8 @@ class MeasurementUnitsRegex:
     def __init__(self, config: dict[str, Any]) -> None:
         self.given = {k: v for k, v in config.items() if k in regex.INJECTED}
         rest = {k: v for k, v in config.items() if k not in regex.INJECTED}
-        self.fractions = [str(m) for m in rest.pop("fraction_metrics", FRACTION_METRICS)]
-        self.patterns = {"conditions": terms.CONDITIONS, "metrics": [list(m) for m in terms.METRICS],
-                         "alias": terms.ALIAS} | rest
+        self.fractions = [str(m) for m in rest.pop("fraction_metrics")]   # the pack's, or the protocol's
+        self.patterns = {"alias": terms.ALIAS} | rest
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=("measurement",),
                                   code_sha256=CODE_SHA256,
                                   config={**self.given, **self.patterns, "fraction_metrics": self.fractions},

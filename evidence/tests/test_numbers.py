@@ -12,11 +12,12 @@ from evidence import engine, protocol
 from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef, Span
 from evidence.extractors import base, get, numbers
 
-from .conftest import PROTOCOL, corpus_of
+from .conftest import PROTOCOL, corpus_of, pack_words
 
 PROTO = protocol.load(PROTOCOL)
 SPAN = Span(role="label", selector={"file": "papers/X.md", "start": 0, "end": 1, "exact": "X"})
 LATENCY = PROTOCOL.parent / "rag-latency.yaml"
+WORDS = pack_words("number_measurement", "measurement")
 EFFECT = {"question_metrics": ["factual_accuracy"], "compare": {"treatment": "rag", "control": "baseline"}}
 
 RAG = Item.build("condition", {"label": "retrieval-augmented model", "role": "rag"}, [SPAN])
@@ -49,7 +50,7 @@ def run(text: str, context: list[Item] | None = None, config: dict[str, Any] | N
     task = ExtractionTask(protocol=ProtocolRef(id=PROTO.id, sha256=PROTO.sha256), evidence_type="measurement",
                           field_schema_sha256="x", document=doc)
     ctx = Ctx(text, context if context is not None else [RAG, CB, ACC])
-    return list(get("number_measurement", {**EFFECT, **(config or {})}).extract(task, ctx).items)
+    return list(get("number_measurement", {**WORDS, **EFFECT, **(config or {})}).extract(task, ctx).items)
 
 
 def found(items: list[Item]) -> list[tuple[str, str, float, Any]]:
@@ -223,7 +224,7 @@ def test_condition_code_in_a_table_row_from_context_spans() -> None:
 # --- identity ----------------------------------------------------------------------------------------------
 
 def test_registered_as_regex_with_own_hash() -> None:
-    ex = get("number_measurement", {})
+    ex = get("number_measurement", WORDS)
     assert ex.spec.kind == "regex" and ex.spec.evidence_types == ("measurement",)
     assert ex.spec.code_sha256 == numbers.CODE_SHA256 == base.source_sha256(*numbers.SOURCES)
     names = {p.name for p in numbers.SOURCES}

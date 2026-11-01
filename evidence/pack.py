@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 import yaml
 from pydantic import ValidationError
@@ -55,6 +56,19 @@ class Words(Strict):
     query: dict[str, list[str]]
 
 
+_CONDITIONS = ("conditions", "not_a_system")
+# The config keys of the pack words each extractor reads (its key names as the extractor reads them); an
+# extractor not named here (LLM, agentic, screen, configured names) takes no pack words.
+READS: dict[str, tuple[str, ...]] = {
+    "regex_condition": _CONDITIONS, "abbrev_condition": _CONDITIONS, "gliner_condition": ("labels", *_CONDITIONS),
+    "regex_metric": ("metrics",), "abbrev_metric": ("metrics", "supplement"), "gliner_metric": ("labels", "metrics"),
+    "regex_measurement": (*_CONDITIONS, "metrics"),
+    "regex_measurement_units": (*_CONDITIONS, "metrics", "fraction_metrics"),
+    "number_measurement": (*_CONDITIONS, "metrics", "fraction_metrics"),
+    "regex_author_claim": ("subject", "claims"), "regex_dataset": ("pattern",), "gliner_dataset": ("labels",),
+}
+
+
 class Pack(Strict):
     name: str
     types: dict[str, TypeDecl]
@@ -63,6 +77,26 @@ class Pack(Strict):
     names_seed: dict[str, list[str]]
     limitation_categories: list[str]
     sha256: str
+
+    def extractor_config(self, etype: str, extractor: str) -> dict[str, Any]:
+        """The pack words `extractor` reads when it runs on evidence type `etype`, under its config keys. The
+        engine puts a protocol's own config over these (the protocol wins). Condition patterns of every role
+        after the first (the controls) end in `not_a_system`, as terms.control_cue builds them."""
+        w = self.words
+        roles = list(w.conditions.items())
+        words: dict[str, Any] = {
+            "conditions": {role: [p + w.not_a_system if i else p for p in ps] for i, (role, ps) in enumerate(roles)},
+            "not_a_system": w.not_a_system,
+            "metrics": [list(m) for m in w.metrics],
+            "supplement": [list(m) for m in w.metric_supplement],
+            "fraction_metrics": list(w.fraction_metrics),
+            "subject": w.claim_subject,
+            "claims": [list(c) for c in w.claims],
+            "pattern": w.dataset_pattern,
+        }
+        if etype in w.gliner_labels:
+            words["labels"] = list(w.gliner_labels[etype])
+        return {key: words[key] for key in READS.get(extractor, ()) if key in words}
 
 
 def load_pack(name: str, root: Path = DOMAINS) -> Pack:

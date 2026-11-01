@@ -17,7 +17,7 @@ from evidence.contract import DocumentRef, ExtractionTask, ProtocolRef
 from evidence.extractors import get, gliner
 from evidence.replay import replay
 
-from .conftest import PROTOCOL, corpus_of, provider_of, screen_yes, scripted
+from .conftest import PROTOCOL, corpus_of, pack_words, provider_of, screen_yes, scripted
 from .fake_gliner import FakeGliner, closed_url
 
 PROTO = protocol.load(PROTOCOL)
@@ -34,7 +34,8 @@ def fresh_info(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def config(etype: str, **more: Any) -> dict[str, Any]:
     spec = (DATASETS if etype == "dataset" else PROTO).evidence_types[etype]
-    return {"evidence_type": etype, "field_schema": spec.fields, "roles": list(spec.roles), **more}
+    return {**pack_words(f"gliner_{etype}", etype), "evidence_type": etype, "field_schema": spec.fields,
+            "roles": list(spec.roles), **more}
 
 
 def extract(name: str, text: str, etype: str, cfg: dict[str, Any]) -> tuple[Any, EngineContext]:
