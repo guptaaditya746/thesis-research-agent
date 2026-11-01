@@ -108,6 +108,12 @@ def measurements(items: dict[str, Any], doc: str) -> list[tuple[str, float]]:
     return [(role, value) for _, role, value in sorted(out)]
 
 
+@pytest.fixture(autouse=True)
+def code_commit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every sealed run names commit `test`: no `git rev-parse` per run, and the manifest does not depend on HEAD."""
+    monkeypatch.setenv("EVIDENCE_CODE_COMMIT", "test")
+
+
 @pytest.fixture
 def corpus(tmp_path: Path) -> Path:
     return make_corpus(tmp_path / "corpus")

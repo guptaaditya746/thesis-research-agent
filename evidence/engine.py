@@ -104,6 +104,7 @@ import modelcall
 from modelcall import JsonlCache
 
 from . import checks, extractors, graph, lockfile, kinds, merge, names, reasoner
+from . import seal as sealing
 from .extractors import base as extractor_base
 from .extractors import gliner
 from .extractors import llm as llm_extractor
@@ -800,12 +801,18 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
-    if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
-        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
-              settings.confirm, settings.relink)
-    for paper in corpus.papers:
-        ex.document(paper)
-    ex.finish()
+    try:
+        if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
+            _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
+                  settings.confirm, settings.relink)
+        for paper in corpus.papers:
+            ex.document(paper)
+        ex.finish()
+    except BaseException as exc:   # a crash or Ctrl-C: every file a reader expects, a failed seal, no run.json
+        sealing.fill_expected(root, settings)
+        sealing.seal(root, corpus.manifest_sha256, status="failed",
+                     error=f"{type(exc).__name__}: {modelcall.redact(str(exc))[:300]}")
+        raise
     ex.cost["seconds"] = round(time.monotonic() - t0, 3)
     if settings.gliner_model is None:   # GLiNER came up after the run started: record the model it served
         served = sorted({e.model for c in cascades.values() for ref, e in c
@@ -823,6 +830,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
         **({"dangling_links": ex.dangling} if settings.relink == "on" else {}),
         **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {})})
+    sealing.seal(root, corpus.manifest_sha256, status="complete")   # last: after run.json and the final lock
     return root
 
 

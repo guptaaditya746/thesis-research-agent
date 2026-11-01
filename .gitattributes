@@ -66,3 +66,8 @@ evidence/propose/** text eol=lf
 # EV2 corpora built here and run on Slurm: papers are hashed into manifest.json, placements are offsets.
 tests/EV2/corpora/** text eol=lf
 tests/EV2/ui-case/** text eol=lf
+
+# EV4 test corpora (plan 2): papers are hashed into manifest.json, so their bytes must not change on checkout.
+tests/EV4/** text eol=lf
+# Run folders are hashed byte for byte (manifest.json); `evidence verify` must pass on every checkout.
+reports/** -text

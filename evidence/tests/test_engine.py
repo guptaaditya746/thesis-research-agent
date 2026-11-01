@@ -31,7 +31,7 @@ def test_run_directory_and_answer(protocol_file: Path, corpus: Path, tmp_path: P
     record = json.loads((root / "run.json").read_text(encoding="utf-8"))
     assert {"run.json", "protocol.yaml", "events.jsonl", "locate.json", "evidence.jsonl", "graph.json",
             "answer.json", "funnel.json"} <= files
-    assert set(record["outputs"]) == files - {"run.json", "events.jsonl"}
+    assert set(record["outputs"]) == files - {"run.json", "events.jsonl", "manifest.json"}   # the seal comes after run.json
     assert record["mode"] == "run" and record["protocol"]["id"] == "rag-factuality"
     # the four regex extractors plus regex_screen (the protocol's screen block, Part D): 5 calls each
     assert all(e.startswith("regex_") for e in record["extractors"]) and len(record["extractors"]) == 5

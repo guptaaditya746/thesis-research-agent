@@ -1,4 +1,5 @@
-"""`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain.
+"""`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain and
+its file hashes.
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--relink on|off]
@@ -33,7 +34,7 @@ model call each (`--model`, default orch-model), the rest is deterministic, and 
 `fetch` writes a demonstration corpus of real arXiv papers (evidence/arxiv.py): manifest.json, papers/ and
 source.json with `ground_truth: false`; there is nothing to score it against.
 Exit status: 0 ok,
-1 a replay mismatch, a cache miss, a broken chain or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
+1 a replay mismatch, a cache miss, a broken chain, a run file whose sha256 differs from its manifest.json or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
 refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
 `run` also exits 2 when the run it wrote has failed extractor calls (calls/*.json status error or partial: the
 model gateway or the GLiNER service did not answer): the run stays on disk, and stderr has
@@ -110,7 +111,7 @@ def _parser() -> argparse.ArgumentParser:
         if name == "reexec":
             s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
-    sub.add_parser("verify", help="check the run's hash chain").add_argument("run", type=Path)
+    sub.add_parser("verify", help="check the run's hash chain and file hashes").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
     proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
     d = proto.add_parser("diff", help="what differs between two protocols or two runs (exit 0 same, 1 differ, 2 unreadable)")
@@ -241,9 +242,20 @@ def _dispatch(args: argparse.Namespace) -> int:
         return _propose(args)
     if args.command == "fetch":
         return arxiv.run(args)
-    report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
-    print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
-    return 0 if report.ok else 1
+    return _verify(args.run)
+
+
+def _verify(run: Path) -> int:
+    """The chain (against run.json's head; a failed run has no run.json, so its chain is checked with no head) and
+    the manifest's file hashes; a run made before sealing is judged on the chain only."""
+    from . import seal
+    head = read_json(run / RUN_FILE).get("chain_head") if (run / RUN_FILE).is_file() else None
+    report = verify(run / EVENTS_FILE, head=head)
+    manifest = seal.check(run)
+    sealed = manifest == seal.PRE_EV4 or bool(manifest["ok"])
+    print(json.dumps({"ok": report.ok and sealed, "records": report.records, "head": report.head, "chain_head": head,
+                      "errors": report.errors, "manifest": manifest}, indent=1))
+    return 0 if report.ok and sealed else 1
 
 
 def _pack_check(name: str) -> int:
