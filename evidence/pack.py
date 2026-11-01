@@ -17,7 +17,7 @@ from jsonio import sha256_hex
 
 from . import evidence_types
 from .contract import digest
-from .protocol import Strict
+from .protocol import DEFAULT_PACK, Strict   # DEFAULT_PACK: re-exported, the pack of a protocol with no `domain:`
 
 DOMAINS = Path(__file__).resolve().parents[1] / "domains"
 FILES = ("pack.yaml", "provenance.json", "words.yaml")   # name order, as digested

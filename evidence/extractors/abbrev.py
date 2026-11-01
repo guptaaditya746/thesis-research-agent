@@ -2,7 +2,7 @@
 
 `definitions` finds "Long Form (LF)" and "LF (Long Form)" where the short form's letters are, in order, the
 initials of the long form's words (the parts of a hyphenated word count as words; "of", "the" and similar may
-be left out). It also reads phrase definitions ("hallucination rate, abbreviated HR", "the vanilla LLM, denoted
+be left out). It also reads phrase definitions ("error rate, abbreviated ER", "the plain model, denoted
 by the code B", "hereafter CB", "FLA for short"); a one-letter code only with the "code" wording, and a code
 names a condition, never a metric. The two extractors then find every use of such a short form whose long form names a protocol
 term (the terms the regex extractors use, from the config: the domain pack's words or the protocol's): "FLA" in a table header is the metric
@@ -94,7 +94,7 @@ PHRASES = [
     re.compile(r"(?:\s*,\s*or|\s*\()\s*(" + SHORT + r")\s+for\s+short\b(?:\s*\))?"),
 ]
 CLAUSE_START = re.compile(r"[.!?;:\n]\s*")
-# words between the long form and the phrase: "the vanilla LLM, which is denoted"; "and"/"it" mean the phrase
+# words between the long form and the phrase: "the plain model, which is denoted"; "and"/"it" mean the phrase
 # speaks of the sentence's subject ("..., and is denoted by its code R")
 TRAILING = re.compile(r"(?i)(?:[\s,(]+|\b(?:which|that|it|is|are|was|and|also)\b)+$")
 CUT = re.compile(r"(?i)^.*(?:,|\(|:|\b(?:is|are|was|with|as|called|on|of|for|reports?|uses?|runs?|measures?|"
@@ -131,7 +131,7 @@ SUBJECT_END = re.compile(r"(?i),\s*which\b|;|,\s*and\b|\band\s+it\b|\bwhich\b")
 
 
 def _subject(text: str, m: re.Match[str], *, code: bool) -> list[Definition]:
-    """"The vanilla LLM is prompted with the question, and it is denoted by the code B": the phrase speaks of the
+    """"The plain model is prompted with the question, and it is denoted by the code B": the phrase speaks of the
     sentence's subject. The long form is the sentence up to its first clause break ("which", "; ", ", and"),
     marked `subject`: the item takes the term found in it as its name (Abbrev.named)."""
     cuts = [c.end() for c in SENTENCE_START.finditer(text, max(0, m.start() - 400), m.start())]

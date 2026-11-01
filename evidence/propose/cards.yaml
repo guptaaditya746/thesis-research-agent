@@ -141,15 +141,7 @@
   advanced: false
   ask: Which metric ranks the methods inside a paper, and is a higher value better?
   sets: [best.metric]
-  options:
-    - id: factual_accuracy
-      summary: factual accuracy, higher is better
-      effect: "inside each paper the method kind with the highest factual_accuracy wins"
-      value: {canonical: factual_accuracy, higher_is_better: true}
-    - id: hallucination_rate
-      summary: hallucination rate, lower is better
-      effect: "inside each paper the method kind with the lowest hallucination_rate wins"
-      value: {canonical: hallucination_rate, higher_is_better: false}
+  options: []   # the pack's options: domains/<pack>/propose.yaml card_options.best_metric
 
 - id: method_kinds
   title: Method kinds and the conditions in each
@@ -157,14 +149,7 @@
   advanced: false
   ask: Which method kinds are compared, and which condition names belong to each?
   sets: [best.kinds, evidence_types.condition.fields.kind.enum]
-  options:
-    - id: rag_vs_closed_book
-      summary: two kinds, retrieval-augmented and no-retrieval
-      effect: "conditions are sorted into no-retrieval and rag; a condition of any other kind is not ranked, and the answer is the kind with most wins inside papers"
-      value:
-        kinds:
-          no-retrieval: [closed-book model, no-retrieval baseline, vanilla LLM, parametric-only model]
-          rag: [retrieval-augmented model, RAG pipeline, retrieval-augmented generator, retrieve-then-read model]
+  options: []   # the pack's options: domains/<pack>/propose.yaml card_options.method_kinds
 
 - id: win_rule
   title: Which value is a method's value in a paper

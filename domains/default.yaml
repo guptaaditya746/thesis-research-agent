@@ -1,0 +1,3 @@
+# The pack a protocol with no `domain:` key belongs to, and the pack `evidence propose` drafts from (its
+# propose.yaml). Code names no pack (D35); it reads this file (evidence/protocol.py DEFAULT_PACK).
+pack: rag

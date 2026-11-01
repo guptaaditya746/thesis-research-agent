@@ -35,6 +35,10 @@ from .evidence_types import EvidenceType
 if TYPE_CHECKING:   # pack.py imports this module (Strict); the pack is imported where it is used
     from .pack import FieldName, Pack, Role, RoleMap
 
+# The pack of a protocol with no `domain:` key, named in domains/default.yaml (code names no pack, D35).
+DEFAULT_PACK: str = yaml.safe_load((Path(__file__).resolve().parents[1] / "domains" / "default.yaml")
+                                   .read_text(encoding="utf-8"))["pack"]
+
 LocateStrategy = Literal["exhaustive", "bm25", "agent"]
 # What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,
 # or which method kind wins. Each kind has its own block (`synthesis`, `inventory`, `best`, `consistency`).
@@ -109,7 +113,7 @@ SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False
 # Fields added after protocols were hashed (dotted path -> default): left out of `Protocol.sha256` while at
 # their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
 DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject", "kind": "effect", "synthesis": None,
-                                          "inventory": None, "best": None, "consistency": None, "domain": "rag"}
+                                          "inventory": None, "best": None, "consistency": None, "domain": DEFAULT_PACK}
 
 SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
 
@@ -251,7 +255,7 @@ class Protocol(Strict):
     inventory: Inventory | None = None
     best: Best | None = None
     consistency: Consistency | None = None
-    domain: str = Field(default="rag", pattern=r"^[a-z0-9][a-z0-9_-]*$")   # the pack in domains/ (no key: rag)
+    domain: str = Field(default=DEFAULT_PACK, pattern=r"^[a-z0-9][a-z0-9_-]*$")   # the pack in domains/ (no key: the default)
     # The folder the pack is read from (`parse(..., domains=)`; None: pack.DOMAINS). Not part of the protocol's
     # content or hash: the same protocol text under a test pack folder is the same protocol.
     _domains: Path | None = PrivateAttr(default=None)

@@ -25,10 +25,10 @@ When the vocabulary lists a term that fits, use its label and its synonyms; do n
 would not use. Be literal: the frame is a draft a person will check.
 
 Scale of an outcome's values (never leave it out):
-- fraction: a share from 0 to 1 (accuracy 0.62, hallucination rate 0.08);
+- fraction: a share from 0 to 1 (accuracy 0.62, <<FRACTION_EXAMPLE>>);
 - percent: a share from 0 to 100 (accuracy 62%);
 - count: a number of items (tokens, answers, seconds if counted);
-- score: a value on another scale (a 1-5 rating, a BLEU score out of 100);
+- score: a value on another scale (a 1-5 rating, <<SCORE_EXAMPLE>>);
 - other: the paper may state it either way or you cannot tell. Accuracies, rates and F1 stated as shares are
   fraction or percent, not other; a rating is a score; a latency or cost is a count.
 

@@ -4,7 +4,7 @@
 Per entry: `id` (a plain name), `question` (exactly as its hand-written protocol asks it), `kind` (effect,
 inventory, consistency or best; the protocol's kind), `truth` (the parameters the expected answer is computed
 with, fixed here and never taken from a user's protocol), `protocol` (the hand-written protocol, a path from the
-questions file's folder, `protocol_file`) and `agentic_protocol` (rag-factuality only). Truth parameters by
+questions file's folder, `protocol_file`) and `agentic_protocol` (optional). Truth parameters by
 kind: effect and consistency take `metric` and `min_effect`; inventory takes `target`; best takes `metric`. A
 parameter of another kind is refused. This module checks the file's shape only; the web app also checks that
 each protocol parses and asks the entry's question with the entry's kind.
@@ -19,10 +19,10 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from .pack import load_pack, questions_path
-from .protocol import Kind, load as load_protocol
+from .protocol import DEFAULT_PACK, Kind, load as load_protocol
 from .rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 
-DEFAULT = questions_path("rag")
+DEFAULT = questions_path(DEFAULT_PACK)
 NAME = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"   # a directory name, never a flag or a path
 TRUTH_FIELDS: dict[str, tuple[str, ...]] = {"effect": ("metric", "min_effect"), "consistency": ("metric", "min_effect"),
                                             "inventory": ("target",), "best": ("metric",)}

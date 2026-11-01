@@ -1,6 +1,6 @@
 """Kind `inventory`: every distinct item of one evidence type (`inventory.target`) the papers report.
 
-A name is the item's name field (the pack's `name_field` of the target type: `label` of a rag condition, `name` of
+A name is the item's name field (the pack's `name_field` of the target type: `label` of a condition, `name` of
 a metric or dataset), compared case-folded with
 whitespace collapsed. `inventory.same` maps a canonical name to the other names it goes by: every name that folds
 to the canonical name or one of its others is one entry, named by the canonical name. Any other name is an entry

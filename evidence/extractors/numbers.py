@@ -1,20 +1,20 @@
 """`number_measurement`: number-first search for measurements (Part C, after regex, abbreviations and GLiNER).
 
-regex_measurement starts from fixed sentence shapes ("71% for the closed-book model"); this extractor starts
+regex_measurement starts from fixed sentence shapes ("71% for the baseline model"); this extractor starts
 from every number in the task's parts and asks what is around it.
 
 - A table cell: the condition is the row label and the metric the column header (or the other way round in a
   table whose rows are metrics); the dataset is the row's dataset column, else a context dataset item named in
   the column header or the caption, else null.
-- A sentence: the condition named right after the number ("71% (RAG)", "62% for the closed-book model"), else
+- A sentence: the condition named right after the number ("71% (TM)", "62% for the baseline model"), else
   the nearest one before it, else the nearest one after it; a condition is not taken across a system noun,
   another value or a comparison word ("versus", "over", "compared"), nor when another number already names it
   right after itself. The metric is the nearest one. The dataset is a context dataset item named in the
   sentence, else null.
 
 Labels resolve to context items by measure.Resolver's rules (protocol wording, labels, codes the paper
-defines: "closed-book model (CB)") and also by the context items' own surface forms: the exact texts of their
-spans, so an abbreviation item ("HR" for hallucination rate) or a condition whose code an earlier extractor
+defines: "baseline model (BM)") and also by the context items' own surface forms: the exact texts of their
+spans, so an abbreviation item ("ER" for error rate) or a condition whose code an earlier extractor
 quoted ("B") resolves in a table header, a row label or a sentence. A form that names two items is not used.
 A measurement is emitted only when both a condition and a metric resolve.
 
@@ -400,7 +400,7 @@ def _distance(hit: re.Match[str], m: terms.Mention) -> int:
 
 
 def _right(text: str, hit: re.Match[str], conditions: list[Named]) -> Named | None:
-    """The condition named right after the number: "71% (RAG)", "62% for the closed-book model"."""
+    """The condition named right after the number: "71% (TM)", "62% for the baseline model"."""
     follows = FOLLOWS.match(text, hit.end())
     return next(((m, i) for m, i in conditions if follows and m.start == follows.end()), None)
 
@@ -418,7 +418,7 @@ def _nearest(text: str, hit: re.Match[str], conditions: list[Named], others: lis
         else:
             continue
         if SYSTEMS.search(text, a, b) or COMPARED.search(text, a, b) or any(a <= o < b for o in others):
-            continue   # "RAG ... versus 62%", "71% over the closed-book model": a comparison, not this value's
+            continue   # "TM ... versus 62%", "71% over the baseline model": a comparison, not this value's
         open_.append((side, _distance(hit, m), (m, i)))
     return min(open_, key=lambda t: (t[0], t[1]))[2] if open_ else None
 

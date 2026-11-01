@@ -1,6 +1,6 @@
 """`evidence fetch`: a demonstration corpus of real papers from the arXiv API, in the layout the engine reads.
 
-    evidence fetch --query "retrieval augmented generation factuality" --max 30 --out corpora/arxiv-rag [--category cs.CL]
+    evidence fetch --query "<search words>" --max 30 --out corpora/<name> [--category cs.CL]
 
 One search request to the arXiv API (https://info.arxiv.org/help/api/index.html, an Atom feed), then each
 paper's PDF, at most one request every three seconds as its terms of use ask, with a User-Agent naming this

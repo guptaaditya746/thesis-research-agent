@@ -2,7 +2,7 @@
 
 The wording itself is topic data: it lives in the domain pack (domains/<name>/words.yaml) and reaches each
 extractor through its `config` (the engine fills it, evidence/pack.py `Pack.extractor_config`), so a changed
-pattern is a changed extractor id (contract principle 6). Inline flags carry case sensitivity ("RAG" is
+pattern is a changed extractor id (contract principle 6). Inline flags carry case sensitivity ("NLP" is
 matched in capitals only, "accuracy" in any case). Only generic wording (alias codes, qualifiers, negation,
 system head nouns) stays here.
 """
@@ -17,18 +17,18 @@ _NOUNS = r"(?:\s+(?:model|variant|system|setting|pipeline|condition|configuratio
 
 
 def control_cue(term: str, not_a_system: str) -> str:
-    """A control term's pattern that does not match where a negated object follows ("no retrieval failures");
+    """A control term's pattern that does not match where a negated object follows ("no tuning failures");
     `not_a_system` is the pack's lookahead for such objects (words.yaml `not_a_system`)."""
     return term + not_a_system
 
 
 ALIAS = r"\s*\(\s*([A-Za-z][\w+\-]{0,5})\s*\)"   # a short code in brackets right after a mention: "(R)"
-QUALIFIER = r"\s*\(([^)]{1,40})\)"                 # a bracketed qualifier after a condition: "RAG (no retrieval)"
+QUALIFIER = r"\s*\(([^)]{1,40})\)"                 # a bracketed qualifier after a condition: "TM (no tuning)"
 NEGATION = r"(?i)\b(?:no|without|w/o)\b"
-# a system noun the condition's own pattern left out, between it and its code: "closed-book baseline (B)"
+# a system noun the condition's own pattern left out, between it and its code: "untuned baseline (B)"
 _HEAD_NOUNS = r"(?i:model|baseline|system|variant|setting|pipeline|condition|configuration|LLM|approach|generator)"
 _HEAD = r"(?:\s+" + _HEAD_NOUNS + r")?"
-# a mention that is a negated term on its own ("no retrieval"), not one ending in its system ("no-retrieval baseline")
+# a mention that is a negated term on its own ("no tuning"), not one ending in its system ("no-tuning baseline")
 _BARE_NEGATION = r"(?i)^(?:no|without|w/o)\b(?!.*[\s-]" + _HEAD_NOUNS + r"$)"
 CLAIM_SECTIONS = ("conclusion", "abstract", "discussion", "summary")   # where an author claim is looked for first
 
@@ -70,7 +70,7 @@ def condition_patterns(conditions: dict[str, list[str]]) -> list[tuple[str, str,
 
 
 def _negated_object(text: str, m: Mention, end: int, not_a_system: str) -> bool:
-    """A bare negated term followed by an object: "no retrieval failures" names no system ("no-retrieval
+    """A bare negated term followed by an object: "no tuning failures" names no system ("no-tuning
     baseline errors" does: the errors are the baseline's)."""
     return bool(_compiled(_BARE_NEGATION).match(m.text)) and _compiled(not_a_system).match(text, m.end, end) is None
 
@@ -79,10 +79,10 @@ def find_conditions(text: str, patterns: list[tuple[str, str, bool]], roles: Seq
                     start: int = 0, end: int | None = None, treatment: str | None = None, *,
                     not_a_system: str) -> list[Mention]:
     """Condition mentions in text[start:end] as `find_all` finds them, with their local qualifier: a bracketed
-    part right after a mention that names a role ("RAG (no retrieval)": that role) or holds a negation ("RAG
+    part right after a mention that names a role ("TM (no tuning)": that role) or holds a negation ("TM
     (no reranking)": other) belongs to the mention; an alias code ("(B)") does not. Only a treatment head
-    becomes other (an ablation); any other head keeps its role ("the closed-book model (no fine-tuning)"). A
-    negated object ("no retrieval failures", by the pack's `not_a_system` lookahead) is no mention. `roles`: the
+    becomes other (an ablation); any other head keeps its role ("the baseline model (no fine-tuning)"). A
+    negated object ("no tuning failures", by the pack's `not_a_system` lookahead) is no mention. `roles`: the
     role enum; without "other" an "other" mention is dropped. `treatment`: the treatment role (default: the first pattern's)."""
     end = len(text) if end is None else end
     treatment = treatment if treatment is not None else (patterns[0][1] if patterns else None)

@@ -42,8 +42,7 @@ Confusing case, a rationale tempted to describe the engine wrongly:
   {"default": "exhaustive", "rationale": "The extractors read the whole paper, so no passage is left out by a ranker; the critic found no length problem."}
 
 Kind-specific case, a question that names a lower-is-better metric (best kind):
-  best_metric, options factual_accuracy (effect "inside each paper the method kind with the highest factual_accuracy wins") and hallucination_rate (effect "... the lowest hallucination_rate wins"); the question asks which method hallucinates least.
-  {"default": "hallucination_rate", "rationale": "The question asks for the least hallucination, and this option's effect is that the lowest hallucination_rate wins."}
+  <<BEST_METRIC_EXAMPLE>>
 
 Missing information:
   pairing, no critic finding, no vocabulary entry, the question does not mention tables.

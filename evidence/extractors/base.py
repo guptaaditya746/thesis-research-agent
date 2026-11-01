@@ -64,7 +64,7 @@ def emitted(given: dict[str, Any], native: str) -> str:
 class Slots:
     """A measured value's two context types and its links to them: the compared thing (`thing`, linked as
     `to_thing`) and the metric (`metric`, `to_metric`). From the pack's `types` (role -> type) and the protocol's
-    `links` (link name -> type) the engine configures; the rag names when the config has neither."""
+    `links` (link name -> type) the engine configures; the names below when the config has neither."""
     thing: str = "condition"
     metric: str = "metric"
     to_thing: str = "condition"

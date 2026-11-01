@@ -1,9 +1,9 @@
 """Regex extractors, one per evidence type (kind regex, determinism exact).
 
 They find the explicit cases: condition and metric names from fixed wording, measurements in sentences
-("the retrieval-augmented model reaches 71%, compared with 62% for the closed-book model") and in
+("the tuned model reaches 71%, compared with 62% for the baseline model") and in
 Markdown tables (row and column labels matched to the context's conditions and metrics, by label or by a
-code the method section defines: "its retrieval-augmented variant (R)"), and author claims from effect
+code the method section defines: "its tuned variant (T)"), and author claims from effect
 phrases. Paraphrased, distributed and complex renderings are expected to be missed; how much they miss is
 measured on the synthetic benchmark, not hidden.
 """

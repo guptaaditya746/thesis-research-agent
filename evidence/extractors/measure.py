@@ -5,7 +5,7 @@ A label is matched to a context condition by a code the text defines ("variant (
 by condition wording covering the whole label; to a context metric by name, or by its canonical metric
 when only one context metric has it. A value without both links is not reported (R2 requires them).
 
-In a sentence, a value belongs to the condition named right after it ("62% for the closed-book model"),
+In a sentence, a value belongs to the condition named right after it ("62% for the baseline model"),
 else to the nearest condition named before it, but never across another system noun or another number
 ("71%, while a fine-tuned model reaches 57%": 57% is nobody's). Signed numbers ("+9%") are deltas and
 "from 62% to 71%" is a change, not two results; neither gives a value.
@@ -80,7 +80,7 @@ class Resolver:
         return None
 
     def mentions(self, text: str, start: int = 0, end: int | None = None) -> list[terms.Mention]:
-        """Condition mentions with their qualifiers: "RAG (no retrieval)" is the control, not RAG."""
+        """Condition mentions with their qualifiers: "TM (no tuning)" is the control, not TM."""
         return terms.find_conditions(text, self.cond_patterns, self.roles, start, end, self.treatment,
                                      not_a_system=self.not_a_system)
 

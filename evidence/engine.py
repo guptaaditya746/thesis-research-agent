@@ -104,7 +104,7 @@ from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
 from .pack import Role, RoleMap, load_pack
-from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
+from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
@@ -229,11 +229,11 @@ def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[I
     """The targeted task of an escalation (Part D): the gap code, what was found (the sides of the compared things,
     the canonical metrics; types and fields by pack role) and the request in words, from the gap code and the
     protocol's compared sides. For effect and consistency protocols (or a `synthesis` block given directly, read
-    with `roles`, default the rag pack); for the other kinds the task names the gap only (nothing in `have`) with
+    with `roles`, else the default pack); for the other kinds the task names the gap only (nothing in `have`) with
     the generic request."""
     if isinstance(protocol, Synthesis):
         spec = protocol
-        roles = roles if roles is not None else RoleMap(load_pack("rag"))
+        roles = roles if roles is not None else RoleMap(load_pack(DEFAULT_PACK))
         thing, metric = roles.type_of(Role.COMPARED_THING), roles.type_of(Role.METRIC)
     elif protocol.kind in ("effect", "consistency") and protocol.synthesis is not None:
         spec = protocol.synthesis

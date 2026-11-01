@@ -1,7 +1,7 @@
 """Kind `best`: which method kind reaches the top value of `best.metric` inside each paper, and which kind wins
 in the most papers?
 
-Types and fields come from the pack by role (pack.RoleMap, synthesis.Types): the compared thing (a rag condition),
+Types and fields come from the pack by role (pack.RoleMap, synthesis.Types): the compared thing (a condition),
 its name field and kind field, the metric and its canonical field, the measured value and its links to the two.
 A compared thing's kind is its kind field when that names one of `best.kinds`, else the kind whose names hold its
 name (case-folded, whitespace collapsed); a compared thing of no kind is left out. The values compared are the
@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any
 from .. import synthesis
 from ..contract import Item
 from ..evidence_types import EvidenceType
-from ..protocol import Best, Protocol
+from ..protocol import DEFAULT_PACK, Best, Protocol
 
 if TYPE_CHECKING:
     from ..names import NameGroups
@@ -56,13 +56,13 @@ def _roles(roles: RoleMap | None) -> RoleMap:
     if roles is not None:
         return roles
     from ..pack import RoleMap, load_pack
-    return RoleMap(load_pack("rag"))   # a caller without a protocol: the default pack
+    return RoleMap(load_pack(DEFAULT_PACK))   # a caller without a protocol: the default pack
 
 
 def kind_of(thing: Item, best: Best, roles: RoleMap | None = None, groups: NameGroups | None = None) -> str | None:
     """The method kind of compared thing `thing`: its kind field (pack TypeDecl.kind_field) when that names a kind
     of `best`, else the kind whose names hold its name field, else (with the names step's `groups`, D38) the kind
-    whose names hold a name of its corpus-wide group; None when none does. `roles`: the pack by role (None: the rag
+    whose names hold a name of its corpus-wide group; None when none does. `roles`: the pack by role (None: the default
     pack)."""
     roles = _roles(roles)
     kind_field = roles.field_or_none(thing.evidence_type, "kind")

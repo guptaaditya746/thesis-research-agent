@@ -17,7 +17,7 @@ the flag thresholds. The frame decides the rest:
   frame name under its role or canonical: then the regex steps get a `conditions` / `metrics` / `subject`
   config with the missing names added as word-bounded patterns (a role or metric the built-ins do not know
   at all gets patterns from its names only). A frame whose names the built-ins find leaves the regex steps
-  without config, so the RAG frame drafts the hand-written cascades exactly. `sync_regex` does this from a
+  without config, so the default pack's frame drafts its hand-written cascades exactly. `sync_regex` does this from a
   protocol mapping's roles and metrics; freeze runs it again after the decisions.
 
 draft.sources.json says where every decided value and every term comes from: `frame` (the frame's, so the
@@ -34,7 +34,7 @@ from typing import Any
 from ..extractors import terms as regex_terms
 from ..extractors.screen import term_pattern
 from ..pack import Pack, load_pack
-from ..protocol import parse
+from ..protocol import DEFAULT_PACK, parse
 from . import frame as frame_module
 from .common import (DRAFT, FRAME, KIND_TEMPLATES, SOURCES, ProposalError, dump_yaml, need, read_yaml, sha,
                      slug_id, write_json, write_text)
@@ -84,7 +84,7 @@ def condition_patterns(roles: list[tuple[str, Names]],
                        pack: Pack) -> tuple[dict[str, list[str]] | None, list[tuple[str, Any]]]:
     """(the regex `conditions` config, or None when the built-ins (the domain pack's patterns) find every name
     under its role and know exactly these roles; the names added). `roles`: (role id, its names) for the
-    treatment and the control; the control's added patterns refuse a negated object ("no retrieval failures")."""
+    treatment and the control; the control's added patterns refuse a negated object ("no tuning failures")."""
     builtin: dict[str, list[str]] = pack.extractor_config("condition", "regex_condition")["conditions"]
     known = all(r in builtin for r, _ in roles) and len(roles) == len(builtin)
     base = {r: list(builtin.get(r, [])) for r, _ in roles}
@@ -163,7 +163,7 @@ def sync_regex(p: dict[str, Any], f: Frame) -> list[tuple[str, Any]]:
     """Set (or remove) the regex steps' `conditions`, `metrics` and `subject` config from the roles and metrics
     the protocol mapping decides (draft, and freeze after the decisions); returns the names added."""
     roles, outcomes = decided_names(p, f)
-    pack = load_pack(p.get("domain", "rag"))   # a protocol without `domain` is rag
+    pack = load_pack(p.get("domain", DEFAULT_PACK))   # a protocol without `domain` is the default pack
     out: list[tuple[str, Any]] = []
     for key, (config, added) in (("conditions", condition_patterns(roles, pack)),
                                  ("metrics", metric_patterns(outcomes, pack)),

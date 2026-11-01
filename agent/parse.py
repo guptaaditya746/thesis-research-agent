@@ -97,7 +97,7 @@ def files_read(command: str) -> tuple[list[str], bool]:
     `p12.md`, is a file read, returned as corpus-relative names in order of first mention; an
     anthology id also counts without `.md` (M1-real loops ran `for f in 2025-acl-long-1106 ...;
     do rg ... "$f.md"`), a bare `p12` does not. The second value is True when the command names
-    the corpus directory itself (`$CORPUS` not followed by a file name, e.g. `rg -l RAG "$CORPUS"`),
+    the corpus directory itself (`$CORPUS` not followed by a file name, e.g. `rg -l NLP "$CORPUS"`),
     i.e. it may read any file. Files reached through variables, globs (`p1*.md`) or scripts are
     missed; a name that only appears in a string is over-counted.
     """

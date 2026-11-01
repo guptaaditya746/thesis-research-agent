@@ -9,7 +9,7 @@ like an extractor call:
   -> relevant, the span on the first hit (the earliest position; ties go to the earlier term in the list);
   no term -> not relevant, the reason names the terms, the span on the document's first non-empty line (its
   title), because every item carries a checked span (R1) and there is no term to point at. A term written in
-  capitals only (an acronym such as RAG) is matched in capitals; any other term in any case; a space in a
+  capitals only (an acronym such as NLP) is matched in capitals; any other term in any case; a space in a
   term matches any run of white space. An empty document gives no item.
 - `llm_screen` (kind llm, near_exact): one schema-constrained call over the HEAD of the task's scope (the
   first `head_chars` characters, default 12000, the LLM extractors' chunk size) with the protocol's
