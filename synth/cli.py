@@ -132,6 +132,22 @@ def cmd_sample(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_draft(args: argparse.Namespace) -> int:
+    from evidence.pack import DOMAINS
+    from modelcall.exchange import model_for
+    from synth.draft import draft
+    exchange = args.exchange or DOMAINS / args.domain / ".draft-exchange"
+    cache = args.cache or DOMAINS / args.domain / "draft-calls.jsonl"
+    try:
+        path = draft(args.domain, args.papers, model=model_for(args.model, exchange),
+                     verify_model=model_for(args.verify_model, exchange), cache=cache)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr, flush=True)
+        return 1
+    print(f"wrote {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="synth", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -176,6 +192,14 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--out", type=Path, default=None, help="default <corpus>/review")
     s.set_defaults(func=cmd_sample)
+    d = sub.add_parser("draft", help="draft domains/<domain>/generator.yaml from 5-10 real papers (D39)")
+    d.add_argument("--domain", required=True)
+    d.add_argument("--papers", type=Path, required=True, help="a folder of 5-10 .txt/.md papers, none held out")
+    d.add_argument("--model", default="sub-model-1", help="LiteLLM alias of the drafting model, or exchange:<name>")
+    d.add_argument("--verify-model", required=True, help="LiteLLM alias of the quoting model, or exchange:<name>")
+    d.add_argument("--cache", type=Path, default=None, help="default domains/<domain>/draft-calls.jsonl")
+    d.add_argument("--exchange", type=Path, default=None, help="default domains/<domain>/.draft-exchange")
+    d.set_defaults(func=cmd_draft)
     args = parser.parse_args(argv)
     return args.func(args)
 
