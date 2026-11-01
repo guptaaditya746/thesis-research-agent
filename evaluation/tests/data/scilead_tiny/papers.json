@@ -1,0 +1,11 @@
+[
+ {"id": "p1", "arxiv_id": "2101.00001", "title": "Tiny paper one",
+  "tdmr": [{"task": "Question Answering", "dataset": "SQuAD", "metric": "F1", "result": "90.0"},
+           {"task": "Question Answering", "dataset": "Natural Questions", "metric": "EM", "result": "41.2"}]},
+ {"id": "p2", "arxiv_id": "2102.00002v2", "title": "Tiny paper two",
+  "tdmr": [{"task": "Question Answering", "dataset": "SQuAD", "metric": "F1", "result": "85.0"}]},
+ {"id": "p3", "arxiv_id": "2103.00003", "title": "Tiny paper three",
+  "tdmr": [{"task": "Question Answering", "dataset": "SQuAD", "metric": "F1", "result": "80.0"}]},
+ {"id": "p4", "arxiv_id": null, "title": "Tiny paper four, not on arXiv",
+  "tdmr": [{"task": "Natural Language Inference", "dataset": "MNLI", "metric": "Accuracy", "result": "88.1"}]}
+]

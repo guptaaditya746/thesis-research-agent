@@ -1,0 +1,82 @@
+# Research protocol of the SciLead real-paper check (spec 6.12, D42; plan 3 Task 10, F9): the results the papers
+# report, each a measured value linked to the method, the dataset and the metric it was measured with.
+# evaluation/realpapers/scilead.py scores it: is each gold (task, dataset, metric, result) value found and linked
+# to its metric, and do the values rank the papers of each leaderboard as the gold does ("best" and pairwise order).
+# An inventory over the metrics (evidence/kinds/inventory.py): the ranking is done by the scorer, not by a question
+# kind (F39). No screen: every SciLead paper is an ML paper. No regex step: the pack's words are owed to the drafting
+# helper (domains/ml/provenance.json), and the number extractors need the pack's metric words, so the LLM extractor
+# alone extracts values. The measurement links to no task: SciLead's leaderboards are compared per (dataset, metric).
+# Written by hand; its sha256 is the digest of the parsed content (evidence/protocol.py).
+
+id: values
+version: 1
+kind: inventory
+domain: ml
+question: Which results do the papers report, for which method, on which dataset and in which metric?
+
+locate:
+  strategy: exhaustive
+
+evidence_types:
+  method:
+    description: >-
+      A method, model or algorithm whose results the paper reports. name is the method's name as the paper
+      writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the method's name as the paper writes it}
+    roles: [method_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_condition
+  dataset:
+    description: >-
+      A dataset or benchmark the paper reports results on. name is the dataset's name as the paper writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the dataset's name as the paper writes it}
+    roles: [dataset_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_dataset
+  metric:
+    description: >-
+      A measure the paper reports its results in. name is the metric's name as the paper writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the metric's name as the paper writes it}
+    roles: [metric_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_metric
+  measurement:
+    description: >-
+      One reported result: the value of one metric for one method on one dataset. value is the number as the
+      paper prints it, without a % sign (90.5% is 90.5, 0.905 is 0.905).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [value]
+      properties:
+        value: {type: number, description: the number as the paper prints it, without a % sign}
+    links: {method: method, dataset: dataset, metric: metric}
+    context: [method, dataset, metric]
+    roles: [value, method_label, dataset_label, metric_label]
+    merge_key: [value]
+    extractors:
+      - name: llm_measurement
+
+inventory:
+  target: metric

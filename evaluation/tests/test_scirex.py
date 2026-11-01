@@ -188,7 +188,8 @@ def test_ml_pack_is_a_names_pack(tmp_path: Path) -> None:
     assert (protocol.kind, protocol.domain, protocol.inventory.target) == ("inventory", "ml", "method")
     assert set(protocol.evidence_types) == {"method", "dataset", "task", "metric"}
     questions = yaml.safe_load((ML_NAMES_PROTOCOL.parents[1] / "questions.yaml").read_text(encoding="utf-8"))
-    assert [q["kind"] for q in questions["questions"]] == ["inventory"]
+    assert [(q["kind"], q["protocol"]) for q in questions["questions"]] == [
+        ("inventory", "protocols/names.yaml"), ("inventory", "protocols/values.yaml")]   # values: SciLead (Task 10)
 
 
 def test_cli_corpus_then_score(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

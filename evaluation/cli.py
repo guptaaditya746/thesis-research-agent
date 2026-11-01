@@ -13,6 +13,8 @@
     evaluate review --csv REVIEW.csv
     evaluate scirex corpus --jsonl F --out DIR [--limit N]
     evaluate scirex score --run R --corpus C --out D [--estimate ESTIMATE.json]
+    evaluate scilead ids --data DIR --out ids.txt
+    evaluate scilead score --run R --corpus C --data DIR --out D
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
@@ -24,6 +26,11 @@ asked and its kind picks the answer.json shape (default: the RAG factuality ques
 `scirex` is a real-paper check (D21, evaluation/realpapers/scirex.py): `corpus` turns SciREX JSON lines into a corpus
 plus the gold only `score` reads; `score` writes real.json and real.md, never a report.json. `--limit` is chosen with
 `evidence estimate` on the corpus; give its saved output as `--estimate` so real.md reports it.
+
+`scilead` is a real-paper check (D42, evaluation/realpapers/scilead.py) on the unpacked SciLead release (`--data`):
+`ids` writes the papers' arXiv ids for `evidence fetch --ids` and prints the papers with none; `score` scores a run
+of domains/ml/protocols/values.yaml on the fetched corpus: values found and linked, "best" per leaderboard and
+pairwise order, in real.json and real.md.
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
@@ -234,6 +241,24 @@ def cmd_scirex(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_scilead(args: argparse.Namespace) -> int:
+    from .realpapers import scilead
+    from .realpapers.common import write_real
+
+    try:
+        if args.scilead_cmd == "ids":
+            found = scilead.ids(args.data)
+            args.out.write_text("".join(f"{i}\n" for i in found), encoding="utf-8", newline="\n")
+            print(json.dumps({"ids": len(found), "out": str(args.out), "no_arxiv_id": scilead.no_arxiv(args.data)}))
+            return 0
+        result = scilead.report(args.run, args.corpus, args.data)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate scilead {args.scilead_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "SciLead")
+    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evaluate", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -332,6 +357,19 @@ def parser() -> argparse.ArgumentParser:
     ss.add_argument("--out", type=Path, required=True)
     ss.add_argument("--estimate", type=Path, help="the saved output of `evidence estimate` that chose --limit")
     ss.set_defaults(func=cmd_scirex)
+
+    sl = sub.add_parser("scilead", help="real-paper check: SciLead values, best per leaderboard, pairwise order (D42)")
+    sls = sl.add_subparsers(dest="scilead_cmd", required=True)
+    li = sls.add_parser("ids", help="the papers' arXiv ids, one per line, for `evidence fetch --ids`")
+    li.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release")
+    li.add_argument("--out", type=Path, required=True, help="the ids file to write")
+    li.set_defaults(func=cmd_scilead)
+    ls = sls.add_parser("score", help="score a run of domains/ml/protocols/values.yaml -> real.json and real.md")
+    ls.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    ls.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `evidence fetch --ids`")
+    ls.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release (the gold)")
+    ls.add_argument("--out", type=Path, required=True)
+    ls.set_defaults(func=cmd_scilead)
     return p
 
 
