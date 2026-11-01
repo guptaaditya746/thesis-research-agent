@@ -58,10 +58,14 @@ class NameGroups:
     unresolved: list[Mention]
 
     def group_of(self, name: str) -> str | None:
+        """The group of `name`: the group holding it as written (whitespace runs as one space, ends trimmed),
+        else the first group holding a form with the same `clean` form; None when there is none."""
+        plain = " ".join(name.split())
         for key, forms in self.groups.items():
-            if name in forms:
+            if name in forms or plain in (" ".join(f.split()) for f in forms):
                 return key
-        return None
+        folded = clean(name)
+        return next((key for key, forms in self.groups.items() if any(clean(f) == folded for f in forms)), None)
 
 
 def _guard(a: str, b: str) -> bool:
@@ -80,9 +84,52 @@ def _sentence(text: str, start: int, end: int) -> str:
     return text[left:(min(ends) + 1) if ends else len(text)].strip()
 
 
+def _starts_at(m: Mention, text: str, at: int) -> bool:
+    """Whether mention `m` is the one that begins at offset `at` of its paper's text. Where the mention's offsets
+    are real (the text there is its name, case aside) it must start at `at`; otherwise (a mention without real
+    offsets) the text at `at` must begin with its name, case aside."""
+    if text[m.start:m.end].casefold() == m.name.casefold():
+        return m.start == at
+    return re.compile(re.escape(m.name), re.IGNORECASE).match(text, at) is not None
+
+
+LOCAL = "\x00"   # a paper-local key: "<clean name>\x00<doc>" (a short form a paper defines as an alias)
+
+
 def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, list[str]] | None = None,
                 threshold: int = 92) -> NameGroups:
+    """Group `mentions` by the steps of the module docstring. An alias a paper defines ("compound 12 (hereafter
+    Drug A)") is paper-local: the short form joins the long form only for the mentions of that paper (its key is
+    paper-local), so another paper's "Drug A" is not pulled in; across papers names join only by clean, near,
+    seed and (later) model."""
     keys = {m: clean(m.name) for m in mentions}
+    doc_mentions: dict[str, list[Mention]] = {}
+    for m in mentions:
+        doc_mentions.setdefault(m.doc, []).append(m)
+
+    aliases: list[tuple[str, str, str, str]] = []      # (long key, short key, doc, defining sentence)
+    for doc, in_doc in doc_mentions.items():
+        text = texts.get(doc, "")
+        doc_keys = {keys[m] for m in in_doc}
+        for d in abbrev.definitions(text) if text else []:
+            long_key = clean(d.long)
+            if long_key not in doc_keys:
+                continue
+            # the short form, found in the original text (case-insensitively: casefold may change the length,
+            # as for "ß" or the "ﬁ" ligature, and would shift every later offset)
+            hit = re.compile(re.escape(d.short), re.IGNORECASE).search(text, d.start, d.end + 1)
+            if hit is None:
+                continue
+            # the paper may write a longer short form than the extractor's token ("Drug A" for "Drug"): the alias
+            # is a mention of this paper that begins exactly where the short form begins
+            for m in in_doc:
+                if keys[m] != long_key and _starts_at(m, text, hit.start()):
+                    aliases.append((long_key, keys[m], doc, _sentence(text, d.start, d.end)))
+    local = {(doc, short) for _, short, doc, _ in aliases}
+    for m in mentions:
+        if (m.doc, keys[m]) in local:
+            keys[m] = keys[m] + LOCAL + m.doc
+
     parent: dict[str, str] = {k: k for k in keys.values()}
     how: dict[str, tuple[Step, str | None]] = {}      # how a key joined its group: (step, quote)
     canon: dict[str, str] = {}                         # key -> seed group name
@@ -107,25 +154,13 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
         for k in seeded[1:]:
             union(seeded[0], k, "seed")
 
-    doc_mentions: dict[str, list[Mention]] = {}
-    for m in mentions:
-        doc_mentions.setdefault(m.doc, []).append(m)
-    for doc, in_doc in doc_mentions.items():
-        text = texts.get(doc, "")
-        for d in abbrev.definitions(text) if text else []:
-            folded = text.casefold()
-            at = folded.find(d.short.casefold(), d.start, d.end + 1)   # where the short form starts
-            long_key = clean(d.long)
-            if long_key not in {keys[m] for m in in_doc}:
-                continue
-            # the paper may write a longer short form than the extractor's token ("Drug A" for "Drug"): the alias
-            # is a mention of this paper that begins exactly where the short form begins
-            for m in in_doc:
-                k = keys[m]
-                if k != long_key and (at >= 0 and folded.startswith(m.name.casefold(), at)):
-                    union(long_key, k, "alias", _sentence(text, d.start, d.end))
+    def in_paper(key: str, doc: str) -> str:
+        return key + LOCAL + doc if (doc, key) in local else key
 
-    distinct = sorted(parent)
+    for long_key, short, doc, quote in aliases:
+        union(in_paper(long_key, doc), short + LOCAL + doc, "alias", quote)
+
+    distinct = sorted(k for k in parent if LOCAL not in k)   # paper-local keys never join across papers
     for i, a in enumerate(distinct):
         for b in distinct[i + 1:]:
             if find(a) != find(b) and _guard(a, b) and fuzz.token_sort_ratio(a, b) >= threshold:
@@ -136,10 +171,16 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
         members.setdefault(find(k), []).append(m)
     groups: dict[str, list[str]] = {}
     root_name: dict[str, str] = {}
-    for root, ms in members.items():
+    # groups with a paper-local key name themselves last, so a corpus-wide group keeps its plain name when a
+    # paper's alias group would take the same one; a taken name falls to the next form, then to "<name> (<doc>)"
+    order = sorted(members, key=lambda r: any(LOCAL in keys[m] for m in members[r]))
+    for root in order:
+        ms = members[root]
         seeded = next((canon[k] for k in sorted({keys[m] for m in ms}) if k in canon), None)
         counts = Counter(m.name for m in ms)
-        name = seeded or min(counts, key=lambda n: (-counts[n], len(n), n))
+        ranked = sorted(counts, key=lambda n: (-counts[n], len(n), n))
+        candidates = [seeded] if seeded else ranked
+        name = next((n for n in candidates if n not in groups), f"{candidates[0]} ({ms[0].doc})")
         root_name[root] = name
         groups[name] = sorted(counts, key=lambda n: (-counts[n], n))
 

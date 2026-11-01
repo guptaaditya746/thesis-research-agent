@@ -64,3 +64,50 @@ def test_seed_groups_form_first_and_unmatched_names_are_unresolved():
     assert g.group_of("RAG") == "retrieval-augmented" == g.group_of("retrieval augmented generation")
     assert {m.step for m in g.matches} == {"seed"}
     assert [m.name for m in g.unresolved] == ["Zed"] and g.group_of("Zed") == "Zed"
+
+
+def real(text: str, doc: str, *names: str) -> list[Mention]:
+    """Mentions at their real offsets in `text` (each name's first occurrence after the previous one)."""
+    out, at = [], 0
+    for n in names:
+        start = text.index(n, at)
+        out.append(Mention(n, doc, start, start + len(n), "condition"))
+        at = start + 1
+    return out
+
+
+def test_group_of_normalises_whitespace_and_falls_back_to_clean():
+    g = group_names(ms("Drug A", "Zed"), {})
+    assert g.group_of("Drug  A") == g.group_of(" Drug A\n") == "Drug A"
+    assert g.group_of("drug-a") == "Drug A" and g.group_of("Nothing") is None
+
+
+def test_alias_offsets_hold_after_ligatures():
+    # casefold turns each "ﬁ" into "fi" (one char longer): the alias must still be found where the paper wrote it
+    text = "ﬁ" * 40 + ". compound 12 (hereafter Drug A) was given."
+    g = group_names(real(text, "p1", "compound 12", "Drug A"), {"p1": text})
+    assert len(g.groups) == 1 and {m.step for m in g.matches} == {"alias"}
+
+
+def test_shorter_mention_joins_only_at_the_alias_position():
+    text = "The ﬁrst agent, compound 12 (hereafter Drug A), was given. Drug use was recorded."
+    at_alias = real(text, "p1", "compound 12", "Drug A")
+    elsewhere = Mention("Drug", "p1", text.index("Drug use"), text.index("Drug use") + 4, "condition")
+    g = group_names([*at_alias, elsewhere], {"p1": text})
+    assert g.group_of("Drug") != g.group_of("compound 12")
+    here = Mention("Drug", "p1", text.index("Drug A"), text.index("Drug A") + 4, "condition")
+    g = group_names([at_alias[0], here], {"p1": text})
+    assert g.group_of("Drug") == g.group_of("compound 12")
+
+
+def test_an_alias_joins_only_mentions_of_its_own_paper():
+    t1 = "compound 12 (hereafter Drug A) was given."
+    t2 = "Drug A was the comparator; compound 7 (hereafter Drug B) was new."
+    mentions = [*real(t1, "p1", "compound 12", "Drug A"), *real(t2, "p2", "Drug A", "compound 7", "Drug B")]
+    g = group_names(mentions, {"p1": t1, "p2": t2})
+    p1_drug_a = next(m for m in g.matches if m.mention.doc == "p1" and m.mention.name == "Drug A")
+    p2_drug_a = [m for m in g.matches if m.mention.doc == "p2" and m.mention.name == "Drug A"]
+    assert p1_drug_a.step == "alias"
+    assert all(m.group != p1_drug_a.group for m in p2_drug_a)
+    assert len(g.groups) == 3 and len(set(g.groups)) == 3          # three distinct groups, none overwritten
+    assert sorted(m.name for m in g.unresolved) == ["Drug A"]     # p2's own Drug A is alone
