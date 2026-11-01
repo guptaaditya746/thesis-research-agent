@@ -40,6 +40,8 @@ def what(kind: EvidenceType, words: dict[str, Any] | None = None) -> str:
         examples = f" (for example a {control}, a {treatment}, an ablation or another system)"
     elif kind == "metric" and metrics:
         examples = f" (for example {', '.join(metrics)})"
+    if kind not in WHAT:   # a pack's own type: the protocol's description says what a row is
+        return f"one {kind.replace('_', ' ')} the paper states"
     return WHAT[kind].format(examples=examples, subject=f"the {treatment}" if treatment else "the studied system",
                              other=f"the {control}" if control else "the systems it is compared with")
 
@@ -92,7 +94,7 @@ def concept_for(task: ExtractionTask, field_schema: dict[str, Any], links: dict[
     the evidence type, used instead of the built-in one (`what`, with the pack's `words`) when given.
     """
     kind: EvidenceType = task.evidence_type
-    noun = NOUN[kind]
+    noun = NOUN.get(kind, kind.replace("_", " "))
     row = (" ".join(description.split()) or what(kind, words)).rstrip(".") + "."
     where = ("the whole paper" if task.scope.kind == "document" or not task.scope.ranges else
              "only these character ranges of the file (offsets into the file as stored, of "

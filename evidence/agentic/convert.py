@@ -31,8 +31,9 @@ from agent.anchor import AnchorError, Index, find
 from evidence.contract import (Coverage, EvidenceType, ExtractionTask, Item, Rejected, RejectReason, Span)
 
 ANCHOR_REASONS = {"empty_quote", "not_found", "ambiguous", "partial_number"}
-ITEM_ID = re.compile(r"^[ckma]-[0-9a-f]{16}$")
+ITEM_ID = re.compile(r"^[a-z]+-[0-9a-f]{16}$")   # any registered type's prefix (contract.ITEM_PREFIX)
 MIN_LINE = 8
+# The span role of a quote, per built-in type; a pack's own type has span role `context`.
 DEFAULT_ROLE: dict[EvidenceType, str] = {"condition": "condition_label", "metric": "metric_label",
                                          "measurement": "value", "author_claim": "claim"}
 MEASUREMENT_ROLE = {"value": "value", "condition": "condition_label", "metric": "metric_label"}
@@ -42,7 +43,7 @@ def span_role(kind: EvidenceType, field: Any) -> str:
     """The span role for a quote supporting `field` of an item of type `kind` (other measurement fields: context)."""
     if kind == "measurement":
         return MEASUREMENT_ROLE.get(str(field), "context")
-    return DEFAULT_ROLE[kind]
+    return DEFAULT_ROLE.get(kind, "context")
 
 
 def reject_reason(broker_reason: str | None) -> RejectReason:

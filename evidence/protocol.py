@@ -19,8 +19,9 @@ every corpus that records their sha256 are unchanged. Fields added later do the 
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import yaml
 from jsonschema import Draft202012Validator
@@ -30,6 +31,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from . import rules
 from .contract import Budget, digest
 from .evidence_types import EvidenceType
+
+if TYPE_CHECKING:   # pack.py imports this module (Strict); the pack is imported where it is used
+    from .pack import FieldName, Pack, Role, RoleMap
 
 LocateStrategy = Literal["exhaustive", "bm25", "agent"]
 # What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,
@@ -260,6 +264,12 @@ class Protocol(Strict):
                                  f"(it belongs to another kind; set kind or remove the block)")
         if SCREEN_TYPE in self.evidence_types:
             raise ValueError(f"evidence_types may not be named {SCREEN_TYPE!r}: it is the funnel's screening pseudo type")
+        from .pack import check
+        pack = _pack(self.domain)
+        check(pack, [self.kind])   # the pack has a type of every role the kind needs (spec section 6.2)
+        unknown = [t for t in self.evidence_types if t not in pack.types]
+        if unknown:
+            raise ValueError(f"evidence_types {unknown} are not types of pack {pack.name!r} (it has {sorted(pack.types)})")
         for name, spec in self.evidence_types.items():
             try:
                 Draft202012Validator.check_schema(spec.fields)
@@ -279,41 +289,62 @@ class Protocol(Strict):
             missing = [k for k in spec.merge_key or () if k not in spec.properties]
             if missing:
                 raise ValueError(f"{name}.merge_key names unknown fields {missing}")
+        from .pack import RoleMap
+        roles = RoleMap(pack)
         if self.synthesis is not None:
-            self._synthesis_matches_types()
-        self._kind_matches_types()
+            self._synthesis_matches_types(roles)
+        self._kind_matches_types(roles)
         self.phases()  # raises on a cycle
         return self
 
-    def _synthesis_matches_types(self) -> None:
-        """The synthesis parameters name values the evidence types can carry (when the types declare enums)."""
+    def _synthesis_matches_types(self, roles: RoleMap) -> None:
+        """The synthesis parameters name values the evidence types can carry (when the types declare enums): the
+        compared sides (the compared thing's side field), the metrics (the metric's canonical field) and the claim
+        map (the claim's direction field), each type found by its role in the pack."""
+        from .pack import Role
         s = self.synthesis
         assert s is not None
-        roles = self.evidence_types["condition"].enum_of("role") if "condition" in self.evidence_types else None
-        if roles is not None:
-            bad = [r for r in (s.compare.treatment, s.compare.control) if r not in roles]
+        side = self._enum(roles, Role.COMPARED_THING, "side")
+        if side is not None:
+            (etype, field), allowed = side
+            bad = [r for r in (s.compare.treatment, s.compare.control) if r not in allowed]
             if bad:
-                raise ValueError(f"synthesis.compare names roles {bad} that condition.role does not allow {roles}")
-        canon = self.evidence_types["metric"].enum_of("canonical") if "metric" in self.evidence_types else None
+                raise ValueError(f"synthesis.compare names roles {bad} that {etype}.{field} does not allow {allowed}")
+        canon = self._enum(roles, Role.METRIC, "canonical")
         if canon is not None:
-            bad = [m for m in s.metric_names if m not in canon]
+            (etype, field), allowed = canon
+            bad = [m for m in s.metric_names if m not in allowed]
             if bad:
-                raise ValueError(f"synthesis.metrics names {bad}, which metric.canonical does not allow {canon}")
-        claims = (self.evidence_types["author_claim"].enum_of("direction")
-                  if "author_claim" in self.evidence_types else None)
-        if claims is not None and set(s.claim_map) != set(claims):
-            raise ValueError(f"synthesis.claim_map must map exactly author_claim.direction {claims}; got {sorted(s.claim_map)}")
+                raise ValueError(f"synthesis.metrics names {bad}, which {etype}.{field} does not allow {allowed}")
+        claims = self._enum(roles, Role.CLAIM, "direction")
+        if claims is not None:
+            (etype, field), allowed = claims
+            if set(s.claim_map) != set(allowed):
+                raise ValueError(f"synthesis.claim_map must map exactly {etype}.{field} {allowed}; got {sorted(s.claim_map)}")
 
-    def _kind_matches_types(self) -> None:
+    def _enum(self, roles: RoleMap, role: Role, which: FieldName) -> tuple[tuple[str, str], list[Any]] | None:
+        """((type, field), the field's enum) for the protocol's type of `role` and its `which` field; None when the
+        protocol declares no type of that role, or the type's field has no enum."""
+        etype = next((t for t in roles.types_of(role) if t in self.evidence_types), None)
+        if etype is None:
+            return None
+        field = roles.field(etype, which)
+        allowed = self.evidence_types[etype].enum_of(field)
+        return None if allowed is None else ((etype, field), allowed)
+
+    def _kind_matches_types(self, roles: RoleMap) -> None:
         """The kind's block names evidence types and values the protocol declares."""
-        if self.kind == "consistency" and "author_claim" not in self.evidence_types:
-            raise ValueError("a consistency protocol needs an author_claim evidence type")
+        from .pack import Role
+        if self.kind == "consistency" and not any(t in self.evidence_types for t in roles.types_of(Role.CLAIM)):
+            raise ValueError(f"a consistency protocol needs an evidence type of role {Role.CLAIM.value!r} "
+                             f"(pack {roles.pack.name!r}: {roles.types_of(Role.CLAIM)})")
         if self.inventory is not None and self.inventory.target not in self.evidence_types:
             raise ValueError(f"inventory.target {self.inventory.target!r} is not a declared evidence type")
         if self.best is not None:
-            enum = self.evidence_types["condition"].enum_of("kind") if "condition" in self.evidence_types else None
+            thing = next((t for t in roles.types_of(Role.COMPARED_THING) if t in self.evidence_types), None)
+            enum = self.evidence_types[thing].enum_of("kind") if thing is not None else None
             if enum is None or set(self.best.kinds) != set(enum):
-                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal condition.kind enum {enum}")
+                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal {thing or 'condition'}.kind enum {enum}")
 
     @property
     def sha256(self) -> str:
@@ -338,6 +369,21 @@ class Protocol(Strict):
             done.append(ready)
             pending.remove(ready)
         return done
+
+
+@lru_cache(maxsize=None)
+def _cached_pack(domain: str, root: Path) -> Pack:
+    from .pack import load_pack
+    return load_pack(domain, root=root)
+
+
+def _pack(domain: str) -> Pack:
+    """The protocol's domain pack, read once per process from domains/ (pack.DOMAINS, read at call time), its types
+    registered with the contract (each time; registering again is a no-op) so items of them validate."""
+    from . import pack
+    loaded = _cached_pack(domain, pack.DOMAINS)
+    pack.register_pack(loaded)
+    return loaded
 
 
 def parse(text: str) -> Protocol:

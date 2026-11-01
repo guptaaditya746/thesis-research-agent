@@ -19,12 +19,13 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from evidence.contract import Item
-from evidence.evidence_types import EvidenceType
+from evidence.evidence_types import EvidenceType   # str: any evidence type name (types are open, EV4)
 from evidence.rundir import ANSWER_FILE, FUNNEL_FILE, LOCATE_FILE, REEXEC_FILE, RUN_FILE, RunDir
 from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in answer.json; baselines differ
 
 # Ground-truth fact lists per evidence type, and the role of the placement that locates each kind of
-# fact's main rendering (span accuracy compares the item's span of that role with it).
+# fact's main rendering (span accuracy compares the item's span of that role with it). The ground truth is the
+# synthetic RAG benchmark's, so these are the rag pack's type names; another pack has no ground truth here.
 FACT_LISTS: dict[EvidenceType, str] = {"condition": "conditions", "metric": "metrics",
                                        "measurement": "measurements", "author_claim": "author_claim"}
 MAIN_ROLE: dict[EvidenceType, str] = {"condition": "condition_label", "metric": "metric_label",

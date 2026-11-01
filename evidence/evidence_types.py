@@ -1,39 +1,40 @@
-"""The `dataset` evidence type (question-first step 2): one item `{name}` per benchmark a paper reports on.
+"""The registry of evidence types beyond the contract's built-in ones (EV4: open evidence types).
 
-It lives here, not in contract.py, because contract.py is one of the shared sources hashed into the code hash
-of every extractor (extractors/base.SHARED_SOURCES): adding the type there gave every existing extractor a new
-id, so EV1/EV2 runs no longer replayed and every cached model call missed once. contract.py stays exactly as
-it was at the end of EV2; this module widens its evidence type by `dataset` (item prefix `d`) when the
-`evidence` package is imported (evidence/__init__.py), so no code ever sees the contract without it.
-Extractors that make dataset items hash this module in their SOURCES; other modules take `EvidenceType` from
-here (the agentic package keeps the contract's, as its files are its code hash).
+A domain pack declares its evidence types, each with an item id prefix (pack.yaml `types`); `register` adds one to
+the contract's registry (`contract.ITEM_PREFIX`), and from then on the contract's models take items of that type.
+A name not registered is refused. `dataset` (prefix `d`, question-first step 2) is registered here when the
+`evidence` package is imported (evidence/__init__.py), so the dataset extractors, which declare their type at
+import, and old runs with dataset items load without a pack.
 """
 from __future__ import annotations
 
-from typing import Literal, get_args
-
-from pydantic.fields import FieldInfo
+import re
 
 from . import contract
 
 DATASET = "dataset"
 PREFIX = "d"
-EvidenceType = Literal["condition", "metric", "measurement", "author_claim", "dataset", "screen"]
+# Other modules annotate evidence type names with this; validation happens in the contract (contract.EvidenceType)
+# and against the pack's types (protocol.Protocol).
+EvidenceType = str
+PREFIX_PATTERN = re.compile(r"^[a-z]+$")   # item ids are `<prefix>-<hex>`; the LLM schema numbers rows `<prefix>1`
 
 
-def _widen() -> None:
-    """Add `dataset` to the contract: its item prefix, and the evidence type fields of the contract's models
-    (rebuilt in dependency order, so ExtractionResult validates dataset items and rejections too)."""
-    assert set(get_args(EvidenceType)) == {*get_args(contract.EvidenceType), DATASET}
-    contract.ITEM_PREFIX.setdefault(DATASET, PREFIX)
-    fields = {contract.ExtractorSpec: ("evidence_types", tuple[EvidenceType, ...]),
-              contract.ExtractionTask: ("evidence_type", EvidenceType),
-              contract.Item: ("evidence_type", EvidenceType),
-              contract.Rejected: ("evidence_type", EvidenceType)}
-    for model, (name, annotation) in fields.items():
-        model.model_fields[name] = FieldInfo.from_annotation(annotation)
-        model.model_rebuild(force=True)
-    contract.ExtractionResult.model_rebuild(force=True)
+def register(name: str, prefix: str) -> None:
+    """Register evidence type `name` with item id prefix `prefix`. Registering a type again with the same prefix
+    does nothing; a prefix that belongs to another type, or another prefix for a registered type, raises
+    ValueError (two types sharing a prefix would make their item ids look alike)."""
+    if not PREFIX_PATTERN.match(prefix):
+        raise ValueError(f"evidence type {name!r}: prefix {prefix!r} must be lowercase letters a-z")
+    owner = next((t for t, p in contract.ITEM_PREFIX.items() if p == prefix), None)
+    if owner == name:
+        return
+    if owner is not None:
+        raise ValueError(f"evidence type {name!r}: prefix {prefix!r} already belongs to evidence type {owner!r}")
+    held = contract.ITEM_PREFIX.get(name)
+    if held is not None:
+        raise ValueError(f"evidence type {name!r} already has prefix {held!r}, not {prefix!r}")
+    contract.ITEM_PREFIX[name] = prefix
 
 
-_widen()
+register(DATASET, PREFIX)

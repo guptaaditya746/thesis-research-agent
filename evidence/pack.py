@@ -7,13 +7,15 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, Literal
 
 import yaml
 from pydantic import ValidationError
 
 from jsonio import sha256_hex
 
+from . import evidence_types
 from .contract import digest
 from .protocol import Strict
 
@@ -100,6 +102,68 @@ class Pack(Strict):
         if etype in w.gliner_labels:
             words["labels"] = list(w.gliner_labels[etype])
         return {key: words[key] for key in READS.get(extractor, ()) if key in words}
+
+
+# The roles each question kind needs a type for (spec section 6.2): a pack may lack values and claims (a
+# SciREX-style pack) and still answer inventories; an inventory needs only its target type, which the protocol
+# names (Protocol checks it is a type of the pack).
+KIND_ROLES: dict[str, tuple[Role, ...]] = {
+    "effect": (Role.COMPARED_THING, Role.METRIC, Role.VALUE),
+    "best": (Role.COMPARED_THING, Role.METRIC, Role.VALUE),
+    "consistency": (Role.COMPARED_THING, Role.METRIC, Role.VALUE, Role.CLAIM),
+    "inventory": (),
+}
+FieldName = Literal["name", "side", "canonical", "direction"]
+
+
+class RoleMap:
+    """The pack's evidence types by role, and the fields that carry a type's name, side, canonical name and
+    direction, so code asks for "the compared thing" and never for a type name."""
+
+    def __init__(self, pack: Pack) -> None:
+        self.pack = pack
+
+    def types_of(self, role: Role) -> list[str]:
+        """Every type of role `role`, in the pack's order."""
+        return [name for name, decl in self.pack.types.items() if decl.role == role]
+
+    def type_of(self, role: Role) -> str:
+        """The one type of role `role`; PackError naming the role and the pack when there is none or several."""
+        found = self.types_of(role)
+        if not found:
+            raise PackError(f"pack {self.pack.name!r}: no type has role {str(role)!r}")
+        if len(found) > 1:
+            raise PackError(f"pack {self.pack.name!r}: several types have role {str(role)!r}: {found}")
+        return found[0]
+
+    def field(self, etype: str, which: FieldName) -> str:
+        """The field of type `etype` that holds its `which` (TypeDecl.<which>_field); PackError when undeclared."""
+        decl = self.pack.types.get(etype)
+        if decl is None:
+            raise PackError(f"pack {self.pack.name!r}: no type {etype!r}")
+        name = getattr(decl, f"{which}_field")
+        if name is None:
+            raise PackError(f"pack {self.pack.name!r}: type {etype!r} declares no {which}_field")
+        return name
+
+
+def check(pack: Pack, kinds: Iterable[str]) -> None:
+    """Every role the question kinds `kinds` need has a type in `pack` (KIND_ROLES); else PackError of the form
+    `pack '<name>': no type has role '<role>' (needed by kind '<kind>')`."""
+    roles = RoleMap(pack)
+    for kind in kinds:
+        for role in KIND_ROLES[kind]:
+            if not roles.types_of(role):
+                raise PackError(f"pack {pack.name!r}: no type has role {str(role)!r} (needed by kind {kind!r})")
+
+
+def register_pack(pack: Pack) -> None:
+    """Register every type of `pack` with its item prefix (evidence_types.register); a clash raises PackError."""
+    for name, decl in pack.types.items():
+        try:
+            evidence_types.register(name, decl.prefix)
+        except ValueError as e:
+            raise PackError(f"pack {pack.name!r}: {e}") from e
 
 
 def protocol_path(pack: str, protocol_id: str) -> Path:

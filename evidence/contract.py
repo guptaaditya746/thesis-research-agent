@@ -6,24 +6,36 @@ selectors), absence is recorded as coverage, and every result is canonical so it
 """
 from __future__ import annotations
 
-from typing import Any, Literal, Protocol, runtime_checkable
+from typing import Annotated, Any, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from agent.anchor import Selector
 from jsonio import canonical_bytes, sha256_hex
 
 Kind = Literal["regex", "model", "llm", "agent"]
 Determinism = Literal["exact", "near_exact", "variable"]
-# `screen` is the pseudo evidence type of the funnel's screening calls (docs/evidence-system.md Part D, ours):
-# one item {relevant, reason} per call, checked, cached and replayed like any call; never an evidence item.
-EvidenceType = Literal["condition", "metric", "measurement", "author_claim", "screen"]
 Status = Literal["ok", "partial", "error"]
 RejectReason = Literal["empty_quote", "not_found", "ambiguous", "partial_number", "schema", "out_of_scope",
                        "dangling_link"]
 CoverageStatus = Literal["found", "none", "skipped", "error"]
 
-ITEM_PREFIX = {"condition": "c", "metric": "k", "measurement": "m", "author_claim": "a", "screen": "s"}
+# The registry of evidence types: type name -> item id prefix. Seeded with the built-in types; a domain pack adds
+# its own (evidence_types.register, pack.register_pack). `screen` is the pseudo evidence type of the funnel's
+# screening calls (docs/evidence-system.md Part D, ours): one item {relevant, reason} per call, checked, cached
+# and replayed like any call; never an evidence item.
+ITEM_PREFIX: dict[str, str] = {"condition": "c", "metric": "k", "measurement": "m", "author_claim": "a", "screen": "s"}
+
+
+def _registered(name: str) -> str:
+    if name not in ITEM_PREFIX:
+        raise ValueError(f"evidence type {name!r} is not registered (known: {sorted(ITEM_PREFIX)}); "
+                         "a domain pack declares its types")
+    return name
+
+
+# An evidence type is any registered name (open: the pack declares them); an unregistered name is refused.
+EvidenceType = Annotated[str, AfterValidator(_registered)]
 
 
 def digest(obj: Any) -> str:
@@ -129,6 +141,7 @@ class Item(Frozen):
 
     @staticmethod
     def make_id(evidence_type: EvidenceType, fields: dict[str, Any], spans: tuple[Span, ...] | list[Span]) -> str:
+        _registered(evidence_type)
         where = sorted((s.selector["file"], s.selector["start"], s.selector["end"]) for s in spans)
         return f"{ITEM_PREFIX[evidence_type]}-{digest([evidence_type, fields, where])[:16]}"
 

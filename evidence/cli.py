@@ -9,6 +9,7 @@
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
+    evidence pack check NAME
     evidence propose frame --question Q --out DIR [--model ALIAS] [--force] [--refresh]
     evidence propose draft DIR [--template P]
     evidence propose critic DIR [--model ALIAS] [--refresh]
@@ -21,7 +22,10 @@
 screen, then escalate only the gaps; `all` runs every extractor on every document and records the
 screen decision. LLM extractors reach LiteLLM through modelcall.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
-and both baselines) is the alias of the LLM and agentic extractors. `protocol check` validates a protocol file
+and both baselines) is the alias of the LLM and agentic extractors. `pack check` reads the domain pack
+domains/NAME/, registers its evidence types, checks that it has a type of every role its questions' kinds need and
+that every protocol its questions name validates, and prints {pack, sha256, types, kinds, protocols} (exit 2 when
+it does not). `protocol check` validates a protocol file
 and prints {id, version, revision, sha256, phases, extractors per type}. `propose` is the proposal flow
 (docs/evidence-system.md Part E, evidence/propose): question -> frame -> draft -> critic -> cards (the person
 edits decisions.yaml) -> freeze -> amend, all files in one directory; frame, critic and cards make one cached
@@ -102,6 +106,8 @@ def _parser() -> argparse.ArgumentParser:
     sub.add_parser("verify", help="check the run's hash chain").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
     proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
+    pk = sub.add_parser("pack", help="check a domain pack").add_subparsers(dest="pack_command", required=True)
+    pk.add_parser("check", help="check a domain pack's types against its questions and protocols").add_argument("name")
     _propose_parser(sub)
     arxiv.add_parser(sub)
     return p
@@ -218,6 +224,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         return 0
     if args.command == "protocol":
         return _protocol_check(args.protocol)
+    if args.command == "pack":
+        return _pack_check(args.name)
     if args.command == "propose":
         return _propose(args)
     if args.command == "fetch":
@@ -225,6 +233,28 @@ def _dispatch(args: argparse.Namespace) -> int:
     report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
     print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
     return 0 if report.ok else 1
+
+
+def _pack_check(name: str) -> int:
+    from . import pack, questions
+    from .protocol import load
+    try:
+        p = pack.load_pack(name, root=pack.DOMAINS)
+        pack.register_pack(p)
+        qfile = pack.questions_path(name)
+        entries = questions.load(qfile) if qfile.is_file() else []
+        kinds = sorted({q.kind for q in entries})
+        pack.check(p, kinds)
+        files = [questions.protocol_file(f, qfile) for q in entries for f in (q.protocol, q.agentic_protocol) if f]
+        for path in files:
+            if load(path).domain != name:
+                raise ValueError(f"{path}: its domain is not {name!r}")
+    except (OSError, ValueError, yaml.YAMLError) as exc:   # PackError and pydantic's ValidationError are ValueErrors
+        print(f"error: pack {name!r}: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps({"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
+                      "kinds": kinds, "protocols": len(files)}, indent=1))
+    return 0
 
 
 def _protocol_check(path: Path) -> int:
