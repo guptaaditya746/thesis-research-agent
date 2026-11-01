@@ -620,7 +620,8 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
 - **Events**: `screen` also carries the call ids, one status per call (`statuses`) and the deciding
   call's status; `completeness` carries `after_round` next to `after_position`; `extractor_call` gains
   `focus` (the gap code or null). funnel.json is `{strategy, documents: {id: {screen, skipped, steps,
-  decisions, stopped_after}}}`.
+  decisions, stopped_after}}}`; with `relink: on` (1 Nov, below) also `dangling_links`, per document (a list)
+  and for the run (a count).
 - **Evaluation**: `report.json.funnel` holds per-document rows, the per-document means, the stop-position
   histogram (`0`, `1`, …, `exhausted`, `skipped`) and the screen's precision and recall of the decision
   "relevant" (recall = the share of the truly relevant papers kept); the `all` run is compared with the
@@ -643,6 +644,25 @@ the LLM agreed with became `no_pair`.) Without GLiNER, or with `regex-only` or `
 run.json's settings carry `confirm` only when it is `llm`; replay of a run without the key uses `none`, so older
 runs replay byte for byte. Known limit: when the LLM confirm call fails (status `error`), the type's GLiNER-only
 items are still dropped.
+
+**As built (1 Nov): links follow a re-merged item (`relink`).** Eager confirmation fixed one case of a wider bug.
+In `gaps` a type escalated in a later round is merged again with its earlier results; when the later extractor
+(usually the LLM) lists an item the earlier one found but quotes another span, the merged item gains that span and
+its id changes (`Item.make_id` covers the span positions). Items of other types that already linked to the old id
+kept the old id: the link pointed at nothing, synthesis skipped the measurement and the study could become
+`no_pair`. This happened with `--confirm none` too; the EV2 `gaps` runs on `origin/results` hold such links.
+`Settings.relink` (`evidence run --relink on|off`, default `on`) fixes it. `merge.merge_from` returns, next to the
+merge, old id -> new id for each item of the type's previous merge whose id changed: the merge forms the earlier
+results' groups first and the same way whatever follows, so each earlier item is one item now. The engine then
+rewrites the links of every other type's items that point at an old id, in the checked results (so a later merge
+of that type keys them by the new id) and in the merged items; an item's id does not cover its links, so no other
+id changes. The merge event lists the pairs as `relinked: [[old, new], ...]` (present only when not empty).
+After each document a final check lists the links that point to no item in funnel.json
+(`documents.<id>.dangling_links: [[item, link name, target], ...]`) and the run's total in funnel.json and
+run.json (`dangling_links`, expected 0), so a dangling link is never silent again. run.json's settings carry
+`relink` only when it is `on`; replay of a run without the key uses `off`, which is the engine before 1 Nov byte
+for byte (no `relinked`, no `dangling_links`). Replayed with `relink on` from their own call results, the 7 local
+EV2 `cascade-gaps` runs went from 15 dangling links to 0, every study's verdict unchanged.
 
 # Part E. Proposal flow (contract, 17 Oct 2026; our design)
 

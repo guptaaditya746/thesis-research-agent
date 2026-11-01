@@ -15,6 +15,12 @@ the failed-call and retry rules, the scoring table, the hand-back commands, the 
   items (the key is there only when something was dropped). Under `gaps` the LLM step of a type runs right after
   its GLiNER step, in the same round, when GLiNER found something. This changes every cascade run. `regex-only` and
   `llm-only` runs have no GLiNER step and are unchanged.
+- Engine: `evidence run --relink {on,off}`, default `on`. Under `gaps`, when a later round merges a type again and
+  an item gets a new id (the LLM quoted another span of it), the links of the other types' items now follow it;
+  before, they pointed at nothing and the study could become `no_pair`. The merge events carry
+  `custom_metadata["relinked"]` (the `[old, new]` id pairs, only when not empty), and every run now counts the links
+  that point to no item: `dangling_links` in `run.json` and `funnel.json` (expected **0**). This can change cascade
+  `gaps` runs of every question, with or without GLiNER, and a study complete earlier needs fewer calls.
 - RAG: `evaluate rag-baseline --max-tokens N`. `per_paper` defaults to 16,384 answer tokens (EV3: 4,096, so some
   long answers were cut off). `global` keeps 4,096, so its EV3 cache entries are still hits.
 - Agent baseline: the runner now uses prompt **v3** (a repeated command is refused instead of ending the
@@ -53,12 +59,13 @@ git -C llm-setup log -1 --oneline         # expect b962edd (the llm-setup commit
 git ls-tree HEAD llm-setup               # 160000 commit b962edd83c987efd1275ee535dd19bc4186e4ce3
 uv sync --locked --all-groups
 uv run evidence run --help | grep -- --confirm
+uv run evidence run --help | grep -- --relink
 uv run evaluate rag-baseline --help | grep -- --max-tokens
 uv run evaluate agent-baseline --help | grep -- --question-id
 ```
 
 The **USER** creates the tag `ev3b-code` on `main` (after merging the three fixes) and pushes it. If the tag is
-missing, `git checkout` fails, `git -C llm-setup log -1` does not show `b962edd`, or one of the three `grep` lines
+missing, `git checkout` fails, `git -C llm-setup log -1` does not show `b962edd`, or one of the four `grep` lines
 prints nothing: stop, **USER**. The parent repo must be at the tag `ev3b-code`: it contains `78fbb67` ("fix: use
 distinct distributed ports for replicas"), the commit that moves the submodule to `b962edd`. That submodule commit
 holds the port fix you made by hand in EV3 (`llm-setup-port-fix.patch` on `results`), so **do not apply that patch
@@ -66,12 +73,15 @@ again** and make no llm-setup change
 except the profile copy of EV3 step 1.4.
 
 Then EV3 section 1 (GPU report, stack with GLiNER, `in-job.env`, `mkdir`), with the new `$EV`. Its section 2 (offline
-check) and the two code checks (`scored_types`, `no_question_metric`) are run again as written, plus this line, which
-must print `confirm`'s default as `llm`:
+check) and the two code checks (`scored_types`, `no_question_metric`) are run again as written, plus these lines,
+which must print `confirm`'s default as `llm` and `relink`'s as `on` (the word `(default)` follows `llm:` and `on:`):
 
 ```bash
-uv run evidence run --help | grep -A1 -- --confirm        # ... (default)
+uv run evidence run --help | grep -A1 -- '--confirm {'      # llm: ... (default)
+uv run evidence run --help | grep -A2 -- '--relink {'       # on: ... (default); off: ...
 ```
+
+`one.sh` (EV3 section 4) passes neither flag, so every engine cell runs with `--confirm llm --relink on`.
 
 Seed the caches from EV3 (the old caches make every unchanged call a hit: the global RAG, `regex-only`, `llm-only`,
 `rag-oracle`, the seeds, and every engine call that is not new). If `$EV3/cache` is gone from `data-tmp`, rebuild it
@@ -166,7 +176,7 @@ below shows the command; expect `v3`). If it is not `v3`, stop: **USER**.
 
 | system | EV3b | cost |
 |---|---|---|
-| engine, `cascade`, `gaps`, `--confirm llm` (default) | all 10 questions x both corpora, every run (confirm changes it) | engine calls from cache; only the LLM confirm steps are new |
+| engine, `cascade`, `gaps`, `--confirm llm --relink on` (defaults) | all 10 questions x both corpora, every run (confirm and relink change it) | engine calls from cache; new: the LLM confirm steps, and any call a funnel decision changed by relink asks for |
 | `rag-per-paper` (main k=2, hard k=1), now 16,384 answer tokens | all 10 questions | new calls (the cache key holds the token limit) |
 | agent baseline, prompt v3 | all 20 cells | new (v3 changes every prompt); **one run per cell, no repeats** |
 | global RAG (k 8), `rag-oracle`, `rag-seed1`, `rag-seed2`, `regex-only`, `llm-only` | run again with the seeded caches | all hits; they only put the EV3 answers into this session's layout so the report is complete |
@@ -174,7 +184,7 @@ below shows the command; expect `v3`). If it is not `v3`, stop: **USER**.
 
 The extras that EV3 ran stay as in EV3 section 4b, from the same `extra.sh`, **except** that `engine-r2` is not run (section 3). Create
 `one.sh`, `grid.sh`, `extra.sh` and `extras.sh` exactly as in EV3 sections 4 and 4b (before the one-check cell of
-step 2) and do not edit them: `--confirm` is left at its default `llm`, and `rag-per-paper` / `rag-per-paper-k1`
+step 2) and do not edit them: `--confirm` and `--relink` are left at their defaults `llm` and `on`, and `rag-per-paper` / `rag-per-paper-k1`
 already call `--retrieval per_paper` without `--max-tokens`, so they get 16,384.
 
 ## 4. The grid and the extras
@@ -265,6 +275,28 @@ earlier step left a gap, so a 0 on a single question is a note. `rag-factuality`
 is the new behaviour, not a failure. Caveat: when the LLM confirm call fails (status `error`), the GLiNER items
 of that type are still dropped; they count as `dropped`, so check `failures.md` before reading a high `dropped`.
 
+**Dangling links.** For every engine run (grid and extras, every run dir with a `run.json` under `$RUNS`), the count
+of links that point to no item, which the engine writes into `run.json` as `dangling_links` (relink on). No model
+call; login node:
+
+```bash
+cat > "$EV/dangling.py" <<'EOF'
+import json, pathlib, sys
+# dangling.py <runs dir>: dangling_links and relink of every engine run (a run.json with extractor_specs).
+for p in sorted(pathlib.Path(sys.argv[1]).rglob("run.json")):
+    r = json.loads(p.read_text(encoding="utf-8"))
+    if "extractor_specs" in r and r.get("mode") == "run":
+        print(r.get("dangling_links", "MISSING"), r["settings"].get("relink", "off"), p.parent)
+EOF
+uv run python -I "$EV/dangling.py" "$RUNS" > "$EV/dangling.txt"
+awk '{print $1, $2}' "$EV/dangling.txt" | sort | uniq -c        # expected: one line "<N> 0 on"
+```
+
+Good: every engine run says `0 on`. `MISSING off` means the run was made without relink (an old cache dir or an
+old checkout): stop, **USER**. A count above 0 is a bug in the engine: list the run dirs and their
+`funnel.json` `documents.<id>.dangling_links` entries in `failures.md` and report them (**USER**); do not drop the
+runs from the table.
+
 ## 6. The deliverable: `reports/ev3b/summary.md`
 
 As EV3 section 6 (cost column, B and C fields, `scored_types`), with these changes:
@@ -274,7 +306,8 @@ As EV3 section 6 (cost column, B and C fields, `scored_types`), with these chang
    that under the table, together with "every paper is seen, so a left-out paper is the model's choice, not the
    retriever's". The agent rows are prompt v3, one run each.
 2. **GLiNER confirm line**, one under each question's rows (both corpora): `GLiNER confirm: proposed=<n>
-   confirmed=<n> dropped=<n>` from step 5.
+   confirmed=<n> dropped=<n>` from step 5, and one line under the main table: `dangling links: <total> over <N>
+   engine runs` from step 5 (expected `0`).
 3. **Extra comparisons**: the top-k global RAG row (`rag-baseline`, global, k 8) per question, **moved here** from
    the main table; then `rag-oracle` (label it a diagnostic), `regex-only`, `llm-only`, the two seeds (global RAG,
    spread of C over the grid and the two seeds only; there is no engine repeat).

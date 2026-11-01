@@ -36,7 +36,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     model=s.get("model"), imports=list(s.get("imports") or []), strategy=s.get("strategy") or "all",
                     # $GLINER_URL wins: the service may have moved; the recorded model keeps the ids
                     gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"),
-                    confirm=s.get("confirm", "none"))   # a run made before confirmation kept every item
+                    confirm=s.get("confirm", "none"),   # a run made before confirmation kept every item
+                    relink=s.get("relink", "off"))      # a run made before relinking left those links dangling
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
