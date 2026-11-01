@@ -222,3 +222,91 @@ def test_best_kind_of_follows_the_name_group() -> None:
     groups = NameGroups({"vanilla LLM": ["vanilla LLM", "Plain-LM"]}, [], [])
     assert best.kind_of(thing, best.spec(protocol), protocol.roles()) is None
     assert best.kind_of(thing, best.spec(protocol), protocol.roles(), groups) == "no-retrieval"
+
+
+# --- a failed names check is a failed call; the check asks the extractors' model ------------------------------
+
+def names_down(asked: list[str]) -> FunctionModel:
+    """The scripted reader of PAPER whose names checks fail (the gateway does not answer them)."""
+    inner = scripted(agent_script, [])
+
+    def function(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        if NAMES_MARK in (info.instructions or ""):
+            asked.append(prompt_of(messages))
+            raise ConnectionError("the gateway does not answer")
+        return inner.function(messages, info)  # type: ignore[misc]
+    return FunctionModel(function, model_name="down")
+
+
+def cli_run(out: Path, corpus: Path, run_id: str, *more: str) -> int:
+    from evidence import cli
+    return cli.main(["run", "--protocol", str(INVENTORY), "--corpus", str(corpus), "--out", str(out),
+                     "--cache", str(out / "cache"), "--strategy", "all", "--extractors", "llm-only", "--names", "on",
+                     "--model", "scripted-alias", "--workers", "1", "--run-id", run_id, *more])
+
+
+def test_a_failed_names_check_is_a_failed_call_and_retry_errors_asks_again(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    from evidence.rundir import RunDir
+    corpus = corpus_of(tmp_path / "corpus", {"P1": PAPER})
+    out = tmp_path / "runs"
+    asked: list[str] = []
+    monkeypatch.setattr(engine, "default_provider", lambda _alias: names_down(asked))
+    assert cli_run(out, corpus, "outage") == 2
+    assert RunDir(out / "outage").failed_calls() == 1 == len(asked)
+    assert f"FAIL engine-errors {out / 'outage'} 1" in capsys.readouterr().err.splitlines()
+    assert run_json(out / "outage")["unresolved_names"] == 2
+    # a plain rerun reuses the stored error; --retry-errors asks again once the model answers
+    assert cli_run(out, corpus, "again") == 2 and len(asked) == 1
+    monkeypatch.setattr(engine, "default_provider", lambda _alias: with_names(SAME, asked))
+    assert cli_run(out, corpus, "retried", "--retry-errors") == 0
+    assert len(asked) == 2 and RunDir(out / "retried").failed_calls() == 0
+    assert run_json(out / "retried")["unresolved_names"] == 0
+    _, report = replay(out / "retried")
+    assert report["ok"], report
+
+
+def aliases_run(tmp_path: Path, model: str | None) -> list[str]:
+    """The model aliases asked, per call, by an inventory run whose protocol pins llm_condition to `pinned-x`."""
+    import yaml
+    proto = yaml.safe_load(INVENTORY.read_text(encoding="utf-8"))
+    for ref in proto["evidence_types"]["condition"]["extractors"]:
+        if ref["name"] == "llm_condition":
+            ref["config"] = {**(ref.get("config") or {}), "model": "pinned-x"}
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    path = tmp_path / "protocol.yaml"
+    path.write_text(yaml.safe_dump(proto, sort_keys=False), encoding="utf-8")
+    corpus_of(tmp_path / "corpus", {"P1": PAPER})
+    seen: list[tuple[str, bool]] = []
+
+    def provider(alias: str) -> FunctionModel:
+        inner = with_names(SAME, [])
+
+        def function(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+            seen.append((alias, NAMES_MARK in (info.instructions or "")))
+            return inner.function(messages, info)  # type: ignore[misc]
+        return FunctionModel(function, model_name="scripted")
+    settings = engine.Settings(corpus=str(tmp_path / "corpus"), cache=str(tmp_path / "cache"), model=model,
+                               selection="llm-only", strategy="all", names="on")
+    engine.execute_run(path.read_bytes(), settings, tmp_path / "runs", provider=provider)
+    names_aliases = {a for a, is_names in seen if is_names}
+    condition_aliases = {a for a, is_names in seen if not is_names}
+    assert len(names_aliases) == 1
+    return [*names_aliases, *sorted(condition_aliases)]
+
+
+def test_the_names_check_asks_the_model_the_llm_extractors_ask(tmp_path: Path) -> None:
+    names_alias, *_ = aliases_run(tmp_path / "pinned", None)
+    assert names_alias == "pinned-x"                    # the protocol's pin, as llm_condition
+    names_alias, *others = aliases_run(tmp_path / "run", "run-model")
+    assert names_alias == "run-model" and others == ["run-model"]   # the run's --model wins for both
+
+
+def test_two_leftovers_are_asked_about_once() -> None:
+    prompts: list[str] = []
+
+    def ask(prompt: str) -> str:
+        prompts.append(prompt)
+        return '{"same": false, "quote": ""}'
+    assert confirm_leftovers(LEFTOVER, {"p1": TEXT}, ask=ask) == LEFTOVER
+    assert len(prompts) == 1

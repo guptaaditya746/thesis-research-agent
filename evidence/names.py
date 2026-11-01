@@ -196,12 +196,14 @@ def confirm_leftovers(groups: NameGroups, texts: dict[str, str], ask: Callable[[
     group_names, passages} (the sentences of the mention and of the group's first mention), the reply JSON
     {same, quote}. Only `same: true` with a quote found verbatim in one passage joins the mention to the group
     (step `model`, with the quote); a leftover that was the group itself joins with the same quote. A mention
-    without a passage is not asked. The first quoted yes ends the questions about a mention."""
+    without a passage is not asked, and a pair of groups is asked about once (two leftovers are not asked again the
+    other way round). The first quoted yes ends the questions about a mention."""
     if not groups.unresolved:
         return groups
     out = {k: list(v) for k, v in groups.groups.items()}
     matches, unresolved = list(groups.matches), list(groups.unresolved)
     known = [x.mention for x in matches] + unresolved
+    asked: set[frozenset[str]] = set()                # pairs of groups already asked about, either way round
 
     def key_of(name: str) -> str | None:
         return next((k for k, forms in out.items() if name in forms), None)
@@ -219,11 +221,15 @@ def confirm_leftovers(groups: NameGroups, texts: dict[str, str], ask: Callable[[
         ranked = sorted((k for k in first if not _versions_differ(name, clean(k))),
                         key=lambda k: (-fuzz.token_set_ratio(name, clean(k)), k))[:limit]
         for k in ranked:
+            pair = frozenset((own or m.name, k))
+            if pair in asked:
+                continue
             passages = list(dict.fromkeys(p for p in (_passage(texts, m), _passage(texts, first[k])) if p))
             if not passages:
                 continue
             prompt = json.dumps({"name": m.name, "type": m.etype, "group": k, "group_names": out[k],
                                  "passages": passages}, ensure_ascii=False)
+            asked.add(pair)
             quote = _verdict(ask(prompt), passages)
             if quote is None:
                 continue

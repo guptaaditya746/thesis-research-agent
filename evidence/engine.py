@@ -48,7 +48,10 @@ Names (`Settings.names`, D38; off by default, as runs before it): after every do
 pack type has a name field are grouped corpus-wide (evidence/names.py `group_names`, with the pack's `names_seed`),
 and unless the selection is `regex-only` each name no step matched is put to a model check
 (`names.confirm_leftovers`, prompts/names-confirm-v1.md) whose calls go through the record cache like an extractor's
-(`CallCache.recorded`, owner id `names_confirm@<version>#<digest>`), so a replay never asks a model. The groups are
+(`CallCache.recorded`, owner id `names_confirm@<version>#<digest>`), so a replay never asks a model. It asks the model
+of the protocol's LLM extractors (`names_alias`). Each check is a `names_check` event and a calls/<call_id>.json result
+(error reason `model_call` when the gateway failed it), so a failed check is a failed call: the CLI exits 2, the web
+app counts it, `--retry-errors` asks it again. The groups are
 names.json; the names left unresolved are counted in funnel.json and run.json (`unresolved_names`), as dangling links
 are; the kind's answer gets the groups (`groups`). With `off` none of it happens and no file changes.
 
@@ -96,8 +99,9 @@ from modelcall import JsonlCache
 from . import checks, extractors, graph, kinds, merge, names
 from .extractors import base as extractor_base
 from .extractors import gliner
+from .extractors import llm as llm_extractor
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
-from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
+from .contract import DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
 from .pack import Role, RoleMap, load_pack
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
@@ -152,7 +156,6 @@ class Settings:
 
 NAMES_VERSION = 1
 NAMES_PROMPT = Path(__file__).resolve().parent / "prompts" / "names-confirm-v1.md"
-NAMES_MODEL = "orch-model"                         # the one model of every extractor, unless the run names another
 NAMES_SETTINGS: dict[str, Any] = {"temperature": 0.0, "seed": 0, "max_tokens": 512}
 
 
@@ -161,10 +164,21 @@ class NamesVerdict(BaseModel):
     quote: str
 
 
-def names_check(model: str | None) -> tuple[str, str, str]:
+def names_alias(cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], model: str | None) -> str:
+    """The model the names check asks ("same model for all systems"): the model the protocol's LLM extractors were
+    built with (their `model` config: the protocol's pin, replaced by the run's `--model` when given, see
+    build_extractors), the first LLM extractor in the protocol's type order, the screen last; with none, the run's
+    model, else the LLM extractors' default."""
+    for cascade in cascades.values():
+        for _, extractor in cascade:
+            if extractor.spec.kind == "llm" and extractor.spec.config.get("model"):
+                return str(extractor.spec.config["model"])
+    return model or str(llm_extractor.DEFAULTS["model"])
+
+
+def names_check(alias: str) -> tuple[str, str, str]:
     """(owner id, model alias, instructions) of the names check: the id covers the code, the prompt with its output
     schema, the model alias and the call settings, so a change to any of them is a new cache key."""
-    alias = model or NAMES_MODEL
     instructions = modelcall.load_prompt(NAMES_PROMPT).text
     config = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, NamesVerdict), **NAMES_SETTINGS}
     here = Path(__file__).resolve().parent
@@ -610,7 +624,7 @@ class Execution:
                                               span.selector["end"], item.evidence_type))
                 used.append(item.item_id)
         groups = names.group_names(mentions, self.texts, seed=self.roles.pack.names_seed)
-        owner, alias, instructions = names_check(self.names_model)
+        owner, alias, instructions = names_check(self.names_model or names_alias(self.cascades, None))
         asks: list[dict[str, Any]] = []
         if self.names_ask:
             groups = names.confirm_leftovers(
@@ -635,14 +649,28 @@ class Execution:
         request = {"user_prompt": prompt}
         started = utc_now()
         asked = self.calls.recorded(owner, request, make)
-        asks.append({"key": cache_key(owner, digest(request)), "attempt": asked.attempt, "source": asked.source,
-                     "status": asked.value.get("status"), "model_calls": [r["id"] for r in asked.model_calls]})
+        # the check's result as an extraction result in calls/ (error reason `model_call`, as an LLM extractor's), so a
+        # failed check is a failed call wherever failed calls are counted (RunDir.failed_calls: the CLI's exit 2, the
+        # web app) and `--retry-errors` asks it again
+        failed = asked.value.get("status") == "error"
+        call_id = self.events.next_id()
+        result = ExtractionResult(
+            call_id=call_id, extractor_id=owner, task_sha256=digest(request), status="error" if failed else "ok",
+            error=ExtractionError(reason="model_call", detail=str(asked.value.get("error") or "")[:300]) if failed else None,
+            model_calls=tuple(r["id"] for r in asked.model_calls))
+        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
+                                                               result.model_dump(mode="json"))
+        check = {"call_id": call_id, "key": cache_key(owner, digest(request)), "attempt": asked.attempt,
+                 "source": asked.source, "status": result.status, "model_calls": list(result.model_calls)}
+        self.events.add("names_check", used=[], generated=[], agent_id=owner, status=result.status, started_at=started,
+                        custom={k: v for k, v in check.items() if k != "call_id"})
+        asks.append(check)
         if self.run_calls is not None and asked.model_calls:
             self.run_calls.add({"key": cache_key(owner, digest(request), asked.attempt), "phase": self.phase,
-                                "document": None, "evidence_type": "names", "extractor_id": owner,
-                                "attempt": asked.attempt, "status": asked.value.get("status"), "source": asked.source,
-                                "started_at": started, "ended_at": utc_now(), "task": request, "result": asked.value,
-                                "model_calls": asked.model_calls})
+                                "document": "", "evidence_type": "names", "extractor_id": owner,
+                                "attempt": asked.attempt, "status": result.status, "source": asked.source,
+                                "started_at": started, "ended_at": utc_now(), "task": request,
+                                "result": result.model_dump(mode="json"), "model_calls": asked.model_calls})
         tokens_in, tokens_out = usage(asked.model_calls)
         self.cost["calls"] += 1
         self.cost["cached_calls"] += asked.source == "cache"
@@ -725,7 +753,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
-                   confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=settings.model,
+                   confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
                    names_ask=settings.selection != "regex-only")
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
