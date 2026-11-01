@@ -1,11 +1,12 @@
 /**
  * Routes. Home selects a question; its guided flow (`/flow/:qid/:step`) follows the supervisor's order
  * (STATE.md §1, §4) and starts the missing steps as jobs; the viewer's pages (protocols and proposals,
- * corpora, runs with their papers, scores) and the jobs are linked from it. Pages load lazily, so the graph
- * (React Flow) and the charts (recharts) stay out of the first bundle until needed.
+ * corpora, runs with their papers and scores, the Report over all runs) and the jobs are linked from it. Pages
+ * load lazily, so the graph (React Flow) and the charts (recharts) stay out of the first bundle until needed.
+ * The old Scores page's addresses (/scores, /scores/...) lead to the same place under /report.
  */
 import { lazy } from "react"
-import type { RouteObject } from "react-router"
+import { Navigate, useLocation, type RouteObject } from "react-router"
 
 import { AppLayout } from "@/components/layout/AppLayout"
 
@@ -23,12 +24,18 @@ const ProposalPage = lazy(() => import("@/pages/ev/ProposalPage"))
 const EvRunsPage = lazy(() => import("@/pages/ev/RunsPage"))
 const EvRunPage = lazy(() => import("@/pages/ev/RunPage"))
 const RunPaperPage = lazy(() => import("@/pages/ev/RunPaperPage"))
-const ScoresPage = lazy(() => import("@/pages/ev/ScoresPage"))
+const ReportsPage = lazy(() => import("@/pages/ev/ReportsPage"))
 const ReportPage = lazy(() => import("@/pages/ev/ReportPage"))
 const EvComparePage = lazy(() => import("@/pages/ev/ComparePage"))
 const ShiftPage = lazy(() => import("@/pages/ev/ShiftPage"))
 const BenchmarkPage = lazy(() => import("@/pages/ev/BenchmarkPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
+
+/** /scores/<rest> (the old Scores page's addresses) → /report/<rest>, keeping the query. */
+function OldScoresPath() {
+  const { pathname, search } = useLocation()
+  return <Navigate to={`${pathname.replace(/^\/scores/, "/report")}${search}`} replace />
+}
 
 export const routes: RouteObject[] = [
   {
@@ -50,11 +57,13 @@ export const routes: RouteObject[] = [
       { path: "runs", element: <EvRunsPage /> },
       { path: "runs/:runId", element: <EvRunPage /> },
       { path: "runs/:runId/papers/:doc", element: <RunPaperPage /> },
-      { path: "scores", element: <ScoresPage /> },
-      { path: "scores/reports/:id", element: <ReportPage /> },
-      { path: "scores/compares/:id", element: <EvComparePage /> },
-      { path: "scores/shifts/:id", element: <ShiftPage /> },
-      { path: "scores/benchmarks/:id", element: <BenchmarkPage /> },
+      { path: "report", element: <ReportsPage /> },
+      { path: "report/reports/:id", element: <ReportPage /> },
+      { path: "report/compares/:id", element: <EvComparePage /> },
+      { path: "report/shifts/:id", element: <ShiftPage /> },
+      { path: "report/benchmarks/:id", element: <BenchmarkPage /> },
+      { path: "scores", element: <Navigate to="/report" replace /> },
+      { path: "scores/*", element: <OldScoresPath /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

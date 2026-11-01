@@ -1,5 +1,5 @@
 /**
- * A controlled variant's shift `/scores/shifts/:id` (evaluate shift, F3/F4; the supervisor's §6): one study's
+ * A controlled variant's shift `/report/shifts/:id` (evaluate shift, F3/F4; the supervisor's §6): one study's
  * result was changed and only its paper rewritten; per system, did the changed study's direction and the
  * label move as the variant predicts?
  */
@@ -21,7 +21,7 @@ export default function ShiftPage() {
   const { id = "" } = useParams()
   const shift = useShift(id)
   return (
-    <QueryPage query={shift} what={`shift ${id}`} back={{ to: "/scores", label: "All scores" }}>
+    <QueryPage query={shift} what={`shift ${id}`} back={{ to: "/report", label: "Report" }}>
       {({ ref, shift: s, markdown }) => {
         const systems = (s.systems ?? []) as System[]
         const expected = (s.expected ?? {}) as { before?: { label?: string }; after?: { label?: string } }

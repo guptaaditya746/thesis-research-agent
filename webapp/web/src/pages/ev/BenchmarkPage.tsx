@@ -1,5 +1,5 @@
 /**
- * Benchmark records `/scores/benchmarks/:id` (evaluate benchmark, B11): per extractor id, pooled over the
+ * Benchmark records `/report/benchmarks/:id` (evaluate benchmark, B11): per extractor id, pooled over the
  * reports given, precision, recall, F1 and span accuracy per evidence type and level, the cost per call and
  * the re-execution stability where a report had one; the corpora each record rests on.
  */
@@ -16,7 +16,7 @@ export default function BenchmarkPage() {
   const { id = "" } = useParams()
   const bench = useBenchmark(id)
   return (
-    <QueryPage query={bench} what={`benchmark ${id}`} back={{ to: "/scores", label: "All scores" }}>
+    <QueryPage query={bench} what={`benchmark ${id}`} back={{ to: "/report", label: "Report" }}>
       {({ ref, records, markdown }) => (
         <div className="space-y-6">
           <PageHeader title={<span className="font-mono">{ref.id}</span>} description={`${records.length} extractor records, pooled over the reports given to evaluate benchmark.`} />

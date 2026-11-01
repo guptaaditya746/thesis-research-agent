@@ -3,6 +3,7 @@ corpora, protocols and proposals, engine and baseline runs with their funnel, sp
 from __future__ import annotations
 
 import json
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from fastapi.testclient import TestClient
 from agent.anchor import read_text
 from webapp.app import create_app
 from webapp.evfiles import RecordCache, segments
+from webapp.evmodels import CAUSES, Losses
 from webapp.settings import Settings
 
 from .evidence_world import NAME, POSIX, EvidenceWorld
@@ -50,6 +52,7 @@ def test_unconfigured_roots_are_404_with_the_variable(tmp_path: Path) -> None:
         response = c.get("/api/ev/corpora/x")
         assert response.status_code == 404 and "$CORPORA" in response.json()["detail"]
         assert c.get("/api/ev/scores").json() == {"reports": [], "compares": [], "shifts": [], "benchmarks": []}
+        assert c.get("/api/ev/losses").json() == {"losses": None, "markdown": None}
 
 
 def test_corpora_list_levels_knobs_variant(ev: TestClient, ev_world: EvidenceWorld) -> None:
@@ -257,6 +260,50 @@ def test_report_compare_shift_benchmark(ev: TestClient, ev_world: EvidenceWorld)
     for bad in ("/api/ev/scores/reports/nope~x", "/api/ev/scores/reports/a~b~c", "/api/ev/scores/compares/cascade",
                 "/api/ev/scores/reports/..~cascade", "/api/ev/scores/reports/%2e%2e", "/api/ev/scores/benchmarks/cascade"):
         assert ev.get(bad).status_code == 404, bad
+
+
+def test_losses_endpoint_reads_the_file(ev_fresh: EvidenceWorld) -> None:
+    ev_fresh.write_losses({"domains": {"rag": []}})
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        view = client.get("/api/ev/losses").json()
+    assert view["losses"]["domains"] == {"rag": []} and "We should not assume" in view["markdown"]
+
+
+def test_no_losses_file_is_an_empty_view_not_a_404(ev_fresh: EvidenceWorld) -> None:
+    shutil.rmtree(ev_fresh.scores / "losses")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        assert client.get("/api/ev/losses").json() == {"losses": None, "markdown": None}
+
+
+def test_the_worlds_losses_put_the_losses_first_with_a_cause(ev: TestClient) -> None:
+    rows = ev.get("/api/ev/losses").json()["losses"]["domains"]["rag"]
+    assert rows[0]["engine_loss"] and rows[0]["cause"] in CAUSES
+    assert [r["engine_loss"] for r in rows] == sorted((r["engine_loss"] for r in rows), reverse=True)
+    assert rows[0]["cost"]["rag-baseline"]["model_calls"] == 2
+    assert {r["report"] for r in rows} <= {r["id"] for r in ev.get("/api/ev/scores").json()["reports"]}
+
+
+def test_losses_json_of_evaluate_validates_as_LossesView(ev_world: EvidenceWorld) -> None:
+    """The contract with plan 3 Task 6 (preflight F6): what `evaluation.losses.losses` makes from the world's
+    reports is what the Report page reads. Skipped until Task 6 adds evaluation/losses.py."""
+    losses_module = pytest.importorskip("evaluation.losses")
+    reports = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(ev_world.scores.glob("*/*/report.json"))]
+    made = losses_module.losses(reports)
+    assert Losses.model_validate(made).domains
+    assert tuple(losses_module.CAUSES) == CAUSES
+
+
+def test_run_detail_counts_the_link_flags_of_reason_json(ev_fresh: EvidenceWorld) -> None:
+    run_dir = ev_fresh.runs / "cascade-gaps" / MIXED
+    reason = json.loads((run_dir / "reason.json").read_text(encoding="utf-8"))
+    reason["link_flags"] = [["m1", "condition", "c1", "not a condition"], ["m2", "metric", "c1", "not a metric"]]
+    (run_dir / "reason.json").write_text(json.dumps(reason), encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        assert client.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["link_flags"] == 2
+        assert client.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()["link_flags"] is None
+    (run_dir / "reason.json").unlink()
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        assert client.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["link_flags"] is None
 
 
 # --- pieces --------------------------------------------------------------------------------------------

@@ -76,6 +76,57 @@ class EvidenceWorld:
         shutil.copytree(self.root, target)
         return dataclasses.replace(self, root=target)
 
+    def write_losses(self, losses: dict[str, Any]) -> Path:
+        """losses.json and losses.md under scores/losses, where `evaluate losses` writes them (plan 3 Task 6)."""
+        out = self.scores / "losses"
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "losses.json").write_text(json.dumps(losses, indent=2) + "\n", encoding="utf-8", newline="\n")
+        lines = ["# Losses first", "", "## Comparison", "", TIM_SENTENCE + ".", ""]
+        for domain, rows in losses["domains"].items():
+            lines += [f"### {domain}", "", "| question | report | engine loss | cause |", "|---|---|---|---|"]
+            lines += [f"| {r['question_id']} | {r['report']} | {'yes' if r['engine_loss'] else 'no'} | {r['cause'] or ''} |"
+                      for r in rows]
+            lines.append("")
+        (out / "losses.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
+        return out
+
+
+TIM_SENTENCE = "We should not assume that the evidence-level approach will necessarily perform better"
+
+
+def stand_in_losses(world: EvidenceWorld) -> dict[str, Any]:
+    """losses.json in the shape plan 3 Task 6's `losses(reports)` gives (the plan's Shared names), made from the
+    world's own score reports until Task 6 adds `evaluate losses` (preflight F6), which then replaces this:
+    the headline is direction accuracy over all levels; the cost is the engine run's, or the baseline answer's
+    model and mapping calls; the engine loses when its headline is below the best baseline's or its label is
+    wrong; the cause is "missed" when the extraction missed facts, else "wrong rule"."""
+    rows = []
+    for path in sorted(world.scores.glob("*/*/report.json")):
+        report = json.loads(path.read_text(encoding="utf-8"))
+        selection, corpus = path.parent.parent.name, path.parent.name
+        run = json.loads((world.runs / selection / corpus / "run.json").read_text(encoding="utf-8"))
+        systems: dict[str, float | None] = {}
+        cost: dict[str, dict[str, int | None]] = {}
+        for s in report["synthesis"]:
+            systems[s["system"]] = next((r["direction_accuracy"] for r in s["rows"] if r["level"] == "all"), None)
+            if s["system"] == "evidence-engine":
+                c = run.get("cost") or {}
+                calls, i, o = c.get("model_calls"), c.get("input_tokens"), c.get("output_tokens")
+            else:
+                answer = json.loads((world.runs / s["system"] / corpus / "answer.json").read_text(encoding="utf-8"))
+                made = [m for m in (answer.get("model_call"), answer.get("mapping_call")) if m]
+                calls, i, o = len(made), sum(m["input_tokens"] for m in made), sum(m["output_tokens"] for m in made)
+            cost[s["system"]] = {"model_calls": calls, "input_tokens": i, "output_tokens": o,
+                                 "tokens": i + o if i is not None and o is not None else None}
+        engine = next(s for s in report["synthesis"] if s["system"] == "evidence-engine")
+        best = max((v for k, v in systems.items() if k != "evidence-engine" and v is not None), default=None)
+        loss = engine["label_correct"] is False or (best is not None and (systems["evidence-engine"] or 0) < best)
+        cause = None if not loss else "missed" if (report.get("extraction") or {}).get("missed") else "wrong rule"
+        rows.append({"question_id": run["protocol"]["id"], "kind": "effect", "systems": systems, "cost": cost,
+                     "engine_loss": loss, "cause": cause, "report": f"{selection}~{corpus}"})
+    rows.sort(key=lambda r: (not r["engine_loss"], r["question_id"], r["report"]))
+    return {"domains": {"rag": rows}}
+
 
 # --- scripted models -------------------------------------------------------------------------------------
 
@@ -263,6 +314,7 @@ def build(root: Path, *, agent: bool | None = None) -> EvidenceWorld:
                               "--out", str(scores / f"shift-{selection}" / variant.name)]) == 0
     assert evaluate.main(["benchmark", str(scores / "cascade" / f"{NAME}-explicit"),
                           "--out", str(scores / "benchmark-tpl")]) == 0
+    world.write_losses(stand_in_losses(world))
     proposal(world.proposals / "rag-factuality")
     return world
 
@@ -323,7 +375,8 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
              "/api/ev/proposals", "/api/ev/proposals/rag-factuality", "/api/ev/runs", "/api/ev/scores",
              f"/api/ev/scores/reports/cascade-gaps~{mixed}", f"/api/ev/scores/reports/cascade~{explicit}",
              "/api/ev/scores/compares/compare-cascade", f"/api/ev/scores/compares/compare-funnel~{mixed}",
-             f"/api/ev/scores/shifts/shift-cascade~{variant}", "/api/ev/scores/benchmarks/benchmark-tpl"]
+             f"/api/ev/scores/shifts/shift-cascade~{variant}", "/api/ev/scores/benchmarks/benchmark-tpl",
+             "/api/ev/losses"]
     paths += [f"/api/ev/run-group?source=repo&name={protocol}&extractors={extractors}&strategy={strategy}"
               for protocol in ("rag-factuality", "rag-factuality-agentic")
               for extractors in ("regex-only", "cascade") for strategy in ("all", "gaps")]   # the app's key order

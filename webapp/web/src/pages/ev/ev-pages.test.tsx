@@ -21,7 +21,7 @@ beforeAll(async () => {
   await Promise.all([
     import("@/pages/ev/HomePage"), import("@/pages/ev/CorporaPage"), import("@/pages/ev/CorpusPage"), import("@/pages/ev/CorpusPaperPage"),
     import("@/pages/ev/ProtocolsPage"), import("@/pages/ev/ProtocolPage"), import("@/pages/ev/ProposalPage"), import("@/pages/ev/RunsPage"),
-    import("@/pages/ev/RunPage"), import("@/pages/ev/RunPaperPage"), import("@/pages/ev/ScoresPage"), import("@/pages/ev/ReportPage"),
+    import("@/pages/ev/RunPage"), import("@/pages/ev/RunPaperPage"), import("@/pages/ev/ReportsPage"), import("@/pages/ev/ReportPage"),
     import("@/pages/ev/ComparePage"), import("@/pages/ev/ShiftPage"), import("@/pages/ev/BenchmarkPage"), import("@/pages/flow/FlowPage"), import("@/pages/JobsPage"),
   ])
 }, 180_000)
@@ -156,7 +156,7 @@ describe("runs", () => {
       expect(within(table).getByRole("button", { name: `${s.document}: show the evidence in the paper` })).toBeInTheDocument()
     }
     expect(screen.getByRole("link", { name: `rag-baseline~${MIXED}` })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: `cascade-gaps~${MIXED}` })).toHaveAttribute("href", `/scores/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
+    expect(screen.getByRole("link", { name: `cascade-gaps~${MIXED}` })).toHaveAttribute("href", `/report/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
   })
 
   it("the evidence graph sits in Developer tools beside the trace and draws one paper", async () => {
@@ -339,9 +339,45 @@ describe("developer tools tab", () => {
   })
 })
 
-describe("scores", () => {
+describe("report", () => {
+  it("has no Scores page; /scores goes to the Report", async () => {
+    const { router } = renderRoutes(routes, "/scores")
+    await screen.findByRole("heading", { name: "Report" }, T)
+    expect(router.state.location.pathname).toBe("/report")
+    expect(screen.queryByRole("link", { name: "Scores" })).toBeNull()
+  })
+
+  it("an old score address goes to the same page under /report", async () => {
+    const { router } = renderRoutes(routes, `/scores/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
+    await screen.findByRole("table", { name: "Synthesis per system" }, T)
+    expect(router.state.location.pathname).toBe(`/report/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
+  })
+
+  it("the Report lists losses first with their cause and costs", async () => {
+    renderRoutes(routes, "/report")
+    const rows = within(await screen.findByRole("table", { name: "Questions, losses first" }, T)).getAllByRole("row")
+    expect(rows[1]).toHaveTextContent("missed")
+    expect(screen.getByRole("table", { name: "Model calls and tokens per system" })).toBeInTheDocument()
+    expect(screen.getByText(/We should not assume that the evidence-level approach will necessarily perform better/)).toBeInTheDocument()
+  })
+
+  it("without a losses table the Report says how to make one and still lists the reports", async () => {
+    server.use(http.get("/api/ev/losses", () => HttpResponse.json({ losses: null, markdown: null })))
+    renderRoutes(routes, "/report")
+    expect(await screen.findByText(/No losses table yet/, {}, T)).toBeInTheDocument()
+    expect(await screen.findByRole("table", { name: "Reports" }, T)).toBeInTheDocument()
+  })
+
+  it("a run shows its own scores", async () => {
+    renderRoutes(routes, `${run(`cascade-gaps~${MIXED}`)}?tab=scores`)
+    expect(await screen.findByRole("table", { name: "Synthesis per system" }, T)).toBeInTheDocument()
+    expect(screen.getByRole("table", { name: "Extraction over all levels" })).toBeInTheDocument()
+    expect(screen.getByText(/Values linked to the wrong kind of thing: 0/)).toBeInTheDocument()
+    expect(screen.queryByRole("table", { name: "Cost per system" })).toBeNull()   // the report has no cost per system yet (plan 3 Task 6)
+  })
+
   it("indexes reports, comparisons, shifts and benchmarks", async () => {
-    renderRoutes(routes, "/scores")
+    renderRoutes(routes, "/report")
     const reports = await screen.findByRole("table", { name: "Reports" }, T)
     expect(within(reports).getAllByRole("link", { name: "cascade-gaps" }).length).toBeGreaterThan(0)
     expect(screen.getByText("compare-funnel / rag-tpl-w1-mixed")).toBeInTheDocument()
@@ -350,7 +386,7 @@ describe("scores", () => {
   })
 
   it("a report: C with the baselines and intervals, A per type, the funnel", async () => {
-    renderRoutes(routes, `/scores/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
+    renderRoutes(routes, `/report/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
     const c = await screen.findByRole("table", { name: "Synthesis per system" }, T)
     expect(within(c).getByText("evidence engine")).toBeInTheDocument()
     expect(within(c).getByText("RAG baseline")).toBeInTheDocument()
@@ -361,7 +397,7 @@ describe("scores", () => {
   })
 
   it("all against gaps on one corpus", async () => {
-    renderRoutes(routes, `/scores/compares/${encodeURIComponent(`compare-funnel~${MIXED}`)}`)
+    renderRoutes(routes, `/report/compares/${encodeURIComponent(`compare-funnel~${MIXED}`)}`)
     const table = await screen.findByRole("table", { name: "Comparison" }, T)
     expect(within(table).getByText("gaps")).toBeInTheDocument()
     expect(within(table).getByText("all")).toBeInTheDocument()
@@ -369,14 +405,14 @@ describe("scores", () => {
   })
 
   it("the shift of a variant per system", async () => {
-    renderRoutes(routes, `/scores/shifts/${encodeURIComponent(`shift-cascade~${VARIANT}`)}`)
+    renderRoutes(routes, `/report/shifts/${encodeURIComponent(`shift-cascade~${VARIANT}`)}`)
     const table = await screen.findByRole("table", { name: "Shift per system" }, T)
     expect(within(table).getByText("evidence engine")).toBeInTheDocument()
     expect(screen.getByText(/mixed → refuted/)).toBeInTheDocument()
   })
 
   it("benchmark records per extractor", async () => {
-    renderRoutes(routes, "/scores/benchmarks/benchmark-tpl")
+    renderRoutes(routes, "/report/benchmarks/benchmark-tpl")
     expect(await screen.findByText("regex_condition", {}, T)).toBeInTheDocument()
     await waitFor(() => expect(screen.getAllByRole("table").length).toBeGreaterThan(5))
   })

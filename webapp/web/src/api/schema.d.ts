@@ -441,6 +441,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/losses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Losses */
+        get: operations["ev_losses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/questions": {
         parameters: {
             query?: never;
@@ -1953,6 +1970,11 @@ export interface components {
              * @default false
              */
             has_trace: boolean;
+            /**
+             * Link Flags
+             * @description engine: links to an item of the wrong kind (reason.json `link_flags`); null when the run has no reason.json
+             */
+            link_flags: number | null;
         };
         /** EvRunSummary */
         EvRunSummary: {
@@ -2533,6 +2555,67 @@ export interface components {
             params?: {
                 [key: string]: unknown;
             };
+        };
+        /** LossRow */
+        LossRow: {
+            /** Question Id */
+            question_id: string;
+            /** Kind */
+            kind: string;
+            /**
+             * Systems
+             * @description system -> its headline score on the question
+             */
+            systems: {
+                [key: string]: number | null;
+            };
+            /**
+             * Cost
+             * @default {}
+             */
+            cost: {
+                [key: string]: components["schemas"]["SystemCost"];
+            };
+            /**
+             * Engine Loss
+             * @description the engine's headline is below the best baseline's, or its label (effect) or winner (best) is wrong
+             */
+            engine_loss: boolean;
+            /**
+             * Cause
+             * @description an engine loss's first cause; null when not a loss
+             */
+            cause: ("missed" | "wrongly linked" | "names not grouped" | "wrong rule") | null;
+            /**
+             * Report
+             * @description the score report (`<group>~<name>`) the row comes from
+             */
+            report: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * Losses
+         * @description losses.json of `evaluate losses` (evaluation/losses.py `losses(reports)`): per domain, the questions with
+         *     the engine's losses first, then by question id.
+         */
+        Losses: {
+            /**
+             * Domains
+             * @default {}
+             */
+            domains: {
+                [key: string]: components["schemas"]["LossRow"][];
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /** LossesView */
+        LossesView: {
+            /** @description null when the scores root has no losses/losses.json */
+            losses: components["schemas"]["Losses"] | null;
+            /** Markdown */
+            markdown: string | null;
         };
         /** ModelCall */
         ModelCall: {
@@ -3514,6 +3597,23 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * SystemCost
+         * @description One system's cost on a question (evaluation/score.py `system_cost`): model calls and tokens; a count the
+         *     system does not report is null (the agent baseline does not split input and output tokens).
+         */
+        SystemCost: {
+            /** Model Calls */
+            model_calls: number | null;
+            /** Input Tokens */
+            input_tokens: number | null;
+            /** Output Tokens */
+            output_tokens: number | null;
+            /** Tokens */
+            tokens: number | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** TracePage */
         TracePage: {
             /** Rows */
@@ -4420,6 +4520,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_losses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LossesView"];
                 };
             };
         };

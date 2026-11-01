@@ -44,7 +44,7 @@ from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.propose.common import CARDS, CRITIC, DRAFT, FRAME, PROPOSAL
 from evidence.protocol import parse
 from evidence.rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, PROTOCOL_FILE,
-                             RUN_FILE, RunDir)
+                             REASON_FILE, RUN_FILE, RunDir)
 
 from .agenttrace import claim_of, steps_of
 from .evmodels import (
@@ -68,6 +68,8 @@ from .evmodels import (
     EvRunDetail,
     EvRunSummary,
     FunnelDoc,
+    Losses,
+    LossesView,
     ModelCallRecord,
     Placement,
     ProposalDetail,
@@ -585,6 +587,7 @@ class EvidenceFiles:
         run = run if isinstance(run, dict) else {}
         answer = rd.try_json(ANSWER_FILE)
         funnel = rd.try_json(FUNNEL_FILE)
+        reason = rd.try_json(REASON_FILE) if summary.kind == "engine" else None
         documents: list[str] = []
         if summary.corpus:
             manifest = read_json(self.corpus_dir(summary.corpus) / "manifest.json") or {}
@@ -606,7 +609,8 @@ class EvidenceFiles:
                            funnel={d: FunnelDoc.model_validate(v) for d, v in (funnel.get("documents") or {}).items()}
                            if isinstance(funnel, dict) else None,
                            documents=documents, baselines=same, reports=reports,
-                           has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None)
+                           has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None,
+                           link_flags=len(reason.get("link_flags") or []) if isinstance(reason, dict) else None)
 
     def _items(self, path: Path) -> list[Item]:
         """The run's evidence items; a damaged line (not the torn tail) is `Damaged`, named `group/run/file:line`
@@ -888,6 +892,16 @@ class EvidenceFiles:
     def shift(self, score_id: str) -> ShiftView:
         path, ref = self.score_dir(score_id, "shift.json")
         return ShiftView(ref=ref, shift=read_json(path / "shift.json") or {}, markdown=self._markdown(path / "shift.md"))
+
+    def losses(self) -> LossesView:
+        """`evaluate losses` output (plan 3 Task 6): <scores root>/losses/losses.json and losses.md; an empty view
+        when there is none yet."""
+        root = self.s.scores_dir
+        path = root / "losses" if root is not None else None
+        if path is None or not (path / "losses.json").is_file():
+            return LossesView()
+        return LossesView(losses=Losses.model_validate(read_json(path / "losses.json")),
+                          markdown=self._markdown(path / "losses.md"))
 
     def benchmark(self, score_id: str) -> BenchmarkView:
         path, ref = self.score_dir(score_id, "benchmark.md")

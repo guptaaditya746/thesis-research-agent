@@ -12,14 +12,17 @@ import { cell, DASH, num } from "@/lib/format"
 
 export const ENGINE = "evidence-engine"
 
+/** `rag-baseline` is the RAG baseline's id in runs made before it was renamed `bm25-answer-baseline`; both keep the label. */
 export const SYSTEM_LABEL: Record<string, string> = {
   "evidence-engine": "evidence engine",
   "rag-baseline": "RAG baseline",
+  "bm25-answer-baseline": "RAG baseline",
   "agent-baseline": "agent baseline",
 }
 export const SYSTEM_COLOR: Record<string, string> = {
   "evidence-engine": "var(--chart-1)",
   "rag-baseline": "var(--chart-2)",
+  "bm25-answer-baseline": "var(--chart-2)",
   "agent-baseline": "var(--chart-3)",
 }
 export const systemLabel = (system: string | null | undefined) => (system ? (SYSTEM_LABEL[system] ?? system) : DASH)

@@ -8,7 +8,7 @@ evaluation adds later reaches the page without a change here.
 """
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapter, model_validator
 
@@ -486,6 +486,8 @@ class EvRunDetail(EvRunSummary):
     baselines: list[str] = Field([], description="baseline runs (ids) of the same corpus")
     reports: list[str] = Field([], description="score reports (ids) of this run")
     has_trace: bool = Field(False, description="baseline: the agent baseline's run directory is there")
+    link_flags: int | None = Field(None, description="engine: links to an item of the wrong kind (reason.json "
+                                                     "`link_flags`); null when the run has no reason.json")
 
 
 class RunPaper(Base):
@@ -653,6 +655,41 @@ class ShiftView(Base):
 class BenchmarkView(Base):
     ref: ScoreRef
     records: list[dict[str, Any]]
+    markdown: str | None = None
+
+
+LossCause = Literal["missed", "wrongly linked", "names not grouped", "wrong rule"]
+CAUSES: tuple[str, ...] = get_args(LossCause)   # evaluation/losses.py CAUSES (plan 3 Task 6), in its order
+
+
+class SystemCost(Open):
+    """One system's cost on a question (evaluation/score.py `system_cost`): model calls and tokens; a count the
+    system does not report is null (the agent baseline does not split input and output tokens)."""
+    model_calls: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    tokens: int | None = None
+
+
+class LossRow(Open):
+    question_id: str
+    kind: str
+    systems: dict[str, float | None] = Field(description="system -> its headline score on the question")
+    cost: dict[str, SystemCost] = {}
+    engine_loss: bool = Field(description="the engine's headline is below the best baseline's, or its label "
+                                          "(effect) or winner (best) is wrong")
+    cause: LossCause | None = Field(None, description="an engine loss's first cause; null when not a loss")
+    report: str = Field(description="the score report (`<group>~<name>`) the row comes from")
+
+
+class Losses(Open):
+    """losses.json of `evaluate losses` (evaluation/losses.py `losses(reports)`): per domain, the questions with
+    the engine's losses first, then by question id."""
+    domains: dict[str, list[LossRow]] = {}
+
+
+class LossesView(Base):
+    losses: Losses | None = Field(None, description="null when the scores root has no losses/losses.json")
     markdown: str | None = None
 
 
