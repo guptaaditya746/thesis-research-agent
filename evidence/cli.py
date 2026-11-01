@@ -5,6 +5,8 @@ its file hashes.
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--relink on|off]
                  [--names off|on] [--reason on|off] [--workers N] [--import MODULE] [--run-id ID]
                  [--retry-errors] [--allow-failed-calls]
+    evidence estimate --protocol P --corpus DIR [--strategy gaps|all] [--extractors regex-only|llm-only|cascade]
+                      [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
     evidence prov RUN
@@ -19,7 +21,9 @@ its file hashes.
     evidence propose amend DIR --reason R [--before-main-run]
     evidence fetch --query TEXT --out DIR [--max N] [--category CAT]
 
-`--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
+`estimate` prints the extractor and screen calls (low, high) and the tokens a run would need, from a regex-only
+pass over the corpus (no model; nothing is written): `--from-run` takes the tokens per call of a finished run
+instead of chars/4. `--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
 screen, then escalate only the gaps; `all` runs every extractor on every document and records the
 screen decision. LLM extractors reach LiteLLM through modelcall.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
@@ -101,6 +105,12 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--retry-errors", action="store_true", help="run cached error and partial results again")
     r.add_argument("--allow-failed-calls", action="store_true",
                    help="exit 0 even when extractor calls failed (default: exit 2 with a FAIL engine-errors line)")
+    e = sub.add_parser("estimate", help="the calls and tokens a run would need, before it is made")
+    e.add_argument("--protocol", required=True, type=Path)
+    e.add_argument("--corpus", required=True, type=Path)
+    e.add_argument("--strategy", default="gaps", choices=["all", "gaps"])
+    e.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
+    e.add_argument("--from-run", type=Path, help="a finished run: its tokens per model call replace chars/4")
     for name, text in (("replay", "rebuild a run from the record cache and check its output hashes"),
                        ("reexec", "run extractors again, bypassing the cache, and compare")):
         s = sub.add_parser(name, help=text)
@@ -216,6 +226,15 @@ def _dispatch(args: argparse.Namespace) -> int:
             print(f"  {failed} extractor call(s) failed (status error or partial in calls/: the model gateway or the "
                   "GLiNER service did not answer). The run is kept, and the failed results are in the record cache: "
                   "once the service answers, run again into a new run dir with --retry-errors.", file=sys.stderr)
+            return 2
+        return 0
+    if args.command == "estimate":
+        from .estimate import estimate
+        try:
+            print(json.dumps(estimate(args.protocol, args.corpus, strategy=args.strategy, selection=args.extractors,
+                                      from_run=args.from_run), indent=1))
+        except (OSError, ValueError, KeyError, yaml.YAMLError) as exc:   # unreadable protocol, corpus or run
+            print(f"error: {exc}", file=sys.stderr)
             return 2
         return 0
     if args.command == "replay":
