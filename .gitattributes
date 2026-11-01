@@ -44,7 +44,8 @@ webapp/web/dist/** -text
 
 # Evidence-level system: the protocol and extractor prompts are hashed into extractor and protocol ids; the
 # test papers are hashed into their manifest.
-evidence/protocols/** text eol=lf
+# Domain packs are hashed: protocols, words and pack files (evidence/pack.py, evidence/protocol.py).
+domains/** text eol=lf
 evidence/extractors/prompts/** text eol=lf
 evidence/tests/fixtures/** text eol=lf
 # The judge and gold prompts are hashed into cache keys and result lines.
