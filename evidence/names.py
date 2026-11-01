@@ -4,13 +4,15 @@
   alias  the paper defines it ("compound 12 (hereafter Drug A)", abbrev.definitions), with the defining quote;
   near   a close spelling (rapidfuzz token_sort_ratio) whose digit runs and single-letter tokens are equal, so
          "GPT-3" / "GPT-3.5" and "Drug A" / "Drug B" stay apart;
-  model  a model check for what is left (the engine step, not done here).
+  model  a model check for what is left (`confirm_leftovers`; the engine passes an `ask` whose calls are recorded).
 A name left alone gets a singleton group (answers keep it) and is listed in `unresolved`."""
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -157,3 +159,80 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
         if not matches or matches[-1].mention is not m:   # no step matched this mention
             unresolved.append(m)
     return NameGroups(groups, matches, unresolved)
+
+
+def _versions_differ(a: str, b: str) -> bool:
+    """Both names carry digit runs and they differ ("GPT-3" / "GPT 3.5"): different versions, never asked."""
+    da, db = re.findall(r"\d+", a), re.findall(r"\d+", b)
+    return bool(da) and bool(db) and da != db
+
+
+def _passage(texts: dict[str, str], m: Mention) -> str | None:
+    """The sentence of the paper around a mention; None without the paper's text."""
+    text = texts.get(m.doc)
+    if not text or m.end > len(text):
+        return None
+    return _sentence(text, m.start, m.end) or None
+
+
+def _verdict(reply: str, passages: list[str]) -> str | None:
+    """The quote of a "same" reply whose quote is a verbatim substring of one of the given passages; None for
+    anything else (no, not JSON, a quote not in the passages, an empty quote, an error)."""
+    try:
+        data = json.loads(reply)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get("same") is not True or not isinstance(data.get("quote"), str):
+        return None
+    quote = data["quote"]
+    return quote if quote.strip() and any(quote in p for p in passages) else None
+
+
+def confirm_leftovers(groups: NameGroups, texts: dict[str, str], ask: Callable[[str], str],
+                      limit: int = 3) -> NameGroups:
+    """The `model` step: each unresolved mention (in order) is asked about the `limit` closest groups of its own
+    evidence type (rapidfuzz token_set_ratio of the cleaned names, then the group name), leaving out groups whose
+    digit runs differ from its own. One `ask(prompt)` per question; the prompt is JSON {name, type, group,
+    group_names, passages} (the sentences of the mention and of the group's first mention), the reply JSON
+    {same, quote}. Only `same: true` with a quote found verbatim in one passage joins the mention to the group
+    (step `model`, with the quote); a leftover that was the group itself joins with the same quote. A mention
+    without a passage is not asked. The first quoted yes ends the questions about a mention."""
+    if not groups.unresolved:
+        return groups
+    out = {k: list(v) for k, v in groups.groups.items()}
+    matches, unresolved = list(groups.matches), list(groups.unresolved)
+    known = [x.mention for x in matches] + unresolved
+
+    def key_of(name: str) -> str | None:
+        return next((k for k, forms in out.items() if name in forms), None)
+
+    for m in list(groups.unresolved):
+        if m not in unresolved:
+            continue                                  # an earlier answer joined it already
+        own = key_of(m.name)
+        first: dict[str, Mention] = {}
+        for x in known:
+            k = key_of(x.name)
+            if k is not None and k != own and x.etype == m.etype:
+                first.setdefault(k, x)
+        name = clean(m.name)
+        ranked = sorted((k for k in first if not _versions_differ(name, clean(k))),
+                        key=lambda k: (-fuzz.token_set_ratio(name, clean(k)), k))[:limit]
+        for k in ranked:
+            passages = list(dict.fromkeys(p for p in (_passage(texts, m), _passage(texts, first[k])) if p))
+            if not passages:
+                continue
+            prompt = json.dumps({"name": m.name, "type": m.etype, "group": k, "group_names": out[k],
+                                 "passages": passages}, ensure_ascii=False)
+            quote = _verdict(ask(prompt), passages)
+            if quote is None:
+                continue
+            for form in out.pop(own, []) if own is not None else [m.name]:
+                if form not in out[k]:
+                    out[k].append(form)
+            matches = [Match(x.mention, k, x.step, x.quote) if x.group == own else x for x in matches]
+            joined = [x for x in unresolved if x is m or key_of(x.name) == k]
+            matches += [Match(x, k, "model", quote) for x in joined]
+            unresolved = [x for x in unresolved if x not in joined]
+            break
+    return NameGroups(out, matches, unresolved)

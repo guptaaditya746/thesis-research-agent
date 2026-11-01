@@ -2,7 +2,7 @@
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--relink on|off]
-                 [--workers N] [--import MODULE] [--run-id ID]
+                 [--names off|on] [--workers N] [--import MODULE] [--run-id ID]
                  [--retry-errors] [--allow-failed-calls]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
@@ -86,6 +86,10 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--relink", default="on", choices=["on", "off"],
                    help="on: links follow an item whose id a later funnel round changed, and the run counts the links "
                         "to no item (default); off: the engine of runs before 1 Nov")
+    r.add_argument("--names", default="off", choices=["off", "on"],
+                   help="on: group the names of compared things, metrics and datasets across papers (names.json), a "
+                        "model check for names no rule joins, and count the names left (unresolved_names); off: as "
+                        "before (default)")
     r.add_argument("--workers", type=_workers, default=3,
                    help="papers whose model calls run at once; outputs do not depend on it")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
@@ -186,7 +190,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         try:
             root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                        model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
-                       strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink)
+                       strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink,
+                       names=args.names)
         except RunDirExists as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2

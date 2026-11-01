@@ -6,7 +6,8 @@ whitespace collapsed. `inventory.same` maps a canonical name to the other names 
 to the canonical name or one of its others is one entry, named by the canonical name. Any other name is an entry
 of its own, named by the first form met (documents in manifest order, items in the order given). `aliases` are the
 entry's other forms as written, sorted; `papers` (manifest order) and `items` list where it was found. Entries are
-sorted by name (case-folded, then as written). A document without a target item has reason `no_target_items`; one
+sorted by name (case-folded, then as written). With the names step (`groups`, D38), a name that `inventory.same` does not
+place goes to its corpus-wide group: the group's name, or the `same` name that group's name folds to. A document without a target item has reason `no_target_items`; one
 with target items has `target_open`. Both escalate the target type, so in `gaps` mode the funnel runs the target's
 whole cascade (recall is not capped at position 0) and the document ends exhausted with that gap on record. Answer: `{kind, system, target, entries: [{name, aliases, papers, items}]}`.
 """
@@ -20,6 +21,7 @@ from ..evidence_types import EvidenceType
 from ..protocol import Inventory, Protocol
 
 if TYPE_CHECKING:
+    from ..names import NameGroups
     from ..pack import RoleMap
 
 KIND = "inventory"
@@ -70,14 +72,14 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
     inv = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     field = name_field(protocol, roles)
     canonical = {fold(name): name for name in inv.same}
     canonical |= {fold(other): name for name, others in inv.same.items() for other in others
                   if fold(other) not in canonical}
-    groups: dict[str, dict[str, Any]] = {}       # folded group key -> {name, forms, papers, items}
+    found: dict[str, dict[str, Any]] = {}        # folded group key -> {name, forms, papers, items}
     used: list[str] = []
     for doc in documents:
         entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
@@ -85,8 +87,12 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
         for item_id in ids:
             form = name_of(by_id[item_id], field)
             assert form is not None
-            name = canonical.get(fold(form), form)
-            group = groups.setdefault(fold(name), {"name": name, "forms": [], "papers": [], "items": []})
+            if groups is None:
+                name = canonical.get(fold(form), form)
+            else:   # the protocol's `same` first, then the name's corpus-wide group
+                same = groups.group_of(form) or form
+                name = canonical.get(fold(form), canonical.get(fold(same), same))
+            group = found.setdefault(fold(name), {"name": name, "forms": [], "papers": [], "items": []})
             if form not in group["forms"]:
                 group["forms"].append(form)
             if doc not in group["papers"]:
@@ -95,7 +101,7 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
         used += ids
     entries = [{"name": g["name"], "aliases": sorted(f for f in g["forms"] if f != g["name"]),
                 "papers": g["papers"], "items": g["items"]}
-               for g in sorted(groups.values(), key=lambda g: (fold(g["name"]), g["name"]))]
+               for g in sorted(found.values(), key=lambda g: (fold(g["name"]), g["name"]))]
     return {"kind": KIND, "system": synthesis.SYSTEM, "target": inv.target, "entries": entries}, used
 
 

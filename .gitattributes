@@ -47,6 +47,8 @@ webapp/web/dist/** -text
 # Domain packs are hashed: protocols, words and pack files (evidence/pack.py, evidence/protocol.py).
 domains/** text eol=lf
 evidence/extractors/prompts/** text eol=lf
+# The names check prompt is hashed into the names step's id (evidence/engine.py).
+evidence/prompts/** text eol=lf
 evidence/tests/fixtures/** text eol=lf
 # The judge and gold prompts are hashed into cache keys and result lines.
 gold/prompts/** text eol=lf

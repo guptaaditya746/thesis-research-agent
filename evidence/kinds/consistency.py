@@ -19,6 +19,7 @@ from ..protocol import Protocol
 from . import effect
 
 if TYPE_CHECKING:
+    from ..names import NameGroups
     from ..pack import RoleMap
 
 KIND = "consistency"
@@ -46,17 +47,18 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`groups` (the names step) is not read: the studies are effect studies."""
     studies, used = [], []
     roles = roles if roles is not None else protocol.roles()
     for doc in documents:
         entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
         studies.append(entry)
         used += ids
-    groups = {name: [s["document"] for s in studies if s["agrees"] is value]
-              for name, value in (("agreeing", True), ("disagreeing", False), ("undetermined", None))}
+    by_agreement = {name: [s["document"] for s in studies if s["agrees"] is value]
+                    for name, value in (("agreeing", True), ("disagreeing", False), ("undetermined", None))}
     out = {"kind": KIND, "system": synthesis.SYSTEM, "metric": effect.spec(protocol).metric_names[0],
-           "studies": studies, **groups}
+           "studies": studies, **by_agreement}
     return out, used
 
 

@@ -38,7 +38,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"),
                     confirm=s.get("confirm", "none"),   # a run made before confirmation kept every item
                     relink=s.get("relink", "off"),      # a run made before relinking left those links dangling
-                    domains=s.get("domains"))           # a run of a pack outside domains/ (tests)
+                    domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
+                    names=s.get("names", "off"))        # a run made before the names step grouped no names
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
@@ -80,9 +81,12 @@ def _stamp() -> str:
 
 
 def _attempts(run: Path) -> dict[str, int]:
-    """cache key -> the attempt of the record each call of the run used (calls.py)."""
-    return {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
-            for e in RunDir(run).events_of("extractor_call") or [] if e["status"] != "skipped"}
+    """cache key -> the attempt of the record each call of the run used (calls.py), the names checks too."""
+    run_dir = RunDir(run)
+    used = {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
+            for e in run_dir.events_of("extractor_call") or [] if e["status"] != "skipped"}
+    return used | {c["key"]: c["attempt"] for e in run_dir.events_of("names") or []
+                   for c in e["custom_metadata"].get("checks", [])}
 
 
 def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:

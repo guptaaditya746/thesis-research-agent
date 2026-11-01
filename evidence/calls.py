@@ -14,6 +14,9 @@ call inside it. Modes:
 - `replay`: cache only, the attempt the recorded run used (its events record it), a miss is NotRecorded;
 - `reexec`: extractors chosen by `bypass` run again from scratch and are not stored (the record stays the
   reference); the others use the recorded attempt and run fresh only when the cache has no entry.
+
+`recorded` is the same policy for a model call of the engine's own that is not an extractor (the names check of
+D38): its records sit in the same cache, keyed by the call's owner id and the digest of its request.
 """
 from __future__ import annotations
 
@@ -69,6 +72,15 @@ class EngineContext:
 @dataclass
 class Outcome:
     raw: ExtractionResult           # as the extractor returned it (or as recorded)
+    model_calls: list[dict[str, Any]]
+    source: Literal["cache", "fresh"]
+    attempt: int = 0
+
+
+@dataclass
+class Asked:
+    """A recorded call of the engine's own (`CallCache.recorded`): its value as stored, its model-call records."""
+    value: dict[str, Any]
     model_calls: list[dict[str, Any]]
     source: Literal["cache", "fresh"]
     attempt: int = 0
@@ -145,6 +157,34 @@ class CallCache:
             "result": raw.model_dump(mode="json"), "model_calls": records})
         self.made.add(key)
         return Outcome(raw, records, "fresh", n)
+
+    def recorded(self, owner_id: str, request: dict[str, Any],
+                 make: Callable[[], tuple[dict[str, Any], list[dict[str, Any]]]]) -> Asked:
+        """A model call of the engine's own (the names check), under the same policy as `call`: the key is
+        cache_key(owner_id, digest(request)); `make()` gives (value, model-call records), a value with status `error`
+        is what `retry_errors` asks again. Replay reads the recorded attempt only (a miss is NotRecorded); reexec uses
+        the record and asks only when there is none (no `bypass`: it names extractors)."""
+        request_sha256 = digest(request)
+        if self.mode in ("replay", "reexec"):
+            n, hit = self._recorded(owner_id, request_sha256)
+            if hit is not None:
+                return Asked(hit["result"], list(hit.get("model_calls") or []), "cache", n)
+            if self.mode == "replay":
+                raise NotRecorded(f"not recorded: {owner_id}, request {request_sha256[:12]}, attempt {n}")
+            value, records = make()
+            return Asked(value, records, "fresh", n)
+        n, hit = self._latest(owner_id, request_sha256)
+        if hit is not None and cache_key(owner_id, request_sha256, n) in self.made:
+            return Asked(hit["result"], list(hit.get("model_calls") or []), "fresh", n)
+        if hit is not None and not (self.retry_errors and hit["result"].get("status") == "error"):
+            return Asked(hit["result"], list(hit.get("model_calls") or []), "cache", n)
+        n = n + 1 if hit is not None else 0
+        value, records = make()
+        key = cache_key(owner_id, request_sha256, n)
+        self.cache.put(key, {"extractor_id": owner_id, "attempt": n, "task": request, "task_sha256": request_sha256,
+                             "result": value, "model_calls": records})
+        self.made.add(key)
+        return Asked(value, records, "fresh", n)
 
     @staticmethod
     def _from(hit: dict[str, Any], attempt: int) -> Outcome:

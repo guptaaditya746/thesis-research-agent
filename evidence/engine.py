@@ -44,6 +44,14 @@ results and merged items), and the merge event lists the pairs (`relinked`). Aft
 point to no item are listed in funnel.json (`dangling_links`, per document and as a run total, also in run.json),
 so a dangling link is never silent. With `off` (runs before 1 Nov) neither happens: those links dangled.
 
+Names (`Settings.names`, D38; off by default, as runs before it): after every document, the names of the items whose
+pack type has a name field are grouped corpus-wide (evidence/names.py `group_names`, with the pack's `names_seed`),
+and unless the selection is `regex-only` each name no step matched is put to a model check
+(`names.confirm_leftovers`, prompts/names-confirm-v1.md) whose calls go through the record cache like an extractor's
+(`CallCache.recorded`, owner id `names_confirm@<version>#<digest>`), so a replay never asks a model. The groups are
+names.json; the names left unresolved are counted in funnel.json and run.json (`unresolved_names`), as dangling links
+are; the kind's answer gets the groups (`groups`). With `off` none of it happens and no file changes.
+
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
@@ -66,7 +74,9 @@ chain, so it changes no hash; its row order may vary with workers.
 """
 from __future__ import annotations
 
+import dataclasses
 import importlib
+import json
 import os
 import tempfile
 import time
@@ -75,27 +85,33 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal
 
+from pydantic import BaseModel
+
 from agent.anchor import Index
 from jsonio import sha256_hex, write_json
 from agent.rundir import utc_now
+import modelcall
 from modelcall import JsonlCache
 
-from . import checks, extractors, graph, kinds, merge
+from . import checks, extractors, graph, kinds, merge, names
+from .extractors import base as extractor_base
 from .extractors import gliner
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
 from .pack import Role, RoleMap, load_pack
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
-from .recording import Provider, usage
+from .contract import digest
+from .recording import ModelCallError, Provider, Recorder, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, RunDirExists,
+                     LOCATE_FILE, NAMES_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, RunDirExists,
                      new_run_id, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
 Confirm = Literal["none", "llm"]
 Relink = Literal["off", "on"]
+Names = Literal["off", "on"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -119,14 +135,41 @@ class Settings:
     confirm: Confirm = "llm"                       # llm: GLiNER-only items need the LLM extractor too; none: keep all
     relink: Relink = "on"                          # on: links follow an item a later merge gave a new id; off: as before 1 Nov
     domains: str | None = None                     # the folder of the protocol's pack (None: domains/; a test pack)
+    names: Names = "off"                           # on: corpus-wide name groups, names.json (D38); off: as before
 
     def json(self) -> dict[str, Any]:
-        # `confirm` only when it is llm, `relink` only when on: the settings of a run made before them are unchanged
+        # `confirm` only when it is llm, `relink` and `names` only when on: the settings of a run made before them
+        # are unchanged
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
                 "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
                 "gliner_model": self.gliner_model, **({"confirm": self.confirm} if self.confirm == "llm" else {}),
                 **({"relink": self.relink} if self.relink == "on" else {}),
-                **({"domains": self.domains} if self.domains is not None else {})}
+                **({"domains": self.domains} if self.domains is not None else {}),
+                **({"names": self.names} if self.names == "on" else {})}
+
+
+# --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
+
+NAMES_VERSION = 1
+NAMES_PROMPT = Path(__file__).resolve().parent / "prompts" / "names-confirm-v1.md"
+NAMES_MODEL = "orch-model"                         # the one model of every extractor, unless the run names another
+NAMES_SETTINGS: dict[str, Any] = {"temperature": 0.0, "seed": 0, "max_tokens": 512}
+
+
+class NamesVerdict(BaseModel):
+    same: bool
+    quote: str
+
+
+def names_check(model: str | None) -> tuple[str, str, str]:
+    """(owner id, model alias, instructions) of the names check: the id covers the code, the prompt with its output
+    schema, the model alias and the call settings, so a change to any of them is a new cache key."""
+    alias = model or NAMES_MODEL
+    instructions = modelcall.load_prompt(NAMES_PROMPT).text
+    config = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, NamesVerdict), **NAMES_SETTINGS}
+    here = Path(__file__).resolve().parent
+    code = extractor_base.source_sha256(here / "names.py", NAMES_PROMPT, here / "recording.py")
+    return f"names_confirm@{NAMES_VERSION}#{digest([code, config])[:12]}", alias, instructions
 
 
 def default_provider(alias: str) -> Any:
@@ -243,9 +286,13 @@ class Execution:
     def __init__(self, protocol: Protocol, corpus: Corpus, root: Path, run_id: str, calls: CallCache,
                  cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
                  locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
-                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off") -> None:
+                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
+                 names: Names = "off", names_model: str | None = None, names_ask: bool = True) -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
         self.confirm, self.relink = confirm, relink
+        self.names, self.names_model, self.names_ask = names, names_model, names_ask   # `names_ask`: the model check
+        self.texts: dict[str, str] = {}                  # document -> text (`names: on` only)
+        self.unresolved_names = 0
         self.roles = protocol.roles()                    # the pack's types by role, for the kind's rules
         self.dangling = 0                                 # links to no item, over the run (`relink: on` only)
         self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
@@ -264,6 +311,8 @@ class Execution:
 
     def document(self, paper: Any) -> None:
         text = self.corpus.text(paper)
+        if self.names == "on":
+            self.texts[paper.id] = text
         state = DocState(paper.ref, text, Index(text))
         self.screen(state)
         screen = self.protocol.screen
@@ -540,20 +589,86 @@ class Execution:
                                 "rejected": len(result.rejected), "focus": task.focus.gap if task.focus else None})
         return call_id, result
 
+    # --- the names step -------------------------------------------------------------------------------
+
+    def names_step(self) -> names.NameGroups | None:
+        """`names: on`: group the names of every item whose type has a name field, corpus-wide (seeded by the pack),
+        then the model check of what is left (not under `regex-only`); names.json, `unresolved_names` and a `names`
+        event with every check's cache key and attempt (replay reads them). None with `off`."""
+        if self.names != "on":
+            return None
+        mentions: list[names.Mention] = []
+        used: list[str] = []
+        for paper in self.corpus.papers:
+            for item in self.items.get(paper.id, []):
+                field = self.roles.field_or_none(item.evidence_type, "name")
+                value = item.fields.get(field) if field is not None else None
+                if value is None or not str(value).strip() or not item.spans:
+                    continue
+                span = min(item.spans, key=lambda s: (s.selector["start"], s.selector["end"]))
+                mentions.append(names.Mention(" ".join(str(value).split()), paper.id, span.selector["start"],
+                                              span.selector["end"], item.evidence_type))
+                used.append(item.item_id)
+        groups = names.group_names(mentions, self.texts, seed=self.roles.pack.names_seed)
+        owner, alias, instructions = names_check(self.names_model)
+        asks: list[dict[str, Any]] = []
+        if self.names_ask:
+            groups = names.confirm_leftovers(
+                groups, self.texts, lambda prompt: self._names_ask(owner, alias, instructions, prompt, asks))
+        self.unresolved_names = len(groups.unresolved)
+        self.outputs[NAMES_FILE] = write_json(self.root / NAMES_FILE, dataclasses.asdict(groups))
+        self.events.add("names", used=sorted(set(used)), generated=[], agent_id=owner if asks else ENGINE,
+                        custom={"groups": len(groups.groups), "matches": len(groups.matches),
+                                "unresolved": self.unresolved_names, "checks": asks})
+        return groups
+
+    def _names_ask(self, owner: str, alias: str, instructions: str, prompt: str, asks: list[dict[str, Any]]) -> str:
+        """One question of the names check through the record cache: the reply as JSON, or {"error": ...}. Counted in
+        the run's cost like an extractor call; one row of calls.jsonl when it made model calls."""
+        def make() -> tuple[dict[str, Any], list[dict[str, Any]]]:
+            recorder = Recorder(self.provider)
+            try:
+                out, _ = recorder.structured(alias, instructions, prompt, NamesVerdict, **NAMES_SETTINGS)
+                return {"status": "ok", "output": out.model_dump(mode="json")}, recorder.records
+            except ModelCallError as exc:
+                return {"status": "error", "error": exc.reason}, recorder.records
+        request = {"user_prompt": prompt}
+        started = utc_now()
+        asked = self.calls.recorded(owner, request, make)
+        asks.append({"key": cache_key(owner, digest(request)), "attempt": asked.attempt, "source": asked.source,
+                     "status": asked.value.get("status"), "model_calls": [r["id"] for r in asked.model_calls]})
+        if self.run_calls is not None and asked.model_calls:
+            self.run_calls.add({"key": cache_key(owner, digest(request), asked.attempt), "phase": self.phase,
+                                "document": None, "evidence_type": "names", "extractor_id": owner,
+                                "attempt": asked.attempt, "status": asked.value.get("status"), "source": asked.source,
+                                "started_at": started, "ended_at": utc_now(), "task": request, "result": asked.value,
+                                "model_calls": asked.model_calls})
+        tokens_in, tokens_out = usage(asked.model_calls)
+        self.cost["calls"] += 1
+        self.cost["cached_calls"] += asked.source == "cache"
+        self.cost["model_calls"] += len(asked.model_calls)
+        self.cost["made_model_calls"] += len(asked.model_calls) if asked.source == "fresh" else 0
+        self.cost["input_tokens"] += tokens_in
+        self.cost["output_tokens"] += tokens_out
+        return json.dumps(asked.value.get("output") or {"error": asked.value.get("error")})
+
     # --- the run --------------------------------------------------------------------------------------
 
     def finish(self) -> dict[str, Any]:
         papers = self.corpus.papers
         funnel = {p.id: {"screened": self.funnel[p.id]["screen"]["relevant"] is False if self.funnel[p.id]["screen"] else False,
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
+        groups = self.names_step()
         answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
-                                                      funnel, roles=self.roles)
+                                                      funnel, roles=self.roles, groups=groups)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
         dangling = {"dangling_links": self.dangling} if self.relink == "on" else {}
+        unresolved = {"unresolved_names": self.unresolved_names} if self.names == "on" else {}
         self.outputs[FUNNEL_FILE] = write_json(self.root / FUNNEL_FILE, {"strategy": self.strategy,
-                                                                               "documents": self.funnel, **dangling})
+                                                                               "documents": self.funnel, **dangling,
+                                                                               **unresolved})
         self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
         self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
         if self.protocol.kind == "effect":
@@ -610,7 +725,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
-                   confirm=settings.confirm, relink=settings.relink)
+                   confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=settings.model,
+                   names_ask=settings.selection != "regex-only")
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
@@ -632,7 +748,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "manifest_sha256": corpus.manifest_sha256, "corpus_id": corpus.corpus_id, "extractors": list(specs),
         "extractor_specs": {k: _spec_json(s) for k, s in specs.items()}, "outputs": dict(sorted(ex.outputs.items())),
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
-        **({"dangling_links": ex.dangling} if settings.relink == "on" else {})})
+        **({"dangling_links": ex.dangling} if settings.relink == "on" else {}),
+        **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {})})
     return root
 
 
@@ -650,13 +767,13 @@ def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, c
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
         retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
-        relink: Relink = "on", domains: Path | str | None = None) -> Path:
+        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off") -> Path:
     """A normal run: cached calls are reused, new ones are made and stored. `domains`: the folder of the protocol's
     pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm=confirm, relink=relink,
+                        confirm=confirm, relink=relink, names=names,
                         domains=str(Path(domains).resolve()) if domains is not None else None)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,

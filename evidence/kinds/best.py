@@ -32,6 +32,7 @@ from ..evidence_types import EvidenceType
 from ..protocol import Best, Protocol
 
 if TYPE_CHECKING:
+    from ..names import NameGroups
     from ..pack import RoleMap
 
 KIND = "best"
@@ -58,18 +59,25 @@ def _roles(roles: RoleMap | None) -> RoleMap:
     return RoleMap(load_pack("rag"))   # a caller without a protocol: the default pack
 
 
-def kind_of(thing: Item, best: Best, roles: RoleMap | None = None) -> str | None:
+def kind_of(thing: Item, best: Best, roles: RoleMap | None = None, groups: NameGroups | None = None) -> str | None:
     """The method kind of compared thing `thing`: its kind field (pack TypeDecl.kind_field) when that names a kind
-    of `best`, else the kind whose names hold its name field; None when neither. `roles`: the pack by role (None:
-    the rag pack)."""
+    of `best`, else the kind whose names hold its name field, else (with the names step's `groups`, D38) the kind
+    whose names hold a name of its corpus-wide group; None when none does. `roles`: the pack by role (None: the rag
+    pack)."""
     roles = _roles(roles)
     kind_field = roles.field_or_none(thing.evidence_type, "kind")
     given = thing.fields.get(kind_field) if kind_field is not None else None
     if given in best.kinds:
         return str(given)
     name_field = roles.field_or_none(thing.evidence_type, "name")
-    name = _fold(thing.fields.get(name_field, "") if name_field is not None else "")
-    return next((k for k, names in best.kinds.items() if name in {_fold(n) for n in names}), None)
+    raw = thing.fields.get(name_field, "") if name_field is not None else ""
+    name = _fold(raw)
+    found = next((k for k, names in best.kinds.items() if name in {_fold(n) for n in names}), None)
+    if found is not None or groups is None:
+        return found
+    group = groups.group_of(" ".join(str(raw).split()))
+    forms = {_fold(f) for f in groups.groups.get(group, [])} if group is not None else set()
+    return next((k for k, names in best.kinds.items() if forms & {_fold(n) for n in names}), None)
 
 
 def reason(code: str, best: Best) -> dict[str, str]:
@@ -77,7 +85,7 @@ def reason(code: str, best: Best) -> dict[str, str]:
 
 
 def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
-          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+          roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
     best = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     ty = synthesis.Types.of(protocol, roles)
@@ -86,7 +94,7 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
     if preset is not None:
         entry["reason"] = dict(preset)
         return entry, []
-    kinds = {i.item_id: k for i in ty.of_type(items, ty.thing) if (k := kind_of(i, best, roles)) is not None}
+    kinds = {i.item_id: k for i in ty.of_type(items, ty.thing) if (k := kind_of(i, best, roles, groups)) is not None}
     if len(set(kinds.values())) < 2:
         entry["reason"] = reason("too_few_kinds", best)
         return entry, []
@@ -140,12 +148,12 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
     best = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     studies, used = [], []
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles, groups=groups)
         studies.append(entry)
         used += ids
     out = {"kind": KIND, "system": synthesis.SYSTEM, "metric": best.metric.canonical, "studies": studies,
