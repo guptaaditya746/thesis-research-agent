@@ -1,0 +1,8 @@
+# The questions of the ML-papers pack (evidence/questions.py). One inventory: the methods the papers use, the
+# SciREX real-paper check's protocol (evaluation/realpapers/scirex.py scores all four name types of its run).
+questions:
+  - id: ml-names
+    question: Which methods, datasets, tasks and metrics do the papers name?
+    kind: inventory
+    truth: {target: method}
+    protocol: protocols/names.yaml

@@ -1,0 +1,25 @@
+{
+  "source": "scaffold written by hand in plan 3 Task 8, without reading any paper: the types, the ontology seed and the names protocol; words.yaml holds only the GLiNER labels of the four name types",
+  "files": {
+    "pack.yaml": "the four SciREX name types (Method, Dataset, Task, Metric) and a measured value (Task 10, SciLead); metric, dataset and measurement keep the rag pack's prefixes",
+    "words.yaml": "GLiNER labels only (the type names as plain labels); the rest is empty until the drafting helper runs",
+    "ontology.ttl": "hand-written from the CS-KG 2.0 specification (https://scholkg.kmi.open.ac.uk/cskg/ontology), no download"
+  },
+  "owed": [
+    "words.yaml drafted by a fresh helper (Claude via the exchange model, docs/claude-writer.md) from the text of 10 SciREX train-split papers only (never the test split, any gold, or SciLead); the 10 doc_ids and the helper's log are recorded here",
+    "Task 10 adds protocols/values.yaml (F9); the pack is then frozen under tag ev4-ml-pack before any scored run"
+  ],
+  "ontology": {
+    "source": "CS-KG 2.0 specification, namespace https://w3id.org/cskg/ontology#",
+    "classes": {
+      "cskg:Method": "CS-KG 2.0",
+      "cskg:Metric": "CS-KG 2.0",
+      "cskg:Material": "CS-KG 2.0",
+      "cskg:Task": "CS-KG 2.0",
+      "cskg:OtherEntity": "CS-KG 2.0",
+      "cskg:based-on": "CS-KG 2.0 (object property)"
+    },
+    "narrower_broader": [],
+    "note": "no metric classes: the pack has no canonical metrics yet"
+  }
+}

@@ -11,6 +11,8 @@
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
     evaluate review --csv REVIEW.csv
+    evaluate scirex corpus --jsonl F --out DIR [--limit N]
+    evaluate scirex score --run R --corpus C --out D [--estimate ESTIMATE.json]
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
@@ -18,6 +20,10 @@ wrong studies to upstream or downstream errors with the oracle's answer.json. `s
 domains/rag/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
 B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that question: its text is
 asked and its kind picks the answer.json shape (default: the RAG factuality question, as before).
+
+`scirex` is a real-paper check (D21, evaluation/realpapers/scirex.py): `corpus` turns SciREX JSON lines into a corpus
+plus the gold only `score` reads; `score` writes real.json and real.md, never a report.json. `--limit` is chosen with
+`evidence estimate` on the corpus; give its saved output as `--estimate` so real.md reports it.
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
@@ -210,6 +216,26 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_scirex(args: argparse.Namespace) -> int:
+    from .realpapers import scirex
+    from .realpapers.common import write_real
+
+    try:
+        if args.scirex_cmd == "corpus":
+            if args.limit is not None and args.limit < 1:
+                raise ValueError("--limit must be at least 1")
+            corpus = scirex.to_corpus(args.jsonl, args.out, limit=args.limit)
+            print(json.dumps(json.loads((corpus / scirex.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
+            return 0
+        estimate = json.loads(args.estimate.read_text(encoding="utf-8")) if args.estimate else None
+        result = scirex.report(args.run, args.corpus, estimate)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate scirex {args.scirex_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "SciREX")
+    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evaluate", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -294,6 +320,20 @@ def parser() -> argparse.ArgumentParser:
     rv = sub.add_parser("review", help="summarise a filled-in fidelity review sheet (synth review CSV)")
     rv.add_argument("--csv", type=Path, required=True, help="review-s<seed>.csv with the three checks ticked yes/no")
     rv.set_defaults(func=cmd_review)
+
+    sx = sub.add_parser("scirex", help="real-paper check: SciREX names at mention and salient-cluster level (D21)")
+    sxs = sx.add_subparsers(dest="scirex_cmd", required=True)
+    sc = sxs.add_parser("corpus", help="SciREX JSON lines -> manifest.json, papers/ and the gold (read by score only)")
+    sc.add_argument("--jsonl", type=Path, required=True, help="a SciREX split file (e.g. test.jsonl)")
+    sc.add_argument("--out", type=Path, required=True, help="the corpus directory to write")
+    sc.add_argument("--limit", type=int, help="keep the first N papers (chosen with `evidence estimate`)")
+    sc.set_defaults(func=cmd_scirex)
+    ss = sxs.add_parser("score", help="score a run of domains/ml/protocols/names.yaml -> real.json and real.md")
+    ss.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    ss.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `scirex corpus`")
+    ss.add_argument("--out", type=Path, required=True)
+    ss.add_argument("--estimate", type=Path, help="the saved output of `evidence estimate` that chose --limit")
+    ss.set_defaults(func=cmd_scirex)
     return p
 
 

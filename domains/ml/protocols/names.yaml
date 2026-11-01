@@ -1,0 +1,78 @@
+# Research protocol of the SciREX real-paper check (spec 6.12, D21): the names of the methods, datasets, tasks and
+# metrics the papers mention. An inventory over the methods (evidence/kinds/inventory.py); the other three name types
+# are extracted beside it, and evaluation/realpapers/scirex.py scores all four. No screen: every SciREX paper is an
+# ML paper. No regex step yet: the pack's words are owed to the drafting helper (domains/ml/provenance.json).
+# Each type: a GLiNER name span (gliner_dataset gives {name} for any type; its label is the pack's GLiNER label of
+# the type), then the LLM extractor configured for the type. Written by hand; its sha256 is the digest of the parsed
+# content (evidence/protocol.py).
+
+id: names
+version: 2
+kind: inventory
+domain: ml
+question: Which methods, datasets, tasks and metrics do the papers name?
+
+locate:
+  strategy: exhaustive
+
+evidence_types:
+  method:
+    description: >-
+      A method, model or algorithm the paper proposes, uses or compares with. name is the method's name as the
+      paper writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the method's name as the paper writes it}
+    roles: [method_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_condition
+  dataset:
+    description: >-
+      A dataset or benchmark the paper trains or evaluates on. name is the dataset's name as the paper writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the dataset's name as the paper writes it}
+    roles: [dataset_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_dataset
+  task:
+    description: >-
+      A task or problem the paper's methods address. name is the task's name as the paper writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the task's name as the paper writes it}
+    roles: [task_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_condition
+  metric:
+    description: >-
+      A measure the paper reports its results in. name is the metric's name as the paper writes it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the metric's name as the paper writes it}
+    roles: [metric_label]
+    merge_key: [name]
+    extractors:
+      - name: gliner_dataset
+      - name: llm_metric
+
+inventory:
+  target: method

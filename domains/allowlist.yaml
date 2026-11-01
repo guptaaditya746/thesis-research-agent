@@ -17,6 +17,9 @@
   reason: every paper has a method section and compares methods; a GLiNER label of any pack
 - word: metric
   reason: any measured quantity; the code's evidence type role (Role.METRIC) and protocol key
+- word: task
+  reason: plain noun for a piece of work; the code's extraction task (ExtractionTask, task_sha256) and agent tasks;
+    the ml pack's GLiNER label of its task type
 - word: measure
   reason: plain verb for taking a value, in any field
 - word: evaluate
