@@ -63,9 +63,12 @@ class NameGroups:
 
 
 def _guard(a: str, b: str) -> bool:
-    """Different digit runs or different single-letter tokens mean different things."""
-    def shape(s: str) -> tuple[list[str], list[str]]:
-        return re.findall(r"\d+", s), [w for w in s.split() if len(w) == 1 and w.isalpha()]
+    """Different digit runs, different tokens that hold a digit ("1a" / "1b", "x1" / "y1") or different
+    single-letter tokens mean different things."""
+    def shape(s: str) -> tuple[list[str], list[str], list[str]]:
+        words = s.split()
+        return (re.findall(r"\d+", s), [w for w in words if re.search(r"\d", w)],
+                [w for w in words if len(w) == 1 and w.isalpha()])
     return shape(a) == shape(b)
 
 
@@ -92,7 +95,8 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
         ra, rb = find(a), find(b)
         if ra != rb:
             parent[rb] = ra
-            how.setdefault(b if rb == b else rb, (step, quote))
+            how.setdefault(a, (step, quote))
+            how.setdefault(b, (step, quote))
 
     for name, variants in (seed or {}).items():
         seeded = [k for k in {clean(v) for v in [name, *variants]} if k in parent]
@@ -138,7 +142,6 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
         groups[name] = sorted(counts, key=lambda n: (-counts[n], n))
 
     matches: list[Match] = []
-    seen: set[str] = set()
     unresolved: list[Mention] = []
     for m in mentions:
         k = keys[m]
@@ -146,14 +149,11 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
         name = root_name[root]
         if k in canon:
             matches.append(Match(m, name, "seed", None))
-        elif k in seen:
-            matches.append(Match(m, name, "clean", None))
         elif k in how:
             step, quote = how[k]
             matches.append(Match(m, name, step, quote))
-        elif any(keys[o] == k for o in members[root] if o is not m) or len({keys[o] for o in members[root]}) > 1:
+        elif sum(keys[o] == k for o in mentions) > 1:
             matches.append(Match(m, name, "clean", None))
-        seen.add(k)
-        if len(members[root]) == 1:
+        if not matches or matches[-1].mention is not m:   # no step matched this mention
             unresolved.append(m)
     return NameGroups(groups, matches, unresolved)
