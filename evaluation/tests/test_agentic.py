@@ -27,7 +27,7 @@ def test_spec_is_an_agent_with_variable_determinism() -> None:
     assert isinstance(extractor, Extractor)
     spec = extractor.spec
     assert (spec.kind, spec.determinism, spec.name) == ("agent", "variable", "agentic")
-    assert spec.config["prompt_version"] == "v2" and "system-v2.txt" in spec.config["prompt_files"]
+    assert spec.config["prompt_version"] == "v3" and "system-v3.txt" in spec.config["prompt_files"]
     assert AgenticExtractor(FakeRunner({})).spec.extractor_id == spec.extractor_id
     other = AgenticExtractor(FakeRunner({}), AgentSettings(seed=7))
     assert other.spec.extractor_id != spec.extractor_id  # a config change is a new id

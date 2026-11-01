@@ -29,6 +29,21 @@ supervisor's):
   baseline condition the regex missed (condition is the gap at round 1, measurement only at round 2, where a
   two-step cascade has nothing); see Part D's as-built note.
 
+Confirmation (`Settings.confirm`, Part D's as-built note of 29 Oct): with `llm` (the default), an item that only
+GLiNER extractors found (every id in its `found_by` of kind `model`) is *unconfirmed* when the type's cascade has an
+LLM extractor; once that extractor's position has run, unconfirmed items are dropped from the merge and listed in
+its event (`unconfirmed`). In `all` every position runs, so only the drop applies. In `gaps` the confirmation is
+eager: when a type's position leaves unconfirmed items and its LLM position has not run, that position runs at once
+(a step of the same round, focus unchanged), before the merge and before a later type links to the items, so no
+link ever points at an id a later merge replaced. With `none` (runs before 29 Oct) every item counts.
+
+Relinking (`Settings.relink`, Part D's as-built note of 1 Nov): in `gaps` a type escalated in a later round is merged
+again, and an earlier item that a later extractor found with another span gets a new id. With `on` (the default)
+`merge.merge_from` maps each earlier id to the new one, the links of the other types' items follow (checked
+results and merged items), and the merge event lists the pairs (`relinked`). After each document the links that
+point to no item are listed in funnel.json (`dangling_links`, per document and as a run total, also in run.json),
+so a dangling link is never silent. With `off` (runs before 1 Nov) neither happens: those links dangled.
+
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
@@ -78,6 +93,8 @@ from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_F
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
+Confirm = Literal["none", "llm"]
+Relink = Literal["off", "on"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -98,11 +115,15 @@ class Settings:
     # the model that service served when the run was made (GET /info; execute_run fills it): every gliner_* step
     # that pins no `model` gets it, so a replay without the service builds the ids of the recorded run
     gliner_model: str | None = None
+    confirm: Confirm = "llm"                       # llm: GLiNER-only items need the LLM extractor too; none: keep all
+    relink: Relink = "on"                          # on: links follow an item a later merge gave a new id; off: as before 1 Nov
 
     def json(self) -> dict[str, Any]:
+        # `confirm` only when it is llm, `relink` only when on: the settings of a run made before them are unchanged
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
                 "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
-                "gliner_model": self.gliner_model}
+                "gliner_model": self.gliner_model, **({"confirm": self.confirm} if self.confirm == "llm" else {}),
+                **({"relink": self.relink} if self.relink == "on" else {})}
 
 
 def default_provider(alias: str) -> Any:
@@ -203,8 +224,10 @@ class Execution:
     def __init__(self, protocol: Protocol, corpus: Corpus, root: Path, run_id: str, calls: CallCache,
                  cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
                  locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
-                 phase: Literal["warm", "run"] = "run") -> None:
+                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off") -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
+        self.confirm, self.relink = confirm, relink
+        self.dangling = 0                                 # links to no item, over the run (`relink: on` only)
         self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
         self.events = Events(root / EVENTS_FILE, run_id)
@@ -235,6 +258,12 @@ class Execution:
         self.items[paper.id] = state.items()
         self.funnel[paper.id] = {"screen": state.screen, "skipped": state.skipped, "steps": state.steps,
                                  "decisions": state.decisions, "stopped_after": state.stopped_after}
+        if self.relink == "on":   # the final check: a link to no item is listed, never silent (off: runs before it)
+            ids = {i.item_id for i in self.items[paper.id]}
+            dangling = [[i.item_id, name, target] for i in self.items[paper.id] for name, target in sorted(i.links.items())
+                        if target not in ids]
+            self.funnel[paper.id]["dangling_links"] = dangling
+            self.dangling += len(dangling)
 
     def screen(self, state: DocState) -> None:
         """The screening cascade (Part D): an extractor saying "not relevant" stops it; "relevant" passes the
@@ -315,6 +344,7 @@ class Execution:
             found = state.scopes[etype]
             context = [i for t in spec.context for i in state.merged.get(t, [])]
             results = state.results.setdefault(etype, [])
+            before = len(results)    # the results the type's last merge covered (state.merged[etype])
             for p in positions:
                 ref, extractor = cascade[p]
                 if position is None and spec.cascade == "until_found" and any(r.items for _, r in results):
@@ -335,13 +365,81 @@ class Execution:
                 state.next_position[etype] = p + 1
                 if position is not None:
                     break
-            items, sources, collisions = merge.merge(results, spec)
+            # `gaps`: GLiNER items wait for the type's LLM position now, before a later type links to them (a later
+            # merge would change their ids); a step of this round at that position, with the type's focus unchanged
+            llm = self._llm_position(etype)
+            if position is not None and llm is not None and self._awaiting_llm(state, etype, results, spec):
+                ref, extractor = cascade[llm]
+                task = ExtractionTask(protocol=self.ref, evidence_type=etype,  # type: ignore[arg-type]
+                                      field_schema_sha256=spec.schema_sha256, document=state.doc, scope=found.scope,
+                                      context=tuple(i.item_id for i in context),
+                                      budget=ref.budget if extractor.spec.kind == "agent" else None,
+                                      focus=state.focus.get(etype) if llm > 0 else None)
+                if not self._unavailable(extractor, task, state, llm):
+                    call_id, result = self._call(extractor, task, state.text, state.index, spec, context, llm)
+                    results.append((call_id, result))
+                    step = ran.setdefault(llm, {"round": round_no, "position": llm, "types": [], "calls": []})
+                    step["types"].append(etype)
+                    step["calls"].append(call_id)
+                state.next_position[etype] = llm + 1
+            items, sources, collisions, remap = merge.merge_from(results, spec, before)
+            dropped = (self._unconfirmed(etype, items)
+                       if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
+            items = [i for i in items if i.item_id not in dropped]
+            relinked = self._relink(state, etype, remap, items) if self.relink == "on" else []
             state.merged[etype] = items
+            # only a merge that dropped or relinked items carries the key: a record without them is unchanged
+            unconfirmed: dict[str, Any] = {"unconfirmed": dropped} if dropped else {}
+            moved: dict[str, Any] = {"relinked": relinked} if relinked else {}
             self.events.add("merge", used=sorted({i.item_id for _, r in results for i in r.items}),
                             generated=[i.item_id for i in items], agent_id=ENGINE, group_id=state.doc.id,
                             custom={"document": state.doc.id, "evidence_type": etype, "sources": sources,
-                                    "collisions": collisions})
+                                    "collisions": collisions, **unconfirmed, **moved})
         state.steps += [ran[p] for p in sorted(ran)]
+
+    @staticmethod
+    def _relink(state: DocState, etype: str, remap: dict[str, str], items: list[Item]) -> list[list[str]]:
+        """`relink: on`: a merge of `etype` again (a later round) gave an earlier item a new id (`merge.merge_from`); the
+        links of the other types' items, checked results and merged items both, follow it. Returns the [old, new] pairs
+        of the items the last merge kept and this one keeps. An item's id does not cover its links
+        (`Item.make_id`), so no other id changes."""
+        kept, before = {i.item_id for i in items}, {i.item_id for i in state.merged.get(etype, [])}
+        moved = {old: new for old, new in remap.items() if old in before and new in kept}
+        if not moved:
+            return []
+
+        def follow(item: Item) -> Item:
+            if not any(target in moved for target in item.links.values()):
+                return item
+            return item.model_copy(update={"links": {name: moved.get(target, target) for name, target in item.links.items()}})
+
+        for t in state.results:
+            if t != etype:
+                state.results[t] = [(call_id, r.model_copy(update={"items": tuple(follow(i) for i in r.items)}))
+                                    for call_id, r in state.results[t]]
+        for t in state.merged:
+            if t != etype:
+                state.merged[t] = [follow(i) for i in state.merged[t]]
+        return sorted([old, new] for old, new in moved.items())
+
+    def _llm_position(self, etype: str) -> int | None:
+        """The cascade position of the type's first LLM extractor, the one that confirms GLiNER items; None with
+        `confirm: none` or without one."""
+        if self.confirm == "none":
+            return None
+        return next((p for p, (_, e) in enumerate(self.cascades.get(etype, [])) if e.spec.kind == "llm"), None)
+
+    def _unconfirmed(self, etype: str, items: list[Item]) -> list[str]:
+        """The ids of the items only GLiNER extractors (kind `model`) found."""
+        kind = {e.spec.extractor_id: e.spec.kind for _, e in self.cascades.get(etype, [])}
+        return [i.item_id for i in items if all(kind.get(x) == "model" for x in i.found_by)]
+
+    def _awaiting_llm(self, state: DocState, etype: str, results: list[tuple[str, ExtractionResult]],
+                      spec: EvidenceTypeSpec) -> bool:
+        """The type's results so far, merged, have unconfirmed items and its LLM position has not run yet (`gaps`)."""
+        llm = self._llm_position(etype)
+        return (llm is not None and state.next_position.get(etype, 0) <= llm
+                and bool(self._unconfirmed(etype, merge.merge(results, spec)[0])))
 
     def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
         """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the
@@ -433,8 +531,9 @@ class Execution:
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
+        dangling = {"dangling_links": self.dangling} if self.relink == "on" else {}
         self.outputs[FUNNEL_FILE] = write_json(self.root / FUNNEL_FILE, {"strategy": self.strategy,
-                                                                               "documents": self.funnel})
+                                                                               "documents": self.funnel, **dangling})
         self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
         self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
         if self.protocol.kind == "effect":
@@ -450,7 +549,7 @@ class Execution:
 
 def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
           provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
-          run_calls: RunCalls | None = None) -> None:
+          run_calls: RunCalls | None = None, confirm: Confirm = "none", relink: Relink = "off") -> None:
     """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
     except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
@@ -458,7 +557,7 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
             root = Path(tmp) / str(i)
             root.mkdir()
             Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
-                      run_calls, "warm").document(paper)
+                      run_calls, "warm", confirm, relink).document(paper)
         futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
         try:
             for future in futures:
@@ -490,12 +589,14 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
-    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls)
+    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
+                   confirm=settings.confirm, relink=settings.relink)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
     if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
-        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls)
+        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
+              settings.confirm, settings.relink)
     for paper in corpus.papers:
         ex.document(paper)
     ex.finish()
@@ -510,7 +611,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "run_id": run_id, "mode": mode, "source_run": source_run, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "manifest_sha256": corpus.manifest_sha256, "corpus_id": corpus.corpus_id, "extractors": list(specs),
         "extractor_specs": {k: _spec_json(s) for k, s in specs.items()}, "outputs": dict(sorted(ex.outputs.items())),
-        "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json()})
+        "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
+        **({"dangling_links": ex.dangling} if settings.relink == "on" else {})})
     return root
 
 
@@ -527,11 +629,13 @@ def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
 def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, cache: Path | str | None = None,
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
-        retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3) -> Path:
+        retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
+        relink: Relink = "on") -> Path:
     """A normal run: cached calls are reused, new ones are made and stored."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
-                        selection=selection, model=model, imports=list(imports or []), strategy=strategy)
+                        selection=selection, model=model, imports=list(imports or []), strategy=strategy,
+                        confirm=confirm, relink=relink)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
                        retry_errors=retry_errors, workers=workers)

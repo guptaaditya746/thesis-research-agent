@@ -438,9 +438,11 @@ def test_gaps_run_never_opens_ground_truth_and_funnel_json_has_the_documented_sh
         active[0] = False
     assert any(p.endswith("manifest.json") for p in opened) and not [p for p in opened if Path(p).name in POISON]
     funnel = read(root, "funnel.json")
-    assert set(funnel) == {"strategy", "documents"} and set(funnel["documents"]) == {"S001", "S002", "S003", "S004", "S005"}
+    # `dangling_links` (run total, per document) come with `relink: on`, the default
+    assert set(funnel) == {"strategy", "documents", "dangling_links"} and funnel["dangling_links"] == 0
+    assert set(funnel["documents"]) == {"S001", "S002", "S003", "S004", "S005"}
     for entry in funnel["documents"].values():
-        assert set(entry) == {"screen", "skipped", "steps", "decisions", "stopped_after"}
+        assert set(entry) == {"screen", "skipped", "steps", "decisions", "stopped_after", "dangling_links"}
         assert set(entry["screen"]) == {"relevant", "reason", "extractor", "status", "calls", "statuses"}
         assert all(set(s) == {"round", "position", "types", "calls"} for s in entry["steps"])
         assert all(set(d) == {"after_round", "after_position", "complete", "gap", "gap_types"} for d in entry["decisions"])

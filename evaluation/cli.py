@@ -118,7 +118,7 @@ def cmd_rag(args: argparse.Namespace) -> int:
         raise SystemExit("evaluate rag-baseline: --oracle-passages takes no --k, --retrieval or --max-chars")
     answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
                           mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
-                          seed=args.seed, oracle=args.oracle_passages)
+                          seed=args.seed, oracle=args.oracle_passages, max_tokens=args.max_tokens)
     print(f"{_write_answer(answer, args.out)}: {_summary(answer)}")
     return 0
 
@@ -253,6 +253,7 @@ def parser() -> argparse.ArgumentParser:
                         "(every paper seen)")
     r.add_argument("--k", type=int, help="passages in all (global, default 8) or per paper (per_paper, default 2)")
     r.add_argument("--max-chars", type=int, default=1500, help="passage size limit")
+    r.add_argument("--max-tokens", type=int, help="answer call's token limit (default 4096 global, 16384 per_paper)")
     r.add_argument("--oracle-passages", action="store_true",
                    help="diagnostic: the paragraphs needed to interpret the true values instead of BM25 (reads "
                         "ground_truth.json); --k, --retrieval and --max-chars do not apply and are rejected")

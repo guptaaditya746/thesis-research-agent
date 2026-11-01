@@ -138,6 +138,8 @@
                             "description": "percent of either budget at which the agent gets a one-time notice"},
         "repeat_stop": {"type": "integer", "minimum": 0,
                         "description": "identical commands in a row that end research; 0 = never"},
+        "repeat_action": {"const": "refuse",
+                          "description": "prompt v3: from repeat_stop identical commands in a row the command is not run and research goes on; absent = research ends (v1, v2)"},
         "draft_file": {"type": ["string", "null"],
                        "description": "the agent's draft answer in scratch/, taken when the run ends without an answer"},
         "m1_notices": {"type": "boolean",

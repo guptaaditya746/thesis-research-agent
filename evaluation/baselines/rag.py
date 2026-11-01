@@ -62,6 +62,7 @@ ORACLE_SYSTEM = "rag-oracle-passages"   # the diagnostic that reads ground_truth
 MODES = ("global", "per_paper")
 DEFAULT_MODE = "global"
 K = {"global": 8, "per_paper": 2}  # default k per mode
+MAX_TOKENS = {"global": 4096, "per_paper": 16_384}  # answer call limit per mode (per_paper lists every paper)
 MAX_CHARS = 1_500
 TOKEN = re.compile(r"\w+")
 
@@ -187,10 +188,11 @@ def mapping_text(answer: CitedAnswer, kept: list[dict[str, Any]]) -> str:
 def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None, k: int | None = None,
                  mode: str = DEFAULT_MODE, max_chars: int = MAX_CHARS, cache: JsonlCache | None = None,
                  model_id: str | None = None, seed: int = 0, oracle: bool = False,
-                 question_id: str | None = None) -> dict[str, Any]:
+                 question_id: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
     """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
     `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json). `question_id`: a
-    question of evidence/questions.yaml (not with `question`; default the RAG factuality question)."""
+    question of evidence/questions.yaml (not with `question`; default the RAG factuality question).
+    `max_tokens`: the answer call's limit (default `MAX_TOKENS[mode]`, oracle 4096; recorded in `settings` only per_paper)."""
     if question is not None and question_id is not None:
         raise ValueError("give question or question_id, not both")
     params = kind_params(question_id) if question_id is not None else None
@@ -205,8 +207,11 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None,
         hits = retrieve(passages(corpus, max_chars), question, k, mode)
         k = K[mode] if k is None else k
         system, settings = SYSTEM, {"retrieval": mode, "k": k, "max_chars": max_chars, "retriever": "bm25okapi"}
+    limit = max_tokens if max_tokens is not None else MAX_TOKENS["global" if oracle else mode]
+    if mode == "per_paper" and not oracle:
+        settings["max_tokens"] = limit  # global answers keep their old settings (their cache records still hit)
     answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
-                                seed=seed, output_type=CitedAnswer)
+                                seed=seed, max_tokens=limit, output_type=CitedAnswer)
     call.pop("cached")  # so a cached rerun writes the same bytes
     citations, dropped = keep_citations(answer.citations, hits)
     effect = params is None or params.kind == "effect"

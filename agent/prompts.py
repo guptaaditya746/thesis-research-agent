@@ -16,12 +16,15 @@ Versions:
   `2025-acl-long-892.md`; the manifest has no titles), claim a fact in the command that finds it,
   keep ./answer-draft.json up to date, finish research by about 75% of the budget, what the
   budget notices and output masking mean, and a conclude reply that is the bare answer object.
+- v3 (EV3 fixes): v2 with one sentence changed: from the {{repeat_stop}}th identical command in a
+  row the command is not run (loop.settings_for: repeat_action "refuse"), instead of research
+  ending. Its task, spawn and attach files are v2's, copied byte for byte.
 The attach step (agent/attach.py) has its own attach-<version>.txt, and uses the run's version:
 attach-v2 has v2's corpus paragraph and claim rules verbatim (test_attach checks both versions).
 
 Subagents (row 2.12, agent/spawn.py): with `agent run --spawn on` the system prompt gets the
 spawn block spawn-<version>.txt (spawn-<version>-baseline.txt for claim_off: the block minus
-its claim lines), inserted before the draft-answer paragraph; v2 has one, v1 none (the M1-real
+its claim lines), inserted before the draft-answer paragraph; v2 and v3 have one, v1 none (the M1-real
 runs had no spawn). A subagent has its own prompts sub-<version>.txt (-baseline.txt without
 the claim block, as for the main prompt) and sub-task-<version>.txt (load_sub).
 """
