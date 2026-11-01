@@ -1,5 +1,6 @@
 """No topic words in code (D35): every word of every domain pack lives only in `domains/<name>/`, never in the
-code folders CHECKED_DIRS, apart from the generic words of domains/allowlist.yaml (each with its reason)."""
+code folders CHECKED_DIRS, apart from the generic words of domains/allowlist.yaml (each with its reason) and the
+legacy files of LEGACY (each with its reason)."""
 from __future__ import annotations
 
 import re
@@ -9,10 +10,23 @@ import yaml
 
 from evidence.pack import DOMAINS, load_pack
 
-CHECKED_DIRS = ["evidence", "agent"]
+CHECKED_DIRS = ["evidence", "agent", "synth"]
 ROOT = DOMAINS.parent
 SUFFIXES = {".py", ".md", ".txt", ".yaml"}
-SKIPPED = {"tests", "fixtures", "__pycache__"}
+# examples: synth/examples/rag-demo-* are committed corpora, pinned byte for byte (D36), not code.
+SKIPPED = {"tests", "fixtures", "__pycache__", "examples"}
+# Files kept with their topic words, by path, each with its reason (D8: replay needs their exact bytes).
+_REPLAY = ("kept byte for byte so corpora built before the prompts became recipe templates replay with their "
+           "cached calls (D36); the v3 template filled from the default recipe is this text")
+LEGACY = {
+    "synth/prompts/render.txt": "the paper prompt without the statement stage (--no-statements); its sha256 is pinned "
+                                "so old cache keys hold (test_no_statements_cache_keys_are_unchanged), and it is "
+                                "still what --no-statements sends",
+    "synth/prompts/render-v2.txt": _REPLAY + " (render-v3.txt)",
+    "synth/prompts/statements-v1.txt": _REPLAY + " (statements-v2.txt)",
+    "synth/prompts/blind.txt": "the blind re-extraction prompt before blind-v2.txt, kept for replay (D36)",
+    "synth/prompts/blind-v2.txt": _REPLAY + " (blind-v3.txt)",
+}
 
 
 def regex_words(pattern: str) -> set[str]:
@@ -76,9 +90,10 @@ def allowlist() -> set[str]:
 
 
 def code_files(dirs: list[str]) -> list[Path]:
-    """The .py, .md, .txt and .yaml files under `dirs`, without tests/ and fixtures."""
+    """The .py, .md, .txt and .yaml files under `dirs`, without tests/, fixtures, examples and the LEGACY files."""
     return sorted(f for d in dirs for f in (ROOT / d).rglob("*")
-                  if f.suffix in SUFFIXES and f.is_file() and not SKIPPED & set(f.relative_to(ROOT).parts))
+                  if f.suffix in SUFFIXES and f.is_file() and not SKIPPED & set(f.relative_to(ROOT).parts)
+                  and f.relative_to(ROOT).as_posix() not in LEGACY)
 
 
 def text_of(f: Path) -> str:
@@ -95,6 +110,10 @@ def test_pack_words_reduce_patterns_to_words() -> None:
 
 def test_every_allowlisted_word_is_a_pack_word() -> None:
     assert allowlist() - pack_words() == set()
+
+
+def test_every_legacy_file_exists_and_names_its_reason() -> None:
+    assert all((ROOT / path).is_file() and reason.strip() for path, reason in LEGACY.items())
 
 
 def test_moved_prompt_words_fill_the_default_pack_prompts_as_before() -> None:

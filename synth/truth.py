@@ -1,13 +1,14 @@
 """Structured ground truth: a seeded set of fictional studies for a protocol's question.
 
-A study has a control and a treatment condition (the roles `synthesis.compare` of the protocol names;
-for the RAG question `baseline` and `rag`) plus 0-2 distractor conditions, one question metric (one of
-the protocol's `synthesis.metrics`) plus 1-2 distractor metrics, two datasets (the first is the main
-one), a measurement for every condition x metric x dataset, and an author claim that agrees with the
-data. The effect is always `evidence.rules.effect` with the protocol's parameters on the main dataset's
-treatment/control pair of the question metric, so the generator and the engine use one definition: the
-protocol (`spec`, its `synthesis` block; the default is `domains/rag/protocols/rag-factuality.yaml`).
-Randomness comes only from one `random.Random(seed)`; there is no clock.
+A study has a control and a treatment condition (the roles `synthesis.compare` of the protocol names)
+plus 0-2 distractor conditions, one question metric (one of the protocol's `synthesis.metrics`) plus 1-2
+distractor metrics, two datasets (the first is the main one), a measurement for every condition x metric x
+dataset, and an author claim that agrees with the data. The effect is always `evidence.rules.effect` with the
+protocol's parameters on the main dataset's treatment/control pair of the question metric, so the generator
+and the engine use one definition: the protocol (`spec`, its `synthesis` block; the default is the recipe's
+`effect_protocol`). Every name, context and value range comes from the recipe (`domains/<name>/generator.yaml`,
+synth/recipe.py; default the default pack's); the code holds no topic word. Randomness comes only from one
+`random.Random(seed)`; there is no clock.
 
 The benchmark knobs (the supervisor's variants of 14 Oct, section 6: duplicated studies, missing
 information, methodological limitations, unusually large effects; the irrelevant papers and the
@@ -15,8 +16,8 @@ mechanics are ours; contract docs/evidence-system.md F2) change the set after it
 own `random.Random(f"synth:{seed}:{knob}")` stream, so the plain set (every knob 0) stays byte for byte
 what it was:
 
-- outliers: supporting studies whose treatment/control pair is drawn again with an improvement of
-  0.30 to 0.45 (the usual one is 0.03 to 0.15);
+- outliers: supporting studies whose treatment/control pair is drawn again with an improvement in the
+  recipe's `effects.large` (the usual one is in `effects.supports`);
 - duplicates: extra studies, ids continuing the sequence, that report an existing study's values again;
 - missing: studies whose control (or, alternately, treatment) measurement on the question metric is
   dropped from both datasets, so the paper never states it and the effect is undetermined;
@@ -41,28 +42,29 @@ import random
 from dataclasses import dataclass, field, replace
 
 from evidence import protocol, rules
-from evidence.pack import protocol_path
+from evidence.pack import DOMAINS
 from evidence.protocol import Synthesis
-from synth import vocab
+from synth.recipe import MetricSpec, Recipe, default_recipe, effect_protocol_path
 
 DIRECTIONS = rules.DIRECTIONS
-DEFAULT_PROTOCOL = protocol_path("rag", "rag-factuality")
+DEFAULT_PROTOCOL = effect_protocol_path(default_recipe())
 # The claim a contradictory paper states instead: the usual spin (an improvement where there is none),
 # or "no effect" where the data do show one.
 FALSE_CLAIM = {"supports": "no_effect", "contradicts": "improves", "neutral": "improves"}
 # A decoy lies more than this from every true value: the evaluation tolerance (0.005) plus a margin.
 DECOY_GAP = 0.0075
 DEFAULT_MIX = {"supports": 0.6, "contradicts": 0.2, "neutral": 0.2}
-LARGE_DELTA = (0.30, 0.45)             # an outlier's improvement (--outliers), far above the usual 0.03-0.15
 MISSING_SIDES = ("control", "treatment")   # --missing drops these in turn (the protocol's compare roles)
-IRRELEVANT_TOPICS = ("survey", "other")    # --irrelevant alternates these templates (vocab.IRRELEVANT)
+IRRELEVANT_TOPICS = ("survey", "other")    # --irrelevant alternates these templates (recipe text.irrelevant)
 KNOBS = ("duplicates", "missing", "outliers", "irrelevant")
 HARD_SHARE = 1 / 3                     # --hard: the share of studies that report more than one experiment
 HARD_EXTRAS = (("subset",), ("ablation",), ("subset", "ablation"))   # the further experiments, drawn per study
 
 
-def default_spec() -> Synthesis:
-    return protocol.load(DEFAULT_PROTOCOL).synthesis
+def default_spec(recipe: Recipe | None = None) -> Synthesis:
+    """The synthesis block of the recipe's effect protocol (default: the default pack's)."""
+    recipe = recipe or default_recipe()
+    return protocol.load(effect_protocol_path(recipe), None if recipe.root == DOMAINS else recipe.root).synthesis
 
 
 def true_claim(spec: Synthesis, direction: str) -> str:
@@ -137,6 +139,7 @@ class Study:
     effect: Effect
     claim: str                     # agrees with the effect (with the data's direction when undetermined)
     false_claim: str               # what a contradictory paper states
+    recipe: Recipe = field(repr=False, compare=False)   # the words the study was drawn from (and is written with)
     decoy: float | None = None     # a wrong treatment value a contradictory abstract states (odd studies)
     relevant: bool = True          # False: no experiment at all (--irrelevant); nothing below applies
     topic: str | None = None       # irrelevant only: the template, one of IRRELEVANT_TOPICS
@@ -235,12 +238,20 @@ def _neutral_band(min_effect: float) -> tuple[int, ...]:
     return band
 
 
-def _improvement(rng: random.Random, direction: str, min_effect: float, large: bool = False) -> float:
+def _improvement(rng: random.Random, direction: str, min_effect: float, recipe: Recipe, large: bool = False) -> float:
+    """A difference of `direction` in the recipe's `effects` ranges (`large`: an outlier's, supports only)."""
     if direction == "supports":
-        return _thousandths(rng, *LARGE_DELTA) if large else _thousandths(rng, 0.03, 0.15)
+        return _thousandths(rng, *recipe.effects["large" if large else "supports"])
     if direction == "contradicts":
-        return -_thousandths(rng, 0.03, 0.10)
+        return -_thousandths(rng, *recipe.effects["contradicts"])
     return rng.choice((1, -1)) * rng.choice(_neutral_band(min_effect)) / 1000
+
+
+def metric_spec(recipe: Recipe, metric: Metric) -> MetricSpec:
+    """The recipe's entry of a study's metric: a question metric by its canonical name, another by its name."""
+    if metric.canonical != "other":
+        return next(m for m in recipe.question_metrics if m.canonical == metric.canonical)
+    return next(m for m in recipe.other_metrics if metric.name in (f[0] for f in m.forms))
 
 
 def _far(v: float, taken: set[float]) -> bool:
@@ -249,31 +260,32 @@ def _far(v: float, taken: set[float]) -> bool:
     return all(abs(v - x) > DECOY_GAP for x in taken)
 
 
-def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float], spec: Synthesis,
+def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float], spec: Synthesis, recipe: Recipe,
           large: bool = False) -> tuple[float, float]:
     """(control, treatment) on a question metric with the given effect direction under rules.effect
-    (`large`: an outlier-sized improvement, supports only)."""
-    low, high = (0.35, 0.80) if metric.higher_is_better else (0.10, 0.45)
+    (`large`: an outlier-sized improvement, supports only); the control value from the metric's `pair_range`."""
+    ms = metric_spec(recipe, metric)
+    low, high = ms.pair_range or ms.range
     while True:
         base = _thousandths(rng, low, high)
-        delta = _improvement(rng, direction, spec.min_effect, large)
+        delta = _improvement(rng, direction, spec.min_effect, recipe, large)
         treat = round(base + delta if metric.higher_is_better else base - delta, 3)
         if (round(treat * 1000) % 10 and 0.05 <= treat <= 0.95 and _far(base, taken) and _far(treat, taken)
                 and rules.effect(treat, base, metric.higher_is_better, spec.min_effect)[0] == direction):
             return base, treat
 
 
-def _value(rng: random.Random, metric: Metric, taken: set[float]) -> float:
+def _value(rng: random.Random, metric: Metric, taken: set[float], recipe: Recipe) -> float:
+    """A value not under test, in the metric's `range` (seconds in hundredths, fractions in thousandths)."""
+    low, high = metric_spec(recipe, metric).range
     while True:
         if metric.unit == "seconds":
-            k = rng.randint(40, 350)
+            k = rng.randint(round(low * 100), round(high * 100))
             if not k % 10:          # 1.00 or 2.50 would equal a count denominator or a round filler number
                 continue
             v = k / 100
-        elif metric.canonical == "other":
-            v = _thousandths(rng, 0.10, 0.55)
         else:
-            v = _thousandths(rng, 0.30, 0.80) if metric.higher_is_better else _thousandths(rng, 0.08, 0.50)
+            v = _thousandths(rng, low, high)
         if _far(v, taken):
             return v
 
@@ -284,37 +296,47 @@ def _names_clash(names: list[str]) -> bool:
     return any(a != b and a in b for a in low for b in low)
 
 
-def make_study(rng: random.Random, index: int, direction: str, spec: Synthesis) -> Study:
+def make_study(rng: random.Random, index: int, direction: str, spec: Synthesis, recipe: Recipe) -> Study:
+    """One study of `direction`, its names drawn from the recipe: a name of each compared side (`recipe.sides`, by
+    the protocol's roles), 0-2 other conditions, a form of the question metric, 1-2 other metrics (each written by
+    its first form) and two contexts."""
     sid = f"S{index + 1:03d}"
     control_role, treatment_role = spec.compare.control, spec.compare.treatment
-    names_of = {control_role: vocab.BASELINES, treatment_role: vocab.RAGS}
-    unknown = [m for m in spec.metric_names if m not in vocab.QUESTION_METRICS]
+    missing = [r for r in (control_role, treatment_role) if r not in recipe.sides]
+    if missing:
+        raise ValueError(f"the recipe of {recipe.domain} has no side for the compared roles {missing}")
+    names_of = {role: recipe.sides[role].names for role in (control_role, treatment_role)}
+    question = {m.canonical: m for m in recipe.question_metrics}
+    unknown = [m for m in spec.metric_names if m not in question]
     if unknown:
-        raise ValueError(f"synth has no vocabulary for the question metrics {unknown}")
+        raise ValueError(f"metric not in recipe: the recipe of {recipe.domain} has no question metric {unknown}")
     while True:
-        others = rng.sample(vocab.OTHERS, rng.randint(0, 2))
+        others = rng.sample(recipe.others, rng.randint(0, 2))
         picks = [(control_role, rng.choice(names_of[control_role])), (treatment_role, rng.choice(names_of[treatment_role]))]
         picks += [("other", o) for o in others]
         canonical = rng.choice(sorted(spec.metric_names))
-        qname = rng.choice(vocab.QUESTION_METRICS[canonical])
-        extra = rng.sample(vocab.OTHER_METRICS, rng.randint(1, 2))
-        names = [n for _, c in picks for n in c[:2]] + list(qname[:2]) + [n for m in extra for n in m[1:3]]
+        qname = rng.choice(question[canonical].forms)
+        extra = rng.sample(recipe.other_metrics, rng.randint(1, 2))
+        names = [n for _, c in picks for n in (c.label, c.synonym)] + list(qname[:2])
+        names += [n for m in extra for n in m.forms[0][:2]]
         if not _names_clash(names):
             break
-    conditions = tuple(
-        Condition(f"{sid}.c{i + 1}", role, label, syn, desc,
-                  vocab.CODES.get(role) or vocab.OTHER_CODES[i - 2])
-        for i, (role, (label, syn, desc)) in enumerate(picks))
-    metrics = (Metric(f"{sid}.k1", canonical, *qname, spec.higher_is_better(canonical), "fraction"),) + tuple(
-        Metric(f"{sid}.k{i + 2}", "other", name, abbr, desc, hib, unit)
-        for i, (_, name, abbr, desc, hib, unit) in enumerate(extra))
-    datasets = tuple(rng.sample(vocab.DATASETS, 2))
+    codes = [c.code if role != "other" else recipe.other_codes[i - 2] for i, (role, c) in enumerate(picks)]
+    if None in codes:
+        raise ValueError(f"the recipe of {recipe.domain} gives a compared name no code (its short name at the "
+                         "distributed level)")
+    conditions = tuple(Condition(f"{sid}.c{i + 1}", role, c.label, c.synonym, c.description, code)
+                       for i, ((role, c), code) in enumerate(zip(picks, codes)))
+    metrics = (Metric(f"{sid}.k1", canonical, *qname, spec.higher_is_better(canonical), question[canonical].unit),)
+    metrics += tuple(Metric(f"{sid}.k{i + 2}", "other", *m.forms[0], m.higher_is_better, m.unit)
+                     for i, m in enumerate(extra))
+    datasets = tuple(rng.sample(recipe.contexts, 2))
     control, treatment = conditions[0], conditions[1]
     q = metrics[0]
     values: dict[tuple[str, str, str], float] = {}
     taken: set[float] = set()
     for dataset in datasets:            # both datasets show the same direction, so either pair answers alike
-        b, t = _pair(rng, q, direction, taken, spec)
+        b, t = _pair(rng, q, direction, taken, spec, recipe)
         values[(control.id, q.id, dataset)], values[(treatment.id, q.id, dataset)] = b, t
         taken |= {b, t}
         if dataset == datasets[0]:      # the complex level writes this difference ("7.0 percentage points"):
@@ -325,7 +347,7 @@ def make_study(rng: random.Random, index: int, direction: str, spec: Synthesis) 
             for cond in conditions:
                 key = (cond.id, metric.id, dataset)
                 if key not in values:
-                    values[key] = _value(rng, metric, taken)
+                    values[key] = _value(rng, metric, taken, recipe)
                     taken.add(values[key])
                 measurements.append(Measurement(f"{sid}.m{len(measurements) + 1}", cond.id, metric.id,
                                                 dataset, values[key]))
@@ -334,21 +356,22 @@ def make_study(rng: random.Random, index: int, direction: str, spec: Synthesis) 
     got, delta = rules.effect(m_treat.value, m_control.value, q.higher_is_better, spec.min_effect)
     assert got == direction, (sid, got, direction)
     false_claim = FALSE_CLAIM[direction]
-    decoy = (_decoy(rng, q, m_control.value, false_claim, [m.value for m in measurements], spec)
+    decoy = (_decoy(rng, q, m_control.value, false_claim, [m.value for m in measurements], spec, recipe)
              if index % 2 else None)
     return Study(sid, index, conditions, metrics, datasets, tuple(measurements),
-                 Effect(got, delta, q.id, m_treat.id, m_control.id), true_claim(spec, direction), false_claim, decoy)
+                 Effect(got, delta, q.id, m_treat.id, m_control.id), true_claim(spec, direction), false_claim, recipe,
+                 decoy)
 
 
 def _decoy(rng: random.Random, metric: Metric, base: float, claim: str, values: list[float],
-           spec: Synthesis) -> float | None:
+           spec: Synthesis, recipe: Recipe) -> float | None:
     """A treatment value that fits the false claim under rules.effect and lies more than DECOY_GAP from
     every true value of the study, so an extractor that takes it can never score it as a correct
     measurement. "No effect" leaves a narrow band between DECOY_GAP and min_effect; when other values
     block it, the study gets no decoy (None) rather than a misleading one."""
     direction = spec.claim_map[claim]
     for _ in range(200):
-        d = _improvement(rng, direction, spec.min_effect)
+        d = _improvement(rng, direction, spec.min_effect, recipe)
         v = round(base + d if metric.higher_is_better else base - d, 3)
         if (round(v * 1000) % 10 and 0.05 <= v <= 0.95 and all(abs(v - x) > DECOY_GAP for x in values)
                 and rules.effect(v, base, metric.higher_is_better, spec.min_effect)[0] == direction):
@@ -372,7 +395,7 @@ def redrawn(rng: random.Random, study: Study, direction: str, spec: Synthesis, *
     while True:
         taken, new = set(others), {}
         for dataset in study.datasets:
-            b, t = _pair(rng, q, direction, taken, spec, large)
+            b, t = _pair(rng, q, direction, taken, spec, study.recipe, large)
             new[(control.id, dataset)], new[(treatment.id, dataset)] = b, t
             taken |= {b, t}
             if dataset == main:
@@ -386,7 +409,7 @@ def redrawn(rng: random.Random, study: Study, direction: str, spec: Synthesis, *
     got, delta = rules.effect(m_treat.value, m_control.value, q.higher_is_better, spec.min_effect)
     assert got == direction, (study.study_id, got, direction)
     false_claim = FALSE_CLAIM[direction]
-    decoy = (_decoy(rng, q, m_control.value, false_claim, [m.value for m in measurements], spec)
+    decoy = (_decoy(rng, q, m_control.value, false_claim, [m.value for m in measurements], spec, study.recipe)
              if study.index % 2 else None)
     return replace(study, measurements=measurements, effect=Effect(got, delta, q.id, m_treat.id, m_control.id),
                    claim=true_claim(spec, direction), false_claim=false_claim, decoy=decoy)
@@ -429,13 +452,14 @@ def without(study: Study, side: str) -> Study:
                    effect=effect, missing=side, decoy=None)
 
 
-def irrelevant_study(index: int, topic: str) -> Study:
-    """A paper with no treatment/control experiment (a survey, or a paper on another topic): nothing to
-    extract, expected to be screened out."""
+def irrelevant_study(index: int, topic: str, recipe: Recipe) -> Study:
+    """A paper with no treatment/control experiment (a survey, or a paper on another topic; its text from the
+    recipe's `text.irrelevant`): nothing to extract, expected to be screened out."""
     if topic not in IRRELEVANT_TOPICS:
         raise ValueError(f"irrelevant topic must be one of {IRRELEVANT_TOPICS}, not {topic!r}")
     return Study(f"S{index + 1:03d}", index, (), (), (), (), Effect("undetermined", None, None, None, None,
-                                                                   "screened_out"), "", "", relevant=False, topic=topic)
+                                                                   "screened_out"), "", "", recipe,
+                 relevant=False, topic=topic)
 
 
 def with_experiments(rng: random.Random | None, study: Study, spec: Synthesis) -> Study:
@@ -445,7 +469,9 @@ def with_experiments(rng: random.Random | None, study: Study, spec: Synthesis) -
     `<treatment> without <component>`, role other), every metric for each. As in make_study, every new
     value lies more than DECOY_GAP from every value of the study, the decoy and the main difference."""
     sid, q, dataset = study.study_id, study.primary, study.datasets[0]
-    main = Experiment(f"{sid}.e1", vocab.MAIN_EXPERIMENT, tuple(c.id for c in study.conditions), study.datasets)
+    recipe = study.recipe
+    words = recipe.text.hard
+    main = Experiment(f"{sid}.e1", words.main_experiment, tuple(c.id for c in study.conditions), study.datasets)
     ms = [replace(m, experiment=main.id) for m in study.measurements]
     if rng is None:
         return replace(study, measurements=tuple(ms), experiments=(main,))
@@ -454,9 +480,9 @@ def with_experiments(rng: random.Random | None, study: Study, spec: Synthesis) -
     others = [n for c in study.conditions if c is not treatment for n in (c.label, c.synonym)]
     others += [n for k in study.metrics for n in (k.name, k.abbr)]
     while True:                         # the ablation contains the treatment's label, by design; nothing else may
-        subset, component = rng.choice(vocab.SUBSET_EXPERIMENTS), rng.choice(vocab.ABLATED)
+        subset, component = rng.choice(words.subset_experiments), rng.choice(words.ablated)
         label = f"{treatment.label} without {component}"
-        new = [vocab.MAIN_EXPERIMENT] + [{"subset": subset, "ablation": label}[k] for k in kinds]
+        new = [words.main_experiment] + [{"subset": subset, "ablation": label}[k] for k in kinds]
         if not _names_clash(others + new):
             break
     taken = {m.value for m in ms} | {abs(round(study.value_of(study.effect.treatment)
@@ -466,20 +492,20 @@ def with_experiments(rng: random.Random | None, study: Study, spec: Synthesis) -
     for kind in kinds:
         eid = f"{sid}.e{len(experiments) + 1}"
         if kind == "subset":
-            b, t = _pair(rng, q, rng.choice(DIRECTIONS), taken, spec)
+            b, t = _pair(rng, q, rng.choice(DIRECTIONS), taken, spec, recipe)
             e, pair = Experiment(eid, subset, (control.id, treatment.id), (dataset,)), {control.id: b, treatment.id: t}
         else:
             ablation = Condition(f"{sid}.c{len(conditions) + 1}", "other", label, label,
-                                 vocab.ABLATION_DESCRIPTION.format(component=component), "")
+                                 words.ablation_description.format(component=component), "")
             conditions.append(ablation)
-            b, t = _pair(rng, q, "supports", taken, spec)
-            e, pair = (Experiment(eid, vocab.ABLATION_EXPERIMENT, (treatment.id, ablation.id), (dataset,)),
+            b, t = _pair(rng, q, "supports", taken, spec, recipe)
+            e, pair = (Experiment(eid, words.ablation_experiment, (treatment.id, ablation.id), (dataset,)),
                        {ablation.id: b, treatment.id: t})
         taken |= {b, t}
         experiments.append(e)
         for metric in study.metrics:
             for cid in e.conditions:
-                v = pair[cid] if metric.id == q.id else _value(rng, metric, taken)
+                v = pair[cid] if metric.id == q.id else _value(rng, metric, taken, recipe)
                 taken.add(v)
                 ms.append(Measurement(f"{sid}.m{len(ms) + 1}", cid, metric.id, dataset, v, eid))
     return replace(study, conditions=tuple(conditions), measurements=tuple(ms), experiments=tuple(experiments))
@@ -529,8 +555,8 @@ def flagged(studies: list[Study], spec: Synthesis) -> list[Study]:
     return out
 
 
-def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int = 0, missing: int = 0,
-               outliers: int = 0, irrelevant: int = 0) -> list[Study]:
+def with_knobs(seed: int, base: list[Study], spec: Synthesis, recipe: Recipe, *, duplicates: int = 0,
+               missing: int = 0, outliers: int = 0, irrelevant: int = 0) -> list[Study]:
     """The benchmark knobs applied to a plain study set, each from its own stream (`synth:<seed>:<knob>`):
     outliers among the supporting studies, duplicates of any study (ids after the set), missing among the
     studies that are neither outliers nor duplicated nor --hard studies with further experiments (control,
@@ -576,7 +602,7 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int
         i = next(i for i, s in enumerate(studies) if s.study_id == sid)
         studies[i] = without(studies[i], MISSING_SIDES[k % len(MISSING_SIDES)])
     for k in range(irrelevant):
-        studies.append(irrelevant_study(n + duplicates + k, IRRELEVANT_TOPICS[k % len(IRRELEVANT_TOPICS)]))
+        studies.append(irrelevant_study(n + duplicates + k, IRRELEVANT_TOPICS[k % len(IRRELEVANT_TOPICS)], recipe))
     studies = flagged(studies, spec)
     found_duplicates = {s.study_id: s.duplicate_of for s in studies if s.duplicate_of}
     if found_duplicates != planted_duplicates:
@@ -592,27 +618,28 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int
 
 
 def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synthesis | None = None, *,
-             duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0,
-             hard: bool = False) -> list[Study]:
-    """`n` studies for the protocol's synthesis block `spec` (default: the RAG protocol); the share of each
-    true effect direction follows `mix` (default 0.6/0.2/0.2); then `hard` (`hardened`), then the knobs. A study whose
-    treatment/control pair equals an earlier study's (on either dataset) is drawn again, so equal pairs
-    always mean one study; this never happens for the seeds in use, and the plain set is byte for byte
-    what it was."""
-    spec = spec or default_spec()
+             recipe: Recipe | None = None, duplicates: int = 0, missing: int = 0, outliers: int = 0,
+             irrelevant: int = 0, hard: bool = False) -> list[Study]:
+    """`n` studies drawn from `recipe` (default: the default pack's) for the protocol's synthesis block `spec`
+    (default: the recipe's effect protocol's); the share of each true effect direction follows `mix` (default
+    0.6/0.2/0.2); then `hard` (`hardened`), then the knobs. A study whose treatment/control pair equals an earlier
+    study's (on either dataset) is drawn again, so equal pairs always mean one study; this never happens for the
+    seeds in use, and the plain set is byte for byte what it was."""
+    recipe = recipe or default_recipe()
+    spec = spec or default_spec(recipe)
     rng = random.Random(seed)
     counts = effect_counts(n, mix or DEFAULT_MIX)
     directions = [d for d in DIRECTIONS for _ in range(counts[d])]
     rng.shuffle(directions)
     studies: list[Study] = []
     for i, d in enumerate(directions):
-        study = make_study(rng, i, d, spec)
+        study = make_study(rng, i, d, spec, recipe)
         while collides(study, studies):
-            study = make_study(rng, i, d, spec)
+            study = make_study(rng, i, d, spec, recipe)
         studies.append(study)
     if hard:
         studies = hardened(seed, studies, spec)
-    return with_knobs(seed, studies, spec, duplicates=duplicates, missing=missing, outliers=outliers,
+    return with_knobs(seed, studies, spec, recipe, duplicates=duplicates, missing=missing, outliers=outliers,
                       irrelevant=irrelevant)
 
 

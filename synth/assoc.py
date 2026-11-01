@@ -1,7 +1,7 @@
 """Is each value written next to its own condition, metric and dataset?
 
 Locating a value string proves the number is in the paper, not that it is attached to the right fact: a
-writer that swaps the rag and baseline numbers passes every presence check while the ground truth then
+writer that swaps the treatment and control numbers passes every presence check while the ground truth then
 says the opposite effect. So, where a value is written:
 
 - in a table: its row names its condition (full name or code) and no other; its column header names its

@@ -13,7 +13,6 @@ from evaluation.expected import expected
 from evaluation.truth import TYPES, GroundTruth
 from evidence import protocol as protocol_module
 from evidence.questions import QuestionTruth
-from synth import vocab
 
 ROOT = Path(__file__).resolve().parents[2]
 MIXED = ROOT / "tests" / "EV2" / "corpora" / "rag-claude-s1-mixed" / "ground_truth.json"
@@ -86,7 +85,7 @@ def test_inventory_datasets_are_vocab_names(mixed):
     got = expected(mixed, "inventory", QuestionTruth(target="dataset"))
     assert got["kind"] == "inventory" and got["target"] == "dataset" and got["entries"]
     for entry in got["entries"]:
-        assert entry["name"] in vocab.DATASETS
+        assert entry["name"] in canon.RECIPE.contexts
         assert entry["papers"] and entry["papers"] == sorted(entry["papers"])
 
 
@@ -122,7 +121,8 @@ def test_kind_of_matches_best_protocol():
     for kind, names in kinds.items():
         for name in names:
             assert canon.KIND_OF[canon.key("condition", name)] == kind, name
-    assert set(canon.KIND_OF) == {label for label, _, _ in (*vocab.BASELINES, *vocab.RAGS, *vocab.OTHERS)}
+    recipe = canon.RECIPE
+    assert set(canon.KIND_OF) == {n.label for n in (*[n for s in recipe.sides.values() for n in s.names], *recipe.others)}
 
 
 def test_best_uses_main_experiment_only(tmp_path):

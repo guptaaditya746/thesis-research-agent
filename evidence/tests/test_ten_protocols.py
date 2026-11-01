@@ -8,7 +8,8 @@ import pytest
 
 from evidence import engine, protocol, questions
 from evidence.pack import DOMAINS
-from synth import vocab
+from evidence.protocol import DEFAULT_PACK
+from synth.recipe import load_recipe
 
 from .conftest import make_corpus, regex_run
 
@@ -56,19 +57,22 @@ def test_rag_factuality_untouched(name: str) -> None:
 
 
 def test_best_kinds_cover_vocab() -> None:
-    kinds_of = {**{label: "no-retrieval" for label, _, _ in vocab.BASELINES},
-                **{label: "rag" for label, _, _ in vocab.RAGS},
-                **dict(zip((label for label, _, _ in vocab.OTHERS),
+    recipe = load_recipe(DEFAULT_PACK)
+    control, treatment = ([n for s in recipe.sides.values() if s.role == role for n in s.names]
+                          for role in ("control", "treatment"))
+    kinds_of = {**{n.label: "no-retrieval" for n in control},
+                **{n.label: "rag" for n in treatment},
+                **dict(zip((n.label for n in recipe.others),
                            ("rag-no-rerank", "rag-random", "fine-tuned", "chain-of-thought", "self-consistency",
                             "query-rewriting"), strict=True))}
     for qid in ("best-accuracy", "best-hallucination"):
         best = load(qid).best
         assert best is not None
-        for conditions in (vocab.BASELINES, vocab.RAGS, vocab.OTHERS):
-            for label, synonym, _ in conditions:
-                for name in (label, synonym):
+        for conditions in (control, treatment, recipe.others):
+            for n in conditions:
+                for name in (n.label, n.synonym):
                     owners = [k for k, names in best.kinds.items() if name in names]
-                    assert owners == [kinds_of[label]], (qid, name, owners)
+                    assert owners == [kinds_of[n.label]], (qid, name, owners)
         assert sum(len(names) for names in best.kinds.values()) == 2 * len(kinds_of)
 
 

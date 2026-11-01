@@ -131,7 +131,7 @@ def test_one_bad_attempt_then_a_good_one(tmp_path: Path, studies: list[truth.Stu
         meta = json.loads((d / "corpus.json").read_text(encoding="utf-8"))
         assert meta["renderer"] == "llm"
         assert meta["models"] == {"renderer": "fake-writer", "verifier": None, "served": ["fake-writer"],
-                                  "statements": True, "paper_prompt": "render-v2.txt"}
+                                  "statements": True, "paper_prompt": "render-v3.txt"}
     # every second prompt carries the reasons the first paper was rejected
     retries = [c for c in writer.calls if "rejected for these reasons" in c]
     assert len(retries) == N * 4 and all("not_found" in c for c in retries)

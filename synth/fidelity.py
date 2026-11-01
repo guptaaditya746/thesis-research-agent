@@ -6,6 +6,7 @@ next attempt. A paper that never passes is reported in fidelity.json and exclude
 """
 from __future__ import annotations
 
+import functools
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
@@ -14,18 +15,29 @@ from pydantic import BaseModel
 
 from agent import anchor
 from evidence.extractors import base as extractor_base
-from evidence.pack import load_pack
-from synth import assoc, levelcheck, vocab
+from synth import assoc, levelcheck
 from synth.levels import Plan, parse_value
+from synth.recipe import Recipe
 from synth.text import Decoy, Placement
 from synth.truth import DECOY_GAP
 
 NUMBER = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 TOLERANCE = 0.005      # evaluation's value tolerance; a blind re-extraction must land within it
-# Numbers a paper may hold outside its value placements and decoys (`added_numbers`, docs/evidence-system.md
-# G.2): the plan's dataset size, numbered tables, sections and figures, Markdown list markers. The relative
-# "N.N percentage points" string is a value placement itself; A1-style condition codes are allowed by name.
-ALLOWED_NUMBERS = re.compile(r"\b1,000 questions\b|\b(?:Table|Section|Figure|Appendix|Equation)\s+\d+\b|(?m:^\s*\d+[.)]\s)")
+# Numbers any paper may hold outside its value placements and decoys (`added_numbers`, docs/evidence-system.md
+# G.2): numbered tables, sections and figures, Markdown list markers; the recipe adds its own
+# (`reporting.allowed_numbers`, e.g. the dataset size). The relative "N.N percentage points" string is a value
+# placement itself; condition codes with a digit (A1) are allowed by name.
+GENERIC_NUMBERS = r"\b(?:Table|Section|Figure|Appendix|Equation)\s+\d+\b|(?m:^\s*\d+[.)]\s)"
+
+
+@functools.cache
+def _allowed_numbers(patterns: tuple[str, ...]) -> re.Pattern[str]:
+    return re.compile("|".join([*patterns, GENERIC_NUMBERS]))
+
+
+def allowed_numbers(recipe: Recipe) -> re.Pattern[str]:
+    """The numbers a paper of `recipe` may hold outside its placements: the recipe's, then the generic ones."""
+    return _allowed_numbers(tuple(recipe.reporting.allowed_numbers))
 
 
 @dataclass(frozen=True)
@@ -127,15 +139,16 @@ def labels_covered(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
 
 def stray_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
     """A number outside every value placement and decoy that reads as one of the study's values (as is,
-    as percent or as a count of 1,000) would mislead an extractor."""
+    as percent or as a count of the recipe's `count_base`) would mislead an extractor."""
     covered = [(p.start, p.end) for p in ps if p.role == "value"] + [(d.start, d.end) for d in decoys]
     truth = {round(m.value, 6): m.id for m in plan.study.measurements}
+    bases = [1, 100] + ([plan.recipe.reporting.count_base] if plan.recipe.reporting.count_base else [])
     bad = []
     for m in NUMBER.finditer(text):
         if any(a <= m.start() and m.end() <= b for a, b in covered):
             continue
         x = float(m.group().replace(",", ""))
-        hits = {truth[c] for c in (round(x, 6), round(x / 100, 6), round(x / 1000, 6)) if c in truth}
+        hits = {truth[c] for c in (round(x / base, 6) for base in bases) if c in truth}
         if hits:
             bad.append(f"{m.group()!r} at {m.start()} reads as {sorted(hits)}")
     return bad
@@ -154,12 +167,13 @@ def _around(text: str, start: int, end: int, width: int = 30) -> str:
 
 
 def added_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
-    """No number outside the value placements, the decoys and ALLOWED_NUMBERS (plus the A1-style condition
-    codes of vocab.py): a paper that adds a number adds a result the ground truth does not have (the
-    writer prompt's rule 3). Each offending number is reported with its offset and context."""
+    """No number outside the value placements, the decoys and `allowed_numbers` (plus the condition codes with a
+    digit, A1: the recipe's `other_codes` and the plan's aliases): a paper that adds a number adds a result the
+    ground truth does not have (the writer prompt's rule 3). Each offending number is reported with its offset
+    and context."""
     covered = [(p.start, p.end) for p in ps if p.role == "value"] + [(d.start, d.end) for d in decoys]
-    covered += [(m.start(), m.end()) for m in ALLOWED_NUMBERS.finditer(text)]
-    codes = set(vocab.OTHER_CODES) | {a for aliases in plan.cond_aliases.values() for a in aliases}
+    covered += [(m.start(), m.end()) for m in allowed_numbers(plan.recipe).finditer(text)]
+    codes = set(plan.recipe.other_codes) | {a for aliases in plan.cond_aliases.values() for a in aliases}
     for code in sorted(codes):
         if any(ch.isdigit() for ch in code):
             covered += levelcheck.occurs(text, code)
@@ -168,18 +182,22 @@ def added_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy
 
 
 def added_claims(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
-    """No sentence outside the claim placements names the question's subject and states an effect in the
-    words the regex claim extractor reads (the rag domain pack's claim_subject and claims, domains/rag/words.yaml,
-    over the extractor's own sentence split): a second statement on whether the method helps would be a second
-    author claim (the writer prompt's rule 4)."""
+    """No sentence outside the claim placements names the question's subject and states an effect: it matches the
+    recipe's `text.claim_subject` and one of its `text.claim_cues` (the generator's own copy of the claim wording,
+    never the engine's words.yaml), over the regex extractor's sentence split. A second statement on whether
+    the method helps would be a second author claim (the writer prompt's rule 4). A recipe without the two
+    regexes is refused: the check would pass every paper."""
+    t = plan.recipe.text
+    if not t.claim_subject or not t.claim_cues:
+        raise ValueError(f"the recipe of {plan.recipe.domain} has no text.claim_subject or text.claim_cues for the "
+                         "added_claims check")
     claims = [(p.start, p.end) for p in ps if p.role == "claim"]
-    words = load_pack("rag").words
     bad = []
     for a, b in extractor_base.sentences(text):
         if any(a < e and s < b for s, e in claims):
             continue
         sentence = text[a:b]
-        if re.search(words.claim_subject, sentence) and any(re.search(p, sentence) for p, _ in words.claims):
+        if re.search(t.claim_subject, sentence) and any(re.search(p, sentence) for p in t.claim_cues):
             bad.append(f"{sentence!r} at {a}")
     return bad
 

@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 
+from evidence.protocol import DEFAULT_PACK
 from synth.levels import LEVELS
 from synth.truth import DIRECTIONS, KNOBS
 
@@ -88,7 +89,7 @@ def cmd_build(args: argparse.Namespace) -> int:
     renderer = make_renderer(args, args.out)
     result = corpus.build(name=args.name, seed=args.seed, studies=args.studies, renderer=renderer, out=args.out,
                           levels=args.levels, mix=args.effects, protocol=args.protocol, hard=args.hard,
-                          **{knob: getattr(args, knob) for knob in KNOBS})
+                          domain=args.domain, **{knob: getattr(args, knob) for knob in KNOBS})
     print(json.dumps(result, indent=2))
     if result["excluded"]:
         print(f"WARNING: {len(result['excluded'])} studies failed fidelity and were left out; see fidelity.json")
@@ -142,8 +143,11 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--effects", type=parse_effects, default=None,
                    help="true effect mix, e.g. supports=0.6,contradicts=0.2,neutral=0.2 (the default)")
     b.add_argument("--out", type=Path, default=Path("corpora"))
+    b.add_argument("--domain", default=DEFAULT_PACK,
+                   help=f"the pack whose recipe (domains/<domain>/generator.yaml) gives the words (default {DEFAULT_PACK})")
     b.add_argument("--protocol", type=Path, default=None,
-                   help="the protocol whose synthesis block defines the ground truth (default: the RAG protocol)")
+                   help="the protocol whose synthesis block defines the ground truth (default: the recipe's "
+                        "effect_protocol)")
     b.add_argument("--min-retained", type=float, default=0.0, metavar="FRACTION",
                    help="exit 1 when fewer than this fraction of the requested studies pass fidelity (default 0)")
     b.add_argument("--duplicates", type=count, default=0, help="extra papers that report an existing study again")
@@ -162,8 +166,8 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--direction", choices=DIRECTIONS, required=True, help="the study's new effect direction")
     v.add_argument("--out", type=Path, default=None, help="default <corpus>-cf-<study>-<direction>")
     v.add_argument("--protocol", type=Path, default=None,
-                   help="the protocol the base corpus was built from (default: the RAG protocol); refused if its "
-                        "sha256 differs from the base corpus.json's")
+                   help="the protocol the base corpus was built from (default: its recipe's effect_protocol); refused "
+                        "if its sha256 differs from the base corpus.json's")
     add_renderer_options(v, default=None, statements=None)
     v.set_defaults(func=cmd_variant)
     s = sub.add_parser("sample", help="write a human fidelity review sheet (Markdown + CSV) for a corpus")

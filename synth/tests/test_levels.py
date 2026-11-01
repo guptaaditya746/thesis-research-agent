@@ -8,6 +8,7 @@ import pytest
 
 from synth import fidelity, levelcheck, truth
 from synth.levels import LEVELS, make_plan, parse_value, plan_rng, write_value
+from synth.recipe import default_recipe
 from synth.render_template import render, render_study
 
 
@@ -199,7 +200,7 @@ def test_allowlisted_numbers_pass(allowed: str) -> None:
 
 
 def test_distributed_codes_are_allowed_numbers() -> None:
-    """The A1-style codes of vocab.py hold a digit; they are allowed by name, a bare digit is not."""
+    """The A1-style codes of the recipe (`other_codes`) hold a digit; they are allowed by name, a bare digit is not."""
     s = next(s for seed in range(1, 20) for s in truth.generate(seed, 6) if len(s.conditions) > 2)
     r = render_study(s, "distributed", 1)
     assert "A1" in r.text and r.fidelity.ok
@@ -239,7 +240,7 @@ def test_irrelevant_papers_pass_every_check_and_place_nothing() -> None:
     from synth.levels import irrelevant_plan
     for topic in truth.IRRELEVANT_TOPICS:
         for seed in range(1, 6):
-            s = truth.irrelevant_study(3, topic)
+            s = truth.irrelevant_study(3, topic, default_recipe())
             r = render_study(s, "explicit", seed)
             assert r.fidelity.ok, [(c.name, c.detail) for c in r.fidelity.checks if not c.ok]
             assert r.placements == [] and r.decoys == [] and r.plan == irrelevant_plan(s, "explicit")

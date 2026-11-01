@@ -9,6 +9,7 @@ enforced here (they are what the fidelity checks rely on):
 """
 from __future__ import annotations
 
+import functools
 import re
 from pathlib import Path
 from typing import Any, Literal
@@ -17,7 +18,7 @@ import yaml
 from pydantic import model_validator
 
 from evidence.pack import DOMAINS
-from evidence.protocol import Strict
+from evidence.protocol import DEFAULT_PACK, Strict
 from jsonio import sha256_hex
 
 Range = tuple[float, float]
@@ -50,11 +51,16 @@ class Reporting(Strict):
     count_base: int | None
     arm_size: tuple[int, int] | None
     allowed_numbers: list[str]           # regexes of numbers a paper may hold outside its placements
+    dataset_size: str | None = None      # what a paper may say of each context's size ("1,000 questions")
 
     @model_validator(mode="after")
     def _regexes(self) -> Reporting:
         for pattern in self.allowed_numbers:
             re.compile(pattern)
+        whole = [m.group() for p in self.allowed_numbers if (m := re.search(p, self.dataset_size or ""))]
+        if self.dataset_size is not None and self.dataset_size not in whole:
+            raise ValueError(f"dataset_size {self.dataset_size!r} is not one of the allowed_numbers, so a paper "
+                             "that states it would fail the added-numbers check")
         return self
 
 
@@ -88,7 +94,10 @@ class Text(Strict):
     blind_examples: str                             # the examples block of the blind-extraction prompt
     # Not every recipe has these; the generator that reads one says so when it is missing.
     templates: dict[str, list[str]] | None = None   # sentence templates of the template renderer
-    claim_cues: list[str] | None = None             # words of a sentence that states an effect (fidelity check)
+    # The fidelity check `added_claims`: a sentence outside the claim placements that matches `claim_subject` and
+    # one of `claim_cues` (regexes) states a second effect. Generator-side: the engine's words.yaml is not read.
+    claim_subject: str | None = None
+    claim_cues: list[str] | None = None
     authors: list[str] | None = None
     unit_noun: str | None = None                    # "patients", for "k of n patients"
     limitation_phrases: dict[str, list[str]] | None = None
@@ -153,15 +162,19 @@ class Recipe(Strict):
     limitations: Limitations | None = None
     name_variants: NameVariants | None = None
     sha256: str
+    root: Path = DOMAINS                 # the folder of domains it was read from (not in the file, not in sha256)
 
     @model_validator(mode="after")
     def _rules(self) -> Recipe:
         # The prompt words and the blind examples carry digits on purpose (example values); everything else none.
         for name in ("question", "sides", "others", "question_metrics", "other_metrics", "contexts"):
             _digits(name, getattr(self, name))
+        # The claim regexes are never written into a paper; they hold counts like {0,3}.
         for name in type(self.text).model_fields:
-            if name not in ("prompt_words", "blind_examples"):
+            if name not in ("prompt_words", "blind_examples", "claim_subject", "claim_cues"):
                 _digits(f"text.{name}", getattr(self.text, name))
+        for pattern in [self.text.claim_subject or "", *(self.text.claim_cues or [])]:
+            re.compile(pattern)
         names = [n for s in self.sides.values() for n in s.names] + self.others
         spellings = [x for n in names for x in (n.label, n.synonym)] + [m.forms[0][0] for m in
                                                                         self.question_metrics + self.other_metrics]
@@ -174,9 +187,21 @@ class Recipe(Strict):
 
 
 def load_recipe(domain: str, root: Path = DOMAINS) -> Recipe:
+    """The recipe in `root/<domain>/generator.yaml`."""
     path = Path(root) / domain / "generator.yaml"
     if not path.is_file():
         raise ValueError(f"no generator recipe for domain {domain!r}: {path} does not exist")
     text = path.read_bytes().replace(b"\r\n", b"\n")
     data = yaml.safe_load(text)
-    return Recipe(**data, domain=domain, sha256=sha256_hex(text))
+    return Recipe(**data, domain=domain, sha256=sha256_hex(text), root=Path(root))
+
+
+@functools.cache
+def default_recipe() -> Recipe:
+    """The recipe of the default pack (domains/default.yaml), read once: what synth draws when no recipe is given."""
+    return load_recipe(DEFAULT_PACK)
+
+
+def effect_protocol_path(recipe: Recipe) -> Path:
+    """The protocol whose synthesis block the generator follows for `recipe` (`effect_protocol`, in its domain)."""
+    return recipe.root / recipe.domain / "protocols" / f"{recipe.effect_protocol}.yaml"   # as pack.protocol_path

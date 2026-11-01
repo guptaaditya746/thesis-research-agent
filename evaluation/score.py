@@ -157,7 +157,6 @@ from evidence.questions import QuestionEntry, QuestionTruth
 from evidence.questions import answered_by, answers_asked, load as load_questions, protocol_file
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS
-from synth import vocab
 
 from . import canon
 from .expected import expected as expected_answer
@@ -218,7 +217,8 @@ def link(item: Item, name: str) -> str | None:
 
 # --- A: matching -----------------------------------------------------------------------------------
 
-QUESTION_CANONICALS = frozenset(vocab.QUESTION_METRICS)   # factual_accuracy, hallucination_rate: compared as they are
+# factual_accuracy, hallucination_rate: compared as they are
+QUESTION_CANONICALS = frozenset(m.canonical for m in canon.RECIPE.question_metrics)
 OTHER = "other"
 
 
@@ -1081,8 +1081,8 @@ def effect_truth(truth: GroundTruth, params: QuestionTruth, protocol: Protocol |
 def _entry_key(truth_entries: list[dict[str, Any]], target: canon.Target) -> Any:
     """A function: system inventory entry -> its key, ("key", folded truth name) or ("unknown", folded name).
 
-    A form (the entry's name, then its aliases) vocab knows gives its `canon.key`; else a form that folds to a
-    form of a truth entry vocab does not know (an ablation condition of the hard corpus) gives that entry; else
+    A form (the entry's name, then its aliases) the recipe knows gives its `canon.key`; else a form that folds to a
+    form of a truth entry the recipe does not know (an ablation condition of the hard corpus) gives that entry; else
     the entry is a key of its own (a false positive, never an error)."""
     unkeyed = {canon.fold(form): canon.fold(e["name"]) for e in truth_entries if canon.key(target, e["name"]) is None
                for form in (e["name"], *(e.get("aliases") or []))}
@@ -1244,7 +1244,7 @@ def integration_inventory(m: Matching, answer: dict[str, Any]) -> dict[str, Any]
 
 
 def integration_best(m: Matching, protocol: Protocol | None) -> dict[str, Any]:
-    """B, best (kind assignment): of the condition items A matched to a condition whose label vocab gives a kind
+    """B, best (kind assignment): of the condition items A matched to a condition whose label the recipe gives a kind
     (`canon.KIND_OF`), the share whose kind is that kind; an item's kind is the engine's (kinds.best.kind_of with the
     protocol's `best` block), or its `kind` field without one."""
     n = ok = 0

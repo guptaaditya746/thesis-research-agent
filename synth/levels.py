@@ -10,7 +10,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
-from synth import vocab
+from synth.recipe import Recipe
 from synth.text import Decoy, Seg
 from synth.truth import Condition, Experiment, Measurement, Metric, Study
 
@@ -24,23 +24,23 @@ DEFINITIONS = {
                 "verbatim (the study's own labels) together with the dataset; values are written as percent "
                 "(62.4%). No tables. Facts: all conditions on the question metric on the main dataset.",
     "paraphrased": "Conditions and the metric are never called by their labels but by descriptive synonyms "
-                   "('the model that answers from its own parameters', 'share of answers whose facts are all "
-                   "correct'); values appear in prose in varied formats: percent (62.4%), fraction (0.624) and "
-                   "count (624 out of 1,000), at least two formats per paper. Same facts as explicit.",
+                   "(the recipe's `synonym` and metric description); values appear in prose in varied formats: "
+                   "percent (62.4%), fraction (0.624) and count (624 out of 1,000), at least two formats per "
+                   "paper. Same facts as explicit.",
     "distributed": "Values appear only in one Markdown table whose rows are short codes (B, R, A1, A2) and whose "
-                   "value column header is the metric's abbreviation with a percent unit (FA (%)); the codes "
+                   "value column header is the metric's abbreviation with a percent unit (XY (%)); the codes "
                    "and the abbreviation are defined in the Method section, separated from the table by "
                    "several paragraphs. No sentence states a value. Same facts as explicit.",
     "complex": "Every condition (with the distractor systems), the question metric and one or two distractor "
-               "metrics (BLEU, ROUGE-L, latency) on two datasets, in one table with full labels and a Dataset column "
+               "metrics on two datasets, in one table with full labels and a Dataset column "
                "(one row per dataset and condition); the "
-               "rag value on the question metric of the main (first) dataset is not in the table but given in "
-               "the text relative to the baseline ('7.0 percentage points higher than the ...'). The reader "
-               "must pick the rag/baseline pair of the question metric on the main dataset.",
+               "treatment value on the question metric of the main (first) dataset is not in the table but given "
+               "in the text relative to the control ('7.0 percentage points higher than the ...'). The reader "
+               "must pick the treatment/control pair of the question metric on the main dataset.",
     "contradictory": "The values are in a table with full labels, but the author claim (abstract and conclusion) "
                      "disagrees with them (it claims an improvement the table does not show, or no effect where "
-                     "it does); in odd-index studies the abstract also states a wrong rag value (a decoy, more than "
-                     "0.0075 from every true value; left out in the rare study where none fits). The "
+                     "it does); in odd-index studies the abstract also states a wrong treatment value (a decoy, "
+                     "more than 0.0075 from every true value; left out in the rare study where none fits). The "
                      "table is the truth: the effect is computed from it and the claim is recorded as stated. "
                      "Same facts as explicit.",
 }
@@ -67,6 +67,11 @@ class Plan:
     @property
     def paper(self) -> str:
         return self.study.study_id
+
+    @property
+    def recipe(self) -> Recipe:
+        """The recipe the study was drawn from; the renderers write its words."""
+        return self.study.recipe
 
     def cond(self, cid: str) -> Seg:
         return Seg(cid, "condition_label", self.cond_name[cid])
@@ -179,7 +184,7 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
     if level == "contradictory" and study.decoy is not None and treat is not None and base is not None:
         decoy = Decoy(treat.id, study.decoy, write_value(study.decoy, "pct"))
     return Plan(study, level, conditions, metrics, datasets, ms, cond_name, cond_aliases, metric_name,
-                metric_aliases, values, claim, vocab.CLAIMS[(claim, q.canonical)], decoy, experiments)
+                metric_aliases, values, claim, study.recipe.text.claims[claim][q.canonical], decoy, experiments)
 
 
 def plan_rng(seed: int, study_id: str, level: str) -> random.Random:

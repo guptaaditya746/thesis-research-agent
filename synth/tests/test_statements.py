@@ -212,7 +212,7 @@ def test_a_built_llm_corpus_records_the_statement_mode(tmp_path: Path) -> None:
         corpus.build(name="m", seed=SEED, studies=N, renderer=renderer, out=tmp_path / str(on), levels=["explicit"])
         for lv in ("explicit", "mixed"):
             models = json.loads((tmp_path / str(on) / f"m-{lv}" / "corpus.json").read_text(encoding="utf-8"))["models"]
-            assert (models["statements"], models["paper_prompt"]) == (on, "render-v2.txt" if on else "render.txt")
+            assert (models["statements"], models["paper_prompt"]) == (on, "render-v3.txt" if on else "render.txt")
 
 
 def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:

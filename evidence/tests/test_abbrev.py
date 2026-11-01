@@ -9,9 +9,13 @@ from evidence import engine, protocol
 from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef
 from evidence.extractors import get
 from evidence.extractors.abbrev import definitions
-from synth.vocab import QUESTION_METRICS
+from evidence.protocol import DEFAULT_PACK
+from synth.recipe import load_recipe
 
 from .conftest import PROTOCOL, corpus_of, pack_words
+
+# The generator recipe's question metrics: canonical -> forms (name, abbreviation, description).
+QUESTION_METRICS = {m.canonical: m.forms for m in load_recipe(DEFAULT_PACK).question_metrics}
 
 PROTO = protocol.load(PROTOCOL)
 

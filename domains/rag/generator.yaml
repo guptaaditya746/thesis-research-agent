@@ -1,5 +1,7 @@
 # The generator recipe of the rag pack: the words and ranges synth draws a corpus from (moved by hand from
-# synth/vocab.py and synth/truth.py at tag ev3b-code). Rules: no digits in filler or claim text, no name inside another.
+# synth/vocab.py and synth/truth.py at tag ev3b-code; the sentence templates, the dataset size, the statement examples
+# and the claim regexes of the fidelity check (copied from words.yaml) moved from synth/ code and prompts in plan 2
+# Task 2). Rules: no digits in filler or claim text, no name inside another.
 effect_protocol: rag-factuality
 question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
 context: dataset
@@ -147,6 +149,7 @@ reporting:
   arm_size: null
   allowed_numbers:
   - \b1,000 questions\b
+  dataset_size: 1,000 questions
 text:
   claims:
     improves:
@@ -317,6 +320,45 @@ text:
     topic_terms: retrieval or RAG
     outcome_terms: accuracy or hallucination
     method_phrase: retrieval or the method
+    effect_verbs: improves, helps, increases, changes, reduces, lowers, decreases, raises, boosts, enhances, affects, alters, makes, leads, yields or matters
+    statement_examples: |
+      Examples.
+
+      Normal task:
+      {"id": "S001.m1", "level": "explicit", "condition": "dense-retrieval reader", "metric": "answer correctness", "dataset": "CityFactsQA", "value": "62.4%"}
+      Reply entry:
+      {"id": "S001.m1", "text": "On CityFactsQA, the dense-retrieval reader reaches an answer correctness of 62.4%."}
+
+      Confusing task (a count value; the metric must still be named as given):
+      {"id": "S002.m2", "level": "paraphrased", "condition": "variant that reads retrieved evidence first", "metric": "fraction of answers judged factually correct", "dataset": "LawFactQA", "value": "662 out of 1,000"}
+      Wrong: "The variant that reads retrieved evidence first yields 662 out of 1,000 answers judged factually correct." (the metric "fraction of answers judged factually correct" is missing)
+      Reply entry:
+      {"id": "S002.m2", "text": "On LawFactQA, the variant that reads retrieved evidence first has a fraction of answers judged factually correct of 662 out of 1,000."}
+
+      Relative value:
+      {"id": "S003.m2", "level": "complex", "condition": "dense-retrieval reader", "metric": "answer correctness", "dataset": "CityFactsQA", "value": "7.0 percentage points higher", "compared_with": "closed-book reader"}
+      Reply entry:
+      {"id": "S003.m2", "text": "On CityFactsQA, the dense-retrieval reader scores 7.0 percentage points higher than the closed-book reader in answer correctness."}
+
+      Missing comparison (no "compared_with"):
+      {"id": "S004.m1", "level": "explicit", "condition": "closed-book reader", "metric": "unsupported-claim rate", "dataset": "WikiCheckQA", "value": "18.3%"}
+      Reply entry (no other condition is named):
+      {"id": "S004.m1", "text": "On WikiCheckQA, the closed-book reader has an unsupported-claim rate of 18.3%."}
+  templates:
+    abstract_without_names:
+    - We study whether access to retrieved documents changes the correctness of generated answers on {dataset}.
+    method_one_context:
+    - We evaluate on {main}, a benchmark of {size} with reference answers.
+    method_two_contexts:
+    - 'We evaluate on two benchmarks: {main}, our main benchmark, and {other}; each has {size} with reference answers.'
+    paraphrased_count:
+    - In terms of the {metric}, the {cond} corresponds to {value} {dataset} questions.
+    - On {dataset}, the {cond} reaches {value} questions in terms of the {metric}.
+  claim_subject: (?i)\bretriev\w*|\bRAG\b
+  claim_cues:
+  - (?i)(?:\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn't|wasn't)\b)(?:\s+\w+){0,3}?\s+(?:improve|help|increase|change|reduce|lower|decrease|raise|boost|enhance|affect|alter|make|lead|yield|matter)(?:s|d|ed|ing)?\b|(?:\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn't|wasn't)\b)[^.;]{0,80}?\bmore\s+(?:accurate|factual|reliable|correct)|\b(?:fails?|failed)\s+to\s+(?:improve|help)|\bno\s+(?:significant\s+|clear\s+|measurable\s+)?(?:improvement|effect|difference|gain|benefit|change)|\bon\s+par\s+with\b|\b(?:essentially\s+)?unchanged\b
+  - (?i)\b(?:increases?|increased|raises?|raised)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat|\bmore\s+hallucinat|\bless\s+(?:accurate|factual|correct)\b|\b(?:hurts?|harms?|harmed|degrades?|degraded|worsens?|worsened|impairs?|impaired)\b|\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased)\s+(?:the\s+)?(?:factual\s+|answer\s+)?accuracy
+  - (?i)\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased|cuts?)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat|\b(?:fewer|less)\s+hallucinat|\b(?:improves?|improved|improving|increases?|increased|boosts?|boosted|raises?|raised|enhances?|enhanced)\b|\b(?:outperforms?|outperformed)\b|\bmore\s+(?:factual|accurate)\b
   blind_examples: |
     Examples.
 

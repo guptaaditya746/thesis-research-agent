@@ -8,8 +8,11 @@ prompt hash, model identity and the full prompt (which holds the plan), so a reb
 The model is injected: tests pass a FunctionModel, real runs `modelcall.openai_model(alias)`, whose key
 comes only from $LITELLM_MASTER_KEY and is never logged; every call is `modelcall.ask`, whose errors are redacted.
 With `statements` (the default) each value the level writes in prose is first written and checked as one
-sentence (synth/statements.py) and the paper (render-v2.txt) must hold the accepted sentences verbatim;
-without it the calls are exactly those of render.txt.
+sentence (synth/statements.py) and the paper (render-v3.txt) must hold the accepted sentences verbatim;
+without it the calls are exactly those of render.txt (kept byte for byte; its wording is the default pack's).
+The v3 prompts (render-v3, statements-v2, blind-v3) are templates: their <<NAME>> placeholders are filled from
+the study's recipe (`text.prompt_words`, `text.blind_examples`, `reporting.dataset_size`); filled from the default
+pack's recipe they are the v2/v1 texts byte for byte, so its prompt hashes and cached calls do not move.
 """
 from __future__ import annotations
 
@@ -29,15 +32,46 @@ from synth import levelcheck, statements as statements_module
 from synth.corpus import Rendered
 from synth.fidelity import BlindExtraction, Check, PaperFidelity, blind_check, check_paper
 from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
+from synth.recipe import Recipe
 from synth.render_template import render_study as render_with_template
 from synth.text import Decoy, Placement
 from synth.truth import Study
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
-INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "render.txt").text
-INSTRUCTIONS_V2 = modelcall.load_prompt(PROMPT_DIR / "render-v2.txt").text
-STATEMENT_INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "statements-v1.txt").text
-BLIND_INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "blind-v2.txt").text
+PROMPT_VERSION = "v3"     # of the paper prompt with statements (render-v3.txt); corpus.json models.paper_prompt
+INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "render.txt").text      # --no-statements only
+PAPER_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / f"render-{PROMPT_VERSION}.txt").text
+STATEMENT_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / "statements-v2.txt").text
+BLIND_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / "blind-v3.txt").text
+
+
+def fill(template: str, recipe: Recipe) -> str:
+    """`template` with every <<NAME>> placeholder filled from the recipe: the prompt words (key upper-cased),
+    BLIND_EXAMPLES and DATASET_SIZE. A placeholder the recipe has no value for is an error."""
+    values = {k.upper(): v for k, v in recipe.text.prompt_words.items()}
+    values["BLIND_EXAMPLES"] = recipe.text.blind_examples
+    if recipe.reporting.dataset_size is not None:
+        values["DATASET_SIZE"] = recipe.reporting.dataset_size
+    for name, value in values.items():
+        template = template.replace(f"<<{name}>>", value)
+    assert "<<" not in template, f"a placeholder is left (the recipe of {recipe.domain} has no value for it)"
+    return template
+
+
+def instructions(recipe: Recipe) -> str:
+    """The paper prompt (render-v3.txt) filled from `recipe`."""
+    return fill(PAPER_TEMPLATE, recipe)
+
+
+def statement_instructions(recipe: Recipe) -> str:
+    """The statement prompt (statements-v2.txt) filled from `recipe`."""
+    return fill(STATEMENT_TEMPLATE, recipe)
+
+
+def blind_instructions(recipe: Recipe) -> str:
+    """The blind re-extraction prompt (blind-v3.txt) filled from `recipe`."""
+    return fill(BLIND_TEMPLATE, recipe)
+
 
 LEVEL_INSTRUCTIONS = {
     "explicit": "Report each value in its own Results sentence that contains the condition name, the metric name "
@@ -78,10 +112,10 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
     """What the model is told: facts, names and the exact strings, never the effect or the answer. A
     duplicate paper (--duplicates) is told its original's title (`avoid_title`) so it takes another."""
     units = {"fraction": "%", "seconds": "s"}
-    rag = plan.study.conditions[1].id
+    treatment = plan.study.condition(plan.study.treatment_role).id
     decoy = None
     if plan.decoy is not None:
-        decoy = (f"On {plan.datasets[0]}, the {plan.cond_name[rag]} reaches {plan.decoy.exact} "
+        decoy = (f"On {plan.datasets[0]}, the {plan.cond_name[treatment]} reaches {plan.decoy.exact} "
                  f"{plan.metric_name[plan.metrics[0].id]}.")
     not_reported = None
     if plan.study.missing is not None:          # a --missing study: the key is present only then
@@ -94,7 +128,8 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
                            f"exactly '{MISSING_CELL}' in its cell."}
     return {
         "paper": plan.paper, "level_instructions": LEVEL_INSTRUCTIONS[plan.level],
-        "datasets": [{"name": d, "main": i == 0, "size": "1,000 questions"} for i, d in enumerate(plan.datasets)],
+        "datasets": [{"name": d, "main": i == 0, "size": plan.recipe.reporting.dataset_size}
+                     for i, d in enumerate(plan.datasets)],
         "conditions": [{"name": plan.cond_name[c.id], "does": c.description,
                         **({"code": plan.cond_aliases[c.id][0]} if plan.cond_aliases[c.id] else {})}
                        for c in plan.conditions],
@@ -105,7 +140,7 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
         "results": [{"condition": plan.cond_name[m.condition], "metric": plan.metric_name[m.metric],
                      "dataset": m.dataset, "write_exactly": "see text" if plan.values[m.id].fmt == "relative"
                      else plan.values[m.id].text} for m in plan.measurements],
-        "relative_value": next(({"string": v.text, "of": plan.cond_name[rag]} for v in plan.values.values()
+        "relative_value": next(({"string": v.text, "of": plan.cond_name[treatment]} for v in plan.values.values()
                                 if v.fmt == "relative"), None),
         "claim_sentences": {"abstract": plan.claim_sentences[0], "conclusion": plan.claim_sentences[1]},
         "decoy_sentence": decoy,
@@ -178,11 +213,12 @@ class LlmRenderer:
 
     def models(self) -> dict[str, Any]:
         """Model identities, and the pipeline: `statements` on or off and the paper prompt file it uses (a
-        corpus.json without these keys predates the statement stage: off, render.txt)."""
+        corpus.json without these keys predates the statement stage: off, render.txt; render-v2.txt is the one
+        before the prompts became recipe templates)."""
         return {"renderer": modelcall.model_identity([self.model]),
                 "verifier": modelcall.model_identity([self.verify_model]) if self.verify_model else None,
                 "served": sorted(self.served), "statements": self.statements,
-                "paper_prompt": "render-v2.txt" if self.statements else "render.txt"}
+                "paper_prompt": f"render-{PROMPT_VERSION}.txt" if self.statements else "render.txt"}
 
     async def _call(self, instructions: str, prompt: str, output: type[BaseModel], model: Model, seed: int) -> dict:
         key = {"prompt_sha256": modelcall.prompt_sha256(instructions, output),
@@ -193,8 +229,9 @@ class LlmRenderer:
         self.served.add(answer.served_model or answer.model)
         return answer.output.model_dump()
 
-    async def _blind(self, text: str, seed: int) -> BlindExtraction:
-        out = await self._call(BLIND_INSTRUCTIONS, "Paper:\n\n" + text, BlindExtraction, self.verify_model, seed)
+    async def _blind(self, text: str, recipe: Recipe, seed: int) -> BlindExtraction:
+        out = await self._call(blind_instructions(recipe), "Paper:\n\n" + text, BlindExtraction, self.verify_model,
+                               seed)
         return BlindExtraction.model_validate(out)
 
     async def render_one(self, study: Study, level: str, seed: int, avoid_title: str | None = None) -> Rendered:
@@ -202,16 +239,16 @@ class LlmRenderer:
         if not study.relevant:          # nothing to place: the fixed template writes it, no model call
             return render_with_template(study, level, seed)
         plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
-        instructions, accepted, record = INSTRUCTIONS, {}, None
+        paper_instructions, accepted, record = INSTRUCTIONS, {}, None
         planned = plan_json(plan, avoid_title)
         if self.statements:
             async def call(prompt: str, s: int) -> dict:
                 reply = statements_module.StatementReply
-                return await self._call(STATEMENT_INSTRUCTIONS, prompt, reply, self.model, s)
+                return await self._call(statement_instructions(plan.recipe), prompt, reply, self.model, s)
             accepted, record = await statements_module.write(plan, call, self.attempts, seed)
             print(f"synth {plan.paper}/{level}: statements {record['rounds']} round(s), failed {record['failed']}",
                   file=sys.stderr, flush=True)
-            instructions = INSTRUCTIONS_V2
+            paper_instructions = instructions(plan.recipe)
             if accepted:
                 planned["statements"] = list(accepted.values())
         base = json.dumps(planned, indent=2, ensure_ascii=False)
@@ -228,7 +265,7 @@ class LlmRenderer:
             try:
                 # A failed reply can produce identical feedback and therefore an identical prompt. Give
                 # each retry a distinct seed so the content-addressed cache cannot replay that same reply.
-                text = (await self._call(instructions, prompt, PaperReply, self.model, seed + attempt - 1))["markdown"]
+                text = (await self._call(paper_instructions, prompt, PaperReply, self.model, seed + attempt - 1))["markdown"]
                 text = text.replace("\r\n", "\n").replace("\r", "\n")
                 text = text if text.endswith("\n") else text + "\n"
                 ps, decoys, problems = locate(text, plan)
@@ -239,7 +276,7 @@ class LlmRenderer:
                     checks.append(Check("title_differs", not same, f"the title {avoid_title!r} is the original's" if same else ""))
                 checks += check_paper(text, plan, ps, decoys) if not problems else []
                 if self.verify_model is not None and all(c.ok for c in checks):
-                    checks += await blind_check(text, plan, lambda t: self._blind(t, seed))
+                    checks += await blind_check(text, plan, lambda t: self._blind(t, plan.recipe, seed))
             except modelcall.ModelCallError as exc:  # a dead server or a malformed reply is one failed attempt
                 checks = [Check("model_call", False, exc.reason)]
             except Exception as exc:  # a cached reply that no longer decodes, too

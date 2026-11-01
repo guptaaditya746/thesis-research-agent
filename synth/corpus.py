@@ -29,15 +29,19 @@ from typing import Any, Protocol
 from jsonio import canonical_bytes, sha256_hex
 from evidence import protocol as protocol_module
 from evidence import rules
-from evidence.protocol import Protocol
+from evidence.pack import DOMAINS
+from evidence.protocol import DEFAULT_PACK, Protocol
 from synth import truth
 from synth.fidelity import PaperFidelity
 from synth.levels import LEVELS, Plan
+from synth.recipe import Recipe, effect_protocol_path, load_recipe
 from synth.text import Decoy, Placement
 from synth.truth import Study
 
 GENERATOR = "synth"
-GENERATOR_VERSION = "2"      # 2: knobs, flags, relevant/missing/duplicate_of, settings, variants
+# 2: knobs, flags, relevant/missing/duplicate_of, settings, variants; 3: the words come from a recipe
+# (domains/<name>/generator.yaml), recorded in corpus.json `recipe`
+GENERATOR_VERSION = "3"
 PACKAGE = Path(__file__).resolve().parent
 
 
@@ -132,17 +136,27 @@ def settings_of(*, name: str, studies: int, mix: dict[str, float] | None, levels
             **({"hard": True} if hard else {})}
 
 
+def recipe_of(studies: list[Study]) -> Recipe:
+    """The one recipe a study set was drawn from."""
+    found = {s.recipe.sha256: s.recipe for s in studies}
+    if len(found) != 1:
+        raise ValueError(f"a corpus is drawn from one recipe, not {len(found)}")
+    return next(iter(found.values()))
+
+
 def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer, protocol: Protocol,
                  studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]],
                  settings: dict[str, Any], extra: dict[str, Any] | None = None,
                  selection: dict[str, Any] | None = None) -> str:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
-    synthesis block made the ground truth is recorded (id and sha256), never its file. `extra` goes into
+    synthesis block made the ground truth is recorded (id and sha256), never its file; so is the recipe the
+    studies were drawn from (domain and sha256, `recipe`). `extra` goes into
     corpus.json as it is (`variant`, F3); `selection` (the fidelity counters of `selection_of`) goes into
     corpus.json (never manifest.json: the engine reads that). The set-level flags are found over the studies actually written
     (after the fidelity exclusions), as the engine finds them over the papers it reads."""
     prepare(directory)
     spec = protocol.synthesis
+    recipe = recipe_of(studies)
     kept = truth.flagged([s for s in studies if s.study_id not in failed], spec)
     manifest = []
     for s in kept:
@@ -156,6 +170,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         "generator": {"name": GENERATOR, "version": GENERATOR_VERSION, "code_sha256": code_sha256()},
         "renderer": renderer.name, "level": level, "question": protocol.question,
         "protocol": {"id": protocol.id, "sha256": protocol.sha256},
+        "recipe": {"domain": recipe.domain, "sha256": recipe.sha256},
         "papers": [{"id": s.study_id, "study_id": s.study_id, "level": papers[s.study_id].plan.level} for s in kept],
         "models": renderer.models(),
         "settings": settings,
@@ -233,19 +248,22 @@ def selection_of(rendered: dict[tuple[str, str], Rendered], study_set: list[Stud
 def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
           protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
-          outliers: int = 0, irrelevant: int = 0, hard: bool = False) -> dict[str, Any]:
-    """Generate the study set for the protocol's question (its synthesis block gives the roles, metrics,
-    neutral band, claim vocabulary and label table; default domains/rag/protocols/rag-factuality.yaml), apply
-    the knobs (and `hard`), render it at every level, write the level corpora and the mixed one."""
+          outliers: int = 0, irrelevant: int = 0, hard: bool = False, domain: str | None = None,
+          root: Path = DOMAINS) -> dict[str, Any]:
+    """Generate the study set from the recipe of `domain` (`root/<domain>/generator.yaml`; default the default
+    pack's) for the protocol's question (its synthesis block gives the roles, metrics, neutral band, claim
+    vocabulary and label table; default the recipe's effect protocol), apply the knobs (and `hard`), render it
+    at every level, write the level corpora and the mixed one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:
         raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
+    recipe = load_recipe(domain or DEFAULT_PACK, root)
     if not isinstance(protocol, Protocol):
-        protocol = protocol_module.load(protocol or truth.DEFAULT_PROTOCOL)
+        protocol = protocol_module.load(protocol or effect_protocol_path(recipe), None if root == DOMAINS else root)
     settings = settings_of(name=name, studies=studies, mix=mix, levels=levels, duplicates=duplicates,
                            missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard)
-    study_set = truth.generate(seed, studies, mix, protocol.synthesis, duplicates=duplicates, missing=missing,
-                               outliers=outliers, irrelevant=irrelevant, hard=hard)
+    study_set = truth.generate(seed, studies, mix, protocol.synthesis, recipe=recipe, duplicates=duplicates,
+                               missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard)
     rendered = renderer.render_all([(s, lv) for lv in levels for s in study_set], seed)
     failed = exclusions(rendered, study_set)
     selection = selection_of(rendered, study_set, studies, failed)
