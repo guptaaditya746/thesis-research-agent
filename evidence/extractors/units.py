@@ -37,7 +37,9 @@ class MeasurementUnitsRegex:
         rest = {k: v for k, v in config.items() if k not in regex.INJECTED}
         self.fractions = [str(m) for m in rest.pop("fraction_metrics")]   # the pack's, or the protocol's
         self.patterns = {"alias": terms.ALIAS} | rest
-        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=("measurement",),
+        self.emits = base.emitted(self.given, self.evidence_type)
+        self.slots = base.Slots.of(self.given)
+        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.emits,),
                                   code_sha256=CODE_SHA256,
                                   config={**self.given, **self.patterns, "fraction_metrics": self.fractions},
                                   determinism="exact")
@@ -47,7 +49,7 @@ class MeasurementUnitsRegex:
         parts = base.ranges(task, text)
         context = ctx.context_items()
         patterns = {**self.patterns, "question_metrics": self.fractions,   # rate-like: the fraction metrics only
-                    "treatment": (self.given.get("compare") or {}).get("treatment")}
+                    "treatment": (self.given.get("compare") or {}).get("treatment"), "slots": self.slots}
         found = [self._seconds(f, context) for f in measurements(task, text, parts, context, patterns)
                  if not self._difference(f, text, context)]
         resolver = Resolver(text, context, patterns)
@@ -55,13 +57,13 @@ class MeasurementUnitsRegex:
             for a, b in parts:
                 for s, e in base.sentences(text, a, b):
                     found.extend(self._timed(task, text, s, e, resolver))
-        items: list[Item] = base.group("measurement", found)
+        items: list[Item] = base.group(self.emits, found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 
     def _difference(self, found: Found, text: str, context: list[Item]) -> bool:
         """A non-fraction value measure.py read in a sentence that is a difference ("0.45 s slower than")."""
-        metric = next((i for i in context if i.item_id == found[1].get("metric")), None)
+        metric = next((i for i in context if i.item_id == found[1].get(self.slots.to_metric)), None)
         if metric is None or metric.fields.get("canonical") in self.fractions:
             return False
         end = next((int(s.selector["end"]) for s in found[2] if s.role == "value"), None)
@@ -71,7 +73,7 @@ class MeasurementUnitsRegex:
     def _seconds(self, found: Found, context: list[Item]) -> Found:
         """A non-fraction value under a millisecond header, in seconds."""
         fields, links, spans = found
-        metric = next((i for i in context if i.item_id == links.get("metric")), None)
+        metric = next((i for i in context if i.item_id == links.get(self.slots.to_metric)), None)
         label = next((s.selector.get("exact", "") for s in spans if s.role == "metric_label"), "")
         if metric is not None and metric.fields.get("canonical") not in self.fractions and MS_HEADER.search(label):
             fields = {**fields, "value": round(float(fields["value"]) / 1000, 6)}
@@ -107,8 +109,7 @@ class MeasurementUnitsRegex:
             spans = [base.span(task, text, hit.start(1), hit.end(1), "value"),
                      base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                      base.span(task, text, met[0].start, met[0].end, "metric_label")]
-            out.append(({"value": round(value, 6), "dataset": None}, {"condition": cond[1].item_id,
-                                                                     "metric": met[1].item_id}, spans))
+            out.append(({"value": round(value, 6), "dataset": None}, r.slots.links(cond[1], met[1]), spans))
         return out
 
 

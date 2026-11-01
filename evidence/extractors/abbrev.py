@@ -167,7 +167,8 @@ class Abbrev:
     def __init__(self, config: dict[str, Any]) -> None:
         self.given = {k: v for k, v in config.items() if k in regex.INJECTED}
         self.patterns = self.default_patterns() | {k: v for k, v in config.items() if k not in regex.INJECTED}
-        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
+        self.emits = base.emitted(self.given, self.evidence_type)
+        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.emits,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config={**self.given, **self.patterns}, determinism="exact")
 
     def default_patterns(self) -> dict[str, Any]:
@@ -184,7 +185,7 @@ class Abbrev:
             if uses:
                 spans = [base.span(task, text, s, e, role) for s, e in uses[: self.patterns["max_spans"]]]
                 found.append((self.fields(long, mention), {}, spans))
-        items: list[Item] = base.group(self.evidence_type, found)
+        items: list[Item] = base.group(self.emits, found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 

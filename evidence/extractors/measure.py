@@ -48,8 +48,9 @@ class Resolver:
         self.not_a_system = patterns["not_a_system"]
         self.metric_patterns = [tuple(m) for m in patterns["metrics"]]
         self.question = set(patterns["question_metrics"])
-        self.conditions = [i for i in context if i.evidence_type == "condition"]
-        self.metrics = [i for i in context if i.evidence_type == "metric"]
+        self.slots: base.Slots = patterns.get("slots") or base.Slots()   # which context types, which links
+        self.conditions = [i for i in context if i.evidence_type == self.slots.thing]
+        self.metrics = [i for i in context if i.evidence_type == self.slots.metric]
         self.codes: dict[str, tuple[Item, tuple[int, int]]] = {}
         for mention, code, a, b in terms.aliases(text, self.mentions(text)):
             item = self.condition_for(mention)
@@ -177,7 +178,7 @@ def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> l
                      base.span(task, text, metric_cell.start, metric_cell.end, "metric_label")]
             if defined is not None:
                 spans.append(base.span(task, text, *defined, "condition_label"))
-            out.append(({"value": value, "dataset": dataset}, {"condition": item.item_id, "metric": metric.item_id}, spans))
+            out.append(({"value": value, "dataset": dataset}, r.slots.links(item, metric), spans))
     return out
 
 
@@ -237,5 +238,5 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         spans = [base.span(task, text, hit.start(1), end, "value"),
                  base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                  base.span(task, text, met[0].start, met[0].end, "metric_label")]
-        out.append(({"value": value, "dataset": None}, {"condition": cond[1].item_id, "metric": met[1].item_id}, spans))
+        out.append(({"value": value, "dataset": None}, r.slots.links(cond[1], met[1]), spans))
     return out

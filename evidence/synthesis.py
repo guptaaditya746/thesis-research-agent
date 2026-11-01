@@ -18,10 +18,14 @@ Pairing rule (`synthesis.pairing`, rule `same_dataset`):
    `table_cell` (a value in a Markdown table cell beats one in prose; abstracts and discussions may
    restate or misstate results) and `document_order` (the earlier one wins), applied in the order given.
 
-The author claim is the document's first author_claim item; it agrees with the data per
+Every evidence type is found by its pack role (`Types`, from pack.RoleMap): the compared thing (its side field
+says treatment or control), the metric (its canonical field), the measured value (its links to the two, named in
+the protocol's `links`) and the author claim (its direction field). No type or field name is written here.
+
+The author claim is the document's first item of the claim type; it agrees with the data per
 `rules.claim_agrees` through `synthesis.claim_map`. A document without a usable pair is `undetermined`
 with a reason code and text and does not count; the label is `rules.label` of the counts by the
-protocol's decision table. The reason codes double as the funnel's gaps (Part D, ours): `GAP_TYPES` names
+protocol's decision table. The reason codes double as the funnel's gaps (Part D, ours): `GAP_ROLES` names the roles of
 the evidence types the engine escalates for each code, `study()` is the funnel's completeness check, and a
 document the funnel screened out comes in with a pre-set `screened_out` reason and no items. Every study
 also carries `funnel: {screened, stopped_after}` (`answer`).
@@ -45,23 +49,77 @@ Every study carries `flags` (sorted, from rules.FLAGS) and `duplicate_of`; the a
 from __future__ import annotations
 
 import re
-from typing import Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from . import rules
 from .contract import Item
 from .protocol import Protocol, Synthesis
 
+if TYPE_CHECKING:
+    from .pack import RoleMap
+
 SYSTEM = "evidence-engine"
 CELL_BEFORE = re.compile(r"\|[\s*_]*$")
 CELL_AFTER = re.compile(r"^[^\n|]*\|")
-# Why a document is undetermined: the code names the evidence type the funnel escalates (Part D).
+# Why a document is undetermined: the code names the role whose evidence type the funnel escalates (Part D).
 REASONS = {"screened_out": "screened out",
            "no_treatment_condition": "no {treatment} condition found",
            "no_control_condition": "no {control} condition found",
            "no_question_metric": "no metric of the question found",
            "no_pair": "no {treatment} and {control} measurement on a question metric"}
-GAP_TYPES = {"no_treatment_condition": ("condition",), "no_control_condition": ("condition",),
-             "no_question_metric": ("metric",), "no_pair": ("measurement",), "screened_out": ()}
+GAP_ROLES: dict[str, tuple[str, ...]] = {   # reason code -> pack roles (pack.Role values)
+    "no_treatment_condition": ("compared_thing",), "no_control_condition": ("compared_thing",),
+    "no_question_metric": ("metric",), "no_pair": ("measured_value",), "screened_out": ()}
+SIDE_THING, SIDE_VALUE = rules.SIDE_THING, rules.SIDE_VALUE   # answer.json keys of a study side
+
+
+@dataclass(frozen=True)
+class Types:
+    """The protocol's evidence types by role and the fields and links the rules read (pack.RoleMap): `thing` (the
+    compared thing; `side` is its treatment/control field), `metric` (`canonical`), `value` (the measured value;
+    `to_thing` and `to_metric` its links) and `claim` (`direction`); None where the protocol or pack has none."""
+    thing: str | None
+    side: str | None
+    metric: str | None
+    canonical: str | None
+    value: str | None
+    to_thing: str | None
+    to_metric: str | None
+    claim: str | None
+    direction: str | None
+
+    @classmethod
+    def of(cls, protocol: Protocol, roles: RoleMap | None = None) -> Types:
+        from .pack import Role
+        roles = roles if roles is not None else protocol.roles()
+        declared = protocol.evidence_types
+        thing, metric, value, claim = (roles.type_in(r, declared)
+                                       for r in (Role.COMPARED_THING, Role.METRIC, Role.VALUE, Role.CLAIM))
+        links = dict(declared[value].links) if value is not None else {}
+
+        def link(target: str | None) -> str | None:
+            return next((name for name, t in links.items() if t == target), None)
+
+        def field(etype: str | None, which: Any) -> str | None:
+            return roles.field_or_none(etype, which) if etype is not None else None
+
+        return cls(thing=thing, side=field(thing, "side"), metric=metric, canonical=field(metric, "canonical"),
+                   value=value, to_thing=link(thing), to_metric=link(metric), claim=claim,
+                   direction=field(claim, "direction"))
+
+    @staticmethod
+    def of_type(items: list[Item], etype: str | None) -> list[Item]:
+        return [i for i in items if etype is not None and i.evidence_type == etype]
+
+
+def gap_types(protocol: Protocol, code: str, roles: RoleMap | None = None,
+              table: dict[str, tuple[str, ...]] = GAP_ROLES) -> tuple[str, ...]:
+    """The protocol's evidence types of the roles `table` names for reason code `code` (none for an unknown code)."""
+    from .pack import Role
+    roles = roles if roles is not None else protocol.roles()
+    found = (roles.type_in(Role(r), protocol.evidence_types) for r in table.get(code, ()))
+    return tuple(t for t in found if t is not None)
 
 
 def reason(code: str, spec: Synthesis) -> dict[str, str]:
@@ -108,16 +166,19 @@ def _pair(treatment: list[Item], control: list[Item], spec: Synthesis) -> tuple[
     return None
 
 
-def study(protocol: Protocol, document: str, items: list[Item],
-          preset: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
-    """One document's entry and the item ids it rests on.
+def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
+          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+    """One document's entry and the item ids it rests on; `roles` is the protocol's pack by role (None: the
+    protocol's own, `Protocol.roles`).
 
     `preset` is a pre-set reason `{code, text}` for a document the funnel did not extract from (screened out,
     Part D): the entry is undetermined with that reason, whatever `items` holds (the engine passes none)."""
     spec = protocol.synthesis
+    assert spec is not None, "an effect or consistency protocol has a synthesis block"
+    ty = Types.of(protocol, roles)
     by_id = {i.item_id: i for i in items}
-    of = {t: [i for i in items if i.evidence_type == t] for t in ("condition", "metric", "measurement", "author_claim")}
-    claim = of["author_claim"][0] if of["author_claim"] else None
+    things, metrics, values, claims = (ty.of_type(items, t) for t in (ty.thing, ty.metric, ty.value, ty.claim))
+    claim = claims[0] if claims else None
     entry: dict[str, Any] = {"document": document, "direction": "undetermined", "delta": None, "metric": None,
                              "treatment": None, "control": None, "author_claim": None, "reason": None,
                              "flags": [], "duplicate_of": None}
@@ -125,24 +186,25 @@ def study(protocol: Protocol, document: str, items: list[Item],
     if preset is not None:
         entry["reason"] = dict(preset)
         return entry, used
-    roles = {c.fields.get("role") for c in of["condition"]}
-    question = [m for name in spec.metric_names for m in of["metric"] if m.fields.get("canonical") == name]
+    side, canonical, to_thing, to_metric = ty.side or "", ty.canonical or "", ty.to_thing or "", ty.to_metric or ""
+    sides = {c.fields.get(side) for c in things}
+    question = [m for name in spec.metric_names for m in metrics if m.fields.get(canonical) == name]
     pair = None
     for metric in question:
-        on = [m for m in of["measurement"] if m.links.get("metric") == metric.item_id]
+        on = [m for m in values if m.links.get(to_metric) == metric.item_id]
 
-        def role(m: Item) -> Any:
-            cond = by_id.get(m.links.get("condition", ""))
-            return cond.fields.get("role") if cond else None
+        def side_of(m: Item) -> Any:
+            thing = by_id.get(m.links.get(to_thing, ""))
+            return thing.fields.get(side) if thing else None
 
-        pair = _pair([m for m in on if role(m) == spec.compare.treatment],
-                     [m for m in on if role(m) == spec.compare.control], spec)
+        pair = _pair([m for m in on if side_of(m) == spec.compare.treatment],
+                     [m for m in on if side_of(m) == spec.compare.control], spec)
         if pair:
             break
     if pair is None:
-        if spec.compare.treatment not in roles:
+        if spec.compare.treatment not in sides:
             entry["reason"] = reason("no_treatment_condition", spec)
-        elif spec.compare.control not in roles:
+        elif spec.compare.control not in sides:
             entry["reason"] = reason("no_control_condition", spec)
         elif not question:
             entry["reason"] = reason("no_question_metric", spec)
@@ -150,18 +212,19 @@ def study(protocol: Protocol, document: str, items: list[Item],
             entry["reason"] = reason("no_pair", spec)
     else:
         t, c = pair
-        canonical = by_id[t.links["metric"]].fields["canonical"]
+        name = by_id[t.links[to_metric]].fields[canonical]
         direction, delta = rules.effect(float(t.fields["value"]), float(c.fields["value"]),
-                                        spec.higher_is_better(canonical), spec.min_effect)
-        entry.update(direction=direction, delta=delta, metric=canonical,
-                     treatment={"condition": t.links["condition"], "measurement": t.item_id, "value": t.fields["value"]},
-                     control={"condition": c.links["condition"], "measurement": c.item_id, "value": c.fields["value"]})
-        used += [t.item_id, c.item_id, t.links["condition"], c.links["condition"], t.links["metric"]]
+                                        spec.higher_is_better(name), spec.min_effect)
+        entry.update(direction=direction, delta=delta, metric=name,
+                     treatment={SIDE_THING: t.links[to_thing], SIDE_VALUE: t.item_id, "value": t.fields["value"]},
+                     control={SIDE_THING: c.links[to_thing], SIDE_VALUE: c.item_id, "value": c.fields["value"]})
+        used += [t.item_id, c.item_id, t.links[to_thing], c.links[to_thing], t.links[to_metric]]
     if claim is not None:
         determined = entry["direction"] != "undetermined"
-        entry["author_claim"] = {"item": claim.item_id, "direction": claim.fields["direction"],
-                                 "agrees_with_data": rules.claim_agrees(claim.fields["direction"], entry["direction"],
-                                                                        spec.claim_map) if determined else None}
+        said = claim.fields[ty.direction or ""]
+        entry["author_claim"] = {"item": claim.item_id, "direction": said,
+                                 "agrees_with_data": rules.claim_agrees(said, entry["direction"], spec.claim_map)
+                                 if determined else None}
         used.append(claim.item_id)
     return entry, used
 
@@ -197,7 +260,8 @@ NO_FUNNEL = {"screened": False, "stopped_after": None}   # a study's `funnel` wh
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
-           funnel: dict[str, dict[str, Any]] | None = None) -> tuple[dict[str, Any], list[str]]:
+           funnel: dict[str, dict[str, Any]] | None = None, *,
+           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
     """answer.json and the ids of every item it rests on (a duplicate's items included: they are evidence
     the answer reports, even though the duplicate is not counted).
 
@@ -207,8 +271,9 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
     for a screened-out document, and when the gap types' cascades were exhausted). Every study carries
     the key (`NO_FUNNEL` when the engine gives nothing), so the shape does not depend on the strategy."""
     studies, used = [], []
+    roles = roles if roles is not None else protocol.roles()
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc))
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
         entry["funnel"] = dict((funnel or {}).get(doc) or NO_FUNNEL)
         studies.append(entry)
         used += ids

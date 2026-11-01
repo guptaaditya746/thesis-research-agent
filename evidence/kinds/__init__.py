@@ -1,12 +1,14 @@
 """One rules module per question kind (protocol.Kind): how a document's merged items become its entry, which
 evidence types the funnel escalates for a gap, and the answer (answer.json).
 
-Every module has the same four functions:
-- `study(protocol, document, items, preset=None) -> (entry, used item ids)`: the per-document entry; it always
+Every module has the same four functions. Each reads evidence types and fields by their pack role, never by name:
+`roles` (keyword, a pack.RoleMap; the engine passes the protocol's, None reads `protocol.roles()`).
+- `study(protocol, document, items, preset=None, *, roles=None) -> (entry, used item ids)`: the per-document entry; it always
   carries `entry["reason"]`, None when the document is complete (the funnel's completeness check) or
   `{code, text}`; `preset` is the pre-set reason of a document the funnel screened out.
-- `gap_types(protocol, code) -> evidence types` the funnel escalates for a reason code.
-- `answer(protocol, documents, items, reasons, funnel) -> (answer, used item ids)`.
+- `gap_types(protocol, code, *, roles=None) -> evidence types` the funnel escalates for a reason code (the
+  protocol's types of the roles the module's `GAP_ROLES` names).
+- `answer(protocol, documents, items, reasons, funnel, *, roles=None) -> (answer, used item ids)`.
 - `extractor_config(protocol) -> dict`: the question's part of every extractor's config (engine.build_extractors).
 
 `effect` is evidence/synthesis.py unchanged, so an effect protocol gives byte-identical runs. Every other kind's

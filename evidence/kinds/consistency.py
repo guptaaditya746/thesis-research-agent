@@ -2,15 +2,15 @@
 
 Per document, the effect study of evidence/synthesis.py gives the measured direction and the author claim's
 `agrees_with_data`; that is the entry's `agrees`. The reason is synthesis's while the direction is undetermined,
-and `no_claim` when the direction is determined but the paper has no author_claim item (the funnel then
-escalates author_claim). Answer:
+and `no_claim` when the direction is determined but the paper has no item of the claim type (the pack's type of
+role author_claim; the funnel then escalates it). Answer:
 `{kind, system, metric, studies: [{document, claim, direction, agrees, reason}], agreeing, disagreeing,
 undetermined}`, documents in manifest order; `undetermined` holds every study whose `agrees` is null.
 `metric` is the protocol's first question metric (the consistency protocols name one).
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .. import synthesis
 from ..contract import Item
@@ -18,15 +18,18 @@ from ..evidence_types import EvidenceType
 from ..protocol import Protocol
 from . import effect
 
+if TYPE_CHECKING:
+    from ..pack import RoleMap
+
 KIND = "consistency"
-GAP_TYPES: dict[str, tuple[EvidenceType, ...]] = {**synthesis.GAP_TYPES, "no_claim": ("author_claim",)}  # type: ignore[dict-item]
+GAP_ROLES: dict[str, tuple[str, ...]] = {**synthesis.GAP_ROLES, "no_claim": ("author_claim",)}   # pack.Role values
 NO_CLAIM = {"code": "no_claim", "text": "no author claim found"}
 
 
-def study(protocol: Protocol, document: str, items: list[Item],
-          preset: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
+def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
+          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
     effect.spec(protocol)
-    full, used = synthesis.study(protocol, document, items, preset)
+    full, used = synthesis.study(protocol, document, items, preset, roles=roles)
     claim = full["author_claim"]
     reason = full["reason"]
     if reason is None and claim is None:
@@ -36,16 +39,18 @@ def study(protocol: Protocol, document: str, items: list[Item],
     return entry, used
 
 
-def gap_types(protocol: Protocol, code: str) -> tuple[EvidenceType, ...]:
-    return GAP_TYPES.get(code, ())
+def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) -> tuple[EvidenceType, ...]:
+    return synthesis.gap_types(protocol, code, roles, GAP_ROLES)
 
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
-           funnel: dict[str, dict[str, Any]] | None = None) -> tuple[dict[str, Any], list[str]]:
+           funnel: dict[str, dict[str, Any]] | None = None, *,
+           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
     studies, used = [], []
+    roles = roles if roles is not None else protocol.roles()
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc))
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
         studies.append(entry)
         used += ids
     groups = {name: [s["document"] for s in studies if s["agrees"] is value]

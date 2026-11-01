@@ -13,12 +13,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from collections.abc import Sequence
-from typing import Any, Literal, TypeVar
+from typing import Any, TypeVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from .pack import questions_path
+from .pack import load_pack, questions_path
 from .protocol import Kind, load as load_protocol
 from .rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 
@@ -30,12 +30,12 @@ TRUTH_FIELDS: dict[str, tuple[str, ...]] = {"effect": ("metric", "min_effect"), 
 
 class QuestionTruth(BaseModel):
     """What the expected answer is computed with (evaluation): the question metric and the neutral band, or the
-    inventory's target type."""
+    inventory's target type (any type of the questions file's pack, `parse` checks it)."""
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     metric: str | None = Field(None, min_length=1)
     min_effect: float | None = Field(None, gt=0)
-    target: Literal["metric", "condition", "dataset"] | None = None
+    target: str | None = Field(None, min_length=1)
 
 
 class QuestionEntry(BaseModel):
@@ -78,8 +78,9 @@ class QuestionsFile(BaseModel):
         return self
 
 
-def parse(path: Path) -> QuestionsFile:
-    """The file, checked (ValueError naming every problem)."""
+def parse(path: Path, pack: Path | None = None) -> QuestionsFile:
+    """The file, checked (ValueError naming every problem). When `pack` (default: the file's folder) is a pack
+    folder (it holds pack.yaml), every inventory `truth.target` must be a type of that pack."""
     try:
         data: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
     except OSError as exc:
@@ -87,10 +88,18 @@ def parse(path: Path) -> QuestionsFile:
     except yaml.YAMLError as exc:
         raise ValueError(f"{path.name} is not YAML: {str(exc)[:300]}") from exc
     try:
-        return QuestionsFile.model_validate(data)
+        found = QuestionsFile.model_validate(data)
     except ValidationError as exc:
         raise ValueError(f"{path.name} does not validate: " + "; ".join(
             f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())) from exc
+    folder = Path(pack if pack is not None else path.parent).resolve()
+    if (folder / "pack.yaml").is_file():   # a pack's questions file: every inventory target is a type of the pack
+        types = load_pack(folder.name, root=folder.parent).types
+        bad = [f"{q.id}: {q.truth.target}" for q in found.questions if q.truth.target not in (None, *types)]
+        if bad:
+            raise ValueError(f"{path.name}: truth.target names no type of pack {folder.name!r} ({sorted(types)}): "
+                             + "; ".join(bad))
+    return found
 
 
 def load(path: Path | str = DEFAULT) -> list[QuestionEntry]:

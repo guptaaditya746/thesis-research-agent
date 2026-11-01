@@ -1254,7 +1254,7 @@ def integration_best(m: Matching, protocol: Protocol | None) -> dict[str, Any]:
         want = canon.KIND_OF.get(canon.key("condition", str(fact.data.get("label") or "")) or "")
         if want is None:
             continue
-        got = (best_rules.kind_of(item, protocol.best) if protocol is not None and protocol.best is not None
+        got = (best_rules.kind_of(item, protocol.best, protocol.roles()) if protocol is not None and protocol.best is not None
                else item.fields.get("kind"))
         n += 1
         ok += got == want

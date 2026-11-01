@@ -34,6 +34,10 @@ FLAGS: tuple[Flag, ...] = ("claim_disagrees", "duplicate", "large_effect")
 COUNTS = ("supporting", "contradicting", "neutral")      # what a label table's conditions may name
 GROUP_OF: dict[Direction, str] = {"supports": "supporting", "contradicts": "contradicting", "neutral": "neutral"}
 CONDITION = re.compile(r"^\s*(>=|<=|==|>|<)\s*(\d+)\s*$")
+# answer.json's keys of a study's treatment and control: the compared thing's item id and the measured value's item
+# id. Names of the answer format (graph.py, the web app and the evaluation read them), not evidence type names: they
+# stay the same whatever a domain pack calls its types.
+SIDE_THING, SIDE_VALUE = "condition", "measurement"
 VALUE_DECIMALS = 3               # values are compared for duplication after rounding to this many decimals
 
 

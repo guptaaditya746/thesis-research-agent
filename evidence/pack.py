@@ -42,6 +42,7 @@ class TypeDecl(Strict):
     side_field: str | None = None
     canonical_field: str | None = None
     direction_field: str | None = None
+    kind_field: str | None = None      # the compared thing's method kind (kind `best`), when the type carries one
 
 
 class Words(Strict):
@@ -70,6 +71,10 @@ READS: dict[str, tuple[str, ...]] = {
     "regex_author_claim": ("subject", "claims"), "regex_dataset": ("pattern",), "gliner_dataset": ("labels",),
     "agentic": ("display", "metric_names"),   # the examples of its task brief (evidence/agentic/task.py)
 }
+# The measured-value extractors also read `types` (role -> the pack's type of that role): which context items are
+# the compared things and which the metrics, and so the links they fill (protocol EvidenceTypeSpec.links).
+for _name in ("regex_measurement", "regex_measurement_units", "number_measurement"):
+    READS[_name] = (*READS[_name], "types")
 
 
 class Pack(Strict):
@@ -98,6 +103,7 @@ class Pack(Strict):
             "pattern": w.dataset_pattern,
             "display": dict(self.display),
             "metric_names": [m for m in dict.fromkeys(c for _, c, _ in w.metrics) if m != "other"],
+            "types": {str(role): found[0] for role in Role if len(found := RoleMap(self).types_of(role)) == 1},
         }
         if etype in w.gliner_labels:
             words["labels"] = list(w.gliner_labels[etype])
@@ -113,7 +119,7 @@ KIND_ROLES: dict[str, tuple[Role, ...]] = {
     "consistency": (Role.COMPARED_THING, Role.METRIC, Role.VALUE, Role.CLAIM),
     "inventory": (),
 }
-FieldName = Literal["name", "side", "canonical", "direction"]
+FieldName = Literal["name", "side", "canonical", "direction", "kind"]
 
 
 class RoleMap:
@@ -126,6 +132,11 @@ class RoleMap:
     def types_of(self, role: Role) -> list[str]:
         """Every type of role `role`, in the pack's order."""
         return [name for name, decl in self.pack.types.items() if decl.role == role]
+
+    def type_in(self, role: Role, declared: Iterable[str]) -> str | None:
+        """The first type of role `role` (pack order) among `declared` (a protocol's evidence types); None if none."""
+        names = set(declared)
+        return next((t for t in self.types_of(role) if t in names), None)
 
     def type_of(self, role: Role) -> str:
         """The one type of role `role`; PackError naming the role and the pack when there is none or several."""
@@ -145,6 +156,11 @@ class RoleMap:
         if name is None:
             raise PackError(f"pack {self.pack.name!r}: type {etype!r} declares no {which}_field")
         return name
+
+    def field_or_none(self, etype: str, which: FieldName) -> str | None:
+        """`field`, or None when the type declares no such field."""
+        decl = self.pack.types.get(etype)
+        return getattr(decl, f"{which}_field") if decl is not None else None
 
 
 def check(pack: Pack, kinds: Iterable[str]) -> None:

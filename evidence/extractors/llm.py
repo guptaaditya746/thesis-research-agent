@@ -45,10 +45,12 @@ class Proposal:
 
 
 class LLMExtractor:
-    def __init__(self, evidence_type: str, config: dict[str, Any]) -> None:
+    def __init__(self, name_type: str, config: dict[str, Any]) -> None:
+        """`name_type` names the extractor (`llm_<name_type>`); its items are of the evidence type the engine
+        configures (`evidence_type`, a domain pack may call the type otherwise), else of `name_type`. Everything
+        the model is asked comes from the configured type's schema, links, span roles and description."""
         cfg = DEFAULTS | config
-        if cfg.get("evidence_type", evidence_type) != evidence_type:
-            raise ValueError(f"llm_{evidence_type} built for evidence type {cfg['evidence_type']}")
+        evidence_type = str(cfg.get("evidence_type") or name_type)
         self.evidence_type = evidence_type
         self.cfg = cfg
         self.roles = list(cfg.get("roles") or ["quote"])
@@ -69,7 +71,7 @@ class LLMExtractor:
                                                                 max_tokens=cfg["max_tokens"])),
                        "retry_model_settings": dict(modelcall.settings(temperature=cfg["temperature"], seed=cfg["seed"],
                                                                       max_tokens=cfg["retry_max_tokens"]))}
-        self.spec = ExtractorSpec(name=f"llm_{evidence_type}", version=VERSION, kind="llm",
+        self.spec = ExtractorSpec(name=f"llm_{name_type}", version=VERSION, kind="llm",
                                   evidence_types=(evidence_type,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config=config_out, determinism="near_exact")
 

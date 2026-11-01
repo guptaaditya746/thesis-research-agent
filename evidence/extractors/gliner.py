@@ -115,6 +115,7 @@ class GlinerExtractor:
         roles = list(given.get("roles") or [])
         self.role = roles[0] if roles else ROLE[self.evidence_type]
         self.given = given
+        self.emits = base.emitted(given, self.evidence_type)   # the configured type (a pack may rename it)
         # the topic words `fields` reads (the pack's or the protocol's): condition patterns and the negated-object
         # lookahead, or metric [pattern, canonical, higher_is_better] rows, as the regex extractors take them
         self.words: dict[str, Any] = {k: config[k] for k in self.WORDS}
@@ -123,7 +124,7 @@ class GlinerExtractor:
 
     def _spec(self) -> ExtractorSpec:
         return ExtractorSpec(name=self.name, version=VERSION, kind="model",
-                             evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
+                             evidence_types=(self.emits,),  # type: ignore[arg-type]
                              code_sha256=CODE_SHA256,
                              config={**self.given, **self.words, "service": "gliner", "model": self.model,
                                      "labels": self.labels, "threshold": self.threshold, "chunk_chars": self.chunk_chars,
@@ -177,7 +178,7 @@ class GlinerExtractor:
             for e in entities:
                 start, end = a + e["start"], a + e["end"]
                 if not (a <= start < end <= b) or text[start:end] != e["text"]:
-                    rejected.append(Rejected(evidence_type=self.evidence_type, fields={}, quotes=(str(e["text"]),),  # type: ignore[arg-type]
+                    rejected.append(Rejected(evidence_type=self.emits, fields={}, quotes=(str(e["text"]),),  # type: ignore[arg-type]
                                              reason="not_found", detail="entity offsets do not hold its text"))
                     continue
                 start, end = _trim(text, start, end)
@@ -185,7 +186,7 @@ class GlinerExtractor:
                     continue
                 fields = self.fields(text[start:end])
                 if fields is None:
-                    rejected.append(Rejected(evidence_type=self.evidence_type, fields={}, quotes=(text[start:end],),  # type: ignore[arg-type]
+                    rejected.append(Rejected(evidence_type=self.emits, fields={}, quotes=(text[start:end],),  # type: ignore[arg-type]
                                              reason="schema", detail="no term matches and other is not allowed"))
                     continue
                 entry = found.setdefault(digest(fields), (fields, []))
@@ -194,7 +195,7 @@ class GlinerExtractor:
                     entry[1].append(base.span(task, text, start, end, self.role))
                 kept += 1
             coverage.append(Coverage(range=(a, b), status="found" if kept else "none", found=kept))
-        items: list[Item] = base.group(self.evidence_type, [(f, {}, spans) for f, spans in found.values()])  # type: ignore[arg-type]
+        items: list[Item] = base.group(self.emits, [(f, {}, spans) for f, spans in found.values()])  # type: ignore[arg-type]
         status = "ok" if not errors else ("error" if len(errors) == len(chunks) else "partial")
         error = ExtractionError(reason="service_call", detail="; ".join(sorted(set(errors)))[:300]) if errors else None
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status=status,

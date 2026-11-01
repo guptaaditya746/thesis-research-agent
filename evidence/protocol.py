@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import yaml
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationInfo, model_validator
 
 from . import rules
 from .contract import Budget, digest
@@ -218,9 +218,10 @@ class Synthesis(Strict):
 
 
 class Inventory(Strict):
-    """An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to
-    the other names it goes by."""
-    target: Literal["metric", "condition", "dataset"]
+    """An inventory question: list every distinct item of one evidence type. `target` is any evidence type the
+    protocol declares whose pack type has a name field (Protocol checks both); `same` maps a canonical name to the
+    other names it goes by."""
+    target: str = Field(min_length=1)
     same: dict[str, tuple[str, ...]] = Field(default_factory=dict)
 
 
@@ -251,9 +252,15 @@ class Protocol(Strict):
     best: Best | None = None
     consistency: Consistency | None = None
     domain: str = Field(default="rag", pattern=r"^[a-z0-9][a-z0-9_-]*$")   # the pack in domains/ (no key: rag)
+    # The folder the pack is read from (`parse(..., domains=)`; None: pack.DOMAINS). Not part of the protocol's
+    # content or hash: the same protocol text under a test pack folder is the same protocol.
+    _domains: Path | None = PrivateAttr(default=None)
 
     @model_validator(mode="after")
-    def _consistent(self) -> Protocol:
+    def _consistent(self, info: ValidationInfo) -> Protocol:
+        root = (info.context or {}).get("domains")
+        if root is not None:
+            self._domains = Path(root)
         own = KIND_BLOCKS[self.kind]
         for block in own:
             if getattr(self, block) is None:
@@ -265,7 +272,7 @@ class Protocol(Strict):
         if SCREEN_TYPE in self.evidence_types:
             raise ValueError(f"evidence_types may not be named {SCREEN_TYPE!r}: it is the funnel's screening pseudo type")
         from .pack import check
-        pack = _pack(self.domain)
+        pack = self.pack()
         check(pack, [self.kind])   # the pack has a type of every role the kind needs (spec section 6.2)
         unknown = [t for t in self.evidence_types if t not in pack.types]
         if unknown:
@@ -325,7 +332,7 @@ class Protocol(Strict):
     def _enum(self, roles: RoleMap, role: Role, which: FieldName) -> tuple[tuple[str, str], list[Any]] | None:
         """((type, field), the field's enum) for the protocol's type of `role` and its `which` field; None when the
         protocol declares no type of that role, or the type's field has no enum."""
-        etype = next((t for t in roles.types_of(role) if t in self.evidence_types), None)
+        etype = roles.type_in(role, self.evidence_types)
         if etype is None:
             return None
         field = roles.field(etype, which)
@@ -338,13 +345,28 @@ class Protocol(Strict):
         if self.kind == "consistency" and not any(t in self.evidence_types for t in roles.types_of(Role.CLAIM)):
             raise ValueError(f"a consistency protocol needs an evidence type of role {Role.CLAIM.value!r} "
                              f"(pack {roles.pack.name!r}: {roles.types_of(Role.CLAIM)})")
-        if self.inventory is not None and self.inventory.target not in self.evidence_types:
-            raise ValueError(f"inventory.target {self.inventory.target!r} is not a declared evidence type")
+        if self.inventory is not None:
+            target = self.inventory.target
+            if target not in self.evidence_types:
+                raise ValueError(f"inventory.target {target!r} is not a declared evidence type")
+            if roles.field_or_none(target, "name") is None:
+                raise ValueError(f"inventory.target {target!r}: pack {roles.pack.name!r} declares no name_field for it")
         if self.best is not None:
-            thing = next((t for t in roles.types_of(Role.COMPARED_THING) if t in self.evidence_types), None)
-            enum = self.evidence_types[thing].enum_of("kind") if thing is not None else None
+            thing = roles.type_in(Role.COMPARED_THING, self.evidence_types)
+            field = roles.field_or_none(thing, "kind") if thing is not None else None
+            enum = self.evidence_types[thing].enum_of(field) if thing is not None and field is not None else None
             if enum is None or set(self.best.kinds) != set(enum):
-                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal {thing or 'condition'}.kind enum {enum}")
+                where = f"{thing}.{field}" if thing and field else f"the kind field of the {Role.COMPARED_THING.value} type"
+                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal {where} enum {enum}")
+
+    def pack(self) -> Pack:
+        """The protocol's domain pack (from its `domains` folder, else domains/), its types registered."""
+        return _pack(self.domain, self._domains)
+
+    def roles(self) -> RoleMap:
+        """The pack's evidence types by role (pack.RoleMap)."""
+        from .pack import RoleMap
+        return RoleMap(self.pack())
 
     @property
     def sha256(self) -> str:
@@ -377,21 +399,23 @@ def _cached_pack(domain: str, root: Path) -> Pack:
     return load_pack(domain, root=root)
 
 
-def _pack(domain: str) -> Pack:
-    """The protocol's domain pack, read once per process from domains/ (pack.DOMAINS, read at call time), its types
-    registered with the contract (each time; registering again is a no-op) so items of them validate."""
+def _pack(domain: str, root: Path | None = None) -> Pack:
+    """The protocol's domain pack, read once per process from `root` (None: domains/, pack.DOMAINS read at call
+    time), its types registered with the contract (each time; registering again is a no-op) so items of them
+    validate."""
     from . import pack
-    loaded = _cached_pack(domain, pack.DOMAINS)
+    loaded = _cached_pack(domain, Path(root) if root is not None else pack.DOMAINS)
     pack.register_pack(loaded)
     return loaded
 
 
-def parse(text: str) -> Protocol:
+def parse(text: str, domains: Path | str | None = None) -> Protocol:
+    """The protocol in `text`; its pack is read from `domains` (None: domains/)."""
     data = yaml.safe_load(text)
     if not isinstance(data, dict):
         raise ValueError("a protocol is a YAML mapping")
-    return Protocol.model_validate(data)
+    return Protocol.model_validate(data, context={"domains": Path(domains)} if domains is not None else None)
 
 
-def load(path: Path | str) -> Protocol:
-    return parse(Path(path).read_bytes().decode("utf-8"))
+def load(path: Path | str, domains: Path | str | None = None) -> Protocol:
+    return parse(Path(path).read_bytes().decode("utf-8"), domains)

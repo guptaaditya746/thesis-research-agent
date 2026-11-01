@@ -110,7 +110,8 @@ class NumberMeasurement:
         rest = {k: v for k, v in config.items() if k not in regex.INJECTED}
         self.fractions = [str(m) for m in rest.pop("fraction_metrics")]   # the pack's, or the protocol's
         self.patterns = {"alias": terms.ALIAS} | rest
-        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=("measurement",),
+        self.emits = base.emitted(self.given, self.evidence_type)
+        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.emits,),
                                   code_sha256=CODE_SHA256,
                                   config={**self.given, **self.patterns, "fraction_metrics": self.fractions},
                                   determinism="exact")
@@ -122,7 +123,7 @@ class NumberMeasurement:
         datasets = [str(i.fields["name"]) for i in context if i.evidence_type == "dataset" and i.fields.get("name")]
         treatment = (self.given.get("compare") or {}).get("treatment")
         resolver = Resolver(text, context, {**self.patterns, "question_metrics": self.fractions,
-                                            "treatment": treatment})
+                                            "treatment": treatment, "slots": base.Slots.of(self.given)})
         found: list[Found] = []
         if resolver.conditions and resolver.metrics:
             names = Surfaces(resolver)
@@ -132,7 +133,7 @@ class NumberMeasurement:
             for a, b in parts:
                 for s, e in base.sentences(text, a, b):
                     found.extend(self._sentence(task, text, s, e, names, datasets))
-        items: list[Item] = base.group("measurement", found)
+        items: list[Item] = base.group(self.emits, found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 
@@ -201,7 +202,7 @@ class NumberMeasurement:
                     spans.append(base.span(task, text, *defined, "condition_label"))
                 dataset = row_dataset or _named(col.text, datasets) or caption_dataset
                 out.append(({"value": value, "dataset": dataset},
-                            {"condition": item.item_id, "metric": metric.item_id}, spans))
+                            r.r.slots.links(item, metric), spans))
         return out
 
     # sentences -------------------------------------------------------------------------------------------
@@ -235,7 +236,7 @@ class NumberMeasurement:
                      base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                      base.span(task, text, met[0].start, met[0].end, "metric_label")]
             out.append(({"value": value, "dataset": dataset},
-                        {"condition": cond[1].item_id, "metric": met[1].item_id}, spans))
+                        r.r.slots.links(cond[1], met[1]), spans))
         return out
 
     def _candidate(self, text: str, s: int, e: int, hit: re.Match[str], excluded: list[tuple[int, int]]) -> bool:

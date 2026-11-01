@@ -569,7 +569,7 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
   `screened_out` and the screen's text; in `all` the decision is recorded and extraction runs anyway, so
   screening precision and recall can be scored on the same run.
 - **Completeness** = `synthesis.study()` on the document's merged items gives a direction. The gap is the
-  reason code; its evidence types (`synthesis.GAP_TYPES`: `no_*_condition` → condition,
+  reason code; its evidence types (`synthesis.GAP_ROLES`, by pack role: `no_*_condition` → condition,
   `no_question_metric` → metric, `no_pair` → measurement) are the only types the next position runs,
   with the merged items of their context types as context.
 - **Targeted task**: `ExtractionTask.focus: {gap: code, have: {roles: [...], metrics: [...]}, want: text}`

@@ -1,12 +1,15 @@
 """Kind `effect`: does the treatment change the question metric? evidence/synthesis.py, unchanged."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .. import synthesis
 from ..contract import Item
 from ..evidence_types import EvidenceType
 from ..protocol import Protocol, Synthesis
+
+if TYPE_CHECKING:
+    from ..pack import RoleMap
 
 
 def spec(protocol: Protocol) -> Synthesis:
@@ -14,19 +17,20 @@ def spec(protocol: Protocol) -> Synthesis:
     return protocol.synthesis
 
 
-def study(protocol: Protocol, document: str, items: list[Item],
-          preset: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
-    return synthesis.study(protocol, document, items, preset)
+def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
+          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+    return synthesis.study(protocol, document, items, preset, roles=roles)
 
 
-def gap_types(protocol: Protocol, code: str) -> tuple[EvidenceType, ...]:
-    return synthesis.GAP_TYPES.get(code, ())  # type: ignore[return-value]
+def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) -> tuple[EvidenceType, ...]:
+    return synthesis.gap_types(protocol, code, roles)
 
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
-           funnel: dict[str, dict[str, Any]] | None = None) -> tuple[dict[str, Any], list[str]]:
-    return synthesis.answer(protocol, documents, items, reasons, funnel)
+           funnel: dict[str, dict[str, Any]] | None = None, *,
+           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+    return synthesis.answer(protocol, documents, items, reasons, funnel, roles=roles)
 
 
 def extractor_config(protocol: Protocol) -> dict[str, Any]:

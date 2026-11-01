@@ -19,7 +19,7 @@ supervisor's):
   `undetermined` with reason `screened_out`. Otherwise position 0 of every type's cascade runs; then, while
   the kind's `study()` (evidence/kinds/; for effect `synthesis.study()`) on the document's merged items gives
   a reason, the gap's reason code names the evidence types to escalate (the kind's `gap_types`; for effect
-  `synthesis.GAP_TYPES`), and each of those runs the NEXT position of its own
+  `synthesis.GAP_ROLES`, the pack roles whose protocol types escalate), and each of those runs the NEXT position of its own
   cascade with a targeted task (`contract.Focus`, `focus_for`), the merged items of its context types as
   context, re-merged with its earlier results; the funnel stops when the study is complete or when no gap
   type has a position left (the gap is recorded). `cascade: until_found` is an `all`-mode rule; the funnel's
@@ -85,7 +85,7 @@ from .extractors import gliner
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
-from .pack import load_pack
+from .pack import Role, RoleMap, load_pack
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .recording import Provider, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
@@ -118,13 +118,15 @@ class Settings:
     gliner_model: str | None = None
     confirm: Confirm = "llm"                       # llm: GLiNER-only items need the LLM extractor too; none: keep all
     relink: Relink = "on"                          # on: links follow an item a later merge gave a new id; off: as before 1 Nov
+    domains: str | None = None                     # the folder of the protocol's pack (None: domains/; a test pack)
 
     def json(self) -> dict[str, Any]:
         # `confirm` only when it is llm, `relink` only when on: the settings of a run made before them are unchanged
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
                 "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
                 "gliner_model": self.gliner_model, **({"confirm": self.confirm} if self.confirm == "llm" else {}),
-                **({"relink": self.relink} if self.relink == "on" else {})}
+                **({"relink": self.relink} if self.relink == "on" else {}),
+                **({"domains": self.domains} if self.domains is not None else {})}
 
 
 def default_provider(alias: str) -> Any:
@@ -141,7 +143,7 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     get `gliner_url` (None: unavailable) and, unless their config pins one, `model` = `gliner_model`; only
     they, so no other extractor's config (and id) changes. Each config starts from the topic words of the
     protocol's domain pack (`Pack.extractor_config`); the protocol's own config is put over them (it wins)."""
-    pack = load_pack(protocol.domain)
+    pack = protocol.pack()
     out: dict[str, list[tuple[ExtractorRef, Extractor]]] = {}
     specs: dict[str, tuple[EvidenceTypeSpec, dict[str, Any]]] = {etype: (spec, {}) for etype, spec in protocol.evidence_types.items()}
     question = kinds.of(protocol).extractor_config(protocol)   # the kind's part (effect: question_metrics, compare)
@@ -165,22 +167,36 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     return out
 
 
-def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[Item]]) -> Focus:
-    """The targeted task of an escalation (Part D): the gap code, what was found (condition roles, canonical
-    metrics) and the request in words, from the gap code and the protocol's roles. For effect and consistency
-    protocols (or a `synthesis` block given directly); for the other kinds the task names the gap only (nothing
-    in `have`) with the generic request."""
+def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[Item]],
+              roles: RoleMap | None = None) -> Focus:
+    """The targeted task of an escalation (Part D): the gap code, what was found (the sides of the compared things,
+    the canonical metrics; types and fields by pack role) and the request in words, from the gap code and the
+    protocol's compared sides. For effect and consistency protocols (or a `synthesis` block given directly, read
+    with `roles`, default the rag pack); for the other kinds the task names the gap only (nothing in `have`) with
+    the generic request."""
     if isinstance(protocol, Synthesis):
         spec = protocol
+        roles = roles if roles is not None else RoleMap(load_pack("rag"))
+        thing, metric = roles.type_of(Role.COMPARED_THING), roles.type_of(Role.METRIC)
     elif protocol.kind in ("effect", "consistency") and protocol.synthesis is not None:
         spec = protocol.synthesis
+        roles = roles if roles is not None else protocol.roles()
+        thing = roles.type_in(Role.COMPARED_THING, protocol.evidence_types)
+        metric = roles.type_in(Role.METRIC, protocol.evidence_types)
     else:
         return Focus(gap=gap, have={}, want=f"the study is incomplete ({gap}); find what is missing")
     t, c = spec.compare.treatment, spec.compare.control
-    roles = sorted({str(i.fields.get("role")) for i in merged.get("condition", []) if i.fields.get("role") is not None})
-    metrics = sorted({str(i.fields.get("canonical")) for i in merged.get("metric", []) if i.fields.get("canonical") is not None})
+    side = roles.field_or_none(thing, "side") if thing is not None else None
+    canonical = roles.field_or_none(metric, "canonical") if metric is not None else None
+
+    def values(etype: str | None, field: str | None) -> list[str]:
+        if etype is None or field is None:
+            return []
+        return sorted({str(i.fields.get(field)) for i in merged.get(etype, []) if i.fields.get(field) is not None})
+
+    roles_found, metrics = values(thing, side), values(metric, canonical)
+    found = ", ".join(roles_found) or "none"
     question = ", ".join(spec.metric_names)
-    found = ", ".join(roles) or "none"
     want = {
         "no_treatment_condition": f"the {t} condition is missing (condition roles found: {found}); find the condition the "
                                   f"paper reports as its {t} system, with the label the paper gives it",
@@ -193,7 +209,7 @@ def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[I
                    f"one dataset was found; find the values of both conditions on the same dataset and metric "
                    f"({', '.join(m for m in metrics if m in spec.metric_names) or question}), tables first",
     }.get(gap, f"the study is incomplete ({gap}); find what is missing")
-    return Focus(gap=gap, have={"roles": roles, "metrics": metrics}, want=want)
+    return Focus(gap=gap, have={"roles": roles_found, "metrics": metrics}, want=want)
 
 
 @dataclass
@@ -230,6 +246,7 @@ class Execution:
                  phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off") -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
         self.confirm, self.relink = confirm, relink
+        self.roles = protocol.roles()                    # the pack's types by role, for the kind's rules
         self.dangling = 0                                 # links to no item, over the run (`relink: on` only)
         self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
@@ -323,7 +340,7 @@ class Execution:
             if not pending:
                 return   # exhausted: the gap stays recorded in the last decision
             round_no += 1
-            focus = focus_for(gap or "", self.protocol, state.merged)
+            focus = focus_for(gap or "", self.protocol, state.merged, self.roles)
             for etype in pending:
                 state.focus[etype] = focus
                 self.run_position(state, [etype], state.next_position[etype], round_no=round_no)
@@ -469,10 +486,10 @@ class Execution:
         effect: a direction), or the gap's reason code and the evidence types to escalate (`gap_types`). A
         `completeness` event and a funnel.json entry."""
         rules = kinds.of(self.protocol)
-        entry, _ = rules.study(self.protocol, state.doc.id, state.items())
+        entry, _ = rules.study(self.protocol, state.doc.id, state.items(), roles=self.roles)
         complete = entry["reason"] is None
         gap = None if complete else entry["reason"]["code"]
-        gap_types = rules.gap_types(self.protocol, gap) if gap else ()
+        gap_types = rules.gap_types(self.protocol, gap, roles=self.roles) if gap else ()
         decision = {"after_round": round_no, "after_position": max((s["position"] for s in state.steps), default=None),
                     "complete": complete, "gap": gap, "gap_types": list(gap_types)}
         state.decisions.append(decision)
@@ -530,7 +547,7 @@ class Execution:
         funnel = {p.id: {"screened": self.funnel[p.id]["screen"]["relevant"] is False if self.funnel[p.id]["screen"] else False,
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
         answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
-                                                      funnel)
+                                                      funnel, roles=self.roles)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
@@ -577,7 +594,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     """Execute and write one run directory; returns its path."""
     for module in settings.imports:
         importlib.import_module(module)
-    protocol = parse(protocol_bytes.decode("utf-8"))
+    protocol = parse(protocol_bytes.decode("utf-8"), settings.domains)
     corpus = Corpus(settings.corpus)
     run_id = run_id or new_run_id(protocol.id, "" if mode == "run" else f"-{mode}")
     root = Path(out_dir) / run_id
@@ -633,12 +650,14 @@ def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, c
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
         retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
-        relink: Relink = "on") -> Path:
-    """A normal run: cached calls are reused, new ones are made and stored."""
+        relink: Relink = "on", domains: Path | str | None = None) -> Path:
+    """A normal run: cached calls are reused, new ones are made and stored. `domains`: the folder of the protocol's
+    pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm=confirm, relink=relink)
+                        confirm=confirm, relink=relink,
+                        domains=str(Path(domains).resolve()) if domains is not None else None)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
                        retry_errors=retry_errors, workers=workers)

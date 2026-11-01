@@ -1,7 +1,7 @@
 name: rag
 types:
-  condition: {prefix: c, role: compared_thing, name_field: label, side_field: role}
-  metric: {prefix: k, role: metric, canonical_field: canonical}
+  condition: {prefix: c, role: compared_thing, name_field: label, side_field: role, kind_field: kind}
+  metric: {prefix: k, role: metric, name_field: name, canonical_field: canonical}
   measurement: {prefix: m, role: measured_value}
   author_claim: {prefix: a, role: author_claim, direction_field: direction}
   dataset: {prefix: d, role: context, name_field: name}

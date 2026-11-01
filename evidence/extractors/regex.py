@@ -20,7 +20,8 @@ from .measure import measurements
 VERSION = 2
 SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
-INJECTED = ("evidence_type", "field_schema", "links", "roles", "question_metrics", "compare")   # added by the engine
+# added by the engine (`types`: the pack's type of each role, for the measured-value extractors)
+INJECTED = ("evidence_type", "field_schema", "links", "roles", "question_metrics", "compare", "types")
 
 
 class RegexExtractor:
@@ -31,9 +32,10 @@ class RegexExtractor:
     def __init__(self, config: dict[str, Any]) -> None:
         given = {k: v for k, v in config.items() if k in INJECTED}
         self.given = given
+        self.emits = base.emitted(given, self.evidence_type)
         self.patterns = self.default_patterns() | {k: v for k, v in config.items() if k not in INJECTED}
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex",
-                                  evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
+                                  evidence_types=(self.emits,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config={**given, **self.patterns}, determinism="exact")
 
     def default_patterns(self) -> dict[str, Any]:
@@ -74,7 +76,7 @@ class ConditionRegex(RegexExtractor):
             spans = [base.span(task, text, *defined.get(m, (m.start, m.end)), "condition_label")
                      for m in chosen[: self.patterns["max_spans"]]]
             found.append(({"label": " ".join(mine[0].text.split()), "role": role}, {}, spans))
-        return base.group("condition", found)
+        return base.group(self.emits, found)
 
 
 class MetricRegex(RegexExtractor):
@@ -95,7 +97,7 @@ class MetricRegex(RegexExtractor):
             spans = [base.span(task, text, m.start, m.end, "metric_label") for m in mentions[: self.patterns["max_spans"]]]
             fields = {"name": " ".join(first.text.split()), "canonical": first.key, "higher_is_better": first.higher_is_better}
             found.append((fields, {}, spans))
-        return base.group("metric", found)
+        return base.group(self.emits, found)
 
 
 class MeasurementRegex(RegexExtractor):
@@ -108,8 +110,9 @@ class MeasurementRegex(RegexExtractor):
         # the question metrics come from the protocol's synthesis block (the engine injects them), never from here
         found = measurements(task, text, parts, ctx.context_items(),
                              {**self.patterns, "question_metrics": self.given.get("question_metrics", []),
-                              "treatment": (self.given.get("compare") or {}).get("treatment")})
-        return base.group("measurement", found)
+                              "treatment": (self.given.get("compare") or {}).get("treatment"),
+                              "slots": base.Slots.of(self.given)})
+        return base.group(self.emits, found)
 
 
 class AuthorClaimRegex(RegexExtractor):
@@ -136,7 +139,7 @@ class AuthorClaimRegex(RegexExtractor):
         best = min(candidates)
         same = [c for c in sorted(candidates) if c[0] == best[0] and c[3] == best[3]][: self.patterns["max_spans"]]
         spans: list[Span] = [base.span(task, text, s, e, "claim") for _, s, e, _ in same]
-        return base.group("author_claim", [({"direction": best[3]}, {}, spans)])
+        return base.group(self.emits, [({"direction": best[3]}, {}, spans)])
 
     def _priority(self, heads: list[tuple[int, int, str | None]], pos: int) -> int:
         """Index of the first preferred section word in the heading the position falls under."""

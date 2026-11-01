@@ -1,0 +1,7 @@
+{
+  "source": "hand-moved from code at tag ev3b-code",
+  "files": {
+    "words.yaml": "evidence/extractors/terms.py, gliner.py, units.py, dataset.py, abbrev.py; evidence/protocols/rag-factuality-funnel.yaml",
+    "pack.yaml": "evidence types of rag-factuality-funnel.yaml"
+  }
+}

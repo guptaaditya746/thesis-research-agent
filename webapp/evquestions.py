@@ -62,7 +62,7 @@ def load(path: Path, protocols: Path, base: Path | None = None) -> list[Question
     """The questions of the file, checked (ValueError naming every problem). Protocol paths are relative to
     `base`, by default the file's folder."""
     base = path.parent if base is None else base
-    parsed = parse(path)
+    parsed = parse(path, base)   # the pack folder: inventory targets are its types
     out, problems = [], []
     for q in parsed.questions:
         names: dict[str, str | None] = {"protocol": None, "agentic_protocol": None}

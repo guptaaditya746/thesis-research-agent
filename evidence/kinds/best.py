@@ -1,9 +1,11 @@
 """Kind `best`: which method kind reaches the top value of `best.metric` inside each paper, and which kind wins
 in the most papers?
 
-A condition's kind is its `kind` field when that names one of `best.kinds`, else the kind whose names hold its
-label (case-folded, whitespace collapsed); a condition of no kind is left out. The values compared are the
-measurements on a metric item whose `canonical` is `best.metric.canonical`, of a condition with a kind. They are
+Types and fields come from the pack by role (pack.RoleMap, synthesis.Types): the compared thing (a rag condition),
+its name field and kind field, the metric and its canonical field, the measured value and its links to the two.
+A compared thing's kind is its kind field when that names one of `best.kinds`, else the kind whose names hold its
+name (case-folded, whitespace collapsed); a compared thing of no kind is left out. The values compared are the
+measured values on a metric item whose canonical field is `best.metric.canonical`, of a compared thing with a kind. They are
 chosen as `Pairing` chooses a pair (evidence/synthesis.py): the datasets are tried in the order they first appear
 (by value position) and the first one with values of at least two kinds is used; only when none has, values that
 name no dataset join a named dataset (synthesis._pair's fallback). Among several values of one kind there,
@@ -12,25 +14,29 @@ kind is compared.
 
 Per document: the kind with the top value (the highest, or the lowest when `higher_is_better` is false) is the
 `winner`; when several kinds share the top value there is no winner and `tied` lists them (sorted), and the paper
-counts no win. Reasons, in this order: `too_few_kinds` (conditions of fewer than two kinds; the funnel escalates
-condition), `no_question_metric` (no metric item has `best.metric.canonical`; escalates metric, as effect does) and
-`no_comparison` (no dataset has values of two kinds on the metric; escalates measurement); a tie is complete
+counts no win. Reasons, in this order: `too_few_kinds` (compared things of fewer than two kinds; the funnel
+escalates the compared-thing type), `no_question_metric` (no metric item has `best.metric.canonical`; escalates the
+metric type, as effect does) and `no_comparison` (no dataset has values of two kinds on the metric; escalates the
+measured-value type); a tie is complete
 (reason null). Answer: `{kind, system, metric, studies: [{document, winner, tied, values, reason}], wins, winner,
 tied}`; `wins` counts the papers each kind won (kinds without a win are left out), `winner` is the kind with the
 most wins, or null with `tied` listing the kinds that share the most wins.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .. import synthesis
 from ..contract import Item
 from ..evidence_types import EvidenceType
 from ..protocol import Best, Protocol
 
+if TYPE_CHECKING:
+    from ..pack import RoleMap
+
 KIND = "best"
-GAP_TYPES: dict[str, tuple[EvidenceType, ...]] = {"too_few_kinds": ("condition",), "no_question_metric": ("metric",),
-                                                  "no_comparison": ("measurement",), "screened_out": ()}
+GAP_ROLES: dict[str, tuple[str, ...]] = {"too_few_kinds": ("compared_thing",), "no_question_metric": ("metric",),
+                                         "no_comparison": ("measured_value",), "screened_out": ()}   # pack.Role values
 REASONS = {"too_few_kinds": "conditions of fewer than two method kinds found",
            "no_question_metric": "no metric item of {metric} found",
            "no_comparison": "no dataset with values of two method kinds on {metric}"}
@@ -45,35 +51,50 @@ def _fold(name: Any) -> str:
     return " ".join(str(name).split()).casefold()
 
 
-def kind_of(condition: Item, best: Best) -> str | None:
-    given = condition.fields.get("kind")
+def _roles(roles: RoleMap | None) -> RoleMap:
+    if roles is not None:
+        return roles
+    from ..pack import RoleMap, load_pack
+    return RoleMap(load_pack("rag"))   # a caller without a protocol: the default pack
+
+
+def kind_of(thing: Item, best: Best, roles: RoleMap | None = None) -> str | None:
+    """The method kind of compared thing `thing`: its kind field (pack TypeDecl.kind_field) when that names a kind
+    of `best`, else the kind whose names hold its name field; None when neither. `roles`: the pack by role (None:
+    the rag pack)."""
+    roles = _roles(roles)
+    kind_field = roles.field_or_none(thing.evidence_type, "kind")
+    given = thing.fields.get(kind_field) if kind_field is not None else None
     if given in best.kinds:
         return str(given)
-    label = _fold(condition.fields.get("label", ""))
-    return next((k for k, names in best.kinds.items() if label in {_fold(n) for n in names}), None)
+    name_field = roles.field_or_none(thing.evidence_type, "name")
+    name = _fold(thing.fields.get(name_field, "") if name_field is not None else "")
+    return next((k for k, names in best.kinds.items() if name in {_fold(n) for n in names}), None)
 
 
 def reason(code: str, best: Best) -> dict[str, str]:
     return {"code": code, "text": REASONS[code].format(metric=best.metric.canonical)}
 
 
-def study(protocol: Protocol, document: str, items: list[Item],
-          preset: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
+def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
+          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
     best = spec(protocol)
+    roles = roles if roles is not None else protocol.roles()
+    ty = synthesis.Types.of(protocol, roles)
+    canonical, to_thing, to_metric = ty.canonical or "", ty.to_thing or "", ty.to_metric or ""
     entry: dict[str, Any] = {"document": document, "winner": None, "tied": [], "values": {}, "reason": None}
     if preset is not None:
         entry["reason"] = dict(preset)
         return entry, []
-    kinds = {i.item_id: k for i in items if i.evidence_type == "condition" and (k := kind_of(i, best)) is not None}
+    kinds = {i.item_id: k for i in ty.of_type(items, ty.thing) if (k := kind_of(i, best, roles)) is not None}
     if len(set(kinds.values())) < 2:
         entry["reason"] = reason("too_few_kinds", best)
         return entry, []
-    metrics = {i.item_id for i in items if i.evidence_type == "metric" and i.fields.get("canonical") == best.metric.canonical}
+    metrics = {i.item_id for i in ty.of_type(items, ty.metric) if i.fields.get(canonical) == best.metric.canonical}
     if not metrics:
         entry["reason"] = reason("no_question_metric", best)
         return entry, []
-    on = [m for m in items if m.evidence_type == "measurement" and m.links.get("metric") in metrics
-          and m.links.get("condition") in kinds]
+    on = [m for m in ty.of_type(items, ty.value) if m.links.get(to_metric) in metrics and m.links.get(to_thing) in kinds]
     chosen: dict[str, Item] = {}
     order: list[Any] = []
     for m in sorted(on, key=lambda m: (synthesis.value_start(m), m.item_id)):
@@ -83,7 +104,7 @@ def study(protocol: Protocol, document: str, items: list[Item],
         by_kind: dict[str, list[Item]] = {}
         for m in on:
             if m.fields.get("dataset") in allowed:
-                by_kind.setdefault(kinds[m.links["condition"]], []).append(m)
+                by_kind.setdefault(kinds[m.links[to_thing]], []).append(m)
         return by_kind
 
     groups = None
@@ -108,21 +129,23 @@ def study(protocol: Protocol, document: str, items: list[Item],
     leaders = sorted(k for k, v in values.items() if v == top)
     entry.update(values=values, winner=leaders[0] if len(leaders) == 1 else None,
                  tied=leaders if len(leaders) > 1 else [])
-    used = [x for k in values for x in (chosen[k].item_id, chosen[k].links["condition"], chosen[k].links["metric"])]
+    used = [x for k in values for x in (chosen[k].item_id, chosen[k].links[to_thing], chosen[k].links[to_metric])]
     return entry, list(dict.fromkeys(used))
 
 
-def gap_types(protocol: Protocol, code: str) -> tuple[EvidenceType, ...]:
-    return GAP_TYPES.get(code, ())
+def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) -> tuple[EvidenceType, ...]:
+    return synthesis.gap_types(protocol, code, roles, GAP_ROLES)
 
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
-           funnel: dict[str, dict[str, Any]] | None = None) -> tuple[dict[str, Any], list[str]]:
+           funnel: dict[str, dict[str, Any]] | None = None, *,
+           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
     best = spec(protocol)
+    roles = roles if roles is not None else protocol.roles()
     studies, used = [], []
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc))
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
         studies.append(entry)
         used += ids
     out = {"kind": KIND, "system": synthesis.SYSTEM, "metric": best.metric.canonical, "studies": studies,

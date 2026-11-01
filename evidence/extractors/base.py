@@ -54,6 +54,37 @@ def coverage(parts: list[tuple[int, int]], items: list[Item]) -> tuple[Coverage,
     return tuple(out)
 
 
+def emitted(given: dict[str, Any], native: str) -> str:
+    """The evidence type an extractor's items are of: the type the engine configured it for (a domain pack may
+    call it otherwise, e.g. `arm` for a condition), else the extractor's own (`native`, an extractor built directly)."""
+    return str(given.get("evidence_type") or native)
+
+
+@dataclass(frozen=True)
+class Slots:
+    """A measured value's two context types and its links to them: the compared thing (`thing`, linked as
+    `to_thing`) and the metric (`metric`, `to_metric`). From the pack's `types` (role -> type) and the protocol's
+    `links` (link name -> type) the engine configures; the rag names when the config has neither."""
+    thing: str = "condition"
+    metric: str = "metric"
+    to_thing: str = "condition"
+    to_metric: str = "metric"
+
+    @classmethod
+    def of(cls, given: dict[str, Any]) -> Slots:
+        types = given.get("types") or {}
+        thing, metric = str(types.get("compared_thing", cls.thing)), str(types.get("metric", cls.metric))
+        links = dict(given.get("links") or {})
+
+        def to(target: str) -> str:
+            return next((str(name) for name, t in links.items() if t == target), target)
+
+        return cls(thing=thing, metric=metric, to_thing=to(thing), to_metric=to(metric))
+
+    def links(self, thing: Item, metric: Item) -> dict[str, str]:
+        return {self.to_thing: thing.item_id, self.to_metric: metric.item_id}
+
+
 def group(evidence_type: Any, found: list[tuple[dict[str, Any], dict[str, str], list[Span]]]) -> list[Item]:
     """Items from (fields, links, spans) triples; equal fields and links become one item with all spans
     (the same value reported in the abstract and in a table is one item with two value spans)."""

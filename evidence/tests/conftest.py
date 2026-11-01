@@ -54,11 +54,13 @@ def corpus_of(root: Path, docs: dict[str, str]) -> Path:
     return root
 
 
-def regex_run(docs: dict[str, str], tmp: Path, protocol: Path = PROTOCOL) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(answer.json, evidence items by id) of a regex-only run over inline papers."""
+def regex_run(docs: dict[str, str], tmp: Path, protocol: Path = PROTOCOL,
+              domains: Path | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(answer.json, evidence items by id) of a regex-only run over inline papers; `domains` is the folder of the
+    protocol's pack when it is not domains/ (a test pack)."""
     from evidence import engine
     run = engine.run(protocol, corpus_of(tmp / "corpus", docs), tmp / "runs", selection="regex-only", provider=None,
-                     strategy="all")
+                     strategy="all", domains=domains)
     items = [json.loads(x) for x in (run / "evidence.jsonl").read_text(encoding="utf-8").splitlines()]
     return json.loads((run / "answer.json").read_text(encoding="utf-8")), {i["item_id"]: i for i in items}
 
