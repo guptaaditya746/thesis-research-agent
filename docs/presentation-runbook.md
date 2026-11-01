@@ -64,15 +64,18 @@ And the fidelity review status (shows the human review is still open):
 ev review --csv tests/EV1/live-rerun/corpora/rag-llm-s1-mixed/review/review-s1.csv   # rows 342, reviewed 0
 ```
 
-## Optional: the web app with the real EV1 runs (needs the cluster)
+## The web app as a case study (laptop, no cluster)
 
-Only if a working tunnel was tested tonight. The EV1 runs live on Ceph, not in git.
+`bash docs/presentation/ui-case.sh` (Git Bash, from the repo) builds a local `$EV` in `~/demo-ev-case` in about a
+minute and serves the app on http://127.0.0.1:8080 (`PORT=8091 bash ...` if 8080 is taken). It holds the EV1
+LLM-written corpus `rag-llm-s1-mixed` (11 papers), an offline engine run on it (regex extractors, no model), the
+oracle run, and all EV1 live scores and comparisons. Later `--serve` alone restarts it without rebuilding.
 
-1. On a node in the job (`srun --jobid "$JOB" --overlap --pty bash -l`): `export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster && uv run webapp serve --port 8080`.
-2. On the laptop: `ssh -L 8080:127.0.0.1:8080 <that node>` (through the gateway as usual), then open http://127.0.0.1:8080. Always the `127.0.0.1` name: the app refuses any other host name with “Host … is not served”.
-3. With `omen-tunnels-external`: start the compute end **on the node where `webapp serve` runs**, not on the login node; then the laptop end; open http://127.0.0.1:25173. See the tunnel notes in the session summary if it fails.
-
-If anything here misbehaves, skip it: slides plus animation plus the terminal demo cover the talk.
+Click path for Tim: question `rag-factuality` -> protocol -> corpus `rag-llm-s1-mixed` (fidelity, the 9 excluded
+studies) -> run `regex-only~rag-llm-s1-mixed` -> paper S005 with its anchored quotes -> evidence graph -> answer
+-> Scores (`ev1-compare-cascade` for engine vs RAG vs agent). The live LLM runs are shown through their scores
+only: their run directories stayed on Ceph. When EV2 results with `tests/EV2/ui-case/` are committed, rerun the
+script and they appear beside the EV1 ones.
 
 ## What to say, slide by slide
 
