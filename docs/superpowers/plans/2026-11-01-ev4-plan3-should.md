@@ -43,6 +43,7 @@ The web app only reads files (D27).
   - the known webapp `test_evjobs` failure;
   - the old vitest failure "lists every corpus with level, knobs and the variant" (docs/STATE.md:117).
 - **Test style:** as plan 1 (module docstring, `from __future__ import annotations`, `test_<plain_sentence>()`).
+- **Run helpers (plan 1, `evidence/tests/conftest.py`):** `regex_run_dir(docs, tmp, protocol, *, domains=None, settings=None) -> Path` runs regex-only (strategy `all`, no provider) under `tmp / "runs"` and returns the run dir; `docs` is a dict id -> text, a list of texts (ids P1, P2, ...) or a corpus path; `settings` is a dict of more `engine.run` keyword arguments (`names`, `run_id`, and the new ones this plan adds). `run_json(out)`, `funnel_json(out)`, `answer_of(out)` read the run's files. `regex_run` (returns `(answer, items)`) is unchanged.
 
 ## Review Focus
 
@@ -181,33 +182,33 @@ def test_rag_ontology_loads_and_has_a_digest():
 
 ```python
 def test_reason_off_writes_nothing_new(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL, settings={"reason": "off"})
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL, settings={"reason": "off"})
     assert not (out / "reason.json").exists() and "reason" not in run_json(out)["settings"]
 
 def test_reason_on_writes_inferences_as_an_output(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL)
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL)
     data = json.loads((out / "reason.json").read_text())
     assert set(data) == {"ontology_sha256", "broader", "link_flags"}
     assert "reason.json" in run_json(out)["outputs"] and run_json(out)["settings"]["reason"] == "on"
 
 def test_narrower_metric_answers_a_broader_question(tmp_path):
-    out = regex_run(["System R reaches top-1 accuracy of 0.71; the closed-book model 0.52."], tmp_path,
-                    question_metric_protocol("accuracy"), domains=onto_domains(tmp_path))
+    out = regex_run_dir(["System R reaches top-1 accuracy of 0.71; the closed-book model 0.52."], tmp_path,
+                        question_metric_protocol("accuracy"), domains=onto_domains(tmp_path))
     assert answer_of(out)["studies"][0]["direction"] == "supports"
 
 def test_value_linked_to_a_dataset_name_is_flagged(tmp_path):
-    out = regex_run(["accuracy on SQuAD: 0.71"], tmp_path, metric_is_squad_protocol(), domains=onto_domains(tmp_path))
+    out = regex_run_dir(["accuracy on SQuAD: 0.71"], tmp_path, metric_is_squad_protocol(), domains=onto_domains(tmp_path))
     flags = json.loads((out / "reason.json").read_text())["link_flags"]
     assert any(f[1] == "metric" and f[3] == "not a metric" for f in flags)
 
 def test_replay_never_re_reasons(tmp_path, monkeypatch):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL)
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL)
     monkeypatch.setattr(reasoner, "load_ontology", lambda *a, **k: pytest.fail("re-reasoned"))
     new, report = replay(out)
     assert report["ok"]
 
 def test_replay_of_a_run_without_reason_keeps_every_hash(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL, settings={"reason": "off"})
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL, settings={"reason": "off"})
     strip_setting(out, "reason")          # as a run made before this task
     assert replay(out)[1]["ok"]
 
@@ -251,7 +252,7 @@ For `test_replay_never_re_reasons`, replay reads `reason.json` from the recorded
 
 ```python
 def test_every_run_writes_a_lock_with_all_digests(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL)
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL)
     lock = json.loads((out / "protocol.lock.json").read_text())
     assert lock["protocol"]["sha256"] == load(PROTOCOL).sha256 and lock["pack"]["sha256"] == load_pack("rag").sha256
     assert lock["extractors"]["metric"] == [e for e in run_json(out)["extractors"] if e in lock["extractors"]["metric"]]
@@ -272,7 +273,7 @@ def test_diff_of_the_same_protocol_is_same():
     assert lockfile.diff(PROTOCOL, PROTOCOL) == ["same"]
 
 def test_diff_of_a_pre_ev4_run_says_so(tmp_path):
-    old = regex_run(PAPERS, tmp_path, PROTOCOL); (old / "protocol.lock.json").unlink()
+    old = regex_run_dir(PAPERS, tmp_path, PROTOCOL); (old / "protocol.lock.json").unlink()
     assert f"no lock (pre-EV4): {old}" in lockfile.diff(old, PROTOCOL)
 
 def test_cli_diff_exit_codes(tmp_path):
@@ -305,26 +306,26 @@ def test_cli_diff_exit_codes(tmp_path):
 
 ```python
 def test_a_run_ends_with_a_complete_manifest(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL)
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL)
     m = json.loads((out / "manifest.json").read_text())
     assert m["status"] == "complete" and "run.json" in m["files"] and "manifest.json" not in m["files"]
     assert m["corpus_manifest_sha256"] == run_json(out)["manifest_sha256"]
     assert m["protocol_lock_sha256"] == file_sha256(out / "protocol.lock.json")
 
 def test_verify_names_an_edited_file(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL)
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL)
     (out / "answer.json").write_bytes((out / "answer.json").read_bytes() + b" ")
     assert seal.check(out)["mismatched"] == ["answer.json"]
     assert cli.main(["verify", str(out)]) == 1
 
 def test_verify_old_run_says_pre_ev4(tmp_path):
-    out = regex_run(PAPERS, tmp_path, PROTOCOL); (out / "manifest.json").unlink()
+    out = regex_run_dir(PAPERS, tmp_path, PROTOCOL); (out / "manifest.json").unlink()
     assert seal.check(out) == "no manifest (pre-EV4)" and cli.main(["verify", str(out)]) == 0
 
 def test_a_crash_writes_all_expected_files_and_a_failed_manifest(tmp_path):
     corpus = corpus_with_bad_sha_at(2, tmp_path)          # CorpusError at paper 2 of 3
     with pytest.raises(CorpusError):
-        regex_run_corpus(corpus, tmp_path / "runs", PROTOCOL, run_id="r")
+        regex_run_dir(corpus, tmp_path, PROTOCOL, settings={"run_id": "r"})
     root = tmp_path / "runs" / "r"
     assert not (root / "run.json").exists()
     for name in ("locate.json", "evidence.jsonl", "funnel.json", "answer.json", "graph.json", "protocol.lock.json"):
@@ -536,7 +537,7 @@ def test_corpus_offsets_match_tokens(tmp_path):
 
 def test_engine_never_reads_scirex_gold(tmp_path):
     c = to_corpus(TINY, tmp_path); (c / "scirex_gold.json").write_text("not json")
-    regex_run_corpus(c, tmp_path / "runs", ML_NAMES_PROTOCOL)   # must not fail
+    regex_run_dir(c, tmp_path, ML_NAMES_PROTOCOL)   # must not fail
 
 def test_two_levels(tmp_path):
     r = score(run_with_items(tmp_path, [("method", "bert", (0, 0))]), to_corpus(TINY, tmp_path / "c"))
@@ -853,7 +854,7 @@ All tasks and plan 2 must be merged into `ev4/should` first.
   - `evidence protocol diff` of each scored protocol against its frozen tag copy (must print `same`).
 - **§2 Estimate before every Slurm run (D41):** `evidence estimate --protocol P --corpus C` for every cell. Write the JSON into `$EV/estimates/`. Stop (**USER**) when `calls.high` is more than 2× the plan in `session.json`.
 - **§3 RAG rerun:** the four kinds (effect, inventory, consistency, best) from `domains/rag/questions.yaml` × the RAG corpora × three systems (engine, `rag-per-paper` as main RAG row, agent v3), using the `one.sh` / `grid.sh` pattern of `runbook-question-first.md` §4. EV3 numbers are never a comparison point (§6.8).
-- **§4 Drug trials:** all kinds of `domains/drugtrials/questions.yaml` (effect, inventory, consistency, best, chaining, limitations, builds_on) × three systems, with the baseline map prompts.
+- **§4 Drug trials:** all kinds of `domains/drugtrials/questions.yaml` (effect, inventory, consistency, best, chaining, limitations, builds_on) × three systems, with the baseline map prompts; the engine runs with `--names on`.
 - **§5 Real-paper checks:** SciREX (`--limit` from §2), Yun et al. + Evidence Inference, SciLead (`fetch --ids`), the arXiv edit test (the frozen `arxiv-edits.yaml`). Each goes to `reports/ev4/real/<name>/` and is never mixed with synthetic scores.
 - **§6 arXiv demo:** about 30 papers by `evidence fetch` (HTML first), the frozen RAG protocols, `evaluate sheet --papers 5`, the sample precision labelled "demonstration, not an evaluation".
 - **§7 Checks, per run:**

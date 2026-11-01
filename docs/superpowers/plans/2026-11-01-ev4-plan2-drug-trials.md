@@ -45,6 +45,7 @@
 - **Prompts** follow `docs/prompt-writing.md`: atomic tasks, explicit input and output, deterministic validation, generation separate from verification.
 - **Every task ends with** `uv run pytest synth evaluation evidence packbuilder -q` passing, apart from the known failures in docs/STATE.md:186.
 - **Test style:** copy synth/tests/test_truth.py:1-40 (docstring, `from __future__ import annotations`, `test_<plain_sentence>()`). Scripted models use `evaluation/tests/helpers.py:16` `Scripted`. Corpus guards use `guard_corpus` (:37).
+- **Run helpers (plan 1, `evidence/tests/conftest.py`):** `regex_run_dir(docs, tmp, protocol, *, domains=None, settings=None) -> Path` runs regex-only (strategy `all`, no provider) under `tmp / "runs"` and returns the run dir; `docs` is a dict id -> text, a list of texts (ids P1, P2, ...) or a corpus path; `settings` is a dict of more `engine.run` keyword arguments (`names`, `run_id`, and the new ones this plan adds). `run_json(out)`, `funnel_json(out)`, `answer_of(out)` read the run's files. `regex_run` (returns `(answer, items)`) is unchanged.
 
 ## Review Focus
 
@@ -83,8 +84,10 @@ class TypeDecl(Strict): ...; context_field: str | None = None
 # evidence/comparisons.py
 @dataclass(frozen=True) class Comparison: id: str; document: str; a: str; b: str; metric: str; context: str | None
     a_value: float; b_value: float; direction: Direction; delta: float; items: tuple[str, ...]; copied_from: str | None
-def build_comparisons(document: str, items: list[Item], roles: RoleMap, groups: NameGroups, *,
+def build_comparisons(document: str, items: list[Item], roles: RoleMap, groups: NameGroups | None, *,
                       higher_is_better: Callable[[str], bool], min_effect: float, prefer: Sequence[str]) -> list[Comparison]
+#   groups None (a run with `names: off`): two names are the same thing when their `names.clean` forms are equal
+#   (controller ruling, final review of plan 1); the drug-trials protocols and runbook run with `names: on`
 # run file: comparisons.json  {"comparisons": [Comparison...], "copied": [...]}
 # evidence/protocol.py
 Kind = Literal["effect", "inventory", "consistency", "best", "chaining", "limitations", "builds_on"]
@@ -455,6 +458,7 @@ def test_trial_records_recipe_hash_and_stale_trial_refused(tmp_path):
   3. Among several values of one group, `prefer` decides (`best_value`).
   4. A value whose item links to a dependency item with `reuses == "result"` gets `copied_from = <cited document>`. A comparison whose two values are both copied is dropped. A comparison equal in (a, b, metric, context, a_value, b_value) to one already listed from its cited document is listed under `"copied"`, not under `"comparisons"`.
   5. Ids are `cmp-<16 hex>` from `contract.digest`.
+  6. `groups` is `NameGroups | None`. With a `NameGroups` (a run with `names: on`), a compared thing's group is `groups.group_of(name)`; with None (`names: off`, the default), it falls back to `names.clean(name)` equality. The engine passes the run's `NameGroups` when `names: on`, else None; no other name matching is added.
 - The `effect` kind and the RAG protocols keep `synthesis.compare` (spec §6.2); `comparisons.json` is written for every kind.
 
 - [ ] **Step 1: Write the failing tests**
@@ -488,7 +492,7 @@ def test_rag_protocol_hashes_unchanged_by_new_kinds():
 - Create: `evidence/kinds/chaining.py`, `evidence/tests/test_chaining.py`.
 
 **Interfaces:**
-- Consumes: `comparisons.json` rows, `NameGroups.group_of`, `Chaining` block, `rules.effect`.
+- Consumes: `comparisons.json` rows, `NameGroups.group_of` (or `names.clean` equality when the run has no `NameGroups`, `names: off`), `Chaining` block, `rules.effect`. Comparisons already carry group names when the run had `names: on`; the drug-trials protocols and runbook always run with `names: on`.
 - Produces: `answer = {kind: "chaining", system, source, target, metric, verdict, inferred, via, studies, paths, reason, note}`.
   - `verdict ∈ {"better","worse","no_difference","refused"}`.
   - `note` is the exact string `"inferred through {via}, not tested directly"` when inferred, else null.
@@ -856,7 +860,7 @@ def test_helper_prompt_holds_no_generator_words(tmp_path):
 
 ### Task 18: Build and freeze `domains/drugtrials`
 
-This task runs the tools on real inputs; there is nothing to implement.
+This task runs the tools on real inputs; there is nothing to implement. Every run of a drug-trials protocol (the test below, plan 3's runbook) uses `names: on` (`--names on`), so comparisons and chaining join name variants through `NameGroups`.
 
 **Files:**
 - Create:
@@ -887,7 +891,8 @@ def test_frozen_hashes_match_files():
     assert all(sha256_file(DOMAINS / "drugtrials" / f) == h for f, h in frozen["files"].items())
 
 def test_regex_run_on_three_papers_builds_comparisons(tmp_path):
-    out = regex_run(papers_of(DRUG_MIXED, 3), tmp_path, protocol_path("drugtrials", "dt-chain"))
+    out = regex_run_dir(papers_of(DRUG_MIXED, 3), tmp_path, protocol_path("drugtrials", "dt-chain"),
+                        settings={"names": "on"})
     assert json.loads((out / "comparisons.json").read_text())["comparisons"]
 ```
 
@@ -921,6 +926,6 @@ def test_regex_run_on_three_papers_builds_comparisons(tmp_path):
 | No topic words in synth/ and evaluation/ | 2, 12 |
 | `rag` baseline renamed (§6.1) | 14 |
 
-- **Left to plan 3:** ontology search and `ontology.ttl` (§6.3/§6.4 web search, Should), the protocol lock, run manifests, real-paper checks, the web app, and the runbook that scores drug trials (all kinds) and RAG (four kinds, D43).
+- **Left to plan 3:** ontology search and `ontology.ttl` (§6.3/§6.4 web search, Should), the protocol lock, run manifests, real-paper checks, the web app, and the runbook that scores drug trials (all kinds, with `--names on`) and RAG (four kinds, D43).
 - **Name consistency:** `Recipe`, `load_recipe`, `Comparison`, `build_comparisons`, `CHAIN_REASONS`, `create_server` and `PackProposal` are used under the same names in the tasks and in Shared interfaces. Plan 1's names (`load_pack`, `Pack`, `Role`, `RoleMap`, `protocol_path`, `questions_path`, `read_numbers`, `NameGroups.group_of`, `CHECKED_DIRS`) are used unchanged.
 - **Open risk:** whether the exchange model passes tool calls through to the request file (`modelcall/exchange.py:48-68`) is unverified. Task 16 Step 1 tests it first, and the file is modified only if the test fails.
