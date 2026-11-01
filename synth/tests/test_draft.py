@@ -147,3 +147,28 @@ def test_an_existing_recipe_is_not_replaced(tmp_path):
 
 def test_the_shipped_heldout_file_reads():
     assert isinstance(heldout_ids(), set)
+
+
+def with_codes(codes: tuple[str, str]) -> dict:
+    data = recipe_data()
+    names = [n for side in data["sides"].values() for n in side["names"]]
+    names[0]["code"], names[1]["code"] = codes
+    return data
+
+
+@pytest.mark.parametrize("code,text", [("AZ", "AZ was given."), ("Zq", "A Zq trial."), ("zorvex", "The zorvex arm.")])
+def test_a_code_in_a_paper_is_refused(tmp_path, code, text):
+    with pytest.raises(ValueError, match="invented"):
+        run(tmp_path, papers_dir(tmp_path, n=5, first_text=text), model=scripted(with_codes((code, "ZX"))))
+
+
+def test_a_short_code_inside_a_word_or_in_other_case_passes(tmp_path):
+    folder = papers_dir(tmp_path, n=5, first_text="The ZXY plan was run. Are zx and ZX2 shown?")
+    run(tmp_path, folder, model=scripted(with_codes(("ZX", "QV"))), verify=scripted_quotes())
+    assert (tmp_path / "domains/toy/generator.yaml").exists()
+
+
+@pytest.mark.parametrize("quote", ["", "   ", "Arms"])
+def test_an_empty_or_tiny_quote_is_refused(tmp_path, quote):
+    with pytest.raises(ValueError, match="verbatim"):
+        run(tmp_path, papers_dir(tmp_path, n=5), model=scripted_recipe(), verify=scripted_quotes(quote))

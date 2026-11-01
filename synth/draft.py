@@ -6,8 +6,9 @@ The checks, all deterministic, each a refusal (ValueError) before anything is wr
 - no held-out paper (its file stem, or a PMCID in its text, is in `domains/heldout.yaml`);
 - the draft is a valid `Recipe` (a failure goes back to the model once, with the error: `ask` retries);
 - every name of a side, an other condition and a network thing is invented: after `names.clean` it does not occur in any
-  source paper (a code of fewer than 3 letters is exempt: "R" is also the word "r" of any text);
-- every verifier quote is a verbatim substring of a source paper.
+  source paper; a code of fewer than 3 letters ("R" cleans to the word "r") is looked for as it is written, case-sensitive,
+  at token edges;
+- every verifier quote is a verbatim substring of a source paper and holds at least 8 non-space characters.
 The recipe is written only when all pass, and the log (papers, models, prompt hash, quotes) is merged into
 `provenance.json["generator"]` beside whatever other writers put there.
 """
@@ -27,14 +28,16 @@ import modelcall
 from evidence.names import clean
 from evidence.pack import DOMAINS
 from evidence.protocol import Strict
+from jsonio import sha256_hex
 from modelcall import JsonlCache, default_key, load_prompt
-from synth.recipe import Recipe, load_recipe
+from synth.recipe import Recipe
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 HELDOUT = DOMAINS / "heldout.yaml"
 PMCID = re.compile(r"PMC\d+")
 MIN_PAPERS, MAX_PAPERS = 5, 10
-MIN_CODE = 3        # a shorter code is not checked against the papers
+MIN_CODE = 3        # a shorter code is searched raw and case-sensitive, not cleaned
+MIN_QUOTE = 8       # non-space characters a verifier quote must hold
 
 
 def _draft_rules(self: BaseModel) -> BaseModel:
@@ -82,20 +85,25 @@ def read_papers(papers: Path, heldout: Collection[str]) -> list[dict[str, str]]:
     return out
 
 
-def _spelled(recipe: Any) -> list[str]:
-    """Every label, synonym and code of the sides, the other conditions and the network things."""
+def _spelled(recipe: Any) -> tuple[list[str], list[str]]:
+    """(names to clean-match, short codes to match raw): the labels, synonyms, codes of the sides and other
+    conditions, and the network things."""
     sides = [n for s in recipe.sides.values() for n in s.names] + list(recipe.others)
     names = [x for n in sides for x in (n.label, n.synonym)]
-    names += [n.code for n in sides if n.code and len(n.code) >= MIN_CODE]
+    codes = [n.code for n in sides if n.code]
     if recipe.network:
         names += recipe.network.things
-    return names
+    return names + [c for c in codes if len(c) >= MIN_CODE], [c for c in codes if len(c) < MIN_CODE]
 
 
 def not_invented(recipe: Any, papers: list[dict[str, str]]) -> list[str]:
-    """The names of `recipe` that occur (after `names.clean`, at word edges) in a source paper."""
+    """The names of `recipe` that occur in a source paper: after `names.clean`, at word edges; a short code as written."""
     cleaned = [f" {clean(p['text'])} " for p in papers]
-    return sorted({n for n in _spelled(recipe) if clean(n) and any(f" {clean(n)} " in c for c in cleaned)})
+    names, short = _spelled(recipe)
+    found = {n for n in names if clean(n) and any(f" {clean(n)} " in c for c in cleaned)}
+    found |= {c for c in short if any(re.search(rf"(?<![A-Za-z0-9]){re.escape(c)}(?![A-Za-z0-9])", p["text"])
+                                      for p in papers)}
+    return sorted(found)
 
 
 def draft(domain: str, papers: Path, *, model: Any, verify_model: Any, cache: Path, root: Path = DOMAINS,
@@ -124,14 +132,15 @@ def draft(domain: str, papers: Path, *, model: Any, verify_model: Any, cache: Pa
                                 key=default_key(check_prompt, check_input, verify_model, settings)).output.quotes
     if not quotes:
         raise ValueError("the verifier quoted no source sentence")
-    missing = [q.quote for q in quotes if not any(q.quote in p["text"] for p in sources)]
+    missing = [q.quote for q in quotes if len("".join(q.quote.split())) < MIN_QUOTE
+               or not any(q.quote in p["text"] for p in sources)]
     if missing:
         raise ValueError(f"verifier quotes that are not verbatim in any source paper: {missing}")
 
+    body = yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=120)
+    Recipe(**yaml.safe_load(body), domain=domain, sha256=sha256_hex(body.encode("utf-8")), root=root)  # reads back valid
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=120),
-                      encoding="utf-8", newline="\n")
-    load_recipe(domain, root)           # the file as written reads back as a valid recipe
+    target.write_text(body, encoding="utf-8", newline="\n")
     _log(root / domain / "provenance.json", {
         "papers": [{k: p[k] for k in ("file", "sha256", "id")} for p in sources],
         "model": modelcall.model_name(model), "verify_model": modelcall.model_name(verify_model),

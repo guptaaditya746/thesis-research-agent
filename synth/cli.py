@@ -134,6 +134,7 @@ def cmd_sample(args: argparse.Namespace) -> int:
 
 def cmd_draft(args: argparse.Namespace) -> int:
     from evidence.pack import DOMAINS
+    from modelcall import ModelCallError
     from modelcall.exchange import model_for
     from synth.draft import draft
     exchange = args.exchange or DOMAINS / args.domain / ".draft-exchange"
@@ -141,8 +142,8 @@ def cmd_draft(args: argparse.Namespace) -> int:
     try:
         path = draft(args.domain, args.papers, model=model_for(args.model, exchange),
                      verify_model=model_for(args.verify_model, exchange), cache=cache)
-    except ValueError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr, flush=True)
+    except (ValueError, ModelCallError) as exc:
+        print(f"ERROR: drafting failed: {exc}", file=sys.stderr, flush=True)
         return 1
     print(f"wrote {path}")
     return 0
