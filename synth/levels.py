@@ -98,8 +98,14 @@ def pct(v: float) -> str:
     return f"{k // 10}.{k % 10}"
 
 
-def write_value(v: float, fmt: str, base: float | None = None) -> str:
-    """The string a value is written as; `parse_value` inverts it."""
+def write_value(v: float, fmt: str, base: float | None = None, *, k: int | None = None, n: int | None = None,
+                noun: str | None = None) -> str:
+    """The string a value is written as; `parse_value` inverts it. `k_of_n` writes the count k of the arm's n
+    (`Measurement.k`, `Study.arm_sizes`) with the recipe's `text.unit_noun`: "41 of 120 <noun>"."""
+    if fmt == "k_of_n":
+        if k is None or n is None or not noun:
+            raise ValueError("fmt k_of_n needs the count k, the arm size n and the recipe's unit noun")
+        return f"{k} of {n} {noun}"
     if fmt == "pct":
         return pct(v) + "%"
     if fmt == "frac":
@@ -118,6 +124,9 @@ def write_value(v: float, fmt: str, base: float | None = None) -> str:
 
 def parse_value(text: str, fmt: str, base: float | None = None) -> float:
     """The normalised value a rendering states (fractions for percent and counts)."""
+    if fmt == "k_of_n":
+        k, _, n = text.split()[:3]
+        return round(int(k) / int(n.replace(",", "")), 6)
     number = float(text.split()[0].rstrip("%").replace(",", ""))
     if fmt in ("pct", "cell_pct"):
         return round(number / 100, 6)
@@ -162,8 +171,8 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
                       for m in metrics}
     # A --missing study lacks its control or treatment measurement (None here): the complex level then has
     # no relative value (the treatment value, if present, is a plain cell) and the contradictory level no decoy.
-    base = study.find(study.condition(study.control_role).id, q.id, main)
-    treat = study.find(study.condition(study.treatment_role).id, q.id, main)
+    base = study.find(study.control_condition.id, q.id, main)
+    treat = study.find(study.treatment_condition.id, q.id, main)
     base_value = base.value if base is not None else None
     fmts = ["pct", "frac", "count"]
     rng.shuffle(fmts)

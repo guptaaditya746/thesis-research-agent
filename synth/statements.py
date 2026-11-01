@@ -64,7 +64,7 @@ class StatementReply(BaseModel):
 
 def plan_statements(plan: Plan) -> list[StatementTask]:
     """One task per measurement the level writes in prose, in plan order."""
-    control = plan.study.condition(plan.study.control_role).id if plan.study.relevant else None
+    control = plan.study.control_condition.id if plan.study.relevant else None
     out = []
     for m in plan.measurements:
         seg = plan.values[m.id]

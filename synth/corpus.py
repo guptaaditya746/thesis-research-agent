@@ -31,7 +31,7 @@ from evidence import protocol as protocol_module
 from evidence import rules
 from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK, Protocol
-from synth import truth
+from synth import network, truth
 from synth.fidelity import PaperFidelity
 from synth.levels import LEVELS, Plan
 from synth.recipe import Recipe, effect_protocol_path, load_recipe
@@ -43,6 +43,12 @@ GENERATOR = "synth"
 # (domains/<name>/generator.yaml), recorded in corpus.json `recipe`
 GENERATOR_VERSION = "3"
 PACKAGE = Path(__file__).resolve().parent
+# ground_truth.json `types` (a recipe with a network only): each fact type of a study record -> the record's key
+# that lists its facts and the role of the placement of a fact's main rendering (plan 2, Shared interfaces).
+TRUTH_TYPES = {"condition": {"list": "conditions", "main_role": "condition_label"},
+               "metric": {"list": "metrics", "main_role": "metric_label"},
+               "measurement": {"list": "measurements", "main_role": "value"},
+               "author_claim": {"list": "author_claim", "main_role": "claim"}}
 
 
 @dataclass
@@ -114,7 +120,21 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
         "author_claim": {"id": f"{s.study_id}.a1", "direction": p.claim} if s.relevant else None,
         "effect": {"direction": e.direction, "delta": e.delta, "metric": e.metric, "treatment": e.treatment,
                    "control": e.control, **({"reason": e.reason} if e.reason else {})},
+        # a network study's (synth/network.py); absent otherwise, so a rag record is what it was
+        **({"population": s.population} if s.population is not None else {}),
+        **({"label": s.label} if s.label else {}),
+        **({"arm_sizes": dict(s.arm_sizes)} if s.arm_sizes else {}),
     }
+
+
+def network_truth(studies: list[Study], recipe: Recipe, spec: protocol_module.Synthesis) -> dict[str, Any]:
+    """ground_truth.json's top-level `types` and `network` ({things, comparisons, chains} over `studies`, the ones
+    written) for a set drawn from a recipe with a network; empty for any other recipe, so its truth is what it was."""
+    if recipe.network is None:
+        return {}
+    return {"types": TRUTH_TYPES,
+            "network": {"things": network.nodes(recipe), "comparisons": network.comparisons(studies, spec),
+                        "chains": network.chains(studies, recipe, spec)}}
 
 
 def prepare(directory: Path) -> None:
@@ -185,6 +205,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         "studies": [study_truth(papers[s.study_id], spec, s) for s in kept],
         "placements": [p.json() for p in placements],
         "answer": truth.answer(kept, spec, {s.study_id: study_flags(papers[s.study_id], spec, s) for s in kept}),
+        **network_truth(kept, recipe, spec),
     }))
     records = []
     for s in studies:

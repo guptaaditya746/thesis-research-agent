@@ -185,7 +185,37 @@ class Recipe(Strict):
             for b in low:
                 if a != b and a in b:
                     raise ValueError(f"names clash: {a!r} lies inside {b!r}")
+        if self.network is not None:
+            self._network_rules()
         return self
+
+    def _network_rules(self) -> None:
+        """What synth/network.py draws from: each thing (and the reference) a distinct name of a side, edges joining
+        two of them once, network contexts among the recipe's, one question metric, rates only (counts of an arm),
+        arm sizes, and authors for the studies' labels."""
+        net = self.network
+        labels = {n.label for side in self.sides.values() for n in side.names}
+        nodes = [*net.things, net.reference]
+        unknown = [t for t in nodes if t not in labels]
+        if unknown or len(set(nodes)) != len(nodes):
+            raise ValueError(f"network things {unknown or nodes} must be distinct labels of the sides' names")
+        pairs = [frozenset(e) for e in net.edges]
+        bad = [e for e, p in zip(net.edges, pairs) if len(p) != 2 or not p <= set(nodes)]
+        if bad or len(set(pairs)) != len(pairs):
+            raise ValueError(f"network edges {bad or net.edges} must each join two network things, each pair once")
+        if not net.contexts or not set(net.contexts) <= set(self.contexts):
+            raise ValueError(f"network contexts {net.contexts} must be some of the recipe's contexts {self.contexts}")
+        if len(self.question_metrics) != 1:
+            raise ValueError("a recipe with a network ranks its things on one question metric, not "
+                             f"{len(self.question_metrics)}")
+        not_rates = [m.canonical for m in self.question_metrics + self.other_metrics if m.unit != "fraction"]
+        if not_rates:
+            raise ValueError(f"a network recipe reports counts per arm: metrics {not_rates} are not fractions")
+        size = self.reporting.arm_size
+        if size is None or not 2 <= size[0] <= size[1]:
+            raise ValueError(f"a network recipe needs reporting.arm_size (low, high), at least two; not {size}")
+        if not self.text.authors:
+            raise ValueError("a network recipe needs text.authors for the studies' author-year labels")
 
 
 def load_recipe(domain: str, root: Path = DOMAINS) -> Recipe:

@@ -30,9 +30,17 @@ def papers_dir(tmp_path: Path, n: int, first_text: str | None = None) -> Path:
 
 
 def recipe_data(thing: str = "zorvex") -> dict:
+    """The rag recipe made a valid network recipe (synth/recipe.py `_network_rules`): its things are names of a side,
+    one question metric, rates only, arm sizes and authors."""
     data = json.loads(json.dumps(BASE))
-    data["network"] = {"things": [thing, "qelinol"], "reference": "qelinol", "edges": [[thing, "qelinol"]],
-                       "contexts": ["adult ward"]}
+    names = data["sides"]["rag"]["names"]
+    names[0]["label"], names[1]["label"] = thing, "qelinol"
+    data["question_metrics"] = data["question_metrics"][:1]
+    data["other_metrics"] = [m for m in data["other_metrics"] if m["unit"] == "fraction"]
+    data["reporting"]["arm_size"] = [60, 240]
+    data["text"]["authors"] = ["Halvorsen"]
+    data["network"] = {"things": [thing, "qelinol"], "reference": "closed-book model",
+                       "edges": [[thing, "closed-book model"], [thing, "qelinol"]], "contexts": ["OpenFactQA"]}
     return data
 
 

@@ -32,6 +32,10 @@ treatment again, any direction) and/or an ablation (the treatment against `<trea
 <component>`, role other; at most one per study). Their values are distractors: ground-truth facts that
 extraction is scored on, never the synthesis pair. Without `hard` the set is byte for byte what it was.
 
+A recipe with a `network` (synth/network.py, plan 2 Task 4) draws its studies on the network's edges instead: two
+arms of network things (plus 0-1 distractor arm), one population, count values k of an arm's n units per arm
+(`Measurement.k`, `Study.arm_sizes`), directions from a latent ranking; every study then gets an author-year `label`.
+
 The flags of every study come from `evidence.rules` applied to the set (`flagged`), as the engine applies
 them to what it extracts; the generator then asserts the rules find exactly what it planted. The
 counterfactual variant (F3, `redrawn`) draws one study's pair again with another direction.
@@ -102,6 +106,9 @@ class Measurement:
     value: float
     # --hard only (None otherwise): the experiment id. Left out of repr, so a plain set's repr is unchanged.
     experiment: str | None = field(default=None, repr=False)
+    # A study of a recipe network (synth/network.py) only: the count k of `value` = k / n over its arm's size n
+    # (Study.arm_sizes). None otherwise, and left out of repr like `experiment`.
+    k: int | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -148,9 +155,26 @@ class Study:
     missing: str | None = None     # control | treatment: the measurement the paper never states (--missing)
     # --hard only (empty otherwise; left out of repr, so a plain set's repr is unchanged): main first
     experiments: tuple[Experiment, ...] = field(default=(), repr=False)
+    # Left out of repr too, so a set drawn without them keeps its repr. A study of a recipe network: its population
+    # (the recipe's `context` value, also its one dataset) and each arm's size by condition id.
+    population: str | None = field(default=None, repr=False)
+    arm_sizes: dict[str, int] = field(default_factory=dict, repr=False, hash=False)
+    # The author-year label a paper is cited by ("<author> et al. (<year>)"), when the recipe has `text.authors`.
+    label: str = field(default="", repr=False)
 
     def condition(self, role: str) -> Condition:
         return next(c for c in self.conditions if c.role == role)
+
+    @property
+    def control_condition(self) -> Condition:
+        """The compared condition in the control place (the first). Found by place, not role: in a network study
+        both compared things may have the same role (two things of one side)."""
+        return self.conditions[0]
+
+    @property
+    def treatment_condition(self) -> Condition:
+        """The compared condition in the treatment place (the second); see `control_condition`."""
+        return self.conditions[1]
 
     @property
     def primary(self) -> Metric:
@@ -197,8 +221,8 @@ class Study:
         if not self.relevant:
             return None
         q = self.primary
-        c = self.find(self.condition(self.control_role).id, q.id, dataset)
-        t = self.find(self.condition(self.treatment_role).id, q.id, dataset)
+        c = self.find(self.control_condition.id, q.id, dataset)
+        t = self.find(self.treatment_condition.id, q.id, dataset)
         return None if c is None or t is None else (c, t)
 
     @property
@@ -388,6 +412,9 @@ def redrawn(rng: random.Random, study: Study, direction: str, spec: Synthesis, *
     dataset's difference from every value. The effect, the claims and the decoy (odd studies) follow."""
     if not study.relevant or study.missing is not None:
         raise ValueError(f"{study.study_id} has no complete treatment/control pair to draw again")
+    if study.arm_sizes:
+        raise ValueError(f"{study.study_id} is a network study: its values are counts from the latent ranking "
+                         "(synth/network.py), not pairs to draw again")
     q, main = study.primary, study.datasets[0]
     control, treatment = study.conditions[0], study.conditions[1]
     pair_ids = {study.measurement(c.id, q.id, d).id for c in (control, treatment) for d in study.datasets}
@@ -433,6 +460,7 @@ def duplicate(original: Study, index: int) -> Study:
         experiments=tuple(replace(e, id=renamed(e.id), conditions=tuple(renamed(c) for c in e.conditions))
                           for e in original.experiments),
         effect=replace(e, metric=renamed(e.metric), treatment=renamed(e.treatment), control=renamed(e.control)),
+        arm_sizes={renamed(c): n for c, n in original.arm_sizes.items()},
         flags=(), duplicate_of=original.study_id)
 
 
@@ -444,8 +472,8 @@ def without(study: Study, side: str) -> Study:
     if side not in MISSING_SIDES:
         raise ValueError(f"missing side must be one of {MISSING_SIDES}, not {side!r}")
     q, e = study.primary, study.effect
-    role = study.control_role if side == "control" else study.treatment_role
-    dropped = {study.measurement(study.condition(role).id, q.id, d).id for d in study.datasets}
+    gone = study.control_condition if side == "control" else study.treatment_condition
+    dropped = {study.measurement(gone.id, q.id, d).id for d in study.datasets}
     effect = Effect("undetermined", None, q.id, treatment=e.treatment if side == "control" else None,
                     control=e.control if side == "treatment" else None, reason=f"missing_{side}")
     return replace(study, measurements=tuple(m for m in study.measurements if m.id not in dropped),
@@ -624,23 +652,54 @@ def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synth
     (default: the recipe's effect protocol's); the share of each true effect direction follows `mix` (default
     0.6/0.2/0.2); then `hard` (`hardened`), then the knobs. A study whose treatment/control pair equals an earlier
     study's (on either dataset) is drawn again, so equal pairs always mean one study; this never happens for the
-    seeds in use, and the plain set is byte for byte what it was."""
+    seeds in use, and the plain set is byte for byte what it was.
+
+    A recipe with a `network` draws its studies on the network's edges instead (`network.draw`: count values per
+    arm, directions from the latent ranking, so no `mix`); `hard` and `outliers`, which draw thousandths pairs, are
+    refused for it. Every study gets an author-year `label` when the recipe has `text.authors` (`labelled`)."""
     recipe = recipe or default_recipe()
     spec = spec or default_spec(recipe)
-    rng = random.Random(seed)
-    counts = effect_counts(n, mix or DEFAULT_MIX)
-    directions = [d for d in DIRECTIONS for _ in range(counts[d])]
-    rng.shuffle(directions)
-    studies: list[Study] = []
-    for i, d in enumerate(directions):
-        study = make_study(rng, i, d, spec, recipe)
-        while collides(study, studies):
+    if recipe.network is not None:
+        from synth import network       # network.py builds on this module's Study
+        for asked, what in ((mix is not None, "an effect mix"), (hard, "--hard"), (outliers, "--outliers")):
+            if asked:
+                raise SystemExit(f"{what}: not available for a recipe with a network (the directions come from the "
+                                 "latent ranking and the values are counts per arm)")
+        studies = network.draw(seed, n, spec, recipe)
+    else:
+        rng = random.Random(seed)
+        counts = effect_counts(n, mix or DEFAULT_MIX)
+        directions = [d for d in DIRECTIONS for _ in range(counts[d])]
+        rng.shuffle(directions)
+        studies = []
+        for i, d in enumerate(directions):
             study = make_study(rng, i, d, spec, recipe)
-        studies.append(study)
-    if hard:
-        studies = hardened(seed, studies, spec)
-    return with_knobs(seed, studies, spec, recipe, duplicates=duplicates, missing=missing, outliers=outliers,
-                      irrelevant=irrelevant)
+            while collides(study, studies):
+                study = make_study(rng, i, d, spec, recipe)
+            studies.append(study)
+        if hard:
+            studies = hardened(seed, studies, spec)
+    studies = with_knobs(seed, studies, spec, recipe, duplicates=duplicates, missing=missing, outliers=outliers,
+                         irrelevant=irrelevant)
+    return labelled(seed, studies, recipe)
+
+
+LABEL_YEARS = range(2006, 2025)      # the years of the invented author-year labels
+
+
+def labelled(seed: int, studies: list[Study], recipe: Recipe) -> list[Study]:
+    """Each study with a distinct author-year label ("<author> et al. (<year>)": an author of the recipe's
+    `text.authors`, years never decreasing in study order, so an earlier study is never the newer paper), from its
+    own stream `synth:<seed>:labels`. A recipe without authors (rag) leaves the set as it is."""
+    authors = recipe.text.authors
+    if not authors:
+        return studies
+    pool = [(a, y) for y in LABEL_YEARS for a in authors]
+    if len(studies) > len(pool):
+        raise ValueError(f"the recipe of {recipe.domain} has {len(authors)} authors: too few for {len(studies)} "
+                         "distinct labels")
+    picked = sorted(random.Random(f"synth:{seed}:labels").sample(pool, len(studies)), key=lambda p: p[1])
+    return [replace(s, label=f"{a} et al. ({y})") for s, (a, y) in zip(studies, picked)]
 
 
 def counted(studies: list[Study]) -> list[Study]:

@@ -1,0 +1,205 @@
+# The generator recipe of the toy drug-trial pack (synth/tests/test_network.py; plan 2 Task 4): three invented drugs
+# and placebo in a network of comparisons, response rates as counts per arm, two populations. Written for the tests,
+# not drafted from papers; every drug and author name is invented. Rules: no digits in filler or claim text, no name
+# inside another.
+effect_protocol: drugtoy-response
+question: Does Zelvora improve the response rate over placebo?
+context: population
+sides:
+  drug:
+    role: treatment
+    names:
+    - label: Zelvora
+      synonym: the oral kinase blocker
+      description: is taken as one tablet each morning for the whole trial
+      code: Z
+    - label: Quintapride
+      synonym: the weekly injectable agent
+      description: is given as one injection under the skin each week
+      code: Q
+    - label: Morvectin
+      synonym: the twice-daily capsule
+      description: is taken as one capsule in the morning and one in the evening
+      code: M
+  placebo:
+    role: control
+    names:
+    - label: placebo
+      synonym: the inactive look-alike tablet
+      description: looks and tastes like the study drug but holds no active substance
+      code: P
+others:
+- label: standard care
+  synonym: usual clinical management
+  description: receives the treatment the clinic would give outside the trial
+- label: watchful waiting
+  synonym: monitoring without a study drug
+  description: is seen at every visit but receives no study drug
+- label: dietary counselling
+  synonym: guided nutrition sessions
+  description: meets a dietitian every second week
+- label: physical therapy
+  synonym: supervised exercise programme
+  description: follows a supervised exercise plan three times a week
+other_codes:
+- X
+question_metrics:
+- canonical: response_rate
+  forms:
+  - - response rate
+    - RR
+    - share of patients who met the response criteria
+  - - responder proportion
+    - RP
+    - proportion of patients counted as responders
+  higher_is_better: true
+  unit: fraction
+  range: [0.15, 0.7]
+  pair_range: [0.2, 0.75]
+other_metrics:
+- canonical: adverse_event_rate
+  forms:
+  - - adverse event rate
+    - AE
+    - share of patients with at least one adverse event
+  higher_is_better: false
+  unit: fraction
+  range: [0.05, 0.4]
+- canonical: discontinuation_rate
+  forms:
+  - - discontinuation rate
+    - DC
+    - share of patients who stopped the study treatment early
+  higher_is_better: false
+  unit: fraction
+  range: [0.03, 0.25]
+contexts:
+- adults
+- older adults
+effects:
+  supports: [0.05, 0.2]
+  contradicts: [0.05, 0.15]
+  large: [0.3, 0.45]
+reporting:
+  formats:
+  - k_of_n
+  - pct
+  - cell_pct
+  count_base: null
+  arm_size: [60, 240]
+  allowed_numbers:
+  - \b(?:19|20)\d\d\b
+text:
+  claims:
+    improves:
+      response_rate:
+      - The study drug clearly raises the response rate over its comparator.
+      - Treatment with the study drug leads to more responders than the comparator.
+    no_effect:
+      response_rate:
+      - The study drug does not measurably change the response rate over its comparator.
+      - The share of responders is essentially unchanged by the study drug.
+    worsens:
+      response_rate:
+      - The study drug lowers the response rate compared with its comparator.
+      - Treatment with the study drug leads to fewer responders than the comparator.
+  titles:
+  - 'A Randomised Comparison of Two Treatments in {dataset}'
+  - 'Response to Treatment in {dataset}: A Controlled Trial'
+  - 'Does the Newer Drug Help? A Trial in {dataset}'
+  intro:
+  - Many patients do not respond to the treatments available today.
+  - Several new drugs have been proposed, but direct comparisons are rare.
+  - We report a randomised trial that compares two treatment arms head to head.
+  method:
+  - Patients were assigned to the arms at random and treated for twelve weeks.
+  - Response was judged by an assessor who did not know the assigned arm.
+  - Every patient who received at least one dose was included in the analysis.
+  padding:
+  - The trial was approved by the ethics committee of every site.
+  - All patients gave written consent before the first visit.
+  - Visits took place every second week until the end of treatment.
+  discussion:
+  - The comparison suggests that the choice of drug matters for response.
+  - Our trial was not powered to detect rare adverse events.
+  - Longer follow-up would show whether the responses last.
+  conclusion:
+  - We compared two treatment arms in a randomised trial.
+  - The trial data are available on request.
+  irrelevant:
+    survey:
+      titles:
+      - 'Treatment Options for Chronic Disease: A Narrative Review'
+      abstract:
+      - We review the treatments in use and describe how trials compare them.
+      sections:
+      - Scope
+      - Treatments in use
+      body:
+      - We read the published trials and grouped them by the kind of treatment.
+      - Most trials compare a new drug with placebo, and few compare two active drugs.
+      conclusion:
+      - We summarised the treatment options; the comparisons remain for controlled trials to settle.
+    other:
+      titles:
+      - 'Scheduling Clinic Visits with Fewer Waiting Hours'
+      abstract:
+      - We describe how a clinic reorganised its appointment schedule.
+      sections:
+      - Setting
+      - Changes made
+      body:
+      - The clinic moved routine visits to the afternoon and kept mornings for new patients.
+      - Staff reported that the new schedule was easier to plan.
+      conclusion:
+      - We described a new visit schedule and what the staff thought of it.
+  hard:
+    main_experiment: main comparison
+    subset_experiments:
+    - severe disease
+    - early disease
+    ablation_experiment: dose reduction
+    ablated:
+    - loading dose
+    - evening dose
+    ablation_description: is identical to the full regimen except that its {component} is left out
+  prompt_words:
+    effect_phrase: an effect of the study drug on the response rate
+    topic_terms: the study drug
+    outcome_terms: response
+    method_phrase: the drug or the treatment
+    effect_verbs: improves, helps, increases, changes, reduces, lowers, raises or affects
+    context_noun: population
+    statement_examples: |
+      Examples.
+
+      Normal task:
+      {"id": "S001.m1", "level": "explicit", "condition": "Tavorin", "metric": "remission rate", "dataset": "adults", "value": "41 of 120 patients"}
+      Reply entry:
+      {"id": "S001.m1", "text": "In adults, 41 of 120 patients on Tavorin reached remission."}
+  blind_examples: |
+    Examples.
+
+    A sentence "In adults, 41 of 120 patients on Tavorin responded", with the metric named response rate, gives
+    {"condition": "Tavorin", "metric": "response rate", "dataset": "adults", "value": 0.342}
+  claim_subject: (?i)\bstudy\s+drug\b
+  claim_cues:
+  - (?i)\bno\s+(?:measurable\s+)?(?:effect|difference|change)|\bessentially\s+unchanged\b|\bdoes\s+not\s+measurably\b
+  - (?i)\b(?:lowers?|fewer)\b
+  - (?i)\b(?:raises?|more\s+responders)\b
+  authors:
+  - Halvorsen
+  - Brekkan
+  - Ostrava
+  - Lindqvar
+  - Matussek
+  - Ferreval
+  unit_noun: patients
+network:
+  things: [Zelvora, Quintapride, Morvectin]
+  reference: placebo
+  edges: [[Zelvora, placebo], [Zelvora, Quintapride], [Quintapride, Morvectin]]
+  contexts: [adults, older adults]
+builds_on: null
+limitations: null
+name_variants: null

@@ -118,15 +118,14 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
     """What the model is told: facts, names and the exact strings, never the effect or the answer. A
     duplicate paper (--duplicates) is told its original's title (`avoid_title`) so it takes another."""
     units = {"fraction": "%", "seconds": "s"}
-    treatment = plan.study.condition(plan.study.treatment_role).id
+    treatment = plan.study.treatment_condition.id
     decoy = None
     if plan.decoy is not None:
         decoy = (f"On {plan.datasets[0]}, the {plan.cond_name[treatment]} reaches {plan.decoy.exact} "
                  f"{plan.metric_name[plan.metrics[0].id]}.")
     not_reported = None
     if plan.study.missing is not None:          # a --missing study: the key is present only then
-        role = plan.study.control_role if plan.study.missing == "control" else plan.study.treatment_role
-        gone = plan.study.condition(role).id
+        gone = (plan.study.control_condition if plan.study.missing == "control" else plan.study.treatment_condition).id
         not_reported = {
             "cells": [{"condition": plan.cond_name[gone], "metric": plan.metric_name[plan.metrics[0].id],
                        "dataset": d} for d in plan.datasets],
