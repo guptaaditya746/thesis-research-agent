@@ -5,7 +5,9 @@ The checks, all deterministic, each a refusal (ValueError) before anything is wr
 - 5 to 10 papers;
 - no held-out paper (its file stem, or a PMCID in its text, is in `domains/heldout.yaml`);
 - the draft is a valid `Recipe` (a failure goes back to the model once, with the error: `ask` retries);
-- every name of a side, an other condition and a network thing is invented: after `names.clean` it does not occur in any
+- every name of a side but the network's reference is invented (the reference and the other conditions are generic
+  comparators, such as a placebo or standard care, which real papers always name; the recipe check makes every network
+  thing a side name): after `names.clean` it does not occur in any
   source paper; a code of fewer than 3 letters ("R" cleans to the word "r") is looked for as it is written, case-sensitive,
   at token edges;
 - every verifier quote is a verbatim substring of a source paper and holds at least 8 non-space characters.
@@ -86,13 +88,13 @@ def read_papers(papers: Path, heldout: Collection[str]) -> list[dict[str, str]]:
 
 
 def _spelled(recipe: Any) -> tuple[list[str], list[str]]:
-    """(names to clean-match, short codes to match raw): the labels, synonyms, codes of the sides and other
-    conditions, and the network things."""
-    sides = [n for s in recipe.sides.values() for n in s.names] + list(recipe.others)
+    """(names to clean-match, short codes to match raw): the labels, synonyms and codes of the sides' names, but
+    not the network's reference nor the other conditions (generic comparators). Every network thing is a side name
+    (the recipe check), so it is among them."""
+    reference = recipe.network.reference if recipe.network else None
+    sides = [n for s in recipe.sides.values() for n in s.names if n.label != reference]
     names = [x for n in sides for x in (n.label, n.synonym)]
     codes = [n.code for n in sides if n.code]
-    if recipe.network:
-        names += recipe.network.things
     return names + [c for c in codes if len(c) >= MIN_CODE], [c for c in codes if len(c) < MIN_CODE]
 
 

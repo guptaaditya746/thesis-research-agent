@@ -102,7 +102,30 @@ def test_real_drug_name_refused(tmp_path):
 
 def test_a_name_of_a_side_is_checked_too(tmp_path):
     with pytest.raises(ValueError, match="invented"):
-        run(tmp_path, papers_dir(tmp_path, n=5, first_text="A closed-book model was used."), model=scripted_recipe())
+        run(tmp_path, papers_dir(tmp_path, n=5, first_text="A parametric-only model was used."), model=scripted_recipe())
+
+
+def generic_comparators() -> dict:
+    """recipe_data with the network's reference named placebo and an other condition named standard care."""
+    data = recipe_data()
+    data["sides"]["baseline"]["names"][0]["label"] = "placebo"
+    data["network"]["reference"] = "placebo"
+    data["network"]["edges"][0][1] = "placebo"
+    data["others"][0]["label"] = "standard care"
+    return data
+
+
+def test_the_reference_and_other_conditions_may_occur_in_a_source_paper(tmp_path):
+    """Generic comparators are not invented names (the network's things and the sides' other names are): a draft
+    whose placebo and standard care occur in a source paper is accepted, one whose drug occurs there is not."""
+    text = "Placebo or standard care was given. Arms held many people."
+    run(tmp_path, papers_dir(tmp_path, n=5, first_text=text), model=scripted(generic_comparators()),
+        verify=scripted_quotes())
+    assert load_recipe("toy", tmp_path / "domains").network.reference == "placebo"
+    again = tmp_path / "again"
+    again.mkdir()
+    with pytest.raises(ValueError, match="invented"):
+        run(again, papers_dir(again, n=5, first_text=text + " The zorvex arm did well."), model=scripted(generic_comparators()))
 
 
 def test_draft_is_logged_in_provenance(tmp_path):
@@ -133,7 +156,7 @@ def test_quote_not_in_a_paper_refused(tmp_path):
 
 def test_invalid_draft_goes_back_once_with_the_error(tmp_path):
     bad = recipe_data()
-    bad["contexts"] = ["ward 3"]                                  # a digit in a name
+    bad["contexts"] = ["OpenFactQA", "ward 3"]                    # a digit in a name; the network context stays valid
     model = scripted(bad, recipe_data())
     run(tmp_path, papers_dir(tmp_path, n=5), model=model, verify=scripted_quotes())
     assert len(model.calls) == 2
@@ -141,7 +164,7 @@ def test_invalid_draft_goes_back_once_with_the_error(tmp_path):
 
 def test_two_invalid_drafts_fail(tmp_path):
     bad = recipe_data()
-    bad["contexts"] = ["ward 3"]
+    bad["contexts"] = ["OpenFactQA", "ward 3"]                    # only the digit rule fails
     with pytest.raises(ModelCallError, match="retries"):
         run(tmp_path, papers_dir(tmp_path, n=5), model=scripted(bad), verify=scripted_quotes())
 
@@ -159,7 +182,7 @@ def test_the_shipped_heldout_file_reads():
 
 def with_codes(codes: tuple[str, str]) -> dict:
     data = recipe_data()
-    names = [n for side in data["sides"].values() for n in side["names"]]
+    names = data["sides"]["rag"]["names"]         # the baseline's first name is the network's reference (exempt)
     names[0]["code"], names[1]["code"] = codes
     return data
 

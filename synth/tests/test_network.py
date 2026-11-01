@@ -10,30 +10,20 @@ from pathlib import Path
 
 import pytest
 
-from evidence import contract, rules
+from evidence import rules
 from synth import corpus, truth
 from synth.levels import make_plan, parse_value, write_value
 from synth.network import chains, comparisons, edge_of as edge, latent, plan_studies
 from synth.recipe import load_recipe
 from synth.truth import generate
 
+from .conftest import kept_registry
+
 FIXTURES = Path(__file__).resolve().parents[2] / "evidence" / "tests" / "fixtures"
 DRUGTOY = load_recipe("drugtoy", root=FIXTURES)
-_BEFORE = dict(contract.ITEM_PREFIX)
-SPEC = truth.default_spec(DRUGTOY)      # loading the drugtoy protocol registers its pack's types (arm, outcome, result)
-contract.ITEM_PREFIX.clear()
-contract.ITEM_PREFIX.update(_BEFORE)
+with kept_registry():                   # loading the drugtoy protocol registers its pack's types (arm, outcome, result)
+    SPEC = truth.default_spec(DRUGTOY)
 PINS = Path(__file__).resolve().parent / "data" / "rag_set_sha256.json"
-
-
-@pytest.fixture(autouse=True)
-def _registry():
-    """Each test leaves the type registry as it found it: drawing a drugtoy set loads its protocol, which registers
-    the drugtoy types globally, and another test's pack may use the same type names with other prefixes."""
-    before = dict(contract.ITEM_PREFIX)
-    yield
-    contract.ITEM_PREFIX.clear()
-    contract.ITEM_PREFIX.update(before)
 
 
 def test_values_are_exact_counts_over_arm_size():
@@ -88,6 +78,21 @@ def test_k_of_n_renders_and_parses_back():
             assert abs(parse_value(write_value(m.value, fmt), fmt) - m.value) < 0.005
     with pytest.raises(ValueError, match="k_of_n"):
         write_value(0.5, "k_of_n")
+    assert parse_value("1,204 of 2,000 patients", "k_of_n") == 0.602
+
+
+@pytest.mark.parametrize("seed", range(1, 11))
+def test_the_reference_is_ranked_last_in_every_population(seed):
+    """Active things beat the reference (placebo) everywhere; the things' own order varies."""
+    rate, ref = latent(seed, DRUGTOY), DRUGTOY.network.reference
+    for context in DRUGTOY.network.contexts:
+        assert all(rate[(t, context)] > rate[(ref, context)] for t in DRUGTOY.network.things)
+
+
+def test_the_things_order_varies_between_populations_and_seeds():
+    orders = {tuple(sorted(DRUGTOY.network.things, key=lambda t: -latent(seed, DRUGTOY)[(t, c)]))
+              for seed in range(1, 11) for c in DRUGTOY.network.contexts}
+    assert len(orders) > 1
 
 
 def test_adjacent_things_in_the_latent_order_differ_by_the_gap():

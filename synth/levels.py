@@ -126,7 +126,7 @@ def parse_value(text: str, fmt: str, base: float | None = None) -> float:
     """The normalised value a rendering states (fractions for percent and counts)."""
     if fmt == "k_of_n":
         k, _, n = text.split()[:3]
-        return round(int(k) / int(n.replace(",", "")), 6)
+        return round(int(k.replace(",", "")) / int(n.replace(",", "")), 6)
     number = float(text.split()[0].rstrip("%").replace(",", ""))
     if fmt in ("pct", "cell_pct"):
         return round(number / 100, 6)

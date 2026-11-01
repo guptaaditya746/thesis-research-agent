@@ -1,7 +1,7 @@
 """The truth network of a recipe with `network` (plan 2 Task 4; spec sections 6.9, 6.10): which thing beats which, per
 population, so every direct comparison and every allowed chain has a known answer.
 
-- `latent`: a ranking of the network's things (its reference among them) drawn per context, with a true
+- `latent`: a ranking of the network's things (its reference among them, always ranked last) drawn per context, with a true
   rate for each; neighbours in the ranking differ by at least 2 x min_effect + the smallest supporting effect, so the
   rounding of a count to whole units never turns an edge neutral.
 - `plan_studies`: which edge and context each study tests, round robin over edges x contexts, then shuffled.
@@ -54,7 +54,8 @@ def question_metric(recipe: Recipe, spec: Synthesis) -> MetricSpec:
 
 def latent(seed: int, recipe: Recipe, spec: Synthesis | None = None) -> dict[tuple[str, str], float]:
     """(thing, context) -> true rate of the question metric, for every node and network context. Per context the
-    nodes are shuffled (best first) and get rates from the metric's `pair_range`, in thousandths, neighbours apart by
+    things are shuffled (best first), the reference put last (an active thing beats it, as in real trials; by how
+    much varies), and they get rates from the metric's `pair_range`, in thousandths, neighbours apart by
     at least 2 x min_effect + effects.supports[0] (spec: default the recipe's effect protocol)."""
     spec = spec or default_spec(recipe)
     metric = question_metric(recipe, spec)
@@ -68,8 +69,9 @@ def latent(seed: int, recipe: Recipe, spec: Synthesis | None = None) -> dict[tup
     rng = random.Random(f"synth:{seed}:latent")
     rates: dict[tuple[str, str], float] = {}
     for context in _network(recipe).contexts:
-        order = list(names)
+        order = list(_network(recipe).things)
         rng.shuffle(order)
+        order.append(_network(recipe).reference)
         offsets = sorted(rng.randint(0, slack) for _ in names)
         rising = [(round(low * 1000) + u + i * gap) / 1000 for i, u in enumerate(offsets)]
         best_first = rising[::-1] if spec.higher_is_better(metric.canonical) else rising
@@ -144,7 +146,7 @@ def network_study(rng: random.Random, index: int, edge: Edge, context: str, rate
         k_c, k_t = (round(rates[(thing, context)] * sizes[c.id]) for thing, c in ((second, control), (first, treatment)))
         v_c, v_t = k_c / sizes[control.id], k_t / sizes[treatment.id]
         if (all(1 <= k < sizes[c.id] and _usable(k / sizes[c.id]) for k, c in ((k_c, control), (k_t, treatment)))
-                and rules.effect(v_t, v_c, hib, spec.min_effect)[0] == want):
+                and all(_roomy(n) for n in sizes.values()) and rules.effect(v_t, v_c, hib, spec.min_effect)[0] == want):
             break
     else:
         raise ValueError(f"{sid}: no arm sizes in {recipe.reporting.arm_size} give the latent direction")
@@ -239,11 +241,16 @@ def _usable(v: float) -> bool:
     return bool(round(v * 1000) % 10)
 
 
+def _roomy(n: int) -> bool:
+    """An arm of n has a usable rate k / n at all (an arm of 100, or any n dividing 100, has none)."""
+    return any(_usable(k / n) for k in range(1, n))
+
+
 def _count(rng: random.Random, bounds: tuple[float, float], n: int, taken: set[float], sid: str) -> int:
-    """A count k of n, 1 <= k < n, whose rate k / n lies in `bounds` and is far from every value taken."""
-    low, high = max(1, math.ceil(bounds[0] * n)), min(n - 1, math.floor(bounds[1] * n))
-    for _ in range(TRIES):
-        k = rng.randint(low, high)
-        if _usable(k / n) and _far(k / n, taken):
-            return k
-    raise ValueError(f"{sid}: no count of {n} in {bounds} lies apart from the study's other values")
+    """A count k of n, 1 <= k < n, whose rate k / n lies in `bounds`, is usable and is far from every value taken."""
+    fits = [k for k in range(max(1, math.ceil(bounds[0] * n)), min(n - 1, math.floor(bounds[1] * n)) + 1)
+            if _usable(k / n) and _far(k / n, taken)]
+    if not fits:
+        raise ValueError(f"{sid}: no count of an arm of {n} in {bounds} is usable and apart from the study's other "
+                         "values")
+    return rng.choice(fits)
