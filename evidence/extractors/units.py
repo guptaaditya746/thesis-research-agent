@@ -17,7 +17,7 @@ from typing import Any
 
 from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, RunContext
 from . import base, regex, terms
-from .measure import (AFTER, BLOCKERS, DELTA_BEFORE, FROM_TO, HEAD_NOUN, SIGNED, Found, Resolver, measurements)
+from .measure import AFTER, DELTA_BEFORE, FROM_TO, SIGNED, Found, Resolver, measurements
 
 VERSION = 1
 SOURCES = (base.HERE / "units.py", base.HERE / "measure.py", base.HERE / "numreader.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
@@ -97,8 +97,8 @@ class MeasurementUnitsRegex:
             after = AFTER.match(text, hit.end(), e)
             following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)
             preceding = [(m, i) for m, i in conditions if m.end <= hit.start()]
-            head = HEAD_NOUN.match(text, preceding[-1][0].end) if preceding else None
-            if preceding and BLOCKERS.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
+            head = r.nouns.head.match(text, preceding[-1][0].end) if preceding else None
+            if preceding and r.nouns.blockers.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
                 preceding = []
             cond = following or (preceding[-1] if preceding else None)
             before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]

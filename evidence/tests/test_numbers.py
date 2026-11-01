@@ -264,3 +264,13 @@ def test_one_value_written_in_prose_and_in_a_table_is_one_item() -> None:
     [item] = run(text)
     assert (item.fields["value"], item.fields["form"]) == (0.71, "percent")
     assert sorted(s.selector["exact"] for s in item.spans if s.role == "value") == ["71%", "71.0"]
+
+
+def test_a_pack_system_noun_blocks_a_value_and_comes_from_the_pack() -> None:
+    """"reader" is a system noun of the rag pack (words.yaml `system_nouns`), not of the code: with the rag words the
+    57% is the reader's, not the retrieval-augmented model's (as before the noun moved); a pack without it
+    (config `system_nouns: []`) takes the value across it."""
+    text = "The retrieval-augmented model was tested, and the reader got 57% accuracy."
+    assert "reader" in WORDS["system_nouns"]
+    assert found(run(text)) == []
+    assert found(run(text, config={"system_nouns": []})) == [("rag", "acc", 0.57, None)]

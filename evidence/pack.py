@@ -57,6 +57,7 @@ class Words(Strict):
     metric_supplement: list[tuple[str, str, bool]]
     screen_terms: list[str]
     query: dict[str, list[str]]
+    system_nouns: list[str] = []   # the domain's own system nouns, beside measure.GENERIC_SYSTEM_NOUNS
 
 
 _CONDITIONS = ("conditions", "not_a_system")
@@ -65,9 +66,9 @@ _CONDITIONS = ("conditions", "not_a_system")
 READS: dict[str, tuple[str, ...]] = {
     "regex_condition": _CONDITIONS, "abbrev_condition": _CONDITIONS, "gliner_condition": ("labels", *_CONDITIONS),
     "regex_metric": ("metrics",), "abbrev_metric": ("metrics", "supplement"), "gliner_metric": ("labels", "metrics"),
-    "regex_measurement": (*_CONDITIONS, "metrics"),
-    "regex_measurement_units": (*_CONDITIONS, "metrics", "fraction_metrics"),
-    "number_measurement": (*_CONDITIONS, "metrics", "fraction_metrics"),
+    "regex_measurement": (*_CONDITIONS, "metrics", "system_nouns"),
+    "regex_measurement_units": (*_CONDITIONS, "metrics", "fraction_metrics", "system_nouns"),
+    "number_measurement": (*_CONDITIONS, "metrics", "fraction_metrics", "system_nouns"),
     "regex_author_claim": ("subject", "claims"), "regex_dataset": ("pattern",), "gliner_dataset": ("labels",),
     "agentic": ("display", "metric_names"),   # the examples of its task brief (evidence/agentic/task.py)
 }
@@ -98,6 +99,7 @@ class Pack(Strict):
             "metrics": [list(m) for m in w.metrics],
             "supplement": [list(m) for m in w.metric_supplement],
             "fraction_metrics": list(w.fraction_metrics),
+            "system_nouns": list(w.system_nouns),
             "subject": w.claim_subject,
             "claims": [list(c) for c in w.claims],
             "pattern": w.dataset_pattern,

@@ -171,3 +171,6 @@
   reason: English adjective and verb
 - word: closed
   reason: English adjective (a closed pipe, a closed broker); the topic term closed-book is not allowlisted
+- word: reader
+  reason: plain noun for anything that reads (the number reader numreader.py, file readers, a human reader); the rag
+    pack lists it as a system noun only in the sense of a reading component, which stays in words.yaml

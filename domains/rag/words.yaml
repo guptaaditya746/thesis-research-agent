@@ -120,3 +120,8 @@ query:
   - hurts
   - effect
   - accuracy
+# System nouns of this domain, beside the generic ones in code (evidence/extractors/measure.py
+# GENERIC_SYSTEM_NOUNS): a measured value is not taken across one ("71%, while the retriever reaches 57%").
+system_nouns:
+- reader
+- retriever

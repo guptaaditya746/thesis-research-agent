@@ -40,7 +40,7 @@ from typing import Any
 
 from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, RunContext, Span, digest
 from . import base, regex, terms, units
-from .measure import DATASET_HEADER, DELTA_AFTER, DELTA_BEFORE, HEAD_NOUN, SIGNED, Found, Resolver, sample_size
+from .measure import DATASET_HEADER, DELTA_AFTER, DELTA_BEFORE, SIGNED, Found, Resolver, SystemNouns, sample_size
 from .numreader import NumberSpan, read_numbers
 
 VERSION = 1
@@ -67,8 +67,6 @@ FOLLOWS = re.compile(r"\s*[(,–—-]?\s*(?:(?:for|with|by|of|from|in|using|on)\
                      r"(?:the\s+|a\s+|an\s+|its\s+|our\s+)?")
 DELTA_HEADER = re.compile(r"(?i)Δ|∆|\bdelta\b|\bdiff\w*|\bgain\b|\bimprove\w*|\bchange\b|\bvs\.?\b|\breduction\b")
 COMPARED = re.compile(r"(?i)\b(?:over|than|versus|vs\.?|compared|relative|against|while|whereas|but|unlike)\b")
-SYSTEMS = re.compile(r"(?i)\b(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|"
-                     r"retriever|ablation)s?\b")
 PROSE_EXCLUDED = frozenset({"A", "I"})   # one-letter forms that are ordinary words in a sentence
 
 Named = tuple[terms.Mention, Item]
@@ -259,7 +257,7 @@ class NumberMeasurement:
         out: list[Found] = []
         for n, hit in enumerate(hits):
             others = [h.start() for h in hits if h is not hit]
-            cond = rights[n] or _nearest(text, hit, free, others)
+            cond = rights[n] or _nearest(text, hit, free, others, r.r.nouns)
             unit = hit.unit
             usable = [(m, i) for m, i in metrics if unit is None or i.fields.get("canonical") not in self.fractions]
             met = min(usable, key=lambda mi: (_distance(hit, mi[0]), mi[0].start), default=None)
@@ -405,19 +403,20 @@ def _right(text: str, hit: re.Match[str], conditions: list[Named]) -> Named | No
     return next(((m, i) for m, i in conditions if follows and m.start == follows.end()), None)
 
 
-def _nearest(text: str, hit: re.Match[str], conditions: list[Named], others: list[int]) -> Named | None:
+def _nearest(text: str, hit: re.Match[str], conditions: list[Named], others: list[int],
+             nouns: SystemNouns) -> Named | None:
     """The nearest condition before the number, else the nearest after it, never across a system noun,
     another value or a comparison word (a preceding mention's own head noun does not block)."""
     open_: list[tuple[int, int, Named]] = []
     for m, i in conditions:
         if m.end <= hit.start():
-            head = HEAD_NOUN.match(text, m.end)
+            head = nouns.head.match(text, m.end)
             a, b, side = head.end() if head else m.end, hit.start(), 0
         elif m.start >= hit.end():
             a, b, side = hit.end(), m.start, 1
         else:
             continue
-        if SYSTEMS.search(text, a, b) or COMPARED.search(text, a, b) or any(a <= o < b for o in others):
+        if nouns.systems.search(text, a, b) or COMPARED.search(text, a, b) or any(a <= o < b for o in others):
             continue   # "TM ... versus 62%", "71% over the baseline model": a comparison, not this value's
         open_.append((side, _distance(hit, m), (m, i)))
     return min(open_, key=lambda t: (t[0], t[1]))[2] if open_ else None

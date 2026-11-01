@@ -3,11 +3,13 @@ system or another number, signed deltas and "from X to Y" changes are no values,
 names another system."""
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 
 from evidence.extractors import terms
+from evidence.pack import DOMAINS
 
 from .conftest import PROTOCOL, measurements, pack_words, regex_run
 
@@ -19,6 +21,20 @@ def test_no_reach_back_across_another_system(tmp_path: Path) -> None:
                            "reaches 57%, compared with 62% for the closed-book model.")
     _, items = regex_run({"S": text}, tmp_path)
     assert measurements(items, "S") == [("rag", 0.71), ("baseline", 0.62)]
+
+
+def test_no_reach_back_across_a_pack_system_noun(tmp_path: Path) -> None:
+    """"retriever" blocks as before, now as a rag pack system noun (words.yaml `system_nouns`), not a code word: a
+    copy of the pack without `system_nouns` takes the value across it."""
+    text = ABSTRACT.format("The retrieval-augmented model was tested, and the dense retriever got 57% accuracy.")
+    _, items = regex_run({"S": text}, tmp_path / "rag")
+    assert measurements(items, "S") == []
+    pack = tmp_path / "domains" / "rag"
+    shutil.copytree(DOMAINS / "rag", pack)
+    words = (pack / "words.yaml").read_text(encoding="utf-8")
+    (pack / "words.yaml").write_text(words[:words.index("# System nouns")], encoding="utf-8")
+    _, items = regex_run({"S": text}, tmp_path / "bare", domains=tmp_path / "domains")
+    assert measurements(items, "S") == [("rag", 0.57)]
 
 
 def test_signed_delta_is_not_a_value(tmp_path: Path) -> None:

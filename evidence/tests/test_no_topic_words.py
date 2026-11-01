@@ -28,7 +28,7 @@ def literal_words(text: str) -> set[str]:
 def pack_words() -> set[str]:
     """Every word of every real pack (a folder directly under domains/ with a pack.yaml): words.yaml's patterns
     reduced to their words, its literal terms, its enum values (condition roles, canonical metrics, claim
-    directions) and the pack's display names. Lower-cased; the check ignores case."""
+    directions), its system nouns and the pack's display names. Lower-cased; the check ignores case."""
     words: set[str] = set()
     for folder in sorted(p for p in DOMAINS.iterdir() if (p / "pack.yaml").is_file()):
         pack = load_pack(folder.name)
@@ -40,7 +40,7 @@ def pack_words() -> set[str]:
             words |= regex_words(p)
         enums = [*w.conditions, *w.fraction_metrics, *(c for _, c, _ in (*w.metrics, *w.metric_supplement)),
                  *(d for _, d in w.claims)]
-        literals = [*w.screen_terms, *(t for ts in w.query.values() for t in ts),
+        literals = [*w.screen_terms, *w.system_nouns, *(t for ts in w.query.values() for t in ts),
                     *(t for ts in w.gliner_labels.values() for t in ts), *pack.display.values(), *enums]
         for t in literals:
             words |= literal_words(t)
@@ -68,7 +68,7 @@ def text_of(f: Path) -> str:
 def test_pack_words_reduce_patterns_to_words() -> None:
     assert regex_words(r"(?i)\bclosed[- ]book(?:\s+(?:baseline|LLM))?") == {"closed", "book", "baseline"}
     assert literal_words("closed-book model") == {"closed-book", "model"}
-    assert {"retrieval", "rag", "closed-book", "factual_accuracy", "hallucination"} <= pack_words()
+    assert {"retrieval", "rag", "closed-book", "factual_accuracy", "hallucination", "retriever", "reader"} <= pack_words()
 
 
 def test_every_allowlisted_word_is_a_pack_word() -> None:

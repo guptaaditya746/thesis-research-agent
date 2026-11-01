@@ -12,6 +12,7 @@ else to the nearest condition named before it, but never across another system n
 """
 from __future__ import annotations
 
+import functools
 import re
 from collections.abc import Callable, Sequence
 from typing import Any, NamedTuple
@@ -32,9 +33,30 @@ CORRECT_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}correct")
 SAMPLE_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}?(?:were|are|was)\s+(?:randomly\s+)?(?:sampled|selected|drawn|chosen|used)\b")
 SIGNED = re.compile(r"[+±\-−–]\s*$")
 FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
-_SYSTEMS = r"(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|retriever|ablation)s?"
-BLOCKERS = re.compile(r"\d|(?i:\b" + _SYSTEMS + r"\b)")
-HEAD_NOUN = re.compile(r"(?i:\s+" + _SYSTEMS + r"\b)")
+# Generic system nouns: a value is not taken across one ("71%, while a fine-tuned model reaches 57%"); a pack adds
+# its domain's own (words.yaml `system_nouns`, config key `system_nouns`).
+GENERIC_SYSTEM_NOUNS = ("model", "system", "variant", "baseline", "pipeline", "generator", "approach", "method", "LLM",
+                        "ablation")
+
+
+class SystemNouns(NamedTuple):
+    """The system-noun regexes of one extractor: `blockers` (a digit or a system noun), `head` (a mention's own
+    noun right after it) and `systems` (any system noun, word-bounded)."""
+    blockers: re.Pattern[str]
+    head: re.Pattern[str]
+    systems: re.Pattern[str]
+
+    @staticmethod
+    def of(extra: Sequence[str] = ()) -> SystemNouns:
+        return _system_nouns(tuple(extra))
+
+
+@functools.lru_cache(maxsize=32)
+def _system_nouns(extra: tuple[str, ...]) -> SystemNouns:
+    nouns = "|".join(re.escape(n) for n in dict.fromkeys([*GENERIC_SYSTEM_NOUNS, *extra]))
+    systems = r"(?:" + nouns + r")s?"
+    return SystemNouns(re.compile(r"\d|(?i:\b" + systems + r"\b)"), re.compile(r"(?i:\s+" + systems + r"\b)"),
+                       re.compile(r"(?i)\b" + systems + r"\b"))
 
 
 class Resolver:
@@ -49,6 +71,7 @@ class Resolver:
         self.metric_patterns = [tuple(m) for m in patterns["metrics"]]
         self.question = set(patterns["question_metrics"])
         self.slots: base.Slots = patterns.get("slots") or base.Slots()   # which context types, which links
+        self.nouns = SystemNouns.of(patterns.get("system_nouns") or ())   # generic ones plus the pack's
         self.conditions = [i for i in context if i.evidence_type == self.slots.thing]
         self.metrics = [i for i in context if i.evidence_type == self.slots.metric]
         self.codes: dict[str, tuple[Item, tuple[int, int]]] = {}
@@ -218,8 +241,8 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         after = AFTER.match(text, hit.end(), e)
         following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)
         preceding = [(m, i) for m, i in conditions if m.end <= hit.start()]
-        head = HEAD_NOUN.match(text, preceding[-1][0].end) if preceding else None   # the mention's own noun
-        if preceding and BLOCKERS.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
+        head = r.nouns.head.match(text, preceding[-1][0].end) if preceding else None   # the mention's own noun
+        if preceding and r.nouns.blockers.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
             preceding = []   # another system or another number stands between: the value is not its
         cond = following or (preceding[-1] if preceding else None)
         before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]

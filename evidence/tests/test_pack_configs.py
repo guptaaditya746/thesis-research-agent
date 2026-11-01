@@ -27,6 +27,7 @@ OLD_SHA = {key.split("/")[0]: sha for key, sha in json.loads(SNAPSHOT.read_text(
            if key.endswith("/sha256")}
 # the keys that hold topic words; an LLM or agent extractor gets none of them
 WORD_KEYS = ("conditions", "metrics", "labels", "pattern", "fraction_metrics", "not_a_system", "subject", "claims",
+             "system_nouns",
              "supplement")
 TEXT = "The retrieval-augmented model reaches 71% accuracy."
 TASK = ExtractionTask(protocol=ProtocolRef(id="p", sha256="x"), evidence_type="metric", field_schema_sha256="x",

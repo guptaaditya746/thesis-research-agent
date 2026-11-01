@@ -173,7 +173,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "best-accuracy/measurement/regex_measurement": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -294,7 +298,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "best-accuracy/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or unsupported answers, other for anything else (latency, BLEU, fluency).",
@@ -771,7 +779,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "best-hallucination/measurement/regex_measurement": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -892,7 +904,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "best-hallucination/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or unsupported answers, other for anything else (latency, BLEU, fluency).",
@@ -1359,7 +1375,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "cons-accuracy/measurement/regex_measurement": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -1434,7 +1454,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "cons-accuracy/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or unsupported answers, other for anything else (latency, BLEU, fluency).",
@@ -1809,7 +1833,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "cons-hallucination/measurement/regex_measurement": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -1884,7 +1912,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "cons-hallucination/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or unsupported answers, other for anything else (latency, BLEU, fluency).",
@@ -2500,7 +2532,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-factuality-agentic/metric/agentic": {},
  "rag-factuality-agentic/metric/llm_metric": {},
@@ -2741,7 +2777,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-factuality-funnel/measurement/regex_measurement": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -2816,7 +2856,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-factuality-funnel/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or unsupported answers, other for anything else (latency, BLEU, fluency).",
@@ -3148,7 +3192,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-factuality/metric/llm_metric": {},
  "rag-factuality/metric/regex_metric": {
@@ -3388,7 +3436,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-hallucination/measurement/regex_measurement": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -3463,7 +3515,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-hallucination/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or unsupported answers, other for anything else (latency, BLEU, fluency).",
@@ -3776,7 +3832,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-latency/measurement/regex_measurement_units": {
   "alias": "\\s*\\(\\s*([A-Za-z][\\w+\\-]{0,5})\\s*\\)",
@@ -3820,7 +3880,11 @@
     true
    ]
   ],
-  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)"
+  "not_a_system": "(?!\\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\\b)",
+  "system_nouns": [
+   "reader",
+   "retriever"
+  ]
  },
  "rag-latency/metric/abbrev_metric": {
   "description": "An evaluation metric the paper reports results on. canonical is latency for the time needed to produce an answer (latency, response time, seconds per answer), other for anything else (accuracy, hallucination rate, BLEU).",
