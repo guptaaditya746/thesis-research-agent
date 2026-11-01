@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
+import yaml
+
 from jsonio import GENESIS, canonical_bytes, file_sha256, sha256_hex
 from agent.chain import FIELDS, line, seal, task_id
 from agent.rundir import utc_now
@@ -231,8 +233,27 @@ class RunDir:
             return None
 
     def items(self) -> list[Item]:
+        """The run's evidence items. The run's pack is registered first (`register_pack`), so items of a pack
+        other than the default one validate in a process that has not parsed the run's protocol."""
         path = self.file(EVIDENCE_FILE)
-        return [Item.model_validate(row) for row in read_lines(path)] if path.is_file() else []
+        if not path.is_file():
+            return []
+        self.register_pack()
+        return [Item.model_validate(row) for row in read_lines(path)]
+
+    def register_pack(self) -> None:
+        """Register the types of the run's domain pack: the `domain` of its protocol.yaml (no key: the default
+        pack), read from the `domains` folder run.json's settings name (none: domains/). Only the pack is read,
+        not the whole protocol, so a protocol an older code wrote still loads. Without protocol.yaml (a baseline)
+        nothing is registered."""
+        from .protocol import DEFAULT_PACK, _pack
+        text = self.file(PROTOCOL_FILE)
+        if not text.is_file():
+            return
+        data = yaml.safe_load(text.read_bytes().decode("utf-8"))
+        domain = data.get("domain", DEFAULT_PACK) if isinstance(data, dict) else DEFAULT_PACK
+        settings = (self.try_json(RUN_FILE) or {}).get("settings") or {}
+        _pack(domain, settings.get("domains"))
 
     def events(self) -> list[dict[str, Any]] | None:
         path = self.file(EVENTS_FILE)
