@@ -103,7 +103,7 @@ from agent.rundir import utc_now
 import modelcall
 from modelcall import JsonlCache
 
-from . import checks, extractors, graph, kinds, merge, names, reasoner
+from . import checks, extractors, graph, lockfile, kinds, merge, names, reasoner
 from .extractors import base as extractor_base
 from .extractors import gliner
 from .extractors import llm as llm_extractor
@@ -115,7 +115,7 @@ from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef,
 from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, NAMES_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls,
+                     LOCATE_FILE, LOCK_FILE, NAMES_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls,
                      RunDirExists, new_run_id, read_json, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
@@ -777,15 +777,18 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     corpus = Corpus(settings.corpus)
     run_id = run_id or new_run_id(protocol.id, "" if mode == "run" else f"-{mode}")
     root = Path(out_dir) / run_id
+    # everything that can refuse the run (the pack, the extractor names, the lock's digests) comes before the folder
+    if settings.gliner_url and settings.gliner_model is None and _uses_gliner(protocol):
+        served = gliner.info(settings.gliner_url)
+        settings = replace(settings, gliner_model=served["model"] if served else None)
+    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
+    domains = Path(settings.domains) if settings.domains is not None else None
+    lock = lockfile.lock(protocol, cascades, domains)
     try:
         root.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         raise RunDirExists(root) from None
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
-    if settings.gliner_url and settings.gliner_model is None and _uses_gliner(protocol):
-        served = gliner.info(settings.gliner_url)
-        settings = replace(settings, gliner_model=served["model"] if served else None)
-    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
@@ -794,6 +797,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
                    domains=Path(settings.domains) if settings.domains is not None else None,
                    recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
+    ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
     if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
@@ -809,6 +813,9 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         if served:
             settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
+    final = lockfile.lock(protocol, cascades, domains)
+    if final["extractors"] != lock["extractors"]:   # a GLiNER extractor learned its model during the run: the lock names the ids it used
+        ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, final)
     write_json(root / RUN_FILE, {
         "run_id": run_id, "mode": mode, "source_run": source_run, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "manifest_sha256": corpus.manifest_sha256, "corpus_id": corpus.corpus_id, "extractors": list(specs),

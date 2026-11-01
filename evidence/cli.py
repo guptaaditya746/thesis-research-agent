@@ -113,6 +113,9 @@ def _parser() -> argparse.ArgumentParser:
     sub.add_parser("verify", help="check the run's hash chain").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
     proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
+    d = proto.add_parser("diff", help="what differs between two protocols or two runs (exit 0 same, 1 differ, 2 unreadable)")
+    d.add_argument("a", type=Path, help="a protocol .yaml or a run directory")
+    d.add_argument("b", type=Path, help="a protocol .yaml or a run directory")
     pk = sub.add_parser("pack", help="check a domain pack").add_subparsers(dest="pack_command", required=True)
     pk.add_parser("check", help="check a domain pack's types against its questions and protocols").add_argument("name")
     _propose_parser(sub)
@@ -231,7 +234,7 @@ def _dispatch(args: argparse.Namespace) -> int:
         print(path)
         return 0
     if args.command == "protocol":
-        return _protocol_check(args.protocol)
+        return _protocol_diff(args.a, args.b) if args.protocol_command == "diff" else _protocol_check(args.protocol)
     if args.command == "pack":
         return _pack_check(args.name)
     if args.command == "propose":
@@ -269,6 +272,17 @@ def _pack_check(name: str) -> int:
     print(json.dumps({"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
                       "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}, indent=1))
     return 0
+
+
+def _protocol_diff(a: Path, b: Path) -> int:
+    from . import lockfile
+    try:
+        lines = lockfile.diff(a, b)
+    except (OSError, ValueError, yaml.YAMLError) as exc:   # a missing file, bad JSON or YAML
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print("\n".join(lines))
+    return 0 if lines == ["same"] else 1
 
 
 def _protocol_check(path: Path) -> int:

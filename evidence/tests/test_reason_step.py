@@ -157,7 +157,8 @@ def test_replay_reads_the_recorded_inferences(tmp_path):
     (domains / "rag" / "ontology.ttl").write_text(ONTO.read_text(encoding="utf-8").replace(
         "rdfs:subClassOf :Accuracy", "rdfs:subClassOf cskg:Metric"), encoding="utf-8")
     new, report = replay(out)
-    assert report["ok"] and answer_of(new)["studies"][0]["direction"] == "supports"
+    # the answer is the recorded one; only the lock (which names the ontology's digest) shows the ontology moved
+    assert report["mismatched"] == ["protocol.lock.json"] and answer_of(new)["studies"][0]["direction"] == "supports"
 
 
 def test_replay_of_a_run_without_reason_keeps_every_hash(tmp_path, corpus):
