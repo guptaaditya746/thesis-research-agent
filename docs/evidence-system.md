@@ -62,9 +62,9 @@ comes from the rendering alone. Paper ids stay the same across the variant corpo
 `evidence fetch --query "<words>" --max 30 --out <corpus> [--category cs.CL]` (`evidence/arxiv.py`; in the
 web app the "Fetch from arXiv" button on the corpus step and the Corpora page, a job into
 `$EV/corpora/arxiv-<slug>-<yyyymmdd>`) builds a corpus of **real papers**: it asks the arXiv API for the
-query's papers (one request every three seconds, as arXiv's terms ask), converts each PDF to Markdown with
-pymupdf4llm and writes the A1 layout the engine reads: `manifest.json` (plus title, authors, published,
-url, pdf_sha256 per paper), `papers/<arxiv id>.md` and `source.json` (`kind: arxiv`, the query, when,
+query's papers (one request every three seconds, as arXiv's terms ask), takes each paper's arXiv HTML page (else its PDF) and converts it to Markdown with
+Docling (`uv sync --group fetch`; `--ids FILE` instead of `--query` fetches a list of ids) and writes the A1 layout the engine reads: `manifest.json` (plus title, authors, published,
+url, source, html_sha256 or pdf_sha256 per paper), `papers/<arxiv id>.md` and `source.json` (`kind: arxiv`, the query, when,
 `ground_truth: false`, the papers skipped and why). There is no `corpus.json`, `ground_truth.json` or
 `fidelity.json`.
 
@@ -79,7 +79,7 @@ corpus (question → cards → freeze → run → graph and answer). What a read
 2. **A hand-checked sample of 5 papers.** Pick 5 papers at random from `manifest.json`, open each in the
    run's paper view, and check against the PDF (`url`) whether the extracted conditions, metrics and
    values are right and whether anything the question needs was missed. Write down hits, errors and misses.
-   Also check the conversion: a table or formula pymupdf4llm garbled is a corpus problem, not an engine one.
+   Also check the conversion: a table or formula Docling garbled is a corpus problem, not an engine one.
 3. **Re-execution stability.** `evidence reexec <run>` runs the extractors again without the cache and
    reports per call whether the items came out the same (B8). A stable run is not a correct one, but an
    unstable one should not be trusted.

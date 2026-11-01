@@ -249,8 +249,9 @@ class Commands:
                         if not inside(root, n).exists() and self.jobs.busy("corpus", n) is None)
         self.free("corpus", name)
         category = ["--category", r.category] if r.category else []
-        argv = self.tool("evidence", "fetch", f"--query={r.query.strip()}", "--max", r.max_papers,
-                         "--out", inside(root, name), *category)
+        argv = ["uv", "run", "--group", "fetch", "python", "-m", "webapp.tool", "evidence", "fetch",   # Docling is in the fetch group
+                f"--query={r.query.strip()}", "--max", str(r.max_papers),
+                "--out", str(inside(root, name)), *category]
         return JobPlan("fetch", [step("evidence fetch", argv)], {"corpus": name}, "cpu", False)
 
     def run(self, r: RunRequest) -> JobPlan:

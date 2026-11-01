@@ -1,22 +1,27 @@
 """`evidence fetch`: a demonstration corpus of real papers from the arXiv API, in the layout the engine reads.
 
     evidence fetch --query "<search words>" --max 30 --out corpora/<name> [--category cs.CL]
+    evidence fetch --ids ids.txt --out corpora/<name>          (one arXiv id per line, instead of --query)
 
-One search request to the arXiv API (https://info.arxiv.org/help/api/index.html, an Atom feed), then each
-paper's PDF, at most one request every three seconds as its terms of use ask, with a User-Agent naming this
-tool. Each PDF becomes Markdown with pymupdf4llm and is written as `papers/<arxiv id>.md` (a short header with
+One request to the arXiv API (https://info.arxiv.org/help/api/index.html, an Atom feed: a search, or `id_list`
+for --ids), then each paper's arXiv HTML page (https://arxiv.org/html/<id>, LaTeXML), else its PDF; at most one
+request every three seconds as its terms of use ask, with a User-Agent naming this tool. The HTML is used when
+it is a LaTeXML page (`ltx_page_main`) with at least MIN_HTML_CHARS characters of text, else the PDF, and the
+reason is kept. Docling turns either into Markdown, written as `papers/<arxiv id>.md` (a short header with
 the title, authors, date and link, then the converted text). The corpus directory holds:
 
 - manifest.json: `corpus_id` and per paper `id`, `file`, `sha256` (what evidence/rundir.py `Corpus` reads),
-  plus `title`, `authors`, `published`, `url` and `pdf_sha256`;
-- source.json: `{"kind": "arxiv", "query", "category", "fetched", "ground_truth": false, ...}` and the papers
+  plus `title`, `authors`, `published`, `url`, `source` ("html" or "pdf") and `html_sha256` or `pdf_sha256`;
+- source.json: `{"kind": "arxiv", "query", "category", "fetched", "ground_truth": false, ...}`, how many
+  papers came from HTML and from the PDF, the `fallbacks` (why a paper's HTML was not used) and the papers
   that were skipped and why. There is no ground_truth.json: these are real papers, nobody knows the right
   answer, so the web app lists the corpus as a demonstration and refuses to score a run on it.
 
-A paper whose PDF cannot be downloaded or converted, or converts to no text, is skipped and logged. The
+A paper whose HTML and PDF both fail, or convert to no text, is skipped and logged. The
 corpus is built in a hidden sibling directory and renamed into place at the end, so a half-fetched corpus is
-never listed. Exit status: 0 ok, 1 the search failed or no paper could be fetched, 2 usage errors (an output
-directory that exists).
+never listed. Docling is in the `fetch` dependency group (`uv sync --group fetch`). Exit status: 0 ok, 1 the
+search failed, Docling is missing or no paper could be fetched, 2 usage errors (an output directory that
+exists, a bad ids file).
 """
 from __future__ import annotations
 
@@ -32,8 +37,9 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -48,9 +54,12 @@ BACKOFF_S = (15.0, 30.0, 60.0)   # waits after a 429/503 without Retry-After, on
 MAX_RETRY_AFTER_S = 120.0
 MAX_PAPERS = 100        # one search request; arXiv asks for slices of at most 2000, a demo needs far fewer
 MAX_PDF_BYTES = 40 * 1024 * 1024
+MIN_HTML_CHARS = 2000   # a converted HTML page shorter than this is an error page or a stub: use the PDF
+HTML_MARKER = b"ltx_page_main"   # the LaTeXML page body; arXiv may answer 200 with a plain page for a paper without HTML
 ATOM = "{http://www.w3.org/2005/Atom}"
 CATEGORY = re.compile(r"^[a-z][a-z-]*(\.[A-Za-z][A-Za-z-]*)?$")   # cs.CL, stat.ML, hep-th, astro-ph.CO
 WORD = re.compile(r"[\w-]+")
+ARXIV_ID = re.compile(r"(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Za-z-]+)?/\d{7})(v\d+)?")   # 2411.18583v1, hep-th/9901001
 
 
 class FetchError(RuntimeError):
@@ -156,20 +165,60 @@ class Client:
         self.http.close()
 
 
-def pdf_markdown(data: bytes) -> str:
-    """The PDF's text as Markdown (pymupdf4llm), NUL characters dropped; ValueError for a PDF that will not open."""
-    import pymupdf
-    import pymupdf4llm
-
+def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
+    """The page or PDF as Markdown (Docling), NUL characters dropped. FetchError when Docling is not installed;
+    ValueError for a file Docling cannot read."""
     try:
-        doc = pymupdf.open(stream=data, filetype="pdf")
-    except Exception as exc:   # pymupdf raises its own FileDataError and RuntimeErrors
-        raise ValueError(f"not a readable PDF ({type(exc).__name__}: {exc})") from exc
+        from docling.datamodel.base_models import DocumentStream, InputFormat
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+    except ImportError as exc:
+        raise FetchError("Docling is not installed: uv sync --group fetch") from exc
+    options = PdfPipelineOptions(do_ocr=False, do_table_structure=True)   # as scripts/build-corpus.py
+    converter = DocumentConverter(format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=options)})
     try:
-        text = pymupdf4llm.to_markdown(doc, show_progress=False, use_ocr=False)
-    finally:
-        doc.close()
+        result = converter.convert(DocumentStream(name=f"paper.{kind}", stream=BytesIO(data)))
+        text = result.document.export_to_markdown()
+    except Exception as exc:   # Docling raises its own ConversionError and format errors
+        raise ValueError(f"Docling could not read the {kind} ({type(exc).__name__}: {exc})") from exc
     return text.replace("\x00", "").encode("utf-8", "replace").decode("utf-8")
+
+
+Convert = Callable[[bytes, Literal["html", "pdf"]], str]
+
+
+def paper_body(entry: Entry, client: Client, convert: Convert = docling_markdown
+               ) -> tuple[str, Literal["html", "pdf"], str, str | None]:
+    """(Markdown, "html" or "pdf", sha256 of that source file, why the HTML was not used or None).
+
+    The HTML page first; the PDF when the page is missing, is not a LaTeXML page or converts to under
+    MIN_HTML_CHARS characters. ValueError when neither works, naming both reasons."""
+    html_url = entry.url.replace("/abs/", "/html/", 1)
+    try:
+        page = client.get(html_url)
+        if HTML_MARKER not in page:
+            reason = "html: no LaTeXML page"
+        else:
+            body = convert(page, "html")
+            if len(body.strip()) >= MIN_HTML_CHARS:
+                return body, "html", sha256_hex(page), None
+            reason = f"html: {len(body.strip())} chars"
+    except httpx.HTTPStatusError as exc:
+        reason = f"html {exc.response.status_code}"
+    except httpx.HTTPError as exc:
+        reason = f"html: {type(exc).__name__}"
+    except ValueError as exc:
+        reason = f"html: {exc}"
+    try:
+        pdf = client.get(entry.pdf_url)
+        if len(pdf) > MAX_PDF_BYTES:
+            raise ValueError(f"PDF over {MAX_PDF_BYTES // (1024 * 1024)} MB")
+        body = convert(pdf, "pdf")
+        if not body.strip():
+            raise ValueError("the PDF has no extractable text (a scan?)")
+    except (httpx.HTTPError, ValueError) as exc:
+        raise ValueError(f"{reason}; pdf: {type(exc).__name__}: {exc}") from exc
+    return body, "pdf", sha256_hex(pdf), reason
 
 
 def paper_text(entry: Entry, body: str) -> str:
@@ -178,37 +227,49 @@ def paper_text(entry: Entry, body: str) -> str:
     return header + body.strip() + "\n"
 
 
-def fetch(query: str, out: Path, max_papers: int = 30, category: str | None = None,
+def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | None = None,
           client: Client | None = None, log: Callable[[str], None] = print,
-          now: Callable[[], datetime] = lambda: datetime.now(timezone.utc)) -> dict[str, Any]:
-    """Search, download, convert, write the corpus into `out` (which must not exist). Returns source.json."""
+          now: Callable[[], datetime] = lambda: datetime.now(timezone.utc), ids: list[str] | None = None,
+          convert: Convert | None = None) -> dict[str, Any]:
+    """Look the papers up (a search for `query`, or exactly `ids`; one of the two), download, convert, write the
+    corpus into `out` (which must not exist). `convert` defaults to docling_markdown. Returns source.json."""
+    if (query is None) == (ids is None):
+        raise ValueError("give a query or a list of ids, not both and not neither")
+    if ids is not None:
+        bad = [i for i in ids if not ARXIV_ID.fullmatch(i)]
+        if not ids or bad:
+            raise ValueError(f"not arXiv ids: {bad[:3]}" if bad else "the list of ids is empty")
+        if category:
+            raise ValueError("a category goes with a query, not with ids")
+        max_papers = len(ids)
     if not 1 <= max_papers <= MAX_PAPERS:
-        raise ValueError(f"--max must be between 1 and {MAX_PAPERS}")
+        raise ValueError(f"--max must be between 1 and {MAX_PAPERS}" if ids is None else f"at most {MAX_PAPERS} ids")
     if out.exists():
         raise FileExistsError(f"{out} exists; choose another output directory")
-    q = search_query(query, category)
+    q = search_query(query, category) if query is not None else None
+    convert = convert or docling_markdown
     own = client is None
     client = client or Client(log=log)
     tmp = out.parent / f".{out.name}.partial-{secrets.token_hex(3)}"
     try:
-        log(f"arXiv search: {q} (at most {max_papers})")
-        feed = client.get(API_URL, {"search_query": q, "start": 0, "max_results": max_papers,
-                                    "sortBy": "relevance", "sortOrder": "descending"})
-        entries = parse_feed(feed)[:max_papers]
+        if ids is not None:
+            log(f"arXiv lookup: {len(ids)} ids")
+            params: dict[str, Any] = {"id_list": ",".join(ids), "start": 0, "max_results": max_papers}
+        else:
+            log(f"arXiv search: {q} (at most {max_papers})")
+            params = {"search_query": q, "start": 0, "max_results": max_papers,
+                      "sortBy": "relevance", "sortOrder": "descending"}
+        entries = parse_feed(client.get(API_URL, params))[:max_papers]
         if not entries:
-            raise FetchError(f"the arXiv API found no papers for {q!r}")
+            raise FetchError(f"the arXiv API found no papers for {q or ids!r}")
         (tmp / "papers").mkdir(parents=True)
         papers: list[dict[str, Any]] = []
         skipped: list[dict[str, str]] = []
+        fallbacks: list[dict[str, str]] = []
         for n, entry in enumerate(entries, start=1):
             try:
-                pdf = client.get(entry.pdf_url)
-                if len(pdf) > MAX_PDF_BYTES:
-                    raise ValueError(f"PDF over {MAX_PDF_BYTES // (1024 * 1024)} MB")
-                body = pdf_markdown(pdf)
-                if not body.strip():
-                    raise ValueError("the PDF has no extractable text (a scan?)")
-            except (httpx.HTTPError, ValueError) as exc:
+                body, kind, source_sha, fallback = paper_body(entry, client, convert)
+            except ValueError as exc:
                 reason = f"{type(exc).__name__}: {exc}"
                 skipped.append({"id": entry.id, "url": entry.pdf_url, "reason": reason})
                 log(f"[{n}/{len(entries)}] skipped {entry.id}: {reason}")
@@ -218,15 +279,20 @@ def fetch(query: str, out: Path, max_papers: int = 30, category: str | None = No
             (tmp / file).write_bytes(data)
             papers.append({"id": entry.id, "file": file, "sha256": sha256_hex(data), "title": entry.title,
                            "authors": entry.authors, "published": entry.published, "url": entry.url,
-                           "pdf_sha256": sha256_hex(pdf)})
-            log(f"[{n}/{len(entries)}] {entry.id} {entry.title[:70]} ({len(data) // 1024} KB)")
+                           "source": kind, f"{kind}_sha256": source_sha})
+            if fallback:
+                fallbacks.append({"id": entry.id, "reason": fallback})
+            log(f"[{n}/{len(entries)}] {entry.id} {entry.title[:70]} ({kind}, {len(data) // 1024} KB"
+                f"{', ' + fallback if fallback else ''})")
         if not papers:
             raise FetchError(f"no paper could be fetched ({len(skipped)} skipped)")
-        ids = "\n".join([q, *(p["id"] for p in papers)])
-        corpus_id = f"arxiv-{hashlib.sha256(ids.encode('utf-8')).hexdigest()[:8]}"
-        source = {"kind": "arxiv", "query": query, "category": category, "search_query": q, "max": max_papers,
+        names = "\n".join([q or "ids", *(p["id"] for p in papers)])
+        corpus_id = f"arxiv-{hashlib.sha256(names.encode('utf-8')).hexdigest()[:8]}"
+        source = {"kind": "arxiv", "query": query, "ids": ids, "category": category, "search_query": q, "max": max_papers,
                   "fetched": now().isoformat(timespec="seconds"), "ground_truth": False, "api": API_URL,
-                  "converter": f"pymupdf4llm {_version('pymupdf4llm')}", "papers": len(papers), "skipped": skipped,
+                  "converter": f"docling {_version('docling')}", "papers": len(papers),
+                  "html": sum(p["source"] == "html" for p in papers), "pdf": sum(p["source"] == "pdf" for p in papers),
+                  "fallbacks": fallbacks, "skipped": skipped,
                   "note": "real papers from arXiv: a demonstration corpus with no ground truth; runs on it are not scored"}
         (tmp / "source.json").write_text(json.dumps(source, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
         manifest = {"corpus_id": corpus_id, "papers": papers}
@@ -251,7 +317,9 @@ def _version(package: str) -> str:
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
     f = sub.add_parser("fetch", help="a demonstration corpus of real papers from the arXiv API (no ground truth)")
-    f.add_argument("--query", required=True, help="search words; every word must occur (arXiv `all:` field)")
+    what = f.add_mutually_exclusive_group(required=True)
+    what.add_argument("--query", help="search words; every word must occur (arXiv `all:` field)")
+    what.add_argument("--ids", type=Path, metavar="FILE", help="a file with one arXiv id per line (2411.18583v1)")
     f.add_argument("--max", type=int, default=30, help=f"papers to fetch, 1-{MAX_PAPERS} (default 30)")
     f.add_argument("--out", required=True, type=Path, help="the corpus directory to write; must not exist")
     f.add_argument("--category", help="arXiv category, e.g. cs.CL")
@@ -262,8 +330,11 @@ def run(args: argparse.Namespace) -> int:
         print(line, flush=True)
 
     try:
-        source = fetch(args.query, args.out, args.max, args.category, log=log)
-    except (ValueError, FileExistsError) as exc:
+        ids = None
+        if args.ids is not None:
+            ids = [line.strip() for line in args.ids.read_text(encoding="utf-8").splitlines() if line.strip()]
+        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids)
+    except (ValueError, FileExistsError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except (FetchError, httpx.HTTPError) as exc:
