@@ -15,6 +15,10 @@
     evaluate scirex score --run R --corpus C --out D [--estimate ESTIMATE.json]
     evaluate scilead ids --data DIR --out ids.txt
     evaluate scilead score --run R --corpus C --data DIR --out D
+    evaluate edits apply --corpus C --edits F --out DIR
+    evaluate edits check --original R --runs DIR --edits F --out D
+    evaluate sheet --run R --corpus C (--sample N | --papers N) [--seed 0] --out F.csv
+    evaluate sheet-summary F.csv [--out D]
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
@@ -31,6 +35,13 @@ plus the gold only `score` reads; `score` writes real.json and real.md, never a 
 `ids` writes the papers' arXiv ids for `evidence fetch --ids` and prints the papers with none; `score` scores a run
 of domains/ml/protocols/values.yaml on the fetched corpus: values found and linked, "best" per leaderboard and
 pairwise order, in real.json and real.md.
+
+`edits` is the arXiv edit test (spec 6.12 item 3, evaluation/realpapers/edits.py): `apply` writes one corpus per
+edit of the edits file (`DIR/<edit id>`); run the engine on each with `--run-id <edit id>` under one folder, then
+`check` compares the original run with `DIR/<edit id>` per edit (item, link, answer) into real.json and real.md.
+`sheet` writes a hand-check CSV of a run's items with their source sentences (N random items, or every item of the
+first N papers); `sheet-summary` prints the marked rows' precision with its Wilson 95% interval and, with `--out`,
+writes real.json and real.md labelled "demonstration, not an evaluation".
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
@@ -259,6 +270,50 @@ def cmd_scilead(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_edits(args: argparse.Namespace) -> int:
+    from .realpapers import edits
+    from .realpapers.common import write_real
+
+    try:
+        loaded = edits.load_edits(args.edits)
+        if args.edits_cmd == "apply":
+            made = [str(edits.apply(args.corpus, e, args.out)) for e in loaded]
+            print(json.dumps({"corpora": made}))
+            return 0
+        result = edits.report(args.original, args.runs, loaded)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate edits {args.edits_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "arXiv edit test")
+    print(json.dumps({"real_json": str(js), "real_md": str(md), "carried": result["carried"],
+                      "missing": result["missing"]}))
+    return 0
+
+
+def cmd_sheet(args: argparse.Namespace) -> int:
+    from .realpapers.sheet import sheet, write_sheet
+
+    try:
+        rows = sheet(args.run, args.corpus, sample=args.sample, papers=args.papers, seed=args.seed)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate sheet: {exc}") from None
+    print(json.dumps({"rows": len(rows), "out": str(write_sheet(rows, args.out))}))
+    return 0
+
+
+def cmd_sheet_summary(args: argparse.Namespace) -> int:
+    from .realpapers.common import write_real
+    from .realpapers.sheet import TITLE, summarise
+
+    try:
+        result = summarise(args.csv)
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"evaluate sheet-summary: {exc}") from None
+    if args.out:
+        write_real({**result, "sheet": str(args.csv), "label": "demonstration, not an evaluation"}, args.out, TITLE)
+    print(json.dumps(result))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evaluate", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -370,6 +425,35 @@ def parser() -> argparse.ArgumentParser:
     ls.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release (the gold)")
     ls.add_argument("--out", type=Path, required=True)
     ls.set_defaults(func=cmd_scilead)
+
+    ed = sub.add_parser("edits", help="real-paper check: the arXiv edit test (a number, a name, a limitation changed)")
+    eds = ed.add_subparsers(dest="edits_cmd", required=True)
+    ea = eds.add_parser("apply", help="one edited corpus per edit -> <out>/<edit id>")
+    ea.add_argument("--corpus", type=Path, required=True, help="the original corpus (e.g. from `evidence fetch --ids`)")
+    ea.add_argument("--edits", type=Path, required=True, help="the frozen edits file (evaluation/realpapers/data/)")
+    ea.add_argument("--out", type=Path, required=True, help="the folder of the edited corpora")
+    ea.set_defaults(func=cmd_edits)
+    ec = eds.add_parser("check", help="item, link and answer per edit -> real.json and real.md")
+    ec.add_argument("--original", type=Path, required=True, help="the run directory on the original corpus")
+    ec.add_argument("--runs", type=Path, required=True, help="the folder holding one run per edit, named by edit id")
+    ec.add_argument("--edits", type=Path, required=True)
+    ec.add_argument("--out", type=Path, required=True)
+    ec.set_defaults(func=cmd_edits)
+
+    sh2 = sub.add_parser("sheet", help="a hand-check CSV: items with their source sentences, to mark right or wrong")
+    sh2.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    sh2.add_argument("--corpus", type=Path, required=True, help="the run's corpus (manifest.json and papers/)")
+    pick = sh2.add_mutually_exclusive_group(required=True)
+    pick.add_argument("--sample", type=int, help="N random items of the run")
+    pick.add_argument("--papers", type=int, help="every item of the first N papers in manifest order")
+    sh2.add_argument("--seed", type=int, default=0, help="seed of --sample (default 0)")
+    sh2.add_argument("--out", type=Path, required=True, help="the CSV to write")
+    sh2.set_defaults(func=cmd_sheet)
+
+    ssum = sub.add_parser("sheet-summary", help="precision of a marked hand-check sheet, with its Wilson 95%% interval")
+    ssum.add_argument("csv", type=Path, help="the sheet with right_or_wrong filled in (blank rows are not counted)")
+    ssum.add_argument("--out", type=Path, help="also write real.json and real.md (demonstration, not an evaluation)")
+    ssum.set_defaults(func=cmd_sheet_summary)
     return p
 
 
