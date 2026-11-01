@@ -103,6 +103,12 @@ def test_ids_fetch_uses_id_list(tmp_path: Path):
     assert source["ids"] == ["2411.18583v1"] and source["query"] is None
 
 
+def test_an_id_the_api_does_not_return_is_skipped_with_a_reason(tmp_path: Path):
+    source, _ = fetch_with(tmp_path, ids=["2411.18583v1", "2501.00001v1"])
+    assert [s["id"] for s in source["skipped"]] == ["2501.00001v1"]
+    assert source["skipped"][0]["reason"] == "not returned by the arXiv API"
+
+
 def test_ids_and_query_are_mutually_exclusive(tmp_path: Path):
     for query, ids in (("retrieval", ["2411.18583v1"]), (None, None), (None, ["not an id"])):
         with pytest.raises(ValueError):

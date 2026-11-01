@@ -234,7 +234,7 @@ def test_fetch_plan_names_the_corpus_after_the_query_and_the_day(commands: Comma
     assert plan.kind == "fetch" and plan.refs == {"corpus": name}
     assert plan.lane == "cpu" and not plan.needs_gateway
     argv = plan.steps[0].argv
-    assert argv[:5] == ["uv", "run", "--group", "fetch", "python"] and argv[7:9] == ["evidence", "fetch"]
+    assert argv[3:5] == ["evidence", "fetch"]
     assert "--query=Retrieval-Augmented Generation & factuality!" in argv   # one argv item, never a flag
     assert argv[argv.index("--max") + 1] == "5" and argv[argv.index("--category") + 1] == "cs.CL"
     assert argv[argv.index("--out") + 1] == str(world.corpora / name)

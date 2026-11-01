@@ -265,6 +265,12 @@ def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | No
         (tmp / "papers").mkdir(parents=True)
         papers: list[dict[str, Any]] = []
         skipped: list[dict[str, str]] = []
+        if ids is not None:   # an id the API did not return is reported, not dropped quietly
+            got = {re.sub(r"v\d+$", "", e.id) for e in entries}
+            for want in ids:
+                if re.sub(r"v\d+$", "", want).replace("/", "_") not in got:
+                    skipped.append({"id": want, "url": "", "reason": "not returned by the arXiv API"})
+                    log(f"skipped {want}: not returned by the arXiv API")
         fallbacks: list[dict[str, str]] = []
         for n, entry in enumerate(entries, start=1):
             try:
@@ -320,7 +326,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     what = f.add_mutually_exclusive_group(required=True)
     what.add_argument("--query", help="search words; every word must occur (arXiv `all:` field)")
     what.add_argument("--ids", type=Path, metavar="FILE", help="a file with one arXiv id per line (2411.18583v1)")
-    f.add_argument("--max", type=int, default=30, help=f"papers to fetch, 1-{MAX_PAPERS} (default 30)")
+    f.add_argument("--max", type=int, default=30, help=f"papers to fetch, 1-{MAX_PAPERS} (default 30; ignored with --ids)")
     f.add_argument("--out", required=True, type=Path, help="the corpus directory to write; must not exist")
     f.add_argument("--category", help="arXiv category, e.g. cs.CL")
 
