@@ -34,6 +34,7 @@ from ..protocol import DEFAULT_PACK, Best, Protocol
 if TYPE_CHECKING:
     from ..names import NameGroups
     from ..pack import RoleMap
+    from ..reasoner import Inferences
 
 KIND = "best"
 GAP_ROLES: dict[str, tuple[str, ...]] = {"too_few_kinds": ("compared_thing",), "no_question_metric": ("metric",),
@@ -85,7 +86,8 @@ def reason(code: str, best: Best) -> dict[str, str]:
 
 
 def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
-          roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
+          roles: RoleMap | None = None, groups: NameGroups | None = None,
+          inferred: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
     best = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     ty = synthesis.Types.of(protocol, roles)
@@ -98,7 +100,8 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
     if len(set(kinds.values())) < 2:
         entry["reason"] = reason("too_few_kinds", best)
         return entry, []
-    metrics = {i.item_id for i in ty.of_type(items, ty.metric) if i.fields.get(canonical) == best.metric.canonical}
+    metrics = {i.item_id for i in ty.of_type(items, ty.metric)
+               if synthesis.is_question_metric(i.fields.get(canonical), best.metric.canonical, inferred)}
     if not metrics:
         entry["reason"] = reason("no_question_metric", best)
         return entry, []
@@ -148,12 +151,15 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           reason: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`reason` (the reasoner's inferences): a narrower metric answers the question metric."""
     best = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     studies, used = [], []
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles, groups=groups)
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles, groups=groups,
+                           inferred=reason)
         studies.append(entry)
         used += ids
     out = {"kind": KIND, "system": synthesis.SYSTEM, "metric": best.metric.canonical, "studies": studies,

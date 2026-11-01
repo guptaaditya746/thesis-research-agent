@@ -55,6 +55,13 @@ app counts it, `--retry-errors` asks it again. The groups are
 names.json; the names left unresolved are counted in funnel.json and run.json (`unresolved_names`), as dangling links
 are; the kind's answer gets the groups (`groups`). With `off` none of it happens and no file changes.
 
+Reasoner (`Settings.reason`, spec 6.3, D25, D30; on by default, off for a run made before it): after the names step and
+before the answer, `reasoner.reason` reads the pack's ontology and gives the run's inferences: which names have a
+broader class (so a narrower metric answers a broader question metric) and which links point at an item of the wrong
+kind (`link_flags`). They are reason.json, an output, and the kind's answer gets them (`reason`). A replay reads the
+recorded reason.json and never reasons again (`execute_run(source_dir=...)`); a reexec reasons again, since its items
+may differ. With `off` none of it happens and no file changes.
+
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
@@ -96,26 +103,27 @@ from agent.rundir import utc_now
 import modelcall
 from modelcall import JsonlCache
 
-from . import checks, extractors, graph, kinds, merge, names
+from . import checks, extractors, graph, kinds, merge, names, reasoner
 from .extractors import base as extractor_base
 from .extractors import gliner
 from .extractors import llm as llm_extractor
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
-from .pack import Role, RoleMap, load_pack
+from .pack import DOMAINS, Role, RoleMap, load_pack
 from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, NAMES_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, RunDirExists,
-                     new_run_id, write_lines)
+                     LOCATE_FILE, NAMES_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls,
+                     RunDirExists, new_run_id, read_json, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
 Confirm = Literal["none", "llm"]
 Relink = Literal["off", "on"]
 Names = Literal["off", "on"]
+Reason = Literal["off", "on"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -140,16 +148,18 @@ class Settings:
     relink: Relink = "on"                          # on: links follow an item a later merge gave a new id; off: as before 1 Nov
     domains: str | None = None                     # the folder of the protocol's pack (None: domains/; a test pack)
     names: Names = "off"                           # on: corpus-wide name groups, names.json (D38); off: as before
+    reason: Reason = "on"                          # on: the reasoner's inferences, reason.json (spec 6.3); off: as before
 
     def json(self) -> dict[str, Any]:
-        # `confirm` only when it is llm, `relink` and `names` only when on: the settings of a run made before them
-        # are unchanged
+        # `confirm` only when it is llm, `relink`, `names` and `reason` only when on: the settings of a run made before
+        # them are unchanged
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
                 "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
                 "gliner_model": self.gliner_model, **({"confirm": self.confirm} if self.confirm == "llm" else {}),
                 **({"relink": self.relink} if self.relink == "on" else {}),
                 **({"domains": self.domains} if self.domains is not None else {}),
-                **({"names": self.names} if self.names == "on" else {})}
+                **({"names": self.names} if self.names == "on" else {}),
+                **({"reason": self.reason} if self.reason == "on" else {})}
 
 
 # --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
@@ -301,8 +311,11 @@ class Execution:
                  cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
                  locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
                  phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
-                 names: Names = "off", names_model: str | None = None, names_ask: bool = True) -> None:
+                 names: Names = "off", names_model: str | None = None, names_ask: bool = True,
+                 reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None) -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
+        # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
+        self.reason, self.domains, self.recorded_reason = reason, domains or DOMAINS, recorded_reason
         self.confirm, self.relink = confirm, relink
         self.names, self.names_model, self.names_ask = names, names_model, names_ask   # `names_ask`: the model check
         self.texts: dict[str, str] = {}                  # document -> text (`names: on` only)
@@ -682,6 +695,25 @@ class Execution:
         self.cost["output_tokens"] += tokens_out
         return json.dumps(asked.value.get("output") or {"error": asked.value.get("error")})
 
+    def reason_step(self) -> reasoner.Inferences | None:
+        """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a
+        replay, the recorded ones (`recorded_reason`), never reasoned again; reason.json and a `reason` event. None
+        with `off`."""
+        if self.reason != "on":
+            return None
+        if self.recorded_reason is not None:
+            if not self.recorded_reason.is_file():
+                raise NotRecorded(f"the recorded run has no {REASON_FILE}: {self.recorded_reason}")
+            inferred = reasoner.from_json(read_json(self.recorded_reason))
+        else:
+            inferred = reasoner.reason(self.roles.pack, self.protocol, self.items, self.domains)
+        self.outputs[REASON_FILE] = write_json(self.root / REASON_FILE, reasoner.to_json(inferred))
+        self.events.add("reason", used=sorted({f[0] for f in inferred.link_flags}), generated=[], agent_id=ENGINE,
+                        custom={"ontology_sha256": inferred.ontology_sha256, "broader": len(inferred.broader),
+                                "link_flags": len(inferred.link_flags),
+                                "source": "recorded" if self.recorded_reason is not None else "reasoned"})
+        return inferred
+
     # --- the run --------------------------------------------------------------------------------------
 
     def finish(self) -> dict[str, Any]:
@@ -689,8 +721,9 @@ class Execution:
         funnel = {p.id: {"screened": self.funnel[p.id]["screen"]["relevant"] is False if self.funnel[p.id]["screen"] else False,
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
         groups = self.names_step()
+        inferred = self.reason_step()
         answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
-                                                      funnel, roles=self.roles, groups=groups)
+                                                      funnel, roles=self.roles, groups=groups, reason=inferred)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
@@ -735,8 +768,9 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
 def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, *, mode: Mode = "run",
                 run_id: str | None = None, provider: Provider | None = None, locator: Locator | None = None,
                 bypass: Any = None, retry_errors: bool = False, source_run: str | None = None,
-                attempts: dict[str, int] | None = None, workers: int = 1) -> Path:
-    """Execute and write one run directory; returns its path."""
+                attempts: dict[str, int] | None = None, workers: int = 1, source_dir: Path | None = None) -> Path:
+    """Execute and write one run directory; returns its path. `source_dir`: the folder of the recorded run; in
+    mode replay its reason.json is read instead of reasoning again (a reexec reasons again: its items may differ)."""
     for module in settings.imports:
         importlib.import_module(module)
     protocol = parse(protocol_bytes.decode("utf-8"), settings.domains)
@@ -756,7 +790,9 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
                    confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
-                   names_ask=settings.selection != "regex-only")
+                   names_ask=settings.selection != "regex-only", reason=settings.reason,
+                   domains=Path(settings.domains) if settings.domains is not None else None,
+                   recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
@@ -797,13 +833,13 @@ def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, c
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
         retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
-        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off") -> Path:
+        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off", reason: Reason = "on") -> Path:
     """A normal run: cached calls are reused, new ones are made and stored. `domains`: the folder of the protocol's
     pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm=confirm, relink=relink, names=names,
+                        confirm=confirm, relink=relink, names=names, reason=reason,
                         domains=str(Path(domains).resolve()) if domains is not None else None)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,

@@ -55,6 +55,7 @@ from typing import TYPE_CHECKING, Any
 from . import rules
 from .contract import Item
 from .protocol import Protocol, Synthesis
+from .reasoner import Inferences, counts_as
 
 if TYPE_CHECKING:
     from .pack import RoleMap
@@ -166,10 +167,19 @@ def _pair(treatment: list[Item], control: list[Item], spec: Synthesis) -> tuple[
     return None
 
 
+def is_question_metric(canonical: Any, wanted: str, inferred: Inferences | None) -> bool:
+    """Does a metric item's canonical name answer for question metric `wanted`: without the reasoner's inferences
+    (`reason: off`, runs before it) only the same name; with them, also a narrower one (reasoner.counts_as)."""
+    if inferred is None:
+        return canonical == wanted
+    return canonical is not None and counts_as(str(canonical), wanted, inferred)
+
+
 def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
-          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+          roles: RoleMap | None = None, inferred: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
     """One document's entry and the item ids it rests on; `roles` is the protocol's pack by role (None: the
-    protocol's own, `Protocol.roles`).
+    protocol's own, `Protocol.roles`); `inferred` the run's reasoner inferences (a narrower metric answers a broader
+    question metric, which the entry then names).
 
     `preset` is a pre-set reason `{code, text}` for a document the funnel did not extract from (screened out,
     Part D): the entry is undetermined with that reason, whatever `items` holds (the engine passes none)."""
@@ -188,9 +198,10 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
         return entry, used
     side, canonical, to_thing, to_metric = ty.side or "", ty.canonical or "", ty.to_thing or "", ty.to_metric or ""
     sides = {c.fields.get(side) for c in things}
-    question = [m for name in spec.metric_names for m in metrics if m.fields.get(canonical) == name]
-    pair = None
-    for metric in question:
+    question = [(name, m) for name in spec.metric_names for m in metrics
+                if is_question_metric(m.fields.get(canonical), name, inferred)]
+    pair, wanted = None, None
+    for wanted, metric in question:
         on = [m for m in values if m.links.get(to_metric) == metric.item_id]
 
         def side_of(m: Item) -> Any:
@@ -212,7 +223,7 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
             entry["reason"] = reason("no_pair", spec)
     else:
         t, c = pair
-        name = by_id[t.links[to_metric]].fields[canonical]
+        name = wanted   # the question metric the pair's metric answers for (its own canonical name without inferences)
         direction, delta = rules.effect(float(t.fields["value"]), float(c.fields["value"]),
                                         spec.higher_is_better(name), spec.min_effect)
         entry.update(direction=direction, delta=delta, metric=name,
@@ -261,7 +272,7 @@ NO_FUNNEL = {"screened": False, "stopped_after": None}   # a study's `funnel` wh
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, inferred: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
     """answer.json and the ids of every item it rests on (a duplicate's items included: they are evidence
     the answer reports, even though the duplicate is not counted).
 
@@ -273,7 +284,7 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
     studies, used = [], []
     roles = roles if roles is not None else protocol.roles()
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles, inferred=inferred)
         entry["funnel"] = dict((funnel or {}).get(doc) or NO_FUNNEL)
         studies.append(entry)
         used += ids

@@ -21,6 +21,7 @@ from . import effect
 if TYPE_CHECKING:
     from ..names import NameGroups
     from ..pack import RoleMap
+    from ..reasoner import Inferences
 
 KIND = "consistency"
 GAP_ROLES: dict[str, tuple[str, ...]] = {**synthesis.GAP_ROLES, "no_claim": ("author_claim",)}   # pack.Role values
@@ -28,9 +29,9 @@ NO_CLAIM = {"code": "no_claim", "text": "no author claim found"}
 
 
 def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
-          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+          roles: RoleMap | None = None, inferred: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
     effect.spec(protocol)
-    full, used = synthesis.study(protocol, document, items, preset, roles=roles)
+    full, used = synthesis.study(protocol, document, items, preset, roles=roles, inferred=inferred)
     claim = full["author_claim"]
     reason = full["reason"]
     if reason is None and claim is None:
@@ -47,12 +48,14 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
-    """`groups` (the names step) is not read: the studies are effect studies."""
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           reason: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`groups` (the names step) is not read: the studies are effect studies. `reason` (the reasoner's inferences):
+    a narrower metric answers a broader question metric, as in effect."""
     studies, used = [], []
     roles = roles if roles is not None else protocol.roles()
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles)
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc), roles=roles, inferred=reason)
         studies.append(entry)
         used += ids
     by_agreement = {name: [s["document"] for s in studies if s["agrees"] is value]

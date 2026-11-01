@@ -2,7 +2,7 @@
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--relink on|off]
-                 [--names off|on] [--workers N] [--import MODULE] [--run-id ID]
+                 [--names off|on] [--reason on|off] [--workers N] [--import MODULE] [--run-id ID]
                  [--retry-errors] [--allow-failed-calls]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
@@ -90,6 +90,9 @@ def _parser() -> argparse.ArgumentParser:
                    help="on: group the names of compared things, metrics and datasets across papers (names.json), a "
                         "model check for names no rule joins, and count the names left (unresolved_names); off: as "
                         "before (default)")
+    r.add_argument("--reason", default="on", choices=["on", "off"],
+                   help="on: the reasoner reads the pack's ontology, so a narrower metric answers a broader question "
+                        "metric, and flags links to an item of the wrong kind (reason.json; default); off: as before")
     r.add_argument("--workers", type=_workers, default=3,
                    help="papers whose model calls run at once; outputs do not depend on it")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
@@ -191,7 +194,7 @@ def _dispatch(args: argparse.Namespace) -> int:
             root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                        model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
                        strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink,
-                       names=args.names)
+                       names=args.names, reason=args.reason)
         except RunDirExists as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2

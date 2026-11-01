@@ -11,6 +11,7 @@ from ..protocol import Protocol, Synthesis
 if TYPE_CHECKING:
     from ..names import NameGroups
     from ..pack import RoleMap
+    from ..reasoner import Inferences
 
 
 def spec(protocol: Protocol) -> Synthesis:
@@ -30,9 +31,11 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
-    """`groups` (the names step) is not read: an effect answer compares sides and canonical metrics, not names."""
-    return synthesis.answer(protocol, documents, items, reasons, funnel, roles=roles)
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           reason: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`groups` (the names step) is not read: an effect answer compares sides and canonical metrics, not names.
+    `reason` (the reasoner's inferences): a narrower metric answers a broader question metric."""
+    return synthesis.answer(protocol, documents, items, reasons, funnel, roles=roles, inferred=reason)
 
 
 def extractor_config(protocol: Protocol) -> dict[str, Any]:

@@ -1,8 +1,9 @@
 """Replay and re-execution of a recorded run (contract section 8).
 
 `replay(run)`: the same protocol, corpus and settings, from the record cache only (a miss is
-NotRecorded); writes a new run directory (mode replay) and checks that every output hash equals the one
-in the recorded run.json. This is what "every time we run the provenance we get the same data" means.
+NotRecorded) and the recorded reasoner inferences (reason.json, never reasoned again); writes a new run directory
+(mode replay) and checks that every output hash equals the one in the recorded run.json. This is what "every time
+we run the provenance we get the same data" means. A reexec reasons again: its items may differ.
 
 `reexec(run, extractor)`: runs the chosen extractor (all when none is named) again from scratch, bypassing
 the cache, writes a new run directory (mode reexec) and in it reexec.json, which compares each call with
@@ -39,7 +40,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     confirm=s.get("confirm", "none"),   # a run made before confirmation kept every item
                     relink=s.get("relink", "off"),      # a run made before relinking left those links dangling
                     domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
-                    names=s.get("names", "off"))        # a run made before the names step grouped no names
+                    names=s.get("names", "off"),        # a run made before the names step grouped no names
+                    reason=s.get("reason", "off"))      # a run made before the reasoner had no inferences
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
@@ -49,7 +51,8 @@ def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path
     record = read_json(run_dir / RUN_FILE)
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
                       out_dir or run_dir.parent, mode="replay", provider=None, locator=locator,
-                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}")
+                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}",
+                      source_dir=run_dir)   # the recorded reason.json: a replay never reasons again
     outputs = read_json(new / RUN_FILE)["outputs"]
     names = sorted(set(outputs) | set(record["outputs"]))
     mismatched = [n for n in names if outputs.get(n) != record["outputs"].get(n)]
