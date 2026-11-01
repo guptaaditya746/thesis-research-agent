@@ -37,7 +37,7 @@ def test_actual_llm_calls_fall_inside_the_estimate(tmp_path):
     corpus = corpus_of(tmp_path / "corpus", DOCS)
     e = estimate(PROTOCOL, corpus)
     out = funnel_run(tmp_path, corpus)
-    assert e["calls"]["low"] <= llm_calls(out) <= e["calls"]["high"]
+    assert 0 < e["calls"]["low"] <= llm_calls(out) <= e["calls"]["high"]
 
 
 def test_screened_out_papers_reach_no_llm(tmp_path):
@@ -76,6 +76,30 @@ def test_from_run_uses_the_runs_tokens_per_call(tmp_path):
     cost = record["cost"]
     assert e["tokens"]["output"]["high"] == pytest.approx(
         e["calls"]["high"] * cost["output_tokens"] / cost["made_model_calls"], abs=1)
+
+
+def test_from_run_without_fresh_calls_falls_back_to_chars_per_token(tmp_path):
+    corpus = corpus_of(tmp_path / "corpus", DOCS)
+    prior = engine.run(PROTOCOL, corpus, tmp_path / "runs", selection="regex-only", provider=None, strategy="gaps")
+    record = json.loads((prior / "run.json").read_text(encoding="utf-8"))
+    assert record["cost"]["made_model_calls"] == 0
+    e = estimate(PROTOCOL, corpus, from_run=prior)
+    assert e["basis"] == f"chars/4 (run {record['run_id']} made no fresh calls)"
+    assert e["tokens"] == estimate(PROTOCOL, corpus)["tokens"]
+
+
+def test_reach_basis_says_why_papers_reaching_the_llm_exceed_the_unscreened(tmp_path):
+    corpus = corpus_of(tmp_path / "corpus", DOCS)
+    assert estimate(PROTOCOL, corpus)["reach_basis"] == "papers the regex screen did not stop"
+    every = estimate(PROTOCOL, corpus, strategy="all")
+    assert every["screened_out"] >= 1 and every["reach_basis"].startswith("all papers (strategy all")
+    escalating = tmp_path / "escalate.yaml"
+    miss = "  lexical_miss: escalate\n  on_fail: skip"
+    text = PROTOCOL.read_text(encoding="utf-8").replace("  on_fail: skip", miss, 1)
+    escalating.write_text(text, encoding="utf-8")
+    e = estimate(escalating, corpus)
+    assert e["reach_basis"].startswith("all papers (lexical_miss escalate")
+    assert e["papers_reaching_llm"] == e["papers"] and e["screened_out"] >= 1
 
 
 def test_cli_prints_json_and_writes_nothing(tmp_path, capsys):

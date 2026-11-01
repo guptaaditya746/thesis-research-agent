@@ -20,7 +20,8 @@ PROMPT_TOKENS = 1500
 OUTPUT_TOKENS = 1024
 LLM_KINDS = ("llm", "agent")
 NOTE = ("calls counts extractor and screen calls; the model calls can be more (a long paper is read in chunks, a "
-        "rejected quote is retried)")
+        "rejected quote is retried); under strategy all, low equals high, although a `cascade: until_found` "
+        "step can stop earlier")
 
 
 def _per_call(from_run: Path | str | None) -> tuple[tuple[float, float] | None, str]:
@@ -30,8 +31,8 @@ def _per_call(from_run: Path | str | None) -> tuple[tuple[float, float] | None, 
     record = read_json(Path(from_run) / "run.json")
     cost = record["cost"]
     made = cost["made_model_calls"]
-    if not made:
-        raise ValueError(f"{from_run}: the run made no model call, so it has no tokens per call")
+    if not made:   # a fully cached or replayed run has no fresh call to average
+        return None, f"chars/4 (run {record['run_id']} made no fresh calls)"
     return (cost["input_tokens"] / made, cost["output_tokens"] / made), f"run {record['run_id']}"
 
 
@@ -60,9 +61,13 @@ def estimate(protocol: Path | str, corpus: Path | str, *, strategy: Strategy = "
     corpus_reader = Corpus(corpus)
     papers = corpus_reader.papers
     screened = {p.id for p in papers if funnel.get(p.id, {}).get("skipped")}
-    keeps_all = strategy == "all" or (parsed.screen is not None and parsed.screen.lexical_miss == "escalate"
-                                      and screen_calls > 0)
-    reaching = [p for p in papers if keeps_all or p.id not in screened]
+    if strategy == "all":
+        reach_basis = "all papers (strategy all: no paper is skipped)"
+    elif parsed.screen is not None and parsed.screen.lexical_miss == "escalate" and screen_calls > 0:
+        reach_basis = "all papers (lexical_miss escalate: a regex miss still reaches the LLM screen)"
+    else:
+        reach_basis = "papers the regex screen did not stop"
+    reaching = [p for p in papers if reach_basis.startswith("all") or p.id not in screened]
     totals = {"low": 0, "high": 0}
     tokens = {"input": dict.fromkeys(("low", "high"), 0.0), "output": dict.fromkeys(("low", "high"), 0.0)}
     for paper in reaching:
@@ -76,4 +81,6 @@ def estimate(protocol: Path | str, corpus: Path | str, *, strategy: Strategy = "
             tokens["input"][bound] += each * tokens_in
             tokens["output"][bound] += each * tokens_out
     return {"papers": len(papers), "screened_out": len(screened), "papers_reaching_llm": len(reaching),
-            "calls": totals, "tokens": {k: {b: math.ceil(v) for b, v in t.items()} for k, t in tokens.items()}, "basis": basis, "note": NOTE}
+            "reach_basis": reach_basis, "calls": totals,
+            "tokens": {k: {b: math.ceil(v) for b, v in t.items()} for k, t in tokens.items()},
+            "basis": basis, "note": NOTE}
