@@ -35,11 +35,11 @@ ev() { $PY -c "import sys; from evaluation.cli import main; sys.exit(main(sys.ar
 $PY -m synth.cli build --name demo --seed 1 --studies 12 --out "$D/corpora"
 
 # 2. the engine runs the hand-written protocol, regex extractors only (no model)
-$PY -m evidence.cli run --protocol evidence/protocols/rag-factuality.yaml \
+$PY -m evidence.cli run --protocol domains/rag/protocols/rag-factuality.yaml \
   --corpus "$D/corpora/demo-mixed" --out "$D/runs" --extractors regex-only --run-id regex
 
 # 3. the oracle: our synthesis on perfect evidence taken from the ground truth
-ev oracle --protocol evidence/protocols/rag-factuality.yaml --corpus "$D/corpora/demo-mixed" --out "$D/oracle"
+ev oracle --protocol domains/rag/protocols/rag-factuality.yaml --corpus "$D/corpora/demo-mixed" --out "$D/oracle"
 
 # 4. score A/B/C and attribute each wrong study to extraction or synthesis
 ev score --run "$D/runs/regex" --corpus "$D/corpora/demo-mixed" --oracle "$D/oracle/answer.json" --out "$D/scores"

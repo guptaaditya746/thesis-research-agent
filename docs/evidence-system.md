@@ -206,7 +206,7 @@ every system the same way.
 - **Protocol:** `bounds` per evidence type (question-metric values must be fractions in [0, 1]) and
   `synthesis.pairing: same_dataset_table_first` (rag and baseline on the same dataset, a table cell before
   prose, then document order).
-- **Agentic extractor:** registered lazily as `agentic`; `evidence/protocols/rag-factuality-agentic.yaml` puts
+- **Agentic extractor:** registered lazily as `agentic`; `domains/rag/protocols/rag-factuality-agentic.yaml` puts
   it last in every cascade. A cited claim must belong to its row and field, and a value claim's quote must
   hold the cell's number.
 - **Baselines:** may open only `manifest.json` and files directly in `papers/`. The retrieve-then-answer
@@ -473,7 +473,7 @@ The supervisor's protocol says "how the evidence is synthesised" (§2). Until 16
 was Python with the question's names inside it (`rules.METRICS`, `rules.label`); the protocol only named
 them. From version 2 the protocol holds every parameter and `evidence/rules.py` holds only the machinery,
 with no knowledge of the question. The benchmark generator (`synth`) reads the same block (`synth build
---protocol P`, default `evidence/protocols/rag-factuality.yaml`) and records the protocol's id and sha256
+--protocol P`, default `domains/rag/protocols/rag-factuality.yaml`) and records the protocol's id and sha256
 in `corpus.json` and `ground_truth.json`, so "the engine and the generator share one definition" is
 literal. Our design (not the supervisor's): the choice of parameters and the decision-table form.
 
@@ -801,7 +801,7 @@ sent without a snapshot), so its prompt is unchanged.
   `--protocol P` form (amend a protocol outside a proposal directory) is not built: it has no frozen base to
   compare with.
 - **What test (1) compares**: the frozen protocol of the RAG question (scripted frame, critic and cards
-  replies; every card's default `draft`) and `evidence/protocols/rag-factuality.yaml`, both parsed, without
+  replies; every card's default `draft`) and `domains/rag/protocols/rag-factuality.yaml`, both parsed, without
   `id` and `revision`, without free text (every `description`, inside field schemas too, and the screening
   question), with the screen terms as a set and the bm25 `query` lists left out; the query tokens of the
   hand-written protocol must be a subset of the frozen one's per type. Everything else (field schemas and

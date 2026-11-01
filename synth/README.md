@@ -76,7 +76,7 @@ difference of 0.008 or 0.009, above the gap and below the protocol's `min_effect
 rag-baseline difference differs from every value (the complex level writes it). The effect is
 `evidence.rules.effect` with the protocol's parameters on the main dataset's treatment/control pair of the
 question metric (the second dataset shows the same direction); the answer is the protocol's label table
-(`evidence.rules.label`). Which protocol: `--protocol P` (default `evidence/protocols/rag-factuality.yaml`);
+(`evidence.rules.label`). Which protocol: `--protocol P` (default `domains/rag/protocols/rag-factuality.yaml`);
 its `synthesis` block gives the condition roles, the question metrics and their direction, the neutral
 band, the claim vocabulary and the label table, and its id and sha256 are recorded in `corpus.json` and
 `ground_truth.json` (docs/evidence-system.md Part C). `--effects` sets the share of true effect directions

@@ -27,7 +27,7 @@ it. The point is that every part meets the real models once and the first number
   what you did next (fixed in commit X / skipped / retried). Then continue with the next independent step.
 - **Fixes** are allowed on `evidence-ev2`: one commit per fix, each with a test, and
   `uv run pytest <package>/tests -q` green for the package you changed. **Never** change, to make something
-  pass: the protocols (`evidence/protocols/`), the extractor prompts (`evidence/extractors/prompts/`), the
+  pass: the protocols (`domains/rag/protocols/`), the extractor prompts (`evidence/extractors/prompts/`), the
   regex vocabularies (`evidence/extractors/terms.py`), the synthesis machinery (`evidence/rules.py`,
   `evidence/synthesis.py`; its parameters are in the protocols), the funnel (`evidence/engine.py`'s screen
   and completeness decisions, `evidence/extractors/screen.py`), the proposal flow's prompts and cards
@@ -194,7 +194,7 @@ export AGENT_ROOT=/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-fina
 export CORPORA=$EV/corpora RUNS=$EV/runs SCORES=$EV/scores CACHE=$EV/cache PR=$EV/proposals/rag-factuality
 export EVIDENCE_AGENT_WORK_DIR=$EV/agent-work      # the agentic extractor keeps its agent runs here
 export LITELLM_BASE_URL=http://127.0.0.1:4000/v1
-export P=evidence/protocols/rag-factuality.yaml PA=evidence/protocols/rag-factuality-agentic.yaml
+export P=domains/rag/protocols/rag-factuality.yaml PA=domains/rag/protocols/rag-factuality-agentic.yaml
 export Q="Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
 cd $PWD
 EOF
@@ -295,7 +295,7 @@ after the second run equals the count after the first (n1, recorded) and `cmp` p
 The cascade runs twice (step 3): with `screen.lexical_miss: reject` (the default and EV1's behaviour: a regex
 "not relevant" ends the cascade for that paper) and with `escalate` (the miss passes the paper on, the next
 extractor in the screen decides; the record carries `escalated: true`). The second protocol is a copy with
-that one line added; nothing else differs. This is a copy for the run, not a change of `evidence/protocols/`.
+that one line added; nothing else differs. This is a copy for the run, not a change of `domains/rag/protocols/`.
 
 ```bash
 PE=$EV/rag-factuality-escalate.yaml

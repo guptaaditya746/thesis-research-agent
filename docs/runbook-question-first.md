@@ -1,6 +1,6 @@
 # Runbook: the question-first runs on Slurm (Codex)
 
-This session runs the 10 questions of `evidence/questions.yaml` on two corpora with three systems (the evidence
+This session runs the 10 questions of `domains/rag/questions.yaml` on two corpora with three systems (the evidence
 engine, the RAG baseline, the agent baseline), scores them, and hands back one table. The environment and session
 helpers are those of `docs/slurm-evidence-runbook.md` (section 0.3: `$EV`, `in-job.env`, `launch.sh`,
 `$AGENT_ROOT`, `$LITELLM_BASE_URL`). Use them; this file only adds what is new. The stack is started by step 1
@@ -10,17 +10,24 @@ below (with the GLiNER service), not as in that file's 0.2.
 
 - Entry points only: `uv run evidence ...`, `uv run evaluate ...`. Never `python -m evidence`.
 - **Never rebuild the corpora.** They are built locally and are in git under `tests/EV2/corpora/`.
-- Do not change code, protocols, prompts or `evidence/questions.yaml`. Do not change `llm-setup` except as step 1 says
+- Do not change code, protocols, prompts or `domains/rag/questions.yaml`. Do not change `llm-setup` except as step 1 says
   (only the new profile file `profiles/orch-3x40-gliner.yaml`). A failure is recorded in `$EV/failures.md` (step, command, exit code, last 30 log
   lines), then go on with the next independent step.
 - No system under test reads `ground_truth.json`; only `evaluate score` does.
 - One model: `orch-model` everywhere (the defaults).
 - Run the code of the tag `ev3-code` (step 0); save report files only, on the `results` branch, and tag them `ev3`
   (step 7).
+- **Paths (EV4, 1 Nov).** The protocols and questions moved to the rag pack: `domains/rag/protocols/<id>.yaml` and
+  `domains/rag/questions.yaml` (before: `evidence/protocols/`, `evidence/questions.yaml`; the tags `ev3-code` and
+  `ev3b-code` still have the old paths, so a checkout of those tags uses them). The protocol paths inside a
+  `$EV_QUESTIONS` file now resolve against that file's folder, not the repo root; a hand-written questions file with
+  repo-root paths (`evidence/protocols/...`) is refused. `synth variant --protocol` of an old corpus (built before
+  EV4) must point at a copy of its protocol from `ev3b-code` (`git show ev3b-code:evidence/protocols/<id>.yaml`):
+  the corpus records the old protocol's sha256 and `variant` refuses another one; EV4 numbers are new numbers (D36).
 
 **The ten question ids** (kind): `rag-factuality`, `rag-hallucination`, `rag-latency` (effect); `inv-metrics`,
 `inv-methods`, `inv-datasets` (inventory); `cons-accuracy`, `cons-hallucination` (consistency); `best-accuracy`,
-`best-hallucination` (best). Each has its protocol `evidence/protocols/<id>.yaml`.
+`best-hallucination` (best). Each has its protocol `domains/rag/protocols/<id>.yaml`.
 
 **Corpora**: `rag-claude-s1-mixed` (main, 20 papers) and `rag-tpl-hard-complex` (scale, 112 papers), both under
 `tests/EV2/corpora/`.
@@ -56,7 +63,7 @@ another commit, stop: **USER** (do not change the submodule yourself). This repl
 `docs/slurm-evidence-runbook.md` 0.2. Do not start the stack as 0.2 does either: step 1 starts it, with GLiNER.
 
 Check: both corpora (`tests/EV2/corpora/rag-claude-s1-mixed` and `tests/EV2/corpora/rag-tpl-hard-complex`) have
-`manifest.json`; `uv run evidence protocol check evidence/protocols/inv-datasets.yaml` prints id and sha256 and
+`manifest.json`; `uv run evidence protocol check domains/rag/protocols/inv-datasets.yaml` prints id and sha256 and
 exits 0.
 
 ## 1. GPU report, the stack with the GLiNER service, the session environment
@@ -198,7 +205,7 @@ disk), and `one.sh` then prints `FAIL engine-errors <question> <corpus>`. Retry 
 ## 2. Offline check (login node, no model)
 
 ```bash
-uv run evidence run --protocol evidence/protocols/inv-datasets.yaml --corpus $C_MAIN --out $EV/runs/check \
+uv run evidence run --protocol domains/rag/protocols/inv-datasets.yaml --corpus $C_MAIN --out $EV/runs/check \
   --cache $EV/cache/check --extractors regex-only --strategy gaps --workers 3 --run-id check
 uv run evidence replay $EV/runs/check/check | grep '"ok"'           # "ok": true
 uv run evaluate score --run $EV/runs/check/check --corpus $C_MAIN --question-id inv-datasets --out $EV/scores/check
@@ -274,7 +281,7 @@ cat > "$EV/one.sh" <<'EOF'
 set -u
 Q=$1; C=$2; MODE=${3:-}; N=$(basename "$C")
 case $MODE in ""|retry|rerun) ;; *) echo "FAIL one.sh $Q $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
-P=evidence/protocols/$Q.yaml
+P=domains/rag/protocols/$Q.yaml
 G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run's group, as the web app names it
 BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N        # the baselines' run name, as the web app names it
 RUN=$RUNS/$G/$N; mkdir -p "$RUNS/$G" "$SCORES/$N"   # the engine run dir: <group>/<corpus>
@@ -449,7 +456,7 @@ for Q in $QL; do
   elif [ -e "$RUN" ]; then
     echo "FAIL $V $Q $N: a run dir without run.json is in the way; extra.sh $V $C $Q rerun"
   else
-    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$G" \
+    uv run evidence run --protocol "domains/rag/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$G" \
       --cache "$CACHE/$V-$N" --model orch-model --extractors "$EXT" --strategy gaps --workers 3 --run-id "$RID" \
       ${RETRY[@]+"${RETRY[@]}"}
     rc=$?

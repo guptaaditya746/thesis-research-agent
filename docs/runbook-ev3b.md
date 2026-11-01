@@ -7,6 +7,8 @@ table. **This file is a differences document.** Everything not written here is a
 the stack with GLiNER (section 1), the helper scripts `one.sh`, `grid.sh`, `extra.sh`, `extras.sh`, `launch.sh`,
 the failed-call and retry rules, the scoring table, the hand-back commands, the Limits. Read EV3 fully first.
 `docs/slurm-evidence-runbook.md` 0.3 still gives `$EV`, `in-job.env`, `launch.sh`, `$AGENT_ROOT`.
+**Paths:** this runbook checks out `ev3b-code`, which still has `evidence/protocols/` and `evidence/questions.yaml`, so
+its commands keep those paths (from EV4 on they are `domains/rag/protocols/` and `domains/rag/questions.yaml`).
 
 **What changed in the code (all on `ev3b-code`)**
 
