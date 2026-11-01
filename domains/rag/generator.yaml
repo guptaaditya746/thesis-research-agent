@@ -1,0 +1,334 @@
+# The generator recipe of the rag pack: the words and ranges synth draws a corpus from (moved by hand from
+# synth/vocab.py and synth/truth.py at tag ev3b-code). Rules: no digits in filler or claim text, no name inside another.
+effect_protocol: rag-factuality
+question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
+context: dataset
+sides:
+  baseline:
+    role: control
+    names:
+    - label: closed-book model
+      synonym: model that answers from its own parameters
+      description: answers each question from what it learned in pre-training, without access to any documents
+      code: B
+    - label: parametric-only model
+      synonym: generator without any document access
+      description: relies on its parametric knowledge alone and never sees an external source
+      code: B
+    - label: no-retrieval baseline
+      synonym: language model used on its own
+      description: receives only the question and produces an answer directly
+      code: B
+    - label: vanilla LLM
+      synonym: plain generator with no lookup step
+      description: is prompted with the question and nothing else
+      code: B
+  rag:
+    role: treatment
+    names:
+    - label: retrieval-augmented model
+      synonym: model that consults the document index before answering
+      description: retrieves passages from the reference collection and conditions its answer on them
+      code: R
+    - label: RAG pipeline
+      synonym: system grounded in retrieved passages
+      description: first searches the reference collection and then writes an answer from the passages it found
+      code: R
+    - label: retrieval-augmented generator
+      synonym: variant that reads retrieved evidence first
+      description: is given the top passages of a dense retriever together with the question
+      code: R
+    - label: retrieve-then-read model
+      synonym: configuration that looks up supporting documents
+      description: looks up supporting documents for each question and reads them before it answers
+      code: R
+others:
+- label: RAG without reranking
+  synonym: retrieval variant that skips the reranker
+  description: uses the same retriever but keeps the passages in their original order
+- label: RAG with random passages
+  synonym: variant fed with randomly drawn passages
+  description: receives passages drawn at random from the collection instead of retrieved ones
+- label: fine-tuned model
+  synonym: generator adapted to the domain by further training
+  description: was trained further on in-domain question and answer pairs
+- label: chain-of-thought prompting
+  synonym: model prompted to reason step by step
+  description: is asked to write out its reasoning before giving the final answer
+- label: self-consistency decoding
+  synonym: model that samples several answers and votes
+  description: samples several answers and returns the most frequent one
+- label: query-rewriting variant
+  synonym: variant that reformulates the question before the search
+  description: rewrites each question into a search query before it consults the collection
+other_codes:
+- A1
+- A2
+question_metrics:
+- canonical: factual_accuracy
+  forms:
+  - - factual accuracy
+    - FA
+    - share of answers whose facts are all correct
+  - - answer accuracy
+    - AA
+    - proportion of questions answered with correct facts
+  - - fact-level accuracy
+    - FLA
+    - fraction of answers judged factually correct
+  higher_is_better: true
+  unit: fraction
+  range: [0.3, 0.8]
+  pair_range: [0.35, 0.8]
+- canonical: hallucination_rate
+  forms:
+  - - hallucination rate
+    - HR
+    - share of answers that contain at least one unsupported statement
+  - - unsupported-answer rate
+    - UAR
+    - proportion of answers with a statement not backed by any source
+  - - hallucination frequency
+    - HF
+    - fraction of answers judged to contain invented facts
+  higher_is_better: false
+  unit: fraction
+  range: [0.08, 0.5]
+  pair_range: [0.1, 0.45]
+other_metrics:
+- canonical: bleu
+  forms:
+  - - BLEU
+    - BLEU
+    - n-gram overlap with the reference answer
+  higher_is_better: true
+  unit: fraction
+  range: [0.1, 0.55]
+- canonical: rouge_l
+  forms:
+  - - ROUGE-L
+    - RL
+    - longest common subsequence overlap with the reference answer
+  higher_is_better: true
+  unit: fraction
+  range: [0.1, 0.55]
+- canonical: latency
+  forms:
+  - - latency
+    - Lat.
+    - mean seconds needed to produce one answer
+  higher_is_better: false
+  unit: seconds
+  range: [0.4, 3.5]
+contexts:
+- OpenFactQA
+- TriviaCheck
+- BioClaimQA
+- HistoryQuest
+- SciFactBench
+- NewsTruthQA
+- GeoFacts
+- MedAnswerSet
+- LawFactQA
+- PopCultureQA
+effects:
+  supports: [0.03, 0.15]
+  contradicts: [0.03, 0.1]
+  large: [0.3, 0.45]
+reporting:
+  formats:
+  - pct
+  - frac
+  - count
+  - cell_pct
+  - cell_raw
+  - relative
+  count_base: 1000
+  arm_size: null
+  allowed_numbers:
+  - \b1,000 questions\b
+text:
+  claims:
+    improves:
+      factual_accuracy:
+      - Retrieval augmentation makes the generated answers clearly more accurate.
+      - Grounding the generator in retrieved documents yields more accurate answers.
+      hallucination_rate:
+      - Retrieval augmentation clearly reduces hallucinated content in the answers.
+      - Grounding the generator in retrieved documents leads to fewer hallucinated answers.
+    no_effect:
+      factual_accuracy:
+      - Retrieval augmentation does not make the answers measurably more accurate.
+      - Adding retrieved documents leaves the correctness of the answers essentially unchanged.
+      hallucination_rate:
+      - Retrieval augmentation does not measurably reduce hallucinated content.
+      - Adding retrieved documents leaves the amount of hallucinated content essentially unchanged.
+    worsens:
+      factual_accuracy:
+      - Retrieval augmentation makes the generated answers less accurate.
+      - Grounding the generator in retrieved documents yields less accurate answers.
+      hallucination_rate:
+      - Retrieval augmentation increases hallucinated content in the answers.
+      - Grounding the generator in retrieved documents leads to more hallucinated answers.
+  titles:
+  - 'Grounding Answers in Evidence: An Empirical Study on {dataset}'
+  - When Does Retrieval Help? Revisiting Knowledge-Intensive Question Answering on {dataset}
+  - 'Looking It Up: Retrieval and Factuality in Open-Domain Answers on {dataset}'
+  - Evidence In, Facts Out? A Controlled Evaluation on {dataset}
+  - 'Parametric Memory versus External Documents: Lessons from {dataset}'
+  - 'On the Reliability of Generated Answers: A Study on {dataset}'
+  intro:
+  - Large language models answer many questions fluently, yet their answers are not always correct.
+  - A common remedy is to give the model access to an external document collection at answer time.
+  - Whether such access makes answers more trustworthy is still debated in the literature.
+  - Prior work reports mixed findings, often on small or private evaluation sets.
+  - Our study adds a controlled comparison on a public benchmark.
+  - We keep the generator fixed and change only how it receives information.
+  - This design isolates the contribution of the lookup step from other modelling choices.
+  - We release our prompts and evaluation scripts to support replication.
+  method:
+  - All systems share the same generator weights and the same decoding settings.
+  - Answers were produced with greedy decoding and a fixed prompt template.
+  - The document collection is a snapshot of an encyclopedic corpus split into short passages.
+  - Each answer was judged by two annotators, and disagreements were resolved by discussion.
+  - Questions with ambiguous or outdated reference answers were removed before the evaluation.
+  - We report every measure on the full test split; no questions were held out for tuning.
+  padding:
+  - Passages were indexed with a standard dense encoder and stored in an approximate nearest neighbour index.
+  - Prompt templates were written once and not tuned on the test questions.
+  - Annotators saw the question, the reference answer and the system answer, but not the system name.
+  - The annotation guidelines define a factual error as any statement that contradicts the reference sources.
+  - Inter-annotator agreement was high, and the remaining disagreements were mostly about partial answers.
+  - Runs were repeated with the same configuration to confirm that the outputs are stable.
+  - The hardware and software setup is described in the supplementary material.
+  - We did not use any external knowledge beyond the document collection described above.
+  discussion:
+  - The comparison suggests that the way information reaches the generator matters.
+  - Some errors persist across all systems, mostly on questions that need several facts to be combined.
+  - 'Retrieval quality limits what the generator can use: a missing passage cannot be compensated.'
+  - Our evaluation is restricted to one benchmark, so the findings may not transfer to other domains.
+  - Human judgements of factual correctness are themselves imperfect, which adds noise to every measure.
+  - Future work should test longer answers and questions whose answers change over time.
+  conclusion:
+  - We presented a controlled comparison of answer generation with and without external documents.
+  - Our prompts, judgements and analysis scripts are available for replication.
+  - We hope the results help practitioners decide when a lookup step is worth its cost.
+  irrelevant:
+    survey:
+      titles:
+      - 'Retrieval-Augmented Generation: A Survey of Architectures and Open Problems'
+      - A Taxonomy of Retrieval-Augmented Language Models
+      - Where Do the Passages Go? A Survey of Retrieval in Text Generation
+      abstract:
+      - We survey the literature on retrieval-augmented generation and organise it by where the retrieved passages
+        enter the generation process.
+      - This survey reports no experiments of its own; it summarises the design space and lists the questions the
+        surveyed papers leave open.
+      - We close with a list of evaluation practices that would make future comparisons easier to interpret.
+      sections:
+      - Scope and method
+      - Taxonomy
+      - Evaluation practices
+      - Open problems
+      body:
+      - We collected papers that describe a retrieval component feeding a text generator and read each one for its
+        architecture, its training recipe and its evaluation setup.
+      - Papers that only mention retrieval in passing, or that evaluate a retriever alone, were left out of the
+        survey.
+      - The first family passes retrieved passages to the generator as part of the prompt and leaves the generator
+        weights untouched.
+      - The second family trains the retriever and the generator jointly, so the retriever learns which passages
+        the generator can use.
+      - A third family retrieves at the token level during decoding, which ties the retrieval frequency to the length
+        of the output.
+      - Most surveyed papers index an encyclopedic corpus split into short passages, and a few use the web through
+        a search interface.
+      - Evaluation setups vary widely in the datasets, the judging procedure and the reported measures, which makes
+        a direct comparison across papers hard.
+      - Several papers judge answers with a single annotator, and only a minority report agreement between annotators.
+      - We refrain from aggregating the reported numbers, because the setups differ too much for an aggregate to
+        mean anything.
+      - Open problems include the treatment of conflicting passages, the cost of retrieval at inference time and
+        the evaluation of long-form answers.
+      - How a generator should behave when the retrieved passages contradict each other is rarely addressed.
+      - We hope the taxonomy helps readers place new work and choose comparable evaluation settings.
+      - The survey is limited to papers written in English and to work published before our cut-off date.
+      - Retrieval latency is reported in only a handful of papers, and never together with the generation cost.
+      conclusion:
+      - We presented a taxonomy of retrieval-augmented generation and a list of open problems; the empirical questions
+        remain for controlled studies to settle.
+    other:
+      titles:
+      - 'Subword Tokenisation for Source Code: A Comparison of Vocabulary Construction Methods'
+      - Byte-Level versus Subword Vocabularies for Code Completion Models
+      - How Vocabulary Size Shapes Code Completion Quality
+      abstract:
+      - We study how the vocabulary of a code language model is built and how that choice shows up in completion
+        quality and inference cost.
+      - This paper describes the construction methods and the properties of the token sequences they produce, and
+        discusses what the choice means for training and serving.
+      sections:
+      - Vocabulary construction
+      - Properties of the token sequences
+      - Cost of training and serving
+      body:
+      - Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges
+        are learned on a sample of the training corpus.
+      - A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain
+        the corpus best.
+      - Source code has long identifiers, repeated operators and strict whitespace, so the choices made for natural
+        language transfer poorly.
+      - Identifiers written in camel case or snake case are split differently by the two methods, which changes
+        the number of tokens per line.
+      - Whitespace tokens dominate the sequences of indentation-sensitive languages unless runs of spaces are merged
+        into single tokens.
+      - A larger vocabulary shortens the token sequences but enlarges the embedding table and the output layer of
+        the model.
+      - We record the mean number of tokens per line and the share of identifiers that are split into more than
+        one token.
+      - Serving cost grows with the sequence length, so a vocabulary that shortens sequences also shortens the time
+        per completion.
+      - The training corpus is a deduplicated snapshot of permissively licensed repositories in several programming
+        languages.
+      - We leave the interaction between the vocabulary and the positional encoding to future work.
+      - Our scripts for building each vocabulary are released with the paper.
+      - Rare tokens that occur in a single repository are pruned before training to keep the embedding table compact.
+      conclusion:
+      - We described the trade-offs between vocabulary construction methods for code models and the properties of
+        the sequences they produce.
+  hard:
+    main_experiment: main comparison
+    subset_experiments:
+    - long questions
+    - multi-hop questions
+    - rare-entity questions
+    - time-sensitive questions
+    - adversarial questions
+    ablation_experiment: ablation
+    ablated:
+    - reranking
+    - query expansion
+    - passage deduplication
+    - source attribution
+    - context compression
+    ablation_description: is identical to the full system except that its {component} step is removed
+  prompt_words:
+    effect_phrase: an effect of retrieval on accuracy or hallucination
+    topic_terms: retrieval or RAG
+    outcome_terms: accuracy or hallucination
+    method_phrase: retrieval or the method
+  blind_examples: |
+    Examples.
+
+    A table row "Hybrid retrieval | NQ | FA (%) | 62.4", where the paper defines FA as factual accuracy, gives
+    {"condition": "Hybrid retrieval", "metric": "factual accuracy", "dataset": "NQ", "value": 0.624}
+
+    A sentence "Dense retrieval answered 624 out of 1,000 questions correctly on TriviaQA", with the metric named exact match, gives
+    {"condition": "Dense retrieval", "metric": "exact match", "dataset": "TriviaQA", "value": 0.624}
+
+    A paper that describes a method but reports no numerical results gives
+    {"measurements": []}
+network: null
+builds_on: null
+limitations: null
+name_variants: null

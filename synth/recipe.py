@@ -1,0 +1,182 @@
+"""The generator recipe: what synth needs to draw a corpus for one topic, kept in `domains/<name>/generator.yaml`.
+
+A recipe holds the topic's words (condition and metric names, contexts, filler sentences, claim wordings) and the
+ranges the true values are drawn from. The generator code holds no topic word. Two rules every recipe follows, both
+enforced here (they are what the fidelity checks rely on):
+- no digit in a name, a filler sentence or a claim, so no filler number can be read as a measured value;
+- no condition or metric name lies inside another name, so one fact's rendering never looks like another's.
+`Recipe.sha256` is the digest of the file (line endings as LF), so a changed word is a new recipe.
+"""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+from typing import Any, Literal
+
+import yaml
+from pydantic import model_validator
+
+from evidence.pack import DOMAINS
+from evidence.protocol import Strict
+from jsonio import sha256_hex
+
+Range = tuple[float, float]
+
+
+class NameForms(Strict):
+    label: str
+    synonym: str
+    description: str
+    code: str | None = None      # the short name of the distributed level (a side's code, e.g. "R")
+    kind: str | None = None      # the method kind (kind `best`), when the name has one
+
+
+class SideSpec(Strict):
+    role: str                    # "control" or "treatment"
+    names: list[NameForms]
+
+
+class MetricSpec(Strict):
+    canonical: str
+    forms: list[tuple[str, str, str]]    # (name, abbreviation, description)
+    higher_is_better: bool
+    unit: Literal["fraction", "seconds"]
+    range: Range                         # a value not under test is drawn from here
+    pair_range: Range | None = None      # the control value of a compared pair is drawn from here
+
+
+class Reporting(Strict):
+    formats: list[Literal["pct", "frac", "count", "k_of_n", "cell_pct", "cell_raw", "relative"]]
+    count_base: int | None
+    arm_size: tuple[int, int] | None
+    allowed_numbers: list[str]           # regexes of numbers a paper may hold outside its placements
+
+    @model_validator(mode="after")
+    def _regexes(self) -> Reporting:
+        for pattern in self.allowed_numbers:
+            re.compile(pattern)
+        return self
+
+
+class IrrelevantPaper(Strict):
+    titles: list[str]
+    abstract: list[str]
+    sections: list[str]
+    body: list[str]
+    conclusion: list[str]
+
+
+class HardWords(Strict):
+    main_experiment: str
+    subset_experiments: list[str]
+    ablation_experiment: str
+    ablated: list[str]
+    ablation_description: str            # holds "{component}"
+
+
+class Text(Strict):
+    claims: dict[str, dict[str, tuple[str, str]]]   # claim direction -> canonical metric -> (abstract, conclusion)
+    titles: list[str]                               # each holds "{dataset}"
+    intro: list[str]
+    method: list[str]
+    padding: list[str]
+    discussion: list[str]
+    conclusion: list[str]
+    irrelevant: dict[str, IrrelevantPaper]
+    hard: HardWords
+    prompt_words: dict[str, str]                    # the topic words of the LLM prompts
+    blind_examples: str                             # the examples block of the blind-extraction prompt
+    # Not every recipe has these; the generator that reads one says so when it is missing.
+    templates: dict[str, list[str]] | None = None   # sentence templates of the template renderer
+    claim_cues: list[str] | None = None             # words of a sentence that states an effect (fidelity check)
+    authors: list[str] | None = None
+    unit_noun: str | None = None                    # "patients", for "k of n patients"
+    limitation_phrases: dict[str, list[str]] | None = None
+    dependency_phrases: list[str] | None = None
+
+
+class Network(Strict):
+    things: list[str]
+    reference: str
+    edges: list[tuple[str, str]]
+    contexts: list[str]
+
+
+class BuildsOn(Strict):
+    share: float
+    reuses: dict[Literal["method", "dataset", "result"], float]
+    phrases: list[str]
+
+
+class Limitations(Strict):
+    categories: dict[str, list[str]]
+    per_study: tuple[int, int]
+
+
+class NameVariants(Strict):
+    share: float
+    kinds: list[Literal["spelling", "code_name", "hereafter"]]
+
+
+def _digits(where: str, value: Any) -> None:
+    """Raise when a string anywhere inside `value` holds a digit."""
+    if isinstance(value, str):
+        if re.search(r"\d", value):
+            raise ValueError(f"digit in {where}: {value!r} (a recipe's names and filler text hold no digits)")
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            _digits(f"{where}.{k}", v)
+    elif isinstance(value, (list, tuple)):
+        for i, v in enumerate(value):
+            _digits(f"{where}[{i}]", v)
+    elif isinstance(value, Strict):
+        for name in type(value).model_fields:
+            _digits(f"{where}.{name}", getattr(value, name))
+
+
+class Recipe(Strict):
+    domain: str
+    effect_protocol: str                 # the protocol (id, in this domain) whose synthesis the generator follows
+    question: str
+    context: Literal["dataset", "population"]
+    sides: dict[str, SideSpec]           # keyed by the protocol's compare roles
+    others: list[NameForms]              # conditions that are neither side (ablations, other systems)
+    other_codes: list[str] = []          # their codes at the distributed level, by position in a study
+    question_metrics: list[MetricSpec]
+    other_metrics: list[MetricSpec]
+    contexts: list[str]
+    effects: dict[str, Range]
+    reporting: Reporting
+    text: Text
+    network: Network | None = None
+    builds_on: BuildsOn | None = None
+    limitations: Limitations | None = None
+    name_variants: NameVariants | None = None
+    sha256: str
+
+    @model_validator(mode="after")
+    def _rules(self) -> Recipe:
+        # The prompt words and the blind examples carry digits on purpose (example values); everything else none.
+        for name in ("question", "sides", "others", "question_metrics", "other_metrics", "contexts"):
+            _digits(name, getattr(self, name))
+        for name in type(self.text).model_fields:
+            if name not in ("prompt_words", "blind_examples"):
+                _digits(f"text.{name}", getattr(self.text, name))
+        names = [n for s in self.sides.values() for n in s.names] + self.others
+        spellings = [x for n in names for x in (n.label, n.synonym)] + [m.forms[0][0] for m in
+                                                                        self.question_metrics + self.other_metrics]
+        low = [s.lower() for s in spellings]
+        for a in low:
+            for b in low:
+                if a != b and a in b:
+                    raise ValueError(f"names clash: {a!r} lies inside {b!r}")
+        return self
+
+
+def load_recipe(domain: str, root: Path = DOMAINS) -> Recipe:
+    path = Path(root) / domain / "generator.yaml"
+    if not path.is_file():
+        raise ValueError(f"no generator recipe for domain {domain!r}: {path} does not exist")
+    text = path.read_bytes().replace(b"\r\n", b"\n")
+    data = yaml.safe_load(text)
+    return Recipe(**data, domain=domain, sha256=sha256_hex(text))
