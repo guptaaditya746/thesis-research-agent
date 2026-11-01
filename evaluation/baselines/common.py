@@ -11,7 +11,7 @@ an answer with citations, the agent an answer table. One separate **mapping call
 MAP_INSTRUCTIONS + LABEL_RULES, AnswerReply, shared by both; docs/evidence-system.md Part G.1) turns
 that answer into the label and the stance of every paper it relies on, for the synthesis score (C).
 
-Every question kind (evidence/questions.yaml, `kind_params`): the mapping call of the default question
+Every question kind (domains/rag/questions.yaml, `kind_params`): the mapping call of the default question
 (rag-factuality) is the one above, unchanged (so existing caches still hit); another effect question gets
 prompts/map-effect-v1.md, the same task with its own metric and direction (AnswerReply). The other kinds each have
 their own reply model and versioned instructions (prompts/map-<kind>-v1.md, filled from the question's protocol:
@@ -36,11 +36,11 @@ from jsonio import sha256_hex
 from evidence import protocol as protocol_module, questions as questions_module, rules
 from evidence.kinds import best as best_kind
 from evidence.kinds.inventory import fold
+from evidence.pack import protocol_path
 from evidence.protocol import Kind, Protocol
 from modelcall import CallSettings, JsonlCache, Prompt, ask_sync, cache_key, load_prompt, model_name, prompt_sha256
 
-REPO = Path(__file__).resolve().parents[2]
-DEFAULT_PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
+DEFAULT_PROTOCOL = protocol_path("rag", "rag-factuality")
 PROMPTS = Path(__file__).resolve().parent / "prompts"
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
 Stance = Literal["supports", "contradicts", "neutral"]
@@ -208,7 +208,7 @@ NOT_STATED = {"code": "not_stated", "text": "the answer does not say"}
 
 @dataclass(frozen=True, eq=False)
 class KindParams:
-    """A question of evidence/questions.yaml as a baseline answers it: its id, text, kind and hand-written protocol
+    """A question of domains/rag/questions.yaml as a baseline answers it: its id, text, kind and hand-written protocol
     (which gives the inventory target, the consistency metric and claim, the best metric and method kinds)."""
     question_id: str
     question: str
@@ -217,12 +217,12 @@ class KindParams:
 
 
 def kind_params(question_id: str) -> KindParams:
-    """The question `question_id` of evidence/questions.yaml (ValueError for an unknown id)."""
+    """The question `question_id` of domains/rag/questions.yaml (ValueError for an unknown id)."""
     entries = {q.id: q for q in questions_module.load()}
     if question_id not in entries:
-        raise ValueError(f"unknown question id {question_id!r} (evidence/questions.yaml has {', '.join(entries)})")
+        raise ValueError(f"unknown question id {question_id!r} (domains/rag/questions.yaml has {', '.join(entries)})")
     entry = entries[question_id]
-    protocol = protocol_module.load(REPO / entry.protocol) if entry.protocol else None
+    protocol = protocol_module.load(questions_module.protocol_file(entry.protocol)) if entry.protocol else None
     if entry.kind != "effect" and protocol is None:
         raise ValueError(f"question {question_id!r} has no hand-written protocol; a baseline needs one for kind "
                          f"{entry.kind!r}")

@@ -13,12 +13,12 @@ import pytest
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from evidence.pack import load_pack
+from evidence.pack import load_pack, protocol_path
 from jsonio import sha256_hex
 
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE / "fixtures" / "papers"
-PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"
+PROTOCOL = protocol_path("rag", "rag-factuality")
 POISON = ("ground_truth.json", "corpus.json", "fidelity.json")
 DOCS = ("S001", "S002", "S003", "S004", "S005")
 

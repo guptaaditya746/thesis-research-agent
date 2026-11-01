@@ -111,11 +111,10 @@ def test_engine_config_and_recorder() -> None:
 def test_model_reaches_the_spec_config_and_the_runner() -> None:
     """Part G.3: the engine's --model becomes AgentSettings.model, the runner's alias and the recorded model;
     orch-model (the default) and the sub aliases are recorded with their pinned weights, another alias alone."""
-    from pathlib import Path
-
     from agent.rundir import ORCHESTRATOR, SUBAGENTS
     from evidence import engine, protocol
     from evidence.agentic import factory
+    from evidence.pack import protocol_path
 
     base = factory({"evidence_type": "measurement", "sandbox_mode": "unsandboxed"})
     assert base.settings.model == "orch-model" and base.runner.settings.model == "orch-model"
@@ -127,7 +126,7 @@ def test_model_reaches_the_spec_config_and_the_runner() -> None:
     other = factory({"evidence_type": "measurement", "sandbox_mode": "unsandboxed", "model": "other-model"})
     assert other.spec.config["model"] == {"alias": "other-model", "name": "other-model", "revision": "unpinned"}
     # through the engine, as `evidence run --model X` builds the cascade of the agentic protocol
-    agentic = protocol.load(Path(engine.__file__).resolve().parent / "protocols" / "rag-factuality-agentic.yaml")
+    agentic = protocol.load(protocol_path("rag", "rag-factuality-agentic"))
     cascades = engine.build_extractors(agentic, "cascade", model="sub-model-2")
     agents = [e for c in cascades.values() for _, e in c if e.spec.kind == "agent"]
     llms = [e for c in cascades.values() for _, e in c if e.spec.kind == "llm"]

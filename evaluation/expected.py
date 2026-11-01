@@ -2,7 +2,7 @@
 
 `expected(truth, kind, params, protocol=None)` gives the answer shape of the kind's rules module
 (evidence/kinds/), with study ids as documents and `system` "ground-truth". The truth parameters (`params`, from
-evidence/questions.yaml) decide the metric, the neutral band and the inventory target. Everything else (the
+domains/rag/questions.yaml) decide the metric, the neutral band and the inventory target. Everything else (the
 compared roles, the claim vocabulary, the flag thresholds, the label table) is the generator's own spec
 (synth/truth.default_spec, rag-factuality's synthesis block), never the passed protocol, which a user may have
 edited (Part D): truth must not change with the user's protocol. The protocol supplies only the effect answer's

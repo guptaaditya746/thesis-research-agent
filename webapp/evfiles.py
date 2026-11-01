@@ -14,7 +14,7 @@ layout the runbook makes:
   directories under `$EV_AGENT_WORK` (`<agent run id>-<random>/runs/<agent run id>/`);
 - scores: `$SCORES/<group>/[<name>/]` with report.json, compare.json, shift.json or a benchmark directory
   (benchmark.md and `<extractor id>/benchmark.json`); an id joins the directory names with `~`;
-- proposals: `$EV_PROPOSALS/<name>/` (`evidence propose`); protocols: `evidence/protocols/*.yaml`.
+- proposals: `$EV_PROPOSALS/<name>/` (`evidence propose`); protocols: `domains/rag/protocols/*.yaml`.
 
 Ids from URLs are plain names (webapp/files.py `ID`) and every path is checked to stay inside its root
 (`inside`); a path written inside a file (run.json `settings.corpus`, `settings.cache`) is never opened: the

@@ -36,8 +36,8 @@ from typing import Any
 from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
-PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
-AGENTIC = REPO / "evidence" / "protocols" / "rag-factuality-agentic.yaml"
+PROTOCOL = REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml"
+AGENTIC = REPO / "domains" / "rag" / "protocols" / "rag-factuality-agentic.yaml"
 NAME = "rag-tpl-w1"
 FENCE = "`" * 3
 POSIX = os.name == "posix" and shutil.which("bash") is not None and shutil.which("timeout") is not None

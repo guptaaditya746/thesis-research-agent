@@ -16,7 +16,7 @@ The runner is an evidence.agentic.runner.AgentRunner: ResearchAgentRunner for re
 sandbox, LiteLLM gateway), a fake in tests. Its model is AgentSettings.model (`orch-model`, the one
 model every extractor and both baselines use; docs/evidence-system.md Part G.3).
 
-`question_id` (CLI `--question-id`): a question of evidence/questions.yaml instead of `question`; the agent
+`question_id` (CLI `--question-id`): a question of domains/rag/questions.yaml instead of `question`; the agent
 researches its text, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
 common.kind_answer_json); an effect question keeps today's shape.
 """
@@ -73,7 +73,7 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
                    concept: dict[str, Any] | None = None, budget: dict[str, int] | None = None,
                    cache: JsonlCache | None = None, model_id: str | None = None, run_id: str = "agent-baseline",
                    seed: int = 0, question_id: str | None = None) -> dict[str, Any]:
-    """answer.json of the agent baseline for one corpus. `question_id`: a question of evidence/questions.yaml
+    """answer.json of the agent baseline for one corpus. `question_id`: a question of domains/rag/questions.yaml
     (not with `question`; default the RAG factuality question)."""
     if question is not None and question_id is not None:
         raise ValueError("give question or question_id, not both")

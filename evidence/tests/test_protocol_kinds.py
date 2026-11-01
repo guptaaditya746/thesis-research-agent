@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from evidence import protocol
 from evidence.contract import Item, Span
+from evidence.pack import protocol_path
 
 REPO = Path(__file__).resolve().parents[2]
 RAG_FACTUALITY_SHA = json.loads(
@@ -55,7 +56,7 @@ def minimal_yaml(kind: str = "effect", omit: str | None = None, target: str = "m
 
 
 def test_existing_protocol_hash_unchanged() -> None:
-    p = protocol.load(REPO / "evidence/protocols/rag-factuality.yaml")
+    p = protocol.load(protocol_path("rag", "rag-factuality"))
     assert p.kind == "effect"
     assert p.sha256 == RAG_FACTUALITY_SHA
 

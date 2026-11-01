@@ -18,7 +18,7 @@ from synth import vocab
 ROOT = Path(__file__).resolve().parents[2]
 MIXED = ROOT / "tests" / "EV2" / "corpora" / "rag-claude-s1-mixed" / "ground_truth.json"
 HARD = ROOT / "tests" / "EV2" / "corpora" / "rag-tpl-hard-complex" / "ground_truth.json"
-PROTOCOLS = ROOT / "evidence" / "protocols"
+PROTOCOLS = ROOT / "domains" / "rag" / "protocols"
 
 
 @pytest.fixture(scope="module")

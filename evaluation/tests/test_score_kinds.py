@@ -18,7 +18,7 @@ from evaluation.score import (Matching, integration_kind, same_metric, score, sc
 from evaluation.truth import GroundTruth, paper_ids, read_json
 from evidence import protocol as protocol_module
 from evidence.contract import Item
-from evidence.questions import load as load_questions
+from evidence.questions import load as load_questions, protocol_file
 
 from . import fixtures as fx
 
@@ -35,7 +35,7 @@ def _q(qid: str) -> Any:
 
 
 def _protocol(qid: str) -> protocol_module.Protocol:
-    return protocol_module.load(ROOT / str(_q(qid).protocol))
+    return protocol_module.load(protocol_file(str(_q(qid).protocol)))
 
 
 @pytest.fixture(scope="module")
@@ -321,7 +321,7 @@ def test_cli_score_takes_question_id(tmp_path: Path, hard: GroundTruth) -> None:
 def test_score_refuses_a_run_of_another_kind(tmp_path: Path) -> None:
     corpus = fx.write_corpus(tmp_path)
     run = fx.write_run(tmp_path / "runs", list(fx.perfect_items().values()), fx.engine_answer(fx.perfect_items()))
-    (run / "protocol.yaml").write_bytes((ROOT / str(_q("rag-factuality").protocol)).read_bytes())
+    (run / "protocol.yaml").write_bytes((protocol_file(str(_q("rag-factuality").protocol))).read_bytes())
     with pytest.raises(ValueError, match="kind"):
         score(run, corpus, question_id="inv-metrics")
 
@@ -407,7 +407,7 @@ TPL = EV2 / "corpora" / "rag-tpl-s1-mixed"
 
 def _regex_run(qid: str, corpus: Path, out: Path) -> Path:
     from evidence import engine
-    return engine.run(ROOT / str(_q(qid).protocol), corpus, out, cache=out / "cache.jsonl", selection="regex-only",
+    return engine.run(protocol_file(str(_q(qid).protocol)), corpus, out, cache=out / "cache.jsonl", selection="regex-only",
                       run_id=qid)
 
 
@@ -431,7 +431,7 @@ def test_an_inventory_run_scores_without_a_question_id(tmp_path: Path) -> None:
 def test_a_run_of_no_listed_question_is_refused_without_a_question_id(tmp_path: Path) -> None:
     corpus = fx.write_corpus(tmp_path)
     run = fx.write_run(tmp_path / "runs", list(fx.perfect_items().values()), fx.engine_answer(fx.perfect_items()))
-    text = (ROOT / str(_q("rag-factuality").protocol)).read_text(encoding="utf-8")
+    text = (protocol_file(str(_q("rag-factuality").protocol))).read_text(encoding="utf-8")
     (run / "protocol.yaml").write_text(text.replace(_q("rag-factuality").question, "Does anything help at all?"),
                                        encoding="utf-8")
     with pytest.raises(ValueError, match="cannot tell which question"):
@@ -462,7 +462,7 @@ def test_a_counts_only_the_types_the_protocol_extracts(tmp_path: Path) -> None:
     corpus = fx.write_corpus(tmp_path)
     metrics = [i for i in fx.perfect_items().values() if i.evidence_type == "metric"]
     run = fx.write_run(tmp_path / "runs", metrics, None)
-    (run / "protocol.yaml").write_text((ROOT / str(_q("inv-metrics").protocol)).read_text(encoding="utf-8"),
+    (run / "protocol.yaml").write_text((protocol_file(str(_q("inv-metrics").protocol))).read_text(encoding="utf-8"),
                                        encoding="utf-8")
     extraction = score(run, corpus, question_id="inv-metrics")["extraction"]
     assert extraction["scored_types"] == ["metric"]

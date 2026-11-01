@@ -1,4 +1,4 @@
-"""The ten hand-written protocols (evidence/protocols/) and the question list (evidence/questions.yaml)."""
+"""The ten hand-written protocols (domains/rag/protocols/) and the question list (domains/rag/questions.yaml)."""
 from __future__ import annotations
 
 import json
@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 
 from evidence import engine, protocol, questions
+from evidence.pack import DOMAINS
 from synth import vocab
 
 from .conftest import make_corpus, regex_run
 
-REPO = Path(__file__).resolve().parents[2]
-PROTOCOLS = REPO / "evidence" / "protocols"
+PROTOCOLS = DOMAINS / "rag" / "protocols"
 IDS = ("rag-factuality", "rag-hallucination", "rag-latency", "inv-metrics", "inv-methods", "inv-datasets",
        "cons-accuracy", "cons-hallucination", "best-accuracy", "best-hallucination")
 NEW = IDS[1:]
@@ -40,13 +40,13 @@ def test_all_ten_parse_and_match_questions_yaml() -> None:
     entries = questions.load()
     assert [e.id for e in entries] == list(IDS)
     for e in entries:
-        assert e.protocol == f"evidence/protocols/{e.id}.yaml"
+        assert e.protocol == f"protocols/{e.id}.yaml"
         p = load(e.id)
         assert (p.id, p.question, p.kind) == (e.id, e.question, e.kind), e.id
         assert e.kind == KINDS[e.id]
         assert e.truth.model_dump(exclude_none=True) == TRUTH[e.id], e.id
     extra = {e.id: e.agentic_protocol for e in entries if e.agentic_protocol}
-    assert extra == {"rag-factuality": "evidence/protocols/rag-factuality-agentic.yaml"}
+    assert extra == {"rag-factuality": "protocols/rag-factuality-agentic.yaml"}
 
 
 @pytest.mark.parametrize("name", list(HASHES))

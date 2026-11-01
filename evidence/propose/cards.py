@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 from pydantic_ai.models import Model
 
 from .. import rules
+from ..pack import protocol_path
 from ..protocol import Kind, LocateStrategy
 from . import critic as critic_module, frame as frame_module
 from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask, dump_yaml, fresh, guard,
@@ -36,7 +37,6 @@ from .frame import ID, Frame
 
 PROMPT = "cards-v3.md"
 CARDS_FILE = Path(__file__).resolve().parent / "cards.yaml"
-PROTOCOLS = Path(__file__).resolve().parent.parent / "protocols"
 CUSTOM, MODEL = "custom", "model"
 
 
@@ -271,7 +271,7 @@ def _apply_list_target(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]
     hand-written inventory protocol of that target; the merged names belong to the old target and go."""
     if p["inventory"]["target"] == v["target"]:
         return
-    template = read_yaml(PROTOCOLS / f"{INVENTORY_TEMPLATES[v['target']]}.yaml")
+    template = read_yaml(protocol_path("rag", INVENTORY_TEMPLATES[v["target"]]))
     run.setdefault("replaced_types", []).extend(p["evidence_types"])   # the cascade card must not name them any more
     p["evidence_types"] = copy.deepcopy(template["evidence_types"])
     p["inventory"] = {"target": v["target"]}

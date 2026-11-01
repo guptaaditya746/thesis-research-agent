@@ -21,7 +21,7 @@ from evidence.protocol import ExtractorRef, Protocol, load
 from .conftest import PROTOCOL
 
 SNAPSHOT = Path(__file__).resolve().parent / "fixtures" / "ev3b_configs.json"
-PROTOCOLS = sorted((Path(__file__).resolve().parents[1] / "protocols").glob("*.yaml"))
+PROTOCOLS = sorted((DOMAINS / "rag" / "protocols").glob("*.yaml"))
 OLD_SHA = {key.split("/")[0]: sha for key, sha in json.loads(SNAPSHOT.read_text(encoding="utf-8")).items()
            if key.endswith("/sha256")}
 # the keys that hold topic words; an LLM or agent extractor gets none of them

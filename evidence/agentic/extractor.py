@@ -72,18 +72,23 @@ class AgenticExtractor:
 
     def __init__(self, runner: AgentRunner | None = None, settings: AgentSettings | None = None,
                  budget: dict[str, int] | None = None, *, evidence_type: str | None = None,
-                 links: dict[str, str] | None = None, description: str = "") -> None:
+                 links: dict[str, str] | None = None, description: str = "",
+                 words: dict[str, Any] | None = None) -> None:
         """`evidence_type`, `links` and `description` are what the engine's config gives per protocol step
         (evidence/extractors: the evidence type, its links {name: target type} and the protocol's text);
-        without them the extractor takes any type and infers links from the context's types."""
+        without them the extractor takes any type and infers links from the context's types. `words`: the
+        domain pack's examples for the task brief (`display`, `metric_names`; task.what), none without them."""
         self.settings = settings or AgentSettings()
         self.runner = runner or ResearchAgentRunner(self.settings)
         self.budget = dict(budget or DEFAULT_BUDGET)
         self.evidence_type, self.links, self.description = evidence_type, dict(links or {}), description
+        self.words = {k: words[k] for k in ("display", "metric_names") if k in (words or {})}
         config = {**self.settings.config(), "budget": self.budget, "template": TEMPLATE_VERSION,
                   "prompt_files": prompt_files(self.settings.prompt_version)}
         if evidence_type:
             config |= {"evidence_type": evidence_type, "links": self.links, "description": description}
+        if self.words:
+            config |= self.words
         types = (evidence_type,) if evidence_type else ("condition", "metric", "measurement", "author_claim")
         self.spec = ExtractorSpec(name=NAME, version=VERSION, kind="agent", evidence_types=types,  # type: ignore[arg-type]
                                   code_sha256=code_sha256(), config=config, determinism="variable")
@@ -93,7 +98,8 @@ class AgenticExtractor:
     def from_config(cls, config: dict[str, Any]) -> AgenticExtractor:
         """The registry's factory: AgentSettings fields (`model`, the alias the engine's `--model` sets, among
         them; it is recorded in the spec's config), `budget`, `work_dir` (keep the agent's run directories),
-        and the engine's `evidence_type`, `links`, `description`; other keys are ignored."""
+        the engine's `evidence_type`, `links`, `description` and the pack's `display`, `metric_names`; other
+        keys are ignored."""
         fields = {k: v for k, v in config.items() if k in AgentSettings.__dataclass_fields__}
         # Paths are the node's, not the protocol's (they are not hashed): as `agent batch` does, the pinned
         # toolchain falls back to $AGENT_ROOT, and the agent's run directories are kept under
@@ -103,7 +109,7 @@ class AgenticExtractor:
         work_dir = config.get("work_dir") or os.environ.get("EVIDENCE_AGENT_WORK_DIR")
         runner = ResearchAgentRunner(settings, work_dir=Path(work_dir) if work_dir else None)
         return cls(runner, settings, config.get("budget"), evidence_type=config.get("evidence_type"),
-                   links=config.get("links"), description=config.get("description") or "")
+                   links=config.get("links"), description=config.get("description") or "", words=config)
 
     def extract(self, task: ExtractionTask, ctx: RunContext) -> ExtractionResult:
         return self.extract_recorded(task, ctx)[0]
@@ -116,7 +122,7 @@ class AgenticExtractor:
         schema = ctx.field_schema()
         links = link_names(task, self.links, context)
         file = safe_name(task.document.id)
-        concept = concept_for(task, schema, links, context, file, len(text), self.description)
+        concept = concept_for(task, schema, links, context, file, len(text), self.description, self.words)
         budget = {**self.budget, **{k: v for k, v in (task.budget.model_dump() if task.budget else {}).items() if v}}
         job = AgentJob(run_id=f"agentic-{task.task_sha256[:16]}", files={file: text}, concept=concept, budget=budget)
         try:

@@ -1,4 +1,4 @@
-"""The questions file (evidence/questions.yaml, webapp/evquestions.py) and /api/ev/questions."""
+"""The questions file (domains/rag/questions.yaml, webapp/evquestions.py) and /api/ev/questions."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,11 +11,12 @@ from webapp.app import create_app
 from webapp.evquestions import load
 from webapp.settings import REPO, Settings
 
-PROTOCOLS = REPO / "evidence" / "protocols"
+PACK = REPO / "domains" / "rag"   # question files name protocols relative to the pack folder
+PROTOCOLS = PACK / "protocols"
 
 
 def test_the_committed_file_offers_the_rag_question() -> None:
-    q = load(REPO / "evidence" / "questions.yaml", PROTOCOLS)[0]
+    q = load(REPO / "domains" / "rag" / "questions.yaml", PROTOCOLS)[0]
     assert (q.id, q.question, q.protocol, q.agentic_protocol) == (
         "rag-factuality", QUESTION, "rag-factuality", "rag-factuality-agentic")
 
@@ -35,15 +36,15 @@ def write(tmp_path: Path, text: str) -> Path:
     ("questions:\n  - {id: a, question: 'Q?', extra: 1}", "extra"),
     ("questions:\n  - {id: a, question: 'Q?', vocab: rag-factuality}", "vocab"),   # removed 27 Oct: refused
     ("questions: [unclosed", "not YAML"),
-    ("questions:\n  - {id: a, question: 'Q?', protocol: evidence/protocols/rag-factuality.yaml}", "asks"),
-    (f"questions:\n  - {{id: a, question: '{QUESTION}', protocol: evidence/protocols/nope.yaml}}", "no such file"),
+    ("questions:\n  - {id: a, question: 'Q?', protocol: protocols/rag-factuality.yaml}", "asks"),
+    (f"questions:\n  - {{id: a, question: '{QUESTION}', protocol: protocols/nope.yaml}}", "no such file"),
     (f"questions:\n  - {{id: a, question: '{QUESTION}', protocol: pyproject.toml}}", "directly in"),
-    (f"questions:\n  - {{id: a, question: '{QUESTION}', protocol: evidence/protocols/../../pyproject.toml}}",
+    (f"questions:\n  - {{id: a, question: '{QUESTION}', protocol: protocols/../../pyproject.toml}}",
      "directly in"),
 ])
 def test_a_broken_file_is_refused_with_its_problem(tmp_path: Path, text: str, message: str) -> None:
     with pytest.raises(ValueError, match=message):
-        load(write(tmp_path, text), PROTOCOLS)
+        load(write(tmp_path, text), PROTOCOLS, base=PACK)
 
 
 def test_a_question_without_a_protocol_needs_a_proposal(tmp_path: Path) -> None:

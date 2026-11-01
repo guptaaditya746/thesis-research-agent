@@ -34,7 +34,7 @@ groups, `label_by_rule`), `answer_text` (the model's own answer), `citations` an
 (`[{document, start, end(, score)}]`, raw character offsets into the paper text as agent/anchor.read_text
 and the placements use), `settings`, `model_call` and `mapping_call`.
 
-`question_id` (CLI `--question-id`): a question of evidence/questions.yaml instead of `question`; its text is
+`question_id` (CLI `--question-id`): a question of domains/rag/questions.yaml instead of `question`; its text is
 asked and retrieved with, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
 common.kind_answer_json); an effect question keeps the shape above. An empty answer of another kind is the kind's
 empty answer without a call.
@@ -191,7 +191,7 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None,
                  question_id: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
     """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
     `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json). `question_id`: a
-    question of evidence/questions.yaml (not with `question`; default the RAG factuality question).
+    question of domains/rag/questions.yaml (not with `question`; default the RAG factuality question).
     `max_tokens`: the answer call's limit (default `MAX_TOKENS[mode]`, oracle 4096; recorded in `settings` only per_paper)."""
     if question is not None and question_id is not None:
         raise ValueError("give question or question_id, not both")

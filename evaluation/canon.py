@@ -7,7 +7,7 @@ then a false positive, never an error).
 
 `KIND_OF` maps a condition label to its method kind for the `best` questions: the BASELINES are no-retrieval,
 the RAGS rag, and each OTHERS entry its own kind, in the order and with the names of `best.kinds` in
-evidence/protocols/best-accuracy.yaml and best-hallucination.yaml (a test checks that they agree).
+domains/rag/protocols/best-accuracy.yaml and best-hallucination.yaml (a test checks that they agree).
 """
 from __future__ import annotations
 

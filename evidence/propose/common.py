@@ -15,15 +15,17 @@ from pydantic_ai.models import Model
 from jsonio import file_sha256, sha256_hex
 import modelcall
 
+from ..pack import protocol_path
+
 HERE = Path(__file__).resolve().parent
 # The effect template is rag-factuality.yaml with the funnel steps (regex -> abbrev -> GLiNER -> number -> LLM),
 # like the templates of the other kinds, so an effect draft and its cascade card offer them too.
-EFFECT_TEMPLATE = HERE.parent / "protocols" / "rag-factuality-funnel.yaml"
+EFFECT_TEMPLATE = protocol_path("rag", "rag-factuality-funnel")
 # The draft starts from the hand-written protocol of the question's kind.
 KIND_TEMPLATES = {"effect": EFFECT_TEMPLATE,
-                  "consistency": HERE.parent / "protocols" / "cons-accuracy.yaml",
-                  "inventory": HERE.parent / "protocols" / "inv-metrics.yaml",
-                  "best": HERE.parent / "protocols" / "best-accuracy.yaml"}
+                  "consistency": protocol_path("rag", "cons-accuracy"),
+                  "inventory": protocol_path("rag", "inv-metrics"),
+                  "best": protocol_path("rag", "best-accuracy")}
 DEFAULT_MODEL = "orch-model"   # the one model of every extractor and both baselines (Part G.3)
 
 FRAME, DRAFT, SOURCES, CRITIC = "frame.json", "draft.yaml", "draft.sources.json", "critic.json"

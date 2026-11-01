@@ -40,14 +40,14 @@ class PopulationReply(BaseModel):
 
 
 class RoleReply(BaseModel):
-    role: str = Field(description="a short lower-case id, e.g. rag or baseline")
+    role: str = Field(description="a short lower-case id of this condition, one word or words joined by _")
     label: str = Field(description="the usual name of this condition")
     definition: str = Field(description="what counts as this condition, in one sentence")
     synonyms: list[str] = Field(description="other names papers use for it")
 
 
 class OutcomeReply(BaseModel):
-    canonical: str = Field(description="a short lower-case id, e.g. factual_accuracy")
+    canonical: str = Field(description="a short lower-case id of this metric, its name in words joined by _")
     label: str
     higher_is_better: bool
     scale: Scale = Field(description="how the values are reported: fraction (a share, 0 to 1), percent (0 to 100), "
@@ -179,7 +179,7 @@ def _slug(text: str) -> str:
 
 
 def _terms(names: list[str], skip: str | None = None) -> list[FrameTerm]:
-    """Names as FrameTerms, repeats dropped. Only exact repeats: "retrieval augmented" and "retrieval-augmented"
+    """Names as FrameTerms, repeats dropped. Only exact repeats: one name spelled with a space and with a hyphen
     are two screen terms (a term is matched word-bounded as written, evidence/extractors/screen.py)."""
     out: list[FrameTerm] = []
     seen = {" ".join(skip.split())} if skip else set()

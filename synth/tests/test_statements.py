@@ -25,7 +25,7 @@ DIAG = REPO / "tests" / "EV1" / "diagnostics"
 def step10_plan():
     """The plan Step 10 rendered: S002 made to contradict, at the paraphrased level (as review_repro.py builds it)."""
     meta = json.loads((DIAG / "rag-llm-s1-corpus.json").read_text(encoding="utf-8"))
-    protocol = load(REPO / "evidence" / "protocols" / "rag-factuality.yaml")
+    protocol = load(REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml")
     studies = variant.base_studies(meta, protocol)
     _, _, after = variant.counterfactual(meta["seed"], studies, "S002", "contradicts", protocol.synthesis)
     return make_plan(after, "paraphrased", plan_rng(meta["seed"], "S002", "paraphrased"))

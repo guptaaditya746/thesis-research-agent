@@ -41,7 +41,7 @@ Matching rules (A; B and the pair check reuse A's matching):
    character with) a placement of the matched fact with the main role, over the pairs whose fact has one
    (dataset facts have none); an item without a main-role span is checked with all its spans.
 
-Question kinds (question-first redesign; `score(question_id=...)`, evidence/questions.yaml; without an id, the
+Question kinds (question-first redesign; `score(question_id=...)`, domains/rag/questions.yaml; without an id, the
 question the run's frozen protocol asks, evidence/questions.answered_by): A is computed the same way for every kind,
 over the evidence types the run's protocol extracts (`scored_types`; report.json `extraction.scored_types`), so
 its `all` / `all` row means "all the types this protocol extracts". B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
@@ -154,7 +154,7 @@ from evidence.kinds import best as best_rules
 from evidence.protocol import Protocol
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionEntry, QuestionTruth
-from evidence.questions import answered_by, answers_asked, load as load_questions
+from evidence.questions import answered_by, answers_asked, load as load_questions, protocol_file
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS
 from synth import vocab
@@ -165,7 +165,6 @@ from .expected import saved_answer
 from .stats import bootstrap, bootstrap_f1, bootstrap_mean, interval_row, micro_f1, ratio
 from .truth import DATASET, ENGINE, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
 
-REPO = Path(__file__).resolve().parents[1]
 DEFAULT_QUESTION = "rag-factuality"   # the corpus's own question (its saved answer, _question_text)
 
 VALUE_TOLERANCE = 0.005
@@ -1298,15 +1297,15 @@ def integration_kind(m: Matching, kind: str, answer: dict[str, Any] | None, prot
 
 
 def question(question_id: str) -> QuestionEntry:
-    """The entry of evidence/questions.yaml; ValueError naming the known ids for an unknown one."""
+    """The entry of domains/rag/questions.yaml; ValueError naming the known ids for an unknown one."""
     entries = {q.id: q for q in load_questions()}
     if question_id not in entries:
-        raise ValueError(f"unknown question id {question_id!r}; evidence/questions.yaml has {', '.join(entries)}")
+        raise ValueError(f"unknown question id {question_id!r}; domains/rag/questions.yaml has {', '.join(entries)}")
     return entries[question_id]
 
 
 def _question_protocol(entry: QuestionEntry) -> Protocol | None:
-    return load_protocol(REPO / entry.protocol) if entry.protocol else None
+    return load_protocol(protocol_file(entry.protocol)) if entry.protocol else None
 
 
 def _run_protocol(run: Run, entry: QuestionEntry) -> Protocol | None:
@@ -1329,7 +1328,7 @@ def _question_text(truth: GroundTruth, entry: QuestionEntry) -> str:
 def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None,
           oracle: Path | None = None, question_id: str | None = None) -> dict[str, Any]:
     """The report for one run (and any baseline answers) on one corpus, for the question `question_id` of
-    evidence/questions.yaml (its kind picks B and C: integration_kind, score_kind), by default the one the run
+    domains/rag/questions.yaml (its kind picks B and C: integration_kind, score_kind), by default the one the run
     answers (answered_by; ValueError when that cannot be told); `oracle` an oracle's answer.json (effect
     questions only). Baseline answers are scored on C only."""
     entry = question(question_id) if question_id else answered_by(run_dir, load_questions())

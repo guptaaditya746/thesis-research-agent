@@ -58,7 +58,7 @@ class Words(Strict):
 
 _CONDITIONS = ("conditions", "not_a_system")
 # The config keys of the pack words each extractor reads (its key names as the extractor reads them); an
-# extractor not named here (LLM, agentic, screen, configured names) takes no pack words.
+# extractor not named here (LLM, screen, configured names) takes no pack words.
 READS: dict[str, tuple[str, ...]] = {
     "regex_condition": _CONDITIONS, "abbrev_condition": _CONDITIONS, "gliner_condition": ("labels", *_CONDITIONS),
     "regex_metric": ("metrics",), "abbrev_metric": ("metrics", "supplement"), "gliner_metric": ("labels", "metrics"),
@@ -66,6 +66,7 @@ READS: dict[str, tuple[str, ...]] = {
     "regex_measurement_units": (*_CONDITIONS, "metrics", "fraction_metrics"),
     "number_measurement": (*_CONDITIONS, "metrics", "fraction_metrics"),
     "regex_author_claim": ("subject", "claims"), "regex_dataset": ("pattern",), "gliner_dataset": ("labels",),
+    "agentic": ("display", "metric_names"),   # the examples of its task brief (evidence/agentic/task.py)
 }
 
 
@@ -93,10 +94,22 @@ class Pack(Strict):
             "subject": w.claim_subject,
             "claims": [list(c) for c in w.claims],
             "pattern": w.dataset_pattern,
+            "display": dict(self.display),
+            "metric_names": [m for m in dict.fromkeys(c for _, c, _ in w.metrics) if m != "other"],
         }
         if etype in w.gliner_labels:
             words["labels"] = list(w.gliner_labels[etype])
         return {key: words[key] for key in READS.get(extractor, ()) if key in words}
+
+
+def protocol_path(pack: str, protocol_id: str) -> Path:
+    """The hand-written protocol `protocol_id` of pack `pack`: domains/<pack>/protocols/<protocol_id>.yaml."""
+    return DOMAINS / pack / "protocols" / f"{protocol_id}.yaml"
+
+
+def questions_path(pack: str) -> Path:
+    """The question list of pack `pack`: domains/<pack>/questions.yaml."""
+    return DOMAINS / pack / "questions.yaml"
 
 
 def load_pack(name: str, root: Path = DOMAINS) -> Pack:

@@ -235,7 +235,7 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
           outliers: int = 0, irrelevant: int = 0, hard: bool = False) -> dict[str, Any]:
     """Generate the study set for the protocol's question (its synthesis block gives the roles, metrics,
-    neutral band, claim vocabulary and label table; default evidence/protocols/rag-factuality.yaml), apply
+    neutral band, claim vocabulary and label table; default domains/rag/protocols/rag-factuality.yaml), apply
     the knobs (and `hard`), render it at every level, write the level corpora and the mixed one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:

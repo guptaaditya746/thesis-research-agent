@@ -15,7 +15,7 @@
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
 wrong studies to upstream or downstream errors with the oracle's answer.json. `score --question-id` names the question of
-evidence/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
+domains/rag/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
 B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that question: its text is
 asked and its kind picks the answer.json shape (default: the RAG factuality question, as before).
 
@@ -221,7 +221,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--reexec", type=Path, help="re-execution report (default: <run>/reexec.json if present)")
     s.add_argument("--oracle", type=Path, help="an oracle's answer.json: attribute wrong studies upstream/downstream")
     s.add_argument("--question-id",
-                   help="the question id (evidence/questions.yaml) the run and the answers answer; its kind picks B "
+                   help="the question id (domains/rag/questions.yaml) the run and the answers answer; its kind picks B "
                         "and C (default: the question the run's protocol asks, else the one every --baseline "
                         "answer asks; refused when that cannot be told, and an unknown id is refused)")
     s.add_argument("--out", type=Path, required=True)
@@ -240,8 +240,8 @@ def parser() -> argparse.ArgumentParser:
                        help=f"LiteLLM alias of the answer and mapping calls and of the agent (default {DEFAULT_ALIAS})")
         q.add_argument("--question", help="default: the RAG factuality question")
         q.add_argument("--question-file", type=Path)
-        q.add_argument("--question-id", help="a question id of evidence/questions.yaml: its text is asked and its kind "
-                       "picks the answer's shape (not with --question or --question-file; default: the RAG "
+        q.add_argument("--question-id", help="a question id of domains/rag/questions.yaml: its text is asked and "
+                       "its kind picks the answer's shape (not with --question or --question-file; default: the RAG "
                        "factuality question)")
         q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<system>-calls.jsonl)")
         q.add_argument("--seed", type=int, default=0, help="seed of the answer/mapping call")

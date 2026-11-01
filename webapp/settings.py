@@ -11,8 +11,8 @@ The evidence-level directories (docs/slurm-evidence-runbook.md); `$EV` alone is 
 | `EV_PROPOSALS`   | `proposals`   | `$EV/proposals`                      |
 | `EV_CACHE`       | `ev_cache`    | `$EV/cache/engine` (the engine's record cache) |
 | `EV_AGENT_WORK`  | `agent_work`  | `$EVIDENCE_AGENT_WORK_DIR` (the agentic extractor's own), else `$EV/agent-work` |
-| `EV_PROTOCOLS`   | `protocols`   | `<repo>/evidence/protocols`          |
-| `EV_QUESTIONS`   | `questions`   | `<repo>/evidence/questions.yaml`     |
+| `EV_PROTOCOLS`   | `protocols`   | `<repo>/domains/rag/protocols`       |
+| `EV_QUESTIONS`   | `questions`   | `<repo>/domains/rag/questions.yaml`  |
 
 The jobs the app starts (webapp/jobs.py, webapp/evjobs.py) keep their state and logs in `$EV/.jobs/` (no
 jobs without `$EV`) and write into the directories above:
@@ -43,6 +43,7 @@ from pathlib import Path
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from evidence.pack import DOMAINS, questions_path
 from modelcall import DEFAULT_BASE_URL
 
 REPO = Path(__file__).resolve().parents[1]
@@ -89,8 +90,8 @@ class Settings(BaseSettings):
     agent_work: Path | None = Field(None, validation_alias="EV_AGENT_WORK")
     # where the agentic extractor itself keeps its agent runs (evidence/agentic/extractor.py; the runbook sets it)
     extractor_agent_work: Path | None = Field(None, validation_alias="EVIDENCE_AGENT_WORK_DIR")
-    protocols: Path = Field(REPO / "evidence" / "protocols", validation_alias="EV_PROTOCOLS")
-    questions: Path = Field(REPO / "evidence" / "questions.yaml", validation_alias="EV_QUESTIONS")
+    protocols: Path = Field(DOMAINS / "rag" / "protocols", validation_alias="EV_PROTOCOLS")
+    questions: Path = Field(questions_path("rag"), validation_alias="EV_QUESTIONS")
 
     @property
     def hosts(self) -> list[str]:

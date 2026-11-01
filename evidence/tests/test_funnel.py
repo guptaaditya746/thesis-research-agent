@@ -233,7 +233,7 @@ def test_a_failed_llm_screen_call_leaves_the_regex_decision_standing(tmp_path: P
 
 # --- screen.lexical_miss: a keyword miss escalates to the next screen extractor, or is final (default) ----------
 
-EV1 = PROTOCOL.parents[2] / "tests" / "EV1"
+EV1 = Path(__file__).resolve().parents[2] / "tests" / "EV1"
 EV1_PROPOSAL = EV1 / "diagnostics" / "proposal" / "protocol.yaml"
 # tests/EV1/diagnostics/review_repro.py: a treatment and a comparator synonym that none of the screen terms name
 SYNONYMS = ("# Retrieval comparison\nThe retrieve-then-read system and the parametric-only model "
@@ -467,7 +467,7 @@ def test_focus_is_part_of_the_task_hash_and_of_the_prompts() -> None:
     prompt = llm_schema.user_prompt("S001", 1, 1, 0, 10, "text", {}, focus)
     assert "Focus (gap no_pair): find both values (metrics found: factual_accuracy; roles found: baseline, rag)." in prompt
     assert "Focus" not in llm_schema.user_prompt("S001", 1, 1, 0, 10, "text", {})
-    assert TEMPLATE_VERSION == "agentic-task-v2"
+    assert TEMPLATE_VERSION == "agentic-task-v3"
     brief = concept_for(targeted, MEASUREMENT_SCHEMA, {"condition": "condition", "metric": "metric"}, context(), "S001.md", 10)
     assert brief["scope"]["focus"] == "gap no_pair: find both values (metrics found: factual_accuracy; roles found: baseline, rag)"
     assert "focus" not in concept_for(plain, MEASUREMENT_SCHEMA, {}, [], "S001.md", 10)["scope"]

@@ -10,11 +10,12 @@ from agent.anchor import Index, text_sha256
 from evidence import engine, protocol
 from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef
 from evidence.extractors import get
+from evidence.pack import protocol_path
 
 from .conftest import PROTOCOL, make_corpus, pack_words, regex_run
 
 PROTO = protocol.load(PROTOCOL)
-LATENCY = Path(__file__).resolve().parents[1] / "protocols" / "rag-latency.yaml"
+LATENCY = protocol_path("rag", "rag-latency")
 
 
 class Ctx:

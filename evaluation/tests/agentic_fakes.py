@@ -8,7 +8,7 @@ from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef, Sc
 
 from . import fixtures as fx
 
-# As evidence/protocols/rag-factuality.yaml (ev/engine) has them: a measurement's condition and metric are links.
+# As domains/rag/protocols/rag-factuality.yaml (ev/engine) has them: a measurement's condition and metric are links.
 MEASUREMENT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["value", "dataset"],
                       "properties": {"value": {"type": "number", "description": "as a fraction for accuracies and rates"},
                                      "dataset": {"type": ["string", "null"], "description": "the dataset, or null"}}}

@@ -6,7 +6,7 @@ the protocol's `synthesis.metrics`) plus 1-2 distractor metrics, two datasets (t
 one), a measurement for every condition x metric x dataset, and an author claim that agrees with the
 data. The effect is always `evidence.rules.effect` with the protocol's parameters on the main dataset's
 treatment/control pair of the question metric, so the generator and the engine use one definition: the
-protocol (`spec`, its `synthesis` block; the default is `evidence/protocols/rag-factuality.yaml`).
+protocol (`spec`, its `synthesis` block; the default is `domains/rag/protocols/rag-factuality.yaml`).
 Randomness comes only from one `random.Random(seed)`; there is no clock.
 
 The benchmark knobs (the supervisor's variants of 14 Oct, section 6: duplicated studies, missing
@@ -39,14 +39,14 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field, replace
-from pathlib import Path
 
 from evidence import protocol, rules
+from evidence.pack import protocol_path
 from evidence.protocol import Synthesis
 from synth import vocab
 
 DIRECTIONS = rules.DIRECTIONS
-DEFAULT_PROTOCOL = Path(__file__).resolve().parents[1] / "evidence" / "protocols" / "rag-factuality.yaml"
+DEFAULT_PROTOCOL = protocol_path("rag", "rag-factuality")
 # The claim a contradictory paper states instead: the usual spin (an improvement where there is none),
 # or "no effect" where the data do show one.
 FALSE_CLAIM = {"supports": "no_effect", "contradicts": "improves", "neutral": "improves"}

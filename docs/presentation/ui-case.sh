@@ -17,7 +17,7 @@ PY=${PY:-$REPO/.venv/Scripts/python.exe}
 export PYTHONPATH=$REPO PYDANTIC_AI_NO_BANNER=1
 export EV=${EV:-$HOME/demo-ev-case}
 C=rag-llm-s1-mixed
-P=evidence/protocols/rag-factuality.yaml
+P=domains/rag/protocols/rag-factuality.yaml
 ev() { "$PY" -c "import sys; from evaluation.cli import main; sys.exit(main(sys.argv[1:]))" "$@"; }
 
 if [ "${1:-}" != "--serve" ]; then

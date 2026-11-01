@@ -1,13 +1,13 @@
-"""The question list (evidence/questions.yaml): the questions the system answers, shared by the web app
+"""The question list (domains/<pack>/questions.yaml): the questions the system answers, shared by the web app
 (webapp/evquestions.py) and the evaluation.
 
 Per entry: `id` (a plain name), `question` (exactly as its hand-written protocol asks it), `kind` (effect,
 inventory, consistency or best; the protocol's kind), `truth` (the parameters the expected answer is computed
 with, fixed here and never taken from a user's protocol), `protocol` (the hand-written protocol, a path from the
-repository root) and `agentic_protocol` (rag-factuality only). Truth parameters by kind: effect and
-consistency take `metric` and `min_effect`; inventory takes `target`; best takes `metric`. A parameter of another
-kind is refused. This module checks the file's shape only; the web app also checks that each protocol parses
-and asks the entry's question with the entry's kind.
+questions file's folder, `protocol_file`) and `agentic_protocol` (rag-factuality only). Truth parameters by
+kind: effect and consistency take `metric` and `min_effect`; inventory takes `target`; best takes `metric`. A
+parameter of another kind is refused. This module checks the file's shape only; the web app also checks that
+each protocol parses and asks the entry's question with the entry's kind.
 """
 from __future__ import annotations
 
@@ -18,10 +18,11 @@ from typing import Any, Literal, TypeVar
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from .pack import questions_path
 from .protocol import Kind, load as load_protocol
 from .rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 
-DEFAULT = Path(__file__).resolve().parent / "questions.yaml"
+DEFAULT = questions_path("rag")
 NAME = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"   # a directory name, never a flag or a path
 TRUTH_FIELDS: dict[str, tuple[str, ...]] = {"effect": ("metric", "min_effect"), "consistency": ("metric", "min_effect"),
                                             "inventory": ("target",), "best": ("metric",)}
@@ -94,6 +95,12 @@ def parse(path: Path) -> QuestionsFile:
 
 def load(path: Path | str = DEFAULT) -> list[QuestionEntry]:
     return parse(Path(path)).questions
+
+
+def protocol_file(path_text: str, questions_file: Path | str = DEFAULT) -> Path:
+    """An entry's `protocol` or `agentic_protocol` as a file: the path is relative to the questions file's folder
+    (the pack folder, domains/<pack>/)."""
+    return Path(questions_file).parent / path_text
 
 
 Q = TypeVar("Q")   # an entry with `id`, `question` and `kind`: a QuestionEntry, or the web app's Question

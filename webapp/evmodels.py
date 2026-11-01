@@ -48,7 +48,7 @@ class EvConfig(Base):
     cache: Root = Field(description="the engine's record cache directory (extractor_calls.jsonl)")
     agent_work: Root = Field(description="the agentic extractor's agent run directories")
     protocols: Root
-    questions: Root = Field(description="the questions file (evidence/questions.yaml; `exists`: the file is there)")
+    questions: Root = Field(description="the questions file (domains/rag/questions.yaml; `exists`: the file is there)")
     jobs: Root = Field(description="$EV/.jobs: the state and logs of the jobs the app starts (none without $EV)")
     user: str = Field(description="who decides a card in the app (`by` in decisions.yaml, $WEBAPP_USER)")
     default_model: str = Field(description="the model alias every model job uses unless told otherwise (orch-model)")
@@ -656,7 +656,7 @@ class BenchmarkView(Base):
     markdown: str | None = None
 
 
-# --- questions (evidence/questions.yaml; webapp/evquestions.py) --------------------------------------------
+# --- questions (domains/rag/questions.yaml; webapp/evquestions.py) --------------------------------------------
 
 class Question(Base):
     id: str
