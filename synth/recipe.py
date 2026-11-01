@@ -187,7 +187,33 @@ class Recipe(Strict):
                     raise ValueError(f"names clash: {a!r} lies inside {b!r}")
         if self.network is not None:
             self._network_rules()
+        self._planted_rules()
         return self
+
+    def _planted_rules(self) -> None:
+        """What synth/truth.py `planted` draws from: limitation templates and builds-on phrases without digits, each
+        limitation category with templates that name its `{thing}`, counts and shares that can be drawn."""
+        for name in ("limitations", "builds_on"):
+            if getattr(self, name) is not None:
+                _digits(name, getattr(self, name))
+        lim = self.limitations
+        if lim is not None:
+            low, high = lim.per_study
+            if not lim.categories or not 0 <= low <= high:
+                raise ValueError(f"limitations need categories and per_study (low, high), 0 <= low <= high; not "
+                                 f"{list(lim.categories)} and {lim.per_study}")
+            unnamed = [c for c, ts in lim.categories.items() if not ts or any("{thing}" not in t for t in ts)]
+            if unnamed:
+                raise ValueError(f"limitation categories {unnamed}: each needs templates, every one naming {{thing}}")
+        bad = {k: v for k, v in (("builds_on.share", self.builds_on and self.builds_on.share),
+                                 ("name_variants.share", self.name_variants and self.name_variants.share))
+               if v is not None and not 0 <= v <= 1}
+        weights = list(self.builds_on.reuses.values()) if self.builds_on else [1.0]
+        if min(weights, default=0) < 0 or not any(w > 0 for w in weights):
+            bad["builds_on.reuses"] = self.builds_on.reuses
+        if bad:
+            raise ValueError(f"shares must lie in 0-1, and builds_on.reuses weights be non-negative with one "
+                             f"positive: {bad}")
 
     def _network_rules(self) -> None:
         """What synth/network.py draws from: each thing (and the reference) a distinct name of a side, edges joining

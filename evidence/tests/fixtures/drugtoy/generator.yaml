@@ -200,6 +200,32 @@ network:
   reference: placebo
   edges: [[Zelvora, placebo], [Zelvora, Quintapride], [Quintapride, Morvectin]]
   contexts: [adults, older adults]
-builds_on: null
-limitations: null
-name_variants: null
+# plan 2 Task 5: the builds_on preset (`--preset builds_on`), planted limitations and name variants
+builds_on:
+  share: 0.5
+  reuses:
+    method: 0.3
+    dataset: 0.3
+    result: 0.4
+  phrases:
+  - we reuse the protocol of {label}
+  - the cohort of {label}
+  - as reported by {label}
+limitations:
+  categories:
+    small_sample:
+    - Only a small number of patients received {thing}, so its estimate is imprecise.
+    - The group treated with {thing} was too small to show modest differences.
+    side_effects:
+    - Some patients on {thing} reported nausea and headaches.
+    - Side effects led several patients to skip doses of {thing}.
+    cost:
+    - The price of {thing} may limit its use outside a trial.
+    - Treatment with {thing} costs much more than the older options.
+    short_follow_up:
+    - Patients on {thing} were followed for only a short time after the last dose.
+    - It remains open whether the response to {thing} lasts beyond the trial.
+  per_study: [1, 2]
+name_variants:
+  share: 0.3
+  kinds: [spelling, code_name, hereafter]

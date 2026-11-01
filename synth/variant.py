@@ -58,7 +58,8 @@ def base_studies(meta: dict[str, Any], protocol: Protocol) -> list[Study]:
                          "with --protocol")
     return truth.generate(meta["seed"], st["studies"], st["mix"], protocol.synthesis, recipe=base_recipe(meta),
                           duplicates=st["duplicates"], missing=st["missing"], outliers=st["outliers"],
-                          irrelevant=st["irrelevant"], hard=st.get("hard", False))
+                          irrelevant=st["irrelevant"], hard=st.get("hard", False),
+                          preset=st.get("preset", "plain"))
 
 
 def counterfactual(seed: int, studies: list[Study], study_id: str, direction: str, spec: protocol_module.Synthesis,

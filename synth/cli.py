@@ -9,7 +9,7 @@ from pathlib import Path
 
 from evidence.protocol import DEFAULT_PACK
 from synth.levels import LEVELS
-from synth.truth import DIRECTIONS, KNOBS
+from synth.truth import DIRECTIONS, KNOBS, PRESETS
 
 
 def parse_levels(text: str) -> list[str]:
@@ -89,7 +89,7 @@ def cmd_build(args: argparse.Namespace) -> int:
     renderer = make_renderer(args, args.out)
     result = corpus.build(name=args.name, seed=args.seed, studies=args.studies, renderer=renderer, out=args.out,
                           levels=args.levels, mix=args.effects, protocol=args.protocol, hard=args.hard,
-                          domain=args.domain, **{knob: getattr(args, knob) for knob in KNOBS})
+                          domain=args.domain, preset=args.preset, **{knob: getattr(args, knob) for knob in KNOBS})
     print(json.dumps(result, indent=2))
     if result["excluded"]:
         print(f"WARNING: {len(result['excluded'])} studies failed fidelity and were left out; see fidelity.json")
@@ -175,6 +175,9 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--hard", action="store_true",
                    help="about a third of the studies report a further experiment and/or an ablation, all in the "
                         "complex level's table (template renderer only)")
+    b.add_argument("--preset", choices=PRESETS, default="plain",
+                   help="builds_on: about the recipe's builds_on.share of the studies reuse an earlier study's method, "
+                        "dataset or result (the recipe needs a builds_on block); default plain")
     add_renderer_options(b)
     b.set_defaults(func=cmd_build)
     v = sub.add_parser("variant", help="change one study's effect and re-render only its paper (counterfactual)")

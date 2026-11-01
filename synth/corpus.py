@@ -108,12 +108,14 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
     return {
         "study_id": s.study_id, "paper": s.study_id, "level": p.level,
         "relevant": s.relevant, "flags": study_flags(r, spec, s), "duplicate_of": s.duplicate_of, "missing": s.missing,
-        "conditions": [{"id": c.id, "role": c.role, "label": p.cond_name[c.id], "aliases": list(p.cond_aliases[c.id])}
+        "conditions": [{"id": c.id, "role": c.role, "label": p.cond_name[c.id], "aliases": list(p.cond_aliases[c.id]),
+                        **({"variants": [list(v) for v in c.variants]} if c.variants else {})}
                        for c in p.conditions],
         "metrics": [{"id": k.id, "canonical": k.canonical, "name": p.metric_name[k.id],
                      "higher_is_better": k.higher_is_better} for k in p.metrics],
         "measurements": [{"id": m.id, "condition": m.condition, "metric": m.metric, "value": m.value,
-                          "dataset": m.dataset, **({"experiment": m.experiment} if p.experiments else {})}
+                          "dataset": m.dataset, **({"experiment": m.experiment} if p.experiments else {}),
+                          **({"copied_from": m.copied_from} if m.copied_from else {})}
                          for m in p.measurements],
         **({"experiments": [{"id": x.id, "name": x.name, "conditions": list(x.conditions), "datasets": list(x.datasets),
                              "synthesis": i == 0} for i, x in enumerate(p.experiments)]} if p.experiments else {}),
@@ -124,6 +126,12 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
         **({"population": s.population} if s.population is not None else {}),
         **({"label": s.label} if s.label else {}),
         **({"arm_sizes": dict(s.arm_sizes)} if s.arm_sizes else {}),
+        # plan 2 Task 5: present when the recipe plants them (a rag record is what it was)
+        **({"limitations": [{"id": x.id, "thing": x.thing, "category": x.category, "sentence": x.sentence}
+                            for x in s.limitations]} if s.recipe.limitations is not None else {}),
+        **({"dependencies": [{"id": d.id, "cites": d.cites, "reuses": d.reuses, "thing": d.thing,
+                              "measurement": d.measurement} for d in s.dependencies]}
+           if s.recipe.builds_on is not None else {}),
     }
 
 
@@ -148,12 +156,13 @@ def prepare(directory: Path) -> None:
 
 def settings_of(*, name: str, studies: int, mix: dict[str, float] | None, levels: Sequence[str],
                 duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0,
-                hard: bool = False) -> dict[str, Any]:
+                hard: bool = False, preset: str = "plain") -> dict[str, Any]:
     """corpus.json `settings`: what `build` was asked, enough to draw the same study set again (`synth
-    variant` does); `hard` only when set, so a plain build's settings are what they were."""
+    variant` does); `hard` only when set and `preset` only when not plain, so a plain build's settings are what
+    they were."""
     return {"name": name, "studies": studies, "mix": dict(mix or truth.DEFAULT_MIX), "levels": list(levels),
             "duplicates": duplicates, "missing": missing, "outliers": outliers, "irrelevant": irrelevant,
-            **({"hard": True} if hard else {})}
+            **({"hard": True} if hard else {}), **({"preset": preset} if preset != "plain" else {})}
 
 
 def recipe_of(studies: list[Study]) -> Recipe:
@@ -270,11 +279,12 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
           protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
           outliers: int = 0, irrelevant: int = 0, hard: bool = False, domain: str | None = None,
-          root: Path = DOMAINS) -> dict[str, Any]:
+          root: Path = DOMAINS, preset: str = "plain") -> dict[str, Any]:
     """Generate the study set from the recipe of `domain` (`root/<domain>/generator.yaml`; default the default
     pack's) for the protocol's question (its synthesis block gives the roles, metrics, neutral band, claim
-    vocabulary and label table; default the recipe's effect protocol), apply the knobs (and `hard`), render it
-    at every level, write the level corpora and the mixed one."""
+    vocabulary and label table; default the recipe's effect protocol), apply the knobs (and `hard`, and the
+    `preset`: plain or builds_on, truth.PRESETS), render it at every level, write the level corpora and the mixed
+    one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:
         raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
@@ -282,9 +292,9 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
     if not isinstance(protocol, Protocol):
         protocol = protocol_module.load(protocol or effect_protocol_path(recipe), None if root == DOMAINS else root)
     settings = settings_of(name=name, studies=studies, mix=mix, levels=levels, duplicates=duplicates,
-                           missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard)
+                           missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard, preset=preset)
     study_set = truth.generate(seed, studies, mix, protocol.synthesis, recipe=recipe, duplicates=duplicates,
-                               missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard)
+                               missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard, preset=preset)
     rendered = renderer.render_all([(s, lv) for lv in levels for s in study_set], seed)
     failed = exclusions(rendered, study_set)
     selection = selection_of(rendered, study_set, studies, failed)

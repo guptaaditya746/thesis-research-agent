@@ -36,6 +36,12 @@ A recipe with a `network` (synth/network.py, plan 2 Task 4) draws its studies on
 arms of network things (plus 0-1 distractor arm), one population, count values k of an arm's n units per arm
 (`Measurement.k`, `Study.arm_sizes`), directions from a latent ranking; every study then gets an author-year `label`.
 
+What a recipe plants besides the values (plan 2 Task 5, `planted`, after `hard` and before the knobs), each from its
+own stream: the builds_on preset's `Dependency` links to earlier studies (one may copy an earlier study's result as
+its reference arm's value, `Measurement.copied_from`), the authors' `Limitation`s and the name variants of the
+compared things (`Condition.variants`). With the plain preset and a recipe without these blocks (rag) the set is what
+it was.
+
 The flags of every study come from `evidence.rules` applied to the set (`flagged`), as the engine applies
 them to what it extracts; the generator then asserts the rules find exactly what it planted. The
 counterfactual variant (F3, `redrawn`) draws one study's pair again with another direction.
@@ -43,9 +49,11 @@ counterfactual variant (F3, `redrawn`) draws one study's pair again with another
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass, field, replace
+from typing import Literal
 
-from evidence import protocol, rules
+from evidence import names, protocol, rules
 from evidence.pack import DOMAINS
 from evidence.protocol import Synthesis
 from synth.recipe import MetricSpec, Recipe, default_recipe, effect_protocol_path
@@ -84,6 +92,9 @@ class Condition:
     synonym: str
     description: str
     code: str
+    # Name variants (plan 2 Task 5; recipe `name_variants`): how this paper writes the thing, as (kind, form), kind one
+    # of spelling, code_name, hereafter (`variant_forms`). Left out of repr, so a set drawn without them keeps its repr.
+    variants: tuple[tuple[str, str], ...] = field(default=(), repr=False)
 
 
 @dataclass(frozen=True)
@@ -109,6 +120,36 @@ class Measurement:
     # A study of a recipe network (synth/network.py) only: the count k of `value` = k / n over its arm's size n
     # (Study.arm_sizes). None otherwise, and left out of repr like `experiment`.
     k: int | None = field(default=None, repr=False)
+    # The builds_on preset only: the study whose value this one reports as its own ("as reported by ..."); None
+    # otherwise, and left out of repr.
+    copied_from: str | None = field(default=None, repr=False)
+
+
+Reuse = Literal["method", "dataset", "result"]
+
+
+@dataclass(frozen=True)
+class Dependency:
+    """A study builds on an earlier one (the builds_on preset). It reuses the cited study's `method` (a compared thing
+    both test; `thing` its condition id in this study), `dataset` (the same main context; `thing` None) or `result`
+    (the cited study's value of this study's reference arm on the same thing, question metric and context: `thing` is
+    that arm's condition id, `measurement` the copied fact, marked `copied_from`). A paper cites by the cited study's
+    `label`."""
+    id: str                        # <study id>.d<n>
+    cites: str                     # the cited study's id, always an earlier one
+    reuses: Reuse
+    thing: str | None
+    measurement: str | None
+
+
+@dataclass(frozen=True)
+class Limitation:
+    """A limitation the authors state about a compared thing (`thing`, its condition id): a recipe category and a
+    sentence from that category's templates with `{thing}` filled by the thing's label."""
+    id: str                        # <study id>.l<n>
+    thing: str
+    category: str
+    sentence: str
 
 
 @dataclass(frozen=True)
@@ -161,6 +202,10 @@ class Study:
     arm_sizes: dict[str, int] = field(default_factory=dict, repr=False, hash=False)
     # The author-year label a paper is cited by ("<author> et al. (<year>)"), when the recipe has `text.authors`.
     label: str = field(default="", repr=False)
+    # Left out of repr too (plan 2 Task 5): what the study builds on (the builds_on preset) and the limitations its
+    # authors state (a recipe with `limitations`).
+    dependencies: tuple[Dependency, ...] = field(default=(), repr=False)
+    limitations: tuple[Limitation, ...] = field(default=(), repr=False)
 
     def condition(self, role: str) -> Condition:
         return next(c for c in self.conditions if c.role == role)
@@ -415,6 +460,9 @@ def redrawn(rng: random.Random, study: Study, direction: str, spec: Synthesis, *
     if study.arm_sizes:
         raise ValueError(f"{study.study_id} is a network study: its values are counts from the latent ranking "
                          "(synth/network.py), not pairs to draw again")
+    if any(d.reuses == "result" for d in study.dependencies):
+        raise ValueError(f"{study.study_id} reports an earlier study's result as its control (builds_on): drawing its "
+                         "pair again would break the copy")
     q, main = study.primary, study.datasets[0]
     control, treatment = study.conditions[0], study.conditions[1]
     pair_ids = {study.measurement(c.id, q.id, d).id for c in (control, treatment) for d in study.datasets}
@@ -461,6 +509,9 @@ def duplicate(original: Study, index: int) -> Study:
                           for e in original.experiments),
         effect=replace(e, metric=renamed(e.metric), treatment=renamed(e.treatment), control=renamed(e.control)),
         arm_sizes={renamed(c): n for c, n in original.arm_sizes.items()},
+        dependencies=tuple(replace(d, id=renamed(d.id), thing=renamed(d.thing), measurement=renamed(d.measurement))
+                           for d in original.dependencies),
+        limitations=tuple(replace(lim, id=renamed(lim.id), thing=renamed(lim.thing)) for lim in original.limitations),
         flags=(), duplicate_of=original.study_id)
 
 
@@ -598,7 +649,10 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, recipe: Recipe, *,
             raise SystemExit(f"--{knob} {value}: a knob is a count, not negative")
     n, studies = len(base), list(base)
     o_rng = random.Random(f"synth:{seed}:outliers")
-    supporting = [s.study_id for s in studies if s.effect.direction == "supports"]
+    # a copied result (builds_on) and the value it copies must stay as they are: neither study is redrawn or dropped
+    copying = {s.study_id for s in studies for d in s.dependencies if d.reuses == "result"}
+    copied = {d.cites for s in studies for d in s.dependencies if d.reuses == "result"}
+    supporting = [s.study_id for s in studies if s.effect.direction == "supports" and s.study_id not in copying | copied]
     if outliers > len(supporting):
         raise SystemExit(f"--outliers {outliers}: only {len(supporting)} supporting studies to choose from")
     planted_outliers = sorted(o_rng.sample(supporting, outliers))
@@ -619,13 +673,13 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, recipe: Recipe, *,
         studies.append(duplicate(original, n + k))
         planted_duplicates[studies[-1].study_id] = original.study_id
     m_rng = random.Random(f"synth:{seed}:missing")
-    protected = set(planted_outliers) | set(planted_duplicates.values())
+    protected = set(planted_outliers) | set(planted_duplicates.values()) | copying | copied
     # a --hard study with further experiments keeps a complete subset or ablation comparison when its main side
     # is dropped (`without` drops the main experiment's), so its undetermined gold would be arguable: not eligible
     eligible = [s.study_id for s in studies[:n] if s.study_id not in protected and len(s.experiments) <= 1]
     if missing > len(eligible):
         raise SystemExit(f"--missing {missing}: only {len(eligible)} studies are neither outliers nor duplicated "
-                         "nor --hard studies with further experiments")
+                         "nor --hard studies with further experiments nor a copied result or its source (builds_on)")
     for k, sid in enumerate(sorted(m_rng.sample(eligible, missing))):
         i = next(i for i, s in enumerate(studies) if s.study_id == sid)
         studies[i] = without(studies[i], MISSING_SIDES[k % len(MISSING_SIDES)])
@@ -647,10 +701,11 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, recipe: Recipe, *,
 
 def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synthesis | None = None, *,
              recipe: Recipe | None = None, duplicates: int = 0, missing: int = 0, outliers: int = 0,
-             irrelevant: int = 0, hard: bool = False) -> list[Study]:
+             irrelevant: int = 0, hard: bool = False, preset: str = "plain") -> list[Study]:
     """`n` studies drawn from `recipe` (default: the default pack's) for the protocol's synthesis block `spec`
     (default: the recipe's effect protocol's); the share of each true effect direction follows `mix` (default
-    0.6/0.2/0.2); then `hard` (`hardened`), then the knobs. A study whose treatment/control pair equals an earlier
+    0.6/0.2/0.2); then `hard` (`hardened`), then what is planted (`planted`: the builds_on `preset`'s dependencies,
+    the recipe's limitations and name variants), then the knobs. A study whose treatment/control pair equals an earlier
     study's (on either dataset) is drawn again, so equal pairs always mean one study; this never happens for the
     seeds in use, and the plain set is byte for byte what it was.
 
@@ -659,6 +714,10 @@ def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synth
     refused for it. Every study gets an author-year `label` when the recipe has `text.authors` (`labelled`)."""
     recipe = recipe or default_recipe()
     spec = spec or default_spec(recipe)
+    if preset not in PRESETS:
+        raise SystemExit(f"unknown preset {preset!r}; choose from {', '.join(PRESETS)}")
+    if preset == "builds_on" and recipe.builds_on is None:
+        raise SystemExit(f"--preset builds_on: the recipe of {recipe.domain} has no builds_on block")
     if recipe.network is not None:
         from synth import network       # network.py builds on this module's Study
         for asked, what in ((mix is not None, "an effect mix"), (hard, "--hard"), (outliers, "--outliers")):
@@ -679,9 +738,267 @@ def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synth
             studies.append(study)
         if hard:
             studies = hardened(seed, studies, spec)
+    studies = planted(seed, studies, spec, recipe, preset)
     studies = with_knobs(seed, studies, spec, recipe, duplicates=duplicates, missing=missing, outliers=outliers,
                          irrelevant=irrelevant)
     return labelled(seed, studies, recipe)
+
+
+# --- the builds_on preset, planted limitations and name variants (plan 2 Task 5; spec 6.11, D38) ----------------
+
+PRESETS = ("plain", "builds_on")
+CODE_NUMBERS = (100, 999)            # the number of an invented code name ("ZV-217")
+SHORT_FORM = re.compile(r"[A-Z]{2,8}")   # a short form a paper's abbreviation definition can name (abbrev.SHORT)
+VOWELS = "aeiouy"
+
+
+def planted(seed: int, studies: list[Study], spec: Synthesis, recipe: Recipe, preset: str = "plain") -> list[Study]:
+    """What a set carries besides its values, each from its own stream so the values and each other stay as they
+    are: the builds_on preset's dependencies (`synth:<seed>:builds_on`), the recipe's limitations
+    (`synth:<seed>:limitations`) and name variants (`synth:<seed>:variants`). A recipe without these blocks (rag)
+    and the plain preset leave the set as it is."""
+    if preset == "builds_on":
+        studies = with_dependencies(seed, studies, spec, recipe)
+    if recipe.limitations is not None:
+        studies = with_limitations(seed, studies, recipe)
+    if recipe.name_variants is not None:
+        studies = with_variants(seed, studies, recipe)
+    return studies
+
+
+def _things(study: Study, recipe: Recipe) -> list[Condition]:
+    """The compared conditions a limitation, a reused method or a name variant may be about: the study's two compared
+    arms, without the network's reference (a placebo is no method of the study and has no code name)."""
+    reference = recipe.network.reference if recipe.network is not None else None
+    return [c for c in study.conditions[:2] if c.role != "other" and c.label != reference]
+
+
+def with_dependencies(seed: int, studies: list[Study], spec: Synthesis, recipe: Recipe) -> list[Study]:
+    """The builds_on preset: each relevant study after the first builds on an earlier one with probability
+    `builds_on.share`, reusing its method, dataset or result (`Dependency`). The kind is drawn by the weights of
+    `builds_on.reuses` among the kinds the study can reuse from some earlier study (`_built_on`); a study that can
+    reuse none builds on none."""
+    plan = recipe.builds_on
+    rng = random.Random(f"synth:{seed}:builds_on")
+    out: list[Study] = []
+    for i, study in enumerate(studies):
+        if out and study.relevant and rng.random() < plan.share:
+            earlier = [s for s in out if s.relevant]
+            kinds = [k for k, w in plan.reuses.items() if w > 0]
+            while kinds:
+                reuses = rng.choices(kinds, [plan.reuses[k] for k in kinds])[0]
+                built = _built_on(rng, study, earlier, reuses, spec, out + studies[i + 1:])
+                if built is not None:
+                    study = built
+                    break
+                kinds.remove(reuses)
+        out.append(study)
+    return out
+
+
+def _built_on(rng: random.Random, study: Study, earlier: list[Study], reuses: str, spec: Synthesis,
+              others: list[Study]) -> Study | None:
+    """`study` building on one of `earlier` by `reuses`, or None when none fits: a method is a compared thing both
+    test, a dataset the same main context, a result the cited study's value of this study's reference arm
+    (`_copied`; tried in random order until a copy keeps the study valid and apart from `others`)."""
+    sid, recipe = study.study_id, study.recipe
+
+    def cites(cited: Study, thing: str | None = None, measurement: str | None = None, base: Study = study) -> Study:
+        return replace(base, dependencies=(Dependency(f"{sid}.d1", cited.study_id, reuses, thing, measurement),))
+
+    if reuses == "method":
+        options = [(c, t) for c in earlier for t in _things(study, recipe)
+                   if t.label in {x.label for x in _things(c, recipe)}]
+        if not options:
+            return None
+        cited, thing = rng.choice(options)
+        return cites(cited, thing.id)
+    if reuses == "dataset":
+        options = [c for c in earlier if c.datasets[0] == study.datasets[0]]
+        return cites(rng.choice(options)) if options else None
+    options = [c for c in earlier if _source(c, study) is not None]
+    rng.shuffle(options)
+    for cited in options:
+        copy = _copied(rng, study, cited, spec)
+        if copy is not None and not collides(copy, others):
+            mine = study.measurement(study.control_condition.id, study.primary.id, study.datasets[0])
+            return cites(cited, study.control_condition.id, mine.id, copy)
+    return None
+
+
+def _source(cited: Study, study: Study) -> Measurement | None:
+    """The value of `cited` that `study` may report as its reference arm's: the same thing (by label), question
+    metric (by canonical name) and main context, not itself a copy."""
+    arm = next((c for c in cited.conditions if c.label == study.control_condition.label), None)
+    metric = next((k for k in cited.metrics if k.canonical == study.primary.canonical), None)
+    found = None if arm is None or metric is None else cited.find(arm.id, metric.id, study.datasets[0])
+    return found if found is not None and found.copied_from is None else None
+
+
+def _copied(rng: random.Random, study: Study, cited: Study, spec: Synthesis) -> Study | None:
+    """`study` with its reference arm's value on the question metric and main context replaced by `cited`'s (k and
+    the arm size too, for count values; the arm's other counts are drawn again for the new size), or None when the
+    copy would change the effect direction or come within DECOY_GAP of the study's other values, as make_study
+    forbids. The decoy (odd studies) is kept when it still fits the false claim, else drawn again."""
+    source = _source(cited, study)
+    ref, q, recipe = study.control_condition, study.primary, study.recipe
+    mine = study.measurement(ref.id, q.id, study.datasets[0])
+    treat = study.value_of(study.effect.treatment)
+    difference = abs(round(treat - source.value, 3))
+    sizes = dict(study.arm_sizes)
+    again = [m for m in study.measurements if sizes and m.condition == ref.id and m.id != mine.id]
+    kept = {m.value for m in study.measurements if m.id != mine.id and m not in again}
+    if not (_far(source.value, kept) and _far(difference, kept - {treat})):
+        return None
+    new = {mine.id: replace(mine, value=source.value, k=source.k, copied_from=cited.study_id)}
+    if sizes:
+        from synth.network import _count      # network.py builds on this module
+        sizes[ref.id] = cited.arm_sizes[source.condition]
+        taken = kept | {source.value, difference}
+        for m in again:
+            metric = next(k for k in study.metrics if k.id == m.metric)
+            try:
+                k = _count(rng, metric_spec(recipe, metric).range, sizes[ref.id], taken, study.study_id)
+            except ValueError:
+                return None
+            new[m.id] = replace(m, value=k / sizes[ref.id], k=k)
+            taken.add(new[m.id].value)
+    measurements = tuple(new.get(m.id, m) for m in study.measurements)
+    direction, delta = rules.effect(treat, source.value, q.higher_is_better, spec.min_effect)
+    if direction != study.effect.direction:
+        return None
+    values = [m.value for m in measurements]
+    decoy = study.decoy
+    if decoy is not None and not (_far(decoy, set(values)) and rules.effect(
+            decoy, source.value, q.higher_is_better, spec.min_effect)[0] == spec.claim_map[study.false_claim]):
+        decoy = _decoy(rng, q, source.value, study.false_claim, values, spec, recipe)
+    return replace(study, measurements=measurements, arm_sizes=sizes, effect=replace(study.effect, delta=delta),
+                   decoy=decoy)
+
+
+def with_limitations(seed: int, studies: list[Study], recipe: Recipe) -> list[Study]:
+    """Each relevant study states `limitations.per_study` limitations (distinct categories of the recipe), each about
+    one of its compared things, in a sentence of the category's templates with `{thing}` filled by the thing's
+    label."""
+    plan = recipe.limitations
+    rng = random.Random(f"synth:{seed}:limitations")
+    categories = list(plan.categories)
+    out = []
+    for s in studies:
+        things = _things(s, recipe)
+        if s.relevant and things:
+            picked = rng.sample(categories, min(rng.randint(*plan.per_study), len(categories)))
+            limitations = []
+            for category in picked:
+                thing = rng.choice(things)
+                sentence = rng.choice(plan.categories[category]).replace("{thing}", thing.label)
+                limitations.append(Limitation(f"{s.study_id}.l{len(limitations) + 1}", thing.id, category, sentence))
+            s = replace(s, limitations=tuple(limitations))
+        out.append(s)
+    return out
+
+
+def with_variants(seed: int, studies: list[Study], recipe: Recipe) -> list[Study]:
+    """With probability `name_variants.share` a compared thing of a study is written in its paper by a variant
+    (`Condition.variants`, one (kind, form)), of a kind of `name_variants.kinds` that the thing has (`variant_forms`).
+    """
+    plan = recipe.name_variants
+    rng = random.Random(f"synth:{seed}:variants")
+    forms = variant_forms(rng, recipe)
+    out = []
+    for s in studies:
+        things = {c.id for c in _things(s, recipe)}
+        conditions = list(s.conditions)
+        for i, c in enumerate(conditions):
+            if c.id in things and rng.random() < plan.share:
+                kinds = [k for k in plan.kinds if forms[c.label][k]]
+                if kinds:
+                    kind = rng.choice(kinds)
+                    conditions[i] = replace(c, variants=((kind, rng.choice(forms[c.label][kind])),))
+        out.append(replace(s, conditions=tuple(conditions)) if conditions != list(s.conditions) else s)
+    return out
+
+
+def variant_forms(rng: random.Random, recipe: Recipe) -> dict[str, dict[str, list[str]]]:
+    """Label -> kind -> the variant forms of every side name but the network's reference, all by general rules:
+    - spelling: case and hyphen changes ("ZELVORA") that the name grouping of D38 joins with the label (`clean` or a
+      near match; `evidence.names.group_names`), so a hyphen inside a one-word name ("zel-vora") is left out;
+    - hereafter: the short form of the name's parts ("ZV" for "Zel|vora", "TWC" for "two-word compound"), kept when
+      a paper's definition "<label> (hereafter <short>)" joins it with the label (D38's alias step);
+    - code_name: the short form and a number ("ZV-217"), one per name for the whole set, distinct between names; a
+      paper introduces it as "<label> (<code>)", which only the model step of D38 can join.
+    No form contains another name of the recipe or lies inside one."""
+    reference = recipe.network.reference if recipe.network is not None else None
+    taken: set[str] = set()
+    out: dict[str, dict[str, list[str]]] = {}
+    for name in (n for side in recipe.sides.values() for n in side.names if n.label != reference):
+        short = _short_form(name.label)
+        code = None
+        while short and (code is None or code in taken):
+            code = f"{short}-{rng.randint(*CODE_NUMBERS)}"
+        taken.add(code or "")
+        forms = {"spelling": [f for f in _spellings(name.label) if _joined(name.label, f)],
+                 "hereafter": [short] if short and _defined(name.label, short) else [],
+                 "code_name": [code] if code else []}
+        out[name.label] = {k: [f for f in v if not _clashes(f, name.label, recipe)] for k, v in forms.items()}
+    return out
+
+
+def _parts(label: str) -> list[str]:
+    """A name's words (hyphens, slashes and spaces split them); a one-word name in two at its second syllable
+    ("Zel|vora"), when both halves keep two letters."""
+    words = [w for w in re.split(r"[\s\-_/]+", label) if w]
+    if len(words) != 1:
+        return words
+    word = words[0]
+    m = re.match(rf"[^{VOWELS}]*[{VOWELS}]+[^{VOWELS}]*?([^{VOWELS}])[{VOWELS}]", word, re.IGNORECASE)
+    if m is None or m.start(1) < 2 or len(word) - m.start(1) < 2:
+        return words
+    return [word[:m.start(1)], word[m.start(1):]]
+
+
+def _short_form(label: str) -> str | None:
+    """The initials of a name's parts, upper case ("ZV", "TWC"); None when they are not a short form a paper's
+    definition can name (one letter, or not letters)."""
+    short = "".join(p[0] for p in _parts(label)).upper()
+    return short if SHORT_FORM.fullmatch(short) else None
+
+
+def _spellings(label: str) -> list[str]:
+    """Case and hyphen changes of a name, each differing from it."""
+    forms = [label.upper(), label.lower(), label.replace("-", " "), label.replace(" ", "-")]
+    parts = _parts(label)
+    if " " not in label and "-" not in label and len(parts) > 1:
+        forms.append("-".join(p.lower() for p in parts))
+    return [f for f in dict.fromkeys(forms) if f != label]
+
+
+def _joined(label: str, form: str) -> bool:
+    """D38's grouping (no paper text: clean and near) puts `form` with `label`."""
+    mentions = [names.Mention(label, "a", 0, 0, "thing"), names.Mention(form, "b", 0, 0, "thing")]
+    return len(names.group_names(mentions, {}).groups) == 1
+
+
+def _defined(label: str, short: str) -> bool:
+    """D38's alias step joins `short` with `label` in a paper that defines it as "<label> (hereafter <short>)"."""
+    text = f"{label} (hereafter {short}) is named. {short} is named again."
+    at = text.index(short)
+    again = text.rindex(short)
+    mentions = [names.Mention(label, "p", 0, len(label), "thing"),
+                names.Mention(short, "p", at, at + len(short), "thing"),
+                names.Mention(short, "p", again, again + len(short), "thing")]
+    return len(names.group_names(mentions, {"p": text}).groups) == 1
+
+
+def _clashes(form: str, label: str, recipe: Recipe) -> bool:
+    """`form` contains, or lies inside, a name of the recipe (a condition's label or synonym, a metric's name or
+    abbreviation) other than the thing's own."""
+    own = next(n for side in recipe.sides.values() for n in side.names if n.label == label)
+    others = [x for n in [*(n for side in recipe.sides.values() for n in side.names), *recipe.others] if n is not own
+              for x in (n.label, n.synonym)]
+    others += [x for m in recipe.question_metrics + recipe.other_metrics for f in m.forms for x in f[:2]]
+    low = form.lower()
+    return any(o.lower() in low or low in o.lower() for o in others)
 
 
 LABEL_YEARS = range(2006, 2025)      # the years of the invented author-year labels
