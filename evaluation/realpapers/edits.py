@@ -6,8 +6,10 @@ the engine runs on the original corpus and on every edited one (`evidence run --
 the original run with the edited one in three parts: the right item changed (`item`), its links still hold (`link`),
 and the answer changed as it should (`answer`). This shows that the system follows the text, not that it is right.
 
-Where the edit sits in a run's paper is read from the original run's span selectors (prefix + exact + suffix is a
-piece of the paper, and `find` occurs once in it), so `check` needs the two run directories only. An item belongs to
+Where the edit sits (`at`) is recorded by `apply` in the edited corpus's edit.json; `check` reads it from there (the
+corpora folder, or the edited run's corpus), else from the original run's span selectors (prefix + exact + suffix
+is a piece of the paper, and `find` occurs once in it). A part that cannot be tested is None and is left out of the
+shares (the original run never read the spot, or nothing linked to the old name). An item belongs to
 paper P when a span's file is `papers/<P>.md` (the layout `evidence fetch` and every corpus writer use).
 
 The `limitation` check reads plan 2's `limitations` answer (`entries: [{thing, category, papers, items}]`): an item
@@ -51,12 +53,31 @@ class Edit(Strict):
     replace: str
 
     @model_validator(mode="after")
-    def _limitation_deletes(self) -> Edit:
+    def _well_formed(self) -> Edit:
+        """find is not empty and differs from replace; a limitation deletes (replace empty); a number edit holds
+        exactly one number in find and one in replace, with the same text around it (context is allowed, to make
+        find unique: "accuracy of 0.71" -> "accuracy of 0.31")."""
         if not self.find:
             raise ValueError(f"edit {self.id}: find is empty")
+        if self.find == self.replace:
+            raise ValueError(f"edit {self.id}: replace equals find (the edit changes nothing)")
         if self.kind == "limitation" and self.replace:
             raise ValueError(f"edit {self.id}: a limitation edit deletes its sentence (replace must be empty)")
+        if self.kind == "number":
+            old, new = read_numbers(self.find), read_numbers(self.replace)
+            if len(old) != 1 or len(new) != 1:
+                raise ValueError(f"edit {self.id}: a number edit holds exactly one number in find and in replace "
+                                 f"(find has {len(old)}, replace has {len(new)})")
+            around_old = (self.find[:old[0].start], self.find[old[0].end:])
+            if around_old != (self.replace[:new[0].start], self.replace[new[0].end:]):
+                raise ValueError(f"edit {self.id}: a number edit changes the number only (the text around it in "
+                                 "find and replace must be the same)")
         return self
+
+    def number_spans(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        """(start, end) of the number inside find and inside replace (a number edit)."""
+        old, new = read_numbers(self.find)[0], read_numbers(self.replace)[0]
+        return (old.start, old.end), (new.start, new.end)
 
 
 def load_edits(path: Path) -> list[Edit]:
@@ -76,7 +97,8 @@ def load_edits(path: Path) -> list[Edit]:
 def apply(corpus: Path, edit: Edit, out: Path) -> Path:
     """The corpus `out/<edit id>`: a copy of `corpus` where only paper `edit.paper` changes (its one `find` becomes
     `replace`) and its manifest sha256 is updated; `edit.json` records the edit. EditError naming the edit when the
-    paper is not in the corpus or `find` does not occur exactly once in it."""
+    paper is not in the corpus or `find` does not occur exactly once in it. edit.json also records `at`, the offset
+    of `find` in the original paper (the same offset as `replace` in the edited one), which `check` reads."""
     corpus, target = Path(corpus), Path(out) / edit.id
     manifest = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
     entry = next((p for p in manifest["papers"] if str(p["id"]) == edit.paper), None)
@@ -95,7 +117,8 @@ def apply(corpus: Path, edit: Edit, out: Path) -> Path:
     entry["sha256"] = sha256_hex(data)
     (target / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n",
                                           encoding="utf-8", newline="\n")
-    (target / EDIT_FILE).write_text(json.dumps(edit.model_dump(), indent=1, ensure_ascii=False) + "\n",
+    record = {**edit.model_dump(), "at": text.index(edit.find)}
+    (target / EDIT_FILE).write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n",
                                     encoding="utf-8", newline="\n")
     return target
 
@@ -161,17 +184,6 @@ def _entries(answer: Any, paper: str) -> Iterator[dict[str, Any]]:
             yield from _entries(v, paper)
 
 
-def _strings(value: Any) -> Iterator[str]:
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, dict):
-        for v in value.values():
-            yield from _strings(v)
-    elif isinstance(value, list):
-        for v in value:
-            yield from _strings(v)
-
-
 def _canon(value: Any, by_id: dict[str, Item]) -> Any:
     """`value` with every item id replaced by what the item says (_key), so two runs compare by content."""
     if isinstance(value, str):
@@ -201,38 +213,65 @@ class _Run:
         entries = self.answer.get("entries") if isinstance(self.answer, dict) else None
         return {i for e in entries or [] if isinstance(e, dict) for i in e.get("items") or []}
 
-
 # --- check ----------------------------------------------------------------------------------------------------
+#
+# A part is True (followed), False (not followed) or None (not testable: the edit cannot be placed, the original run
+# never read the spot, or nothing linked to the old name). Not testable parts are left out of the shares.
+
+Part = bool | None
+NOT_TESTABLE: dict[str, Part] = dict.fromkeys(PARTS)
 
 
-def _same_value(value: Any, read: float) -> bool:
-    """The item's value is the number read (or that number as a fraction: 71.0 under a % header is 0.71)."""
+def _equal(value: Any, want: float) -> bool:
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         return False
-    return any(abs(value - want) <= 1e-9 * max(1.0, abs(want)) for want in (read, round(read / 100, 6)))
+    return abs(value - want) <= 1e-9 * max(1.0, abs(want))
 
 
-def _value_item(items: list[Item], start: int, end: int, number: str) -> Item | None:
-    """The item with a span over [start, end) whose `value` is the number `number` reads as."""
-    numbers = read_numbers(number)
-    if not numbers:
-        return None
-    return next((i for i in items if _covers(i, start, end) and _same_value(i.fields.get("value"), numbers[0].value)),
-                None)
+def _read_item(items: list[Item], start: int, end: int, read: float) -> tuple[Item, float] | None:
+    """The item with a span over [start, end) whose `value` is the number read, and the scale it is stored at:
+    1, or 0.01 (71.0 under a % header is stored as 0.71)."""
+    for ratio in (1.0, 0.01):
+        want = round(read * ratio, 6)
+        hit = next((i for i in items if _covers(i, start, end) and _equal(i.fields.get("value"), want)), None)
+        if hit is not None:
+            return hit, ratio
+    return None
 
 
-def _check_number(orig: _Run, new: _Run, edit: Edit) -> dict[str, bool]:
-    at = _edit_at(orig.of(edit.paper), edit.paper, edit.find)
-    item = link = False
-    if at is not None:
-        before = _value_item(orig.of(edit.paper), at, at + len(edit.find), edit.find)
-        after = _value_item(new.of(edit.paper), at, at + len(edit.replace), edit.replace)
-        item = after is not None
-        if before is not None and after is not None and set(before.links) == set(after.links):
-            link = all(target in orig.by_id and after.links[k] in new.by_id
-                       and _key(orig.by_id[target]) == _key(new.by_id[after.links[k]])
-                       for k, target in before.links.items())
-    return {"item": item, "link": link, "answer": orig.entries(edit.paper) != new.entries(edit.paper)}
+def _leaves(value: Any) -> Iterator[Any]:
+    if isinstance(value, dict):
+        for v in value.values():
+            yield from _leaves(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _leaves(v)
+    else:
+        yield value
+
+
+def _check_number(orig: _Run, new: _Run, edit: Edit, at: int | None) -> dict[str, Part]:
+    """Only the number inside find/replace is the spot (Edit.number_spans), so context words in find do not widen it.
+    The original item fixes the scale; the edited item must hold the new number at that same scale."""
+    if at is None:
+        return dict(NOT_TESTABLE)
+    (fs, fe), (rs, re_) = edit.number_spans()
+    old, new_read = read_numbers(edit.find)[0].value, read_numbers(edit.replace)[0].value
+    found = _read_item(orig.of(edit.paper), at + fs, at + fe, old)
+    if found is None:                     # the original run never read the old number: nothing to follow
+        return dict(NOT_TESTABLE)
+    before, ratio = found
+    want = round(new_read * ratio, 6)
+    after = next((i for i in new.of(edit.paper)
+                  if _covers(i, at + rs, at + re_) and _equal(i.fields.get("value"), want)), None)
+    link = after is not None and set(before.links) == set(after.links) and all(
+        target in orig.by_id and after.links[k] in new.by_id
+        and _key(orig.by_id[target]) == _key(new.by_id[after.links[k]])
+        for k, target in before.links.items())
+    said = list(_leaves(list(_entries(new.answer, edit.paper))))
+    uses_new = any((after is not None and s == after.item_id) or _equal(s, want) for s in said)
+    return {"item": after is not None, "link": link,
+            "answer": orig.entries(edit.paper) != new.entries(edit.paper) and uses_new}
 
 
 def _named(run: _Run, roles: RoleMap, paper: str, name: str) -> set[str]:
@@ -246,29 +285,31 @@ def _named(run: _Run, roles: RoleMap, paper: str, name: str) -> set[str]:
     return found
 
 
-def _check_name(orig: _Run, new: _Run, edit: Edit) -> dict[str, bool]:
+def _check_name(orig: _Run, new: _Run, edit: Edit, at: int | None) -> dict[str, Part]:
     roles = _pack_roles(new.root)
-    old_ids, new_ids = _named(orig, roles, edit.paper, edit.find), _named(new, roles, edit.paper, edit.replace)
-    item = bool(new_ids) and not _named(new, roles, edit.paper, edit.find)
+    old_ids = _named(orig, roles, edit.paper, edit.find)
+    if not old_ids:                       # the original run never found the old name
+        return dict(NOT_TESTABLE)
+    new_ids, stale_ids = _named(new, roles, edit.paper, edit.replace), _named(new, roles, edit.paper, edit.find)
     linkers = [(i, k) for i in orig.of(edit.paper) for k, target in i.links.items() if target in old_ids]
-    link = bool(linkers) and bool(new_ids) and all(
+    link = None if not linkers else bool(new_ids) and all(
         any(_key(j) == _key(i) and j.links.get(k) in new_ids for j in new.of(edit.paper)) for i, k in linkers)
-    said = {s for e in _entries(new.answer, edit.paper) for s in _strings(e)}
-    answer = bool(said & new_ids) or any(_norm(s) == _norm(edit.replace) for s in said)
-    return {"item": item, "link": link, "answer": answer}
+    said = {s for s in _leaves(list(_entries(new.answer, edit.paper))) if isinstance(s, str)}
+    names_new = bool(said & new_ids) or any(_norm(s) == _norm(edit.replace) for s in said)
+    names_old = bool(said & stale_ids) or any(_norm(s) == _norm(edit.find) for s in said)
+    return {"item": bool(new_ids) and not stale_ids, "link": link, "answer": names_new and not names_old}
 
 
 def _limitation_count(run: _Run, paper: str) -> int:
     return sum(1 for i in run.limitation_ids() if i in run.by_id and _in_paper(run.by_id[i], paper))
 
 
-def _check_limitation(orig: _Run, new: _Run, edit: Edit) -> dict[str, bool]:
-    at = _edit_at(orig.of(edit.paper), edit.paper, edit.find)
+def _check_limitation(orig: _Run, new: _Run, edit: Edit, at: int | None) -> dict[str, Part]:
     listed = orig.limitation_ids()
     gone = None if at is None else next(
         (i for i in orig.of(edit.paper) if i.item_id in listed and _overlaps(i, at, at + len(edit.find))), None)
-    if gone is None:
-        return {"item": False, "link": False, "answer": False}
+    if gone is None:                      # the original run listed no limitation over the sentence
+        return dict(NOT_TESTABLE)
     still = {_key(new.by_id[i]) for i in new.limitation_ids() if i in new.by_id and _in_paper(new.by_id[i], edit.paper)}
     linked = any(t == gone.item_id or (t in new.by_id and _key(new.by_id[t]) == _key(gone))
                  for i in new.items for t in i.links.values())
@@ -279,45 +320,72 @@ def _check_limitation(orig: _Run, new: _Run, edit: Edit) -> dict[str, bool]:
 CHECKS = {"number": _check_number, "name": _check_name, "limitation": _check_limitation}
 
 
-def check(original: Path, edited: Path, edit: Edit) -> dict[str, bool]:
+def recorded_at(corpus: Path, edit: Edit) -> int | None:
+    """The offset `apply` recorded in `corpus/edit.json` for `edit`; None when there is no such record."""
+    record = RunDir(corpus).try_json(EDIT_FILE)
+    if isinstance(record, dict) and record.get("id") == edit.id and isinstance(record.get("at"), int):
+        return record["at"]
+    return None
+
+
+def check(original: Path, edited: Path, edit: Edit, at: int | None = None) -> dict[str, Part]:
     """Did the edited run follow edit `edit`? Per part (see the module docstring and spec 6.12):
 
-    - number: an item whose span covers the new text has the new value (read_numbers); the original item's links
-      point to items that say the same as before; the answer entry for the paper differs (item ids compared by
-      what they say).
+    - number: an item whose span covers the new number holds it (read_numbers, at the original item's scale); the
+      original item's links point to items that say the same as before; the paper's answer entry differs (item ids
+      compared by what they say) and uses the new item or value.
     - name: a compared-thing item named `replace` is in the paper and none named `find`; every item that linked to
-      the old one links to a new one (at least one did); the paper's answer entry names `replace` (or its item).
+      the old one links to a new one; the paper's answer entry names `replace` (or its item) and not `find`.
     - limitation: the listed limitation item over the deleted sentence is gone; no item links to it; the paper's
-      limitation count in the `limitations` answer drops by 1. All False when the original run had no such item.
-    """
-    return CHECKS[edit.kind](_Run(Path(original)), _Run(Path(edited)), edit)
+      limitation count in the `limitations` answer drops by 1.
+
+    `at`: the edit's offset in the paper; default: edit.json of the edited run's corpus (run.json settings), else a
+    span selector of the original run near the edit. A part that cannot be tested is None (see NOT_TESTABLE)."""
+    orig, new = _Run(Path(original)), _Run(Path(edited))
+    if at is None:
+        corpus = ((RunDir(edited).try_json(RUN_FILE) or {}).get("settings") or {}).get("corpus")
+        at = recorded_at(Path(corpus), edit) if corpus else None
+    if at is None:
+        at = _edit_at(orig.of(edit.paper), edit.paper, edit.find)
+    return CHECKS[edit.kind](orig, new, edit, at)
 
 
-def summary(results: dict[str, dict[str, bool]], kinds: dict[str, str]) -> dict[str, Any]:
-    """The share of edits carried through per part and over all three (`all`), overall and per edit kind."""
+def summary(results: dict[str, dict[str, Part]], kinds: dict[str, str]) -> dict[str, Any]:
+    """The share of edits carried through per part (over the edits where that part could be tested) and over all
+    three (`all`, over the edits with every part testable), overall and per edit kind."""
+    def share(values: list[bool]) -> float | None:
+        return sum(values) / len(values) if values else None
+
     def shares(ids: list[str]) -> dict[str, float | None]:
-        n = len(ids)
-        out: dict[str, float | None] = {p: (sum(results[i][p] for i in ids) / n if n else None) for p in PARTS}
-        out["all"] = sum(all(results[i].values()) for i in ids) / n if n else None
+        out = {p: share([v for i in ids if (v := results[i][p]) is not None]) for p in PARTS}
+        out["all"] = share([all(results[i].values()) for i in ids if None not in results[i].values()])
         return out
     by_kind = {k: {"edits": len(ids), **shares(ids)}
                for k in ("number", "name", "limitation") if (ids := [i for i in results if kinds[i] == k])}
     return {"carried": shares(list(results)), "by_kind": by_kind}
 
 
-def report(original: Path, runs: Path, edits: list[Edit]) -> dict[str, Any]:
-    """real.json of the edit test: every edit checked against `runs/<edit id>` (the run of its edited corpus);
-    edits without a run are listed under `missing` and left out of the shares."""
+def report(original: Path, runs: Path, edits: list[Edit], corpora: Path | None = None) -> dict[str, Any]:
+    """real.json of the edit test: every edit checked against `runs/<edit id>` (the run of its edited corpus), placed
+    by `corpora/<edit id>/edit.json` when given. Edits without a run are listed under `missing`, parts that could
+    not be tested under `not_testable`; both are left out of the shares."""
     results, missing = {}, []
     for e in edits:
         run = Path(runs) / e.id
         if not RunDir(run).complete:
             missing.append(e.id)
             continue
-        results[e.id] = check(original, run, e)
+        at = recorded_at(Path(corpora) / e.id, e) if corpora is not None else None
+        results[e.id] = check(original, run, e, at)
     s = summary(results, {e.id: e.kind for e in edits})
     by_edit = {e.id: {"kind": e.kind, "paper": e.paper, **results[e.id]} for e in edits if e.id in results}
-    return {"edits": len(edits), "checked": len(results), "missing": missing, "carried": s["carried"],
-            "by_kind": s["by_kind"], "by_edit": by_edit,
+    not_testable = {i: [p for p in PARTS if r[p] is None] for i, r in results.items() if None in r.values()}
+    return {"edits": len(edits), "checked": len(results), "missing": missing,
+            "not_testable_edits": len(not_testable), "carried": s["carried"], "by_kind": s["by_kind"],
+            "by_edit": by_edit, "not_testable": not_testable,
             "notes": ["Shows that the system follows the text, not that it is right (spec 6.12 item 3).",
-                      "An edit is carried through when its item, link and answer parts all hold (`all`)."]}
+                      "An edit is carried through when its item, link and answer parts all hold (`all`).",
+                      "A part is not testable (null) when the edit cannot be placed, the original run never read "
+                      "the edited spot, or nothing linked to the old name; such parts are left out of the shares.",
+                      "Two runs with a live model may differ by chance, so the number answer part also needs the "
+                      "edited entry to use the new item or value."]}

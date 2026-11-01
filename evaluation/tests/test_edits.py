@@ -221,6 +221,95 @@ def test_summary_shares_per_part_and_over_all_three() -> None:
     s = summary(results, kinds)
     assert s["carried"] == {"item": 1.0, "link": 0.5, "answer": 1.0, "all": 0.5}
     assert s["by_kind"]["name"] == {"edits": 1, "item": 1.0, "link": 0.0, "answer": 1.0, "all": 0.0}
+    results["e3"] = {"item": None, "link": None, "answer": None}           # not testable: left out of every share
+    results["e4"] = {"item": True, "link": None, "answer": False}          # link not testable: out of link and all
+    s = summary(results, {**kinds, "e3": "number", "e4": "name"})
+    assert s["carried"] == {"item": 1.0, "link": 0.5, "answer": 2 / 3, "all": 0.5}
+
+
+# --- fix round 1: number spot, recorded offset, scale, not testable ------------------------------------------
+
+
+def test_a_number_edit_holds_one_number_with_the_same_context() -> None:
+    for find, replace, why in (("0.71 and 0.62", "0.31 and 0.62", "exactly one number"),
+                               ("accuracy", "precision", "exactly one number"),
+                               ("accuracy of 0.71", "recall of 0.31", "the number only"),
+                               ("0.71", "0.71", "changes nothing")):
+        with pytest.raises(ValueError, match=why):
+            Edit(id="x", paper="p1", kind="number", find=find, replace=replace)
+    with pytest.raises(ValueError, match="changes nothing"):
+        Edit(id="x", paper="p1", kind="name", find="System R", replace="System R")
+
+
+def test_context_words_in_find_do_not_widen_the_spot(tmp_path: Path) -> None:
+    edit = Edit(id="e6", paper="p1", kind="number", find="accuracy of 0.71", replace="accuracy of 0.31")
+    orig, edited = run_pair(tmp_path, edit)
+    assert check(orig, edited, edit) == {"item": True, "link": True, "answer": True}
+
+
+def test_apply_records_the_offset_and_check_uses_it(tmp_path: Path) -> None:
+    orig, edited = run_pair(tmp_path, EDIT)
+    record = json.loads((tmp_path / "edited" / "e1" / "edit.json").read_text(encoding="utf-8"))
+    assert record["at"] == TEXT.index("0.71")
+    assert check(orig, edited, EDIT, at=record["at"]) == {"item": True, "link": True, "answer": True}
+    assert check(orig, edited, EDIT, at=0) == {"item": None, "link": None, "answer": None}   # nothing read there
+
+
+NUMBERS = "# A study\n\n## Results\n\nSystem R reaches 71.0 here. We used 5 seeds.\n"
+
+
+def hand_run(root: Path, text: str, items: list[tuple[str, dict[str, Any], str]],
+             answer: dict[str, Any] | None = None) -> Path:
+    """A run directory of paper p1 holding `items` (type, fields, the text its one span covers) and `answer`."""
+    root.mkdir(parents=True)
+    (root / PROTOCOL_FILE).write_bytes(PROTOCOL.read_bytes())
+    built = []
+    for etype, fields, quote in items:
+        at = text.index(quote)
+        built.append(Item.build(etype, fields, [Span(role="value", selector=selector(text, "papers/p1.md", at,
+                                                                                      at + len(quote)))]))
+    write_lines(root / EVIDENCE_FILE, [i.model_dump(mode="json") for i in built])
+    (root / ANSWER_FILE).write_text(json.dumps(answer or {}), encoding="utf-8")
+    return root
+
+
+def test_the_new_value_must_have_the_original_scale(tmp_path: Path) -> None:
+    """71.0 read as 0.71 (a % column): the edited item must hold 0.31, not 31.0."""
+    edit = Edit(id="e7", paper="p1", kind="number", find="71.0", replace="31.0")
+    after = NUMBERS.replace("71.0", "31.0")
+    orig = hand_run(tmp_path / "orig", NUMBERS, [("measurement", {"value": 0.71, "dataset": None}, "71.0")])
+    scaled = hand_run(tmp_path / "scaled", after, [("measurement", {"value": 0.31, "dataset": None}, "31.0")])
+    raw = hand_run(tmp_path / "raw", after, [("measurement", {"value": 31.0, "dataset": None}, "31.0")])
+    assert check(orig, scaled, edit)["item"] is True
+    assert check(orig, raw, edit)["item"] is False
+
+
+def test_an_unread_spot_and_an_unlinked_name_are_not_testable(tmp_path: Path) -> None:
+    unread = Edit(id="e8", paper="p1", kind="number", find="5 seeds", replace="7 seeds")
+    orig = hand_run(tmp_path / "orig", NUMBERS, [("measurement", {"value": 0.71, "dataset": None}, "71.0"),
+                                                 ("condition", {"label": "System R", "role": "rag"}, "System R")])
+    after = NUMBERS.replace("System R", "System Q")
+    swapped = hand_run(tmp_path / "swapped", after, [("condition", {"label": "System Q", "role": "rag"}, "System Q")],
+                       {"studies": [{"document": "p1", "winner": "System Q"}]})
+    assert check(orig, swapped, unread) == {"item": None, "link": None, "answer": None}
+    assert check(orig, swapped, EDIT2) == {"item": True, "link": None, "answer": True}   # nothing linked to System R
+    both = hand_run(tmp_path / "both", after, [("condition", {"label": "System Q", "role": "rag"}, "System Q")],
+                    {"studies": [{"document": "p1", "winner": "System Q", "loser": "System R"}]})
+    assert check(orig, both, EDIT2)["answer"] is False                                  # still names System R
+
+
+def test_report_lists_not_testable_edits_apart(tmp_path: Path) -> None:
+    from evaluation.realpapers.edits import report
+    edit = Edit(id="e7", paper="p1", kind="number", find="71.0", replace="31.0")
+    unread = Edit(id="e8", paper="p1", kind="number", find="5 seeds", replace="7 seeds")
+    orig = hand_run(tmp_path / "orig", NUMBERS, [("measurement", {"value": 0.71, "dataset": None}, "71.0")])
+    for e, text in ((edit, NUMBERS.replace("71.0", "31.0")), (unread, NUMBERS.replace("5 seeds", "7 seeds"))):
+        run = hand_run(tmp_path / "runs" / e.id, text, [("measurement", {"value": 0.31, "dataset": None}, "31.0")]
+                       if e is edit else [])
+        (run / "run.json").write_text('{"run_id": "x"}', encoding="utf-8")   # a complete run
+    real = report(orig, tmp_path / "runs", [edit, unread])
+    assert real["not_testable"] == {"e8": ["item", "link", "answer"]} and real["not_testable_edits"] == 1
+    assert real["carried"]["item"] == 1.0 and real["by_edit"]["e8"]["item"] is None
 
 
 # --- sheets -------------------------------------------------------------------------------------------------
@@ -315,7 +404,8 @@ def test_cli_apply_check_sheet_and_summary(tmp_path: Path, capsys: pytest.Captur
     for e in ("e1", "e2"):
         scripted_run(tmp_path / "edited" / e, tmp_path / "runs", e)
     assert cli.main(["edits", "check", "--original", str(orig), "--runs", str(tmp_path / "runs"),
-                     "--edits", str(edits), "--out", str(tmp_path / "report")]) == 0
+                     "--edits", str(edits), "--corpora", str(tmp_path / "edited"),
+                     "--out", str(tmp_path / "report")]) == 0
     real = json.loads((tmp_path / "report" / "real.json").read_text(encoding="utf-8"))
     assert real["carried"] == {"item": 1.0, "link": 1.0, "answer": 1.0, "all": 1.0} and real["missing"] == []
     assert (tmp_path / "report" / "real.md").read_text(encoding="utf-8").startswith("# real-paper check: arXiv edit")

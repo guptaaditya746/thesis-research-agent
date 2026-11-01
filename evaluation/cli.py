@@ -16,7 +16,7 @@
     evaluate scilead ids --data DIR --out ids.txt
     evaluate scilead score --run R --corpus C --data DIR --out D
     evaluate edits apply --corpus C --edits F --out DIR
-    evaluate edits check --original R --runs DIR --edits F --out D
+    evaluate edits check --original R --runs DIR --edits F --out D [--corpora DIR]
     evaluate sheet --run R --corpus C (--sample N | --papers N) [--seed 0] --out F.csv
     evaluate sheet-summary F.csv [--out D]
 
@@ -280,12 +280,12 @@ def cmd_edits(args: argparse.Namespace) -> int:
             made = [str(edits.apply(args.corpus, e, args.out)) for e in loaded]
             print(json.dumps({"corpora": made}))
             return 0
-        result = edits.report(args.original, args.runs, loaded)
+        result = edits.report(args.original, args.runs, loaded, args.corpora)
     except (OSError, ValueError, KeyError) as exc:
         raise SystemExit(f"evaluate edits {args.edits_cmd}: {exc}") from None
     js, md = write_real(result, args.out, "arXiv edit test")
     print(json.dumps({"real_json": str(js), "real_md": str(md), "carried": result["carried"],
-                      "missing": result["missing"]}))
+                      "missing": result["missing"], "not_testable": result["not_testable"]}))
     return 0
 
 
@@ -437,6 +437,8 @@ def parser() -> argparse.ArgumentParser:
     ec.add_argument("--original", type=Path, required=True, help="the run directory on the original corpus")
     ec.add_argument("--runs", type=Path, required=True, help="the folder holding one run per edit, named by edit id")
     ec.add_argument("--edits", type=Path, required=True)
+    ec.add_argument("--corpora", type=Path, help="the folder `edits apply` wrote: each edit is placed by its "
+                    "edit.json (default: the edited run's corpus, else the original run's spans)")
     ec.add_argument("--out", type=Path, required=True)
     ec.set_defaults(func=cmd_edits)
 
