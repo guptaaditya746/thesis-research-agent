@@ -221,7 +221,8 @@ def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:
 
     import modelcall
     from modelcall.cache import cache_key
-    from synth.render_llm import INSTRUCTIONS, PaperReply, plan_json
+    from synth.render_llm import PaperReply, plan_json
+    INSTRUCTIONS = modelcall.load_prompt(REPO / "synth" / "prompts" / "render.txt").text
     assert hashlib.sha256((REPO / "synth" / "prompts" / "render.txt").read_bytes()).hexdigest() == \
         "9e8ff1fedb40b65e2a0e98801e4b8b61605aba1aefe39d45b9f16fa99cc49d9d"
     s = truth.generate(SEED, N)[0]

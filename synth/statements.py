@@ -1,7 +1,7 @@
 """Atomic Results statements: every value a level writes in prose is first written as one checked sentence.
 
-EV1 Step 10 failed three whole-paper attempts on one sentence ("... yields 662 out of 1,000 answers judged
-factually correct" never names the metric as planned). So the LLM renderer asks the model, in one call per
+EV1 Step 10 failed three whole-paper attempts on one sentence (a paraphrased count, "... yields 662 out of
+1,000 ...", that never named the metric as planned). So the LLM renderer asks the model, in one call per
 paper, for one sentence per prose value; code checks each sentence alone with the paper checks that apply
 to a single sentence (the value and, where the level names it verbatim, the metric; the association of
 `assoc`; no other number; the level's wording for explicit and paraphrased); failed sentences go back in a

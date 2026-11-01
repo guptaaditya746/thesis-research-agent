@@ -8,7 +8,7 @@ Rules:
 3. Do not write any other number that could be read as a result (no invented scores, percentages, deltas or counts). Avoid digits outside the required strings; the dataset size "<<DATASET_SIZE>>" may be mentioned.
 4. The abstract contains the abstract claim sentence; the conclusion contains the conclusion claim sentence. Do not add any other statement on whether the method helps, hurts or makes no difference.
 5. Follow the "level_instructions" exactly.
-6. Mention the main dataset as the main benchmark.
+6. Mention the main dataset as the main <<CONTEXT_NOUN>>.
 7. Only the two claim sentences may state <<EFFECT_PHRASE>>.
 8. Outside them, never put <<TOPIC_TERMS>> in a sentence that says it <<EFFECT_VERBS>> for <<OUTCOME_TERMS>>.
 9. Rule 8 also holds for questions, aims, predictions and implications.

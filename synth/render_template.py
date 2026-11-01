@@ -75,8 +75,9 @@ def method(doc: Doc, plan: Plan, rng: random.Random) -> None:
     else:
         doc.add(templates(plan, "method_one_context")[0].format(main=plan.datasets[0], size=dataset_size(plan)))
     if len(plan.experiments) > 1:          # --hard
-        doc.add(f" Besides the {plan.experiments[0].name} on both benchmarks, we report "
-                + " and ".join(f"the {e.name} experiment" for e in plan.experiments[1:]) + f" on {plan.datasets[0]}.")
+        others = " and ".join(f"the {e.name} experiment" for e in plan.experiments[1:])
+        doc.add(" " + templates(plan, "hard_more_experiments")[0].format(main=plan.experiments[0].name, others=others,
+                                                                         dataset=plan.datasets[0]))
     for c in plan.conditions:
         if plan.level == "distributed":
             doc.fill(" We include the {c}, which {d}; we denote it by {code}.", c=plan.cond(c.id),

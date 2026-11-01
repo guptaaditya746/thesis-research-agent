@@ -68,9 +68,24 @@ def test_filled_prompts_have_no_placeholder():
 
 
 def test_filled_v3_prompts_are_the_v2_texts():
-    """Filled from the rag recipe, the v3 templates are the committed texts they replace, byte for byte, so the
-    prompt hashes (and cached calls) of the rag pack do not move."""
+    """Filled from the rag recipe, the templates are the committed texts they replace (render-plain-v2.txt:
+    render.txt), byte for byte, so the prompt hashes (and cached calls) of the rag pack do not move."""
     rag = load_recipe("rag")
     assert render_llm.instructions(rag) == load_prompt(PROMPTS / "render-v2.txt").text
     assert render_llm.statement_instructions(rag) == load_prompt(PROMPTS / "statements-v1.txt").text
     assert render_llm.blind_instructions(rag) == load_prompt(PROMPTS / "blind-v2.txt").text
+    assert render_llm.plain_instructions(rag) == load_prompt(PROMPTS / "render.txt").text
+
+
+# The knob, --hard and --irrelevant paths (the same digests as before the move, checked when pinned).
+KNOB_SETS = {"7-12-knobs": ((7, 12), dict(duplicates=2, missing=3, outliers=1, irrelevant=1)),
+             "5-10-hard": ((5, 10), dict(hard=True, duplicates=1, irrelevant=2))}
+
+
+def test_knob_hard_and_irrelevant_paths_are_pinned(tmp_path):
+    pins = json.loads(PINS.read_text(encoding="utf-8"))
+    assert {k: hashlib.sha256(repr(truth.generate(*a, **kw)).encode()).hexdigest()
+            for k, (a, kw) in KNOB_SETS.items()} == pins["knob_sets"]
+    corpus.build(name="h", seed=7, studies=12, renderer=TemplateRenderer(), out=tmp_path,
+                 levels=["complex", "paraphrased"], hard=True, outliers=1, irrelevant=2, duplicates=1, missing=1)
+    assert build_digests(tmp_path) == pins["hard_build"]

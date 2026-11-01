@@ -321,6 +321,7 @@ text:
     outcome_terms: accuracy or hallucination
     method_phrase: retrieval or the method
     effect_verbs: improves, helps, increases, changes, reduces, lowers, decreases, raises, boosts, enhances, affects, alters, makes, leads, yields or matters
+    context_noun: benchmark
     statement_examples: |
       Examples.
 
@@ -351,6 +352,8 @@ text:
     - We evaluate on {main}, a benchmark of {size} with reference answers.
     method_two_contexts:
     - 'We evaluate on two benchmarks: {main}, our main benchmark, and {other}; each has {size} with reference answers.'
+    hard_more_experiments:
+    - Besides the {main} on both benchmarks, we report {others} on {dataset}.
     paraphrased_count:
     - In terms of the {metric}, the {cond} corresponds to {value} {dataset} questions.
     - On {dataset}, the {cond} reaches {value} questions in terms of the {metric}.

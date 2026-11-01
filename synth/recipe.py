@@ -93,7 +93,9 @@ class Text(Strict):
     prompt_words: dict[str, str]                    # the topic words of the LLM prompts
     blind_examples: str                             # the examples block of the blind-extraction prompt
     # Not every recipe has these; the generator that reads one says so when it is missing.
-    templates: dict[str, list[str]] | None = None   # sentence templates of the template renderer
+    # Sentence templates of the template renderer: `paraphrased_count` is drawn from; every other key is one sentence
+    # and only its first entry is used.
+    templates: dict[str, list[str]] | None = None
     # The fidelity check `added_claims`: a sentence outside the claim placements that matches `claim_subject` and
     # one of `claim_cues` (regexes) states a second effect. Generator-side: the engine's words.yaml is not read.
     claim_subject: str | None = None

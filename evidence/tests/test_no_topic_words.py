@@ -19,9 +19,8 @@ SKIPPED = {"tests", "fixtures", "__pycache__", "examples"}
 _REPLAY = ("kept byte for byte so corpora built before the prompts became recipe templates replay with their "
            "cached calls (D36); the v3 template filled from the default recipe is this text")
 LEGACY = {
-    "synth/prompts/render.txt": "the paper prompt without the statement stage (--no-statements); its sha256 is pinned "
-                                "so old cache keys hold (test_no_statements_cache_keys_are_unchanged), and it is "
-                                "still what --no-statements sends",
+    "synth/prompts/render.txt": _REPLAY + " (render-plain-v2.txt); its sha256 is pinned "
+                                "(test_no_statements_cache_keys_are_unchanged)",
     "synth/prompts/render-v2.txt": _REPLAY + " (render-v3.txt)",
     "synth/prompts/statements-v1.txt": _REPLAY + " (statements-v2.txt)",
     "synth/prompts/blind.txt": "the blind re-extraction prompt before blind-v2.txt, kept for replay (D36)",

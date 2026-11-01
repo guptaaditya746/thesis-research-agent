@@ -9,7 +9,8 @@ The model is injected: tests pass a FunctionModel, real runs `modelcall.openai_m
 comes only from $LITELLM_MASTER_KEY and is never logged; every call is `modelcall.ask`, whose errors are redacted.
 With `statements` (the default) each value the level writes in prose is first written and checked as one
 sentence (synth/statements.py) and the paper (render-v3.txt) must hold the accepted sentences verbatim;
-without it the calls are exactly those of render.txt (kept byte for byte; its wording is the default pack's).
+without it the paper prompt is render-plain-v2.txt, which filled from the default pack's recipe is render.txt
+byte for byte (the calls are exactly those of render.txt; render.txt itself stays for replay).
 The v3 prompts (render-v3, statements-v2, blind-v3) are templates: their <<NAME>> placeholders are filled from
 the study's recipe (`text.prompt_words`, `text.blind_examples`, `reporting.dataset_size`); filled from the default
 pack's recipe they are the v2/v1 texts byte for byte, so its prompt hashes and cached calls do not move.
@@ -39,7 +40,7 @@ from synth.truth import Study
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 PROMPT_VERSION = "v3"     # of the paper prompt with statements (render-v3.txt); corpus.json models.paper_prompt
-INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "render.txt").text      # --no-statements only
+PLAIN_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / "render-plain-v2.txt").text      # --no-statements only
 PAPER_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / f"render-{PROMPT_VERSION}.txt").text
 STATEMENT_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / "statements-v2.txt").text
 BLIND_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / "blind-v3.txt").text
@@ -61,6 +62,11 @@ def fill(template: str, recipe: Recipe) -> str:
 def instructions(recipe: Recipe) -> str:
     """The paper prompt (render-v3.txt) filled from `recipe`."""
     return fill(PAPER_TEMPLATE, recipe)
+
+
+def plain_instructions(recipe: Recipe) -> str:
+    """The paper prompt without the statement stage (render-plain-v2.txt) filled from `recipe`."""
+    return fill(PLAIN_TEMPLATE, recipe)
 
 
 def statement_instructions(recipe: Recipe) -> str:
@@ -239,7 +245,7 @@ class LlmRenderer:
         if not study.relevant:          # nothing to place: the fixed template writes it, no model call
             return render_with_template(study, level, seed)
         plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
-        paper_instructions, accepted, record = INSTRUCTIONS, {}, None
+        paper_instructions, accepted, record = plain_instructions(plan.recipe), {}, None
         planned = plan_json(plan, avoid_title)
         if self.statements:
             async def call(prompt: str, s: int) -> dict:
