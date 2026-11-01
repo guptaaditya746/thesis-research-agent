@@ -158,7 +158,7 @@ def network_study(rng: random.Random, index: int, edge: Edge, context: str, rate
             key = (cond.id, metric.id)
             if key not in counts:
                 bounds = qspec.range if metric is q else metric_spec(recipe, metric).range
-                counts[key] = _count(rng, bounds, sizes[cond.id], taken, sid)
+                counts[key] = draw_count(rng, bounds, sizes[cond.id], taken, sid)
                 taken.add(counts[key] / sizes[cond.id])
             measurements.append(Measurement(f"{sid}.m{len(measurements) + 1}", cond.id, metric.id, context,
                                             counts[key] / sizes[cond.id], k=counts[key]))
@@ -246,7 +246,7 @@ def _roomy(n: int) -> bool:
     return any(_usable(k / n) for k in range(1, n))
 
 
-def _count(rng: random.Random, bounds: tuple[float, float], n: int, taken: set[float], sid: str) -> int:
+def draw_count(rng: random.Random, bounds: tuple[float, float], n: int, taken: set[float], sid: str) -> int:
     """A count k of n, 1 <= k < n, whose rate k / n lies in `bounds`, is usable and is far from every value taken."""
     fits = [k for k in range(max(1, math.ceil(bounds[0] * n)), min(n - 1, math.floor(bounds[1] * n)) + 1)
             if _usable(k / n) and _far(k / n, taken)]

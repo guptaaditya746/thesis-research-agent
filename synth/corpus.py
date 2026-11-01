@@ -22,7 +22,7 @@ import hashlib
 import json
 import shutil
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -105,6 +105,7 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
     flags and `duplicate_of` as found over the written set."""
     p, s = r.plan, study or r.study
     e = s.effect
+    copied = {m.id: m.copied_from for m in s.measurements}   # from `study`: in_corpus may have cleared a mark
     return {
         "study_id": s.study_id, "paper": s.study_id, "level": p.level,
         "relevant": s.relevant, "flags": study_flags(r, spec, s), "duplicate_of": s.duplicate_of, "missing": s.missing,
@@ -115,7 +116,7 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
                      "higher_is_better": k.higher_is_better} for k in p.metrics],
         "measurements": [{"id": m.id, "condition": m.condition, "metric": m.metric, "value": m.value,
                           "dataset": m.dataset, **({"experiment": m.experiment} if p.experiments else {}),
-                          **({"copied_from": m.copied_from} if m.copied_from else {})}
+                          **({"copied_from": copied[m.id]} if copied.get(m.id) else {})}
                          for m in p.measurements],
         **({"experiments": [{"id": x.id, "name": x.name, "conditions": list(x.conditions), "datasets": list(x.datasets),
                              "synthesis": i == 0} for i, x in enumerate(p.experiments)]} if p.experiments else {}),
@@ -143,6 +144,17 @@ def network_truth(studies: list[Study], recipe: Recipe, spec: protocol_module.Sy
     return {"types": TRUTH_TYPES,
             "network": {"things": network.nodes(recipe), "comparisons": network.comparisons(studies, spec),
                         "chains": network.chains(studies, recipe, spec)}}
+
+
+def in_corpus(study: Study, written: set[str]) -> Study:
+    """`study` as the truth of a corpus holding the studies `written` (after the fidelity exclusions): a dependency on
+    a study left out is dropped, and a copied result whose source is left out loses `copied_from` (the copy is then
+    the only instance of the value, its original)."""
+    if not study.dependencies and not any(m.copied_from for m in study.measurements):
+        return study
+    return replace(study, dependencies=tuple(d for d in study.dependencies if d.cites in written),
+                   measurements=tuple(replace(m, copied_from=None) if m.copied_from and m.copied_from not in written
+                                      else m for m in study.measurements))
 
 
 def prepare(directory: Path) -> None:
@@ -187,6 +199,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
     spec = protocol.synthesis
     recipe = recipe_of(studies)
     kept = truth.flagged([s for s in studies if s.study_id not in failed], spec)
+    kept = [in_corpus(s, {k.study_id for k in kept}) for s in kept]
     manifest = []
     for s in kept:
         data = papers[s.study_id].text.encode("utf-8")

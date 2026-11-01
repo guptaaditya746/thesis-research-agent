@@ -53,7 +53,7 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
-from evidence import names, protocol, rules
+from evidence import protocol, rules
 from evidence.pack import DOMAINS
 from evidence.protocol import Synthesis
 from synth.recipe import MetricSpec, Recipe, default_recipe, effect_protocol_path
@@ -852,13 +852,13 @@ def _copied(rng: random.Random, study: Study, cited: Study, spec: Synthesis) -> 
         return None
     new = {mine.id: replace(mine, value=source.value, k=source.k, copied_from=cited.study_id)}
     if sizes:
-        from synth.network import _count      # network.py builds on this module
+        from synth.network import draw_count      # network.py builds on this module
         sizes[ref.id] = cited.arm_sizes[source.condition]
         taken = kept | {source.value, difference}
         for m in again:
             metric = next(k for k in study.metrics if k.id == m.metric)
             try:
-                k = _count(rng, metric_spec(recipe, metric).range, sizes[ref.id], taken, study.study_id)
+                k = draw_count(rng, metric_spec(recipe, metric).range, sizes[ref.id], taken, study.study_id)
             except ValueError:
                 return None
             new[m.id] = replace(m, value=k / sizes[ref.id], k=k)
@@ -920,26 +920,31 @@ def with_variants(seed: int, studies: list[Study], recipe: Recipe) -> list[Study
 
 
 def variant_forms(rng: random.Random, recipe: Recipe) -> dict[str, dict[str, list[str]]]:
-    """Label -> kind -> the variant forms of every side name but the network's reference, all by general rules:
-    - spelling: case and hyphen changes ("ZELVORA") that the name grouping of D38 joins with the label (`clean` or a
-      near match; `evidence.names.group_names`), so a hyphen inside a one-word name ("zel-vora") is left out;
-    - hereafter: the short form of the name's parts ("ZV" for "Zel|vora", "TWC" for "two-word compound"), kept when
-      a paper's definition "<label> (hereafter <short>)" joins it with the label (D38's alias step);
+    """Label -> kind -> the variant forms of every side name but the network's reference, by fixed rules of the
+    generator (never by asking the engine's name grouping whether it joins them: scoring counts what it joins and what
+    it leaves unresolved, per kind):
+    - spelling: upper case ("ZELVORA") and a hyphen change: a one-word name split at its second syllable
+      ("zel-vora"), a hyphenated name with spaces, a spaced one with hyphens;
+    - hereafter: the short form of the name's parts ("ZV" for "Zel|vora", "TWC" for "two-word compound"), distinct
+      between names (a later name with the same initials has none); a paper defines it as
+      "<label> (hereafter <short>)";
     - code_name: the short form and a number ("ZV-217"), one per name for the whole set, distinct between names; a
-      paper introduces it as "<label> (<code>)", which only the model step of D38 can join.
+      paper introduces it as "<label> (<code>)".
     No form contains another name of the recipe or lies inside one."""
     reference = recipe.network.reference if recipe.network is not None else None
-    taken: set[str] = set()
+    codes: set[str] = set()
+    shorts: set[str] = set()
     out: dict[str, dict[str, list[str]]] = {}
     for name in (n for side in recipe.sides.values() for n in side.names if n.label != reference):
         short = _short_form(name.label)
         code = None
-        while short and (code is None or code in taken):
+        while short and (code is None or code in codes):
             code = f"{short}-{rng.randint(*CODE_NUMBERS)}"
-        taken.add(code or "")
-        forms = {"spelling": [f for f in _spellings(name.label) if _joined(name.label, f)],
-                 "hereafter": [short] if short and _defined(name.label, short) else [],
+        codes.add(code or "")
+        forms = {"spelling": _spellings(name.label),
+                 "hereafter": [short] if short and short not in shorts else [],
                  "code_name": [code] if code else []}
+        shorts.add(short or "")
         out[name.label] = {k: [f for f in v if not _clashes(f, name.label, recipe)] for k, v in forms.items()}
     return out
 
@@ -965,29 +970,15 @@ def _short_form(label: str) -> str | None:
 
 
 def _spellings(label: str) -> list[str]:
-    """Case and hyphen changes of a name, each differing from it."""
-    forms = [label.upper(), label.lower(), label.replace("-", " "), label.replace(" ", "-")]
+    """Upper case and a hyphen change of a name ("ZELVORA", "zel-vora"), each differing from it."""
     parts = _parts(label)
-    if " " not in label and "-" not in label and len(parts) > 1:
-        forms.append("-".join(p.lower() for p in parts))
-    return [f for f in dict.fromkeys(forms) if f != label]
-
-
-def _joined(label: str, form: str) -> bool:
-    """D38's grouping (no paper text: clean and near) puts `form` with `label`."""
-    mentions = [names.Mention(label, "a", 0, 0, "thing"), names.Mention(form, "b", 0, 0, "thing")]
-    return len(names.group_names(mentions, {}).groups) == 1
-
-
-def _defined(label: str, short: str) -> bool:
-    """D38's alias step joins `short` with `label` in a paper that defines it as "<label> (hereafter <short>)"."""
-    text = f"{label} (hereafter {short}) is named. {short} is named again."
-    at = text.index(short)
-    again = text.rindex(short)
-    mentions = [names.Mention(label, "p", 0, len(label), "thing"),
-                names.Mention(short, "p", at, at + len(short), "thing"),
-                names.Mention(short, "p", again, again + len(short), "thing")]
-    return len(names.group_names(mentions, {"p": text}).groups) == 1
+    if "-" in label:
+        hyphen = label.replace("-", " ")
+    elif " " in label:
+        hyphen = label.replace(" ", "-")
+    else:
+        hyphen = "-".join(p.lower() for p in parts)
+    return [f for f in dict.fromkeys([label.upper(), hyphen]) if f != label]
 
 
 def _clashes(form: str, label: str, recipe: Recipe) -> bool:

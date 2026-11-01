@@ -200,11 +200,27 @@ def test_a_variant_never_contains_another_things_name():
         assert not any(o in form.lower() or form.lower() in o for o in others - {c.label.lower(), c.synonym.lower()})
 
 
-def test_spelling_and_hereafter_variants_are_joined_by_the_general_name_rules():
-    """D38: a spelling joins its label by `clean` or a near match; a hereafter alias by the paper's definition."""
+def test_variant_forms_follow_the_generators_own_rules():
+    """Spelling: upper case or a hyphen at the second syllable ("zel-vora"); hereafter: the parts' initials, distinct
+    between things. Drawn by fixed rules: the generator never asks the engine's name grouping."""
+    forms = truth.variant_forms(random.Random(0), DRUGTOY)
+    assert forms["Zelvora"]["spelling"] == ["ZELVORA", "zel-vora"] and forms["Zelvora"]["hereafter"] == ["ZV"]
+    shorts = [f for v in forms.values() for f in v["hereafter"]]
+    assert len(shorts) == len(set(shorts)) == 3
+    assert "evidence.names" not in Path(truth.__file__).read_text(encoding="utf-8")
+    assert "from evidence import names" not in Path(truth.__file__).read_text(encoding="utf-8")
     for _, c, kind, form in VARIANTS:
         if kind == "spelling":
-            assert form != c.label
+            assert form in (c.label.upper(), "-".join(p.lower() for p in truth._parts(c.label)))
+        elif kind == "hereafter":
+            assert form == truth._short_form(c.label)
+
+
+def test_the_engine_joins_spelling_and_hereafter_variants():
+    """A cross-check, not a filter: D38's clean step joins every spelling variant ("zel-vora" too), and its alias
+    step a hereafter alias defined at the start of a clause. Code names are left to the model step."""
+    for _, c, kind, form in VARIANTS:
+        if kind == "spelling":
             assert len(names.group_names([names.Mention(c.label, "p", 0, 0, "x"),
                                           names.Mention(form, "q", 0, 0, "x")], {}).groups) == 1
         elif kind == "hereafter":
@@ -285,3 +301,41 @@ def test_recipe_planted_blocks_are_checked(tmp_path, old, new, match):
     (folder / "generator.yaml").write_text(text.replace(old, new), encoding="utf-8")
     with pytest.raises(ValueError, match=match):
         load_recipe("drugtoy", root=tmp_path)
+
+
+class _Named:
+    name = "fake"
+
+    def models(self):
+        return None
+
+
+def written_truth(tmp_path, excluded: set[str]) -> dict:
+    """ground_truth.json of the builds_on set written with `excluded` left out as fidelity failures."""
+    from evidence import protocol as protocol_module
+    from synth.fidelity import PaperFidelity
+    from synth.recipe import effect_protocol_path
+    proto = protocol_module.load(effect_protocol_path(DRUGTOY), FIXTURES)
+    papers = {s.study_id: corpus.Rendered(s, make_plan(s, "explicit", random.Random(0)), "text", [], [],
+                                          PaperFidelity(s.study_id, s.study_id not in excluded, []))
+              for s in BUILT}
+    corpus.write_corpus(tmp_path / "c", name="c", level="explicit", seed=4, renderer=_Named(), protocol=proto,
+                        studies=BUILT, papers=papers, failed={sid: ["explicit"] for sid in excluded},
+                        settings=corpus.settings_of(name="c", studies=16, mix=None, levels=["explicit"],
+                                                    preset="builds_on"))
+    return json.loads((tmp_path / "c" / "ground_truth.json").read_text(encoding="utf-8"))
+
+
+def test_truth_drops_links_to_excluded_studies_and_orphan_copies(tmp_path):
+    copy_study, dep = next((s, d) for s in BUILT for d in s.dependencies if d.reuses == "result")
+    other = next(d.cites for s in BUILT for d in s.dependencies if d.reuses != "result" and d.cites != dep.cites)
+    gt = written_truth(tmp_path, {dep.cites, other})
+    records = {r["study_id"]: r for r in gt["studies"]}
+    assert dep.cites not in records and other not in records
+    assert all(d["cites"] in records for r in records.values() for d in r["dependencies"])
+    copied = next(m for m in records[copy_study.study_id]["measurements"] if m["id"] == dep.measurement)
+    assert "copied_from" not in copied and copied["value"] == copy_study.value_of(dep.measurement)
+    # nothing excluded: every link and mark is written
+    full = {r["study_id"]: r for r in written_truth(tmp_path / "all", set())["studies"]}
+    assert sum(len(r["dependencies"]) for r in full.values()) == sum(len(s.dependencies) for s in BUILT)
+    assert any(m.get("copied_from") == dep.cites for m in full[copy_study.study_id]["measurements"])
