@@ -13,7 +13,8 @@ A compound form takes its numbers: "41 of 120" is one `k_of_n` span, not three. 
 ("0 of 0", "45 of 30") and a fraction with an empty or smaller denominator are no span at all and their numbers
 are not read alone either, so a broken count never gives a value above 1.
 
-The text is NFKC-normalised first (full-width "８２．５％" reads as 82.5%), and every offset (`start`, `end`, each
+The text's full- and half-width characters are NFKC-folded first ("８２．５％" reads as 82.5%; superscripts,
+subscripts and fractions are left as they are, so "0.68¹" is no 0.681), and every offset (`start`, `end`, each
 number's `parts`) is mapped back to the original text, so `raw == text[start:end]`. `parts` are the (start, end) of
 each number of the span in order, a % sign that follows a number included. Nothing here knows a topic: whether a
 number is a result (and not a year, a delta or a sample size) is the caller's decision (numbers.py).
@@ -65,11 +66,14 @@ def count_fraction(num: str, den: str) -> float | None:
 
 
 def _normalise(text: str) -> tuple[str, list[int]]:
-    """NFKC text and, for each of its characters, the index of the original character it came from."""
+    """The text with full- and half-width forms folded (NFKC of a <wide> or <narrow> character only: "８２．５％"
+    is "82.5%"; a superscript, subscript or vulgar fraction stays, so "0.68¹" is not 0.681) and, for each of its
+    characters, the index of the original character it came from."""
     out: list[str] = []
     origin: list[int] = []
     for i, ch in enumerate(text):
-        norm = unicodedata.normalize("NFKC", ch) if ord(ch) > 127 else ch
+        wide = ord(ch) > 127 and unicodedata.decomposition(ch).startswith(("<wide>", "<narrow>"))
+        norm = unicodedata.normalize("NFKC", ch) if wide else ch
         out.append(norm)
         origin.extend([i] * len(norm))
     return "".join(out), origin

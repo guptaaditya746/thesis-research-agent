@@ -85,3 +85,18 @@ def test_enrolment_count_is_not_a_measurement(tmp_path):
 def test_share_of_patients_is_a_measurement(tmp_path):
     (item,) = measurements(["The response rate was 34% of patients for Zelvora."], tmp_path, DRUG_TOY_PROTOCOL)
     assert item.fields["value"] == pytest.approx(0.34) and item.fields["form"] == "percent"
+
+
+def test_superscripts_and_fractions_are_not_folded_into_numbers():
+    # only full- and half-width forms are NFKC-folded: a footnote mark or a vulgar fraction is no digit
+    assert [(s.form, s.value) for s in read_numbers("accuracy of 0.68¹ on X")] == [("plain", 0.68)]
+    assert [(s.form, s.value) for s in read_numbers("reached 71.2%²")] == [("percent", 0.712)]
+    assert read_numbers("about ½ of them") == []
+    (wide,) = read_numbers("accuracy of ０．６８")
+    assert (wide.form, wide.value, wide.raw) == ("plain", 0.68, "０．６８")
+
+
+def test_a_footnote_mark_glues_the_number_out_of_a_measurement(tmp_path):
+    assert measurements(["Zelvora reached a response rate of 0.68¹."], tmp_path, DRUG_TOY_PROTOCOL) == []
+    (item,) = measurements(["Zelvora reached a response rate of 0.68."], tmp_path / "b", DRUG_TOY_PROTOCOL)
+    assert item.fields["value"] == 0.68
