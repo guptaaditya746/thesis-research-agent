@@ -28,8 +28,9 @@ TRUTH = {"rag-factuality": {"metric": "factual_accuracy", "min_effect": 0.01},
          "cons-accuracy": {"metric": "factual_accuracy", "min_effect": 0.01},
          "cons-hallucination": {"metric": "hallucination_rate", "min_effect": 0.01},
          "best-accuracy": {"metric": "factual_accuracy"}, "best-hallucination": {"metric": "hallucination_rate"}}
-HASHES = {"rag-factuality": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
-          "rag-factuality-agentic": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79"}
+# D35/D36: the measurement type gained form and value_total (Task 6)
+HASHES = {"rag-factuality": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",
+          "rag-factuality-agentic": "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2"}
 
 
 def load(qid: str) -> protocol.Protocol:

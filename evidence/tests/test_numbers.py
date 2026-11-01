@@ -149,7 +149,10 @@ def test_ranges_sections_and_shares_are_not_values() -> None:
     assert run(sentence("Accuracy of the closed-book model drops from 71% to 62%.")) == []
     text = sentence("Section 4.1 reports the latency of the closed-book model.")
     assert run(text, [RAG, CB, LAT]) == []
-    assert run(sentence("For 40% of the questions, the closed-book model's accuracy is reported.")) == []
+    # D35: a percentage followed by "of" is no longer turned away as a share ("34% of patients responded")
+    [share] = run(sentence("For 40% of the questions, the closed-book model's accuracy is reported."))
+    assert (share.fields["value"], share.fields["form"]) == (0.4, "percent")
+    assert run(sentence("For 0.4 of the questions, the closed-book model's accuracy is reported.")) == []
 
 
 def test_percent_only_normalised_for_fraction_metrics() -> None:
@@ -228,7 +231,7 @@ def test_registered_as_regex_with_own_hash() -> None:
     assert ex.spec.kind == "regex" and ex.spec.evidence_types == ("measurement",)
     assert ex.spec.code_sha256 == numbers.CODE_SHA256 == base.source_sha256(*numbers.SOURCES)
     names = {p.name for p in numbers.SOURCES}
-    assert {"numbers.py", "measure.py", "terms.py", "units.py", "regex.py", "base.py"} <= names
+    assert {"numbers.py", "numreader.py", "measure.py", "terms.py", "units.py", "regex.py", "base.py"} <= names
 
 
 # --- the engine: [regex_measurement, number_measurement] --------------------------------------------------

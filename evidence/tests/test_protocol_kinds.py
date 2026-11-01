@@ -1,8 +1,6 @@
 """Protocol kinds (effect, inventory, consistency, best) and the dataset evidence type."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -13,9 +11,8 @@ from evidence import protocol
 from evidence.contract import Item, Span
 from evidence.pack import protocol_path
 
-REPO = Path(__file__).resolve().parents[2]
-RAG_FACTUALITY_SHA = json.loads(
-    (REPO / "tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json").read_text(encoding="utf-8"))["protocol"]["sha256"]
+# D35/D36: was the sha256 the EV2 corpora recorded; the measurement type gained form and value_total (Task 6)
+RAG_FACTUALITY_SHA = "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f"
 
 SYNTHESIS: dict[str, Any] = {
     "compare": {"treatment": "rag", "control": "baseline"},

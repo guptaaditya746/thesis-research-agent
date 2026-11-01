@@ -596,7 +596,7 @@
    "without retrieval"
   ]
  },
- "best-accuracy/sha256": "fa9db4b52caabf060722d88ab3dedae638504c7886e65084a74677e73a4eb84f",
+ "best-accuracy/sha256": "2543fe910cc6d8cf3f7f8cd9589d072dffaa3975bb11ed3c19c5d793235bd9a5",
  "best-hallucination/condition/llm_condition": {},
  "best-hallucination/condition/regex_condition_kind": {
   "kinds": {
@@ -1194,7 +1194,7 @@
    "without retrieval"
   ]
  },
- "best-hallucination/sha256": "23287ecfe2bd9c2a6772c8baaca3d1a7e3fc2daee76c54ed0253d0b1f8f71c55",
+ "best-hallucination/sha256": "c79504ad08b681d973b9ce176a9e4975d275f8e607d59c6f0df0d0fd935eaf46",
  "cons-accuracy/author_claim/llm_author_claim": {},
  "cons-accuracy/author_claim/regex_author_claim": {
   "claims": [
@@ -1644,7 +1644,7 @@
    "without retrieval"
   ]
  },
- "cons-accuracy/sha256": "53d517dec36c4683f2044ac427a1ad996392ec7462dbdbc382db001eb9a02a0b",
+ "cons-accuracy/sha256": "5806fc9b893e25f06a0c4b56f69bcc423b7847d78d092ae191b6db165511d3ec",
  "cons-hallucination/author_claim/llm_author_claim": {},
  "cons-hallucination/author_claim/regex_author_claim": {
   "claims": [
@@ -2094,7 +2094,7 @@
    "without retrieval"
   ]
  },
- "cons-hallucination/sha256": "b6c9bb66e4ed345a218bb7ad7835aa3ac908e674a8cdf408468fddbfed57739f",
+ "cons-hallucination/sha256": "84406b8938d691423701de7a28a2a61fe27014627cd27f1b0dc8043702fc5629",
  "inv-datasets/dataset/gliner_dataset": {
   "labels": [
    "dataset"
@@ -2576,7 +2576,7 @@
    "without retrieval"
   ]
  },
- "rag-factuality-agentic/sha256": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79",
+ "rag-factuality-agentic/sha256": "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2",
  "rag-factuality-funnel/author_claim/llm_author_claim": {},
  "rag-factuality-funnel/author_claim/regex_author_claim": {
   "claims": [
@@ -3026,7 +3026,7 @@
    "without retrieval"
   ]
  },
- "rag-factuality-funnel/sha256": "f856c8285c963346e2b32846bd2fa35eed6b8cd8dd8fbfc9c0de0358aae5c516",
+ "rag-factuality-funnel/sha256": "49fbd46924cde4841fc791c3bc9615a5e55a725b64c3e8fac1b18001c224ec26",
  "rag-factuality/author_claim/llm_author_claim": {},
  "rag-factuality/author_claim/regex_author_claim": {
   "claims": [
@@ -3223,7 +3223,7 @@
    "without retrieval"
   ]
  },
- "rag-factuality/sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
+ "rag-factuality/sha256": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",
  "rag-hallucination/author_claim/llm_author_claim": {},
  "rag-hallucination/author_claim/regex_author_claim": {
   "claims": [
@@ -3673,7 +3673,7 @@
    "without retrieval"
   ]
  },
- "rag-hallucination/sha256": "1561009a1c65b823ce4d333b07d0f240ab90fdfaf457ba298a59d7bddb63e36c",
+ "rag-hallucination/sha256": "b9cd999f5b8e0446f3e57980523d5af4ab665e32c547df812c0991b3c104dea4",
  "rag-latency/condition/abbrev_condition": {
   "conditions": {
    "baseline": [
@@ -3925,5 +3925,5 @@
    "without retrieval"
   ]
  },
- "rag-latency/sha256": "15bf21073b70f6917d4ced1927140d6fd3e89745c95f166a4d4c714bf8e298eb"
+ "rag-latency/sha256": "0ab9e2fd4e8aceb3cafedc7890d2c5bc6d9b6e5808ad5d6e224358df43a1ed6e"
 }

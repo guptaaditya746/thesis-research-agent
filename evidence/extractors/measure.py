@@ -17,7 +17,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, NamedTuple
 
 from ..contract import ExtractionTask, Item, Span
-from . import base, terms
+from . import base, numreader, terms
 
 Found = tuple[dict[str, Any], dict[str, str], list[Span]]
 CELL = re.compile(r"^[*_]*\s*(\d+(?:\.\d+)?|\.\d+)\s*(%?)\s*[*_]*(?:\s*(?:±|\+/-|\+-)\s*\d+(?:\.\d+)?)?\s*[*_]*$")
@@ -182,7 +182,7 @@ def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> l
     return out
 
 
-def _sample_size(text: str, s: int, e: int, hit: re.Match[str]) -> bool:
+def sample_size(text: str, s: int, e: int, hit: re.Match[str]) -> bool:
     """A count that sizes a sample, not an outcome: a result verb between the trigger and the count, or
     "correct(ly)" after it, keeps it a result."""
     if CORRECT_AFTER.match(text[hit.end():e]):
@@ -203,10 +203,10 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         return []
     out: list[Found] = []
     changes = [(m.start(), m.end()) for m in FROM_TO.finditer(text, s, e)]
-    counts = list(base.COUNT.finditer(text, s, e))
+    counts = list(numreader.COUNT.finditer(text, s, e))
     numbers = [h for h in base.NUMBER.finditer(text, s, e) if not any(c.start() <= h.start() < c.end() for c in counts)]
     for hit in sorted([*numbers, *counts], key=lambda h: h.start()):
-        count = hit.re is base.COUNT
+        count = hit.re is numreader.COUNT
         raw, pct = hit.group(1), (not count and bool(hit.group(2)))
         if not count and not pct and not ("." in raw and float(raw) <= 1):
             continue
@@ -226,10 +226,10 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
         if cond is None or met is None:
             continue
-        if count and _sample_size(text, s, e, hit):
+        if count and sample_size(text, s, e, hit):
             continue
         if count:
-            value = base.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None
+            value = numreader.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None
         else:
             value = base.to_fraction(raw + ("%" if pct else ""), percent=pct, rate_like=r.rate_like(met[1]))
         if value is None:

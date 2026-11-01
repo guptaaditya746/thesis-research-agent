@@ -18,7 +18,7 @@ from . import base, terms
 from .measure import measurements
 
 VERSION = 2
-SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
+SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "numreader.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
 # added by the engine (`types`: the pack's type of each role, for the measured-value extractors)
 INJECTED = ("evidence_type", "field_schema", "links", "roles", "question_metrics", "compare", "types")

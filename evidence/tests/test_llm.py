@@ -37,13 +37,13 @@ def s001(evidence_type: str, doc: str, prompt: str) -> dict[str, Any]:
     if evidence_type == "measurement":
         rag, base, acc = (context_id(prompt, '"rag"'), context_id(prompt, '"baseline"'),
                           context_id(prompt, '"answer accuracy"'))
-        items = [{"fields": {"value": 71, "dataset": "Natural Questions"}, "links": {"condition": rag, "metric": acc},
-                  "quotes": {"value": "reaches an answer accuracy of 71%", "condition_label": None, "metric_label": None}},
-                 {"fields": {"value": 0.99, "dataset": None}, "links": {"condition": base, "metric": acc},
-                  "quotes": {"value": "an accuracy of 99%", "condition_label": None, "metric_label": None}}]
+        items = [{"fields": {"value": 71, "dataset": "Natural Questions", "form": None}, "links": {"condition": rag, "metric": acc},
+                  "quotes": {"value": "reaches an answer accuracy of 71%", "condition_label": None, "metric_label": None, "value_total": None}},
+                 {"fields": {"value": 0.99, "dataset": None, "form": None}, "links": {"condition": base, "metric": acc},
+                  "quotes": {"value": "an accuracy of 99%", "condition_label": None, "metric_label": None, "value_total": None}}]
         if EXTRA["on"]:
-            items.append({"fields": {"value": 0.62, "dataset": "Natural Questions"}, "links": {"condition": base, "metric": acc},
-                          "quotes": {"value": "| Closed-book model | 62.0", "condition_label": None, "metric_label": None}})
+            items.append({"fields": {"value": 0.62, "dataset": "Natural Questions", "form": None}, "links": {"condition": base, "metric": acc},
+                          "quotes": {"value": "| Closed-book model | 62.0", "condition_label": None, "metric_label": None, "value_total": None}})
         return {"items": items}
     return {"items": [{"fields": {"direction": "improves"},
                        "quotes": {"claim": "Retrieval-augmented generation improves the factual accuracy"}}]}

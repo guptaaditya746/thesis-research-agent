@@ -18,31 +18,40 @@ spans, so an abbreviation item ("HR" for hallucination rate) or a condition whos
 quoted ("B") resolves in a table header, a row label or a sentence. A form that names two items is not used.
 A measurement is emitted only when both a condition and a metric resolve.
 
-Values: a % sign or a % metric header makes a fraction (a % caption only for a fraction metric); a bare number
-between 1 and 100 is read as a percentage only for the metrics in `fraction_metrics` (default: the canonicals
-a protocol bounds to [0, 1]); any other metric keeps its value as written, a time unit or a millisecond header
-giving seconds (units.py). Integers need a % sign or a time unit. Not values: deltas and differences ("by 4%",
-"+3.2 points", "9% higher", "0.45 s slower"), ranges and changes ("0.6-0.7", "between 0.6 and 0.7", "from 71%
-to 62%"), years, table, section and figure numbers, counts ("1,000 questions", "1.5 billion"), shares ("40% of
-the questions") and cells under a difference header ("Δ Accuracy"). Own module, so every existing extractor
-keeps its id.
+Numbers are read by numreader.read_numbers (D35: one reader for every topic), which gives each its written form
+(`fields["form"]`): plain, percent, fraction, k_of_n, range or plus_minus. Values: a % sign or a % metric header
+makes a fraction (a % caption only for a fraction metric); a bare number between 1 and 100 is read as a
+percentage only for the metrics in `fraction_metrics` (the pack's or the protocol's); any other metric keeps its
+value as written, a time unit or a millisecond header giving seconds (units.py). A count "41 of 120" or "41/120"
+is the fraction k/n, for a fraction metric only; its two numbers are the spans `value` (k) and `value_total` (n).
+"0.61 ± 0.03" is 0.61. Integers need a % sign, a time unit or a count. Not values: deltas and differences ("by
+4%", "+3.2 points", "9% higher", "0.45 s slower"), ranges and changes ("0.6-0.7", "between 0.6 and 0.7", "from
+71% to 62%"), years, table, section and figure numbers, bare counts ("1,000 questions", "1.5 billion", "120
+patients"), a count that sizes a sample ("200 out of 1,000 questions were sampled") and cells under a difference
+header ("Δ Accuracy"). A percentage or a k-of-n count followed by a noun is a value ("34% of patients", "41 of 120
+patients" respond): the reader no longer turns them away as shares or counts. Own module, so every existing
+extractor keeps its id.
 """
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Any
 
-from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, RunContext
+from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, RunContext, Span
 from . import base, regex, terms, units
-from .measure import CELL, DATASET_HEADER, DELTA_AFTER, DELTA_BEFORE, FROM_TO, HEAD_NOUN, SIGNED, Found, Resolver
+from .measure import DATASET_HEADER, DELTA_AFTER, DELTA_BEFORE, HEAD_NOUN, SIGNED, Found, Resolver, sample_size
+from .numreader import NumberSpan, read_numbers
 
 VERSION = 1
-SOURCES = (base.HERE / "numbers.py", base.HERE / "measure.py", base.HERE / "terms.py", base.HERE / "units.py",
-           base.HERE / "regex.py", *base.SHARED_SOURCES)   # regex.py: INJECTED; units.py: time units, ms header
+SOURCES = (base.HERE / "numbers.py", base.HERE / "numreader.py", base.HERE / "measure.py", base.HERE / "terms.py",
+           base.HERE / "units.py", base.HERE / "regex.py", *base.SHARED_SOURCES)   # regex.py: INJECTED; units.py: time units, ms header
 CODE_SHA256 = base.source_sha256(*SOURCES)
 
-NUMBER = re.compile(r"(?<![\w.,])(\d+(?:\.\d+)?|\.\d+)(?:(\s?%)|\s?(ms|milliseconds?|s|secs?|seconds?)\b)?")
-TIME_CELL = re.compile(r"^[*_]*\s*(\d+(?:\.\d+)?|\.\d+)\s?(ms|s|secs?|seconds?)\s*[*_]*$")
+UNIT = re.compile(r"\s?(ms|milliseconds?|s|secs?|seconds?)\b")   # a time unit right after a plain number
+CELL_UNIT = re.compile(r"\s?(ms|s|secs?|seconds?)\s*$")           # ... closing a table cell
+COUNTS: frozenset[str] = frozenset({"k_of_n", "fraction"})       # k / n: a value of a fraction metric only
+SHARES: frozenset[str] = frozenset({"k_of_n", "percent"})        # a noun may follow ("34% of patients")
 GLUED = re.compile(r"[\w]|[.,]\d|[-–]\w")   # "7B", "1,000", "5-shot": the number is part of a longer token
 REFERENCE_BEFORE = re.compile(r"(?i)(?:\b(?:table|tab\.|section|sec\.|figure|fig\.|eq\.|equation|appendix|"
                               r"chapter|step|version|v)|§)\s*$")
@@ -54,8 +63,6 @@ COUNT_AFTER = re.compile(r"(?i)^\s*(?:questions|examples|samples|items|papers|do
                          r"participants|annotators|tokens|passages|runs|seeds|layers|parameters|billion|million|"
                          r"thousand)\b")
 SHARE_AFTER = re.compile(r"(?i)^\s+of\b")
-RANGE = re.compile(r"(?i)\bbetween\s+\d*\.?\d+\s*%?\s*and\s+\d*\.?\d+\s*%?|"
-                   r"\d*\.?\d+\s*%?\s*(?:-|–|—|to)\s*\d*\.?\d+\s*%?")
 FOLLOWS = re.compile(r"\s*[(,–—-]?\s*(?:(?:for|with|by|of|from|in|using|on)\s+)?"
                      r"(?:the\s+|a\s+|an\s+|its\s+|our\s+)?")
 DELTA_HEADER = re.compile(r"(?i)Δ|∆|\bdelta\b|\bdiff\w*|\bgain\b|\bimprove\w*|\bchange\b|\bvs\.?\b|\breduction\b")
@@ -65,6 +72,30 @@ SYSTEMS = re.compile(r"(?i)\b(?:model|system|variant|baseline|pipeline|generator
 PROSE_EXCLUDED = frozenset({"A", "I"})   # one-letter forms that are ordinary words in a sentence
 
 Named = tuple[terms.Mention, Item]
+
+
+@dataclass(frozen=True)
+class Hit:
+    """A number read in a sentence: the reader's span and the time unit right after it (a plain number only).
+    `start()` and `end()` (the unit included) as on a regex match, for the position helpers below."""
+    n: NumberSpan
+    unit: str | None
+    unit_end: int
+
+    def start(self) -> int:
+        return self.n.start
+
+    def end(self) -> int:
+        return self.unit_end if self.unit else self.n.end
+
+
+def _value_spans(task: ExtractionTask, text: str, n: NumberSpan, offset: int = 0) -> list[Span]:
+    """The value's spans: its (first) number, the % sign included; for a count also `value_total` (n)."""
+    (a, b), *rest = n.parts
+    spans = [base.span(task, text, offset + a, offset + b, "value")]
+    if n.form in COUNTS:
+        spans.append(base.span(task, text, offset + rest[0][0], offset + rest[0][1], "value_total"))
+    return spans
 
 
 class Surfaces:
@@ -130,22 +161,30 @@ class NumberMeasurement:
             for table in base.tables(text):
                 if any(a <= table.start and table.end <= b for a, b in parts):
                     found.extend(self._table(task, text, table, names, datasets))
+            numbers = read_numbers(text)
             for a, b in parts:
                 for s, e in base.sentences(text, a, b):
-                    found.extend(self._sentence(task, text, s, e, names, datasets))
+                    inside = [n for n in numbers if s <= n.start and n.end <= e]
+                    found.extend(self._sentence(task, text, s, e, inside, names, datasets))
         items: list[Item] = base.group(self.emits, found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 
     # values ----------------------------------------------------------------------------------------------
 
-    def _value(self, raw: str, metric: Item, *, percent: bool, unit: str | None) -> float | None:
-        """The number as the protocol stores it, or None when it cannot be a value of this metric."""
+    def _value(self, n: NumberSpan, metric: Item, *, percent: bool, unit: str | None) -> float | None:
+        """The number as the protocol stores it, or None when it cannot be a value of this metric. `percent`:
+        the header or caption marks the number as a percentage (a % sign in the text the reader has applied)."""
         fraction = metric.fields.get("canonical") in self.fractions
+        if n.form in COUNTS:   # k / n, at most 1 by construction: a share, so a fraction metric's value
+            return n.value if fraction else None
+        if n.form == "range":
+            return None
         if unit is not None:   # a time: only for a metric that is not a fraction
-            return None if fraction else round(float(raw) / (1000 if unit.startswith("m") else 1), 6)
-        value = base.to_fraction(raw, percent=percent, rate_like=fraction)
-        if value is None or (fraction or percent) and value > 1:
+            return None if fraction else round(n.value / (1000 if unit.startswith("m") else 1), 6)
+        written = "%" in n.raw
+        value = n.value if written else base.to_fraction(str(n.value), percent=percent, rate_like=fraction)
+        if value is None or (fraction or percent or written) and value > 1:
             return None
         return value
 
@@ -179,42 +218,40 @@ class NumberMeasurement:
                 if condition is None or metric is None:
                     continue
                 fraction = metric.fields.get("canonical") in self.fractions
-                timed = TIME_CELL.match(cell.text)
-                if timed is not None:
-                    raw, a, b, unit, pct = timed.group(1), timed.start(1), timed.end(1), timed.group(2), False
-                else:
-                    hit = CELL.match(cell.text)
-                    if hit is None:
-                        continue
+                held = _cell_number(cell.text)
+                if held is None:
+                    continue
+                number, unit = held
+                if unit is None:
                     # a % caption speaks for the table's rates, not for a latency column beside them
-                    pct = bool(hit.group(2)) or _percent(metric_cell.text) or fraction and _percent(table.caption)
-                    raw, a, b = hit.group(1), hit.start(1), hit.end(2) if hit.group(2) else hit.end(1)
+                    pct = _percent(metric_cell.text) or fraction and _percent(table.caption)
                     ms = units.MS_HEADER.search(col.text) or units.MS_HEADER.search(label[1].text)
-                    unit = "ms" if ms and not fraction else None
+                    unit = "ms" if ms and not fraction and number.form == "plain" else None
+                else:
+                    pct = False
                 item, defined = condition
-                value = self._value(raw, metric, percent=pct, unit=unit)
+                value = self._value(number, metric, percent=pct, unit=unit)
                 if value is None:
                     continue
-                spans = [base.span(task, text, cell.start + a, cell.start + b, "value"),
+                spans = [*_value_spans(task, text, number, cell.start),
                          base.span(task, text, cond_cell.start, cond_cell.end, "condition_label"),
                          base.span(task, text, metric_cell.start, metric_cell.end, "metric_label")]
                 if defined is not None:
                     spans.append(base.span(task, text, *defined, "condition_label"))
                 dataset = row_dataset or _named(col.text, datasets) or caption_dataset
-                out.append(({"value": value, "dataset": dataset},
+                out.append(({"value": value, "dataset": dataset, "form": number.form},
                             r.r.slots.links(item, metric), spans))
         return out
 
     # sentences -------------------------------------------------------------------------------------------
 
-    def _sentence(self, task: ExtractionTask, text: str, s: int, e: int, r: Surfaces,
+    def _sentence(self, task: ExtractionTask, text: str, s: int, e: int, numbers: list[NumberSpan], r: Surfaces,
                   datasets: list[str]) -> list[Found]:
         conditions = r.condition_mentions(text, s, e)
         metrics = r.metric_mentions(text, s, e)
         if not conditions or not metrics:
             return []
-        excluded = [(m.start(), m.end()) for rx in (FROM_TO, RANGE) for m in rx.finditer(text, s, e)]
-        hits = [h for h in NUMBER.finditer(text, s, e) if self._candidate(text, s, e, h, excluded)]
+        hits = [h for h in (_hit(text, n, e) for n in numbers) if self._candidate(text, s, e, h)]
         rights = [_right(text, h, conditions) for h in hits]
         claimed = {(c[0].start, c[0].end) for c in rights if c is not None}   # named right after another number
         free = [c for c in conditions if (c[0].start, c[0].end) not in claimed]
@@ -223,41 +260,45 @@ class NumberMeasurement:
         for n, hit in enumerate(hits):
             others = [h.start() for h in hits if h is not hit]
             cond = rights[n] or _nearest(text, hit, free, others)
-            unit = hit.group(3)
+            unit = hit.unit
             usable = [(m, i) for m, i in metrics if unit is None or i.fields.get("canonical") not in self.fractions]
             met = min(usable, key=lambda mi: (_distance(hit, mi[0]), mi[0].start), default=None)
             if cond is None or met is None:
                 continue
-            value = self._value(hit.group(1), met[1], percent=bool(hit.group(2)), unit=unit)
+            value = self._value(hit.n, met[1], percent=False, unit=unit)
             if value is None:
                 continue
-            end = hit.end(2) if hit.group(2) else hit.end(1)
-            spans = [base.span(task, text, hit.start(1), end, "value"),
+            spans = [*_value_spans(task, text, hit.n),
                      base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                      base.span(task, text, met[0].start, met[0].end, "metric_label")]
-            out.append(({"value": value, "dataset": dataset},
+            out.append(({"value": value, "dataset": dataset, "form": hit.n.form},
                         r.r.slots.links(cond[1], met[1]), spans))
         return out
 
-    def _candidate(self, text: str, s: int, e: int, hit: re.Match[str], excluded: list[tuple[int, int]]) -> bool:
+    def _candidate(self, text: str, s: int, e: int, hit: Hit) -> bool:
         """A number that can be a reported value: not part of a longer token, a delta, a range, a year, a
-        reference, a count or a share."""
-        raw, pct, unit = hit.group(1), hit.group(2), hit.group(3)
+        reference, a bare count, a sample size or (a plain number) a share."""
+        n, unit = hit.n, hit.unit
+        if n.form == "range":
+            return False   # "between 0.6 and 0.7", "0.6-0.7", "from 71% to 62%"
         if GLUED.match(text, hit.end()) and hit.end() < e:
             return False
-        if "." not in raw and not pct and not unit:
+        integer = n.form == "plain" and "." not in n.raw
+        if integer and not unit:
             return False   # a bare integer: a count, a year, a k
-        if "." not in raw and 1900 <= int(raw) <= 2099:
+        if integer and 1900 <= n.value <= 2099:
             return False   # a year ("the 1990s")
-        if any(a <= hit.start() < b for a, b in excluded):
-            return False
         before, after = text[max(s, hit.start() - 25):hit.start()], text[hit.end():e]
         if (DELTA_BEFORE.search(before) or SIGNED.search(before) or CHANGE_BEFORE.search(before)
                 or REFERENCE_BEFORE.search(before)):
             return False
-        if DELTA_AFTER.match(after) or CHANGE_AFTER.match(after) or COUNT_AFTER.match(after):
+        if DELTA_AFTER.match(after) or CHANGE_AFTER.match(after):
             return False
-        return not (pct and SHARE_AFTER.match(after))   # "40% of the questions": a share of something else
+        if n.form in COUNTS and sample_size(text, s, e, hit):  # type: ignore[arg-type]
+            return False   # "200 out of 1,000 questions were sampled"
+        if n.form in SHARES:
+            return True    # D35: "34% of patients", "41 of 120 patients" are results
+        return not (COUNT_AFTER.match(after) or SHARE_AFTER.match(after))   # "1.5 billion", "0.4 of the questions"
 
 
 # surface forms -------------------------------------------------------------------------------------------
@@ -309,6 +350,25 @@ def _merge(text: str, known: list[Named], extra: list[tuple[int, int, Item]], ke
 
 
 # helpers ---------------------------------------------------------------------------------------------------
+
+def _hit(text: str, n: NumberSpan, e: int) -> Hit:
+    """The number with the time unit right after it, for a plain number."""
+    unit = UNIT.match(text, n.end, e) if n.form == "plain" else None
+    return Hit(n, unit.group(1) if unit else None, unit.end() if unit else n.end)
+
+
+def _cell_number(cell: str) -> tuple[NumberSpan, str | None] | None:
+    """The one number a table cell holds (bold and italic marks allowed around it), offsets within the cell,
+    with the time unit closing the cell; None for any other cell (text, two numbers, a range)."""
+    bare = re.sub(r"[*_]", " ", cell)   # same length: the reader's offsets stay the cell's
+    found = read_numbers(bare)
+    if len(found) != 1 or found[0].form == "range" or bare[:found[0].start].strip():
+        return None
+    rest = bare[found[0].end:]
+    if not rest.strip():
+        return found[0], None
+    unit = CELL_UNIT.fullmatch(rest) if found[0].form == "plain" else None
+    return (found[0], unit.group(1)) if unit else None
 
 def _percent(label: str) -> bool:
     return "%" in label or "percent" in label.casefold()

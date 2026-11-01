@@ -81,11 +81,12 @@ evidence_types:
       properties:
         value: {type: number, description: the value as a fraction for accuracies and rates}
         dataset: {type: [string, "null"], description: "the dataset, or null when the paper does not say"}
+        form: {type: [string, "null"], enum: [plain, percent, fraction, k_of_n, range, plus_minus, null], description: "how the paper wrote the number (41 of 120 is k_of_n)"}
     links: {condition: condition, metric: metric}
     bounds:                   # accuracies and rates are fractions; a value outside [0, 1] is rejected (schema)
       - {field: value, min: 0, max: 1, when: {link: metric, field: canonical, values: [factual_accuracy, hallucination_rate]}}
     context: [condition, metric]
-    roles: [value, condition_label, metric_label]
+    roles: [value, condition_label, metric_label, value_total]   # value_total: the n of a count "k of n"
     merge_key: [value]
     query: [table, results, accuracy, rate, achieves, reaches, compared, "%"]
     extractors:

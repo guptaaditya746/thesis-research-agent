@@ -1,0 +1,79 @@
+# Toy effect protocol of the drugtoy pack (evidence/tests/test_numreader.py): does Zelvora raise the response rate
+# over placebo? Regex steps only (no model).
+
+id: drugtoy-response
+domain: drugtoy
+version: 2
+question: Does Zelvora improve the response rate over placebo?
+
+locate:
+  strategy: exhaustive
+
+evidence_types:
+  arm:
+    description: A trial arm; role is drug for Zelvora, placebo for the placebo arm.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label, role]
+      properties:
+        label: {type: string, minLength: 1}
+        role: {type: string, enum: [drug, placebo, other]}
+    roles: [condition_label]
+    merge_key: [label, role]
+    extractors:
+      - name: regex_condition
+
+  outcome:
+    description: A clinical outcome the trial reports.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name, canonical, higher_is_better]
+      properties:
+        name: {type: string, minLength: 1}
+        canonical: {type: string, enum: [response_rate, other]}
+        higher_is_better: {type: boolean}
+    roles: [metric_label]
+    merge_key: [name, canonical]
+    extractors:
+      - name: regex_metric
+
+  result:
+    description: One reported result, as a fraction for a rate; form is how the paper wrote the number.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [value, dataset]
+      properties:
+        value: {type: number}
+        dataset: {type: [string, "null"]}
+        form: {type: [string, "null"], enum: [plain, percent, fraction, k_of_n, range, plus_minus, null]}
+    links: {arm: arm, outcome: outcome}
+    bounds:
+      - {field: value, min: 0, max: 1, when: {link: outcome, field: canonical, values: [response_rate]}}
+    context: [arm, outcome]
+    roles: [value, condition_label, metric_label, value_total]
+    merge_key: [value]
+    extractors:
+      - name: regex_measurement
+      - name: number_measurement
+
+synthesis:
+  compare: {treatment: drug, control: placebo}
+  metrics:
+    - {canonical: response_rate, higher_is_better: true}
+  min_effect: 0.01
+  pairing:
+    rule: same_dataset
+    prefer: [table_cell, document_order]
+  claim_map: {improves: supports, worsens: contradicts, no_effect: neutral}
+  label:
+    - {when: {supporting: ">0", contradicting: ">0"}, then: mixed}
+    - {when: {supporting: ">0"}, then: supported}
+    - {when: {contradicting: ">0"}, then: refuted}
+    - {when: {neutral: ">0"}, then: no_effect}
+    - {then: insufficient}
+  flags:
+    duplicates: true
+    large_effect: {factor: 3.0, min_studies: 3}

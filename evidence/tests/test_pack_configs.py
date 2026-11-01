@@ -22,6 +22,7 @@ from .conftest import PROTOCOL
 
 SNAPSHOT = Path(__file__).resolve().parent / "fixtures" / "ev3b_configs.json"
 PROTOCOLS = sorted((DOMAINS / "rag" / "protocols").glob("*.yaml"))
+# D35/D36: the snapshot's sha256 entries were updated when the measurement type gained form and value_total (Task 6)
 OLD_SHA = {key.split("/")[0]: sha for key, sha in json.loads(SNAPSHOT.read_text(encoding="utf-8")).items()
            if key.endswith("/sha256")}
 # the keys that hold topic words; an LLM or agent extractor gets none of them

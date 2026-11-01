@@ -60,8 +60,8 @@ def respan_script(kind: str, _doc: str, prompt: str) -> dict[str, Any]:
                            "quotes": {"condition_label": "retrieval-augmented variant"}}]}
     if kind == "measurement":
         base, acc = context_id(prompt, '"baseline"'), context_id(prompt, '"factual_accuracy"')
-        return {"items": [{"fields": {"value": 0.6, "dataset": "NQ"}, "links": {"condition": base, "metric": acc},
-                           "quotes": {"value": "60.0", "condition_label": None, "metric_label": None}}]}
+        return {"items": [{"fields": {"value": 0.6, "dataset": "NQ", "form": None}, "links": {"condition": base, "metric": acc},
+                           "quotes": {"value": "60.0", "condition_label": None, "metric_label": None, "value_total": None}}]}
     return {"items": []}
 
 
@@ -159,8 +159,8 @@ def late_script(kind: str, _doc: str, prompt: str) -> dict[str, Any]:
     if kind == "measurement":
         rag, base = context_id(prompt, '"rag"'), context_id(prompt, '"baseline"')
         metric = context_id(prompt, '"factual_accuracy"')
-        return {"items": [{"fields": {"value": v, "dataset": "NQ"}, "links": {"condition": c, "metric": metric},
-                           "quotes": {"value": q, "condition_label": None, "metric_label": None}}
+        return {"items": [{"fields": {"value": v, "dataset": "NQ", "form": None}, "links": {"condition": c, "metric": metric},
+                           "quotes": {"value": q, "condition_label": None, "metric_label": None, "value_total": None}}
                           for v, c, q in ((0.6, base, "60.0"), (0.7, rag, "70.0"))]}
     return {"items": []}
 

@@ -246,8 +246,9 @@ def test_cards_offer_exhaustive_without_params(tmp_path: Path) -> None:
 
 # sha256 of each protocol, computed with the code of main before this change
 EV1_SHA256 = {
-    "domains/rag/protocols/rag-factuality.yaml": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
-    "domains/rag/protocols/rag-factuality-agentic.yaml": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79",
+    # D35/D36: the rag protocols' measurement gained form and value_total (Task 6); the EV1 ones are unchanged
+    "domains/rag/protocols/rag-factuality.yaml": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",
+    "domains/rag/protocols/rag-factuality-agentic.yaml": "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2",
     "tests/EV1/diagnostics/proposal/protocol.yaml": "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
     "tests/EV1/live-rerun/proposals/rag-factuality/protocol.yaml":
         "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",

@@ -20,7 +20,7 @@ from . import base, regex, terms
 from .measure import (AFTER, BLOCKERS, DELTA_BEFORE, FROM_TO, HEAD_NOUN, SIGNED, Found, Resolver, measurements)
 
 VERSION = 1
-SOURCES = (base.HERE / "units.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
+SOURCES = (base.HERE / "units.py", base.HERE / "measure.py", base.HERE / "numreader.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
 TIME = re.compile(r"(?<![\w.,])(\d+(?:\.\d+)?|\.\d+)\s?(ms|milliseconds?|s|secs?|seconds?)\b")
 # "0.45 s slower than": a difference between two conditions, not a value of either

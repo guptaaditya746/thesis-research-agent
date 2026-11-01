@@ -1,0 +1,10 @@
+# A toy drug-trial pack (evidence/tests/test_numreader.py): one drug against placebo, one response rate. Its types
+# have prefixes no other pack uses (the item-prefix registry is global).
+name: drugtoy
+types:
+  arm: {prefix: xa, role: compared_thing, name_field: label, side_field: role}
+  outcome: {prefix: xo, role: metric, name_field: name, canonical_field: canonical}
+  result: {prefix: xr, role: measured_value}
+display: {treatment: "Zelvora", control: "placebo"}
+names_seed: {}
+limitation_categories: []
