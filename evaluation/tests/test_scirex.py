@@ -1,7 +1,8 @@
 """The SciREX real-paper check (D21, spec 6.12): corpus from the SciREX JSON lines, names scored at mention level and
 at salient-cluster level. The fixture `scirex_tiny.jsonl` is two hand-made papers in SciREX's shape (not SciREX
-data): d1 has the salient BERT and SQuAD clusters (its relation's task and metric name no cluster); d2 has three
-salient clusters, and its relation's method (GAT) names no cluster, so its GCN and ResNet clusters are not salient."""
+data). Every coref cluster is salient (SciREX README). d1 has the clusters BERT and SQuAD (its relation's task and
+metric name no cluster); d2 has three clusters, and its relation's method (GAT) names no cluster, so d2 has no
+salient method (GCN and ResNet are ner mentions only)."""
 from __future__ import annotations
 
 import json
@@ -72,11 +73,42 @@ def test_corpus_joins_words_by_spaces_and_sections_by_blank_lines(tmp_path: Path
         == ["node classification"]
 
 
-def test_salient_clusters_are_the_clusters_a_relation_names(tmp_path: Path) -> None:
-    gold = gold_of(to_corpus(TINY, tmp_path))
+def test_salient_clusters_are_the_coref_clusters(tmp_path: Path) -> None:
+    c = to_corpus(TINY, tmp_path)
+    gold = gold_of(c)
     assert gold["d1"]["salient"] == ["BERT", "SQuAD"]      # the relation's Task and Metric name no cluster of d1
-    assert gold["d2"]["salient"] == ["Accuracy", "Cora", "Node_Classification"]   # GCN, ResNet: in no relation
+    assert gold["d2"]["salient"] == ["Accuracy", "Cora", "Node_Classification"]
     assert gold["d2"]["types"] == {"Accuracy": "metric", "Cora": "dataset", "Node_Classification": "task"}
+    source = json.loads((c / "scirex_corpus.json").read_text(encoding="utf-8"))
+    assert (source["coref_clusters"], source["clusters_in_no_relation"], source["clusters_untyped"],
+            source["clusters_without_spans"]) == (5, 0, 0, 0)
+
+
+def test_a_cluster_no_relation_names_is_salient_and_counted(tmp_path: Path) -> None:
+    """The relation filter's drop count: a coref cluster no relation names stays salient, typed by its ner mention;
+    one with no ner mention at its spans is left out and counted as untyped."""
+    doc = {"doc_id": "x1", "words": ["ELMo", "and", "BERT", "on", "SQuAD", "use", "pooling"], "sections": [[0, 7]],
+           "ner": [[0, 1, "Method"], [2, 3, "Method"], [4, 5, "Material"]],
+           "coref": {"ELMo": [[0, 1]], "BERT": [[2, 3]], "SQuAD": [[4, 5]], "Pooling": [[6, 7]]},
+           "n_ary_relations": [{"Method": "BERT", "Material": "SQuAD", "Task": "QA", "Metric": "EM", "Score": "80"}]}
+    jsonl = tmp_path / "x.jsonl"
+    jsonl.write_text(json.dumps(doc) + "\n", encoding="utf-8")
+    c = to_corpus(jsonl, tmp_path / "c")
+    gold = gold_of(c)["x1"]
+    assert gold["salient"] == ["BERT", "ELMo", "SQuAD"] and gold["types"]["ELMo"] == "method"
+    assert (gold["in_no_relation"], gold["untyped"]) == (["ELMo", "Pooling"], ["Pooling"])
+    source = json.loads((c / "scirex_corpus.json").read_text(encoding="utf-8"))
+    assert (source["coref_clusters"], source["clusters_in_no_relation"], source["clusters_untyped"]) == (4, 2, 1)
+
+
+def test_limit_below_one_and_a_bad_line_are_refused(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="at least 1"):
+        to_corpus(TINY, tmp_path / "a", limit=0)
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text(json.dumps({"doc_id": "b1", "words": ["x"], "sections": [[0, 1]], "ner": [[0, 1, "Thing"]]}) + "\n",
+                   encoding="utf-8")
+    with pytest.raises(ValueError, match="SciREX paper b1"):
+        to_corpus(bad, tmp_path / "b")
 
 
 def test_limit_keeps_the_first_papers_and_is_recorded(tmp_path: Path) -> None:
@@ -120,7 +152,7 @@ def test_both_levels_count_per_type(tmp_path: Path) -> None:
     # salient level: "cora" and "CORA" are one name; Cora (d2) is hit, SQuAD (d1) is not; ImageNet is wrong
     assert r["salient"]["dataset"] == {"names": 2, "right_names": 1, "clusters": 2, "clusters_hit": 1,
                                        "precision": 0.5, "recall": 0.5}
-    # ResNet is a cluster of d2 but no relation names it: not salient, so the name is wrong at this level (and
+    # ResNet is a ner mention of d2 but no coref cluster: not salient, so the name is wrong at this level (and
     # the one salient method cluster, BERT of d1, is not hit)
     assert r["salient"]["method"]["right_names"] == 0 and r["salient"]["method"]["recall"] == 0.0
     assert r["mention"]["task"] == {"items": 0, "right_items": 0, "mentions": 1, "matched_mentions": 0,
@@ -170,6 +202,7 @@ def test_cli_corpus_then_score(tmp_path: Path, capsys: pytest.CaptureFixture[str
                      "--estimate", str(estimate)]) == 0
     real = json.loads((out / "real.json").read_text(encoding="utf-8"))
     assert real["papers"] == 2 and real["limit"] == 2 and real["estimate"]["calls"] == {"low": 8, "high": 8}
+    assert (real["coref_clusters"], real["clusters_in_no_relation"]) == (5, 0)
     md = (out / "real.md").read_text(encoding="utf-8")
     assert md.startswith("# real-paper check: SciREX (not a synthetic score)")
     assert "evidence estimate" in md

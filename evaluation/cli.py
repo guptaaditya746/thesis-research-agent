@@ -222,8 +222,6 @@ def cmd_scirex(args: argparse.Namespace) -> int:
 
     try:
         if args.scirex_cmd == "corpus":
-            if args.limit is not None and args.limit < 1:
-                raise ValueError("--limit must be at least 1")
             corpus = scirex.to_corpus(args.jsonl, args.out, limit=args.limit)
             print(json.dumps(json.loads((corpus / scirex.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
             return 0

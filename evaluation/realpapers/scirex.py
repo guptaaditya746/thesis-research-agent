@@ -7,9 +7,11 @@ every token span maps exactly to a character span. SciREX spans are token index 
 exclusive.
 
 What the gold holds, per paper: `ner` (typed mentions), `coref` (clusters: a name and its mention spans) and
-`n_ary_relations` (dicts of type -> cluster name, plus a score). A salient cluster is a cluster whose name occurs
-in a relation; its type is the relation key it is named under. SciREX calls datasets "Material"; "Dataset" is taken
-too.
+`n_ary_relations` (dicts of type -> cluster name, plus a score). The SciREX README defines `coref` as "Salient
+Entities in the document and mentions belonging to it", so every coref cluster is salient. Its type is the relation
+key it is named under, else the `ner` type of a mention at one of its spans; a cluster with neither is left out and
+counted. How many clusters a relation filter would drop (no relation names them) is counted too, so a real run shows
+whether "coref" and "named in a relation" differ. SciREX calls datasets "Material"; "Dataset" is taken too.
 
 `score` counts per name type, at two levels:
   mention   an item is right when one of its spans overlaps a gold mention of its type in its paper; precision is
@@ -42,8 +44,13 @@ DOC_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")   # a file name, neve
 GOLD_NOTES = [
     "gold per paper: ner (typed mentions), coref (clusters: a name and its mention spans), n_ary_relations "
     "(type -> cluster name, plus a score)",
-    "salient cluster: a coref cluster whose name occurs in an n_ary_relation; its type is the relation key "
-    "(SciREX README: coref holds the salient entities; to be confirmed on the live README at the data step)",
+    "salient cluster: every coref cluster (SciREX README: coref is \"Salient Entities in the document and mentions "
+    "belonging to it\"); its type is the relation key it is named under, else the ner type of a mention at its span",
+    "clusters_in_no_relation: coref clusters no n_ary_relation names (a relation filter would drop them); they are "
+    "salient here",
+    "clusters_untyped: coref clusters named in no relation and with no ner mention at their spans; left out",
+    "clusters_without_spans: salient clusters with no mention span; they count in the recall denominator and can "
+    "never be hit",
     "SciREX labels datasets Material; mapped to dataset",
     "the gold is read by this scorer only; the engine run reads manifest.json and papers/ (D31)",
 ]
@@ -101,16 +108,26 @@ def paper_gold(doc: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         for label, name in relation.items():
             if label in TYPES and str(name) in clusters:
                 types.setdefault(str(name), TYPES[label])
+    in_no_relation = sorted(n for n in clusters if n not in types)
+    by_span = {(m[0], m[1]): m[2] for m in reversed(mentions)}   # the first mention at a span wins
+    for name in in_no_relation:
+        found = next((by_span[(a, b)] for a, b in clusters[name] if (a, b) in by_span), None)
+        if found is not None:
+            types[name] = found
     salient = sorted(types)
     return text, {"mentions": mentions, "clusters": clusters, "salient": salient,
-                  "types": {name: types[name] for name in salient}}
+                  "types": {name: types[name] for name in salient}, "in_no_relation": in_no_relation,
+                  "untyped": sorted(n for n in clusters if n not in types)}
 
 
 def to_corpus(jsonl: Path, out: Path, *, limit: int | None = None) -> Path:
     """Write the corpus of the first `limit` papers of `jsonl` (all when None) to `out`: manifest.json,
     papers/<doc_id>.md, the gold (scirex_gold.json, `{doc: {mentions: [[start, end, type, text]], clusters:
-    {name: [[start, end]]}, salient: [name], types: {salient name: type}}}`) and scirex_corpus.json (the source
-    file, its sha256, the papers in it and the limit). Returns `out`."""
+    {name: [[start, end]]}, salient: [name], types: {salient name: type}, in_no_relation: [name], untyped:
+    [name]}}`) and scirex_corpus.json (the source file, its sha256, the papers in it, the limit and the cluster
+    counts). Returns `out`."""
+    if limit is not None and limit < 1:
+        raise ValueError(f"limit must be at least 1, not {limit}")
     raw = Path(jsonl).read_bytes()
     lines = [line for line in raw.decode("utf-8").splitlines() if line.strip()]
     chosen = lines if limit is None else lines[:limit]
@@ -121,14 +138,22 @@ def to_corpus(jsonl: Path, out: Path, *, limit: int | None = None) -> Path:
         doc_id = str(doc["doc_id"])
         if not DOC_ID.match(doc_id) or doc_id in gold:
             raise ValueError(f"doc_id {doc_id!r} is not a plain file name or occurs twice")
-        text, gold[doc_id] = paper_gold(doc)
+        try:
+            text, gold[doc_id] = paper_gold(doc)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"SciREX paper {doc_id}: {type(exc).__name__}: {exc}") from exc
         data = text.encode("utf-8")
         (out / "papers" / f"{doc_id}.md").write_bytes(data)
         papers.append({"id": doc_id, "file": f"papers/{doc_id}.md", "sha256": sha256_hex(data)})
     _write(out / "manifest.json", {"corpus_id": f"scirex-{Path(jsonl).stem}", "papers": papers})
     _write(out / GOLD_FILE, gold)
     _write(out / SOURCE_FILE, {"jsonl": Path(jsonl).name, "jsonl_sha256": sha256_hex(raw),
-                               "papers_in_file": len(lines), "limit": limit, "papers": len(papers)})
+                               "papers_in_file": len(lines), "limit": limit, "papers": len(papers),
+                               "coref_clusters": sum(len(g["clusters"]) for g in gold.values()),
+                               "clusters_in_no_relation": sum(len(g["in_no_relation"]) for g in gold.values()),
+                               "clusters_untyped": sum(len(g["untyped"]) for g in gold.values()),
+                               "clusters_without_spans": sum(not g["clusters"][n] for g in gold.values()
+                                                             for n in g["salient"])})
     return out
 
 
@@ -208,7 +233,6 @@ def _salient_level(etype: str, gold: dict[str, Any], papers: dict[str, str],
             "precision": _ratio(right, found), "recall": _ratio(hit, clusters)}
 
 
-
 def report(run_dir: Path, corpus: Path, estimate: dict[str, Any] | None = None) -> dict[str, Any]:
     """The real.json of the check: `score`, where the papers came from (scirex_corpus.json: the file, the papers in
     it, the limit), the saved `evidence estimate` output that chose the limit (None when not given) and the notes
@@ -219,5 +243,7 @@ def report(run_dir: Path, corpus: Path, estimate: dict[str, Any] | None = None) 
               else "no `evidence estimate` output given: the --limit was not checked against the budget")
     return {"papers": result["papers"], "papers_in_file": source["papers_in_file"], "limit": source["limit"],
             "source": source["jsonl"], "source_sha256": source["jsonl_sha256"], "run": Path(run_dir).name,
+            **{k: source[k] for k in ("coref_clusters", "clusters_in_no_relation", "clusters_untyped",
+                                      "clusters_without_spans")},
             "salient": result["salient"], "mention": result["mention"], "estimate": estimate,
             "notes": [chosen, "headline: the salient-cluster level", *GOLD_NOTES]}
