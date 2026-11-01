@@ -255,3 +255,12 @@ def test_engine_cascade_finds_treatment_and_control_by_number(tmp_path: Path) ->
     values = [i for i in items if i["evidence_type"] == "measurement"]
     assert sorted(i["fields"]["value"] for i in values) == [0.62, 0.71]
     assert all([f.split("@")[0] for f in i["found_by"]] == ["number_measurement"] for i in values)   # regex missed both
+
+
+def test_one_value_written_in_prose_and_in_a_table_is_one_item() -> None:
+    # `form` is not identity: "71%" in prose and "71.0" under a (%) header are one item, form from the earliest span
+    text = (sentence("The retrieval-augmented model reaches an accuracy of 71%.")
+            + "\n| Model | Accuracy (%) |\n|---|---|\n| retrieval-augmented model | 71.0 |\n")
+    [item] = run(text)
+    assert (item.fields["value"], item.fields["form"]) == (0.71, "percent")
+    assert sorted(s.selector["exact"] for s in item.spans if s.role == "value") == ["71%", "71.0"]

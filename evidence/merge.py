@@ -3,7 +3,8 @@ fields and equal links are one item that keeps every span and lists every extrac
 
 Fields compared are the type's `merge_key` (all fields when the protocol gives none); strings compare case
 folded with dashes and runs of spaces as one space. The other fields must not conflict: a null matches
-anything, but two different non-null values (the same value on two datasets) keep the items apart. The
+anything, but two different non-null values (the same value on two datasets) keep the items apart; a
+DESCRIPTIVE field (`form`) never keeps them apart. The
 merged item takes the fields of the first extractor in cascade order that found it, with null fields
 filled from later ones, so the cascade order decides between equivalent wordings. Its id is recomputed
 from the merged fields and spans.
@@ -24,6 +25,10 @@ from .contract import ExtractionResult, Item, Span, digest
 from .extractors.terms import norm
 from .protocol import EvidenceTypeSpec
 
+# Fields that describe how a value was written, not which value it is (`form`: "71%" or "71.0", numreader.py):
+# never part of a merge key, never a conflict; the merged item keeps the first non-null one.
+DESCRIPTIVE: frozenset[str] = frozenset({"form"})
+
 
 def _normal(value: Any) -> Any:
     if isinstance(value, str):
@@ -34,13 +39,13 @@ def _normal(value: Any) -> Any:
 
 
 def key(item: Item, spec: EvidenceTypeSpec) -> str:
-    names = spec.merge_key or tuple(sorted(item.fields))
+    names = spec.merge_key or tuple(sorted(n for n in item.fields if n not in DESCRIPTIVE))
     return digest([item.evidence_type, {n: _normal(item.fields.get(n)) for n in names}, item.links])
 
 
 def _compatible(fields: dict[str, Any], other: dict[str, Any]) -> bool:
     return all(a is None or b is None or _normal(a) == _normal(b)
-               for name in set(fields) | set(other) for a, b in [(fields.get(name), other.get(name))])
+               for name in (set(fields) | set(other)) - DESCRIPTIVE for a, b in [(fields.get(name), other.get(name))])
 
 
 def merge(results: list[tuple[str, ExtractionResult]], spec: EvidenceTypeSpec

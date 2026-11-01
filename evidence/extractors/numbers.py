@@ -38,7 +38,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, RunContext, Span
+from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, RunContext, Span, digest
 from . import base, regex, terms, units
 from .measure import DATASET_HEADER, DELTA_AFTER, DELTA_BEFORE, HEAD_NOUN, SIGNED, Found, Resolver, sample_size
 from .numreader import NumberSpan, read_numbers
@@ -166,7 +166,7 @@ class NumberMeasurement:
                 for s, e in base.sentences(text, a, b):
                     inside = [n for n in numbers if s <= n.start and n.end <= e]
                     found.extend(self._sentence(task, text, s, e, inside, names, datasets))
-        items: list[Item] = base.group(self.emits, found)
+        items: list[Item] = base.group(self.emits, _one_form(found))
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 
@@ -350,6 +350,21 @@ def _merge(text: str, known: list[Named], extra: list[tuple[int, int, Item]], ke
 
 
 # helpers ---------------------------------------------------------------------------------------------------
+
+def _one_form(found: list[Found]) -> list[Found]:
+    """`form` is not identity: findings equal but for it (the same value as "71%" in prose and "71.0" in a table)
+    all take the form of the one whose value span comes first, so base.group makes them one item."""
+    def same(f: Found) -> str:
+        return digest([{k: v for k, v in f[0].items() if k != "form"}, f[1]])
+
+    def first(f: Found) -> int:
+        return min(s.selector["start"] for s in f[2] if s.role == "value")
+
+    form: dict[str, Any] = {}
+    for f in sorted(found, key=first):
+        form.setdefault(same(f), f[0].get("form"))
+    return [({**fields, "form": form[same((fields, links, spans))]}, links, spans) for fields, links, spans in found]
+
 
 def _hit(text: str, n: NumberSpan, e: int) -> Hit:
     """The number with the time unit right after it, for a plain number."""
