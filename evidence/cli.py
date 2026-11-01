@@ -250,15 +250,21 @@ def _pack_check(name: str) -> int:
         entries = questions.load(qfile) if qfile.is_file() else []
         kinds = sorted({q.kind for q in entries})
         pack.check(p, kinds)
-        files = [questions.protocol_file(f, qfile) for q in entries for f in (q.protocol, q.agentic_protocol) if f]
+        named = {questions.protocol_file(f, qfile) for q in entries for f in (q.protocol, q.agentic_protocol) if f}
+        # every protocol of the pack, not only those questions.yaml names (a protocol kept for later must parse too)
+        files = sorted({*(pack.DOMAINS / name / "protocols").glob("*.yaml"), *named})
         for path in files:
-            if load(path).domain != name:
+            try:
+                domain = load(path).domain
+            except (OSError, ValueError, yaml.YAMLError) as exc:
+                raise ValueError(f"{path}: {exc}") from exc
+            if domain != name:
                 raise ValueError(f"{path}: its domain is not {name!r}")
     except (OSError, ValueError, yaml.YAMLError) as exc:   # PackError and pydantic's ValidationError are ValueErrors
         print(f"error: pack {name!r}: {exc}", file=sys.stderr)
         return 2
     print(json.dumps({"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
-                      "kinds": kinds, "protocols": len(files)}, indent=1))
+                      "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}, indent=1))
     return 0
 
 

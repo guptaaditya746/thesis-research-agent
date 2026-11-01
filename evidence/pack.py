@@ -2,6 +2,12 @@
 
 A pack is three files: `pack.yaml` (types, display names), `words.yaml` (patterns and term lists) and
 `provenance.json` (where the words came from). `Pack.sha256` digests the three, so a changed word is a new pack.
+
+Two rules every pack follows:
+- `words.yaml` `conditions` is ordered: the first role is the treatment side, and every role after it is a control
+  whose patterns get the `not_a_system` cue (Pack.extractor_config). The order of the roles decides the control.
+- Type names and prefixes are global across packs (evidence_types.register keeps one registry per process): the
+  same type name in two packs must have the same prefix, and a new pack must pick prefixes no other pack uses.
 """
 from __future__ import annotations
 
@@ -20,6 +26,10 @@ from .contract import digest
 from .protocol import DEFAULT_PACK, Strict   # DEFAULT_PACK: re-exported, the pack of a protocol with no `domain:`
 
 DOMAINS = Path(__file__).resolve().parents[1] / "domains"
+# The files of Pack.sha256, in name order. Left out on purpose: `propose.yaml` (the drafting cards of `evidence
+# propose`, not read by a run, so editing them must not make every run's pack new) and `questions.yaml` and
+# `protocols/` (each protocol has its own sha256). domains/default.yaml is outside every pack: it only names the
+# default pack.
 FILES = ("pack.yaml", "provenance.json", "words.yaml")   # name order, as digested
 
 
@@ -105,7 +115,10 @@ class Pack(Strict):
             "pattern": w.dataset_pattern,
             "display": dict(self.display),
             "metric_names": [m for m in dict.fromkeys(c for _, c, _ in w.metrics) if m != "other"],
-            "types": {str(role): found[0] for role in Role if len(found := RoleMap(self).types_of(role)) == 1},
+            # role -> its type; a role with several types gives the list, and the measured-value extractors pick
+            # the one the measured-value type links to (extractors/base.py Slots.of) or refuse
+            "types": {str(role): found[0] if len(found) == 1 else found
+                      for role in Role if (found := RoleMap(self).types_of(role))},
         }
         if etype in w.gliner_labels:
             words["labels"] = list(w.gliner_labels[etype])
@@ -209,6 +222,9 @@ def load_pack(name: str, root: Path = DOMAINS) -> Pack:
         head, words = yaml.safe_load(raw["pack.yaml"]), yaml.safe_load(raw["words.yaml"])
         if not isinstance(head, dict) or not isinstance(words, dict):
             raise PackError(f"domain pack {name!r}: pack.yaml and words.yaml must be mappings")
-        return Pack(**head, words=Words(**words), sha256=digest([[f, sha256_hex(raw[f])] for f in FILES]))
+        pack = Pack(**head, words=Words(**words), sha256=digest([[f, sha256_hex(raw[f])] for f in FILES]))
     except (yaml.YAMLError, ValidationError, TypeError) as e:
         raise PackError(f"domain pack {name!r} ({folder}) is invalid: {e}") from e
+    if pack.name != folder.name:   # a protocol's `domain:` names the folder; the pack must answer to the same name
+        raise PackError(f"domain pack {name!r}: pack.yaml has name {pack.name!r}, not its folder {folder.name!r}")
+    return pack

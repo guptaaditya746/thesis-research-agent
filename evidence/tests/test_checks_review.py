@@ -108,6 +108,24 @@ def test_merge_ignores_a_differing_form() -> None:
                        links={"condition": RAG.item_id, "metric": ACC.item_id})
     r1 = ExtractionResult(extractor_id="x@1#0", task_sha256="t", status="ok", items=(pct,))
     r2 = ExtractionResult(extractor_id="y@1#0", task_sha256="t", status="ok", items=(plain,))
-    [item], sources, collisions = merge.merge([("t1", r1), ("t2", r2)], PROTO.evidence_types["measurement"])
+    [item], sources, collisions = merge.merge([("t1", r1), ("t2", r2)], PROTO.evidence_types["measurement"],
+                                              descriptive=merge.descriptive("measurement", PROTO.roles()))
     assert item.fields["form"] == "percent" and not collisions and sources[item.item_id] == ["t1", "t2"]
     assert sorted(s.selector["exact"] for s in item.spans) == ["62.0", "62.0%"]
+
+
+def test_form_is_descriptive_only_on_the_measured_value_type() -> None:
+    # a pack field named `form` on another type (here the compared thing) is a real field: two items that differ in
+    # it stay two items; only the measured-value type's `form` (how the number was written) is ignored
+    roles = PROTO.roles()
+    assert merge.descriptive("measurement", roles) == merge.DESCRIPTIVE
+    assert merge.descriptive("condition", roles) == frozenset()
+    spec = PROTO.evidence_types["condition"].model_copy(update={"merge_key": None})
+    a = Item.build("condition", {"label": "RAG", "role": "rag", "form": "tablet"},
+                   [span("retrieval-augmented model", "condition_label")])
+    b = Item.build("condition", {"label": "RAG", "role": "rag", "form": "injection"},
+                   [span("retrieval-augmented model", "condition_label")])
+    r1 = ExtractionResult(extractor_id="x@1#0", task_sha256="t", status="ok", items=(a,))
+    r2 = ExtractionResult(extractor_id="y@1#0", task_sha256="t", status="ok", items=(b,))
+    descriptive = merge.descriptive("condition", roles)
+    assert len(merge.merge([("t1", r1), ("t2", r2)], spec, descriptive=descriptive)[0]) == 2

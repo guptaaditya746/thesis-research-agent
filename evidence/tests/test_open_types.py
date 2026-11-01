@@ -129,3 +129,33 @@ def test_the_agentic_brief_takes_a_pack_type_it_does_not_know():
     assert span_role("arm", "name") == "context" and span_role("condition", "label") == "condition_label"
     assert what("study_arm") == "one study arm the paper states"
     assert ITEM_ID.match("x-0123456789abcdef")
+
+
+def test_pack_check_validates_every_protocol_file_and_prints_both_counts(tmp_path, monkeypatch, capsys):
+    from evidence import questions
+    assert main(["pack", "check", "rag"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    qfile = DOMAINS / "rag" / "questions.yaml"
+    named = {questions.protocol_file(f, qfile) for q in questions.load(qfile)
+             for f in (q.protocol, q.agentic_protocol) if f}
+    assert out["protocols"] == len(list((DOMAINS / "rag" / "protocols").glob("*.yaml")))
+    assert out["question_protocols"] == len(named)
+    shutil.copytree(DOMAINS / "rag", tmp_path / "rag")
+    (tmp_path / "rag" / "protocols" / "unasked.yaml").write_text(EFFECT.replace("\n  condition:", "\n  widget:", 1),
+                                                                 encoding="utf-8")
+    monkeypatch.setattr(pack_module, "DOMAINS", tmp_path)
+    assert main(["pack", "check", "rag"]) == 2
+    assert "unasked.yaml" in capsys.readouterr().err
+
+
+def test_a_role_with_several_types_is_an_error_not_a_silent_default(tmp_path):
+    from evidence.extractors.base import Slots
+    pack = toy_pack(tmp_path, types={"arm": ("xa", "compared_thing"), "drug": ("xd", "compared_thing"),
+                                     "outcome": ("xo", "metric"), "result": ("xr", "measured_value")})
+    given = pack.extractor_config("result", "regex_measurement")
+    assert given["types"]["compared_thing"] == ["arm", "drug"] and given["types"]["metric"] == "outcome"
+    with pytest.raises(ValueError, match="several types of role 'compared_thing'.*\['arm', 'drug'\]"):
+        Slots.of(given)
+    # the measured-value type's links name one of them: that one is the compared thing
+    slots = Slots.of({**given, "links": {"arm": "arm", "outcome": "outcome"}})
+    assert (slots.thing, slots.metric, slots.to_thing, slots.to_metric) == ("arm", "outcome", "arm", "outcome")

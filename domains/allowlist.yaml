@@ -7,6 +7,8 @@
   reason: any comparative study has a baseline arm; the code names the control side of a comparison with it
 - word: accuracy
   reason: a measure of correctness used in every empirical field; the code also scores checkers and models by it
+- word: accura
+  reason: the stem of `\baccura\w*` (accuracy, accurate, accuracies), as generic as "accuracy"; the code and the propose prompts say accuracy and accuracies
 - word: dataset
   reason: every empirical paper reports the data it ran on; the code's context evidence type and table headers
 - word: model

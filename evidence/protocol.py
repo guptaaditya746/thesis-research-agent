@@ -35,7 +35,9 @@ from .evidence_types import EvidenceType
 if TYPE_CHECKING:   # pack.py imports this module (Strict); the pack is imported where it is used
     from .pack import FieldName, Pack, Role, RoleMap
 
-# The pack of a protocol with no `domain:` key, named in domains/default.yaml (code names no pack, D35).
+# The pack of a protocol with no `domain:` key, named in domains/default.yaml (code names no pack, D35). Keep that
+# file frozen: a protocol without `domain:` hashes with the default left out (DIGEST_OMIT_AT_DEFAULT), so naming
+# another default pack would silently move every such protocol, and its hash's meaning, to that pack.
 DEFAULT_PACK: str = yaml.safe_load((Path(__file__).resolve().parents[1] / "domains" / "default.yaml")
                                    .read_text(encoding="utf-8"))["pack"]
 

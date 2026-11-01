@@ -1,4 +1,11 @@
 # Topic words of the RAG domain, hand-moved from code at tag ev3b-code.
+#
+# Rules for every pack (evidence/pack.py):
+# - `conditions` is ordered: the first role is the treatment side; every role after the first is a control, and its
+#   patterns get the `not_a_system` cue appended (Pack.extractor_config, as terms.control_cue builds them). So the
+#   order of the roles decides which side is the control.
+# - Type names and their item prefixes (pack.yaml `types`) are global across packs: the registry is one per process.
+#   The same type name in two packs must have the same prefix, and a new pack must pick prefixes no other pack uses.
 conditions:
   rag:
   - (?i)\bretrieval[- ]augmented(?:\s+generation)?+(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+without\b)

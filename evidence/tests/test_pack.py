@@ -46,3 +46,9 @@ def test_pack_digest_changes_when_a_word_changes(tmp_path):
     before = load_pack("rag", root=tmp_path).sha256
     (tmp_path / "rag/words.yaml").write_text((tmp_path / "rag/words.yaml").read_text().replace("hallucination", "halluc"))
     assert load_pack("rag", root=tmp_path).sha256 != before
+
+
+def test_pack_name_must_equal_its_folder(tmp_path):
+    shutil.copytree(DOMAINS / "rag", tmp_path / "other")
+    with pytest.raises(PackError, match="name 'rag'.*folder 'other'"):
+        load_pack("other", root=tmp_path)

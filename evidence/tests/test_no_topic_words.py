@@ -20,6 +20,26 @@ def regex_words(pattern: str) -> set[str]:
     return set(re.findall(r"[A-Za-z]{4,}", re.sub(r"\\.", " ", pattern)))
 
 
+def regex_stems(pattern: str) -> set[str]:
+    """The words of a regex followed by `\\w*` or `\\w+` ("hallucinat" of `\\bhallucinat\\w*`): the pattern takes
+    every word that starts with them, so the check matches them as a prefix ("hallucinated", "retrieves")."""
+    marked = re.sub(r"\\.", " ", re.sub(r"\\w[*+]", "\x00", pattern))   # mark the \w* first, then drop escapes
+    return set(re.findall(r"([A-Za-z]{4,})\x00", marked))
+
+
+def pack_stems() -> set[str]:
+    """The stems (regex_stems) of every real pack's patterns, lower-cased."""
+    stems: set[str] = set()
+    for folder in sorted(p for p in DOMAINS.iterdir() if (p / "pack.yaml").is_file()):
+        w = load_pack(folder.name).words
+        patterns = [p for ps in w.conditions.values() for p in ps]
+        patterns += [w.not_a_system, w.claim_subject, w.dataset_pattern]
+        patterns += [p for p, _, _ in (*w.metrics, *w.metric_supplement)] + [p for p, _ in w.claims]
+        for p in patterns:
+            stems |= regex_stems(p)
+    return {x.lower() for x in stems}
+
+
 def literal_words(text: str) -> set[str]:
     """The whitespace-separated tokens of a literal term that hold a letter ("closed-book" stays one word)."""
     return {t for t in text.split() if re.search(r"[A-Za-z]", t)}
@@ -68,6 +88,8 @@ def text_of(f: Path) -> str:
 def test_pack_words_reduce_patterns_to_words() -> None:
     assert regex_words(r"(?i)\bclosed[- ]book(?:\s+(?:baseline|LLM))?") == {"closed", "book", "baseline"}
     assert literal_words("closed-book model") == {"closed-book", "model"}
+    assert regex_stems(r"(?i)\bhallucinat\w*|\bunsupported\b|\bretriev\w+") == {"hallucinat", "retriev"}
+    assert {"hallucinat", "retriev"} <= pack_stems()
     assert {"retrieval", "rag", "closed-book", "factual_accuracy", "hallucination", "retriever", "reader"} <= pack_words()
 
 
@@ -88,7 +110,12 @@ def test_moved_prompt_words_fill_the_default_pack_prompts_as_before() -> None:
 
 
 def test_no_pack_word_appears_in_checked_code() -> None:
-    words = pack_words() - allowlist()
-    hits = [(str(f.relative_to(ROOT)), w) for f in code_files(CHECKED_DIRS) for w in sorted(words)
-            if re.search(rf"\b{re.escape(w)}\b", text_of(f), re.I)]
+    """A pack word is matched as a whole word; a stem (a word its pattern follows with `\\w*`) as the start of any
+    word, so "retrieves" and "hallucinated" are caught. An allowlisted stem is checked as neither."""
+    allowed = allowlist()
+    stems = pack_stems() - allowed
+    checks = [(w, rf"\b{re.escape(w)}\b") for w in sorted(pack_words() - allowed - stems)]
+    checks += [(w, rf"\b{re.escape(w)}") for w in sorted(stems)]
+    hits = [(str(f.relative_to(ROOT)), w) for f in code_files(CHECKED_DIRS) for w, rx in checks
+            if re.search(rx, text_of(f), re.I)]
     assert hits == []

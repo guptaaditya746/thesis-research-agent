@@ -465,7 +465,8 @@ class Execution:
                     step["types"].append(etype)
                     step["calls"].append(call_id)
                 state.next_position[etype] = llm + 1
-            items, sources, collisions, remap = merge.merge_from(results, spec, before)
+            items, sources, collisions, remap = merge.merge_from(results, spec, before,
+                                                                 descriptive=merge.descriptive(etype, self.roles))
             dropped = (self._unconfirmed(etype, items)
                        if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
             items = [i for i in items if i.item_id not in dropped]
@@ -522,7 +523,8 @@ class Execution:
         """The type's results so far, merged, have unconfirmed items and its LLM position has not run yet (`gaps`)."""
         llm = self._llm_position(etype)
         return (llm is not None and state.next_position.get(etype, 0) <= llm
-                and bool(self._unconfirmed(etype, merge.merge(results, spec)[0])))
+                and bool(self._unconfirmed(etype, merge.merge(results, spec,
+                                                              descriptive=merge.descriptive(etype, self.roles))[0])))
 
     def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
         """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the

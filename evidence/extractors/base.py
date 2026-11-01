@@ -72,9 +72,23 @@ class Slots:
 
     @classmethod
     def of(cls, given: dict[str, Any]) -> Slots:
+        """The slots of an extractor config. A role the pack gives several types (a list) takes the one the
+        measured-value type links to; none or several of them linked is a ValueError, never a silent default."""
         types = given.get("types") or {}
-        thing, metric = str(types.get("compared_thing", cls.thing)), str(types.get("metric", cls.metric))
         links = dict(given.get("links") or {})
+
+        def one(role: str, default: str) -> str:
+            found = types.get(role, default)
+            if not isinstance(found, list):
+                return str(found)
+            linked = [str(t) for t in found if t in links.values()]
+            if len(linked) != 1:
+                raise ValueError(f"the pack has several types of role {role!r} ({found}) and the measured-value type "
+                                 f"links to {len(linked)} of them: link exactly one, or name it in the extractor's "
+                                 f"config `types: {{{role}: <type>}}`")
+            return linked[0]
+
+        thing, metric = one("compared_thing", cls.thing), one("metric", cls.metric)
 
         def to(target: str) -> str:
             return next((str(name) for name, t in links.items() if t == target), target)
