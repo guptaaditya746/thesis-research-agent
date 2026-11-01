@@ -1,0 +1,122 @@
+# Topic words of the RAG domain, hand-moved from code at tag ev3b-code.
+conditions:
+  rag:
+  - (?i)\bretrieval[- ]augmented(?:\s+generation)?+(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+without\b)
+  - \bRAG\b(?:\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+(?i:with|without)\b)
+  - (?i)\b(?:model|LLM|system|variant|generator)\s+with\s+retrieval\b
+  baseline:
+  - (?i)\bclosed[- ]book(?:\s+(?:baseline|model|variant|system|setting|condition|LLM|generation))?
+  - (?i)\b(?:(?:model|LLM|system|variant|baseline|generation)\s+)?without\s+(?:any\s+)?retrieval\b
+  - (?i)\bno[- ]retrieval(?:\s+(?:baseline|model|variant|setting|condition))?
+  - (?i)\bvanilla\s+(?:LLM|model)\b
+not_a_system: (?!\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\b)
+metrics:
+- - (?i)\bfactual(?:ity)?\s+accuracy\b
+  - factual_accuracy
+  - true
+- - (?i)\b(?:answer|exact[- ]match|EM|QA)\s+accuracy\b
+  - factual_accuracy
+  - true
+- - (?i)\baccuracy\b
+  - factual_accuracy
+  - true
+- - (?i)\bexact[- ]match\b
+  - factual_accuracy
+  - true
+- - (?i)\bFActScore\b|\bfactuality\s+score\b
+  - factual_accuracy
+  - true
+- - (?i)\bhallucination[- ]rate\b|\brate\s+of\s+hallucinat(?:ion|ions|ed\s+answers)\b
+  - hallucination_rate
+  - false
+- - (?i)\blatency\b
+  - other
+  - false
+- - \bBLEU\b|\bROUGE(?:-[12L])?\b
+  - other
+  - true
+- - (?i)\bperplexity\b
+  - other
+  - false
+- - (?i)\bfluency\b
+  - other
+  - true
+- - \bF1\b
+  - other
+  - true
+claim_subject: (?i)\bretriev\w*|\bRAG\b
+claims:
+- - (?i)(?:\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn't|wasn't)\b)(?:\s+\w+){0,3}?\s+(?:improve|help|increase|change|reduce|lower|decrease|raise|boost|enhance|affect|alter|make|lead|yield|matter)(?:s|d|ed|ing)?\b|(?:\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn't|wasn't)\b)[^.;]{0,80}?\bmore\s+(?:accurate|factual|reliable|correct)|\b(?:fails?|failed)\s+to\s+(?:improve|help)|\bno\s+(?:significant\s+|clear\s+|measurable\s+)?(?:improvement|effect|difference|gain|benefit|change)|\bon\s+par\s+with\b|\b(?:essentially\s+)?unchanged\b
+  - no_effect
+- - (?i)\b(?:increases?|increased|raises?|raised)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat|\bmore\s+hallucinat|\bless\s+(?:accurate|factual|correct)\b|\b(?:hurts?|harms?|harmed|degrades?|degraded|worsens?|worsened|impairs?|impaired)\b|\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased)\s+(?:the\s+)?(?:factual\s+|answer\s+)?accuracy
+  - worsens
+- - (?i)\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased|cuts?)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat|\b(?:fewer|less)\s+hallucinat|\b(?:improves?|improved|improving|increases?|increased|boosts?|boosted|raises?|raised|enhances?|enhanced)\b|\b(?:outperforms?|outperformed)\b|\bmore\s+(?:factual|accurate)\b
+  - improves
+gliner_labels:
+  condition:
+  - method
+  - system variant
+  - baseline model
+  metric:
+  - evaluation metric
+  dataset:
+  - dataset
+fraction_metrics:
+- factual_accuracy
+- hallucination_rate
+dataset_pattern: \b[A-Z][A-Za-z]+(?:QA|Bench|Set|Facts|Check|Quest)\b
+metric_supplement:
+- - (?i)\bhallucinat\w*|\bunsupported\b|\binvented\b|\bfabricat\w*
+  - hallucination_rate
+  - false
+- - (?i)\baccura\w*|\bcorrect\w*
+  - factual_accuracy
+  - true
+screen_terms:
+- retrieval-augmented
+- retrieval augmented
+- RAG
+- retrieval
+- closed-book
+- without retrieval
+query:
+  condition:
+  - retrieval
+  - augmented
+  - RAG
+  - closed-book
+  - baseline
+  - without
+  - variant
+  - system
+  - condition
+  - compare
+  metric:
+  - accuracy
+  - factual
+  - hallucination
+  - rate
+  - metric
+  - measure
+  - evaluate
+  - score
+  - exact
+  - match
+  measurement:
+  - table
+  - results
+  - accuracy
+  - rate
+  - achieves
+  - reaches
+  - compared
+  - '%'
+  author_claim:
+  - conclusion
+  - improves
+  - show
+  - find
+  - retrieval
+  - hurts
+  - effect
+  - accuracy
