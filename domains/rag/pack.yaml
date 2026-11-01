@@ -8,3 +8,5 @@ types:
 display: {treatment: "RAG system", control: "closed-book model"}
 names_seed: {}
 limitation_categories: []
+ontology:
+  roles: {compared_thing: "cskg:Method", metric: "cskg:Metric", context: "cskg:Material"}

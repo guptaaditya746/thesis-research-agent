@@ -1,0 +1,8 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix cskg: <https://w3id.org/cskg/ontology#> .
+@prefix : <https://example.org/onto#> .
+
+cskg:Metric a owl:Class .
+:TopOne rdfs:label "top-1 accuracy"; rdfs:subClassOf :Accuracy .
+:Accuracy rdfs:label "accuracy"; rdfs:subClassOf cskg:Metric .

@@ -88,6 +88,12 @@ for _name in ("regex_measurement", "regex_measurement_units", "number_measuremen
     READS[_name] = (*READS[_name], "types")
 
 
+class OntologyDecl(Strict):
+    """The pack's OWL ontology file and the ontology class each role's types belong to (spec 6.3)."""
+    file: str = "ontology.ttl"
+    roles: dict[Role, str]
+
+
 class Pack(Strict):
     name: str
     types: dict[str, TypeDecl]
@@ -96,6 +102,7 @@ class Pack(Strict):
     names_seed: dict[str, list[str]]
     limitation_categories: list[str]
     sha256: str
+    ontology: OntologyDecl | None = None
 
     def extractor_config(self, etype: str, extractor: str) -> dict[str, Any]:
         """The pack words `extractor` reads when it runs on evidence type `etype`, under its config keys. The
