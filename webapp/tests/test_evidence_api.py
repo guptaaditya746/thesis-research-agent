@@ -345,6 +345,34 @@ def test_run_detail_has_the_packs_display_names(ev: TestClient, ev_world: Eviden
     assert ev.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()["display"] == {}
 
 
+def test_a_run_of_a_second_pack_opens_in_a_fresh_registry(ev_fresh: EvidenceWorld) -> None:
+    """A run whose protocol names another pack (drugtoy) opens on the first request: the run page registers the
+    run's pack before it reads the extractor specs, whose evidence types belong to that pack (final review C1)."""
+    from evidence import contract
+    from evidence.pack import load_pack
+    fixtures = Path(__file__).resolve().parents[2] / "evidence" / "tests" / "fixtures"
+    pack = load_pack("drugtoy", root=fixtures)
+    run_dir = ev_fresh.runs / "cascade-gaps" / MIXED
+    protocol = run_dir / "protocol.yaml"
+    protocol.write_text("domain: drugtoy\n" + protocol.read_text(encoding="utf-8"), encoding="utf-8")
+    run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    run["settings"] = {**(run.get("settings") or {}), "domains": str(fixtures)}
+    next(iter(run["extractor_specs"].values()))["evidence_types"] = ["outcome"]
+    (run_dir / "run.json").write_text(json.dumps(run), encoding="utf-8")
+    before = dict(contract.ITEM_PREFIX)
+    for name in pack.types:   # a fresh server process: nothing has registered the drugtoy types
+        contract.ITEM_PREFIX.pop(name, None)
+    try:
+        with TestClient(create_app(settings_for(ev_fresh))) as client:
+            response = client.get(f"/api/ev/runs/cascade-gaps~{MIXED}")
+        assert response.status_code == 200, response.text
+        assert "outcome" in response.json()["extractors"][0]["evidence_types"]
+        assert response.json()["display"] == dict(pack.display)
+    finally:
+        contract.ITEM_PREFIX.clear()
+        contract.ITEM_PREFIX.update(before)
+
+
 # --- pieces --------------------------------------------------------------------------------------------
 
 def test_segments_cut_at_every_boundary() -> None:

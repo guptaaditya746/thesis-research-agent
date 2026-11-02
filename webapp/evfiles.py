@@ -97,7 +97,7 @@ from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
 
 LOG = logging.getLogger(__name__)
-STEPS =("frame", "draft", "critic", "cards", "freeze")
+STEPS = ("frame", "draft", "critic", "cards", "freeze")
 STEP_FILES = {"frame": FRAME, "draft": DRAFT, "critic": CRITIC, "cards": CARDS, "freeze": PROPOSAL}
 REVISION_FILE = re.compile(r"^protocol\.v(\d+)\.yaml$")
 OUTPUT_HEAD = 4096
@@ -603,6 +603,7 @@ class EvidenceFiles:
                 and ((r.corpus and r.corpus == summary.corpus) or (r.corpus_id and r.corpus_id == summary.corpus_id))]
         reports = [r.id for r in self.scores().reports if r.run_id == summary.name and r.corpus_id == summary.corpus_id
                    and r.group == summary.group] if summary.kind == "engine" else []
+        display = self._display(rd) if summary.kind == "engine" else {}   # registers the run's pack: specs need it
         specs = [ExtractorSpec.model_validate({k: v for k, v in spec.items() if k in ExtractorSpec.model_fields})
                  for spec in (run.get("extractor_specs") or {}).values()]
         return EvRunDetail(**summary.model_dump(), extractors=specs, settings=run.get("settings"),
@@ -613,7 +614,7 @@ class EvidenceFiles:
                            documents=documents, baselines=same, reports=reports,
                            has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None,
                            link_flags=len(reason.get("link_flags") or []) if isinstance(reason, dict) else None,
-                           display=self._display(rd) if summary.kind == "engine" else {})
+                           display=display)
 
     @staticmethod
     def _display(rd: RunDir) -> dict[str, str]:
