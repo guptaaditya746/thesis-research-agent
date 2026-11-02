@@ -10,6 +10,7 @@ import pytest
 from evidence import engine
 from evidence.cli import main
 from evidence.estimate import CHARS_PER_TOKEN, OUTPUT_TOKENS, PROMPT_TOKENS, estimate
+from evidence.names import CHECKS_PER_NAME
 
 from .conftest import PROTOCOL, corpus_of, provider_of, scripted
 from .test_funnel import DOCS, events, make_script
@@ -108,3 +109,23 @@ def test_cli_prints_json_and_writes_nothing(tmp_path, capsys):
     printed = json.loads(capsys.readouterr().out)
     assert printed["papers"] == len(DOCS) and "note" in printed
     assert not (tmp_path / "runs").exists()
+
+
+def test_names_on_adds_the_names_checks_as_an_upper_bound(tmp_path):
+    """M3: a `--names on` run asks the model about the names the regex pass leaves unresolved; the estimate adds
+    them to `high` (never to `low`), and a regex-only run asks none."""
+    corpus = corpus_of(tmp_path / "corpus", DOCS)
+    off, on = estimate(PROTOCOL, corpus), estimate(PROTOCOL, corpus, names="on")
+    checks = on["names_checks"]
+    assert "names_checks" not in off and checks["unresolved_after_regex"] >= 1
+    assert checks["high"] == checks["unresolved_after_regex"] * CHECKS_PER_NAME
+    assert on["calls"] == {"low": off["calls"]["low"], "high": off["calls"]["high"] + checks["high"]}
+    assert on["tokens"]["input"]["high"] > off["tokens"]["input"]["high"]
+    assert on["tokens"]["input"]["low"] == off["tokens"]["input"]["low"]
+    assert estimate(PROTOCOL, corpus, selection="regex-only", names="on")["names_checks"]["high"] == 0
+
+
+def test_cli_names_flag(tmp_path, capsys):
+    corpus = corpus_of(tmp_path / "corpus", DOCS)
+    assert main(["estimate", "--protocol", str(PROTOCOL), "--corpus", str(corpus), "--names", "on"]) == 0
+    assert "names_checks" in json.loads(capsys.readouterr().out)

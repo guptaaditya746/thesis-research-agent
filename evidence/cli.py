@@ -112,6 +112,8 @@ def _parser() -> argparse.ArgumentParser:
     e.add_argument("--strategy", default="gaps", choices=["all", "gaps"])
     e.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
     e.add_argument("--from-run", type=Path, help="a finished run: its tokens per model call replace chars/4")
+    e.add_argument("--names", default="off", choices=["on", "off"],
+                   help="on: also count the names check's model calls (as the run's --names on; an upper bound)")
     for name, text in (("replay", "rebuild a run from the record cache and check its output hashes"),
                        ("reexec", "run extractors again, bypassing the cache, and compare")):
         s = sub.add_parser(name, help=text)
@@ -233,7 +235,7 @@ def _dispatch(args: argparse.Namespace) -> int:
         from .estimate import estimate
         try:
             print(json.dumps(estimate(args.protocol, args.corpus, strategy=args.strategy, selection=args.extractors,
-                                      from_run=args.from_run), indent=1))
+                                      from_run=args.from_run, names=args.names), indent=1))
         except (OSError, ValueError, KeyError, yaml.YAMLError) as exc:   # unreadable protocol, corpus or run
             print(f"error: {exc}", file=sys.stderr)
             return 2

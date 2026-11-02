@@ -248,8 +248,11 @@ def _verdict(reply: str, passages: list[str]) -> str | None:
     return quote if quote.strip() and any(quote in p for p in passages) else None
 
 
+CHECKS_PER_NAME = 3   # the closest groups a leftover name is asked about, at most (confirm_leftovers `limit`)
+
+
 def confirm_leftovers(groups: NameGroups, texts: dict[str, str], ask: Callable[[str], str],
-                      limit: int = 3) -> NameGroups:
+                      limit: int = CHECKS_PER_NAME) -> NameGroups:
     """The `model` step: each unresolved mention (in order) is asked about the `limit` closest groups of its own
     evidence type (rapidfuzz token_set_ratio of the cleaned names, then the group name), leaving out groups whose
     digit runs differ from its own. One `ask(prompt)` per question; the prompt is JSON {name, type, group,

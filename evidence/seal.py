@@ -18,8 +18,9 @@ from typing import TYPE_CHECKING, Any
 
 from jsonio import file_sha256, write_json
 
-from .rundir import (ANSWER_FILE, CALLS_DIR, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, LOCATE_FILE, LOCK_FILE,
-                     NAMES_FILE, PROV_FILE, REASON_FILE, read_json)
+from .comparisons import Comparisons
+from .rundir import (ANSWER_FILE, CALLS_DIR, COMPARISONS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, LOCATE_FILE,
+                     LOCK_FILE, NAMES_FILE, PROV_FILE, REASON_FILE, read_json)
 
 if TYPE_CHECKING:
     from .engine import Settings
@@ -45,7 +46,8 @@ def code_commit() -> str | None:
 def fill_expected(root: Path, settings: Settings) -> None:
     """Write, in its empty form, each file a reader expects that a crashed run did not write; never overwrites."""
     empty: dict[str, Any] = {LOCATE_FILE: [], FUNNEL_FILE: {"strategy": settings.strategy, "documents": {}},
-                             ANSWER_FILE: {}, GRAPH_FILE: {"nodes": [], "edges": []}}
+                             ANSWER_FILE: {}, GRAPH_FILE: {"nodes": [], "edges": []},
+                             COMPARISONS_FILE: Comparisons().json()}   # an empty comparisons.Comparisons
     if settings.reason == "on":   # an empty reasoner.Inferences (reasoner.to_json)
         empty[REASON_FILE] = {"ontology_sha256": None, "broader": {}, "link_flags": []}
     if settings.names == "on":

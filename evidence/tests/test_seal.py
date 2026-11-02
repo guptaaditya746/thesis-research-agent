@@ -66,12 +66,13 @@ def test_a_crash_writes_all_expected_files_and_a_failed_manifest(tmp_path):
     root = tmp_path / "runs" / "r"
     assert not (root / "run.json").exists()
     for name in ("locate.json", "evidence.jsonl", "funnel.json", "answer.json", "graph.json", "protocol.lock.json",
-                 "names.json", "reason.json"):
+                 "names.json", "reason.json", "comparisons.json"):
         assert (root / name).is_file()
     assert (root / "calls").is_dir()
     assert json.loads((root / "funnel.json").read_text()) == {"strategy": "all", "documents": {}}
     assert json.loads((root / "graph.json").read_text()) == {"nodes": [], "edges": []}
     assert json.loads((root / "names.json").read_text()) == {"groups": {}, "matches": [], "unresolved": []}
+    assert json.loads((root / "comparisons.json").read_text()) == {"comparisons": [], "copied": [], "min_effect": None}
     m = json.loads((root / "manifest.json").read_text())
     assert m["status"] == "failed" and m["error"].startswith("CorpusError")
     assert "killed or crashed" in str(RunDirExists(root))
