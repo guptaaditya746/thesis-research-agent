@@ -181,6 +181,6 @@
     pack lists it as a system noun only in the sense of a reading component, which stays in words.yaml
 - word: rag
   reason: the name of the first domain pack (domains/rag/), kept in old baseline command and run-folder names and in the
-    committed example corpora (D36, old runs keep their names); a pack name, not a topic sentence
+    committed example corpora (D36, old runs keep their names), and in the web app's labels of that baseline's old runs (F42); a pack name, not a topic sentence
 - word: reduced
   reason: plain past participle of "reduce", and the CSS media feature `prefers-reduced-motion` the web app honours
