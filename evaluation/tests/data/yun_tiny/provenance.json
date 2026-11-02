@@ -1,0 +1,24 @@
+{
+ "what": "Hand-made rows (not data of either release) in the real file layouts, for evaluation/tests/test_yun.py. The drug name is the drugtoy fixture pack's invented one.",
+ "llm-meta-analysis": {
+  "repository": "https://github.com/hyesunyun/llm-meta-analysis",
+  "license": "Apache-2.0",
+  "commit_seen": "1bc768d4d098c727c9866eeff909297c38a3e84c",
+  "commit_date": "2024-09-04T03:03:21Z",
+  "files": {
+   "evaluation/data/annotated_rct_dataset.csv": "header copied exactly from https://raw.githubusercontent.com/hyesunyun/llm-meta-analysis/main/evaluation/data/annotated_rct_dataset.csv (git blob 02573abd04f9b7d037c62aab5f7a39b67d824f6e); empty cells for missing numbers, booleans TRUE/FALSE, split DEV/TEST, as in the real rows",
+   "evaluation/data/no_attributes_markdown_files/PMC<pmcid>.md": "the papers as the authors give them to the LLMs (DATASET.md: 'This is the version that we use as inputs to the LLMs'); listing at https://api.github.com/repos/hyesunyun/llm-meta-analysis/contents/evaluation/data/no_attributes_markdown_files"
+  }
+ },
+ "evidence-inference": {
+  "repository": "https://github.com/jayded/evidence-inference",
+  "license": "MIT",
+  "commit_seen": "a661e8c14f973398380c8865cf2f27a535aaaf6d",
+  "commit_date": "2021-06-18T14:06:48Z",
+  "files": {
+   "annotations/prompts_merged.csv": "header copied exactly from https://raw.githubusercontent.com/jayded/evidence-inference/a661e8c14f973398380c8865cf2f27a535aaaf6d/annotations/prompts_merged.csv",
+   "annotations/annotations_merged.csv": "header copied exactly (it starts with an unnamed index column) from https://raw.githubusercontent.com/jayded/evidence-inference/a661e8c14f973398380c8865cf2f27a535aaaf6d/annotations/annotations_merged.csv; labels and Label Code as annotations/README.md defines them"
+  }
+ },
+ "checked": "2026-11-02, by reading the pages above; nothing was downloaded or cloned"
+}

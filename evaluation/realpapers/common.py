@@ -1,4 +1,5 @@
-"""What every real-paper check shares: one reader of a run's items (F52) and the real.json / real.md writer."""
+"""What every real-paper check shares: one reader of a run's items (F52), the run's name groups and name matching,
+and the real.json / real.md writer."""
 from __future__ import annotations
 
 import json
@@ -6,7 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from evidence.contract import Item
-from evidence.rundir import RunDir
+from evidence.names import NameGroups, clean
+from evidence.rundir import NAMES_FILE, RunDir
 
 JSON_FILE = "real.json"
 MD_FILE = "real.md"
@@ -16,6 +18,27 @@ def items_of(run_dir: Path | str) -> list[Item]:
     """The run's evidence items, read through RunDir (its pack registered first); the scorers never parse
     evidence.jsonl themselves."""
     return RunDir(run_dir).items()
+
+
+def name_groups(run_dir: Path | str) -> NameGroups | None:
+    """The run's name groups (names.json); None for a run without names on."""
+    path = Path(run_dir) / NAMES_FILE
+    if not path.is_file():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return NameGroups({k: list(v) for k, v in data.get("groups", {}).items()}, [], [])
+
+
+def same_name(name: str | None, wanted: str, groups: NameGroups | None) -> bool:
+    """`name` is `wanted`: the same cleaned name, or the same name group of the run."""
+    if name is None:
+        return False
+    if clean(name) == clean(wanted):
+        return True
+    if groups is None:
+        return False
+    group = groups.group_of(name)
+    return group is not None and group == groups.group_of(wanted)
 
 
 def _cell(value: Any) -> str:

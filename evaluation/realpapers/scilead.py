@@ -48,12 +48,12 @@ import yaml
 from evidence.arxiv import ARXIV_ID
 from evidence.contract import Item
 from evidence.extractors.numreader import read_numbers
-from evidence.names import NameGroups, clean
+from evidence.names import clean
 from evidence.pack import DOMAINS, Role, RoleMap, load_pack
 from evidence.protocol import load as load_protocol
-from evidence.rundir import NAMES_FILE, PROTOCOL_FILE
+from evidence.rundir import PROTOCOL_FILE
 
-from .common import items_of
+from .common import items_of, name_groups as _groups, same_name as _same
 
 SOURCES = ("https://aclanthology.org/attachments/2024.emnlp-main.453.data.zip",
            "https://tudatalib.ulb.tu-darmstadt.de/handle/tudatalib/4345")
@@ -257,26 +257,6 @@ def gold(data: Path, metrics: Path = METRICS) -> dict[str, Any]:
     return {"tuples": release.tuples,
             "leaderboards": [{"task": b["task"], "dataset": b["dataset"], "metric": b["metric"], "ranking": b["ranking"],
                               "higher_is_better": b["rule"].higher} for b in boards]}
-
-
-def _groups(run_dir: Path) -> NameGroups | None:
-    path = Path(run_dir) / NAMES_FILE
-    if not path.is_file():
-        return None
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return NameGroups({k: list(v) for k, v in data.get("groups", {}).items()}, [], [])
-
-
-def _same(name: str | None, wanted: str, groups: NameGroups | None) -> bool:
-    """`name` is `wanted`: the same cleaned name, or the same name group of the run."""
-    if name is None:
-        return False
-    if clean(name) == clean(wanted):
-        return True
-    if groups is None:
-        return False
-    group = groups.group_of(name)
-    return group is not None and group == groups.group_of(wanted)
 
 
 def _dataset_type(run_dir: Path, roles: RoleMap, value_type: str) -> str:

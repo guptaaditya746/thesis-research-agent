@@ -43,6 +43,10 @@ FILE_WORDS = {
     # plan 3 (D42), checked here since the merge with plan 2 widened CHECKED_DIRS to evaluation/
     "evaluation/realpapers/scilead.py": ({"generation", "perplexity"},
                                          "the SciLead release is quoted as its authors name it: their repository (leaderboard-generation) and the lower-is-better metrics of their code; the values come from domains/ml/metrics.yaml"),
+    "evaluation/realpapers/yun.py": ({"increased", "decreased"},
+                                     "Evidence Inference 2.0's label vocabulary, quoted as its release writes it "
+                                     "('significantly increased' / 'significantly decreased'), is the gold the "
+                                     "engine's direction is mapped onto (D42)"),
 }
 
 

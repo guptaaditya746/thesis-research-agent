@@ -16,6 +16,8 @@
     evaluate scirex score --run R --corpus C --out D [--estimate ESTIMATE.json]
     evaluate scilead ids --data DIR --out ids.txt
     evaluate scilead score --run R --corpus C --data DIR --out D
+    evaluate yun corpus --repo DIR --ei DIR --out C
+    evaluate yun score --run R --corpus C --out D
     evaluate edits apply --corpus C --edits F --out DIR
     evaluate edits check --original R --runs DIR --edits F --out D [--corpora DIR]
     evaluate sheet --run R --corpus C (--sample N | --papers N) [--seed 0] --out F.csv
@@ -37,6 +39,11 @@ plus the gold only `score` reads; `score` writes real.json and real.md, never a 
 `ids` writes the papers' arXiv ids for `evidence fetch --ids` and prints the papers with none; `score` scores a run
 of domains/ml/protocols/values.yaml on the fetched corpus: values found and linked, "best" per leaderboard and
 pairwise order, in real.json and real.md.
+
+`yun` is a real-paper check (D42, evaluation/realpapers/yun.py) on Yun et al. 2024 and Evidence Inference 2.0:
+`corpus` turns a checkout of hyesunyun/llm-meta-analysis (`--repo`) and Evidence Inference's annotations/ folder
+(`--ei`) into a corpus plus the gold only `score` reads; `score` scores a drug-trials run (its comparisons.json) on
+A names, A values, B and C separately, in real.json and real.md.
 
 `edits` is the arXiv edit test (spec 6.12 item 3, evaluation/realpapers/edits.py): `apply` writes one corpus per
 edit of the edits file (`DIR/<edit id>`); run the engine on each with `--run-id <edit id>` under one folder, then
@@ -294,6 +301,23 @@ def cmd_scilead(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_yun(args: argparse.Namespace) -> int:
+    from .realpapers import yun
+    from .realpapers.common import write_real
+
+    try:
+        if args.yun_cmd == "corpus":
+            corpus = yun.to_corpus(args.repo, args.ei, args.out)
+            print(json.dumps(json.loads((corpus / yun.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
+            return 0
+        result = yun.report(args.run, args.corpus)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate yun {args.yun_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "Yun et al. 2024 + Evidence Inference")
+    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
+    return 0
+
+
 def cmd_edits(args: argparse.Namespace) -> int:
     from .realpapers import edits
     from .realpapers.common import write_real
@@ -489,6 +513,19 @@ def parser() -> argparse.ArgumentParser:
     ssum.add_argument("csv", type=Path, help="the sheet with right_or_wrong filled in (blank rows are not counted)")
     ssum.add_argument("--out", type=Path, help="also write real.json and real.md (demonstration, not an evaluation)")
     ssum.set_defaults(func=cmd_sheet_summary)
+
+    yn = sub.add_parser("yun", help="real-paper check: Yun et al. 2024 + Evidence Inference, A/B/C separately (D42)")
+    yns = yn.add_subparsers(dest="yun_cmd", required=True)
+    yc = yns.add_parser("corpus", help="the records' markdown papers -> manifest.json, papers/ and the gold")
+    yc.add_argument("--repo", type=Path, required=True, help="a checkout of hyesunyun/llm-meta-analysis")
+    yc.add_argument("--ei", type=Path, required=True, help="Evidence Inference 2.0's annotations/ folder")
+    yc.add_argument("--out", type=Path, required=True, help="the corpus directory to write")
+    yc.set_defaults(func=cmd_yun)
+    ys = yns.add_parser("score", help="score a drug-trials run (its comparisons.json) -> real.json and real.md")
+    ys.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    ys.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `yun corpus`")
+    ys.add_argument("--out", type=Path, required=True)
+    ys.set_defaults(func=cmd_yun)
     return p
 
 
