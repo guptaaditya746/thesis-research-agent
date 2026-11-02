@@ -10,6 +10,7 @@
     evaluate compare REPORT [REPORT ...] [--corpora DIR] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
+    evaluate losses --scores DIR --out DIR
     evaluate review --csv REVIEW.csv
     evaluate scirex corpus --jsonl F --out DIR [--limit N]
     evaluate scirex score --run R --corpus C --out D [--estimate ESTIMATE.json]
@@ -46,6 +47,10 @@ writes real.json and real.md labelled "demonstration, not an evaluation".
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
+
+`losses` (spec 6.16, evaluation/losses.py) reads every report.json one or two folders under `--scores` and writes
+losses.json and losses.md: per domain, each question's headline per system with its model calls and tokens, the
+engine's losses first, each with one cause. The web app reads them from `<scores root>/losses/`.
 
 Model calls go to the LiteLLM gateway ($LITELLM_BASE_URL, default http://127.0.0.1:4000/v1); the
 key is read from $LITELLM_MASTER_KEY when a model is made and is never printed or written. `--model`
@@ -226,6 +231,22 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_losses(args: argparse.Namespace) -> int:
+    from .losses import losses, read_reports, write_losses
+
+    reports = read_reports(args.scores)
+    if not reports:
+        raise SystemExit(f"evaluate losses: no report.json one or two folders under {args.scores}")
+    try:
+        result = losses(reports)
+    except KeyError as exc:   # a new kind's score without its headline
+        raise SystemExit(f"evaluate losses: {exc.args[0]}") from None
+    js, md = write_losses(result, args.out)
+    lost = sum(r["engine_loss"] for rows in result["domains"].values() for r in rows)
+    print(f"wrote {js} and {md}: {len(reports)} report(s), {lost} engine loss(es)")
+    return 0
+
+
 def cmd_review(args: argparse.Namespace) -> int:
     from .review import render, summarise
 
@@ -398,6 +419,14 @@ def parser() -> argparse.ArgumentParser:
     b.add_argument("reports", type=Path, nargs="+", help="report.json files or directories holding one")
     b.add_argument("--out", type=Path, required=True, help="writes <out>/<extractor_id>/benchmark.json and benchmark.md")
     b.set_defaults(func=cmd_benchmark)
+
+    lo = sub.add_parser("losses", help="the losses-first table: per domain, each question's headline and cost per "
+                                       "system, the engine's losses first with their cause")
+    lo.add_argument("--scores", type=Path, required=True,
+                    help="the scores root: every <group>/report.json and <group>/<name>/report.json under it")
+    lo.add_argument("--out", type=Path, required=True, help="writes <out>/losses.json and losses.md "
+                                                            "(the web app reads <scores root>/losses/)")
+    lo.set_defaults(func=cmd_losses)
 
     rv = sub.add_parser("review", help="summarise a filled-in fidelity review sheet (synth review CSV)")
     rv.add_argument("--csv", type=Path, required=True, help="review-s<seed>.csv with the three checks ticked yes/no")

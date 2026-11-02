@@ -160,7 +160,7 @@ from evidence.contract import Item, Scope
 from evidence.evidence_types import EvidenceType
 from evidence.kinds import best as best_rules
 from evidence.kinds import limitations as limitation_rules
-from evidence.protocol import Protocol
+from evidence.protocol import DEFAULT_PACK, Protocol
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionEntry, QuestionTruth, default_entry
 from evidence.questions import answered_by, answers_asked, load as load_questions, protocol_file
@@ -170,6 +170,7 @@ from evidence.rules import FLAGS, VALUE_DECIMALS
 from .canon import Canon, Target, default_canon, fold
 from .expected import expected as expected_answer
 from .expected import saved_answer, thing_key, truth_links
+from .losses import system_cost
 from .stats import bootstrap, bootstrap_f1, bootstrap_mean, interval_row, micro_f1, ratio
 from .truth import (DATASET, ENGINE, LIMITATION, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids,
                     read_json)
@@ -1617,13 +1618,15 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
     canon = Canon.from_truth(truth)
     m = protocol_matching(run.items, truth, files, protocol, canon)
     answers = ([run.answer] if run.answer is not None else []) + [read_json(p) for p in baselines]
-    systems = [score_kind(truth, entry.kind, entry.truth, protocol, a, canon) for a in answers]
+    systems = [score_kind(truth, entry.kind, entry.truth, protocol, a, canon)
+               | {"cost": system_cost(a, (run.run or {}) if a is run.answer else None)} for a in answers]
     effect = entry.kind == "effect"
     scored = effect_truth(truth, entry.truth, protocol, canon) if effect else truth
     return {
         "corpus_id": truth.corpus_id, "corpus_name": corpus.name, "levels": truth.levels,
         "run_id": (run.run or {}).get("run_id", run.root.name), "protocol": score_protocol(run),
-        "question_id": entry.id, "kind": entry.kind,
+        "question_id": entry.id, "kind": entry.kind, "domain": protocol.domain if protocol else DEFAULT_PACK,
+        "unresolved_names": (run.run or {}).get("unresolved_names"),
         "question": _question_text(truth, entry), "extraction": score_extraction(m),
         "integration": integration_kind(m, entry.kind, run.answer, protocol, scored, run.comparisons),
         "synthesis": systems,
@@ -1646,11 +1649,14 @@ def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = N
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
     protocol = _question_protocol(entry)
     canon = Canon.from_truth(truth)
-    systems = [score_kind(truth, entry.kind, entry.truth, protocol, a, canon) for a in given]
+    systems = [score_kind(truth, entry.kind, entry.truth, protocol, a, canon) | {"cost": system_cost(a, None)}
+               for a in given]
     effect = entry.kind == "effect"
     scored = effect_truth(truth, entry.truth, protocol, canon) if effect else truth
     return {"corpus_id": truth.corpus_id, "corpus_name": Path(corpus).name, "levels": truth.levels,
-            "run_id": None, "protocol": None, "question_id": entry.id, "kind": entry.kind, "question": _question_text(truth, entry),
+            "run_id": None, "protocol": None, "question_id": entry.id, "kind": entry.kind,
+            "domain": protocol.domain if protocol else DEFAULT_PACK, "unresolved_names": None,
+            "question": _question_text(truth, entry),
             "extraction": None, "integration": None, "synthesis": systems,
             "intervals": score_intervals(None, systems, entry.kind), "locate": None, "cascade": None,
             "extractors": None, "cost": None, "stability": None, "funnel": None,

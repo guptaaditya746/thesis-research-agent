@@ -189,6 +189,13 @@ def render(report: dict[str, Any]) -> str:
             out += ["Flags (F1; a system without `flags` is not listed):", "",
                     table(rows, ["system", "flag", "tp", "fp", "fn", "precision", "recall"]), "",
                     table(verdicts, ["system", "counts_correct", "duplicates_correct"]), ""]
+    costs = [{"system": s["system"], **s["cost"]} for s in report.get("synthesis") or [] if s.get("cost")]
+    if costs:
+        out += ["## Cost per system", "", table(costs, ["system", "model_calls", "input_tokens", "output_tokens",
+                                                        "tokens"]), "",
+                "Model calls and tokens each system recorded (D41): the engine's run.json `cost`, a baseline's "
+                "answering and mapping calls, the agent baseline's agent (its tokens not split into in and out). "
+                "`-`: not recorded.", ""]
     if report.get("attribution"):
         att = report["attribution"]
         rows = sorted(({"system": s["system"], **r} for s in att["systems"] for r in s["rows"]),

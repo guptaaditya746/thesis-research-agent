@@ -2,8 +2,6 @@
 corpora, protocols and proposals, engine and baseline runs with their funnel, spans, calls and traces, scores."""
 from __future__ import annotations
 
-import importlib
-import importlib.util
 import json
 import shutil
 from collections.abc import Iterator
@@ -13,6 +11,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agent.anchor import read_text
+from evaluation import losses as losses_module
+from evaluation.report import dumps
 from webapp.app import create_app
 from webapp.evfiles import RecordCache, segments
 from webapp.evmodels import CAUSES, Losses
@@ -297,16 +297,17 @@ def test_the_worlds_losses_put_the_losses_first_with_a_cause(ev: TestClient) -> 
 
 def test_losses_json_of_evaluate_validates_as_LossesView(ev_world: EvidenceWorld) -> None:
     """The contract with plan 3 Task 6 (preflight F6): what `evaluation.losses.losses` makes from the world's
-    reports is what the Report page reads. Skipped until Task 6 adds evaluation/losses.py; once the module is
-    there, an import error inside it fails this test instead of skipping it."""
-    if importlib.util.find_spec("evaluation.losses") is None:
-        pytest.skip("evaluation/losses.py is not there yet (plan 3 Task 6)")
-    losses_module = importlib.import_module("evaluation.losses")
+    reports (read as `evaluate losses` reads them: read_reports tags each with its `<group>~<name>`) is what the
+    Report page reads, and so is the losses.json `evaluate losses` wrote into the world."""
     paths = sorted(ev_world.scores.glob("*/*/report.json"))
-    made = Losses.model_validate(losses_module.losses([json.loads(p.read_text(encoding="utf-8")) for p in paths]))
+    result = losses_module.losses(losses_module.read_reports(ev_world.scores))
+    made = Losses.model_validate(result)
     assert made.domains and tuple(losses_module.CAUSES) == CAUSES
     ids = {f"{p.parent.parent.name}~{p.parent.name}" for p in paths}
-    assert {r.report for rows in made.domains.values() for r in rows} <= ids
+    assert {r.report for rows in made.domains.values() for r in rows} == ids
+    assert all(r.cost for rows in made.domains.values() for r in rows)   # every system's model calls and tokens
+    written = json.loads((ev_world.scores / "losses" / "losses.json").read_text(encoding="utf-8"))
+    assert written == json.loads(dumps(result)) and Losses.model_validate(written)
 
 
 def test_run_detail_counts_the_link_flags_of_reason_json(ev_fresh: EvidenceWorld) -> None:

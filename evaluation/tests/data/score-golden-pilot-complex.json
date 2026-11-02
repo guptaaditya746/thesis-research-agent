@@ -87,6 +87,7 @@
       "seconds": 132.032
     }
   },
+  "domain": "rag",
   "extraction": {
     "missed": [
       "S001.c3",
@@ -1308,6 +1309,12 @@
           "n": 1
         }
       ],
+      "cost": {
+        "input_tokens": 20746,
+        "model_calls": 15,
+        "output_tokens": 5110,
+        "tokens": 25856
+      },
       "errors": [],
       "expected_label": "mixed",
       "flags": {
@@ -1440,6 +1447,12 @@
           "n": 2
         }
       ],
+      "cost": {
+        "input_tokens": 3125,
+        "model_calls": 2,
+        "output_tokens": 1509,
+        "tokens": 4634
+      },
       "errors": [],
       "expected_label": "mixed",
       "flags": null,
@@ -1502,5 +1515,6 @@
       ],
       "system": "rag-baseline"
     }
-  ]
+  ],
+  "unresolved_names": null
 }
