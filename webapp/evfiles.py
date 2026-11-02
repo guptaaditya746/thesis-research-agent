@@ -27,6 +27,7 @@ strings UTF-16 units, so the page never converts an offset.
 from __future__ import annotations
 
 import json
+import logging
 import re
 import threading
 from collections.abc import Iterable
@@ -95,7 +96,8 @@ from .files import ID, RUN_SEP, Damaged, NotFound, check_id, inside, read_json, 
 from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
 
-STEPS = ("frame", "draft", "critic", "cards", "freeze")
+LOG = logging.getLogger(__name__)
+STEPS =("frame", "draft", "critic", "cards", "freeze")
 STEP_FILES = {"frame": FRAME, "draft": DRAFT, "critic": CRITIC, "cards": CARDS, "freeze": PROPOSAL}
 REVISION_FILE = re.compile(r"^protocol\.v(\d+)\.yaml$")
 OUTPUT_HEAD = 4096
@@ -619,7 +621,8 @@ class EvidenceFiles:
         the run has no protocol.yaml or its pack cannot be read (moved, or written by an older code)."""
         try:
             pack = rd.register_pack()
-        except (OSError, ValueError, yaml.YAMLError):
+        except (OSError, ValueError, yaml.YAMLError) as exc:   # the page then names the sides treatment and control
+            LOG.warning("run %s: the display names of its pack cannot be read: %s", rd.root, str(exc)[:200])
             return {}
         return dict(pack.display) if pack is not None else {}
 

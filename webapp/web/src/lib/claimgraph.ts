@@ -17,6 +17,7 @@ import type { Edge, Node } from "@xyflow/react"
 import type { BestAnswer, BuildsOnAnswer, ChainingAnswer, ConsistencyAnswer, EvGraph, EvGraphNode, LimitationsAnswer, RunAnswer } from "@/api/ev"
 
 import { answerHeadline, effectAnswer } from "./ev"
+import { bestRows, consistencyRows, indexGraph, type EvidenceRow } from "./evidence"
 
 /** What a claim says about the verdict: the claim -> verdict edge's kind. */
 export type ClaimRel = "supports" | "contradicts" | "neutral" | "builds_on" | "chain"
@@ -29,7 +30,8 @@ export interface Claim {
   label: string
   /** the papers the claim is read from, each with the words on its paper -> claim edge */
   sources: { document: string; label: string }[]
-  /** ids of the items (graph nodes) it rests on; empty when the answer names none (best, consistency, chaining) */
+  /** ids of the items (graph nodes) it rests on: named by the answer, or for best and consistency found in graph.json
+   *  as the evidence table finds them (src/lib/evidence.ts); empty for a chain step, which names a comparison */
   items: string[]
   rel: ClaimRel
   /** the words on the claim -> verdict edge */
@@ -65,10 +67,15 @@ const value = (v: number) => (Number.isInteger(v) ? String(v) : String(Number(v.
 const ORDER_WORDS: Record<string, string> = { better: "better than", worse: "worse than", no_difference: "no different from" }
 const ORDER_REL: Record<string, ClaimRel> = { better: "supports", worse: "contradicts", no_difference: "neutral" }
 
-/** The claims of an answer, one case per kind; `display` names the two sides of an effect or consistency claim. */
-export function claimsOf(answer: RunAnswer, kind: string, display: Display = {}): Claim[] {
+/**
+ * The claims of an answer, one case per kind; `display` names the two sides of an effect or consistency claim.
+ * With `graph`, a best or consistency claim gets the items its paper's row of the evidence table rests on.
+ */
+export function claimsOf(answer: RunAnswer, kind: string, display: Display = {}, graph?: EvGraph): Claim[] {
   const side = (key: "treatment" | "control") => display[key] ?? key
-  const name = (thing: string) => display[thing] ?? thing
+  const index = graph ? indexGraph(graph) : null
+  /** document -> the items of its evidence-table row */
+  const rowItems = (rows: EvidenceRow[]) => new Map(rows.map((r) => [r.document ?? "", r.target?.items ?? []]))
   const claims: Omit<Claim, "id">[] = []
   switch (kind) {
     case "effect": {
@@ -87,6 +94,7 @@ export function claimsOf(answer: RunAnswer, kind: string, display: Display = {})
     }
     case "best": {
       const a = answer as BestAnswer
+      const found = index ? rowItems(bestRows(a, [], index)) : null
       for (const s of a.studies) {
         const top = s.winner ?? s.tied[0]
         const at = top === undefined ? undefined : s.values[top]
@@ -96,20 +104,21 @@ export function claimsOf(answer: RunAnswer, kind: string, display: Display = {})
         if (!rival) continue
         const rel: ClaimRel = !s.winner || !a.winner ? "neutral" : s.winner === a.winner ? "supports" : "contradicts"
         claims.push({
-          label: `${name(top)} ${value(at)} vs ${name(rival[0])} ${value(rival[1])} on ${a.metric ?? "the metric"}`,
-          sources: [{ document: s.document, label: "reports" }], items: [],
-          rel, edgeLabel: s.winner ? (rel === "neutral" ? `${name(s.winner)} wins` : rel) : "tie",
+          label: `${top} ${value(at)} vs ${rival[0]} ${value(rival[1])} on ${a.metric ?? "the metric"}`,
+          sources: [{ document: s.document, label: "reports" }], items: found?.get(s.document) ?? [],
+          rel, edgeLabel: s.winner ? (rel === "neutral" ? `${s.winner} wins` : rel) : "tie",
         })
       }
       break
     }
     case "consistency": {
       const a = answer as ConsistencyAnswer
+      const found = index ? rowItems(consistencyRows(a, [], index)) : null
       for (const s of a.studies) {
         if (s.agrees === null || s.agrees === undefined || !s.direction) continue
         claims.push({
           label: `${side("treatment")} vs ${side("control")} on ${a.metric ?? "the metric"}: measured ${s.direction}, authors claim ${s.claim ?? "nothing"}`,
-          sources: [{ document: s.document, label: "reports" }], items: [],
+          sources: [{ document: s.document, label: "reports" }], items: found?.get(s.document) ?? [],
           rel: s.agrees ? "supports" : "contradicts", edgeLabel: s.agrees ? "claim agrees" : "claim disagrees",
         })
       }
@@ -199,7 +208,7 @@ export function claimItems(graph: EvGraph, claim: Claim): EvGraphNode[] {
 
 /** Nodes (papers, claims, the verdict) and edges, positioned: x by column, rows by dagre. */
 export function toClaimFlow(graph: EvGraph, answer: RunAnswer, kind: string, display: Display = {}) {
-  const claims = claimsOf(answer, kind, display)
+  const claims = claimsOf(answer, kind, display, graph)
   const verdict = verdictOf(answer, kind)
   const papers = [...new Set([...graph.nodes.filter((n) => n.type === "document").map((n) => n.id),
     ...claims.flatMap((c) => c.sources.map((s) => s.document))])]

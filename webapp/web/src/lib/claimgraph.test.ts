@@ -15,6 +15,7 @@ const GRAPH = {
     node("c-t1", "condition", "P1", { label: "with it", role: "treatment" }),
     node("c-c1", "condition", "P1", { label: "without it", role: "control" }),
     node("k-1", "metric", "P1", { name: "score", canonical: "score" }),
+    node("a-1", "author_claim", "P1", { direction: "improves" }),
     node("m-t1", "measurement", "P1", { value: 0.8 }, { condition: "c-t1", metric: "k-1" }),
     node("m-c1", "measurement", "P1", { value: 0.6 }, { condition: "c-c1", metric: "k-1" }),
     node("m-t2", "measurement", "P2", { value: 0.5 }),
@@ -45,6 +46,14 @@ const CHAIN_ANSWER = {
   kind: "chaining", system: "engine", source: "A", target: "C", metric: "score", verdict: "better", inferred: true,
   via: ["B"], studies: ["P1", "P2"], reason: null, note: "inferred through B, not tested directly",
   paths: [{ via: ["B"], verdict: "better", reason: null, steps: [step("cmp-1", "P1", "A", "B"), step("cmp-2", "P2", "B", "C")] }],
+} as unknown as RunAnswer
+const BEST_ANSWER = {
+  kind: "best", system: "engine", metric: "score", wins: { x: 1 }, winner: "x", tied: [],
+  studies: [{ document: "P1", winner: "x", tied: [], values: { x: 0.8, y: 0.6 }, reason: null }],
+} as unknown as RunAnswer
+const CONSISTENCY_ANSWER = {
+  kind: "consistency", system: "engine", metric: "score", agreeing: ["P1"], disagreeing: [], undetermined: [],
+  studies: [{ document: "P1", claim: "supports", direction: "supports", agrees: true, reason: null }],
 } as unknown as RunAnswer
 const LIMITATIONS_ANSWER = {
   kind: "limitations", system: "engine", thing: null, counts: {}, unlinked: {},
@@ -105,6 +114,19 @@ describe("claim graph", () => {
     const verdict = toClaimFlow(GRAPH, EFFECT_ANSWER, "effect", DISPLAY).nodes.filter((n) => n.data.column === "verdict")
     expect(verdict).toHaveLength(1)
     expect(verdict[0].data.label).toBe("mixed")
+  })
+
+  it("a best or consistency claim finds its items in the graph, as the evidence table does", () => {
+    const best = claimsOf(BEST_ANSWER, "best", DISPLAY, GRAPH)
+    expect(best.map((c) => c.label)).toEqual(["x 0.8 vs y 0.6 on score"])
+    expect(best[0].items).toEqual(["m-t1", "m-c1"])
+    expect(best[0].rel).toBe("supports")
+    const consistency = claimsOf(CONSISTENCY_ANSWER, "consistency", DISPLAY, GRAPH)
+    expect(consistency[0].items).toEqual(["a-1", "m-t1", "m-c1"])
+    expect(consistency[0].edgeLabel).toBe("claim agrees")
+    expect(claimsOf(BEST_ANSWER, "best", DISPLAY)[0].items).toEqual([])   // no graph, no items
+    const sheet = toClaimFlow(GRAPH, CONSISTENCY_ANSWER, "consistency", DISPLAY).claims[0]
+    expect(claimItems(GRAPH, sheet).map((n) => n.id)).toEqual(["a-1", "m-t1", "c-t1", "k-1", "m-c1", "c-c1"])
   })
 
   it("a claim's items are its own and the ones they link", () => {
