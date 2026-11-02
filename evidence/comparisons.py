@@ -118,6 +118,11 @@ def _key(name: str, groups: NameGroups | None) -> str:
     return f"group:{group}" if group is not None else f"clean:{names.clean(name)}"
 
 
+def thing_key(name: str, groups: NameGroups | None) -> str:
+    """The thing a name stands for, as comparisons match things (rule 6): for the kinds that read comparisons."""
+    return _key(name, groups)
+
+
 def resolve_cited(documents: Sequence[str], items: Mapping[str, list[Item]], roles: RoleMap,
                   groups: NameGroups | None) -> dict[str, str | None]:
     """Each cited text of the run's dependency items -> the document whose study label names the same thing (rule
