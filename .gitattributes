@@ -66,3 +66,6 @@ evidence/propose/** text eol=lf
 # EV2 corpora built here and run on Slurm: papers are hashed into manifest.json, placements are offsets.
 tests/EV2/corpora/** text eol=lf
 tests/EV2/ui-case/** text eol=lf
+# EV4 corpora, call caches and sources (plan 2 Task 18 on): papers are hashed into manifest.json, placements are
+# offsets, so a CRLF checkout would break both.
+tests/EV4/** text eol=lf

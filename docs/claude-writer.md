@@ -47,6 +47,31 @@ The build waits on the pending requests. While it runs, subagents answer them in
 3. repairs;
 4. blind readings.
 
+## Agent calls: replying with tool calls
+
+Some callers are agents with tools: `packbuilder propose` (plan 2 Task 18 Step 6) reads the corpus through the six
+tools of `packbuilder/server.py`. Its request file then has two more keys:
+
+- `tools`: the tools offered, each `{name, description, parameters}` (`parameters` is the JSON schema of its arguments);
+- `tool_calls_schema`: the schema of a reply that calls tools.
+
+The answerer replies in one of two ways:
+
+1. To use tools, reply with an object whose only key is `tool_calls`. Each call names an offered tool, and its
+   `args` fit that tool's `parameters`:
+
+   ```json
+   {"tool_calls": [{"tool": "grep", "args": {"regex": "(?i)placebo", "limit": 20}},
+                   {"tool": "read_paper", "args": {"paper_id": "S001"}}]}
+   ```
+
+2. To finish, reply with the output object under `output_schema`, as for any other request.
+
+After a tool call, the tools run and a new request appears, with a new id. Its `prompt` holds the conversation so
+far: `[tool call <id>] name {args}`, then `[tool result <id>] name: <result>`, or `[tool error <id>] name: <message>`
+(an unknown paper, a bad regex). Each turn is a request of its own, so answer the newest one. A reply that fits
+neither schema is rejected and the reason is listed under `rejected`, as before.
+
 ## Limits (say these in the thesis)
 
 - **Not an API call.** The writer is a Claude Code subagent, so the record holds the prompts and replies but no sampling settings. The `seed` in a request only distinguishes retries.
