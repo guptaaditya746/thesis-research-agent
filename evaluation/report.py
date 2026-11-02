@@ -195,7 +195,8 @@ def render(report: dict[str, Any]) -> str:
                                                         "tokens"]), "",
                 "Model calls and tokens each system recorded (D41): the engine's run.json `cost`, a baseline's "
                 "answering and mapping calls, the agent baseline's agent (its tokens not split into in and out). "
-                "`-`: not recorded.", ""]
+                "The engine's counts include calls replayed from its record cache (the system's cost, not this "
+                "rerun's spend: `made_model_calls` under Cost is that). `-`: not recorded.", ""]
     if report.get("attribution"):
         att = report["attribution"]
         rows = sorted(({"system": s["system"], **r} for s in att["systems"] for r in s["rows"]),

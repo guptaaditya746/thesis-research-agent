@@ -299,11 +299,11 @@ def test_losses_json_of_evaluate_validates_as_LossesView(ev_world: EvidenceWorld
     """The contract with plan 3 Task 6 (preflight F6): what `evaluation.losses.losses` makes from the world's
     reports (read as `evaluate losses` reads them: read_reports tags each with its `<group>~<name>`) is what the
     Report page reads, and so is the losses.json `evaluate losses` wrote into the world."""
-    paths = sorted(ev_world.scores.glob("*/*/report.json"))
     result = losses_module.losses(losses_module.read_reports(ev_world.scores))
     made = Losses.model_validate(result)
     assert made.domains and tuple(losses_module.CAUSES) == CAUSES
-    ids = {f"{p.parent.parent.name}~{p.parent.name}" for p in paths}
+    ids = {"~".join(p.parent.relative_to(ev_world.scores).parts)   # one- and two-level reports, as the web app
+           for p in [*ev_world.scores.glob("*/report.json"), *ev_world.scores.glob("*/*/report.json")]}
     assert {r.report for rows in made.domains.values() for r in rows} == ids
     assert all(r.cost for rows in made.domains.values() for r in rows)   # every system's model calls and tokens
     written = json.loads((ev_world.scores / "losses" / "losses.json").read_text(encoding="utf-8"))

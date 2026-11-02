@@ -9,9 +9,11 @@ one table per domain: per question each system's headline score and cost, whethe
 cause of its loss (CAUSES, in order):
 
 - missed: the extraction (A) missed a fact of the scored types;
-- wrongly linked: a B accuracy of the report (`association_accuracy` over all levels, `kind_accuracy`,
-  `claim_accuracy`) is below 1; a kind whose B has no accuracy (chaining, limitations, builds_on, inventory)
-  skips this step (preflight F33);
+- wrongly linked: a B link measure of the report's own B row (preflight F33) is below 1: `association_accuracy`
+  over all levels, `kind_accuracy`, `claim_accuracy`; chaining `comparison_precision`/`comparison_recall`,
+  limitations `link_share`, builds_on `link_precision`/`link_recall` (B_LINK). A null measure is skipped (chaining
+  without comparisons.json); inventory's B is name grouping, step 3. A missed fact is step 1, so a recall below 1
+  here is a link not made;
 - names not grouped: the run left names unresolved (run.json `unresolved_names`), or the inventory B split or
   merged a name;
 - wrong rule: none of these, so the evidence was there and the answer rule went wrong.
@@ -43,6 +45,8 @@ COST_KEYS = ("model_calls", "input_tokens", "output_tokens", "tokens")
 HEADLINE = {"effect": "direction_accuracy", "inventory": "f1", "best": "per_study_accuracy",
             "consistency": "per_study_accuracy"}   # other kinds: the `headline` their scorer writes
 B_ACCURACY = ("association_accuracy", "kind_accuracy", "claim_accuracy")
+B_LINK = {"chaining": ("comparison_precision", "comparison_recall"), "limitations": ("link_share",),
+          "builds_on": ("link_precision", "link_recall")}   # the new kinds' B rows measure links, not "accuracy"
 ALL = "all"
 
 
@@ -98,13 +102,15 @@ def headline(kind: str, system: dict[str, Any]) -> float | None:
     return row["headline"]
 
 
-def _b_accuracies(integration: dict[str, Any] | None) -> list[float]:
-    """The report's B accuracies: the `all` row's association accuracy and the kind's own accuracy (B_ACCURACY)."""
+def _b_links(kind: str, integration: dict[str, Any] | None) -> list[float]:
+    """The report's B link measures that are known (null skipped): the `all` row's association accuracy, the
+    kind's own accuracy (B_ACCURACY) and the new kinds' link rates (B_LINK)."""
     if not integration:
         return []
     rows = [r for r in integration.get("rows") or [] if r.get("level") == ALL]
-    return [v for source in (integration, *rows) for k in B_ACCURACY
-            if isinstance(v := source.get(k), (int, float))]
+    keys = B_ACCURACY + B_LINK.get(kind, ())
+    return [v for source in (integration, *rows) for k in keys
+            if isinstance(v := source.get(k), (int, float)) and not isinstance(v, bool)]
 
 
 def loss_cause(report: dict[str, Any]) -> str:
@@ -112,7 +118,7 @@ def loss_cause(report: dict[str, Any]) -> str:
     if (report.get("extraction") or {}).get("missed"):
         return "missed"
     integration = report.get("integration") or {}
-    if any(v < 1 for v in _b_accuracies(integration)):
+    if any(v < 1 for v in _b_links(report.get("kind", "effect"), integration)):
         return "wrongly linked"
     if (report.get("unresolved_names") or 0) > 0 or (integration.get("kind") == "inventory" and
                                                      (integration.get("split") or integration.get("merged"))):

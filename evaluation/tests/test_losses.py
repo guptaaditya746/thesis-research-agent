@@ -122,10 +122,28 @@ def test_inventory_split_or_merged_is_names_not_grouped() -> None:
     assert loss_cause(r) == "names not grouped"
 
 
-def test_a_kind_without_a_b_accuracy_skips_wrongly_linked() -> None:
-    """F33: B accuracy comes from the report's own B row; chaining's B has precision and recall, no accuracy."""
+@pytest.mark.parametrize("kind,b", [
+    ("chaining", {"comparison_precision": 1.0, "comparison_recall": 0.5}),
+    ("limitations", {"items": 4, "linked": 3, "link_share": 0.75}),
+    ("builds_on", {"link_precision": 0.5, "link_recall": 1.0})])
+def test_a_new_kinds_link_loss_is_wrongly_linked(kind: str, b: dict[str, Any]) -> None:
+    """F33: B comes from the report's own B row; the new kinds' rows measure links (B_LINK)."""
+    r = report("q", engine=0.1, rag=0.9, kind=kind)
+    r["integration"] = {"kind": kind, **b}
+    assert loss_cause(r) == "wrongly linked"
+
+
+def test_null_link_rates_fall_through() -> None:
+    """Chaining without comparisons.json: null rates are not a link loss."""
     r = report("q", engine=0.1, rag=0.9, kind="chaining")
-    r["integration"] = {"kind": "chaining", "comparison_precision": 0.5, "comparison_recall": 0.5}
+    r["integration"] = {"kind": "chaining", "comparisons": None, "comparison_precision": None,
+                        "comparison_recall": None}
+    assert loss_cause(r) == "wrong rule"
+
+
+def test_perfect_links_are_not_a_link_loss() -> None:
+    r = report("q", engine=0.1, rag=0.9, kind="builds_on")
+    r["integration"] = {"kind": "builds_on", "link_precision": 1.0, "link_recall": 1.0}
     assert loss_cause(r) == "wrong rule"
 
 
