@@ -118,3 +118,31 @@ def test_a_reply_still_being_written_is_not_read_half_done(tmp_path: Path) -> No
     out = ask_sync(PROMPT, "Q", model=model)
     assert out.output.n == 2
     assert not list((tmp_path / "replies").glob("*.rejected-*"))
+
+
+def test_a_tool_call_reply_runs_the_tool_and_the_next_request_shows_it(tmp_path: Path) -> None:
+    """A call with tools: the request lists them; a reply naming an unknown tool is rejected with its reason; a
+    valid tool call runs the tool, and the next request's prompt holds the call and its result."""
+    from pydantic_ai import Agent
+
+    from modelcall.loop import run_sync
+
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, settle_s=0.5)
+    agent = Agent(model, output_type=Out, instructions="Use the tool, then answer.")
+
+    @agent.tool_plain
+    def lookup(word: str) -> str:
+        """Look a word up."""
+        return f"{word} means seven"
+
+    seen: list[dict] = []
+    answer_when_pending(tmp_path, [{"tool_calls": [{"tool": "nope", "args": {}}]},
+                                   {"tool_calls": [{"tool": "lookup", "args": {"word": "zap"}}]},
+                                   {"answer": "zap", "n": 7}], seen)
+    out = run_sync(agent.run("What is zap?"))
+    assert out.output == Out(answer="zap", n=7)
+    assert [t["name"] for t in seen[0]["tools"]] == ["lookup"] and seen[0]["tools"][0]["description"]
+    assert "'nope' is not one of ['lookup']" in seen[1]["rejected"][0]
+    last = seen[2]["prompt"]
+    assert 'lookup {"word": "zap"}' in last and '[tool result ' in last and "zap means seven" in last
+    assert seen[2]["id"] != seen[0]["id"]

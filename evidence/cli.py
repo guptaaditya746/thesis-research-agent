@@ -48,6 +48,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -240,31 +241,40 @@ def _dispatch(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
-def _pack_check(name: str) -> int:
+def pack_check(name: str, root: Path | None = None) -> dict[str, Any]:
+    """`evidence pack check NAME` on `root/NAME/` (None: domains/): load the pack, register its types, check it has a
+    type of every role its questions' kinds need, and validate every protocol file (each must name the pack). Returns
+    {pack, sha256, types, kinds, protocols, question_protocols}; a failure raises (OSError, ValueError, YAMLError)."""
     from . import pack, questions
     from .protocol import load
+    root = Path(root) if root is not None else pack.DOMAINS
+    p = pack.load_pack(name, root=root)
+    pack.register_pack(p)
+    qfile = root / name / "questions.yaml"
+    entries = questions.load(qfile) if qfile.is_file() else []
+    kinds = sorted({q.kind for q in entries})
+    pack.check(p, kinds)
+    named = {questions.protocol_file(f, qfile) for q in entries for f in (q.protocol, q.agentic_protocol) if f}
+    # every protocol of the pack, not only those questions.yaml names (a protocol kept for later must parse too)
+    files = sorted({*(root / name / "protocols").glob("*.yaml"), *named})
+    for path in files:
+        try:
+            domain = load(path, domains=root).domain
+        except (OSError, ValueError, yaml.YAMLError) as exc:
+            raise ValueError(f"{path}: {exc}") from exc
+        if domain != name:
+            raise ValueError(f"{path}: its domain is not {name!r}")
+    return {"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
+            "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}
+
+
+def _pack_check(name: str) -> int:
     try:
-        p = pack.load_pack(name, root=pack.DOMAINS)
-        pack.register_pack(p)
-        qfile = pack.questions_path(name)
-        entries = questions.load(qfile) if qfile.is_file() else []
-        kinds = sorted({q.kind for q in entries})
-        pack.check(p, kinds)
-        named = {questions.protocol_file(f, qfile) for q in entries for f in (q.protocol, q.agentic_protocol) if f}
-        # every protocol of the pack, not only those questions.yaml names (a protocol kept for later must parse too)
-        files = sorted({*(pack.DOMAINS / name / "protocols").glob("*.yaml"), *named})
-        for path in files:
-            try:
-                domain = load(path).domain
-            except (OSError, ValueError, yaml.YAMLError) as exc:
-                raise ValueError(f"{path}: {exc}") from exc
-            if domain != name:
-                raise ValueError(f"{path}: its domain is not {name!r}")
+        report = pack_check(name)
     except (OSError, ValueError, yaml.YAMLError) as exc:   # PackError and pydantic's ValidationError are ValueErrors
         print(f"error: pack {name!r}: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps({"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
-                      "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}, indent=1))
+    print(json.dumps(report, indent=1))
     return 0
 
 
