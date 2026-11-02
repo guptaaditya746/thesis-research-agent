@@ -19,7 +19,9 @@ Search is word search only, no embeddings: paragraphs are the runs of text betwe
 `rag.paragraph`, `rag.BLANK_LINE`), tokens are `\\w+` lower-cased (`rag.tokens`); only paragraphs sharing a word with
 the query (score > 0) are returned, best first. Offsets are character offsets into the paper text, so
 `text == paper[start:end]`. An unknown paper_id, an unknown heading or an invalid regex is an error (a ToolError
-whose message names the known ids or headings), never an empty result.
+whose message names the known ids or headings), never an empty result. `grep` runs the model's regex with the `regex`
+package and a time limit for the whole call (GREP_SECONDS): a pattern that backtracks without end, such as `(a+)+$`,
+is an error instead of a hung agent (the exchange timeout does not cover tools run in process).
 
 The server is an MCP `MCPServer` (mcp 2.x's name for FastMCP; `mcp.server.fastmcp` is gone there). It serves over
 stdio (`packbuilder serve --corpus DIR`) or in process: `pydantic_ai.mcp.MCPToolset(create_server(corpus))`
@@ -28,10 +30,12 @@ stdio (`packbuilder serve --corpus DIR`) or in process: `pydantic_ai.mcp.MCPTool
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import regex as _regex
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from rank_bm25 import BM25Okapi
@@ -40,6 +44,7 @@ from evaluation.baselines.common import Paper, SystemCorpus
 from evaluation.baselines.rag import BLANK_LINE, tokens
 
 GREP_TEXT = 200
+GREP_SECONDS = 5.0      # the time limit of one grep call, over all lines of all papers
 HEADING = re.compile(r"^(#{1,2}) +(.+?) *#*[ \t]*$", re.MULTILINE)   # a `#` or `##` heading line
 TABLE_ROW = re.compile(r"^[ \t]*\|.*\|[ \t]*$")
 TABLE_RULE = re.compile(r"^[ \t]*\|?[ \t]*:?-{3,}:?[ \t]*(\|[ \t]*:?-{3,}:?[ \t]*)*\|?[ \t]*$")
@@ -171,18 +176,24 @@ def create_server(corpus: Path) -> MCPServer:
     @mcp.tool(description="Regular-expression search (Python syntax, case-sensitive; use (?i) to ignore case) over "
                           "every line of every paper: up to `limit` matching lines with their paper, line number "
                           "(from 1), character offset of the match and the line (at most 200 characters). An "
-                          "invalid regex is an error.")
-    def grep(regex: str, limit: int = 50) -> list[dict[str, Any]]:
+                          "invalid regex, or one that runs too long (nested quantifiers such as (a+)+), is an error.")
+    def grep(regex: str, limit: int = 50) -> list[dict[str, Any]]:     # `regex`: the tool's argument name
         try:
-            pattern = re.compile(regex)
-        except re.error as exc:
+            pattern = _regex.compile(regex)
+        except _regex.error as exc:
             raise ToolError(f"invalid regex {regex!r}: {exc}") from None
+        deadline = time.monotonic() + GREP_SECONDS
         out: list[dict[str, Any]] = []
         for p in papers.values():
             for number, (start, line) in enumerate(lines(p.text), 1):
                 if len(out) >= limit:
                     return out
-                if m := pattern.search(line):
+                try:
+                    m = pattern.search(line, timeout=max(deadline - time.monotonic(), 0.0))
+                except TimeoutError:
+                    raise ToolError(f"regex {regex!r} ran longer than {GREP_SECONDS:g} s; write it without nested "
+                                    "quantifiers such as (a+)+") from None
+                if m:
                     out.append({"paper": p.id, "line": number, "start": start + m.start(), "text": line[:GREP_TEXT]})
         return out
 

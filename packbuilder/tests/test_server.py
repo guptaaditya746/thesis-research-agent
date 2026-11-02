@@ -136,3 +136,18 @@ def test_in_process_toolset_serves_the_tools(corpus: Path) -> None:
             return names, reply.structured_content
     names, listed = run(go())
     assert names == TOOLS and [p["id"] for p in listed["result"]] == ["S001", "S002"]
+
+
+def test_grep_stops_a_regex_that_runs_too_long(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from packbuilder import server
+    corpus = tmp_path / "c"
+    (corpus / "papers").mkdir(parents=True)
+    data = ("# Long\n\n" + "a" * 5000 + "!\n").encode("utf-8")
+    (corpus / "papers" / "L001.md").write_bytes(data)
+    (corpus / "manifest.json").write_text(json.dumps({"corpus_id": "long", "papers": [
+        {"id": "L001", "file": "papers/L001.md", "sha256": hashlib.sha256(data).hexdigest()}]}), encoding="utf-8")
+    monkeypatch.setattr(server, "GREP_SECONDS", 0.3)
+    srv = create_server(corpus)
+    with pytest.raises(Exception, match="ran longer than"):
+        run(srv.call_tool("grep", {"regex": r"(a+)+$"}))
+    assert [h["line"] for h in result(srv, "grep", {"regex": r"a{10}!"})] == [3]       # an ordinary regex still runs

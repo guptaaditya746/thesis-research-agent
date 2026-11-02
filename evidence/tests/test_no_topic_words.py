@@ -10,7 +10,8 @@ import yaml
 
 from evidence.pack import DOMAINS, load_pack
 
-CHECKED_DIRS = ["evidence", "agent", "synth", "evaluation"]   # evaluation: plan 2 Task 14 (preflight P2)
+# evaluation: plan 2 Task 14 (preflight P2); packbuilder: its prompts are where topic examples creep in (D35)
+CHECKED_DIRS = ["evidence", "agent", "synth", "evaluation", "packbuilder"]
 ROOT = DOMAINS.parent
 SUFFIXES = {".py", ".md", ".txt", ".yaml"}
 # examples: synth/examples/rag-demo-* are committed corpora, pinned byte for byte (D36), not code.

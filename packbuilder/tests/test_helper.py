@@ -116,3 +116,42 @@ def test_a_cached_helper_proposal_makes_no_model_call(corpus: Path, tmp_path: Pa
     helper(corpus, "toy", model=second.model(), verify_model=scripted_verifier(), cache=tmp_path / "c.jsonl",
            root=tmp_path / "domains2")                           # same cache and input, a new domains folder
     assert len(first.prompts) == 1 and second.prompts == []
+
+
+def drafted_domain(tmp_path: Path) -> Path:
+    """domains/toy as Task 18 has it at Step 6: the drafted recipe and its provenance, no pack yet."""
+    folder = tmp_path / "domains" / "toy"
+    folder.mkdir(parents=True)
+    (folder / "generator.yaml").write_text("{}", encoding="utf-8")
+    (folder / "provenance.json").write_text(json.dumps({"generator": {"by": "synth draft"}}), encoding="utf-8")
+    return folder
+
+
+def test_a_helper_pack_written_in_scratch_is_adopted_beside_the_recipe(corpus: Path, tmp_path: Path) -> None:
+    from packbuilder import cli
+    folder = drafted_domain(tmp_path)
+    with pytest.raises(ValueError, match="generator.yaml"):          # beside the recipe: still refused
+        run(corpus, tmp_path, Scripted().model())
+    scratch = helper(corpus, "toy", model=Scripted().model(), verify_model=scripted_verifier(),
+                     cache=tmp_path / "scratch" / "toy" / "helper-calls.jsonl", root=tmp_path / "scratch")
+    assert cli.main(["adopt", "--from", str(scratch), "--into", str(folder)]) == 0
+    for f in ("pack.yaml", "words.yaml", "helper-calls.jsonl"):
+        assert (folder / f).read_bytes() == (scratch / f).read_bytes()
+    prov = json.loads((folder / "provenance.json").read_text(encoding="utf-8"))
+    assert prov["generator"] == {"by": "synth draft"}
+    assert prov["words"]["by"] == prov["pack"]["by"] == "packbuilder helper (D34)"
+    assert list(load_pack("toy", root=tmp_path / "domains").words.conditions) == ["velmora", "placebo"]
+    # a second adopt never replaces the pack
+    assert cli.main(["adopt", "--from", str(scratch), "--into", str(folder)]) == 2
+
+
+def test_adopt_refuses_another_name_or_an_unwritten_pack(corpus: Path, tmp_path: Path) -> None:
+    from packbuilder.helper import adopt
+    folder = drafted_domain(tmp_path)
+    with pytest.raises(ValueError, match="not a written pack"):
+        adopt(tmp_path / "scratch" / "toy", folder)
+    scratch = helper(corpus, "other", model=Scripted().model(), verify_model=scripted_verifier(),
+                     cache=tmp_path / "c.jsonl", root=tmp_path / "scratch")
+    with pytest.raises(ValueError, match="different packs"):
+        adopt(scratch, folder)
+    assert not (folder / "pack.yaml").exists()
