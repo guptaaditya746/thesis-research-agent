@@ -43,6 +43,7 @@ Output: one `PackProposal`.
 
 Rules:
 - Take every word from the papers. Copy quotes exactly; do not fix spelling, spacing or case.
+- A display name, screen term, query word, system noun or name seed must appear in its own quote (case may differ).
 - Every word needs a source, including each pattern, role name, canonical metric name, GLiNER label, screen term, query word, display name, category and name seed. `not_a_system`, claim directions, `other` and type names need none.
 - Use only the papers given through the tools.
 
@@ -56,6 +57,14 @@ Normal: a condition role and its pattern, each with a source.
   {"claim": "\\bNorvane\\b", "paper": "P003", "quote": "plots treated with Norvane"},
   {"claim": "untreated", "paper": "P003", "quote": "against untreated plots"},
   {"claim": "(?i)\\buntreated\\s+plots?\\b", "paper": "P003", "quote": "against untreated plots"}]}
+```
+
+Normal: the types, with prefixes not in `taken_prefixes` (say `c` and `k` are taken).
+```json
+{"types": {"plot_arm": {"prefix": "pa", "role": "compared_thing", "name_field": "label", "side_field": "role"},
+           "yield_metric": {"prefix": "ym", "role": "metric", "name_field": "name", "canonical_field": "canonical"},
+           "yield_value": {"prefix": "yv", "role": "measured_value", "context_field": "site"},
+           "site": {"prefix": "si", "role": "context", "name_field": "name"}}}
 ```
 
 Confusing: the paper names the control first ("Untreated plots and Norvane plots were compared"). The question asks about Norvane, so `norvane` is still the first role of `conditions`.

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 from pathlib import Path
@@ -29,13 +30,18 @@ def answer_when_pending(root: Path, replies: list[dict], seen: list[dict]) -> th
         deadline = time.time() + 20
         while queue and time.time() < deadline:
             for f in sorted((root / "pending").glob("*.json")) if (root / "pending").exists() else []:
-                req = json.loads(f.read_text(encoding="utf-8"))
+                try:
+                    req = json.loads(f.read_text(encoding="utf-8"))
+                except (OSError, ValueError):   # gone or being replaced (Windows): look again on the next pass
+                    continue
                 if (f.name, len(req.get("rejected", []))) == last:
                     continue
                 last = (f.name, len(req.get("rejected", [])))
                 seen.append(req)
                 (root / "replies").mkdir(parents=True, exist_ok=True)
-                (root / "replies" / f.name).write_text(json.dumps(queue.pop(0)), encoding="utf-8")
+                tmp = root / "replies" / f"{f.stem}.tmp"      # written whole, then renamed: never read half done
+                tmp.write_text(json.dumps(queue.pop(0)), encoding="utf-8")
+                os.replace(tmp, root / "replies" / f.name)
             time.sleep(0.05)
     t = threading.Thread(target=run, daemon=True)
     t.start()
@@ -43,7 +49,7 @@ def answer_when_pending(root: Path, replies: list[dict], seen: list[dict]) -> th
 
 
 def test_request_written_and_reply_returned(tmp_path: Path) -> None:
-    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05)
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, timeout_s=60)
     seen: list[dict] = []
     answer_when_pending(tmp_path, [{"answer": "yes", "n": 3}], seen)
     out = ask_sync(PROMPT, "Is it?", model=model, settings=CallSettings(seed=7))
@@ -57,7 +63,7 @@ def test_request_written_and_reply_returned(tmp_path: Path) -> None:
 
 
 def test_invalid_reply_is_rejected_with_its_reason_then_a_valid_one_accepted(tmp_path: Path) -> None:
-    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05)
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, timeout_s=60)
     seen: list[dict] = []
     answer_when_pending(tmp_path, [{"answer": "yes"}, {"answer": "yes", "n": 1}], seen)
     out = ask_sync(PROMPT, "Is it?", model=model)
@@ -67,18 +73,18 @@ def test_invalid_reply_is_rejected_with_its_reason_then_a_valid_one_accepted(tmp
 
 
 def test_an_existing_reply_is_reused_without_a_pending_request(tmp_path: Path) -> None:
-    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05)
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, timeout_s=60)
     seen: list[dict] = []
     answer_when_pending(tmp_path, [{"answer": "a", "n": 1}], seen)
     ask_sync(PROMPT, "Q", model=model)
     rid = seen[0]["id"]
     (tmp_path / "done" / f"{rid}.json").unlink()
-    again = ask_sync(PROMPT, "Q", model=exchange_model(tmp_path, "exchange:writer", poll_s=0.05))
+    again = ask_sync(PROMPT, "Q", model=exchange_model(tmp_path, "exchange:writer", poll_s=0.05, timeout_s=60))
     assert again.output.answer == "a" and len(seen) == 1
 
 
 def test_cache_key_carries_the_exchange_name_and_a_hit_needs_no_reply(tmp_path: Path) -> None:
-    model = exchange_model(tmp_path / "x", "exchange:writer", poll_s=0.05)
+    model = exchange_model(tmp_path / "x", "exchange:writer", poll_s=0.05, timeout_s=60)
     assert model_identity([model]) == "exchange:writer"
     cache = JsonlCache(tmp_path / "c.jsonl")
     key = default_key(PROMPT, "Q", model, CallSettings())
@@ -103,7 +109,7 @@ def test_model_for_and_status(tmp_path: Path, capsys) -> None:
 
 
 def test_a_reply_still_being_written_is_not_read_half_done(tmp_path: Path) -> None:
-    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, settle_s=0.5)
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, settle_s=0.5, timeout_s=60)
 
     def answer() -> None:
         deadline = time.time() + 20
@@ -127,7 +133,7 @@ def test_a_tool_call_reply_runs_the_tool_and_the_next_request_shows_it(tmp_path:
 
     from modelcall.loop import run_sync
 
-    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, settle_s=0.5)
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, settle_s=0.5, timeout_s=60)
     agent = Agent(model, output_type=Out, instructions="Use the tool, then answer.")
 
     @agent.tool_plain
@@ -146,3 +152,17 @@ def test_a_tool_call_reply_runs_the_tool_and_the_next_request_shows_it(tmp_path:
     last = seen[2]["prompt"]
     assert 'lookup {"word": "zap"}' in last and '[tool result ' in last and "zap means seven" in last
     assert seen[2]["id"] != seen[0]["id"]
+
+
+def test_a_call_with_a_timeout_fails_instead_of_waiting(tmp_path: Path) -> None:
+    from modelcall import ModelCallError
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.02, timeout_s=0.3)
+    started = time.time()
+    try:
+        ask_sync(PROMPT, "Nobody answers", model=model)
+    except ModelCallError as exc:
+        assert "TimeoutError" in exc.reason and "no accepted reply" in exc.reason
+    else:
+        raise AssertionError("the call returned without a reply")
+    assert time.time() - started < 10
+    assert len(list((tmp_path / "pending").glob("*.json"))) == 1     # the request stays for a later run

@@ -104,3 +104,10 @@ def test_freeze_command(tmp_path: Path, capsys) -> None:
     assert "git tag ev4-pack-drugtoy-v1" in capsys.readouterr().out
     assert main(["freeze", str(frozen_ready_pack(tmp_path / "bad", words_files_read=["../generator.yaml"]))]) == 2
     assert "generator.yaml" in capsys.readouterr().err
+
+
+def test_freeze_without_provenance_is_refused(tmp_path: Path) -> None:
+    pack = frozen_ready_pack(tmp_path)
+    (pack / "provenance.json").unlink()
+    with pytest.raises(ValueError, match="provenance.json"):
+        freeze(pack)

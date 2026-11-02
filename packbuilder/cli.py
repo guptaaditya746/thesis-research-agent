@@ -1,9 +1,13 @@
 """`packbuilder` command line.
 
     packbuilder serve --corpus DIR    the corpus tool server (server.py) over stdio, for an MCP client
-    packbuilder propose --corpus DIR --name N --model M [--question Q] [--root DIR] [--cache F] [--exchange DIR]
-                                      the pack-builder agent (agent.py): writes <root>/N/{pack.yaml,words.yaml} and
-                                      logs them in provenance.json
+    packbuilder propose --corpus DIR --name N --model M --verify-model V [--question Q] [--root DIR] [--cache F]
+                        [--exchange DIR]
+                                      the pack-builder agent (agent.py): M proposes, V checks each word; writes
+                                      <root>/N/{pack.yaml,words.yaml} and logs them in provenance.json. By default
+                                      the call cache (propose-calls.jsonl) and the exchange folder (.propose-exchange)
+                                      sit in the pack folder, as the record of the calls behind the pack; freeze does
+                                      not hash them (only *.yaml, *.json and protocols/*.yaml)
     packbuilder freeze DIR            check the pack in DIR, write DIR/FROZEN.json, print the git tag command
                                       (freeze.py; it never runs git)
 
@@ -27,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     prop.add_argument("--corpus", type=Path, required=True, help="corpus directory (manifest.json and papers/)")
     prop.add_argument("--name", required=True, help="the pack's name: its folder under --root")
     prop.add_argument("--model", required=True, help="LiteLLM alias, or exchange:<name> (answered through files)")
+    prop.add_argument("--verify-model", required=True, help="the model that checks each word (alias or exchange:<name>)")
     prop.add_argument("--question", default=None, help="the topic question the pack serves")
     prop.add_argument("--root", type=Path, default=None, help="the domains folder (default domains/)")
     prop.add_argument("--cache", type=Path, default=None, help="default <root>/<name>/propose-calls.jsonl")
@@ -46,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
         exchange = args.exchange or root / args.name / ".propose-exchange"
         try:
             folder = propose(args.corpus, args.name, model=model_for(args.model, exchange), cache=cache, root=root,
+                             verify_model=model_for(args.verify_model, exchange),
                              question=args.question or DEFAULT_QUESTION)
         except ValueError as exc:
             print(f"ERROR: {exc}", file=sys.stderr, flush=True)

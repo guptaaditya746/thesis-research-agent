@@ -56,9 +56,12 @@ def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
 
 
-def _conversation(messages: list[ModelMessage], tools: frozenset[str] = frozenset()) -> str:
+def _conversation(messages: list[ModelMessage], tools: frozenset[str] = frozenset(),
+                  outputs: frozenset[str] = frozenset()) -> str:
     """The user prompt, and any retry pydantic-ai sent back, in order; with the calls the model made of the function
-    tools `tools`, and their results or errors. A call without tools renders as before."""
+    tools `tools`, and their results or errors. With tools, an output given through an output tool of `outputs` is
+    shown too (`[output <id>] name {args}`), so a retry shows the rejected output it is about. A call without tools
+    renders as before."""
     parts = []
     for m in messages:
         for p in getattr(m, "parts", []):
@@ -66,6 +69,8 @@ def _conversation(messages: list[ModelMessage], tools: frozenset[str] = frozense
                 parts.append(str(p.content))
             elif isinstance(p, ToolCallPart) and p.tool_name in tools:
                 parts.append(f"[tool call {p.tool_call_id}] {p.tool_name} {_json(p.args_as_dict())}")
+            elif isinstance(p, ToolCallPart) and tools and p.tool_name in outputs:
+                parts.append(f"[output {p.tool_call_id}] {p.tool_name} {_json(p.args_as_dict())}")
             elif isinstance(p, ToolReturnPart) and p.tool_name in tools:
                 parts.append(f"[tool result {p.tool_call_id}] {p.tool_name}: {_json(p.content)}")
             elif isinstance(p, RetryPromptPart) and p.tool_name in tools:
@@ -138,15 +143,18 @@ def problem(reply_file: Path, schema: dict[str, Any], tools: list[dict[str, Any]
     return _invalid(data, schema)
 
 
-def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0, settle_s: float = 2.0) -> FunctionModel:
+def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0, settle_s: float = 2.0,
+                   timeout_s: float | None = None) -> FunctionModel:
     """A pydantic-ai model named `name` whose calls are answered through files under `root`. A reply is read
-    once it has not changed for `settle_s` seconds, so a file still being written is not taken half done."""
+    once it has not changed for `settle_s` seconds, so a file still being written is not taken half done. A call
+    waits as long as it takes, or `timeout_s` seconds (then TimeoutError; tests set it so they fail, not hang)."""
     root = Path(root)
 
     async def answer(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         instructions = info.instructions or ""
         tools = _tools(info)
-        prompt = _conversation(messages, frozenset(t["name"] for t in tools))
+        prompt = _conversation(messages, frozenset(t["name"] for t in tools),
+                               frozenset(t.name for t in info.output_tools))
         seed = (info.model_settings or {}).get("seed")
         schema, tool = _schema(info)
         rid = request_id(name, seed, instructions, prompt, tools)
@@ -158,7 +166,10 @@ def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0, settle_s
         if not reply.exists():
             _write(pending, request)
         rejected: list[str] = []
+        deadline = None if timeout_s is None else time.monotonic() + timeout_s
         while True:
+            if deadline is not None and time.monotonic() > deadline:
+                raise TimeoutError(f"exchange {name}: no accepted reply to request {rid} in {timeout_s} s")
             if reply.exists() and time.time() - reply.stat().st_mtime >= settle_s:
                 why = problem(reply, schema, tools)
                 if why is None:

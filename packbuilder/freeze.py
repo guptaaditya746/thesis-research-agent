@@ -41,6 +41,8 @@ def pack_files(pack_dir: Path) -> dict[str, str]:
 
 def _check_provenance(pack_dir: Path) -> None:
     path = pack_dir / "provenance.json"
+    if not path.is_file():
+        raise ValueError(f"{path} is missing: a pack is frozen only with the provenance of its files")
     prov = json.loads(path.read_text(encoding="utf-8"))
     legacy = prov.get("files") or {}
     for file, key in ENTRIES:

@@ -16,13 +16,14 @@ from typing import Any
 import pytest
 import yaml
 from pydantic_ai.mcp import MCPToolset
-from pydantic_ai.messages import ModelMessage, ModelResponse, ToolCallPart
+from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from evaluation.tests.helpers import guard_corpus
 from evidence.pack import load_pack
 from modelcall.exchange import exchange_model
 from packbuilder.agent import propose
+from packbuilder.proposal import PackProposal, word_slots
 from packbuilder.server import create_server
 
 TOOLS = {"list_papers", "read_paper", "read_section", "search", "grep", "tables"}
@@ -126,6 +127,23 @@ def scripted_tool_agent(calls: list[tuple[str, dict[str, Any]]] = (), final: dic
     return FunctionModel(answer, model_name="scripted-packbuilder")
 
 
+def scripted_verifier(reject: set[tuple[str, str]] = frozenset()) -> FunctionModel:
+    """A verifier that answers ok for every word but those in `reject`, as (word, a part of its slot)."""
+    def answer(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        asked = json.loads(next(str(p.content) for m in messages for p in m.parts if isinstance(p, UserPromptPart)))
+        verdicts = [{"id": w["id"], "ok": not any(w["word"] == word and part in w["slot"] for word, part in reject),
+                     "reason": "shown by the quote"} for w in asked["words"]]
+        return reply(info, {"verdicts": verdicts})
+    return FunctionModel(answer, model_name="scripted-verifier")
+
+
+def reply(info: AgentInfo, data: dict[str, Any]) -> ModelResponse:
+    """`data` as the output: through the output tool, or as JSON text when the call asks for native output."""
+    if info.output_tools:
+        return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, data)])
+    return ModelResponse(parts=[TextPart(json.dumps(data))])
+
+
 @pytest.fixture
 def corpus(tmp_path: Path) -> Path:
     return write_corpus(tmp_path)
@@ -135,9 +153,9 @@ def in_process(corpus: Path) -> MCPToolset:
     return MCPToolset(create_server(corpus))
 
 
-def run(corpus: Path, tmp_path: Path, model: Any, name: str = "toy") -> Path:
-    return propose(corpus, name, model=model, cache=tmp_path / "c.jsonl", root=tmp_path / "domains",
-                   toolset=in_process(corpus))
+def run(corpus: Path, tmp_path: Path, model: Any, name: str = "toy", verify_model: Any = None) -> Path:
+    return propose(corpus, name, model=model, verify_model=verify_model or scripted_verifier(),
+                   cache=tmp_path / "c.jsonl", root=tmp_path / "domains", toolset=in_process(corpus))
 
 
 def test_agent_runs_with_tools(corpus: Path, tmp_path: Path) -> None:
@@ -161,14 +179,23 @@ def test_agent_runs_with_tools(corpus: Path, tmp_path: Path) -> None:
     pack = load_pack("toy", root=tmp_path / "domains")
     assert list(pack.words.conditions) == ["velmora", "placebo"]          # the treatment role first, as proposed
     assert pack.types["therapy"].prefix == "th" and pack.display == PROPOSAL["display"]
+    check = words["verify"]
+    assert check["model"] == "scripted-verifier" and check["dropped"] == [] and len(check["prompt_sha256"]) == 64
+    assert {"word": r"\bVelmora\b", "ok": True} .items() <= next(v for v in check["verdicts"]
+                                                              if v["word"] == r"\bVelmora\b").items()
 
 
 def test_agent_runs_through_exchange_with_tools(corpus: Path, tmp_path: Path) -> None:
     """The exchange model (preflight P21): the first request lists the six tools; the reply calls grep; the second
-    request's prompt holds that call and its result; the reply to it is the proposal."""
+    request's prompt holds that call and its result. The first proposal fails a check, so the third request shows
+    it with the failed check (a repair sees its rejected output); the fourth reply is the good proposal, and the
+    verifier, through the same exchange, answers the fifth request word by word."""
     root = tmp_path / "exchange"
     seen: list[dict[str, Any]] = []
-    replies = [{"tool_calls": [{"tool": "grep", "args": {"regex": "placebo"}}]}, PROPOSAL]
+    bad = proposal(limitation_categories=["small_sample", "high_cost"])
+    n_words = len(word_slots(PackProposal.model_validate(PROPOSAL)))
+    verdicts = {"verdicts": [{"id": n, "ok": True, "reason": "shown by the quote"} for n in range(1, n_words + 1)]}
+    replies = [{"tool_calls": [{"tool": "grep", "args": {"regex": "placebo"}}]}, bad, PROPOSAL, verdicts]
 
     def responder() -> None:
         deadline = time.time() + 30
@@ -176,24 +203,29 @@ def test_agent_runs_through_exchange_with_tools(corpus: Path, tmp_path: Path) ->
             for f in sorted((root / "pending").glob("*.json")) if (root / "pending").exists() else []:
                 if any(r["id"] == f.stem for r in seen):
                     continue
-                seen.append(json.loads(f.read_text(encoding="utf-8")))
+                try:
+                    seen.append(json.loads(f.read_text(encoding="utf-8")))
+                except (OSError, ValueError):   # gone or being replaced (Windows): look again next pass
+                    continue
                 (root / "replies").mkdir(parents=True, exist_ok=True)
                 tmp = root / "replies" / f"{f.stem}.tmp"       # written whole, then renamed: never read half done
                 tmp.write_text(json.dumps(replies.pop(0)), encoding="utf-8")
                 os.replace(tmp, root / "replies" / f.name)
             time.sleep(0.02)
     threading.Thread(target=responder, daemon=True).start()
-    model = exchange_model(root, "exchange:builder", poll_s=0.02, settle_s=0.05)
-    path = run(corpus, tmp_path, model)
+    model = exchange_model(root, "exchange:builder", poll_s=0.02, settle_s=0.05, timeout_s=60)
+    path = run(corpus, tmp_path, model, verify_model=model)
 
-    first, second = seen
+    first, second, third, check = seen
     assert {t["name"] for t in first["tools"]} == TOOLS and "tool_calls_schema" in first
     assert "[tool call" not in first["prompt"]
     assert '[tool call ' in second["prompt"] and 'grep {"regex": "placebo"}' in second["prompt"]
     assert "[tool result " in second["prompt"] and "randomised to Velmora or placebo" in second["prompt"]
+    assert "[output " in third["prompt"] and "high_cost" in third["prompt"] and "has no source" in third["prompt"]
+    assert "tools" not in check and '"slot": "screen term' in check["prompt"]
     prov = json.loads((path / "provenance.json").read_text(encoding="utf-8"))
     assert [c["tool"] for c in prov["words"]["tool_calls"]] == ["grep"]
-    assert prov["words"]["model"] == "exchange:builder"
+    assert prov["words"]["model"] == "exchange:builder" and prov["words"]["verify"]["model"] == "exchange:builder"
 
 
 def test_non_verbatim_quote_is_rejected(corpus: Path, tmp_path: Path) -> None:
@@ -244,13 +276,58 @@ def test_a_cached_proposal_makes_no_model_call(corpus: Path, tmp_path: Path) -> 
     def no_call(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         raise AssertionError("the model was called")
     again = propose(corpus, "toy", model=FunctionModel(no_call, model_name="scripted-packbuilder"),
+                    verify_model=FunctionModel(no_call, model_name="scripted-verifier"),
                     cache=tmp_path / "c.jsonl", root=tmp_path / "again", toolset=in_process(corpus))
     prov = json.loads((again / "provenance.json").read_text(encoding="utf-8"))
     assert [c["tool"] for c in prov["words"]["tool_calls"]] == ["grep"]
-    assert yaml.safe_load((again / "words.yaml").read_text(encoding="utf-8"))["screen_terms"] == ["placebo"]
+    words = yaml.safe_load((again / "words.yaml").read_text(encoding="utf-8"))
+    assert words["screen_terms"] == ["placebo"]
+    assert list(words["conditions"]) == ["velmora", "placebo"]       # the cache keeps the treatment role first
 
 
 def test_an_existing_pack_is_never_replaced(corpus: Path, tmp_path: Path) -> None:
     run(corpus, tmp_path, scripted_tool_agent())
     with pytest.raises(ValueError, match="exists"):
         run(corpus, tmp_path, scripted_tool_agent())
+
+
+def test_a_plain_word_must_occur_in_its_quote(corpus: Path, tmp_path: Path) -> None:
+    """M1: a screen term sourced by a quote that does not hold it is refused."""
+    bad = proposal()
+    bad["words"]["screen_terms"] = ["cough"]
+    bad["sources"].append(src("cough", "T001", "randomised to Velmora or placebo"))
+    with pytest.raises(ValueError, match="'cough' occurs in none of its quotes"):
+        run(corpus, tmp_path, scripted_tool_agent(final=bad))
+
+
+def test_propose_needs_a_verify_model(corpus: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="verify model"):
+        propose(corpus, "toy", model=scripted_tool_agent(), cache=tmp_path / "c.jsonl", root=tmp_path / "d",
+                toolset=in_process(corpus))
+
+
+def test_words_the_verifier_rejects_are_dropped_and_listed(corpus: Path, tmp_path: Path) -> None:
+    path = run(corpus, tmp_path, scripted_tool_agent(),
+               verify_model=scripted_verifier({("placebo", "screen term"), ("small_sample", "limitation")}))
+    words = yaml.safe_load((path / "words.yaml").read_text(encoding="utf-8"))
+    pack = yaml.safe_load((path / "pack.yaml").read_text(encoding="utf-8"))
+    assert words["screen_terms"] == [] and pack["limitation_categories"] == []
+    assert pack["display"]["control"] == "placebo"                  # the same word in another slot stays
+    prov = json.loads((path / "provenance.json").read_text(encoding="utf-8"))["words"]
+    assert [(d["word"], d["slot"].split(":")[0]) for d in prov["verify"]["dropped"]] == [
+        ("placebo", "screen term"), ("small_sample", "category of a limitation the papers state")]
+    claims = {s["claim"] for s in prov["sources"]}
+    assert "small_sample" not in claims and "placebo" in claims      # a source only a dropped word used goes too
+
+
+def test_a_rejected_required_word_refuses(corpus: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="required words.*claim_subject"):
+        run(corpus, tmp_path, scripted_tool_agent(), verify_model=scripted_verifier({(r"\bVelmora\b", "subject")}))
+    assert not (tmp_path / "domains" / "toy" / "pack.yaml").exists()
+
+
+def test_a_verdict_list_that_misses_a_word_is_refused(corpus: Path, tmp_path: Path) -> None:
+    def short(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        return reply(info, {"verdicts": [{"id": 1, "ok": True, "reason": "fine"}]})
+    with pytest.raises(ValueError, match="one verdict per word"):
+        run(corpus, tmp_path, scripted_tool_agent(), verify_model=FunctionModel(short, model_name="short"))
