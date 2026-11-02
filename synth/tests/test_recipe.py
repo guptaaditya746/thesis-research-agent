@@ -11,6 +11,8 @@ from evidence.pack import DOMAINS
 from jsonio import sha256_hex
 from synth.recipe import load_recipe
 
+FIXTURES = Path(__file__).resolve().parents[2] / "evidence" / "tests" / "fixtures"
+
 
 def rag_recipe_copy(root: Path, *, intro_extra: str | None = None, other_label: str | None = None) -> Path:
     """A copy of domains/rag/generator.yaml under `root/rag/`, with one sentence or one name changed."""
@@ -76,3 +78,13 @@ def test_provenance_records_the_generator_and_keeps_the_old_entries():
     prov = json.loads((DOMAINS / "rag" / "provenance.json").read_text(encoding="utf-8"))
     assert prov["generator"] == {"source": "hand-moved from synth/vocab.py and synth/truth.py at tag ev3b-code"}
     assert {"words", "pack"} <= set(prov) and set(prov["files"]) == {"words.yaml", "pack.yaml"}
+
+
+@pytest.mark.parametrize("domain,root", [("rag", DOMAINS), ("drugtoy", FIXTURES)])
+def test_effect_synthesis_read_as_data_equals_the_validated_protocols(domain, root):
+    from evidence import protocol
+    from evaluation.expected import effect_spec
+    from synth.recipe import effect_protocol_path, effect_synthesis
+    recipe = load_recipe(domain, root=root)
+    validated = protocol.load(effect_protocol_path(recipe), None if root == DOMAINS else root).synthesis
+    assert effect_synthesis(recipe) == validated == effect_spec(domain, root)

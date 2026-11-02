@@ -30,11 +30,11 @@ from jsonio import canonical_bytes, sha256_hex
 from evidence import protocol as protocol_module
 from evidence import rules
 from evidence.pack import DOMAINS
-from evidence.protocol import DEFAULT_PACK, Protocol
+from evidence.protocol import DEFAULT_PACK, Protocol, Synthesis
 from synth import network, truth
 from synth.fidelity import PaperFidelity
 from synth.levels import LEVELS, Plan
-from synth.recipe import Recipe, effect_protocol_path, load_recipe
+from synth.recipe import Recipe, effect_protocol_data, effect_protocol_path, effect_synthesis, load_recipe
 from synth.text import TRUTH_TYPES, Decoy, Placement
 from synth.truth import Study
 
@@ -63,6 +63,46 @@ class Renderer(Protocol):
     def render_all(self, jobs: Sequence[tuple[Study, str]], seed: int) -> dict[tuple[str, str], Rendered]: ...
 
     def models(self) -> dict[str, Any] | None: ...
+
+
+@dataclass(frozen=True)
+class EffectProtocol:
+    """The recipe's effect protocol as the generator reads it while its domain has no pack.yaml yet (Task 18 builds
+    the corpus before the pack is proposed from it): `id`, `question` and the `synthesis` block, read as YAML data
+    (recipe.effect_protocol_data). The protocol's own sha256 needs the pack, so the corpus names it by the digest of
+    its synthesis block, the part the ground truth comes from (`protocol_record`)."""
+    id: str
+    question: str
+    synthesis: Synthesis
+
+
+def effect_protocol(recipe: Recipe) -> Protocol | EffectProtocol:
+    """The protocol a build of `recipe` follows: the validated protocol when the domain has its pack.yaml (so a
+    corpus of a packed domain names it by its sha256, as before), else the `EffectProtocol` read as data."""
+    if (recipe.root / recipe.domain / "pack.yaml").is_file():
+        return protocol_module.load(effect_protocol_path(recipe), None if recipe.root == DOMAINS else recipe.root)
+    data = effect_protocol_data(recipe)
+    return EffectProtocol(id=data["id"], question=data["question"], synthesis=effect_synthesis(recipe))
+
+
+def synthesis_sha256(spec: Synthesis) -> str:
+    return sha256_hex(canonical_bytes(spec.model_dump(mode="json")))
+
+
+def protocol_record(protocol: Protocol | EffectProtocol) -> dict[str, str]:
+    """How corpus.json and ground_truth.json name the protocol: {id, sha256} for a validated protocol;
+    {id, synthesis_sha256} for one read before its domain had a pack (`EffectProtocol`)."""
+    if isinstance(protocol, EffectProtocol):
+        return {"id": protocol.id, "synthesis_sha256": synthesis_sha256(protocol.synthesis)}
+    return {"id": protocol.id, "sha256": protocol.sha256}
+
+
+def same_protocol(protocol: Protocol | EffectProtocol, record: dict[str, str]) -> bool:
+    """`protocol` is the one `record` (a corpus's `protocol`) names: the same sha256, or, for a corpus built before
+    its domain had a pack, the same synthesis block."""
+    if "sha256" in record:
+        return isinstance(protocol, Protocol) and protocol.sha256 == record["sha256"]
+    return synthesis_sha256(protocol.synthesis) == record.get("synthesis_sha256")
 
 
 def code_sha256() -> str:
@@ -190,12 +230,13 @@ def recipe_of(studies: list[Study]) -> Recipe:
     return next(iter(found.values()))
 
 
-def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer, protocol: Protocol,
+def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer,
+                 protocol: Protocol | EffectProtocol,
                  studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]],
                  settings: dict[str, Any], extra: dict[str, Any] | None = None,
                  selection: dict[str, Any] | None = None) -> str:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
-    synthesis block made the ground truth is recorded (id and sha256), never its file; so is the recipe the
+    synthesis block made the ground truth is recorded (`protocol_record`), never its file; so is the recipe the
     studies were drawn from (domain and sha256, `recipe`). `extra` goes into
     corpus.json as it is (`variant`, F3); `selection` (the fidelity counters of `selection_of`) goes into
     corpus.json (never manifest.json: the engine reads that). The set-level flags are found over the studies actually written
@@ -216,7 +257,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         "corpus_id": cid, "seed": seed,
         "generator": {"name": GENERATOR, "version": GENERATOR_VERSION, "code_sha256": code_sha256()},
         "renderer": renderer.name, "level": level, "question": protocol.question,
-        "protocol": {"id": protocol.id, "sha256": protocol.sha256},
+        "protocol": protocol_record(protocol),
         "recipe": {"domain": recipe.domain, "sha256": recipe.sha256},
         "papers": [{"id": s.study_id, "study_id": s.study_id, "level": papers[s.study_id].plan.level} for s in kept],
         "models": renderer.models(),
@@ -228,7 +269,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
                         key=lambda p: (p.paper, p.start, p.end, p.role, p.fact))
     (directory / "ground_truth.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed, "question": protocol.question,
-        "protocol": {"id": protocol.id, "sha256": protocol.sha256},
+        "protocol": protocol_record(protocol),
         "studies": [study_truth(papers[s.study_id], spec, s) for s in kept],
         "placements": [p.json() for p in placements],
         "answer": truth.answer(kept, spec, {s.study_id: study_flags(papers[s.study_id], spec, s) for s in kept}),
@@ -295,20 +336,22 @@ def selection_of(rendered: dict[tuple[str, str], Rendered], study_set: list[Stud
 
 def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
-          protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
+          protocol: Protocol | EffectProtocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
           outliers: int = 0, irrelevant: int = 0, hard: bool = False, domain: str | None = None,
           root: Path = DOMAINS, preset: str = "plain") -> dict[str, Any]:
     """Generate the study set from the recipe of `domain` (`root/<domain>/generator.yaml`; default the default
     pack's) for the protocol's question (its synthesis block gives the roles, metrics, neutral band, claim
-    vocabulary and label table; default the recipe's effect protocol), apply the knobs (and `hard`, and the
-    `preset`: plain or builds_on, truth.PRESETS), render it at every level, write the level corpora and the mixed
-    one."""
+    vocabulary and label table; default the recipe's effect protocol, `effect_protocol`), apply the knobs (and
+    `hard`, and the `preset`: plain or builds_on, truth.PRESETS), render it at every level, write the level corpora
+    and the mixed one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:
         raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
     recipe = load_recipe(domain or DEFAULT_PACK, root)
-    if not isinstance(protocol, Protocol):
-        protocol = protocol_module.load(protocol or effect_protocol_path(recipe), None if root == DOMAINS else root)
+    if protocol is None:
+        protocol = effect_protocol(recipe)
+    elif not isinstance(protocol, (Protocol, EffectProtocol)):
+        protocol = protocol_module.load(protocol, None if root == DOMAINS else root)
     settings = settings_of(name=name, studies=studies, mix=mix, levels=levels, duplicates=duplicates,
                            missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard, preset=preset)
     study_set = truth.generate(seed, studies, mix, protocol.synthesis, recipe=recipe, duplicates=duplicates,
@@ -326,7 +369,7 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
                                                settings=settings, selection=selection)
     kept = truth.flagged([s for s in study_set if s.study_id not in failed], protocol.synthesis)
     flags = {s.study_id: study_flags(papers[s.study_id], protocol.synthesis, s) for s in kept}   # the mixed corpus's
-    return {"corpora": written, "excluded": failed, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
+    return {"corpora": written, "excluded": failed, "protocol": protocol_record(protocol),
             "settings": settings, "selection": selection, "answer": truth.answer(kept, protocol.synthesis, flags)}
 
 
@@ -342,8 +385,7 @@ def trial(domain: str, *, renderer: Renderer, root: Path = DOMAINS, seed: int = 
     if getattr(renderer, "verify_model", None) is None:
         raise SystemExit("a trial needs a verify model (--verify-model): the blind reader is what it measures")
     recipe = load_recipe(domain, root)
-    protocol = protocol_module.load(effect_protocol_path(recipe), None if root == DOMAINS else root)
-    study_set = truth.generate(seed, studies, None, protocol.synthesis, recipe=recipe, preset="builds_on")
+    study_set = truth.generate(seed, studies, None, effect_synthesis(recipe), recipe=recipe, preset="builds_on")
     jobs = [(s, level_of(s, study_set, LEVELS)) for s in study_set]
     rendered = renderer.render_all(jobs, seed)
     papers = [rendered[(s.study_id, lv)] for s, lv in jobs]

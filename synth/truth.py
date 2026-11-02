@@ -53,10 +53,9 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
-from evidence import protocol, rules
-from evidence.pack import DOMAINS
+from evidence import rules
 from evidence.protocol import Synthesis
-from synth.recipe import MetricSpec, Recipe, default_recipe, effect_protocol_path
+from synth.recipe import MetricSpec, Recipe, default_recipe, effect_protocol_path, effect_synthesis
 
 DIRECTIONS = rules.DIRECTIONS
 DEFAULT_PROTOCOL = effect_protocol_path(default_recipe())
@@ -74,9 +73,9 @@ HARD_EXTRAS = (("subset",), ("ablation",), ("subset", "ablation"))   # the furth
 
 
 def default_spec(recipe: Recipe | None = None) -> Synthesis:
-    """The synthesis block of the recipe's effect protocol (default: the default pack's)."""
-    recipe = recipe or default_recipe()
-    return protocol.load(effect_protocol_path(recipe), None if recipe.root == DOMAINS else recipe.root).synthesis
+    """The synthesis block of the recipe's effect protocol (default: the default pack's), read as YAML data so no
+    pack.yaml is needed (recipe.effect_synthesis)."""
+    return effect_synthesis(recipe or default_recipe())
 
 
 def true_claim(spec: Synthesis, direction: str) -> str:

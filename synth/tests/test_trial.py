@@ -121,3 +121,44 @@ def test_the_template_renderer_is_not_gated(tmp_path, capsys):
     code = cli.main(["build", "--domain", "drugtoy", "--root", str(FIXTURES), "--name", "x", "--seed", "1",
                      "--studies", "3", "--levels", "explicit", "--preset", "builds_on", "--out", str(tmp_path)])
     assert code == 0 and GATE_ERROR not in capsys.readouterr().err
+
+
+def without_pack(tmp_path: Path) -> Path:
+    """drugtoy as Task 18 has it before the pack is proposed: generator.yaml and the hand-written effect protocol,
+    no pack.yaml (and only the effect protocol: the others are written after the pack)."""
+    root = copy_fixture(tmp_path)
+    (root / "drugtoy" / "pack.yaml").unlink()
+    keep = f"{load_recipe('drugtoy', root=root).effect_protocol}.yaml"
+    for path in (root / "drugtoy" / "protocols").iterdir():
+        if path.name != keep:
+            path.unlink()
+    return root
+
+
+def test_trial_and_build_run_before_the_pack_exists(tmp_path):
+    from synth.render_template import TemplateRenderer
+    root = without_pack(tmp_path / "d")
+    assert truth.default_spec(load_recipe("drugtoy", root=root)) == truth.default_spec(load_recipe("drugtoy",
+                                                                                                   root=FIXTURES))
+    t = trial("drugtoy", renderer=llm_renderer(tmp_path, root), root=root)
+    assert t["passed"], t["fidelity"]
+    assert cli.main(["build", "--domain", "drugtoy", "--root", str(root), "--name", "np", "--seed", "1",
+                     "--studies", "6", "--levels", "explicit", "--preset", "builds_on", "--renderer", "template",
+                     "--out", str(tmp_path / "out")]) == 0
+    meta = json.loads((tmp_path / "out" / "np-explicit" / "corpus.json").read_text(encoding="utf-8"))
+    effect = load_recipe("drugtoy", root=root).effect_protocol
+    assert set(meta["protocol"]) == {"id", "synthesis_sha256"} and meta["protocol"]["id"] == effect
+    # once the pack exists, the full protocol is still recognised as the one that corpus was built from
+    from evidence import protocol as protocol_module
+    from synth.recipe import effect_protocol_path
+    full_protocol = protocol_module.load(effect_protocol_path(load_recipe("drugtoy", root=FIXTURES)), FIXTURES)
+    assert corpus.same_protocol(full_protocol, meta["protocol"])
+    # the same build with the pack names the full protocol, as before
+    full = corpus.build(name="np", seed=1, studies=6, renderer=TemplateRenderer(), out=tmp_path / "full",
+                        levels=["explicit"], domain="drugtoy", root=FIXTURES, preset="builds_on")
+    assert set(full["protocol"]) == {"id", "sha256"}
+    for f in ("manifest.json", "ground_truth.json"):
+        a = json.loads((tmp_path / "out" / "np-explicit" / f).read_text(encoding="utf-8"))
+        b = json.loads((tmp_path / "full" / "np-explicit" / f).read_text(encoding="utf-8"))
+        a.pop("protocol", None), b.pop("protocol", None)
+        assert a == b

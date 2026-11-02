@@ -58,6 +58,8 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from evidence import rules
 from evidence.comparisons import Comparison
 from evidence.kinds import best as best_rules
@@ -65,7 +67,6 @@ from evidence.kinds import builds_on as builds_on_rules
 from evidence.kinds import chaining as chaining_rules
 from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK, Chaining, Kind, Protocol, QuestionMetric, Synthesis
-from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionTruth, default_entry
 
 from .canon import Canon, fold, recipe_data
@@ -87,14 +88,15 @@ SKIP_TEXT = {"screened_out": "not relevant (no experiment)", "duplicate": "a dup
 
 @cache
 def effect_spec(domain: str = DEFAULT_PACK, root: Path = DOMAINS) -> Synthesis:
-    """The synthesis block of `domain`'s effect protocol: generator.yaml `effect_protocol` (read as YAML data) in
-    `<root>/<domain>/protocols/`; the generator draws a corpus of that domain by it."""
+    """The synthesis block of `domain`'s effect protocol: generator.yaml `effect_protocol` in
+    `<root>/<domain>/protocols/`; the generator draws a corpus of that domain by it. Both files are read as YAML
+    data (the block does not depend on the pack), as synth reads them (synth.recipe.effect_synthesis)."""
     recipe = recipe_data(domain, root)
     if recipe is None or not recipe.get("effect_protocol"):
         raise ValueError(f"no effect protocol for domain {domain!r}: {Path(root) / domain / 'generator.yaml'} is "
                          "missing or names no effect_protocol")
     path = Path(root) / domain / "protocols" / f"{recipe['effect_protocol']}.yaml"
-    return load_protocol(path, None if Path(root) == DOMAINS else root).synthesis
+    return Synthesis.model_validate(yaml.safe_load(path.read_bytes().decode("utf-8"))["synthesis"])
 
 
 def _reason(code: str, **fmt: Any) -> dict[str, str]:

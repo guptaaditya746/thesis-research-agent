@@ -18,7 +18,7 @@ import yaml
 from pydantic import model_validator
 
 from evidence.pack import DOMAINS
-from evidence.protocol import DEFAULT_PACK, Strict
+from evidence.protocol import DEFAULT_PACK, Strict, Synthesis
 from jsonio import sha256_hex
 
 Range = tuple[float, float]
@@ -274,3 +274,22 @@ def default_recipe() -> Recipe:
 def effect_protocol_path(recipe: Recipe) -> Path:
     """The protocol whose synthesis block the generator follows for `recipe` (`effect_protocol`, in its domain)."""
     return recipe.root / recipe.domain / "protocols" / f"{recipe.effect_protocol}.yaml"   # as pack.protocol_path
+
+
+def effect_protocol_data(recipe: Recipe) -> dict[str, Any]:
+    """The effect protocol's file read as plain YAML data, never validated against the pack: the generator needs
+    only its `id`, `question` and `synthesis` block, so it runs before `domains/<domain>/pack.yaml` exists (Task 18
+    writes the effect protocol by hand first and proposes the pack from the built corpus)."""
+    path = effect_protocol_path(recipe)
+    if not path.is_file():
+        raise ValueError(f"effect protocol {recipe.effect_protocol!r} of domain {recipe.domain!r}: {path} is missing")
+    data = yaml.safe_load(path.read_bytes().decode("utf-8"))
+    if not isinstance(data, dict) or not isinstance(data.get("synthesis"), dict):
+        raise ValueError(f"{path} has no synthesis block (the generator follows it)")
+    return data
+
+
+def effect_synthesis(recipe: Recipe) -> Synthesis:
+    """The synthesis block of `recipe`'s effect protocol, from `effect_protocol_data`. The block does not depend on
+    the pack, so this equals the validated protocol's `synthesis`."""
+    return Synthesis.model_validate(effect_protocol_data(recipe)["synthesis"])
