@@ -340,13 +340,19 @@ def written_truth(tmp_path, excluded: set[str]) -> dict:
     return json.loads((tmp_path / "c" / "ground_truth.json").read_text(encoding="utf-8"))
 
 
-def test_truth_drops_links_to_excluded_studies_and_orphan_copies(tmp_path):
+def test_truth_marks_links_to_excluded_studies_and_drops_orphan_copy_marks(tmp_path):
     copy_study, dep = next((s, d) for s in BUILT for d in s.dependencies if d.reuses == "result")
     other = next(d.cites for s in BUILT for d in s.dependencies if d.reuses != "result" and d.cites != dep.cites)
     gt = written_truth(tmp_path, {dep.cites, other})
     records = {r["study_id"]: r for r in gt["studies"]}
     assert dep.cites not in records and other not in records
-    assert all(d["cites"] in records for r in records.values() for d in r["dependencies"])
+    # a dependency on a left-out study stays (the paper still cites it), marked outside the corpus
+    deps = [d for r in records.values() for d in r["dependencies"]]
+    assert all(d.get("outside_corpus") is True for d in deps if d["cites"] not in records)
+    assert all("outside_corpus" not in d for d in deps if d["cites"] in records)
+    assert {d["cites"] for d in deps if d.get("outside_corpus")} == {dep.cites, other}
+    assert sum(len(r["dependencies"]) for r in records.values()) == sum(
+        len(s.dependencies) for s in BUILT if s.study_id in records)
     copied = next(m for m in records[copy_study.study_id]["measurements"] if m["id"] == dep.measurement)
     assert "copied_from" not in copied and copied["value"] == copy_study.value_of(dep.measurement)
     # nothing excluded: every link and mark is written

@@ -120,8 +120,15 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
     roles = roles if roles is not None else protocol.roles()
     if comparisons is None:
         comparisons = cmp.of_run(protocol, documents, items, roles, groups)
+    return judge(chain, documents, list(comparisons.comparisons), groups)
+
+
+def judge(chain: Chaining, documents: list[str], every: list[Comparison],
+          groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
+    """Rules 1-7 over the comparisons `every` (the counted ones; documents in manifest order): the answer and the
+    item ids it rests on. The truth's expected answer (evaluation/expected.py) calls this on comparisons built from
+    the ground truth, so truth and engine walk and judge paths by one code path."""
     canonical = chain.metric.canonical
-    every = list(comparisons.comparisons)
     shown: dict[str, str] = {}
     for c in every:
         shown.setdefault(cmp.thing_key(c.a, groups), c.a)

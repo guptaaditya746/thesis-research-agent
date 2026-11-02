@@ -1,0 +1,90 @@
+{
+  "corpus_id": "dt5x-fbb575a9",
+  "seed": 5,
+  "generator": {
+    "name": "synth",
+    "version": "3",
+    "code_sha256": "ead9fb4a0412718ba77d88373412b3b7dd6866b3dd2c658211f80d74701eaf5d"
+  },
+  "renderer": "template",
+  "level": "explicit",
+  "question": "Does Zelvora improve the response rate over placebo?",
+  "protocol": {
+    "id": "drugtoy-response",
+    "sha256": "8857b4f2f5eed8a35426f0714c1cde3a744a60d428e10d2df0d8689dc7a3a07b"
+  },
+  "recipe": {
+    "domain": "drugtoy",
+    "sha256": "d2c2fc1a69412b4cf9676c62b7d09121671124be9dd967de7109a6493644df32"
+  },
+  "papers": [
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "explicit"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "explicit"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "explicit"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "explicit"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "explicit"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "explicit"
+    }
+  ],
+  "models": null,
+  "settings": {
+    "name": "dt5x",
+    "studies": 8,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0,
+    "preset": "builds_on"
+  },
+  "selection": {
+    "requested_studies": 8,
+    "records": 8,
+    "retained_studies": 6,
+    "per_level": {
+      "explicit": {
+        "passed": 8,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {
+      "S001": [
+        "explicit"
+      ],
+      "S002": [
+        "explicit"
+      ]
+    }
+  }
+}

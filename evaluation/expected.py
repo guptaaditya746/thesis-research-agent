@@ -37,11 +37,10 @@ Rules:
   condition's kind is `Canon.kind_of` its label; the kind with the top value wins, a tie gives none.
 - chaining, limitations, builds_on (plan 2 Task 13; truth of a recipe with a network and the builds_on preset): a
   compared thing is its `Canon.key` (`thing_key`; the label, whitespace collapsed, when the table has none) and is
-  shown by it. chaining: the truth `network` (synth/network.py) on `params.metric`. Comparisons of `params.source`
-  and `params.target` are a direct result (reason `direct_comparison`, verdict source over target, `refused` when
-  they differ); else the truth `chains` of that pair (2 steps, each judged by `rules.chain_verdict`) are combined
-  by `rules.chain_paths`, the engine's rule; none gives `no_path` (truth lists comparisons on the question metric
-  only, so `metric_differs` is never expected). `via` and `studies` are those of the paths the answer rests on.
+  shown by it. chaining: the engine's own rules (`chaining.judge`: direct result, paths of 2 to the protocol's
+  `max_hops` steps through any compared thing, `rules.chain_verdict`, `rules.chain_paths`, `metric_differs`, `no_path`)
+  run on the comparisons a perfect extraction gives (`truth_comparisons`, every relevant study, duplicates included
+  since the engine has no notion of them; a copied result counted once, at its origin).
   limitations: every study's planted limitations, by (thing, category), papers in study order; `counts` keyed by
   thing for the linked ones, `unlinked` for those without a thing. builds_on: links (from, to, reuses) from the
   planted dependencies; a dependency marked `outside_corpus` is `unresolved` (its cited label), never a link. A
@@ -53,16 +52,18 @@ The name table (`Canon`) is the corpus's own, `Canon.from_truth(truth)`, unless 
 from __future__ import annotations
 
 import copy
+from itertools import combinations
 from functools import cache
 from pathlib import Path
 from typing import Any
 
 from evidence import rules
+from evidence.comparisons import Comparison
 from evidence.kinds import best as best_rules
 from evidence.kinds import builds_on as builds_on_rules
 from evidence.kinds import chaining as chaining_rules
 from evidence.pack import DOMAINS
-from evidence.protocol import DEFAULT_PACK, Kind, Protocol, Synthesis
+from evidence.protocol import DEFAULT_PACK, Chaining, Kind, Protocol, QuestionMetric, Synthesis
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionTruth
 
@@ -318,58 +319,70 @@ def thing_key(canon: Canon, name: str) -> str:
     return canon.key("condition", name) or " ".join(str(name).split())
 
 
-def _on(metric: str, wanted: str, canon: Canon) -> bool:
-    return _matches({"canonical": metric, "name": metric}, wanted, canon)
-
-
 def _papers(truth: GroundTruth) -> dict[str, int]:
     """paper -> its position (study order: the manifest's)."""
     return {s["paper"]: n for n, s in enumerate(truth.studies)}
 
 
-def _chaining(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
-    assert params.metric and params.source and params.target, "chaining truth takes metric, source and target"
-    network = truth.network or {}
-    source, target = thing_key(canon, params.source), thing_key(canon, params.target)
-    position = _papers(truth)
-    out: dict[str, Any] = {"kind": "chaining", "system": SYSTEM, "source": params.source, "target": params.target,
-                           "metric": params.metric, "verdict": "refused", "inferred": False, "via": [],
-                           "studies": [], "paths": [], "reason": None, "note": None}
-    direct = []
-    for c in network.get("comparisons") or []:
-        a, b = thing_key(canon, c["a"]), thing_key(canon, c["b"])
-        if {a, b} == {source, target} and a != b and _on(c["metric"], params.metric, canon):
-            turned = c["direction"] if a == source else chaining_rules.FLIP[c["direction"]]
-            direct.append({"via": [], "studies": [c["document"]], "context": c["context"],
-                           "verdict": chaining_rules.VERDICT[turned] or "refused", "reason": chaining_rules.DIRECT})
-    if direct:
-        verdicts = {p["verdict"] for p in direct}
-        out.update(verdict=verdicts.pop() if len(verdicts) == 1 else "refused", reason=chaining_rules.DIRECT)
-        return _chain_finish(out, direct, direct, position)
-    paths = [{"via": [thing_key(canon, v) for v in c["via"]], "studies": list(c["studies"]), "context": c["context"],
-              "verdict": c["verdict"], "reason": c["reason"]}
-             for c in network.get("chains") or []
-             if thing_key(canon, c["source"]) == source and thing_key(canon, c["target"]) == target
-             and _on(c["metric"], params.metric, canon)]
-    if not paths:
-        out.update(reason=chaining_rules.NO_PATH)
-        return out
-    verdict, why, chosen = rules.chain_paths([(p["verdict"], p["reason"]) for p in paths])
-    out.update(verdict=verdict, inferred=why is None, reason=why)
-    return _chain_finish(out, paths, [paths[n] for n in chosen], position)
-
-
-def _chain_finish(out: dict[str, Any], paths: list[dict[str, Any]], chosen: list[dict[str, Any]],
-                  position: dict[str, int]) -> dict[str, Any]:
-    """`paths`, and the chosen paths' `via` (path order), `studies` (study order) and `note` (the engine's _finish)."""
-    via: list[str] = []
-    for p in chosen:
-        via += [v for v in p["via"] if v not in via]
-    docs = {d for p in chosen for d in p["studies"]}
-    out.update(paths=paths, via=via, studies=sorted(docs, key=lambda d: (position.get(d, len(position)), d)))
-    if out["inferred"]:
-        out["note"] = chaining_rules.NOTE.format(via=", ".join(via))
+def truth_comparisons(truth: GroundTruth, canon: Canon, min_effect: float) -> list[Comparison]:
+    """The comparisons a perfect extraction gives the comparisons step (evidence/comparisons.py), from the truth's
+    studies: in each relevant study (duplicates too: the engine has no notion of them), within its main experiment,
+    every pair of compared things (by `thing_key`) with values on one metric (its canonical) and one context (the
+    measurement's dataset, a network study's population), the first value of each; `a` the key that sorts first,
+    `direction` `rules.effect` of a over b with `min_effect`. As comparisons.py rule 4: a pair whose two values are
+    both copied is dropped, and one equal in (things, metric, context, values) to a comparison of the study its value
+    was copied from is not counted (a copied result counts once, at its origin)."""
+    paper = {s["study_id"]: s["paper"] for s in truth.studies}
+    per_doc: dict[str, list[Comparison]] = {}
+    for s in truth.studies:
+        if not s.get("relevant", True):
+            continue
+        things = {c["id"]: thing_key(canon, c["label"]) for c in s.get("conditions") or []}
+        metrics = {k["id"]: k for k in s.get("metrics") or []}
+        cells: dict[tuple[str, Any], dict[str, dict[str, Any]]] = {}
+        for m in _main(s):
+            if m["condition"] in things and m["metric"] in metrics:
+                cells.setdefault((metrics[m["metric"]]["canonical"], m.get("dataset")), {}).setdefault(
+                    things[m["condition"]], m)
+        found = []
+        for (canonical, context), arms in cells.items():
+            higher = next(bool(k["higher_is_better"]) for k in metrics.values() if k["canonical"] == canonical)
+            for a, b in combinations(sorted(arms, key=lambda t: (t.casefold(), t)), 2):
+                ma, mb = arms[a], arms[b]
+                if ma.get("copied_from") and mb.get("copied_from"):
+                    continue
+                direction, delta = rules.effect(float(ma["value"]), float(mb["value"]), higher, min_effect)
+                origin = ma.get("copied_from") or mb.get("copied_from")
+                found.append(Comparison(id=f"{s['paper']}:{ma['id']}~{mb['id']}", document=s["paper"], a=a, b=b,
+                                        metric=canonical, context=context, a_value=float(ma["value"]),
+                                        b_value=float(mb["value"]), direction=direction, delta=delta,
+                                        items=(ma["id"], mb["id"]), copied_from=paper.get(origin) if origin else None))
+        per_doc[s["paper"]] = found
+    out = []
+    for doc, found in per_doc.items():
+        for c in found:
+            origin = per_doc.get(c.copied_from or "", []) if c.copied_from != doc else []
+            if not any(o.key() == c.key() for o in origin):
+                out.append(c)
     return out
+
+
+def _chaining(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
+    """The engine's chaining rules (`chaining.judge`) on the comparisons of a perfect extraction (`truth_comparisons`),
+    with `params` for source, target, metric and neutral band and the protocol's `max_hops` (2 without one)."""
+    assert params.metric and params.source and params.target and params.min_effect, (
+        "chaining truth takes metric, min_effect, source and target")
+    metrics = [k for s in truth.studies for k in s.get("metrics") or [] if _matches(k, params.metric, canon)]
+    canonical = metrics[0]["canonical"] if metrics else params.metric
+    hops = (protocol.chaining.max_hops if protocol is not None and protocol.chaining is not None
+            else Chaining.model_fields["max_hops"].default)
+    chain = Chaining(source=thing_key(canon, params.source), target=thing_key(canon, params.target),
+                     metric=QuestionMetric(canonical=canonical,
+                                           higher_is_better=bool(metrics[0]["higher_is_better"]) if metrics else True),
+                     min_effect=params.min_effect, max_hops=hops)
+    out, _ = chaining_rules.judge(chain, [s["paper"] for s in truth.studies],
+                                  truth_comparisons(truth, canon, params.min_effect))
+    return out | {"system": SYSTEM, "source": params.source, "target": params.target}
 
 
 # limitations -------------------------------------------------------------------------------------------------

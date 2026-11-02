@@ -383,8 +383,10 @@ class Matching:
 
     def __init__(self, items: list[Item], truth: GroundTruth, files: dict[str, str],
                  types: Iterable[EvidenceType] | None = None, canonicals: tuple[str, ...] | None = None,
-                 canon: Canon | None = None) -> None:
+                 canon: Canon | None = None, aliases: dict[EvidenceType, EvidenceType] | None = None) -> None:
         self.truth = truth
+        # an item type -> the truth fact type it is matched with when the names differ (a pack's limitation type)
+        self.aliases = dict(aliases or {})
         self.canonicals = canonicals
         self.canon = canon or Canon.from_truth(truth)
         self.types: tuple[EvidenceType, ...] = (tuple(types) if types is not None else
@@ -398,7 +400,7 @@ class Matching:
         self.pairs: list[tuple[Item, Fact]] = []
         grouped: dict[tuple[str, str], list[Item]] = defaultdict(list)
         for item in items:
-            grouped[(self.document[item.item_id], item.evidence_type)].append(item)
+            grouped[(self.document[item.item_id], self.type_of(item))].append(item)
         self.papers = sorted({s["paper"] for s in truth.studies} | {p for p, _ in grouped})
         # (paper, type) -> items, facts, matched, spans ok, matched with a placed fact (span accuracy's denominator)
         self.cells: dict[tuple[str, str], tuple[int, int, int, int, int]] = {}
@@ -415,14 +417,28 @@ class Matching:
                     self.cells[(paper, kind)] = (len(its), len(facts), len(pairs), hits,
                                                  sum(placed(f, truth) for _, f in pairs))
 
+    def type_of(self, item: Item) -> EvidenceType:
+        """The truth fact type the item is matched as (`aliases`, else its own type)."""
+        return self.aliases.get(item.evidence_type, item.evidence_type)
+
+
+def limitation_type(protocol: Protocol | None) -> EvidenceType | None:
+    """The protocol's evidence type of pack role `limitation` (whatever the pack calls it); None without one."""
+    if protocol is None:
+        return None
+    from evidence.pack import Role
+    return protocol.roles().type_in(Role.LIMITATION, protocol.evidence_types)
+
 
 def scored_types(protocol: Protocol | None, items: Iterable[Item] = ()) -> tuple[EvidenceType, ...]:
     """A's evidence types: the protocol's own (those of TYPES and `dataset` it declares), so A's `all` / `all` row is
     over all the types this protocol extracts and a protocol is never charged with facts of a type it does not ask
-    for (an inventory of metrics is not scored on conditions); `limitation` too (plan 2 Task 13). Without a protocol,
-    the four of TYPES, plus `dataset` when the run has dataset items."""
+    for (an inventory of metrics is not scored on conditions); the truth's `limitation` facts when the protocol has a
+    type of pack role limitation (plan 2 Task 13; `limitation_type`). Without a protocol, the four of TYPES, plus
+    `dataset` when the run has dataset items."""
     if protocol is not None:
-        return tuple(t for t in (*TYPES, DATASET, LIMITATION) if t in protocol.evidence_types)
+        return (tuple(t for t in (*TYPES, DATASET) if t in protocol.evidence_types)
+                + ((LIMITATION,) if limitation_type(protocol) is not None else ()))
     return TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items) else ())
 
 
@@ -437,7 +453,9 @@ def protocol_matching(items: list[Item], truth: GroundTruth, files: dict[str, st
                       protocol: Protocol | None, canon: Canon | None = None) -> Matching:
     """A's matching of a run with its protocol: over the protocol's evidence types (`scored_types`), metric
     canonicals compared through the protocol's enum (`metric_canonicals`)."""
-    return Matching(items, truth, files, scored_types(protocol, items), metric_canonicals(protocol), canon)
+    found = limitation_type(protocol)
+    return Matching(items, truth, files, scored_types(protocol, items), metric_canonicals(protocol), canon,
+                    {found: LIMITATION} if found is not None and found != LIMITATION else None)
 
 
 def score_extraction(m: Matching) -> dict[str, Any]:
@@ -1307,11 +1325,14 @@ def score_limitations(exp: dict[str, Any], answer: dict[str, Any], canon: Canon)
         rows.append({"thing": thing, "expected": sorted(a), "given": sorted(b),
                      "jaccard": len(a & b) / len(a | b) if a | b else 1.0, "exact": a == b})
     jaccard = _mean([r["jaccard"] for r in rows])
+    unlinked_exact = got_unlinked == want_unlinked
     return {"kind": "limitations", "system": answer.get("system", "unknown"), "thing": exp["thing"],
             "things_scored": len(rows), "jaccard_mean": jaccard,
             "exact_match": share(sum(r["exact"] for r in rows), len(rows)),
             "unlinked": sorted(got_unlinked), "expected_unlinked": sorted(want_unlinked),
-            "unlinked_exact": got_unlinked == want_unlinked, "headline": jaccard, "things": rows}
+            "unlinked_exact": unlinked_exact,
+            # no thing on either side: right when the unlinked categories are too (the headline is always a float)
+            "headline": jaccard if jaccard is not None else float(unlinked_exact), "things": rows}
 
 
 def _followers(answer: dict[str, Any], key: Any) -> tuple[dict[str, set[str]], dict[str, int]]:
@@ -1350,26 +1371,34 @@ def score_builds_on(exp: dict[str, Any], answer: dict[str, Any], canon: Canon) -
     tau = None
     if len(things) > 1:
         found = kendalltau([want_influence[t] for t in things], [got_influence.get(t, 0) for t in things]).statistic
-        tau = None if found != found else float(found)   # NaN: a constant side
+        tau = None if found != found else round(float(found), 12)   # NaN: a constant side; 1 - 1e-16 is 1
     most = max(want_influence.values(), default=None)
     ranking = [key(t) for t in answer.get("ranking") or []]
     top1 = None if most is None else bool(ranking) and want_influence.get(ranking[0]) == most
     f1 = _mean([r["f1"] for r in rows])
     return {"kind": "builds_on", "system": answer.get("system", "unknown"), "thing": exp["thing"],
             "things_scored": len(rows), "follower_f1_mean": f1, "ranking_tau": tau, "top1_correct": top1,
-            "ranking": ranking, "expected_ranking": list(exp["ranking"]), "headline": f1, "things": rows}
+            "ranking": ranking, "expected_ranking": list(exp["ranking"]),
+            "headline": f1 if f1 is not None else 1.0, "things": rows}   # no thing on either side: nothing missed
 
 
 def copied_counted(truth: GroundTruth, answer: dict[str, Any]) -> list[str]:
-    """The documents whose counted study entry is a copied comparison: the study reports a result of a study it
-    copies from (a truth measurement's `copied_from`) and the entry's treatment and control values are both values
-    of that study (rounded as rules.duplicate_key rounds them), so the copied result is counted a second time.
-    Counted: a determined direction (supports, contradicts, neutral) and no `duplicate_of`."""
+    """The documents whose counted study entry is a copied comparison: the study holds a value copied from another
+    (a truth measurement's `copied_from`: the provenance), and the entry's treatment and control values are, as a
+    pair, a comparison of that origin (two of its values on one metric and dataset) that includes the copied value
+    (rounded as rules.duplicate_key rounds them), so the origin's result is counted a second time. Counted: a
+    determined direction (supports, contradicts, neutral) and no `duplicate_of`; an entry without both values is not
+    a comparison."""
     paper = {s["study_id"]: s["paper"] for s in truth.studies}
-    values = {s["paper"]: {round(float(m["value"]), VALUE_DECIMALS) for m in s.get("measurements") or []}
-              for s in truth.studies}
-    origins = {s["paper"]: {paper.get(m["copied_from"], m["copied_from"]) for m in s.get("measurements") or []
-                            if m.get("copied_from")} for s in truth.studies}
+    pairs: dict[str, set[tuple[float, float]]] = {}
+    for s in truth.studies:
+        cells: dict[tuple[Any, Any], list[float]] = defaultdict(list)
+        for m in s.get("measurements") or []:
+            cells[(m["metric"], m.get("dataset"))].append(round(float(m["value"]), VALUE_DECIMALS))
+        pairs[s["paper"]] = {(min(x, y), max(x, y)) for vs in cells.values() for i, x in enumerate(vs)
+                             for y in vs[i + 1:]}
+    copies = {s["paper"]: [(paper.get(m["copied_from"], m["copied_from"]), round(float(m["value"]), VALUE_DECIMALS))
+                           for m in s.get("measurements") or [] if m.get("copied_from")] for s in truth.studies}
     out = []
     for e in answer.get("studies") or []:
         if not isinstance(e, dict) or e.get("direction") not in COUNTED_DIRECTIONS or e.get("duplicate_of"):
@@ -1377,8 +1406,9 @@ def copied_counted(truth: GroundTruth, answer: dict[str, Any]) -> list[str]:
         sides = [_number((e.get(side) or {}).get("value")) for side in ("treatment", "control")]
         if None in sides:
             continue
-        if any(all(round(v, VALUE_DECIMALS) in values.get(o, set()) for v in sides if v is not None)
-               for o in origins.get(str(e.get("document")), ())):
+        pair = tuple(sorted(round(v, VALUE_DECIMALS) for v in sides if v is not None))
+        if any(value in pair and pair in pairs.get(origin, set())
+               for origin, value in copies.get(str(e.get("document")), ())):
             out.append(str(e["document"]))
     return out
 
@@ -1505,7 +1535,7 @@ def integration_chaining(m: Matching, comparisons: dict[str, Any] | None) -> dic
 def integration_limitations(m: Matching) -> dict[str, Any]:
     """B, limitations (thing links): the run's limitation items and the share that link a compared thing (whether
     the link is right is A's: a limitation matches only through its thing)."""
-    found = [i for i in m.items.values() if i.evidence_type == LIMITATION]
+    found = [i for i in m.items.values() if m.type_of(i) == LIMITATION]
     linked = sum(1 for i in found if link(i, limitation_rules.THING) in m.items)
     return {"kind": "limitations", "items": len(found), "linked": linked, "link_share": share(linked, len(found))}
 

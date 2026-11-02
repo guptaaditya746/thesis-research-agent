@@ -141,6 +141,8 @@ class Dependency:
     thing: str | None
     measurement: str | None
     label: str = ""                # the cited study's label
+    # the cited study was left out of the corpus (fidelity exclusion: `corpus.in_corpus`); the paper still cites it
+    outside_corpus: bool = False
 
 
 @dataclass(frozen=True)

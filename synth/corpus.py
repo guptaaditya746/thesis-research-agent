@@ -132,7 +132,8 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
         **({"limitations": [{"id": x.id, "thing": x.thing, "category": x.category, "sentence": x.sentence}
                             for x in p.limitations]} if s.recipe.limitations is not None else {}),
         **({"dependencies": [{"id": d.id, "cites": d.cites, "reuses": d.reuses, "thing": d.thing,
-                              "measurement": d.measurement, "label": d.label, "sentence": w.sentence}
+                              "measurement": d.measurement, "label": d.label, "sentence": w.sentence,
+                              **({"outside_corpus": True} if d.outside_corpus else {})}
                              for d in s.dependencies for w in p.dependencies if w.id == d.id]}
            if s.recipe.builds_on is not None else {}),
     }
@@ -150,11 +151,13 @@ def network_truth(studies: list[Study], recipe: Recipe, spec: protocol_module.Sy
 
 def in_corpus(study: Study, written: set[str]) -> Study:
     """`study` as the truth of a corpus holding the studies `written` (after the fidelity exclusions): a dependency on
-    a study left out is dropped, and a copied result whose source is left out loses `copied_from` (the copy is then
-    the only instance of the value, its original)."""
+    a study left out stays, marked `outside_corpus` (the paper still cites it: evaluation expects it unresolved, not a
+    link), and a copied result whose source is left out loses `copied_from` (the copy is then the only instance of
+    the value, its original)."""
     if not study.dependencies and not any(m.copied_from for m in study.measurements):
         return study
-    return replace(study, dependencies=tuple(d for d in study.dependencies if d.cites in written),
+    return replace(study, dependencies=tuple(d if d.cites in written else replace(d, outside_corpus=True)
+                                             for d in study.dependencies),
                    measurements=tuple(replace(m, copied_from=None) if m.copied_from and m.copied_from not in written
                                       else m for m in study.measurements))
 
