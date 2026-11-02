@@ -1,0 +1,46 @@
+# Toy limitations protocol of the drugtoy pack (evidence/tests/test_limitations_kind.py): which limitations do the
+# papers state about Zelvora? The arms and the limitations by the general LLM extractor. A limitation's category is one
+# of the pack's limitation_categories (Protocol checks the enum); the arm it is about is its link `thing`, optional
+# (a limitation about the study as a whole links none).
+
+id: drugtoy-limits
+domain: drugtoy
+version: 2
+question: Which limitations do the papers state about Zelvora?
+kind: limitations
+
+locate:
+  strategy: exhaustive
+
+evidence_types:
+  arm:
+    description: A trial arm; role is drug for a drug, placebo for the placebo arm.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label, role]
+      properties:
+        label: {type: string, minLength: 1}
+        role: {type: string, enum: [drug, placebo, other]}
+    roles: [condition_label]
+    merge_key: [label, role]
+    extractors:
+      - name: llm
+
+  limitation:
+    description: A limitation the authors state about a drug or the study; the quote is the sentence.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [category]
+      properties:
+        category: {type: string, enum: [small_sample, side_effects, cost]}
+    links: {thing: arm}
+    optional_links: [thing]
+    context: [arm]
+    roles: [limitation]
+    extractors:
+      - name: llm
+
+limitations:
+  thing: null

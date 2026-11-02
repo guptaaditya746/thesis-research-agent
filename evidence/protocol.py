@@ -396,6 +396,12 @@ class Protocol(Strict):
                 raise ValueError(f"inventory.target {target!r} is not a declared evidence type")
             if roles.field_or_none(target, "name") is None:
                 raise ValueError(f"inventory.target {target!r}: pack {roles.pack.name!r} declares no name_field for it")
+        limitation = roles.type_in(Role.LIMITATION, self.evidence_types)
+        if limitation is not None:   # the categories a limitation can have are the pack's, so a run's counts name them
+            enum = self.evidence_types[limitation].enum_of("category")
+            if enum is None or set(enum) != set(roles.pack.limitation_categories):
+                raise ValueError(f"{limitation}.category enum {enum} must equal pack {roles.pack.name!r} "
+                                 f"limitation_categories {roles.pack.limitation_categories}")
         if self.best is not None:
             thing = roles.type_in(Role.COMPARED_THING, self.evidence_types)
             field = roles.field_or_none(thing, "kind") if thing is not None else None
