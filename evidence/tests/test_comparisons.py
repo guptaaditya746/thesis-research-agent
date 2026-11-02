@@ -6,6 +6,7 @@ from the pack's type of role `context` into the pack's `context_field`."""
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -126,14 +127,14 @@ def test_a_value_naming_no_population_joins_a_named_one():
     p.value(p.arm("Zelvora"), 0.4, "adults")
     p.value(p.arm("placebo", "placebo"), 0.2, None)
     [c] = build(p.items)
-    assert (c.a, c.b, c.context) == ("Zelvora", "placebo", "adults")
+    assert (c.a, c.b, c.context) == ("placebo", "Zelvora", "adults")
 
 
 def test_each_shared_population_is_its_own_comparison():
     p = Paper()
     z, pl = p.arm("Zelvora"), p.arm("placebo", "placebo")
     p.value(z, 0.4, "adults"), p.value(pl, 0.2, "adults"), p.value(z, 0.3, "children"), p.value(pl, 0.25, "children")
-    assert [(c.context, c.a_value, c.b_value) for c in build(p.items)] == [("adults", 0.4, 0.2), ("children", 0.3, 0.25)]
+    assert [(c.context, c.a_value, c.b_value) for c in build(p.items)] == [("adults", 0.2, 0.4), ("children", 0.25, 0.3)]
 
 
 def test_the_earlier_value_of_a_thing_is_preferred():
@@ -142,7 +143,7 @@ def test_the_earlier_value_of_a_thing_is_preferred():
     p.value(z, 0.4)
     p.value(p.arm("placebo", "placebo"), 0.2)
     p.value(z, 0.9)
-    assert [c.a_value for c in build(p.items)] == [0.4]
+    assert [c.b_value for c in build(p.items)] == [0.4]
 
 
 def test_without_groups_names_match_by_their_clean_form():
@@ -196,13 +197,17 @@ def test_a_copied_value_names_its_origin():
     items = origin_and_copier()
     cited = resolve_cited(["origin", "copier"], items, ROLES, None)
     copied = {(c.a, c.b): c.copied_from for c in build(items["copier"], doc="copier", cited=cited)}
-    assert copied == {("Quintapride", "Zelvora"): None, ("Quintapride", "placebo"): "origin",
-                      ("Zelvora", "placebo"): "origin"}
+    assert copied == {("Quintapride", "Zelvora"): None, ("placebo", "Quintapride"): "origin",
+                      ("placebo", "Zelvora"): "origin"}
 
 
-def test_an_unresolved_copy_keeps_the_cited_text():
+def test_an_unresolved_copy_names_no_document_and_keeps_the_cited_text():
     items = origin_and_copier()
-    assert {c.copied_from for c in build(items["copier"], doc="copier")} == {None, "Halvorsen et al. (2019)"}
+    cs = build(items["copier"], doc="copier")
+    assert {c.copied_from for c in cs} == {None}
+    assert {(c.a, c.b): c.cited_text for c in cs} == {("Quintapride", "Zelvora"): None,
+                                                      ("placebo", "Quintapride"): "Halvorsen et al. (2019)",
+                                                      ("placebo", "Zelvora"): "Halvorsen et al. (2019)"}
 
 
 def test_a_comparison_of_two_copied_values_is_dropped():
@@ -224,8 +229,24 @@ def test_a_reused_method_copies_no_value():
 def test_a_copy_of_its_origins_comparison_is_listed_as_copied():
     out = of_run(load(BUILDS, FIXTURES), ["origin", "copier"], origin_and_copier(), ROLES, None)
     assert [(c.document, c.a, c.b) for c in out.comparisons] == [
-        ("origin", "Zelvora", "placebo"), ("copier", "Quintapride", "Zelvora"), ("copier", "Quintapride", "placebo")]
-    assert [(c.document, c.a, c.b, c.copied_from) for c in out.copied] == [("copier", "Zelvora", "placebo", "origin")]
+        ("origin", "placebo", "Zelvora"), ("copier", "placebo", "Quintapride"), ("copier", "Quintapride", "Zelvora")]
+    assert [(c.document, c.a, c.b, c.copied_from) for c in out.copied] == [("copier", "placebo", "Zelvora", "origin")]
+    assert out.json()["min_effect"] == 0.01
+
+
+def test_a_copy_spelled_otherwise_is_still_counted_once():
+    """names off: the origin writes "placebo", the copier "Placebo"; the copy is found and a/b do not flip."""
+    items = origin_and_copier()
+    c = Paper("copier")
+    c.label("Brennick et al. (2021)")
+    dep = c.cites("Halvorsen et al. (2019)")
+    c.value(c.arm("Zelvora"), 0.34)
+    c.value(c.arm("Placebo", "placebo"), 0.17, source=dep)
+    items["copier"] = c.items
+    out = of_run(load(BUILDS, FIXTURES), ["origin", "copier"], items, ROLES, None)
+    assert [(x.document, x.a, x.b, x.direction) for x in out.comparisons] == [("origin", "placebo", "Zelvora", "contradicts")]
+    assert [(x.document, x.a, x.b, x.direction, x.copied_from) for x in out.copied] == [
+        ("copier", "Placebo", "Zelvora", "contradicts", "origin")]
 
 
 ORIGIN = ("# Zelvora trial\n\nHalvorsen et al. (2019)\n\nWe enrolled adults with the condition.\n\n"
@@ -268,7 +289,7 @@ def builds_run(tmp_path: Path) -> Path:
 def test_copied_control_counts_once_at_origin(tmp_path):
     out = builds_run(tmp_path)
     data = json.loads((out / "comparisons.json").read_text(encoding="utf-8"))
-    assert [(c["document"], c["a"], c["b"]) for c in data["comparisons"]] == [("origin", "Zelvora", "placebo")]
+    assert [(c["document"], c["a"], c["b"]) for c in data["comparisons"]] == [("origin", "placebo", "Zelvora")]
     assert len(data["copied"]) == 1 and data["copied"][0]["copied_from"] == "origin"
     assert data["copied"][0]["document"] == "copier"
     assert "comparisons.json" in run_json(out)["outputs"]
@@ -295,7 +316,8 @@ def test_every_kind_writes_comparisons(tmp_path):
                         domains=FIXTURES)
     data = json.loads((out / "comparisons.json").read_text(encoding="utf-8"))
     assert [(c["a"], c["b"], c["a_value"], c["b_value"], c["context"]) for c in data["comparisons"]] == [
-        ("Zelvora", "placebo", 0.34, 0.12, None)]
+        ("placebo", "Zelvora", 0.12, 0.34, None)]
+    assert data["min_effect"] == 0.01
     assert data["copied"] == []
 
 
@@ -317,6 +339,37 @@ def test_the_context_type_is_found_by_role():
 
 def test_the_rag_pack_gives_no_context_field_to_its_extractors():
     assert "context_field" not in load_pack("rag").extractor_config("measurement", "number_measurement")
+
+
+def test_a_metric_takes_its_direction_from_the_pack_else_none(tmp_path):
+    p = Paper()
+    lower = p.add("outcome", {"name": "adverse events", "canonical": "adverse_rate", "higher_is_better": False},
+                  "metric_label")
+    unknown = p.add("outcome", {"name": "visits", "canonical": "visits", "higher_is_better": True}, "metric_label")
+    z, pl = p.arm("Zelvora"), p.arm("placebo", "placebo")
+    for metric, zv, pv in ((lower, 0.1, 0.3), (unknown, 4.0, 2.0)):
+        for arm, v in ((z, zv), (pl, pv)):
+            p.add("result", {"value": v, "population": "adults"}, "value",
+                  {"arm": arm.item_id, "outcome": metric.item_id})
+    knobs = settings(load(BUILDS, FIXTURES))
+    knobs["higher_is_better"] = adverse_pack_settings(tmp_path)["higher_is_better"]
+    got = {c.metric: (c.direction, c.delta) for c in build_comparisons("p1", p.items, ROLES, None, **knobs)}
+    # placebo (a) 0.3 against Zelvora (b) 0.1 on a lower-is-better rate: placebo is worse; visits: no direction known
+    assert got == {"adverse_rate": ("contradicts", -0.2), "visits": (None, None)}
+
+
+def adverse_pack_settings(root: Path) -> dict[str, Any]:
+    """settings() of drugtoy-builds over a copy of the drugtoy pack whose words.metrics add a lower-is-better rate."""
+    shutil.copytree(DRUGTOY, root / "drugtoy", dirs_exist_ok=True)
+    words = root / "drugtoy" / "words.yaml"
+    added = "metrics:\n- - (?i)\\badverse\\s+events\\b\n  - adverse_rate\n  - false\n"
+    words.write_text(words.read_text(encoding="utf-8").replace("metrics:\n", added, 1), encoding="utf-8")
+    return settings(load(root / "drugtoy" / "protocols" / "drugtoy-builds.yaml", root))
+
+
+def test_settings_take_the_packs_metric_directions(tmp_path):
+    better = adverse_pack_settings(tmp_path)["higher_is_better"]
+    assert (better("response_rate"), better("adverse_rate"), better("visits")) == (True, False, None)
 
 
 def test_settings_follow_the_protocols_kind():

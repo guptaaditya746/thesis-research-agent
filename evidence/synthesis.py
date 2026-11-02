@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING, Any
 
 from . import rules
 from .contract import Item
+from .pack import DEFAULT_CONTEXT_FIELD
 from .protocol import Protocol, Synthesis
 
 if TYPE_CHECKING:
@@ -89,7 +90,7 @@ class Types:
     to_metric: str | None
     claim: str | None
     direction: str | None
-    context: str = "dataset"   # pack.DEFAULT_CONTEXT_FIELD
+    context: str = DEFAULT_CONTEXT_FIELD
 
     @classmethod
     def of(cls, protocol: Protocol, roles: RoleMap | None = None) -> Types:
@@ -152,7 +153,7 @@ def _best(ms: list[Item], spec: Synthesis) -> Item:
 
 
 def _pair(treatment: list[Item], control: list[Item], spec: Synthesis,
-          context: str = "dataset") -> tuple[Item, Item] | None:
+          context: str = DEFAULT_CONTEXT_FIELD) -> tuple[Item, Item] | None:
     """`context`: the values' field naming their dataset (or population; Types.context)."""
     order: list[Any] = []
     for m in sorted(treatment + control, key=lambda m: (value_start(m), m.item_id)):

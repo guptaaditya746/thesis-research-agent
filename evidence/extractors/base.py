@@ -15,6 +15,8 @@ from agent.anchor import selector_at
 from jsonio import sha256_hex
 
 from ..contract import Coverage, ExtractionTask, Item, Span, digest
+from ..evidence_types import DATASET
+from ..pack import DEFAULT_CONTEXT_FIELD
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -72,8 +74,8 @@ class Slots:
     metric: str = "metric"
     to_thing: str = "condition"
     to_metric: str = "metric"
-    context: str = "dataset"
-    context_field: str = "dataset"
+    context: str = DATASET
+    context_field: str = DEFAULT_CONTEXT_FIELD
 
     @classmethod
     def of(cls, given: dict[str, Any]) -> Slots:

@@ -6,18 +6,24 @@ canonical name) and the same context value (a dataset or a population) is one co
    things have values in gives one comparison. Only when there is none, a value that names no context joins a
    named one: the first context (document order) where the two things have values once the values naming no
    context are added, at least one of them naming none, gives the one comparison, with that context.
-2. `a` is the thing whose name sorts first (plain string order), `b` the other; `direction` and `delta` are
-   `rules.effect` of a over b (`supports`: a is better). Treatment and control are the kind's to decide.
+2. `a` is the thing whose name sorts first, `b` the other: the group name with name groups, else the `names.clean`
+   form (so "Placebo" and "placebo" sort alike in every paper; plain string order); `a` and `b` show the group name,
+   else the name as first written in the paper. `direction` and `delta` are `rules.effect` of a over b (`supports`:
+   a is better), the metric's direction from the protocol's question metrics, else from the pack's `words.metrics`;
+   a metric of neither has `direction` and `delta` null (no guess). Treatment and control are the kind's to decide.
 3. Among several values of one thing there, `prefer` decides (`synthesis.best_value`: a table cell first, then
    the earlier value).
 4. A value that links to an item of the dependency type whose `reuses` field is `result` was copied from the study
-   that dependency cites (`resolve_cited`): its comparison gets `copied_from`, the cited document (the cited text
-   as written when no document of the run carries that label). A comparison whose two values are both copied is
-   dropped. A comparison equal in (a, b, metric, context, a_value, b_value) to one of its cited document is
-   listed under `copied`, not under `comparisons`, so a copied result counts once, at its origin (section 6.11).
+   that dependency cites (`resolve_cited`): its comparison gets `cited_text` (the cited label as written) and
+   `copied_from`, the cited document, or null when no document of the run carries that label. A comparison whose two
+   values are both copied is dropped. A comparison equal in (a, b by their thing keys, metric, context, a_value,
+   b_value) to one of its cited document is listed under `copied`, not under `comparisons`, so a copied result
+   counts once, at its origin (section 6.11).
 5. Ids are `cmp-<16 hex>` of `contract.digest`.
 6. A compared thing is its name group: `groups.group_of(name)` when the run has name groups (`names: on`), else
    (and for a name in no group) its `names.clean` form, shown as the name it is first written with.
+
+comparisons.json also records the neutral band used (`min_effect`).
 
 Types and fields are found by pack role (pack.RoleMap), links by the type of the item they point to, so no type,
 field or link name of a topic is written here; the dependency type's fields are `reuses` (method, dataset or
@@ -45,7 +51,9 @@ DEFAULT_PREFER: tuple[str, ...] = Pairing().prefer
 # values are compared at (rules.VALUE_DECIMALS) are neutral.
 NO_BAND = 10.0 ** -rules.VALUE_DECIMALS
 
-Value = tuple[Item, Item, Item, "str | None"]   # (value, its compared thing, its metric, copied from)
+# (value, its compared thing, its metric, its copy): the copy of a copied value is (the cited document or None,
+# the cited text as written); None for a value the study measured itself.
+Value = tuple[Item, Item, Item, "tuple[str | None, str] | None"]
 
 
 @dataclass(frozen=True)
@@ -58,18 +66,20 @@ class Comparison:
     context: str | None
     a_value: float
     b_value: float
-    direction: rules.Direction
-    delta: float
+    direction: rules.Direction | None   # None: the metric's direction is unknown (rule 2)
+    delta: float | None
     items: tuple[str, ...]          # the two values, the two compared things and the metric item(s)
-    copied_from: str | None
+    copied_from: str | None         # the cited document of a copied value (rule 4); None when none or unresolved
+    cited_text: str | None = None   # the cited label as written, for a copied value
 
     def json(self) -> dict[str, Any]:
         return {**asdict(self), "items": list(self.items)}
 
-    def key(self) -> tuple[Any, ...]:
-        """What a copied comparison shares with its origin's (rule 4)."""
-        return (self.a, self.b, self.metric, self.context, round(self.a_value, rules.VALUE_DECIMALS),
-                round(self.b_value, rules.VALUE_DECIMALS))
+    def key(self, groups: NameGroups | None = None) -> tuple[Any, ...]:
+        """What a copied comparison shares with its origin's (rule 4): the things by their keys (rule 6), not by
+        how a paper spells them."""
+        return (_key(self.a, groups), _key(self.b, groups), self.metric, self.context,
+                round(self.a_value, rules.VALUE_DECIMALS), round(self.b_value, rules.VALUE_DECIMALS))
 
 
 @dataclass(frozen=True)
@@ -77,9 +87,11 @@ class Comparisons:
     """A run's comparisons (counted, manifest order) and those listed only as copies of their origin's."""
     comparisons: tuple[Comparison, ...] = ()
     copied: tuple[Comparison, ...] = ()
+    min_effect: float | None = None   # the neutral band the directions were computed with
 
     def json(self) -> dict[str, Any]:
-        return {"comparisons": [c.json() for c in self.comparisons], "copied": [c.json() for c in self.copied]}
+        return {"min_effect": self.min_effect, "comparisons": [c.json() for c in self.comparisons],
+                "copied": [c.json() for c in self.copied]}
 
 
 def _of_role(items: list[Item], roles: RoleMap, role: str) -> list[Item]:
@@ -93,6 +105,11 @@ def _name(item: Item, roles: RoleMap) -> str | None:
     value = item.fields.get(field) if field is not None else None
     text = " ".join(str(value).split()) if value is not None else ""
     return text or None
+
+
+def _sort(key: str) -> tuple[str, str]:
+    """A thing key's sort form (rule 2): the group name or the clean form."""
+    return key.split(":", 1)[1], key
 
 
 def _key(name: str, groups: NameGroups | None) -> str:
@@ -122,7 +139,7 @@ def resolve_cited(documents: Sequence[str], items: Mapping[str, list[Item]], rol
 
 
 def build_comparisons(document: str, items: list[Item], roles: RoleMap, groups: NameGroups | None, *,
-                      higher_is_better: Callable[[str], bool], min_effect: float, prefer: Sequence[str],
+                      higher_is_better: Callable[[str], bool | None], min_effect: float, prefer: Sequence[str],
                       cited: Mapping[str, str | None] | None = None) -> list[Comparison]:
     """The comparisons of one document (rules 1-3, 5, 6; and rule 4's `copied_from` and dropping, `cited` being
     `resolve_cited` of the run: None resolves no cited text). Metrics in order of first value, pairs by name."""
@@ -145,16 +162,16 @@ def build_comparisons(document: str, items: list[Item], roles: RoleMap, groups: 
         if name is None or canonical is None:
             continue
         dep = linked.get(Role.DEPENDENCY)
-        copied: str | None = None
+        copied: tuple[str | None, str] | None = None
         if dep is not None and dep.fields.get(REUSES_FIELD) == COPIED_RESULT:
             text = _name(dep, roles) or ""
-            copied = (cited or {}).get(text) or text
+            copied = ((cited or {}).get(text), text)
         key = _key(name, groups)
         shown.setdefault(key, key.split(":", 1)[1] if key.startswith("group:") else name)
         found.setdefault(str(canonical), {}).setdefault(key, []).append((value, thing, metric, copied))
     out: list[Comparison] = []
     for canonical, things in found.items():
-        for x, y in combinations(sorted(things, key=lambda k: (shown[k], k)), 2):
+        for x, y in combinations(sorted(things, key=_sort), 2):
             for context, a, b in _pairs(things[x], things[y], roles, prefer):
                 comparison = _comparison(document, shown[x], shown[y], canonical, context, a, b, higher_is_better,
                                          min_effect)
@@ -190,35 +207,40 @@ def _pairs(xs: list[Value], ys: list[Value], roles: RoleMap,
 
 
 def _comparison(document: str, a_name: str, b_name: str, metric: str, context: str | None, a: Value, b: Value,
-                higher_is_better: Callable[[str], bool], min_effect: float) -> Comparison | None:
+                higher_is_better: Callable[[str], bool | None], min_effect: float) -> Comparison | None:
     if a[3] is not None and b[3] is not None:   # both values copied: nothing of this study is compared (rule 4)
         return None
     a_value, b_value = float(a[0].fields["value"]), float(b[0].fields["value"])
-    direction, delta = rules.effect(a_value, b_value, higher_is_better(metric), min_effect)
+    better = higher_is_better(metric)
+    direction, delta = (None, None) if better is None else rules.effect(a_value, b_value, better, min_effect)
+    copy = a[3] if a[3] is not None else b[3]
     items = tuple(dict.fromkeys((a[0].item_id, b[0].item_id, a[1].item_id, b[1].item_id, a[2].item_id, b[2].item_id)))
     ident = digest([document, a_name, b_name, metric, context, a[0].item_id, b[0].item_id])
     return Comparison(id=f"{ID_PREFIX}{ident[:16]}", document=document, a=a_name, b=b_name, metric=metric,
                       context=None if context is None else str(context), a_value=a_value, b_value=b_value,
-                      direction=direction, delta=delta, items=items, copied_from=a[3] if a[3] is not None else b[3])
+                      direction=direction, delta=delta, items=items, copied_from=copy[0] if copy else None,
+                      cited_text=copy[1] if copy else None)
 
 
 def settings(protocol: Protocol) -> dict[str, Any]:
-    """The keyword arguments of `build_comparisons` a protocol's kind gives: the direction of its question metrics
-    (a metric the protocol does not name counts as higher-is-better; only the direction of its comparisons depends
-    on it), its neutral band (NO_BAND for a kind without one) and its `prefer` order."""
+    """The keyword arguments of `build_comparisons` a protocol's kind gives: the direction of its question metrics,
+    else the pack's (`words.metrics`, the first entry of a canonical), else None (unknown: rule 2); its neutral band
+    (NO_BAND for a kind without one) and its `prefer` order."""
     metrics: dict[str, bool] = {}
+    for _, canonical, better in protocol.pack().words.metrics:
+        metrics.setdefault(canonical, better)
     min_effect, prefer = NO_BAND, DEFAULT_PREFER
     if protocol.synthesis is not None:
         s = protocol.synthesis
-        metrics = {m.canonical: m.higher_is_better for m in s.metrics}
+        metrics |= {m.canonical: m.higher_is_better for m in s.metrics}
         min_effect, prefer = s.min_effect, s.pairing.prefer
     elif protocol.best is not None:
-        metrics = {protocol.best.metric.canonical: protocol.best.metric.higher_is_better}
+        metrics |= {protocol.best.metric.canonical: protocol.best.metric.higher_is_better}
         prefer = protocol.best.pairing.prefer
     elif protocol.chaining is not None:
-        metrics = {protocol.chaining.metric.canonical: protocol.chaining.metric.higher_is_better}
+        metrics |= {protocol.chaining.metric.canonical: protocol.chaining.metric.higher_is_better}
         min_effect = protocol.chaining.min_effect
-    return {"higher_is_better": lambda canonical: metrics.get(canonical, True), "min_effect": min_effect,
+    return {"higher_is_better": lambda canonical: metrics.get(canonical), "min_effect": min_effect,
             "prefer": tuple(prefer)}
 
 
@@ -227,12 +249,13 @@ def of_run(protocol: Protocol, documents: Sequence[str], items: Mapping[str, lis
     """Every document's comparisons (manifest order), a copy of its cited document's comparison moved to `copied`
     (rule 4)."""
     cited = resolve_cited(documents, items, roles, groups)
-    per_doc = {doc: build_comparisons(doc, items.get(doc, []), roles, groups, cited=cited, **settings(protocol))
+    knobs = settings(protocol)
+    per_doc = {doc: build_comparisons(doc, items.get(doc, []), roles, groups, cited=cited, **knobs)
                for doc in documents}
     counted: list[Comparison] = []
     copied: list[Comparison] = []
     for doc in documents:
         for c in per_doc[doc]:
             origin = per_doc.get(c.copied_from) if c.copied_from is not None and c.copied_from != doc else None
-            (copied if origin and any(o.key() == c.key() for o in origin) else counted).append(c)
-    return Comparisons(comparisons=tuple(counted), copied=tuple(copied))
+            (copied if origin and any(o.key(groups) == c.key(groups) for o in origin) else counted).append(c)
+    return Comparisons(comparisons=tuple(counted), copied=tuple(copied), min_effect=knobs["min_effect"])
