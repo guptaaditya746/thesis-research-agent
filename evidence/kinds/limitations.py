@@ -14,8 +14,8 @@ A limitation without a thing is kept under thing `null` (reason `unlinked`, whic
 the limitation type would not find the link). A document without a limitation item has reason `no_limitation_items`,
 which escalates the limitation type. Per document `study` counts any limitation, whichever thing it is about.
 
-Answer: `{kind, system, thing, entries: [{thing, category, papers, items}], counts: {thing: {category: n_papers}}}`
-(the unlinked entries' counts sit under the key `null`).
+Answer: `{kind, system, thing, entries: [{thing, category, papers, items}], counts: {thing: {category: n_papers}},
+unlinked: {category: n_papers}}` (`counts` has the linked limitations only; the unlinked ones are `unlinked`).
 """
 from __future__ import annotations
 
@@ -116,11 +116,13 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
     ranked = sorted(found, key=lambda k: (k[0] is None, (shown[k[0]] or "").casefold(), order.get(k[1], len(order)),
                                           k[1]))
     entries = [found[k] for k in ranked]
-    counts: dict[str, dict[str, int]] = {}
+    counts: dict[str, dict[str, int]] = {}   # linked limitations only: a JSON key is a string (jsonio sorts keys)
+    unlinked: dict[str, int] = {}
     for e in entries:
-        counts.setdefault(e["thing"], {})[e["category"]] = len(e["papers"])
+        target = unlinked if e["thing"] is None else counts.setdefault(e["thing"], {})
+        target[e["category"]] = len(e["papers"])
     return {"kind": KIND, "system": synthesis.SYSTEM, "thing": question.thing, "entries": entries,
-            "counts": counts}, used
+            "counts": counts, "unlinked": unlinked}, used
 
 
 def extractor_config(protocol: Protocol) -> dict[str, Any]:

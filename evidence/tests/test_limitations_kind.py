@@ -2,11 +2,13 @@
 every paper counted; the protocol category enum is the pack list."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+import jsonio
 from evidence import contract
 from evidence.contract import Item, Span
 from evidence.kinds import MODULES, limitations
@@ -126,7 +128,8 @@ def test_a_limitation_without_a_thing_is_kept_under_null_last():
     papers = lims(("p1", None, "cost"), ("p1", "Zelvora", "cost"))
     a = answer(papers)
     assert [e["thing"] for e in a["entries"]] == ["Zelvora", None]
-    assert a["counts"] == {"Zelvora": {"cost": 1}, None: {"cost": 1}}
+    assert a["counts"] == {"Zelvora": {"cost": 1}} and a["unlinked"] == {"cost": 1}
+    assert json.loads(jsonio.canonical(a))["unlinked"] == {"cost": 1}   # the run writer serialises a mixed answer
     assert [e["thing"] for e in answer(papers, thing="Zelvora")["entries"]] == ["Zelvora"]
 
 
