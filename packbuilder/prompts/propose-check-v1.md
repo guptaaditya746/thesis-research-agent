@@ -20,7 +20,7 @@ Rules:
 - A made-up name (a role, a canonical metric name, a category) fits when it names what its quotes show.
 - When in doubt, answer false and say what is missing.
 
-Examples (an invented topic: a soil treatment named Norvane against untreated plots; question "Does Norvane raise grain yield over untreated plots?").
+Examples (an invented topic: a soil treatment named Norvane against untreated plots; question "Does Norvane raise grain yield over untreated plots?"). Each case shows one entry of the input's `words` list, then its verdict; the whole input and the whole reply follow the cases.
 
 Fits:
 ```json
@@ -50,4 +50,17 @@ Not shown:
 ```json
 {"id": 5, "word": "drought_stress", "slot": "category of a limitation the papers state", "quotes": [{"paper": "P004", "quote": "Plots were sown in May."}]}
 {"id": 5, "ok": false, "reason": "The quote states no limitation about drought."}
+```
+
+The whole input for these five words, and the whole reply (one object, `verdicts` in input order):
+```json
+{"question": "Does Norvane raise grain yield over untreated plots?", "words": [{"id": 1, "word": "\\bNorvane\\b", "slot": "...", "quotes": [...]}, {"id": 2, "...": "..."}, {"id": 3, "...": "..."}, {"id": 4, "...": "..."}, {"id": 5, "...": "..."}]}
+```
+```json
+{"verdicts": [
+ {"id": 1, "ok": true, "reason": "The pattern finds 'Norvane', the treatment the question asks about."},
+ {"id": 2, "ok": true, "reason": "Grain yield is the topic's metric, so a paper naming it is on topic."},
+ {"id": 3, "ok": false, "reason": "Untreated plots are the comparison, not the treatment."},
+ {"id": 4, "ok": false, "reason": "In the quote 'cut' states a loss of yield, which is worsens, not improves."},
+ {"id": 5, "ok": false, "reason": "The quote states no limitation about drought."}]}
 ```

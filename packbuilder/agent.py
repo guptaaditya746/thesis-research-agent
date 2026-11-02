@@ -13,7 +13,8 @@ extraction pack of a topic (`PackProposal`); code checks the proposal (proposal.
 - Proposing and checking are separate (docs/prompt-writing.md): `verify_model` judges every proposed word
   against its slot and its quotes (prompts/propose-check-v1.md, one call); the words it rejects are dropped from the
   pack (proposal.drop) and listed in provenance. A rejected required word (claim subject, context pattern, display
-  name), or a pack left without two condition roles or a metric, refuses. No verify model: refused.
+  name), a rejected condition role or every pattern of one (it would shift the sides, P22), or a pack left without
+  a metric, refuses. No verify model: refused.
 - The run is cached in `cache` (modelcall.JsonlCache) under the prompt, the model, the corpus (its id and every
   paper's sha256) and the user prompt: a rerun makes no model call. Only a proposal that passed is cached.
 - provenance.json is merged, never overwritten (preflight P3): `words` = {by, model, prompt_sha256, corpus_id,

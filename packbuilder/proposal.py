@@ -219,17 +219,24 @@ REQUIRED = {"claim_subject", "dataset_pattern", "display"}   # slots the pack ca
 
 def drop(p: PackProposal, slots: list[Slot]) -> PackProposal:
     """`p` without the words at `slots`, and without the sources only they used. A rejected required word (claim
-    subject, context pattern, display name) cannot be dropped and raises ValueError; so does a pack left with fewer
-    than two condition roles or no metric."""
+    subject, context pattern, display name) cannot be dropped and raises ValueError; neither can a condition role, or
+    the last pattern of one: the order of the roles decides the treatment (the first) and the controls, so losing a
+    role would silently move another role into its side (P22). A pack left with no metric refuses too."""
     gone = set(slots)
     hard = sorted({s[0] for s in gone if s[0] in REQUIRED})
     if hard:
         raise ValueError(f"the verifier rejected required words ({', '.join(hard)}); the proposal cannot be used")
     d = p.model_dump(mode="json")
     w = d["words"]
-    w["conditions"] = {r: [x for x in xs if ("condition", r, x) not in gone]
-                       for r, xs in w["conditions"].items() if ("role", r) not in gone}
-    w["conditions"] = {r: xs for r, xs in w["conditions"].items() if xs}
+    for n, (r, xs) in enumerate(w["conditions"].items()):
+        side = "the treatment side" if n == 0 else "a control side"
+        if ("role", r) in gone:
+            raise ValueError(f"the verifier rejected the condition role {r!r} ({side}); dropping it would shift the "
+                             "other roles onto other sides, so the proposal cannot be used")
+        if all(("condition", r, x) in gone for x in xs):
+            raise ValueError(f"the verifier rejected every pattern of the condition role {r!r} ({side}); a role "
+                             "without patterns cannot stay, and dropping it would shift the other roles' sides")
+    w["conditions"] = {r: [x for x in xs if ("condition", r, x) not in gone] for r, xs in w["conditions"].items()}
     w["metrics"] = [m for i, m in enumerate(w["metrics"]) if ("metric", i) not in gone]
     w["metric_supplement"] = [m for i, m in enumerate(w["metric_supplement"]) if ("supplement", i) not in gone]
     w["claims"] = [c for i, c in enumerate(w["claims"]) if ("claim", i) not in gone]
@@ -240,8 +247,8 @@ def drop(p: PackProposal, slots: list[Slot]) -> PackProposal:
     d["limitation_categories"] = [x for x in d["limitation_categories"] if ("category", x) not in gone]
     d["names_seed"] = {k: [x for x in xs if ("alias", k, x) not in gone]
                        for k, xs in d["names_seed"].items() if ("seed", k) not in gone}
-    if len(w["conditions"]) < 2 or not w["metrics"]:
-        raise ValueError("after the verifier's rejections the pack has fewer than two condition roles or no metric")
+    if not w["metrics"]:
+        raise ValueError("after the verifier's rejections the pack has no metric")
     kept = PackProposal.model_validate(d)
     used = set(sourced_words(kept))
     return kept.model_copy(update={"sources": [s for s in kept.sources if s.claim in used]})

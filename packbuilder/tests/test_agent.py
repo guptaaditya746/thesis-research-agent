@@ -331,3 +331,26 @@ def test_a_verdict_list_that_misses_a_word_is_refused(corpus: Path, tmp_path: Pa
         return reply(info, {"verdicts": [{"id": 1, "ok": True, "reason": "fine"}]})
     with pytest.raises(ValueError, match="one verdict per word"):
         run(corpus, tmp_path, scripted_tool_agent(), verify_model=FunctionModel(short, model_name="short"))
+
+
+def test_a_rejected_condition_role_refuses_rather_than_shift_the_sides(corpus: Path, tmp_path: Path) -> None:
+    """N1 (P22): dropping the first role would make the control the treatment; it refuses instead."""
+    with pytest.raises(ValueError, match=r"condition role 'velmora' \(the treatment side\)"):
+        run(corpus, tmp_path, scripted_tool_agent(), verify_model=scripted_verifier({("velmora", "name of a condition")}))
+    assert not (tmp_path / "domains" / "toy" / "pack.yaml").exists()
+
+
+def test_rejecting_every_pattern_of_a_role_refuses(corpus: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match=r"every pattern of the condition role 'placebo' \(a control side\)"):
+        run(corpus, tmp_path, scripted_tool_agent(),
+            verify_model=scripted_verifier({(r"(?i)\bplacebo\b", "pattern naming the condition role")}))
+
+
+def test_rejecting_one_of_several_patterns_keeps_the_role(corpus: Path, tmp_path: Path) -> None:
+    two = proposal()
+    two["words"]["conditions"]["velmora"] = [r"\bVelmora\b", r"(?i)\bVelmora\s+or\b"]
+    two["sources"].append(src(r"(?i)\bVelmora\s+or\b", "T001", "randomised to Velmora or placebo"))
+    path = run(corpus, tmp_path, scripted_tool_agent(final=two),
+               verify_model=scripted_verifier({(r"(?i)\bVelmora\s+or\b", "pattern naming")}))
+    words = yaml.safe_load((path / "words.yaml").read_text(encoding="utf-8"))
+    assert words["conditions"] == {"velmora": [r"\bVelmora\b"], "placebo": [r"(?i)\bplacebo\b"]}
