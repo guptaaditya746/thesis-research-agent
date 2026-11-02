@@ -173,3 +173,62 @@ def test_default_question_and_effect_prompt_come_from_the_default_pack():
     text, reply = map_prompt(None)
     assert (text, reply) == map_prompt(default) and reply is common.AnswerReply
     assert "<<" not in text and not hasattr(common, "MAP_INSTRUCTIONS")
+
+
+# --- fix round 1: a refusal's reason; pack-filled v2 prompts of inventory, consistency and best -------------------
+
+def test_a_baseline_refusal_with_the_right_reason_is_refusal_correct():
+    params = params_for("chaining")
+    text, reply_type = map_prompt(params)
+    assert '"context_differs"' in text and '"direct_comparison"' not in text   # every refusal reason, described
+    reply = reply_type.model_validate({"verdict": "refused", "via": [], "papers": ["S001"], "inferred": False,
+                                       "reason": "context_differs"})
+    a = common.kind_answer_json(SYSTEM, params, reply, ["S001", "S002"])
+    assert (a["verdict"], a["reason"]) == ("refused", "context_differs")
+    exp = {"source": "Zelvora", "target": "Morvectin", "metric": "response_rate", "verdict": "refused",
+           "inferred": False, "via": [], "studies": ["S001"], "reason": "context_differs"}
+    canon = Canon.from_truth(None)
+    assert score_chaining(exp, a, canon)["refusal_correct"] is True
+    assert score_chaining(exp | {"reason": "no_path"}, a, canon)["refusal_correct"] is False
+    with pytest.raises(ValidationError):   # direct_comparison is no refusal reason
+        reply_type.model_validate({"verdict": "refused", "via": [], "papers": [], "inferred": False,
+                                   "reason": "direct_comparison"})
+    better = reply_type.model_validate({"verdict": "better", "via": [], "papers": [], "inferred": False,
+                                        "reason": "no_path"})   # a reason given with a verdict is not passed through
+    assert common.kind_answer_json(SYSTEM, params, better, ["S001"])["reason"] == "direct_comparison"
+
+
+# The RAG questions' filled v2 mapping prompts (map-<kind>-v2.md), pinned. They differ from the filled v1 texts (pack
+# examples, no topic words), so mapping calls cached before plan 2 miss once (D36).
+RAG_V2 = {"inv-metrics": "e8c80ac537ed656c53397519207a2b4111ecc31105054ca9acde3e32ad38b9ca",
+          "inv-methods": "0850f28f0699d5219e5f4dd93d7ab3e53eb9b8b40b1dff20bad1ab760f7507b9",
+          "inv-datasets": "dc3391cc9039a14ad0d9ef7fedd85725bb053d4b635883e4a573ee19cebebfff",
+          "cons-accuracy": "7711a2209a3e248758228dbcd7c4b38cc1a4aa827b85182ac9fe7e018caaf91e",
+          "cons-hallucination": "38c721f3fdd5ba3d8923c36a24fddc990401c323a4fe60881ba99a4fb1d4b3b0",
+          "best-accuracy": "2a119264f88445e4594ef21769d0eaea45aac5871df527c2cafc0b79096dcdd8",
+          "best-hallucination": "e5f93a3d0e756a95d674715904f8ccaba1cf0c2695133a1baba041e44723af01"}
+
+
+def test_inventory_consistency_best_use_pack_filled_v2_prompts():
+    from modelcall import prompt_sha256
+    assert {common.MAP_PROMPTS[k] for k in ("inventory", "consistency", "best")} == {
+        "map-inventory-v2.md", "map-consistency-v2.md", "map-best-v2.md"}
+    for name in ("map-inventory-v2.md", "map-consistency-v2.md", "map-best-v2.md"):
+        raw = (common.PROMPTS / name).read_text(encoding="utf-8").lower()
+        assert all(w not in raw for w in ("retriev", "closed-book", "rag", "natural questions")), name
+    got = {}
+    for qid in RAG_V2:
+        text, reply = map_prompt(kind_params(qid))
+        # inventory and consistency examples hold no topic word of the file; best's come from its protocol's kinds
+        assert "<<" not in text and (qid.startswith("best") or "retriev" not in text.split("Example 1")[1].lower())
+        got[qid] = prompt_sha256(text, reply)
+    assert got == RAG_V2
+    text, _ = map_prompt(kind_params("inv-methods"))
+    assert "S001 reports RAG system and closed-book model." in text   # example names from the pack's display names
+    assert "fact: S003 | reports | RAG system (RS)" in text           # and an abbreviation made from one
+
+
+def test_the_default_question_is_the_first_effect_question():
+    """The rule `evidence.questions.default_entry` applies; a reorder of domains/rag/questions.yaml is caught here."""
+    assert common.default_question_id() == "rag-factuality" and str(common.DEFAULT_PROTOCOL).endswith(
+        "rag-factuality.yaml")

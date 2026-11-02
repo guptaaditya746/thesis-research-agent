@@ -232,5 +232,5 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None,
     if params is not None and not effect:
         return kind_answer_json(system, params, reply, corpus.ids, answer_text=answer.answer_text, **extra)
     return answer_json(system, question, reply, corpus.ids, answer_text=answer.answer_text, **extra,
-                       mapped_answer_text=reply.answer_text,
+                       mapped_answer_text=reply.answer_text, protocol=params.protocol if params else None,
                        **({"question_id": params.question_id} if params else {}))   # the default run: as before

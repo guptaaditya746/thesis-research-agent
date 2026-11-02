@@ -131,14 +131,14 @@ def paper_id(raw: Any, known: list[str]) -> str | None:
 
 
 def answer_json(system: str, question: str, reply: AnswerReply, known: list[str], *, answer_text: str | None = None,
-                **extra: Any) -> dict[str, Any]:
+                protocol: Protocol | None = None, **extra: Any) -> dict[str, Any]:
     """answer.json (section 4) for a baseline: the mapped label and per-paper stances, as stated.
 
     Entries for papers not in the corpus are dropped (listed in `dropped`); a paper named twice keeps
     its first stance. `answer_text` is the system's own answer when given, else the mapping call's
     summary. `label_by_rule` is evidence.rules.label over the stated stances by the label table of the
-    default question's protocol (the baseline reads no corpus file for it), for reference; the score uses the
-    mapped `label`.
+    question's `protocol` (default the default question's; the baseline reads no corpus file for it), for reference;
+    the score uses the mapped `label`.
     """
     studies, dropped, seen = [], [], set()
     for s in reply.studies:
@@ -153,7 +153,8 @@ def answer_json(system: str, question: str, reply: AnswerReply, known: list[str]
     counts = {g: len(v) for g, v in groups.items()} | {"undetermined": 0}
     return {"system": system, "question": question, "label": reply.label, "counts": counts, "studies": studies,
             **groups, "undetermined": [], "answer_text": reply.answer_text if answer_text is None else answer_text,
-            "label_by_rule": rules.label(counts, default_table()),
+            "label_by_rule": rules.label(counts, protocol.synthesis.table if protocol is not None and
+                                         protocol.synthesis is not None else default_table()),
             "dropped": dropped, **extra}
 
 
@@ -202,8 +203,8 @@ def map_answer(cache: JsonlCache | None, question: str, known: list[str], text: 
 
 # --- every question kind ---------------------------------------------------------------------------
 
-MAP_PROMPTS = {"effect": "map-effect-v2.md", "inventory": "map-inventory-v1.md", "consistency": "map-consistency-v1.md",
-               "best": "map-best-v1.md", "chaining": "map-chaining-v1.md", "limitations": "map-limitations-v1.md",
+MAP_PROMPTS = {"effect": "map-effect-v2.md", "inventory": "map-inventory-v2.md", "consistency": "map-consistency-v2.md",
+               "best": "map-best-v2.md", "chaining": "map-chaining-v1.md", "limitations": "map-limitations-v1.md",
                "builds_on": "map-builds-on-v1.md"}
 TARGET_NAME = {"metric": "evaluation metric", "condition": "method or system variant", "dataset": "dataset"}
 TARGET_TEXT = {"metric": "the evaluation metrics the papers report results on",
@@ -212,14 +213,25 @@ TARGET_TEXT = {"metric": "the evaluation metrics the papers report results on",
 NOT_STATED = {"code": "not_stated", "text": "the answer does not say"}
 
 
-def target_text(target: str, pack: Pack) -> str:
-    """What an inventory of `target` lists, with examples from the pack: its question metrics (canonical names), the
-    display names of its two compared sides; datasets have no pack examples."""
+def pack_examples(target: str, pack: Pack) -> list[str]:
+    """Names of `target` the pack gives: its question metrics (canonical names), the display names of its two compared
+    sides; datasets have none."""
     examples = {"metric": [m.replace("_", " ") for m in dict.fromkeys(c for _, c, _ in pack.words.metrics)
                            if m != "other"][:3],
                 "condition": [pack.display[side] for side in ("treatment", "control") if side in pack.display]}
-    named = examples.get(target) or []
+    return examples.get(target) or []
+
+
+def target_text(target: str, pack: Pack) -> str:
+    """What an inventory of `target` lists, with examples from the pack (`pack_examples`) when it has any."""
+    named = pack_examples(target, pack)
     return TARGET_TEXT[target] + (f" (for example {', '.join(named)})." if named else ".")
+
+
+def abbreviation(name: str) -> str:
+    """An abbreviation of `name` for a prompt example: its words' initials, or a one-word name's first three letters."""
+    words = name.split()
+    return ("".join(w[0] for w in words) if len(words) > 1 else name[:3]).upper()
 
 
 @dataclass(frozen=True, eq=False)
@@ -299,6 +311,12 @@ def best_reply(kinds: tuple[str, ...]) -> type[BestReply]:
                         studies=(list[study], Field(description="one entry per paper the answer speaks about")))
 
 
+# The refusal reasons a chaining answer can give (rules.CHAIN_REASONS but direct_comparison, which is no refusal
+# reason of its own: the engine also gives it to a direct result that concludes).
+RefusalReason = Literal["no_path", "metric_differs", "context_differs", "mixed_directions", "paths_disagree"]
+assert set(RefusalReason.__args__) == set(rules.CHAIN_REASONS) - {chaining_kind.DIRECT}
+
+
 class ChainingReply(BaseModel):
     """The mapping call of a chaining question: the verdict, the things in between, the papers, inferred or direct."""
     verdict: rules.ChainVerdict | None = Field(
@@ -307,6 +325,8 @@ class ChainingReply(BaseModel):
     via: list[str] = Field(description="the things the answer goes through, in order, as it writes them")
     papers: list[str] = Field(description="the corpus paper ids the answer rests its verdict on")
     inferred: bool = Field(description="true when reached through `via` things, false for a direct comparison")
+    reason: RefusalReason | None = Field(
+        None, description="only for a refused verdict: why the papers cannot settle it")
 
 
 CATEGORY = "the category of the limitation, one of the pack's list"
@@ -397,10 +417,16 @@ def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
         reply = AnswerReply
     elif params.kind == "inventory":
         target = protocol.inventory.target  # type: ignore[union-attr]
-        fill = {"TARGET_TEXT": target_text(target, pack), "TARGET": TARGET_NAME[target]}
+        names = (pack_examples(target, pack) + [f"{TARGET_NAME[target]} {x}" for x in "AB"])[:2]
+        fill = {"TARGET_TEXT": target_text(target, pack), "TARGET": TARGET_NAME[target], "NAME_A": names[0],
+                "NAME_B": names[1], "ABBR_A": abbreviation(names[0])}
         reply = InventoryReply
     elif params.kind == "consistency":
-        fill = {"CLAIM_TEXT": " ".join(protocol.evidence_types["author_claim"].description.split())}
+        metric = protocol.synthesis.metrics[0]  # type: ignore[union-attr]
+        fill = {"CLAIM_TEXT": " ".join(protocol.evidence_types["author_claim"].description.split()),
+                "METRIC": metric.canonical.replace("_", " "),
+                "BETTER": "higher" if metric.higher_is_better else "lower",
+                "TREATMENT": _display(pack, "treatment"), "CONTROL": _display(pack, "control")}
         reply = ConsistencyReply
     elif params.kind == "best":
         best = best_kind.spec(protocol)
@@ -460,12 +486,14 @@ def _docs(raw: list[str], known: list[str], dropped: list[str]) -> list[str]:
 
 def _chaining_body(protocol: Protocol, reply: ChainingReply, known: list[str], dropped: list[str]) -> dict[str, Any]:
     """chaining: source, target and metric from the protocol; `studies` the reply's papers; `via` its things (once
-    each, as written). No paths (a baseline has no comparisons); `reason` not_stated when no verdict is given,
-    direct_comparison for a verdict not inferred (as the engine), else null; `note` as the engine's."""
+    each, as written). No paths (a baseline has no comparisons); `reason` not_stated when no verdict is given, the
+    reply's refusal reason for a refused verdict (null when it gives none), direct_comparison for a verdict not
+    inferred (as the engine), else null; `note` as the engine's."""
     chain = chaining_kind.spec(protocol)
     via = list(dict.fromkeys(form for v in reply.via if (form := " ".join(v.split()))))
     direct = not reply.inferred and reply.verdict not in (None, "refused")
-    reason = NOT_STATED["code"] if reply.verdict is None else chaining_kind.DIRECT if direct else None
+    reason = (NOT_STATED["code"] if reply.verdict is None else reply.reason if reply.verdict == "refused"
+              else chaining_kind.DIRECT if direct else None)
     inferred = reply.inferred and reply.verdict is not None
     return {"source": chain.source, "target": chain.target, "metric": chain.metric.canonical,
             "verdict": reply.verdict, "inferred": inferred, "via": via,

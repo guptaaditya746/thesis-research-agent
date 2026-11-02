@@ -106,5 +106,5 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
              "agent_answer_text": text, "mapping_call": call}
     if params is not None and not effect:
         return kind_answer_json(SYSTEM, params, reply, corpus.ids, answer_text=text or "(no answer)", **extra)
-    return answer_json(SYSTEM, question, reply, corpus.ids, **extra,
+    return answer_json(SYSTEM, question, reply, corpus.ids, **extra, protocol=params.protocol if params else None,
                        **({"question_id": params.question_id} if params else {}))

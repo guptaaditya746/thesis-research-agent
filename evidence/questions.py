@@ -115,8 +115,9 @@ def load(path: Path | str = DEFAULT) -> list[QuestionEntry]:
 
 
 def default_entry(path: Path | str = DEFAULT) -> QuestionEntry:
-    """The default question of a questions file: its first effect question (code names no question, D35; for the
-    default pack it is the question its corpora are generated for)."""
+    """The default question of a questions file: its FIRST effect question, by rule (code names no question, D35;
+    for the default pack it is the question its corpora are generated for, so domains/<pack>/questions.yaml lists it
+    first among its effect questions and a test pins it: evaluation/tests/test_baseline_new_kinds.py)."""
     found = [q for q in load(path) if q.kind == "effect"]
     if not found:
         raise ValueError(f"{path} has no effect question, so no default question")

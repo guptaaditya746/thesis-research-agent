@@ -25,17 +25,11 @@ LEGACY = {
     "synth/prompts/statements-v1.txt": _REPLAY + " (statements-v2.txt)",
     "synth/prompts/blind.txt": "the blind re-extraction prompt before blind-v2.txt, kept for replay (D36)",
     "synth/prompts/blind-v2.txt": _REPLAY + " (blind-v3.txt)",
-    "evaluation/baselines/prompts/map-effect-v1.md": "the effect mapping prompt before map-effect-v2.md (filled from "
-                                                     "the pack's display names), kept for replay (D36)",
-    # The mapping prompts of the kinds plan 2 leaves unchanged: their RAG examples are kept byte for byte so their
-    # cached mapping calls still hit (plan 2 Task 14: existing kinds' prompts unchanged); a pack-filled v2 of each
-    # is owed when that kind is next re-pinned.
-    "evaluation/baselines/prompts/map-inventory-v1.md": "live inventory mapping prompt, unchanged for its cached "
-                                                        "calls (D36); its RAG examples move to the pack in a v2",
-    "evaluation/baselines/prompts/map-consistency-v1.md": "live consistency mapping prompt, unchanged for its cached "
-                                                          "calls (D36); its RAG examples move to the pack in a v2",
-    "evaluation/baselines/prompts/map-best-v1.md": "live best mapping prompt, unchanged for its cached calls (D36); "
-                                                   "its one RAG word (in the input description) goes in a v2",
+    # The baselines' mapping prompts before plan 2 Task 14 filled them from the pack (map-<kind>-v2.md): no code
+    # loads them; kept byte for byte so mapping calls cached before plan 2 can be replayed by hand (D36).
+    **{f"evaluation/baselines/prompts/map-{kind}-v1.md": f"replay only: the {kind} mapping prompt before "
+       f"map-{kind}-v2.md (filled from the pack); MAP_PROMPTS no longer names it (D36)"
+       for kind in ("effect", "inventory", "consistency", "best")},
 }
 # Words one file may keep, by path: (the words or stems, matched as the start of a hit word; the reason). Narrower
 # than the allowlist, which frees a word everywhere.
@@ -134,6 +128,20 @@ def test_every_allowlisted_word_is_a_pack_word() -> None:
 def test_every_legacy_file_exists_and_names_its_reason() -> None:
     assert all((ROOT / path).is_file() and reason.strip() for path, reason in LEGACY.items())
     assert all((ROOT / path).is_file() and words and reason.strip() for path, (words, reason) in FILE_WORDS.items())
+
+
+def test_every_file_word_is_still_needed() -> None:
+    """A FILE_WORDS entry whose words its file no longer holds is stale: drop it (as an allowlist word must be a
+    pack word)."""
+    for path, (words, _) in FILE_WORDS.items():
+        text = text_of(ROOT / path).lower()
+        assert all(re.search(rf"\b{re.escape(w)}", text) for w in words), path
+
+
+def test_legacy_prompts_are_not_loaded() -> None:
+    """A LEGACY mapping prompt is replay only: the baselines' MAP_PROMPTS names none of them."""
+    from evaluation.baselines.common import MAP_PROMPTS
+    assert not {f"evaluation/baselines/prompts/{name}" for name in MAP_PROMPTS.values()} & set(LEGACY)
 
 
 def kept(path: str, word: str) -> bool:

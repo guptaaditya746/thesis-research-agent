@@ -6,6 +6,8 @@
 # protocol, a path from this folder into protocols/; leave it out and the question gets its
 # protocol through the proposal flow, docs/evidence-system.md Part E), `agentic_protocol` (its variant with the
 # agentic extractor).
+# The first effect question is the pack's default question (evidence.questions.default_entry: the question its corpora
+# are generated for, the baselines' default and the saved-answer shortcut); keep it first.
 questions:
   - id: rag-factuality
     question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
