@@ -46,7 +46,7 @@ from evidence.kinds import builds_on as builds_on_kind
 from evidence.kinds import chaining as chaining_kind
 from evidence.kinds import limitations as limitations_kind
 from evidence.kinds.inventory import fold
-from evidence.pack import DOMAINS, Pack, Role, questions_path
+from evidence.pack import Pack, Role, questions_path
 from evidence.protocol import DEFAULT_PACK, Kind, Protocol
 from modelcall import CallSettings, JsonlCache, Prompt, ask_sync, cache_key, load_prompt, model_name, prompt_sha256
 
@@ -245,20 +245,21 @@ class KindParams:
     protocol: Protocol
 
 
-def kind_params(question_id: str, questions: Path | str = DEFAULT_QUESTIONS) -> KindParams:
-    """The question `question_id` of the questions file `questions` (default the default pack's; ValueError for an
-    unknown id or a question without a hand-written protocol). A questions file in a pack folder (beside a
-    pack.yaml) reads its protocol's pack from that folder's parent, so a test pack resolves (P19)."""
-    questions = Path(questions)
-    entries = {q.id: q for q in questions_module.load(questions)}
-    if question_id not in entries:
-        raise ValueError(f"unknown question id {question_id!r} ({questions} has {', '.join(entries)})")
-    entry = entries[question_id]
+def kind_params(question_id: str, questions: Path | str | None = None) -> KindParams:
+    """The question `question_id` of the questions file `questions` (default: whichever pack's questions file has
+    it, `questions.find`; ValueError for an unknown id, one in two packs, or a question without a hand-written
+    protocol). A questions file in a pack folder outside domains/ reads its protocol's pack from that folder's
+    parent, so a test pack resolves (P19)."""
+    if questions is None:
+        entry, questions = questions_module.find(question_id)
+    else:
+        entries = {q.id: q for q in questions_module.load(questions)}
+        if question_id not in entries:
+            raise ValueError(f"unknown question id {question_id!r} ({questions} has {', '.join(entries)})")
+        entry = entries[question_id]
     if entry.protocol is None:
         raise ValueError(f"question {question_id!r} has no hand-written protocol; a baseline needs one")
-    root = questions.resolve().parent.parent
-    domains = root if (questions.parent / "pack.yaml").is_file() and root != DOMAINS.resolve() else None
-    protocol = protocol_module.load(questions_module.protocol_file(entry.protocol, questions), domains)
+    protocol = questions_module.entry_protocol(entry.protocol, questions)
     return KindParams(entry.id, entry.question, entry.kind, protocol)
 
 
@@ -403,7 +404,7 @@ def _reuses(protocol: Protocol) -> list[str]:
 def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
     """The mapping call's instructions and reply model for a question (None: the default question; D36: it has no
     special case any more), from prompts/MAP_PROMPTS[kind] filled from the question's protocol and its pack."""
-    params = params or kind_params(default_question_id())
+    params = params or kind_params(default_question_id(), DEFAULT_QUESTIONS)
     protocol = params.protocol
     pack = protocol.pack()
     text = load_prompt(PROMPTS / MAP_PROMPTS[params.kind]).text

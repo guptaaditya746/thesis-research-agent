@@ -16,7 +16,7 @@ The runner is an evidence.agentic.runner.AgentRunner: ResearchAgentRunner for re
 sandbox, LiteLLM gateway), a fake in tests. Its model is AgentSettings.model (`orch-model`, the one
 model every extractor and both baselines use; docs/evidence-system.md Part G.3).
 
-`question_id` (CLI `--question-id`): a question of `questions` (a pack's questions.yaml, default the default pack's)
+`question_id` (CLI `--question-id`): a question of `questions` (a pack's questions.yaml, default the pack whose file has the id)
 instead of `question`; the agent
 researches its text, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
 common.kind_answer_json); an effect question keeps today's shape.
@@ -32,7 +32,7 @@ from pydantic_ai.models import Model
 from evidence.agentic.runner import AgentJob, AgentRunner
 from modelcall import JsonlCache, redact
 
-from .common import (DEFAULT_QUESTION, DEFAULT_QUESTIONS, AnswerReply, SystemCorpus, answer_json, empty_reply,
+from .common import (DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, empty_reply,
                      kind_answer_json, kind_params, map_answer)
 
 SYSTEM = "agent-baseline"
@@ -74,7 +74,7 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
                    concept: dict[str, Any] | None = None, budget: dict[str, int] | None = None,
                    cache: JsonlCache | None = None, model_id: str | None = None, run_id: str = "agent-baseline",
                    seed: int = 0, question_id: str | None = None,
-                   questions: Path = DEFAULT_QUESTIONS) -> dict[str, Any]:
+                   questions: Path | None = None) -> dict[str, Any]:
     """answer.json of the agent baseline for one corpus. `question_id`: a question of `questions`
     (not with `question`; default the default question, common.DEFAULT_QUESTION)."""
     if question is not None and question_id is not None:

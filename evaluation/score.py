@@ -43,7 +43,7 @@ Matching rules (A; B and the pair check reuse A's matching):
    character with) a placement of the matched fact with the main role, over the pairs whose fact has one
    (dataset facts have none); an item without a main-role span is checked with all its spans.
 
-Question kinds (question-first redesign; `score(question_id=...)`, domains/rag/questions.yaml; without an id, the
+Question kinds (question-first redesign; `score(question_id=...)`, any pack's domains/<pack>/questions.yaml; without an id, the
 question the run's frozen protocol asks, evidence/questions.answered_by): A is computed the same way for every kind,
 over the evidence types the run's protocol extracts (`scored_types`; report.json `extraction.scored_types`), so
 its `all` / `all` row means "all the types this protocol extracts". B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
@@ -163,7 +163,8 @@ from evidence.kinds import limitations as limitation_rules
 from evidence.protocol import DEFAULT_PACK, Protocol
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionEntry, QuestionTruth, default_entry
-from evidence.questions import answered_by, answers_asked, load as load_questions, protocol_file
+from evidence.questions import answered_by, answers_asked, entry_protocol, every_question, find, run_questions
+from evidence.questions import load as load_questions
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS, VALUE_DECIMALS
 
@@ -1108,7 +1109,7 @@ def score_protocol(run: Run) -> dict[str, Any] | None:
         return None
     out = {"id": (ref or {}).get("id"), "sha256": (ref or {}).get("sha256"), "lexical_miss": None}
     if path.is_file():
-        protocol = load_protocol(path)
+        protocol = load_protocol(path, _run_domains(run))
         out["lexical_miss"] = protocol.screen.lexical_miss if protocol.screen else None
         out["id"], out["sha256"] = out["id"] or protocol.id, out["sha256"] or protocol.sha256
     return out
@@ -1574,22 +1575,53 @@ def integration_kind(m: Matching, kind: str, answer: dict[str, Any] | None, prot
     return integration_consistency(m)
 
 
-def question(question_id: str) -> QuestionEntry:
-    """The entry of domains/rag/questions.yaml; ValueError naming the known ids for an unknown one."""
-    entries = {q.id: q for q in load_questions()}
-    if question_id not in entries:
-        raise ValueError(f"unknown question id {question_id!r}; domains/rag/questions.yaml has {', '.join(entries)}")
-    return entries[question_id]
+def question(question_id: str) -> tuple[QuestionEntry, Path]:
+    """The entry of whichever pack's questions file has `question_id`, and that file (`questions.find`);
+    ValueError naming the known ids for an unknown one, or for an id found in two packs."""
+    return find(question_id)
 
 
-def _question_protocol(entry: QuestionEntry) -> Protocol | None:
-    return load_protocol(protocol_file(entry.protocol)) if entry.protocol else None
+def run_question(run_dir: Path, question_id: str | None) -> tuple[QuestionEntry, Path]:
+    """The question a run is scored for, and its questions file. With an id: the run's own pack's questions file
+    first (its protocol's `domain`, read from the run's `domains` folder), else every pack's. Without: the entry
+    the run answers (answered_by) among the questions of the run's pack, else of every pack."""
+    own = run_questions(run_dir)
+    if question_id:
+        if own is not None:
+            hit = [q for q in load_questions(own) if q.id == question_id]
+            if hit:
+                return hit[0], own
+        return question(question_id)
+    if own is not None:
+        return answered_by(run_dir, load_questions(own)), own
+    every = every_question()
+    entry = answered_by(run_dir, [q for q, _ in every])
+    return entry, next(path for q, path in every if q.id == entry.id)
 
 
-def _run_protocol(run: Run, entry: QuestionEntry) -> Protocol | None:
-    """The run's protocol.yaml, else the question's hand-written protocol; a run of another kind is refused."""
+def _answers_question(answers: list[dict[str, Any]], question_id: str | None) -> tuple[QuestionEntry, Path]:
+    """The question baseline answers are scored for: `question_id` of any pack, else the one every answer asks."""
+    if question_id:
+        return question(question_id)
+    every = every_question()
+    entry = answers_asked(answers, [q for q, _ in every])
+    return entry, next(path for q, path in every if q.id == entry.id)
+
+
+def _question_protocol(entry: QuestionEntry, questions: Path) -> Protocol | None:
+    return entry_protocol(entry.protocol, questions) if entry.protocol else None
+
+
+def _run_domains(run: Run) -> str | None:
+    """The folder the run read its protocol's pack from (run.json settings `domains`; None: domains/)."""
+    return ((run.run or {}).get("settings") or {}).get("domains")
+
+
+def _run_protocol(run: Run, entry: QuestionEntry, questions: Path) -> Protocol | None:
+    """The run's protocol.yaml (its pack read from the run's `domains` folder), else the question's hand-written
+    protocol; a run of another kind is refused."""
     path = run.root / PROTOCOL_FILE
-    protocol = load_protocol(path) if path.is_file() else _question_protocol(entry)
+    protocol = load_protocol(path, _run_domains(run)) if path.is_file() else _question_protocol(entry, questions)
     if protocol is not None and protocol.kind != entry.kind:
         raise ValueError(f"the run's protocol {protocol.id!r} is of kind {protocol.kind!r}, question {entry.id!r} of "
                          f"kind {entry.kind!r}: give the --question-id the run answered")
@@ -1606,15 +1638,15 @@ def _question_text(truth: GroundTruth, entry: QuestionEntry) -> str:
 def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None,
           oracle: Path | None = None, question_id: str | None = None) -> dict[str, Any]:
     """The report for one run (and any baseline answers) on one corpus, for the question `question_id` of
-    domains/rag/questions.yaml (its kind picks B and C: integration_kind, score_kind), by default the one the run
+    any pack's questions.yaml (its kind picks B and C: integration_kind, score_kind), by default the one the run
     answers (answered_by; ValueError when that cannot be told); `oracle` an oracle's answer.json (effect
     questions only). Baseline answers are scored on C only."""
-    entry = question(question_id) if question_id else answered_by(run_dir, load_questions())
+    entry, questions = run_question(run_dir, question_id)
     corpus = Path(corpus)
     truth = GroundTruth.load(corpus / "ground_truth.json")
     files = paper_ids(read_json(corpus / "manifest.json"))
     run = Run.load(run_dir, reexec)
-    protocol = _run_protocol(run, entry)
+    protocol = _run_protocol(run, entry, questions)
     canon = Canon.from_truth(truth)
     m = protocol_matching(run.items, truth, files, protocol, canon)
     answers = ([run.answer] if run.answer is not None else []) + [read_json(p) for p in baselines]
@@ -1645,9 +1677,9 @@ def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = N
     """C only, for baseline answers without an engine run (the question's hand-written protocol decides the
     saved-answer shortcut); by default for the question every answer asks (answers_asked)."""
     given = [read_json(p) for p in answers]
-    entry = question(question_id) if question_id else answers_asked(given, load_questions())
+    entry, questions = _answers_question(given, question_id)
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
-    protocol = _question_protocol(entry)
+    protocol = _question_protocol(entry, questions)
     canon = Canon.from_truth(truth)
     systems = [score_kind(truth, entry.kind, entry.truth, protocol, a, canon) | {"cost": system_cost(a, None)}
                for a in given]

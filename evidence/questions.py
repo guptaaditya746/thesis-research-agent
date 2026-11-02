@@ -20,7 +20,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from .pack import load_pack, questions_path
-from .protocol import DEFAULT_PACK, Kind, load as load_protocol
+from .protocol import DEFAULT_PACK, Kind, Protocol, load as load_protocol
 from .rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 
 DEFAULT = questions_path(DEFAULT_PACK)
@@ -130,6 +130,59 @@ def protocol_file(path_text: str, questions_file: Path | str = DEFAULT) -> Path:
     return Path(questions_file).parent / path_text
 
 
+def entry_protocol(path_text: str, questions_file: Path | str) -> Protocol:
+    """An entry's hand-written protocol, parsed. A questions file in a pack folder outside the packs root (a test
+    pack beside a pack.yaml) reads the protocol's pack from that folder's parent, so a test pack resolves (P19)."""
+    from . import pack as pack_module
+    questions_file = Path(questions_file)
+    root = questions_file.resolve().parent.parent
+    domains = (root if (questions_file.parent / "pack.yaml").is_file() and root != Path(pack_module.DOMAINS).resolve()
+               else None)
+    return load_protocol(protocol_file(path_text, questions_file), domains)
+
+
+def every_question(root: Path | str | None = None) -> list[tuple[QuestionEntry, Path]]:
+    """Every question of every pack (`<root>/*/questions.yaml`, root default the packs root, domains/, read at call
+    time) with its questions file; ValueError for an id found in two packs (an id names one question)."""
+    from . import pack as pack_module
+    folder = Path(root) if root is not None else Path(pack_module.DOMAINS)
+    found = [(q, path) for path in sorted(folder.glob("*/questions.yaml")) for q in load(path)]
+    seen: dict[str, Path] = {}
+    for q, path in found:
+        if q.id in seen:
+            raise ValueError(f"question id {q.id!r} is in two packs ({seen[q.id]} and {path}); an id names one "
+                             f"question")
+        seen[q.id] = path
+    return found
+
+
+def find(question_id: str, root: Path | str | None = None) -> tuple[QuestionEntry, Path]:
+    """The question `question_id` of any pack (`every_question`) and its questions file; ValueError naming the
+    known ids for an unknown one."""
+    found = every_question(root)
+    for q, path in found:
+        if q.id == question_id:
+            return q, path
+    raise ValueError(f"unknown question id {question_id!r}; the packs' questions files have "
+                     f"{', '.join(q.id for q, _ in found)}")
+
+
+def run_questions(run_dir: Path) -> Path | None:
+    """The questions file of the pack a run's protocol.yaml names (its `domain`, read from the `domains` folder
+    run.json's settings name, else the packs root); None when the run has no protocol.yaml or its pack has no
+    questions file."""
+    from . import pack as pack_module
+    rd = RunDir(Path(run_dir))
+    if not rd.file(PROTOCOL_FILE).is_file():
+        return None
+    data = yaml.safe_load(rd.file(PROTOCOL_FILE).read_bytes().decode("utf-8"))
+    domain = data.get("domain", DEFAULT_PACK) if isinstance(data, dict) else DEFAULT_PACK
+    run = rd.try_json(RUN_FILE)
+    root = ((run.get("settings") or {}).get("domains") if isinstance(run, dict) else None) or pack_module.DOMAINS
+    path = Path(root) / str(domain) / "questions.yaml"
+    return path if path.is_file() else None
+
+
 Q = TypeVar("Q")   # an entry with `id`, `question` and `kind`: a QuestionEntry, or the web app's Question
 
 
@@ -151,7 +204,9 @@ def answered_by(run_dir: Path, entries: Sequence[Q]) -> Q:
     more than one, matches."""
     rd = RunDir(Path(run_dir))
     if rd.file(PROTOCOL_FILE).is_file():
-        protocol = load_protocol(rd.file(PROTOCOL_FILE))
+        run = rd.try_json(RUN_FILE)
+        domains = ((run.get("settings") or {}).get("domains") if isinstance(run, dict) else None)
+        protocol = load_protocol(rd.file(PROTOCOL_FILE), domains)   # its pack from the run's `domains` folder
         found = [q for q in entries if q.question == protocol.question and q.kind == protocol.kind]
         why = f"its protocol {protocol.id!r} asks {protocol.question!r} ({protocol.kind})"
     else:

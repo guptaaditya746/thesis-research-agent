@@ -88,18 +88,22 @@ def _write_answer(answer: dict[str, Any], out: Path) -> Path:
 
 
 def _question(args: argparse.Namespace) -> dict[str, Any]:
-    """The baseline's question keyword: `question_id` (checked here, so a bad id stops before any call), else
+    """The baseline's question keywords: `question_id` and the questions file of the pack that has it (checked
+    here, so a bad id stops before any call), else
     `question` from --question-file or --question, else the default question."""
+    from evidence.questions import find
+
     from .baselines.common import DEFAULT_QUESTION, kind_params
 
     if args.question_id is not None:
         if args.question or args.question_file:
             raise SystemExit(f"evaluate {args.cmd}: give --question-id or --question/--question-file, not both")
         try:
-            kind_params(args.question_id)
+            _, questions = find(args.question_id)
+            kind_params(args.question_id, questions)
         except ValueError as exc:
             raise SystemExit(f"evaluate {args.cmd}: {exc}") from None
-        return {"question_id": args.question_id}
+        return {"question_id": args.question_id, "questions": questions}
     if args.question_file:
         return {"question": args.question_file.read_text(encoding="utf-8").strip()}
     return {"question": args.question or DEFAULT_QUESTION}
@@ -373,7 +377,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--reexec", type=Path, help="re-execution report (default: <run>/reexec.json if present)")
     s.add_argument("--oracle", type=Path, help="an oracle's answer.json: attribute wrong studies upstream/downstream")
     s.add_argument("--question-id",
-                   help="the question id (domains/rag/questions.yaml) the run and the answers answer; its kind picks B "
+                   help="the question id (any pack's domains/<pack>/questions.yaml) the run and the answers answer; its kind picks B "
                         "and C (default: the question the run's protocol asks, else the one every --baseline "
                         "answer asks; refused when that cannot be told, and an unknown id is refused)")
     s.add_argument("--out", type=Path, required=True)
@@ -392,7 +396,7 @@ def parser() -> argparse.ArgumentParser:
                        help=f"LiteLLM alias of the answer and mapping calls and of the agent (default {DEFAULT_ALIAS})")
         q.add_argument("--question", help="default: the default pack's default question")
         q.add_argument("--question-file", type=Path)
-        q.add_argument("--question-id", help="a question id of domains/rag/questions.yaml: its text is asked and "
+        q.add_argument("--question-id", help="a question id of any pack's domains/<pack>/questions.yaml: its text is asked and "
                        "its kind picks the answer's shape (not with --question or --question-file; default: the "
                        "default pack's default question)")
         q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<name>-calls.jsonl, name "

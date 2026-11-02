@@ -35,7 +35,7 @@ groups, `label_by_rule`), `answer_text` (the model's own answer), `citations` an
 (`[{document, start, end(, score)}]`, raw character offsets into the paper text as agent/anchor.read_text
 and the placements use), `settings`, `model_call` and `mapping_call`.
 
-`question_id` (CLI `--question-id`): a question of `questions` (a pack's questions.yaml, default the default pack's)
+`question_id` (CLI `--question-id`): a question of `questions` (a pack's questions.yaml, default the pack whose file has the id)
 instead of `question`; its text is
 asked and retrieved with, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
 common.kind_answer_json); an effect question keeps the shape above. An empty answer of another kind is the kind's
@@ -56,7 +56,7 @@ from gold.chunks import split
 from modelcall import JsonlCache
 
 from ..truth import GroundTruth
-from .common import (DEFAULT_QUESTION, DEFAULT_QUESTIONS, AnswerReply, SystemCorpus, answer_json, cached_reply,
+from .common import (DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, cached_reply,
                      empty_reply, kind_answer_json, kind_params, map_answer)
 
 SYSTEM = "bm25-answer-baseline"   # spec section 6.1; old answers and run folders keep "rag-baseline" (D36)
@@ -191,7 +191,7 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None,
                  mode: str = DEFAULT_MODE, max_chars: int = MAX_CHARS, cache: JsonlCache | None = None,
                  model_id: str | None = None, seed: int = 0, oracle: bool = False,
                  question_id: str | None = None, max_tokens: int | None = None,
-                 questions: Path = DEFAULT_QUESTIONS) -> dict[str, Any]:
+                 questions: Path | None = None) -> dict[str, Any]:
     """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
     `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json). `question_id`: a
     question of `questions` (not with `question`; default the default question, common.DEFAULT_QUESTION).
