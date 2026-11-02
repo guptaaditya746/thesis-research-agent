@@ -3,20 +3,21 @@
  * corpus, cost) and tabs for the answer (the evidence table: the answer, a row per paper by verdict, one click
  * to the sentence; a baseline's text, citations and retrieved passages), the papers (each with where the
  * funnel stopped, opening the paper view), the protocol it ran, its extractors, the agent baseline's trace,
- * and for an engine run the Developer tools tab: its step trace (live) and the raw evidence graph
- * (graph.json in React Flow, and as JSON). An engine run with a score report has a Scores tab: its first
+ * and for an engine run the Developer tools tab: its step trace (live) and the evidence graph (papers ->
+ * claims -> verdict; the raw graph.json items behind a "raw items" switch, and as JSON). An engine run with a score report has a Scores tab: its first
  * report's C and A, the cost per system when the report has it, and how many values the run linked to the
  * wrong kind of thing. The baselines on the same corpus and the run's score reports are linked. The tab is
  * in the URL (?tab=, and ?dev= inside Developer tools; the old ?tab=graph opens the graph there). While a
  * job of the app writes the run, the page polls, so an incomplete run fills in as the engine writes it.
  */
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 
 import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useReport, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
 import { ErrorCallsBadge } from "@/components/badges"
 import { JsonBlock, KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
+import { ClaimGraph } from "@/components/ev/ClaimGraph"
 import { TraceTab } from "@/components/ev/TraceTab"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { EvidenceView } from "@/components/ev/EvidenceView"
@@ -25,6 +26,8 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { effectAnswer, evCell, extractionRows, funnelStop, synthesisSummary, systemOrder, typeLabel } from "@/lib/ev"
@@ -32,17 +35,31 @@ import { duration, tokens } from "@/lib/format"
 
 const runHref = (id: string) => `/runs/${encodeURIComponent(id)}`
 
+/** The evidence graph: papers, the claims read from them and the verdict; the raw items behind a switch. */
 function GraphTab({ run }: { run: EvRunDetail }) {
   const graph = useRunGraph(run.id)
+  const [raw, setRaw] = useState(false)
   if (graph.isPending) return <CardsSkeleton count={1} />
   if (graph.isError) return <ErrorState error={graph.error} />
+  const paperHref = (d: string, item?: string) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}${item ? `?item=${encodeURIComponent(item)}` : ""}`
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        The engine's raw evidence graph (graph.json): every item and link, for debugging. The Answer tab shows the same
-        evidence as a row per paper.
-      </p>
-      <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {raw
+            ? "The engine's raw evidence graph (graph.json): every item and link, for debugging."
+            : "Which papers the answer rests on, what each one claims, and how each claim bears on the verdict. Click a claim for its items."}
+        </p>
+        <div className="flex items-center gap-2">
+          <Switch id="graph-raw" checked={raw} onCheckedChange={setRaw} />
+          <Label htmlFor="graph-raw" className="text-sm">raw items</Label>
+        </div>
+      </div>
+      {raw
+        ? <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => paperHref(d)} />
+        : run.answer
+          ? <ClaimGraph graph={graph.data} answer={run.answer} kind={run.answer.kind ?? "effect"} display={run.display} itemHref={paperHref} />
+          : <p className="text-sm">No answer.json, so no claims to draw; the raw items are behind the switch.</p>}
       <details>
         <summary className="cursor-pointer text-sm">graph.json</summary>
         <JsonBlock value={graph.data} label="graph.json" className="mt-2" />

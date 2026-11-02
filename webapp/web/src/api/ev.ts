@@ -42,6 +42,9 @@ export type EffectAnswer = S["EffectAnswer"]
 export type InventoryAnswer = S["InventoryAnswer"]
 export type ConsistencyAnswer = S["ConsistencyAnswer"]
 export type BestAnswer = S["BestAnswer"]
+export type ChainingAnswer = S["ChainingAnswer"]
+export type LimitationsAnswer = S["LimitationsAnswer"]
+export type BuildsOnAnswer = S["BuildsOnAnswer"]
 /** answer.json of any question kind (a `kind` key; effect when it is absent in an old file). */
 export type RunAnswer = NonNullable<S["EvRunDetail"]["answer"]>
 export type EvAnswer = EffectAnswer

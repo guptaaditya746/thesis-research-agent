@@ -387,6 +387,85 @@ class BestAnswer(Open):
     tied: list[str] = []
 
 
+class ChainStep(Open):
+    """One step of a chaining path: a comparison of `from` and `to` in one paper; `direction` is from over to."""
+    model_config = ConfigDict(extra="allow", json_schema_serialization_defaults_required=True, serialize_by_alias=True,
+                              validate_by_name=True, validate_by_alias=True)
+
+    comparison: str
+    document: str
+    from_: str = Field(alias="from")
+    to: str
+    metric: str | None = None
+    direction: Literal["better", "worse", "no_difference"] | None = None
+    context: str | None = None
+
+
+class ChainPath(Open):
+    via: list[str] = []
+    steps: list[ChainStep] = []
+    verdict: str
+    reason: str | None = None
+
+
+class ChainingAnswer(Open):
+    """evidence/kinds/chaining.py: is the source better than the target, directly or through things each was
+    compared with? `reason` is the rule that decided (null when a chain concluded)."""
+    kind: Literal["chaining"]
+    system: str
+    source: str
+    target: str
+    metric: str | None = None
+    verdict: str
+    inferred: bool = False
+    via: list[str] = []
+    studies: list[str] = []
+    paths: list[ChainPath] = []
+    reason: str | None = None
+    note: str | None = None
+
+
+class LimitationEntry(Open):
+    thing: str | None = None
+    category: str
+    papers: list[str] = []
+    items: list[str] = []
+
+
+class LimitationsAnswer(Open):
+    """evidence/kinds/limitations.py: the limitations the papers state, per compared thing and category."""
+    kind: Literal["limitations"]
+    system: str
+    thing: str | None = None
+    entries: list[LimitationEntry] = []
+    counts: dict[str, dict[str, int]] = {}
+    unlinked: dict[str, int] = {}
+
+
+class DependencyLink(Open):
+    """A paper (`from`) that builds on an earlier one (`to`), reusing a method, dataset or result."""
+    model_config = ConfigDict(extra="allow", json_schema_serialization_defaults_required=True, serialize_by_alias=True,
+                              validate_by_name=True, validate_by_alias=True)
+
+    from_: str = Field(alias="from")
+    to: str
+    reuses: str
+    items: list[str] = []
+
+
+class BuildsOnAnswer(Open):
+    """evidence/kinds/builds_on.py: which papers build on which, and how influential each compared thing is."""
+    kind: Literal["builds_on"]
+    system: str
+    thing: str | None = None
+    links: list[DependencyLink] = []
+    origins: dict[str, str | None] = {}
+    followers: dict[str, list[str]] = {}
+    influence: dict[str, int] = {}
+    ranking: list[str] = []
+    unresolved: list[str] = []
+
+
 def _answer_kind(value: Any) -> str:
     """The union's tag: the `kind` key, effect when there is none (answer.json before the question kinds)."""
     kind = value.get("kind") if isinstance(value, dict) else getattr(value, "kind", None)
@@ -401,10 +480,12 @@ class UnknownAnswer(Open):
     system: str | None = None
 
 
-KNOWN_ANSWER_KINDS = ("effect", "inventory", "consistency", "best")
+KNOWN_ANSWER_KINDS = ("effect", "inventory", "consistency", "best", "chaining", "limitations", "builds_on")
 EvAnswer = Annotated[
     Annotated[EffectAnswer, Tag("effect")] | Annotated[InventoryAnswer, Tag("inventory")]
     | Annotated[ConsistencyAnswer, Tag("consistency")] | Annotated[BestAnswer, Tag("best")]
+    | Annotated[ChainingAnswer, Tag("chaining")] | Annotated[LimitationsAnswer, Tag("limitations")]
+    | Annotated[BuildsOnAnswer, Tag("builds_on")]
     | Annotated[UnknownAnswer, Tag("unknown")],
     Discriminator(_answer_kind),
 ]
@@ -488,6 +569,9 @@ class EvRunDetail(EvRunSummary):
     has_trace: bool = Field(False, description="baseline: the agent baseline's run directory is there")
     link_flags: int | None = Field(None, description="engine: links to an item of the wrong kind (reason.json "
                                                      "`link_flags`); null when the run has no reason.json")
+    display: dict[str, str] = Field({}, description="engine: the run's pack's display names (pack.yaml `display`), "
+                                                    "e.g. what the treatment and control sides are called; empty "
+                                                    "for a baseline or when the pack cannot be read")
 
 
 class RunPaper(Base):

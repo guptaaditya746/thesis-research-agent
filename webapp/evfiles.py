@@ -610,7 +610,18 @@ class EvidenceFiles:
                            if isinstance(funnel, dict) else None,
                            documents=documents, baselines=same, reports=reports,
                            has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None,
-                           link_flags=len(reason.get("link_flags") or []) if isinstance(reason, dict) else None)
+                           link_flags=len(reason.get("link_flags") or []) if isinstance(reason, dict) else None,
+                           display=self._display(rd) if summary.kind == "engine" else {})
+
+    @staticmethod
+    def _display(rd: RunDir) -> dict[str, str]:
+        """The display names of the run's pack (`Pack.display`): what the topic calls the two sides. Empty when
+        the run has no protocol.yaml or its pack cannot be read (moved, or written by an older code)."""
+        try:
+            pack = rd.register_pack()
+        except (OSError, ValueError, yaml.YAMLError):
+            return {}
+        return dict(pack.display) if pack is not None else {}
 
     def _items(self, path: Path) -> list[Item]:
         """The run's evidence items; a damaged line (not the torn tail) is `Damaged`, named `group/run/file:line`

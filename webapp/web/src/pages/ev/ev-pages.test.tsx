@@ -159,21 +159,43 @@ describe("runs", () => {
     expect(screen.getByRole("link", { name: `cascade-gaps~${MIXED}` })).toHaveAttribute("href", `/report/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
   })
 
-  it("the evidence graph sits in Developer tools beside the trace and draws one paper", async () => {
+  it("the evidence graph sits in Developer tools: papers, claims, verdict; a claim opens its items", async () => {
     const user = userEvent.setup()
-    const { router } = renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=dev`)
+    const id = `cascade-gaps~${MIXED}`
+    const detail = evFixture<EvRunDetail>(`/api/ev/runs/${id}`)
+    // the test world's runs determine no study, so S001 gets one, resting on a measurement of the fixture graph
+    const studies = effectAnswer(detail.answer)!.studies.map((s) => (s.document === "S001"
+      ? { ...s, direction: "supports", metric: "m", treatment: { condition: null, measurement: "m-794d268457cdf26b", value: 0.572 },
+          control: { condition: null, measurement: "m-none", value: 0.4 } }
+      : s))
+    server.use(http.get(`/api/ev/runs/${id}`, () => HttpResponse.json({ ...detail, answer: { ...detail.answer, studies } })))
+    const { router } = renderRoutes(routes, `${run(id)}?tab=dev`)
     expect(screen.queryByRole("tab", { name: "Evidence graph" })).toBeNull()
     const dev = await screen.findByRole("tablist", { name: "Developer tools" }, T)
     expect(within(dev).getByRole("tab", { name: "Step trace" })).toHaveAttribute("aria-selected", "true")
     await user.click(within(dev).getByRole("tab", { name: "Evidence graph" }))
+    expect(await screen.findByRole("group", { name: "Evidence graph" }, T)).toBeInTheDocument()
+    for (const heading of ["Papers", "Claims", "Verdict"]) expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument()
+    expect(router.state.location.search).toBe("?tab=dev&dev=graph")
+    await user.click(screen.getByText("Nodes and edges as lists"))
+    await user.click(screen.getByRole("button", { name: `${detail.display.treatment} 0.572 vs ${detail.display.control} 0.4 on m` }))
+    const sheet = await screen.findByRole("dialog", {}, T)
+    const items = within(sheet).getByRole("list", { name: "Items of the claim" })
+    expect(within(items).getAllByRole("link").map((a) => a.getAttribute("href"))).toContain(`${run(id)}/papers/S001?item=m-794d268457cdf26b`)
+    expect(within(items).getByText("measurement:")).toBeInTheDocument()
+  })
+
+  it("the raw items switch brings back the item graph, one paper at a time", async () => {
+    const user = userEvent.setup()
+    renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=dev&dev=graph`)
+    await user.click(await screen.findByRole("switch", { name: "raw items" }, T))
     expect(await screen.findByRole("group", { name: "Evidence graph of S001" }, T)).toBeInTheDocument()
     expect(screen.getByText(/nodes, \d+ edges/)).toBeInTheDocument()
-    expect(router.state.location.search).toBe("?tab=dev&dev=graph")
   })
 
   it("the old ?tab=graph link opens the graph under Developer tools", async () => {
     renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=graph`)
-    expect(await screen.findByRole("group", { name: "Evidence graph of S001" }, T)).toBeInTheDocument()
+    expect(await screen.findByRole("group", { name: "Evidence graph" }, T)).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Developer tools" })).toHaveAttribute("aria-selected", "true")
   })
 

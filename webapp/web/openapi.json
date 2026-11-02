@@ -2325,6 +2325,122 @@
         "type": "object",
         "title": "Budget"
       },
+      "BuildsOnAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "builds_on",
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "thing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thing"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyLink"
+            },
+            "type": "array",
+            "title": "Links",
+            "default": []
+          },
+          "origins": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Origins",
+            "default": {}
+          },
+          "followers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Followers",
+            "default": {}
+          },
+          "influence": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Influence",
+            "default": {}
+          },
+          "ranking": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ranking",
+            "default": []
+          },
+          "unresolved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system",
+          "thing",
+          "links",
+          "origins",
+          "followers",
+          "influence",
+          "ranking",
+          "unresolved"
+        ],
+        "title": "BuildsOnAnswer",
+        "description": "evidence/kinds/builds_on.py: which papers build on which, and how influential each compared thing is."
+      },
+      "BuildsOnQ": {
+        "properties": {
+          "thing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thing"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BuildsOnQ",
+        "description": "A builds-on question (spec section 6.18): which studies build on which, for one compared thing (`thing`) or\nfor every one (None)."
+      },
       "CallDetail": {
         "properties": {
           "run": {
@@ -2625,6 +2741,264 @@
           "problems"
         ],
         "title": "Card"
+      },
+      "ChainPath": {
+        "properties": {
+          "via": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Via",
+            "default": []
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ChainStep"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "via",
+          "steps",
+          "verdict",
+          "reason"
+        ],
+        "title": "ChainPath"
+      },
+      "ChainStep": {
+        "properties": {
+          "comparison": {
+            "type": "string",
+            "title": "Comparison"
+          },
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "from": {
+            "type": "string",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "better",
+                  "worse",
+                  "no_difference"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "comparison",
+          "document",
+          "from",
+          "to",
+          "metric",
+          "direction",
+          "context"
+        ],
+        "title": "ChainStep",
+        "description": "One step of a chaining path: a comparison of `from` and `to` in one paper; `direction` is from over to."
+      },
+      "Chaining": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Target"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/QuestionMetric"
+          },
+          "min_effect": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Min Effect"
+          },
+          "max_hops": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Max Hops",
+            "default": 2
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "target",
+          "metric",
+          "min_effect"
+        ],
+        "title": "Chaining",
+        "description": "A chaining question (spec section 6.10): is `source` better than `target` on `metric`, through compared\nthings each was tested against (at most `max_hops` steps)? `min_effect` is the neutral band of every step."
+      },
+      "ChainingAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "chaining",
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "inferred": {
+            "type": "boolean",
+            "title": "Inferred",
+            "default": false
+          },
+          "via": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Via",
+            "default": []
+          },
+          "studies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Studies",
+            "default": []
+          },
+          "paths": {
+            "items": {
+              "$ref": "#/components/schemas/ChainPath"
+            },
+            "type": "array",
+            "title": "Paths",
+            "default": []
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system",
+          "source",
+          "target",
+          "metric",
+          "verdict",
+          "inferred",
+          "via",
+          "studies",
+          "paths",
+          "reason",
+          "note"
+        ],
+        "title": "ChainingAnswer",
+        "description": "evidence/kinds/chaining.py: is the source better than the target, directly or through things each was\ncompared with? `reason` is the rule that decided (null when a chain concluded)."
       },
       "Check": {
         "properties": {
@@ -4160,6 +4534,40 @@
         ],
         "title": "DecisionsResult"
       },
+      "DependencyLink": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          },
+          "reuses": {
+            "type": "string",
+            "title": "Reuses"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "reuses",
+          "items"
+        ],
+        "title": "DependencyLink",
+        "description": "A paper (`from`) that builds on an earlier one (`to`), reusing a method, dataset or result."
+      },
       "EffectAnswer": {
         "properties": {
           "kind": {
@@ -4783,6 +5191,15 @@
                     "$ref": "#/components/schemas/BestAnswer"
                   },
                   {
+                    "$ref": "#/components/schemas/ChainingAnswer"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LimitationsAnswer"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BuildsOnAnswer"
+                  },
+                  {
                     "$ref": "#/components/schemas/UnknownAnswer"
                   }
                 ]
@@ -4852,6 +5269,15 @@
             ],
             "title": "Link Flags",
             "description": "engine: links to an item of the wrong kind (reason.json `link_flags`); null when the run has no reason.json"
+          },
+          "display": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Display",
+            "description": "engine: the run's pack's display names (pack.yaml `display`), e.g. what the treatment and control sides are called; empty for a baseline or when the pack cannot be read",
+            "default": {}
           }
         },
         "type": "object",
@@ -4884,7 +5310,8 @@
           "baselines",
           "reports",
           "has_trace",
-          "link_flags"
+          "link_flags",
+          "display"
         ],
         "title": "EvRunDetail"
       },
@@ -5094,6 +5521,14 @@
             },
             "type": "object",
             "title": "Links"
+          },
+          "optional_links": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Optional Links",
+            "default": []
           },
           "context": {
             "items": {
@@ -6139,6 +6574,132 @@
         "type": "object",
         "title": "LargeEffect"
       },
+      "LimitationEntry": {
+        "properties": {
+          "thing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thing"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "papers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Papers",
+            "default": []
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "thing",
+          "category",
+          "papers",
+          "items"
+        ],
+        "title": "LimitationEntry"
+      },
+      "LimitationsAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "limitations",
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "thing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thing"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LimitationEntry"
+            },
+            "type": "array",
+            "title": "Entries",
+            "default": []
+          },
+          "counts": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Counts",
+            "default": {}
+          },
+          "unlinked": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Unlinked",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system",
+          "thing",
+          "entries",
+          "counts",
+          "unlinked"
+        ],
+        "title": "LimitationsAnswer",
+        "description": "evidence/kinds/limitations.py: the limitations the papers state, per compared thing and category."
+      },
+      "LimitationsQ": {
+        "properties": {
+          "thing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thing"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LimitationsQ",
+        "description": "A limitations question (spec section 6.18): the limitations papers report, for one compared thing (`thing`)\nor for every one (None)."
+      },
       "Locate": {
         "properties": {
           "strategy": {
@@ -7016,7 +7577,10 @@
               "effect",
               "inventory",
               "consistency",
-              "best"
+              "best",
+              "chaining",
+              "limitations",
+              "builds_on"
             ],
             "title": "Kind",
             "default": "effect"
@@ -7055,6 +7619,36 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Consistency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chaining": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Chaining"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limitations": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LimitationsQ"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "builds_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildsOnQ"
               },
               {
                 "type": "null"
@@ -7270,7 +7864,10 @@
               "effect",
               "inventory",
               "consistency",
-              "best"
+              "best",
+              "chaining",
+              "limitations",
+              "builds_on"
             ],
             "title": "Kind",
             "description": "what the question asks: an effect, an inventory, whether claims agree with results (consistency), or which method kind is best",

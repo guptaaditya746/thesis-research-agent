@@ -15,7 +15,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import yaml
 
@@ -26,6 +26,9 @@ from agent.rundir import utc_now
 from modelcall import JsonlCache
 
 from .contract import DocumentRef, Item
+
+if TYPE_CHECKING:
+    from .pack import Pack
 
 RUN_FILE, PROTOCOL_FILE, EVENTS_FILE = "run.json", "protocol.yaml", "events.jsonl"
 LOCATE_FILE, EVIDENCE_FILE, GRAPH_FILE, ANSWER_FILE = "locate.json", "evidence.jsonl", "graph.json", "answer.json"
@@ -245,19 +248,19 @@ class RunDir:
         self.register_pack()
         return [Item.model_validate(row) for row in read_lines(path)]
 
-    def register_pack(self) -> None:
-        """Register the types of the run's domain pack: the `domain` of its protocol.yaml (no key: the default
-        pack), read from the `domains` folder run.json's settings name (none: domains/). Only the pack is read,
-        not the whole protocol, so a protocol an older code wrote still loads. Without protocol.yaml (a baseline)
-        nothing is registered."""
+    def register_pack(self) -> Pack | None:
+        """Register the types of the run's domain pack and return the pack: the `domain` of its protocol.yaml (no
+        key: the default pack), read from the `domains` folder run.json's settings name (none: domains/). Only the
+        pack is read, not the whole protocol, so a protocol an older code wrote still loads. Without protocol.yaml
+        (a baseline) nothing is registered and the result is None."""
         from .protocol import DEFAULT_PACK, _pack
         text = self.file(PROTOCOL_FILE)
         if not text.is_file():
-            return
+            return None
         data = yaml.safe_load(text.read_bytes().decode("utf-8"))
         domain = data.get("domain", DEFAULT_PACK) if isinstance(data, dict) else DEFAULT_PACK
         settings = (self.try_json(RUN_FILE) or {}).get("settings") or {}
-        _pack(domain, settings.get("domains"))
+        return _pack(domain, settings.get("domains"))
 
     def events(self) -> list[dict[str, Any]] | None:
         path = self.file(EVENTS_FILE)

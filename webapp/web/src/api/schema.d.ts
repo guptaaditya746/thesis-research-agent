@@ -968,6 +968,59 @@ export interface components {
             /** Values */
             values: unknown[];
         };
+        /**
+         * BuildsOnAnswer
+         * @description evidence/kinds/builds_on.py: which papers build on which, and how influential each compared thing is.
+         */
+        BuildsOnAnswer: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "builds_on";
+            /** System */
+            system: string;
+            /** Thing */
+            thing: string | null;
+            /**
+             * Links
+             * @default []
+             */
+            links: components["schemas"]["DependencyLink"][];
+            /**
+             * Origins
+             * @default {}
+             */
+            origins: {
+                [key: string]: string | null;
+            };
+            /**
+             * Followers
+             * @default {}
+             */
+            followers: {
+                [key: string]: string[];
+            };
+            /**
+             * Influence
+             * @default {}
+             */
+            influence: {
+                [key: string]: number;
+            };
+            /**
+             * Ranking
+             * @default []
+             */
+            ranking: string[];
+            /**
+             * Unresolved
+             * @default []
+             */
+            unresolved: string[];
+        } & {
+            [key: string]: unknown;
+        };
         /** Budget */
         Budget: {
             /** Steps */
@@ -1101,6 +1154,95 @@ export interface components {
              * @default []
              */
             problems: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** ChainPath */
+        ChainPath: {
+            /**
+             * Via
+             * @default []
+             */
+            via: string[];
+            /**
+             * Steps
+             * @default []
+             */
+            steps: components["schemas"]["ChainStep"][];
+            /** Verdict */
+            verdict: string;
+            /** Reason */
+            reason: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * ChainStep
+         * @description One step of a chaining path: a comparison of `from` and `to` in one paper; `direction` is from over to.
+         */
+        ChainStep: {
+            /** Comparison */
+            comparison: string;
+            /** Document */
+            document: string;
+            /** From */
+            from: string;
+            /** To */
+            to: string;
+            /** Metric */
+            metric: string | null;
+            /** Direction */
+            direction: ("better" | "worse" | "no_difference") | null;
+            /** Context */
+            context: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * ChainingAnswer
+         * @description evidence/kinds/chaining.py: is the source better than the target, directly or through things each was
+         *     compared with? `reason` is the rule that decided (null when a chain concluded).
+         */
+        ChainingAnswer: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "chaining";
+            /** System */
+            system: string;
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+            /** Metric */
+            metric: string | null;
+            /** Verdict */
+            verdict: string;
+            /**
+             * Inferred
+             * @default false
+             */
+            inferred: boolean;
+            /**
+             * Via
+             * @default []
+             */
+            via: string[];
+            /**
+             * Studies
+             * @default []
+             */
+            studies: string[];
+            /**
+             * Paths
+             * @default []
+             */
+            paths: components["schemas"]["ChainPath"][];
+            /** Reason */
+            reason: string | null;
+            /** Note */
+            note: string | null;
         } & {
             [key: string]: unknown;
         };
@@ -1688,6 +1830,25 @@ export interface components {
             problems: string[];
         };
         /**
+         * DependencyLink
+         * @description A paper (`from`) that builds on an earlier one (`to`), reusing a method, dataset or result.
+         */
+        DependencyLink: {
+            /** From */
+            from: string;
+            /** To */
+            to: string;
+            /** Reuses */
+            reuses: string;
+            /**
+             * Items
+             * @default []
+             */
+            items: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * EffectAnswer
          * @description An effect answer: today's shape, no `kind` key (old answer.json files have none).
          */
@@ -1938,7 +2099,7 @@ export interface components {
             /** Source Run */
             source_run: string | null;
             /** Answer */
-            answer: (components["schemas"]["EffectAnswer"] | components["schemas"]["InventoryAnswer"] | components["schemas"]["ConsistencyAnswer"] | components["schemas"]["BestAnswer"] | components["schemas"]["UnknownAnswer"]) | null;
+            answer: (components["schemas"]["EffectAnswer"] | components["schemas"]["InventoryAnswer"] | components["schemas"]["ConsistencyAnswer"] | components["schemas"]["BestAnswer"] | components["schemas"]["ChainingAnswer"] | components["schemas"]["LimitationsAnswer"] | components["schemas"]["BuildsOnAnswer"] | components["schemas"]["UnknownAnswer"]) | null;
             /**
              * Funnel
              * @description funnel.json documents
@@ -1975,6 +2136,14 @@ export interface components {
              * @description engine: links to an item of the wrong kind (reason.json `link_flags`); null when the run has no reason.json
              */
             link_flags: number | null;
+            /**
+             * Display
+             * @description engine: the run's pack's display names (pack.yaml `display`), e.g. what the treatment and control sides are called; empty for a baseline or when the pack cannot be read
+             * @default {}
+             */
+            display: {
+                [key: string]: string;
+            };
         };
         /** EvRunSummary */
         EvRunSummary: {
@@ -2542,6 +2711,63 @@ export interface components {
              * @default 3
              */
             min_studies?: number;
+        };
+        /** LimitationEntry */
+        LimitationEntry: {
+            /** Thing */
+            thing: string | null;
+            /** Category */
+            category: string;
+            /**
+             * Papers
+             * @default []
+             */
+            papers: string[];
+            /**
+             * Items
+             * @default []
+             */
+            items: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * LimitationsAnswer
+         * @description evidence/kinds/limitations.py: the limitations the papers state, per compared thing and category.
+         */
+        LimitationsAnswer: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "limitations";
+            /** System */
+            system: string;
+            /** Thing */
+            thing: string | null;
+            /**
+             * Entries
+             * @default []
+             */
+            entries: components["schemas"]["LimitationEntry"][];
+            /**
+             * Counts
+             * @default {}
+             */
+            counts: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            /**
+             * Unlinked
+             * @default {}
+             */
+            unlinked: {
+                [key: string]: number;
+            };
+        } & {
+            [key: string]: unknown;
         };
         /** Locate */
         Locate: {

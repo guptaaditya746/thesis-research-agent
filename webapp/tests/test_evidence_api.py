@@ -13,12 +13,14 @@ from fastapi.testclient import TestClient
 from agent.anchor import read_text
 from evaluation import losses as losses_module
 from evaluation.report import dumps
+from evidence.rundir import RunDir
 from webapp.app import create_app
 from webapp.evfiles import RecordCache, segments
 from webapp.evmodels import CAUSES, Losses
 from webapp.settings import Settings
 
 from .evidence_world import NAME, POSIX, EvidenceWorld
+from .test_evanswers import BUILDS_ON, CHAINING, LIMITATIONS
 
 MIXED, EXPLICIT = f"{NAME}-mixed", f"{NAME}-explicit"
 
@@ -321,6 +323,26 @@ def test_run_detail_counts_the_link_flags_of_reason_json(ev_fresh: EvidenceWorld
     (run_dir / "reason.json").unlink()
     with TestClient(create_app(settings_for(ev_fresh))) as client:
         assert client.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["link_flags"] is None
+
+
+
+@pytest.mark.parametrize("raw", [CHAINING, LIMITATIONS, BUILDS_ON], ids=lambda raw: raw["kind"])
+def test_a_run_of_each_new_kind_opens(ev_fresh: EvidenceWorld, raw: dict[str, object]) -> None:
+    """Plan 2's answer kinds load as their own models, so their run pages open (preflight F43)."""
+    (ev_fresh.runs / "cascade-gaps" / MIXED / "answer.json").write_text(json.dumps(raw), encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        response = client.get(f"/api/ev/runs/cascade-gaps~{MIXED}")
+    assert response.status_code == 200
+    answer = response.json()["answer"]
+    assert answer["kind"] == raw["kind"] and {k: answer[k] for k in raw} == raw
+
+
+def test_run_detail_has_the_packs_display_names(ev: TestClient, ev_world: EvidenceWorld) -> None:
+    """The two sides by the topic's own names (Pack.display); a baseline has no pack, so none."""
+    pack = RunDir(ev_world.runs / "cascade-gaps" / MIXED).register_pack()
+    assert pack is not None and pack.display
+    assert ev.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["display"] == pack.display
+    assert ev.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()["display"] == {}
 
 
 # --- pieces --------------------------------------------------------------------------------------------
