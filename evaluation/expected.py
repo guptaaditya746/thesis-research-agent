@@ -3,8 +3,9 @@
 `expected(truth, kind, params, protocol=None)` gives the answer shape of the kind's rules module
 (evidence/kinds/), with study ids as documents and `system` "ground-truth". The truth parameters (`params`, from
 domains/rag/questions.yaml) decide the metric, the neutral band and the inventory target. Everything else (the
-compared roles, the claim vocabulary, the flag thresholds, the label table) is the generator's own spec
-(synth/truth.default_spec, rag-factuality's synthesis block), never the passed protocol, which a user may have
+compared roles, the claim vocabulary, the flag thresholds, the label table) is the generator's own spec: the
+synthesis block of the corpus domain's effect protocol (`effect_spec`: generator.yaml `effect_protocol`, read as
+YAML data; plan 2 Task 12, preflight P15), never the passed protocol, which a user may have
 edited (Part D): truth must not change with the user's protocol. The protocol supplies only the effect answer's
 `question` text and its id for the shortcut below.
 
@@ -23,37 +24,40 @@ Rules:
 - Main experiment: the experiment of the study's `effect.treatment` measurement (else `effect.control`, else
   the first measurement); only its measurements are read. A study without experiments has one.
 - Metric: a truth metric matches `params.metric` when its `canonical` equals it (factual_accuracy,
-  hallucination_rate) or when both names have the same `canon.key` (latency, written "latency" or "Lat.").
+  hallucination_rate) or when both names have the same `Canon.key` (latency, written "latency" or "Lat.").
 - Dataset: the first dataset in measurement order within the main experiment that has the values needed (both
   compared roles for effect and consistency, two method kinds for best); the first value of each side there.
 - effect: `rules.effect` with `params.min_effect` and the metric's `higher_is_better`, `rules.label` over the
   counts. The author claim is about the study's question metric (its first): `agrees_with_data`, and so the
   `claim_disagrees` flag, only when that metric matches `params.metric` (else null: a claim about accuracy says
   nothing about latency). consistency: only studies whose question metric (their first) matches `params.metric`; `agrees` is
-  `rules.claim_agrees` while both the claim and the direction are known. inventory: the `canon.key` of every
-  name over the relevant papers (a name vocab does not know is its own key, whitespace collapsed); `aliases`
+  `rules.claim_agrees` while both the claim and the direction are known. inventory: the `Canon.key` of every
+  name over the relevant papers (a name the table does not know is its own key, whitespace collapsed); `aliases`
   are the other forms truth uses for the key, `papers` sorted study ids, `items` the fact ids. best: each
-  condition's kind is `canon.KIND_OF` of its label's key; the kind with the top value wins, a tie gives none.
+  condition's kind is `Canon.kind_of` its label; the kind with the top value wins, a tie gives none.
+
+The name table (`Canon`) is the corpus's own, `Canon.from_truth(truth)`, unless the caller passes one.
 """
 from __future__ import annotations
 
 import copy
 from functools import cache
+from pathlib import Path
 from typing import Any
 
 from evidence import rules
 from evidence.kinds import best as best_rules
-from evidence.protocol import Kind, Protocol, Synthesis
+from evidence.pack import DOMAINS
+from evidence.protocol import DEFAULT_PACK, Kind, Protocol, Synthesis
+from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionTruth
-from synth.truth import default_spec
 
-from . import canon
+from .canon import Canon, fold, recipe_data
 from .truth import GroundTruth
 
 SYSTEM = "ground-truth"
 SAVED_ANSWER_IDS = frozenset({"rag-factuality", "rag-factuality-agentic"})   # protocols of the corpus's own question
 SAVED_ANSWER_METRIC = "factual_accuracy"
-KINDS: tuple[str, ...] = tuple(dict.fromkeys(canon.KIND_OF.values()))
 NAME_FIELD = {"condition": "label", "metric": "name"}
 GROUPS = (("supporting", "supports"), ("contradicting", "contradicts"), ("neutral", "neutral"),
           ("undetermined", "undetermined"))
@@ -65,15 +69,22 @@ SKIP_TEXT = {"screened_out": "not relevant (no experiment)", "duplicate": "a dup
 
 
 @cache
-def _default() -> Synthesis:
-    return default_spec()
+def effect_spec(domain: str = DEFAULT_PACK, root: Path = DOMAINS) -> Synthesis:
+    """The synthesis block of `domain`'s effect protocol: generator.yaml `effect_protocol` (read as YAML data) in
+    `<root>/<domain>/protocols/`; the generator draws a corpus of that domain by it."""
+    recipe = recipe_data(domain, root)
+    if recipe is None or not recipe.get("effect_protocol"):
+        raise ValueError(f"no effect protocol for domain {domain!r}: {Path(root) / domain / 'generator.yaml'} is "
+                         "missing or names no effect_protocol")
+    path = Path(root) / domain / "protocols" / f"{recipe['effect_protocol']}.yaml"
+    return load_protocol(path, None if Path(root) == DOMAINS else root).synthesis
 
 
 def _reason(code: str, **fmt: Any) -> dict[str, str]:
     return {"code": code, "text": SKIP_TEXT[code].format(**fmt)}
 
 
-def _matches(metric: dict[str, Any], wanted: str) -> bool:
+def _matches(metric: dict[str, Any], wanted: str, canon: Canon) -> bool:
     if metric.get("canonical") == wanted:
         return True
     k = canon.key("metric", wanted)
@@ -95,13 +106,13 @@ def _question_metric(study: dict[str, Any]) -> dict[str, Any] | None:
     return metrics[0] if metrics else None
 
 
-def _skip(study: dict[str, Any], metric: str) -> dict[str, str] | None:
+def _skip(study: dict[str, Any], metric: str, canon: Canon) -> dict[str, str] | None:
     """Why a relevant study is not counted (duplicate, missing side), or why an irrelevant one is undetermined."""
     if not study.get("relevant", True):
         return _reason("screened_out")
     side = study.get("missing")
     q = _question_metric(study)
-    if side and q is not None and _matches(q, metric):
+    if side and q is not None and _matches(q, metric, canon):
         return _reason(f"missing_{side}")
     return None
 
@@ -121,24 +132,24 @@ def _first_dataset(ms: list[dict[str, Any]], side_of: dict[str, str], need: int)
     return None
 
 
-def _on_metric(study: dict[str, Any], metric: str) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
-    metrics = {k["id"]: k for k in study.get("metrics") or [] if _matches(k, metric)}
+def _on_metric(study: dict[str, Any], metric: str, canon: Canon) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    metrics = {k["id"]: k for k in study.get("metrics") or [] if _matches(k, metric, canon)}
     return [m for m in _main(study) if m["metric"] in metrics], metrics
 
 
 # effect ------------------------------------------------------------------------------------------------------
 
-def _effect_study(study: dict[str, Any], params: QuestionTruth, spec: Synthesis) -> dict[str, Any]:
+def _effect_study(study: dict[str, Any], params: QuestionTruth, spec: Synthesis, canon: Canon) -> dict[str, Any]:
     assert params.metric is not None and params.min_effect is not None, "effect truth takes metric and min_effect"
     entry: dict[str, Any] = {"document": study["paper"], "direction": "undetermined", "delta": None, "metric": None,
                              "treatment": None, "control": None, "author_claim": None, "reason": None, "flags": [],
                              "duplicate_of": None}
     claim = study.get("author_claim")
-    skip = _skip(study, params.metric)
+    skip = _skip(study, params.metric, canon)
     if skip is not None:
         entry["reason"] = skip
         return entry
-    ms, metrics = _on_metric(study, params.metric)
+    ms, metrics = _on_metric(study, params.metric, canon)
     roles = {c["id"]: c["role"] for c in study.get("conditions") or []
              if c["role"] in (spec.compare.treatment, spec.compare.control)}
     pair = _first_dataset(ms, roles, 2)
@@ -154,7 +165,7 @@ def _effect_study(study: dict[str, Any], params: QuestionTruth, spec: Synthesis)
                      control={"condition": c["condition"], "measurement": c["id"], "value": c["value"]})
     if claim:
         # the claim is about the study's question metric, its first; on another metric it says nothing: null
-        on_metric = (q := _question_metric(study)) is not None and _matches(q, params.metric)
+        on_metric = (q := _question_metric(study)) is not None and _matches(q, params.metric, canon)
         determined = entry["direction"] != "undetermined" and on_metric
         entry["author_claim"] = {"item": claim["id"], "direction": claim["direction"],
                                  "agrees_with_data": rules.claim_agrees(claim["direction"], entry["direction"],
@@ -162,9 +173,9 @@ def _effect_study(study: dict[str, Any], params: QuestionTruth, spec: Synthesis)
     return entry
 
 
-def _effect(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) -> dict[str, Any]:
-    spec = _default()
-    studies = [_effect_study(s, params, spec) for s in truth.studies]
+def _effect(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
+    spec = effect_spec(canon.domain, canon.root)
+    studies = [_effect_study(s, params, spec, canon) for s in truth.studies]
     determined = {e["document"] for e in studies if e["direction"] != "undetermined"}
     dup_of = {s["paper"]: s["duplicate_of"] for s in truth.studies   # the engine finds duplicates among determined studies
               if s.get("duplicate_of") and s["paper"] in determined}
@@ -188,20 +199,20 @@ def _effect(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None
     groups["duplicates"] = [e["document"] for e in studies if e["duplicate_of"] is not None]
     counts = {k: len(v) for k, v in groups.items()}
     return {"system": SYSTEM, "question": protocol.question if protocol is not None else "",
-            "label": rules.label(counts, _default().table), "counts": counts, "studies": studies, **groups, "flags": flags}
+            "label": rules.label(counts, spec.table), "counts": counts, "studies": studies, **groups, "flags": flags}
 
 
 # consistency -------------------------------------------------------------------------------------------------
 
-def _consistency(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) -> dict[str, Any]:
+def _consistency(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
     assert params.metric is not None, "consistency truth takes metric"
-    spec = _default()
+    spec = effect_spec(canon.domain, canon.root)
     studies = []
     for s in truth.studies:
         q = _question_metric(s)
-        if not s.get("relevant", True) or q is None or not _matches(q, params.metric):
+        if not s.get("relevant", True) or q is None or not _matches(q, params.metric, canon):
             continue
-        full = _effect_study(s, params, spec)
+        full = _effect_study(s, params, spec, canon)
         claim = (s.get("author_claim") or {}).get("direction")
         reason = full["reason"]
         if reason is None and s.get("duplicate_of"):
@@ -227,7 +238,7 @@ def _forms(truth: GroundTruth, study: dict[str, Any], target: str) -> list[tuple
     return [(e["id"], " ".join(str(e[NAME_FIELD[target]]).split())) for e in entries]
 
 
-def _inventory(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) -> dict[str, Any]:
+def _inventory(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
     target = params.target
     assert target is not None, "inventory truth takes target"
     groups: dict[str, dict[str, Any]] = {}
@@ -236,19 +247,19 @@ def _inventory(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | N
             continue
         for fact_id, form in _forms(truth, s, target):
             name = canon.key(target, form) or form
-            g = groups.setdefault(canon.fold(name), {"name": name, "forms": set(), "papers": set(), "items": []})
+            g = groups.setdefault(fold(name), {"name": name, "forms": set(), "papers": set(), "items": []})
             g["forms"].add(form)
             g["papers"].add(s["paper"])
             g["items"].append(fact_id)
     entries = [{"name": g["name"], "aliases": sorted(f for f in g["forms"] if f != g["name"]),
                 "papers": sorted(g["papers"]), "items": g["items"]}
-               for g in sorted(groups.values(), key=lambda g: (canon.fold(g["name"]), g["name"]))]
+               for g in sorted(groups.values(), key=lambda g: (fold(g["name"]), g["name"]))]
     return {"kind": "inventory", "system": SYSTEM, "target": target, "entries": entries}
 
 
 # best --------------------------------------------------------------------------------------------------------
 
-def _best_study(study: dict[str, Any], metric: str) -> dict[str, Any]:
+def _best_study(study: dict[str, Any], metric: str, canon: Canon) -> dict[str, Any]:
     entry: dict[str, Any] = {"document": study["paper"], "winner": None, "tied": [], "values": {}, "reason": None}
     skip = _reason("screened_out") if not study.get("relevant", True) else None   # a `missing` study still counts
     if skip is None and study.get("duplicate_of"):
@@ -256,10 +267,10 @@ def _best_study(study: dict[str, Any], metric: str) -> dict[str, Any]:
     if skip is not None:
         entry["reason"] = skip
         return entry
-    ms, metrics = _on_metric(study, metric)
+    ms, metrics = _on_metric(study, metric, canon)
     main = {m["condition"] for m in _main(study)}
     kinds = {c["id"]: k for c in study.get("conditions") or [] if c["id"] in main
-             and (k := canon.KIND_OF.get(canon.key("condition", c["label"]) or "")) is not None}
+             and (k := canon.kind_of(c["label"])) is not None}
     if len(set(kinds.values())) < 2:
         entry["reason"] = {"code": "too_few_kinds", "text": best_rules.REASONS["too_few_kinds"]}
         return entry
@@ -267,7 +278,7 @@ def _best_study(study: dict[str, Any], metric: str) -> dict[str, Any]:
     if chosen is None:
         entry["reason"] = {"code": "no_comparison", "text": best_rules.REASONS["no_comparison"].format(metric=metric)}
         return entry
-    values = {k: float(chosen[k]["value"]) for k in KINDS if k in chosen}
+    values = {k: float(chosen[k]["value"]) for k in canon.kinds if k in chosen}
     higher = bool(metrics[next(iter(chosen.values()))["metric"]]["higher_is_better"])
     top = (max if higher else min)(values.values())
     leaders = sorted(k for k, v in values.items() if v == top)
@@ -276,10 +287,10 @@ def _best_study(study: dict[str, Any], metric: str) -> dict[str, Any]:
     return entry
 
 
-def _best(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) -> dict[str, Any]:
+def _best(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
     assert params.metric is not None, "best truth takes metric"
-    studies = [_best_study(s, params.metric) for s in truth.studies]
-    wins = {k: n for k in KINDS if (n := sum(1 for s in studies if s["winner"] == k))}
+    studies = [_best_study(s, params.metric, canon) for s in truth.studies]
+    wins = {k: n for k in canon.kinds if (n := sum(1 for s in studies if s["winner"] == k))}
     most = max(wins.values(), default=0)
     leaders = sorted(k for k, n in wins.items() if n == most) if most else []
     return {"kind": "best", "system": SYSTEM, "metric": params.metric, "studies": studies, "wins": wins,
@@ -295,8 +306,9 @@ def saved_answer(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol
                 and protocol.id in SAVED_ANSWER_IDS)
 
 
-def expected(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None = None) -> dict[str, Any]:
-    """The kind's answer as ground truth gives it (module docstring)."""
+def expected(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None = None,
+             canon: Canon | None = None) -> dict[str, Any]:
+    """The kind's answer as ground truth gives it (module docstring); `canon` defaults to the corpus's own table."""
     if saved_answer(truth, kind, params, protocol):
         return copy.deepcopy(truth.answer)
-    return BUILDERS[kind](truth, params, protocol)
+    return BUILDERS[kind](truth, params, protocol, canon or Canon.from_truth(truth))
