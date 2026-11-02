@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 
+from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK
 from synth.levels import LEVELS
 from synth.truth import DIRECTIONS, KNOBS, PRESETS
@@ -86,10 +87,13 @@ def cmd_build(args: argparse.Namespace) -> int:
     if args.hard and args.renderer == "llm":
         print(f"ERROR: {HARD_LLM}", file=sys.stderr, flush=True)
         return 2
+    if args.renderer == "llm" and not corpus.gate(args.domain, args.root):
+        print(f"ERROR: {corpus.GATE_MESSAGE}", file=sys.stderr, flush=True)
+        return 2
     renderer = make_renderer(args, args.out)
     result = corpus.build(name=args.name, seed=args.seed, studies=args.studies, renderer=renderer, out=args.out,
                           levels=args.levels, mix=args.effects, protocol=args.protocol, hard=args.hard,
-                          domain=args.domain, preset=args.preset, **{knob: getattr(args, knob) for knob in KNOBS})
+                          domain=args.domain, root=args.root, preset=args.preset, **{knob: getattr(args, knob) for knob in KNOBS})
     print(json.dumps(result, indent=2))
     if result["excluded"]:
         print(f"WARNING: {len(result['excluded'])} studies failed fidelity and were left out; see fidelity.json")
@@ -104,6 +108,15 @@ def cmd_build(args: argparse.Namespace) -> int:
               f"{args.min_retained:g}", file=sys.stderr, flush=True)
         return 1
     return 0
+
+
+def cmd_trial(args: argparse.Namespace) -> int:
+    from synth import corpus
+    args.renderer = "llm"
+    renderer = make_renderer(args, args.root / args.domain)
+    result = corpus.trial(args.domain, renderer=renderer, root=args.root, seed=args.seed)
+    print(json.dumps({k: result[k] for k in ("recipe_sha256", "passed", "studies")}, indent=2))
+    return 0 if result["passed"] else 1
 
 
 def cmd_variant(args: argparse.Namespace) -> int:
@@ -178,8 +191,16 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--preset", choices=PRESETS, default="plain",
                    help="builds_on: about the recipe's builds_on.share of the studies reuse an earlier study's method, "
                         "dataset or result (the recipe needs a builds_on block); default plain")
+    b.add_argument("--root", type=Path, default=DOMAINS, help="the folder of domains (default domains/)")
     add_renderer_options(b)
     b.set_defaults(func=cmd_build)
+    t = sub.add_parser("trial", help="write 5 builds_on papers with the LLM renderer and record whether they all pass "
+                                     "(domains/<domain>/trial.json); build --renderer llm needs a passing one")
+    t.add_argument("--domain", required=True)
+    t.add_argument("--seed", type=int, default=0)
+    t.add_argument("--root", type=Path, default=DOMAINS, help="the folder of domains (default domains/)")
+    add_renderer_options(t, default="llm")
+    t.set_defaults(func=cmd_trial)
     v = sub.add_parser("variant", help="change one study's effect and re-render only its paper (counterfactual)")
     v.add_argument("--corpus", type=Path, required=True, help="a built corpus directory")
     v.add_argument("--study", required=True)

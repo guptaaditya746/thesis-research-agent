@@ -324,3 +324,42 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
     flags = {s.study_id: study_flags(papers[s.study_id], protocol.synthesis, s) for s in kept}   # the mixed corpus's
     return {"corpora": written, "excluded": failed, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
             "settings": settings, "selection": selection, "answer": truth.answer(kept, protocol.synthesis, flags)}
+
+
+BLIND_CHECKS = ("blind_reextraction", "blind_limitations", "blind_dependencies")
+GATE_MESSAGE = "no passing 5-paper trial for this generator.yaml (run synth trial)"
+
+
+def trial(domain: str, *, renderer: Renderer, root: Path = DOMAINS, seed: int = 0, studies: int = 5) -> dict[str, Any]:
+    """The gate before an LLM-written corpus (D39): write `studies` builds_on papers of the recipe's domain (one level
+    each, round robin, so `levels` is ["mixed"]) with `renderer`, and record `root/<domain>/trial.json`. It passes when
+    every paper passes every check (within the renderer's attempts) and the blind reader's three checks all ran and
+    passed; a verify model is required. `recipe_sha256` ties the result to the recipe it was run on (`gate`)."""
+    if getattr(renderer, "verify_model", None) is None:
+        raise SystemExit("a trial needs a verify model (--verify-model): the blind reader is what it measures")
+    recipe = load_recipe(domain, root)
+    protocol = protocol_module.load(effect_protocol_path(recipe), None if root == DOMAINS else root)
+    study_set = truth.generate(seed, studies, None, protocol.synthesis, recipe=recipe, preset="builds_on")
+    jobs = [(s, level_of(s, study_set, LEVELS)) for s in study_set]
+    rendered = renderer.render_all(jobs, seed)
+    papers = [rendered[(s.study_id, lv)] for s, lv in jobs]
+    blind = [{"id": r.study.study_id, "checks": [{"name": c.name, "ok": c.ok, "detail": c.detail}
+                                                for c in r.fidelity.checks if c.name in BLIND_CHECKS]}
+             for r in papers]
+    blind_ok = all([c["name"] for c in b["checks"]] == list(BLIND_CHECKS) and all(c["ok"] for c in b["checks"])
+                   for b in blind)
+    result = {"recipe_sha256": recipe.sha256, "renderer": renderer.name, "models": renderer.models(),
+              "studies": studies, "levels": ["mixed"], "seed": seed, "preset": "builds_on",
+              "passed": bool(papers) and all(r.fidelity.ok for r in papers) and blind_ok,
+              "fidelity": [r.fidelity.json() for r in papers], "blind": blind}
+    (Path(root) / domain / "trial.json").write_bytes(dump(result))
+    return result
+
+
+def gate(domain: str, root: Path = DOMAINS) -> bool:
+    """True when `root/<domain>/trial.json` passed on the recipe as it is now (same sha256)."""
+    path = Path(root) / domain / "trial.json"
+    if not path.is_file():
+        return False
+    record = json.loads(path.read_text(encoding="utf-8"))
+    return bool(record.get("passed")) and record.get("recipe_sha256") == load_recipe(domain, root).sha256
