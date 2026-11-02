@@ -85,8 +85,8 @@ Correctness, completeness and traceability are the supervisor's three comparison
 `[{document, start, end}]) that overlap (share a character with) a ground-truth placement of role `value`,
 `metric_label` or `claim` of the paper they cite (strict: a passage touching only a condition label traces
 nothing), over all cited passages; **overlap** is the lenient share, over a placement of any role. The
-citations the baseline dropped (`answer.dropped_citations`: ones naming no retrieved passage, the clearest untraceable
-case) count as untraced; `null` for an answer without citations (the engine's spans are scored in A).
+citations the baseline dropped (`answer.dropped_citations`: ones naming no passage it was given, the clearest
+untraceable case) count as untraced; `null` for an answer without citations (the engine's spans are scored in A).
 The confusion counts include expected `undetermined`.
 
 Flags (C, F4; `score_flags`): null for an answer without a `flags` key (the baselines, and engine
@@ -123,7 +123,7 @@ papers it is scored on; inventory precision, recall and F1, resampling the names
 Attribution (`attribute`, Tim M2 §5C, our addition; with `evaluate score --oracle`): per scored study, whether
 a system's direction is right and whether the oracle's is (evaluation/oracle.py: the synthesis on perfect
 evidence; or the RAG baseline on the passages holding the values). A study the system gets wrong is an
-`upstream` error (extraction or retrieval) when the oracle gets it right, a `downstream` one (synthesis or
+`upstream` error (extraction or passage search) when the oracle gets it right, a `downstream` one (synthesis or
 reasoning) when the oracle is wrong too. Counted per level and `all`, only for the oracle's counterpart
 (`oracle-synthesis` -> the engine, `rag-oracle-passages` -> the RAG baseline); any other system is listed under
 `not_attributed`, since an oracle that is right says nothing about where another system went wrong.
@@ -162,7 +162,7 @@ from evidence.kinds import best as best_rules
 from evidence.kinds import limitations as limitation_rules
 from evidence.protocol import Protocol
 from evidence.protocol import load as load_protocol
-from evidence.questions import QuestionEntry, QuestionTruth
+from evidence.questions import QuestionEntry, QuestionTruth, default_entry
 from evidence.questions import answered_by, answers_asked, load as load_questions, protocol_file
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS, VALUE_DECIMALS
@@ -174,7 +174,7 @@ from .stats import bootstrap, bootstrap_f1, bootstrap_mean, interval_row, micro_
 from .truth import (DATASET, ENGINE, LIMITATION, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids,
                     read_json)
 
-DEFAULT_QUESTION = "rag-factuality"   # the corpus's own question (its saved answer, _question_text)
+DEFAULT_QUESTION = default_entry().id   # the corpus's own question (its saved answer, _question_text)
 
 VALUE_TOLERANCE = 0.005
 INFEASIBLE = 1e6
@@ -234,7 +234,7 @@ OTHER = "other"
 def protocol_canonical(data: dict[str, Any], canonicals: tuple[str, ...], canon: Canon | None = None) -> Any:
     """A metric fact's canonical in a protocol's `canonical` enum: its own when the enum has it (not `other`); else an
     enum value with the `Canon.key` of the fact's name (latency, which truth files under `other`); else `other`
-    when the enum has it (a canonical the enum lacks: rag-latency's [latency, other] has no factual_accuracy);
+    when the enum has it (a canonical the enum lacks: an enum [latency, other] has no other question metric);
     else its own. `canon` is the corpus's name table (default: the default pack's, `default_canon`)."""
     canon = canon or default_canon()
     own = data.get("canonical")
@@ -543,7 +543,7 @@ def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None,
                     dropped: list[dict[str, Any]] | None = None) -> dict[str, Counter[str]] | None:
     """Traceability counts per level (and ALL): cited passages, `overlaps_placement` (those overlapping a
     placement of any role of the cited paper) and `traced` (those overlapping a `value`, `metric_label` or
-    `claim` placement). The baseline's dropped citations (naming no retrieved passage) are cited passages
+    `claim` placement). The baseline's dropped citations (naming no passage it was given) are cited passages
     that are never traced. A cited paper outside the ground truth counts under ALL only.
     None without a `citations` list (the engine)."""
     if citations is None:
@@ -622,8 +622,10 @@ def attribute(truth: GroundTruth, system_answer: dict[str, Any], oracle_answer: 
     return out
 
 
-# An oracle stands in for one system with its input made perfect; its errors say nothing about another system's.
-COUNTERPARTS = {"oracle-synthesis": (ENGINE,), "rag-oracle-passages": ("rag-baseline",)}
+# An oracle stands in for one system with its input made perfect; its errors say nothing about another system's. The
+# passage oracle's counterpart is the BM25 answer baseline, by its id since plan 2 and by its old id (answers written
+# before, D36; plan 2 preflight P20).
+COUNTERPARTS = {"oracle-synthesis": (ENGINE,), "rag-oracle-passages": ("bm25-answer-baseline", "rag-baseline")}
 
 
 def score_attribution(truth: GroundTruth, answers: list[dict[str, Any]], oracle_answer: dict[str, Any] | None

@@ -29,12 +29,14 @@ each, in paper and offset order; steps 3 and 4 are unchanged, and `k`, `mode` an
 --oracle`); answer.json has `system: rag-oracle-passages`, `settings.retrieval: oracle_passages` and
 `retrieved` without scores.
 
-answer.json has `system: rag-baseline`, the A4 shape from the mapping (`label`, `counts`, `studies`,
+answer.json has `system: bm25-answer-baseline` (spec section 6.1; answers written before plan 2 say `rag-baseline`,
+and their run folders keep that name, D36), the A4 shape from the mapping (`label`, `counts`, `studies`,
 groups, `label_by_rule`), `answer_text` (the model's own answer), `citations` and `retrieved`
 (`[{document, start, end(, score)}]`, raw character offsets into the paper text as agent/anchor.read_text
 and the placements use), `settings`, `model_call` and `mapping_call`.
 
-`question_id` (CLI `--question-id`): a question of domains/rag/questions.yaml instead of `question`; its text is
+`question_id` (CLI `--question-id`): a question of `questions` (a pack's questions.yaml, default the default pack's)
+instead of `question`; its text is
 asked and retrieved with, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
 common.kind_answer_json); an effect question keeps the shape above. An empty answer of another kind is the kind's
 empty answer without a call.
@@ -54,10 +56,10 @@ from gold.chunks import split
 from modelcall import JsonlCache
 
 from ..truth import GroundTruth
-from .common import (DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, cached_reply, empty_reply,
-                     kind_answer_json, kind_params, map_answer)
+from .common import (DEFAULT_QUESTION, DEFAULT_QUESTIONS, AnswerReply, SystemCorpus, answer_json, cached_reply,
+                     empty_reply, kind_answer_json, kind_params, map_answer)
 
-SYSTEM = "rag-baseline"
+SYSTEM = "bm25-answer-baseline"   # spec section 6.1; old answers and run folders keep "rag-baseline" (D36)
 ORACLE_SYSTEM = "rag-oracle-passages"   # the diagnostic that reads ground_truth.json
 MODES = ("global", "per_paper")
 DEFAULT_MODE = "global"
@@ -188,14 +190,15 @@ def mapping_text(answer: CitedAnswer, kept: list[dict[str, Any]]) -> str:
 def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None, k: int | None = None,
                  mode: str = DEFAULT_MODE, max_chars: int = MAX_CHARS, cache: JsonlCache | None = None,
                  model_id: str | None = None, seed: int = 0, oracle: bool = False,
-                 question_id: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
+                 question_id: str | None = None, max_tokens: int | None = None,
+                 questions: Path = DEFAULT_QUESTIONS) -> dict[str, Any]:
     """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
     `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json). `question_id`: a
-    question of domains/rag/questions.yaml (not with `question`; default the RAG factuality question).
+    question of `questions` (not with `question`; default the default question, common.DEFAULT_QUESTION).
     `max_tokens`: the answer call's limit (default `MAX_TOKENS[mode]`, oracle 4096; recorded in `settings` only per_paper)."""
     if question is not None and question_id is not None:
         raise ValueError("give question or question_id, not both")
-    params = kind_params(question_id) if question_id is not None else None
+    params = kind_params(question_id, questions) if question_id is not None else None
     question = params.question if params else (question or DEFAULT_QUESTION)
     corpus = SystemCorpus(corpus_dir)
     if oracle and (k is not None or mode != DEFAULT_MODE or max_chars != MAX_CHARS):

@@ -94,6 +94,9 @@ def test_an_oracle_attributes_only_its_own_counterpart(tmp_path: Path) -> None:
     assert att["not_attributed"] == ["rag-baseline", "agent-baseline"]
     att = score_attribution(truth, [rag_answer, passages], passages)
     assert [s["system"] for s in att["systems"]] == ["rag-baseline"] and att["not_attributed"] == []
+    renamed = rag_answer | {"system": "bm25-answer-baseline"}   # its id since plan 2; the old id above still counts
+    att = score_attribution(truth, [renamed, passages], passages)
+    assert [s["system"] for s in att["systems"]] == ["bm25-answer-baseline"] and att["not_attributed"] == []
     fx.dump(tmp_path / "rag.json", rag_answer)
     fx.dump(tmp_path / "oracle.json", synthesis)
     assert cli.main(["score", "--corpus", str(corpus), "--baseline", str(tmp_path / "rag.json"),

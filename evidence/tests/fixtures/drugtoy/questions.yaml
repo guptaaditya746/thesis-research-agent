@@ -11,3 +11,11 @@ questions:
     kind: chaining
     truth: {metric: response_rate, min_effect: 0.01, source: Zelvora, target: Morvectin}
     protocol: protocols/drugtoy-chain.yaml
+  - id: drug-limits
+    question: Which limitations do the papers state about Zelvora?
+    kind: limitations
+    protocol: protocols/drugtoy-limits.yaml
+  - id: drug-builds-on
+    question: Which later studies build on Zelvora, and how influential is it?
+    kind: builds_on
+    protocol: protocols/drugtoy-builds-on.yaml

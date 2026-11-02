@@ -114,6 +114,15 @@ def load(path: Path | str = DEFAULT) -> list[QuestionEntry]:
     return parse(Path(path)).questions
 
 
+def default_entry(path: Path | str = DEFAULT) -> QuestionEntry:
+    """The default question of a questions file: its first effect question (code names no question, D35; for the
+    default pack it is the question its corpora are generated for)."""
+    found = [q for q in load(path) if q.kind == "effect"]
+    if not found:
+        raise ValueError(f"{path} has no effect question, so no default question")
+    return found[0]
+
+
 def protocol_file(path_text: str, questions_file: Path | str = DEFAULT) -> Path:
     """An entry's `protocol` or `agentic_protocol` as a file: the path is relative to the questions file's folder
     (the pack folder, domains/<pack>/)."""

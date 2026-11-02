@@ -36,12 +36,14 @@ def two_calls(mapped: Any) -> Scripted:
 
 
 def test_effect_mapping_prompt_unchanged() -> None:
-    """Existing baseline caches still hit: the effect mapping prompt and its schema hash as before A7."""
-    assert prompt_sha256(common.MAP_INSTRUCTIONS, common.AnswerReply) == \
-        "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff"
+    """D36: the default question's mapping call is map-effect-v2 filled from its protocol and the pack's display names
+    (the special-cased v1 instructions are gone, so caches written before plan 2 miss once); pinned from here on."""
     params = common.kind_params("rag-factuality")
     assert params.kind == "effect" and params.question == common.DEFAULT_QUESTION
-    assert common.map_prompt(params) == (common.MAP_INSTRUCTIONS, common.AnswerReply)
+    instructions, reply = common.map_prompt(params)
+    assert reply is common.AnswerReply and common.MAP_PROMPTS["effect"] == "map-effect-v2.md"
+    assert "The question compares RAG system with closed-book model." in instructions
+    assert prompt_sha256(instructions, reply) == "e5df36a5b20b0bc513f9a27c515df74d8660a6a169c4bac9df2ad98f5df8b6d6"
 
 
 def test_rag_baseline_inventory_shape(tmp_path: Path) -> None:
@@ -50,7 +52,7 @@ def test_rag_baseline_inventory_shape(tmp_path: Path) -> None:
                                    {"name": "exact  match", "papers": ["S001"]},
                                    {"name": "latency", "papers": ["S002"]}]})
     answer = rag.rag_baseline(corpus, model=model.model(), question_id="inv-metrics", k=2)
-    assert answer["kind"] == "inventory" and answer["system"] == "rag-baseline" and answer["target"] == "metric"
+    assert answer["kind"] == "inventory" and answer["system"] == rag.SYSTEM and answer["target"] == "metric"
     assert answer["question"] == "Which evaluation metrics do the papers report?"
     assert answer["entries"] == [{"name": "Exact Match", "aliases": ["exact match"], "papers": ["S001", "S002"],
                                   "items": []},
@@ -63,7 +65,7 @@ def test_rag_baseline_inventory_shape(tmp_path: Path) -> None:
     assert answer["mapping_call"]["prompt_sha256"] == prompt_sha256(instructions, reply_type)
     fx.dump(tmp_path / "a.json", answer)
     result = score_answers(corpus, [tmp_path / "a.json"], question_id="inv-metrics")
-    assert result["synthesis"][0]["kind"] == "inventory" and result["synthesis"][0]["system"] == "rag-baseline"
+    assert result["synthesis"][0]["kind"] == "inventory" and result["synthesis"][0]["system"] == rag.SYSTEM
 
 
 def test_best_wins_computed_not_asked(tmp_path: Path) -> None:
@@ -183,12 +185,12 @@ def test_best_prompt_examples_use_the_protocols_kinds() -> None:
 
 def test_effect_questions_by_id_get_their_metric_and_direction() -> None:
     latency, reply_type = common.map_prompt(common.kind_params("rag-latency"))
-    assert reply_type is common.AnswerReply and latency != common.MAP_INSTRUCTIONS
+    assert reply_type is common.AnswerReply and latency != common.map_prompt(None)[0]
     assert "lower latency" in latency and "is the improvement" in latency and "factual accuracy" not in latency
     assert "<<" not in latency
     hallucination, _ = common.map_prompt(common.kind_params("rag-hallucination"))
     assert "lower hallucination rate" in hallucination
-    assert common.map_prompt(common.kind_params("rag-factuality"))[0] == common.MAP_INSTRUCTIONS   # cache unchanged
+    assert common.map_prompt(common.kind_params("rag-factuality")) == common.map_prompt(None)   # the default question
 
 
 def test_paper_id_maps_loose_ids_to_the_manifest() -> None:

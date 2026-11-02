@@ -9,10 +9,11 @@ YAML data; plan 2 Task 12, preflight P15), never the passed protocol, which a us
 edited (Part D): truth must not change with the user's protocol. The protocol supplies only the effect answer's
 `question` text and its id for the shortcut below.
 
-For the question the corpus was generated for (kind effect, `params.metric` factual_accuracy, protocol id in
-SAVED_ANSWER_IDS: rag-factuality and its agentic variant) the saved `truth.answer` is returned unchanged: it was
-computed with that protocol's metric priority list (factual accuracy, then hallucination rate), which one truth
-metric cannot express. Another effect protocol that reuses the question text does not get it.
+For the question the corpus was generated for (the default pack's default question, `questions.default_entry`:
+kind effect, `params.metric` its truth metric SAVED_ANSWER_METRIC, protocol id in SAVED_ANSWER_IDS: its protocol and
+its agentic variant) the saved `truth.answer` is returned unchanged: it was computed with that protocol's metric
+priority list (its first metric, then the next), which one truth metric cannot express. Another effect protocol
+that reuses the question text does not get it.
 
 Rules:
 - Counted studies: relevant, not `duplicate_of`, and (effect, consistency) not `missing` the needed side (the
@@ -23,8 +24,8 @@ Rules:
   is determined on the question metric (else it is undetermined, as the engine would find it).
 - Main experiment: the experiment of the study's `effect.treatment` measurement (else `effect.control`, else
   the first measurement); only its measurements are read. A study without experiments has one.
-- Metric: a truth metric matches `params.metric` when its `canonical` equals it (factual_accuracy,
-  hallucination_rate) or when both names have the same `Canon.key` (latency, written "latency" or "Lat.").
+- Metric: a truth metric matches `params.metric` when its `canonical` equals it (a fraction
+  metric) or when both names have the same `Canon.key` (latency, written "latency" or "Lat.").
 - Dataset: the first dataset in measurement order within the main experiment that has the values needed (both
   compared roles for effect and consistency, two method kinds for best); the first value of each side there.
 - effect: `rules.effect` with `params.min_effect` and the metric's `higher_is_better`, `rules.label` over the
@@ -65,14 +66,15 @@ from evidence.kinds import chaining as chaining_rules
 from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK, Chaining, Kind, Protocol, QuestionMetric, Synthesis
 from evidence.protocol import load as load_protocol
-from evidence.questions import QuestionTruth
+from evidence.questions import QuestionTruth, default_entry
 
 from .canon import Canon, fold, recipe_data
 from .truth import GroundTruth
 
 SYSTEM = "ground-truth"
-SAVED_ANSWER_IDS = frozenset({"rag-factuality", "rag-factuality-agentic"})   # protocols of the corpus's own question
-SAVED_ANSWER_METRIC = "factual_accuracy"
+_SAVED = default_entry()   # the corpus's own question; a protocol file is named by its id
+SAVED_ANSWER_IDS = frozenset(Path(p).stem for p in (_SAVED.protocol, _SAVED.agentic_protocol) if p)
+SAVED_ANSWER_METRIC = _SAVED.truth.metric
 NAME_FIELD = {"condition": "label", "metric": "name"}
 GROUPS = (("supporting", "supports"), ("contradicting", "contradicts"), ("neutral", "neutral"),
           ("undetermined", "undetermined"))

@@ -194,7 +194,8 @@ def render(report: dict[str, Any]) -> str:
         rows = sorted(({"system": s["system"], **r} for s in att["systems"] for r in s["rows"]),
                       key=lambda r: (r["system"], _level_key(r["level"])))
         out += ["## Attribution", "", f"Wrong studies against the oracle `{att['oracle']}`: upstream when the oracle "
-                "is right (extraction or retrieval), downstream when it is wrong too (synthesis or reasoning).", "",
+                "is right (extraction or passage search), downstream when it is wrong too (synthesis or "
+                "reasoning).", "",
                 table(rows, ["system", "level", "studies", "system_correct", "oracle_correct", "upstream",
                              "downstream"]), ""]
         if att.get("not_attributed"):
@@ -616,7 +617,7 @@ def render_compare(comparison: dict[str, Any]) -> str:
     out = ["# Comparison over corpora", "", table(_marked(comparison["rows"]), COMPARE_COLUMNS), ""]
     if any(r.get("diagnostic") for r in comparison["rows"]):
         out += ["`(diagnostic)`: oracle-synthesis and rag-oracle-passages read the ground truth; they bound what "
-                "extraction or retrieval could give and are not baselines.", ""]
+                "extraction or passage search could give and are not baselines.", ""]
     if comparison.get("notes"):
         out += ["**Not shown:**", "", *[f"- {n}" for n in comparison["notes"]], ""]
     if comparison.get("selection"):

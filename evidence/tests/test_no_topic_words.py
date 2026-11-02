@@ -1,6 +1,6 @@
 """No topic words in code (D35): every word of every domain pack lives only in `domains/<name>/`, never in the
-code folders CHECKED_DIRS, apart from the generic words of domains/allowlist.yaml (each with its reason) and the
-legacy files of LEGACY (each with its reason)."""
+code folders CHECKED_DIRS, apart from the generic words of domains/allowlist.yaml (each with its reason), the
+legacy files of LEGACY (each with its reason) and the few words FILE_WORDS lets one file keep (each with its reason)."""
 from __future__ import annotations
 
 import re
@@ -10,7 +10,7 @@ import yaml
 
 from evidence.pack import DOMAINS, load_pack
 
-CHECKED_DIRS = ["evidence", "agent", "synth"]
+CHECKED_DIRS = ["evidence", "agent", "synth", "evaluation"]   # evaluation: plan 2 Task 14 (preflight P2)
 ROOT = DOMAINS.parent
 SUFFIXES = {".py", ".md", ".txt", ".yaml"}
 # examples: synth/examples/rag-demo-* are committed corpora, pinned byte for byte (D36), not code.
@@ -25,6 +25,26 @@ LEGACY = {
     "synth/prompts/statements-v1.txt": _REPLAY + " (statements-v2.txt)",
     "synth/prompts/blind.txt": "the blind re-extraction prompt before blind-v2.txt, kept for replay (D36)",
     "synth/prompts/blind-v2.txt": _REPLAY + " (blind-v3.txt)",
+    "evaluation/baselines/prompts/map-effect-v1.md": "the effect mapping prompt before map-effect-v2.md (filled from "
+                                                     "the pack's display names), kept for replay (D36)",
+    # The mapping prompts of the kinds plan 2 leaves unchanged: their RAG examples are kept byte for byte so their
+    # cached mapping calls still hit (plan 2 Task 14: existing kinds' prompts unchanged); a pack-filled v2 of each
+    # is owed when that kind is next re-pinned.
+    "evaluation/baselines/prompts/map-inventory-v1.md": "live inventory mapping prompt, unchanged for its cached "
+                                                        "calls (D36); its RAG examples move to the pack in a v2",
+    "evaluation/baselines/prompts/map-consistency-v1.md": "live consistency mapping prompt, unchanged for its cached "
+                                                          "calls (D36); its RAG examples move to the pack in a v2",
+    "evaluation/baselines/prompts/map-best-v1.md": "live best mapping prompt, unchanged for its cached calls (D36); "
+                                                   "its one RAG word (in the input description) goes in a v2",
+}
+# Words one file may keep, by path: (the words or stems, matched as the start of a hit word; the reason). Narrower
+# than the allowlist, which frees a word everywhere.
+_BM25 = ("the answer-level baseline is a passage-retrieval system of any domain (BM25 over the papers): its own "
+         "method word, its answer.json keys `retrieved` and `settings.retrieval`/`retriever` and the CLI flag "
+         "`--retrieval`, which old answers and runbooks carry (D36)")
+FILE_WORDS = {
+    "evaluation/baselines/rag.py": ({"retriev"}, _BM25),
+    "evaluation/cli.py": ({"retriev"}, _BM25),
 }
 
 
@@ -113,6 +133,12 @@ def test_every_allowlisted_word_is_a_pack_word() -> None:
 
 def test_every_legacy_file_exists_and_names_its_reason() -> None:
     assert all((ROOT / path).is_file() and reason.strip() for path, reason in LEGACY.items())
+    assert all((ROOT / path).is_file() and words and reason.strip() for path, (words, reason) in FILE_WORDS.items())
+
+
+def kept(path: str, word: str) -> bool:
+    """`word` is one FILE_WORDS lets `path` keep."""
+    return any(word.lower().startswith(w) for w in FILE_WORDS.get(path, ((), ""))[0])
 
 
 def test_moved_prompt_words_fill_the_default_pack_prompts_as_before() -> None:
@@ -134,6 +160,6 @@ def test_no_pack_word_appears_in_checked_code() -> None:
     stems = pack_stems() - allowed
     checks = [(w, rf"\b{re.escape(w)}\b") for w in sorted(pack_words() - allowed - stems)]
     checks += [(w, rf"\b{re.escape(w)}") for w in sorted(stems)]
-    hits = [(str(f.relative_to(ROOT)), w) for f in code_files(CHECKED_DIRS) for w, rx in checks
-            if re.search(rx, text_of(f), re.I)]
+    hits = [(f.relative_to(ROOT).as_posix(), w) for f in code_files(CHECKED_DIRS) for w, rx in checks
+            if not kept(f.relative_to(ROOT).as_posix(), w) and re.search(rx, text_of(f), re.I)]
     assert hits == []

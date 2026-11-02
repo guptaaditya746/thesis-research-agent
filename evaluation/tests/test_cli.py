@@ -84,7 +84,7 @@ def test_rag_baseline_command(tmp_path: Path, scripted: Scripted) -> None:
     corpus = fx.write_corpus(tmp_path)
     assert cli.main(["rag-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "rag"), "--k", "2"]) == 0
     answer = json.loads((tmp_path / "rag" / "answer.json").read_text(encoding="utf-8"))
-    assert answer["system"] == "rag-baseline" and len(answer["retrieved"]) == 2 and answer["label"] == "mixed"
+    assert answer["system"] == "bm25-answer-baseline" and len(answer["retrieved"]) == 2 and answer["label"] == "mixed"
     assert answer["settings"] == {"retrieval": "global", "k": 2, "max_chars": 1500, "retriever": "bm25okapi"}
     assert answer["model_call"]["model"] == answer["mapping_call"]["model"] == cli.DEFAULT_ALIAS == "orch-model"
     assert (tmp_path / "rag" / "rag-baseline-calls.jsonl").is_file()
