@@ -8,6 +8,10 @@
                                       the call cache (propose-calls.jsonl) and the exchange folder (.propose-exchange)
                                       sit in the pack folder, as the record of the calls behind the pack; freeze does
                                       not hash them (only *.yaml, *.json and protocols/*.yaml)
+    packbuilder helper --corpus DIR --name N --model M --verify-model V [--question Q] [--root DIR] [--cache F]
+                       [--exchange DIR]
+                                      the D34 fallback (helper.py): M writes the pack from the paper texts alone,
+                                      V checks each word; refuses beside a generator.yaml
     packbuilder freeze DIR            check the pack in DIR, write DIR/FROZEN.json, print the git tag command
                                       (freeze.py; it never runs git)
 
@@ -36,23 +40,34 @@ def main(argv: list[str] | None = None) -> int:
     prop.add_argument("--root", type=Path, default=None, help="the domains folder (default domains/)")
     prop.add_argument("--cache", type=Path, default=None, help="default <root>/<name>/propose-calls.jsonl")
     prop.add_argument("--exchange", type=Path, default=None, help="default <root>/<name>/.propose-exchange")
+    hlp = commands.add_parser("helper", help="D34 fallback: write a pack from the paper texts alone")
+    hlp.add_argument("--corpus", type=Path, required=True, help="corpus directory (manifest.json and papers/)")
+    hlp.add_argument("--name", required=True, help="the pack's name: its folder under --root")
+    hlp.add_argument("--model", required=True, help="LiteLLM alias, or exchange:<name>")
+    hlp.add_argument("--verify-model", required=True, help="the model that checks each word")
+    hlp.add_argument("--question", default=None, help="the topic question the pack serves")
+    hlp.add_argument("--root", type=Path, default=None, help="the domains folder (default domains/)")
+    hlp.add_argument("--cache", type=Path, default=None, help="default <root>/<name>/helper-calls.jsonl")
+    hlp.add_argument("--exchange", type=Path, default=None, help="default <root>/<name>/.helper-exchange")
     frz = commands.add_parser("freeze", help="freeze a finished pack: FROZEN.json and the tag command")
     frz.add_argument("pack", type=Path, help="the pack folder, e.g. domains/N")
     args = parser.parse_args(argv)
     if args.command == "serve":
         create_server(args.corpus).run(transport="stdio")
         return 0
-    if args.command == "propose":
+    if args.command in ("propose", "helper"):
         from evidence.pack import DOMAINS
         from modelcall.exchange import model_for
         from packbuilder.agent import DEFAULT_QUESTION, propose
+        from packbuilder.helper import helper
+        run = propose if args.command == "propose" else helper
         root = args.root or DOMAINS
-        cache = args.cache or root / args.name / "propose-calls.jsonl"
-        exchange = args.exchange or root / args.name / ".propose-exchange"
+        cache = args.cache or root / args.name / f"{args.command}-calls.jsonl"
+        exchange = args.exchange or root / args.name / f".{args.command}-exchange"
         try:
-            folder = propose(args.corpus, args.name, model=model_for(args.model, exchange), cache=cache, root=root,
-                             verify_model=model_for(args.verify_model, exchange),
-                             question=args.question or DEFAULT_QUESTION)
+            folder = run(args.corpus, args.name, model=model_for(args.model, exchange), cache=cache, root=root,
+                         verify_model=model_for(args.verify_model, exchange),
+                         question=args.question or DEFAULT_QUESTION)
         except ValueError as exc:
             print(f"ERROR: {exc}", file=sys.stderr, flush=True)
             return 2

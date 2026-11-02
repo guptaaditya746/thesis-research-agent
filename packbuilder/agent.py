@@ -192,7 +192,18 @@ def propose(corpus: Path, name: str, *, model: Any, cache: Path, verify_model: A
         # kept as a JSON string: the cache writes its values with sorted keys, which would reorder `conditions`,
         # whose first role is the treatment
         calls.put(key, {"output_json": proposal.model_dump_json(), "tool_calls": log, "model": model_name(model)})
-    verdicts, rejected, check_sha = verify(proposal, question, verify_model=verify_model, cache=calls)
+    return settle(proposal, papers, known, question, verify_model=verify_model, cache=calls, folder=folder,
+                  root=root, name=name, by=BY, model=model, prompt_sha256=prompt.sha256, corpus_id=read.corpus_id,
+                  files_read=files_read, tool_calls=log)
+
+
+def settle(proposal: PackProposal, papers: dict[str, str], known: Known, question: str, *, verify_model: Any,
+           cache: JsonlCache, folder: Path, root: Path, name: str, by: str, model: Any, prompt_sha256: str,
+           corpus_id: str, files_read: list[str], tool_calls: list[dict[str, Any]]) -> Path:
+    """What follows a proposal that passed the code checks, shared by `propose` and the D34 helper: the verifier
+    judges every word, rejected words are dropped, what is left is checked again, and the pack, its words and their
+    provenance are written to `folder`."""
+    verdicts, rejected, check_sha = verify(proposal, question, verify_model=verify_model, cache=cache)
     proposal = drop(proposal, rejected)
     found = problems(proposal, papers, known)       # what is left still passes every check
     if found:
@@ -204,16 +215,18 @@ def propose(corpus: Path, name: str, *, model: Any, cache: Path, verify_model: A
     folder.mkdir(parents=True, exist_ok=True)
     _dump(folder / "pack.yaml", head)
     _dump(folder / "words.yaml", proposal.words.model_dump(mode="json"))
-    common = {"by": BY, "model": model_name(model), "prompt_sha256": prompt.sha256, "corpus_id": read.corpus_id}
+    common = {"by": by, "model": model_name(model), "prompt_sha256": prompt_sha256, "corpus_id": corpus_id}
     _log(folder / "provenance.json", {
         "pack": common,
-        "words": {**common, "tool_calls": log, "sources": [s.model_dump() for s in proposal.sources],
+        "words": {**common, "tool_calls": tool_calls, "sources": [s.model_dump() for s in proposal.sources],
                   "files_read": files_read,
                   "verify": {"model": model_name(verify_model), "prompt_sha256": check_sha, "verdicts": verdicts,
                              "dropped": [{k: v[k] for k in ("word", "slot", "reason")}
                                          for v in verdicts if not v["ok"]]}}})
     load_pack(name, root=root)           # reads back as a valid pack
     return folder
+
+
 
 
 def _dump(path: Path, data: dict[str, Any]) -> None:
