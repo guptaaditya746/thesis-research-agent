@@ -82,11 +82,22 @@ def _labels(items: list[Item], roles: RoleMap) -> list[Item]:
     return sorted((i for i in items if i.evidence_type in labels), key=lambda i: (i.first_start(), i.item_id))
 
 
-def _year(items: list[Item], roles: RoleMap) -> int | None:
-    """The year of the document's first study label: its last 4-digit run (None: no label, or no year in it)."""
-    label = next((n for n in (_name(i, roles) for i in _labels(items, roles)) if n is not None), None)
+def year_of(label: str | None) -> int | None:
+    """The year of a study label: its last 4-digit run (None: no label, or no year in it)."""
     years = YEAR.findall(label) if label is not None else []
     return int(years[-1]) if years else None
+
+
+def _year(items: list[Item], roles: RoleMap) -> int | None:
+    """The year of the document's first study label (`year_of`)."""
+    return year_of(next((n for n in (_name(i, roles) for i in _labels(items, roles)) if n is not None), None))
+
+
+def origin_of(own: list[str], years: dict[str, int | None], position: dict[str, int]) -> str | None:
+    """Rule 4: of the documents that mention a thing and have no dependency linking it (`own`), the earliest by
+    year (a document without one after every dated one; ties: manifest `position`); None when there is none. The
+    truth's expected answer (evaluation/expected.py) uses this and `followers_of` too."""
+    return min(own, key=lambda d: (years[d] is None, years[d] or 0, position[d]), default=None)
 
 
 def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
@@ -169,9 +180,9 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
         if wanted is not None and key != wanted:
             continue
         own = [d for d in docs if (d, key) not in taken]                       # rule 4
-        origin = min(own, key=lambda d: (years[d] is None, years[d] or 0, position[d]), default=None)
+        origin = origin_of(own, years, position)
         origins[key] = origin
-        followers[key] = _followers(origin, citers, position) if origin is not None else []
+        followers[key] = followers_of(origin, citers, position) if origin is not None else []
     if wanted is not None and wanted not in origins:   # the asked thing is mentioned nowhere
         shown.setdefault(wanted, question.thing or "")
         origins[wanted], followers[wanted] = None, []
@@ -185,7 +196,7 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
             "ranking": [shown[k] for k in ranking], "unresolved": unresolved}, used
 
 
-def _followers(origin: str, citers: dict[str, list[str]], position: dict[str, int]) -> list[str]:
+def followers_of(origin: str, citers: dict[str, list[str]], position: dict[str, int]) -> list[str]:
     """Every document with a path of links to `origin` (rule 5), in manifest order; the visited set ends a cycle."""
     seen = {origin}
     queue = deque([origin])

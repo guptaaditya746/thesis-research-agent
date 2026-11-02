@@ -23,7 +23,9 @@ Matching rules (A; B and the pair check reuse A's matching):
    (`protocol_canonical`: a canonical the enum lacks is `other`, and `latency`, which truth files under `other`,
    is `latency` where the enum has it); without a protocol enum, equal `canonical`, or the item's canonical and the
    fact's name have one `Canon.key`; dataset (matched only when the run has dataset items or its protocol declares the
-   type), the same name; author claim, equal `direction`.
+   type), the same name; author claim, equal `direction`; limitation (plan 2 Task 13; a protocol that declares the
+   type), equal `category` and the item's `thing` link pointing to an item of the fact's thing's name (as condition
+   names match), or neither linking a thing: so A is precision/recall of (study, thing, category).
 4. Among compatible pairs the assignment is a minimum-cost assignment (Hungarian method,
    scipy.optimize.linear_sum_assignment) with cost 1, minus 0.5 if the item's span of the type's main
    role (value / condition_label / metric_label / claim) overlaps a placement of that fact with that
@@ -48,6 +50,11 @@ its `all` / `all` row means "all the types this protocol extracts". B and C foll
 docstring describes, against the question's own expected answer (`effect_truth`; the corpus's own question keeps
 the saved answer, so its numbers are unchanged); inventory, consistency and best compare the answer with
 evaluation/expected.py's. Baseline answers are scored on C only. Intervals and attribution are for effect only.
+chaining, limitations and builds_on (plan 2 Task 13, drug-trial truth): A adds the `limitation` type (rule 3); B is
+the run's comparisons against the truth network (chaining), the limitation items' thing links, and the answer's
+dependency links (builds_on); C is `score_chaining`, `score_limitations`, `score_builds_on` (their docstrings), each
+with a float `headline` (plan 3 reads it). On a builds_on truth the effect C also says whether a copied result is
+counted twice (`copied_counted_once`).
 
 B: of the matched measurements, the condition link (`links.condition`, else `fields.condition`) must
 point to a condition item whose `role` is the true condition's role, and the metric link to a metric
@@ -147,22 +154,25 @@ from typing import Any, Iterable
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+from scipy.stats import kendalltau
 
 from evidence.contract import Item, Scope
 from evidence.evidence_types import EvidenceType
 from evidence.kinds import best as best_rules
+from evidence.kinds import limitations as limitation_rules
 from evidence.protocol import Protocol
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionEntry, QuestionTruth
 from evidence.questions import answered_by, answers_asked, load as load_questions, protocol_file
 from evidence.rundir import PROTOCOL_FILE
-from evidence.rules import FLAGS
+from evidence.rules import FLAGS, VALUE_DECIMALS
 
 from .canon import Canon, Target, default_canon, fold
 from .expected import expected as expected_answer
-from .expected import saved_answer
+from .expected import saved_answer, thing_key, truth_links
 from .stats import bootstrap, bootstrap_f1, bootstrap_mean, interval_row, micro_f1, ratio
-from .truth import DATASET, ENGINE, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
+from .truth import (DATASET, ENGINE, LIMITATION, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids,
+                    read_json)
 
 DEFAULT_QUESTION = "rag-factuality"   # the corpus's own question (its saved answer, _question_text)
 
@@ -172,6 +182,7 @@ ALL = "all"
 DIRECTIONS = ("supports", "contradicts", "neutral", "undetermined")
 COUNTED = ("supporting", "contradicting", "neutral")      # the counts the label table sees (C1)
 OPTIONAL_COUNTS = ("undetermined", "duplicates")          # compared when both sides report them (F1, F2)
+COUNTED_DIRECTIONS = ("supports", "contradicts", "neutral")   # an effect entry the label table counts
 
 
 # --- small helpers ---------------------------------------------------------------------------------
@@ -268,10 +279,20 @@ def _same_name(item: Item, fact: Fact, target: Target, canon: Canon) -> bool:
 
 
 def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None,
-               canonicals: tuple[str, ...] | None = None, canon: Canon | None = None) -> bool:
-    """Rule 3 of the module docstring; `canon` the corpus's name table (default: built from `truth`)."""
+               canonicals: tuple[str, ...] | None = None, canon: Canon | None = None,
+               pool: dict[str, Item] | None = None) -> bool:
+    """Rule 3 of the module docstring; `canon` the corpus's name table (default: built from `truth`); `pool` the run's
+    items by id, where a limitation's linked thing is looked up."""
     canon = canon or (Canon.from_truth(truth) if truth is not None else default_canon())
     f, d = item.fields, fact.data
+    if fact.type == LIMITATION:
+        if f.get(limitation_rules.CATEGORY) != d.get("category"):
+            return False
+        thing = truth.facts.get(d.get("thing") or "") if truth is not None else None
+        target = (pool or {}).get(link(item, limitation_rules.THING) or "")
+        if thing is None:
+            return target is None
+        return target is not None and _same_name(target, thing, "condition", canon)
     if fact.type == "measurement":
         value = _number(f.get("value"))
         return value is not None and abs(value - float(d["value"])) <= VALUE_TOLERANCE + 1e-12
@@ -320,8 +341,8 @@ def _labels_agree(item: Item, fact: Fact) -> bool:
 
 
 def cost(item: Item, fact: Fact, truth: GroundTruth, canonicals: tuple[str, ...] | None = None,
-         canon: Canon | None = None) -> float:
-    if not compatible(item, fact, truth, canonicals, canon):
+         canon: Canon | None = None, pool: dict[str, Item] | None = None) -> float:
+    if not compatible(item, fact, truth, canonicals, canon, pool):
         return INFEASIBLE
     c = 1.0 - 0.5 * span_hit(item, fact, truth) - 0.25 * _labels_agree(item, fact)
     if fact.type == "measurement":
@@ -330,7 +351,8 @@ def cost(item: Item, fact: Fact, truth: GroundTruth, canonicals: tuple[str, ...]
 
 
 def match(items: list[Item], facts: list[Fact], truth: GroundTruth,
-          canonicals: tuple[str, ...] | None = None, canon: Canon | None = None) -> list[tuple[Item, Fact]]:
+          canonicals: tuple[str, ...] | None = None, canon: Canon | None = None,
+          pool: dict[str, Item] | None = None) -> list[tuple[Item, Fact]]:
     """One-to-one maximum compatible matching with the cost rules of the module docstring; `canon` the corpus's
     name table (default: built from `truth`)."""
     items = sorted(items, key=lambda i: i.item_id)
@@ -338,7 +360,7 @@ def match(items: list[Item], facts: list[Fact], truth: GroundTruth,
     if not items or not facts:
         return []
     canon = canon or Canon.from_truth(truth)
-    matrix = np.array([[cost(i, f, truth, canonicals, canon) for f in facts] for i in items])
+    matrix = np.array([[cost(i, f, truth, canonicals, canon, pool) for f in facts] for i in items])
     rows, cols = linear_sum_assignment(matrix)
     return [(items[r], facts[c]) for r, c in zip(rows, cols) if matrix[r, c] < INFEASIBLE]
 
@@ -383,7 +405,7 @@ class Matching:
         for paper in self.papers:
             for kind in self.types:
                 its, facts = grouped.get((paper, kind), []), truth.of(paper, kind)
-                pairs = match(its, facts, truth, canonicals, self.canon)
+                pairs = match(its, facts, truth, canonicals, self.canon, self.items)
                 self.pairs += pairs
                 for item, fact in pairs:
                     self.fact_of[item.item_id] = fact.id
@@ -397,10 +419,10 @@ class Matching:
 def scored_types(protocol: Protocol | None, items: Iterable[Item] = ()) -> tuple[EvidenceType, ...]:
     """A's evidence types: the protocol's own (those of TYPES and `dataset` it declares), so A's `all` / `all` row is
     over all the types this protocol extracts and a protocol is never charged with facts of a type it does not ask
-    for (an inventory of metrics is not scored on conditions). Without a protocol, the four of TYPES, plus `dataset`
-    when the run has dataset items."""
+    for (an inventory of metrics is not scored on conditions); `limitation` too (plan 2 Task 13). Without a protocol,
+    the four of TYPES, plus `dataset` when the run has dataset items."""
     if protocol is not None:
-        return tuple(t for t in (*TYPES, DATASET) if t in protocol.evidence_types)
+        return tuple(t for t in (*TYPES, DATASET, LIMITATION) if t in protocol.evidence_types)
     return TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items) else ())
 
 
@@ -703,7 +725,8 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]], question_
 
 
 def kind_intervals(c: dict[str, Any]) -> list[dict[str, Any]]:
-    """Interval rows of one system's C (score_kind) on a question of kind best, consistency or inventory.
+    """Interval rows of one system's C (score_kind) on a question of kind best, consistency or inventory (none for
+    chaining, limitations and builds_on: their C is one answer's, with nothing to resample).
 
     best and consistency: `per_study_accuracy`, resampling the decidable papers it is scored on (`counted`: a
     winner or tie, an `agrees` not null), one 0/1 row (correct) per paper. inventory: `precision`, `recall` and
@@ -712,6 +735,8 @@ def kind_intervals(c: dict[str, Any]) -> list[dict[str, Any]]:
     resample draws hits (1, 1, 1), misses (0, 0, 1) and false positives (0, 1, 0) together. A precision with no
     name given is null (prf), and so is its interval."""
     system = c["system"]
+    if c["kind"] in NEW_KINDS:   # one question, one answer: no rows to resample
+        return []
     if c["kind"] == "inventory":
         hit, given, expected = c["matched"], c["entries"], c["expected_entries"]
         rows = [(1, 1, 1)] * hit + [(0, 0, 1)] * (expected - hit) + [(0, 1, 0)] * (given - hit)
@@ -1217,18 +1242,167 @@ def score_best(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
             "studies": studies}
 
 
+NEW_KINDS = ("chaining", "limitations", "builds_on")   # plan 2 Task 13: C carries a float `headline`
+
+
+def _thing(canon: Canon) -> Any:
+    """name -> the compared thing's key (`expected.thing_key`), for an answer's thing names."""
+    return lambda name: thing_key(canon, str(name))
+
+
+def _mean(values: list[float]) -> float | None:
+    return sum(values) / len(values) if values else None
+
+
+def score_chaining(exp: dict[str, Any], answer: dict[str, Any], canon: Canon) -> dict[str, Any]:
+    """C, chaining: `verdict_correct` (the verdict is truth's), `inferred_correct` (marked inferred exactly when truth
+    is), `path_correct` (the `via` things, as compared-thing keys, and the `studies` are truth's, as sets),
+    `refusal_correct` (truth refuses: the answer refuses with the same reason; null when truth does not refuse);
+    `headline` the mean of verdict_correct and path_correct."""
+    key = _thing(canon)
+    via, studies = {key(v) for v in answer.get("via") or []}, {str(d) for d in answer.get("studies") or []}
+    verdict_correct = answer.get("verdict") == exp["verdict"]
+    path_correct = via == {key(v) for v in exp["via"]} and studies == set(exp["studies"])
+    refused = exp["verdict"] == "refused"
+    return {"kind": "chaining", "system": answer.get("system", "unknown"), "source": exp["source"],
+            "target": exp["target"], "metric": exp["metric"],
+            "verdict": answer.get("verdict"), "expected_verdict": exp["verdict"],
+            "reason": answer.get("reason"), "expected_reason": exp["reason"],
+            "via": sorted(via), "expected_via": exp["via"], "studies": sorted(studies),
+            "expected_studies": exp["studies"],
+            "verdict_correct": verdict_correct, "inferred_correct": bool(answer.get("inferred")) == exp["inferred"],
+            "path_correct": path_correct,
+            "refusal_correct": (answer.get("verdict") == "refused" and answer.get("reason") == exp["reason"]
+                                if refused else None),
+            "headline": (verdict_correct + path_correct) / 2}
+
+
+def _categories(answer: dict[str, Any], key: Any) -> tuple[dict[str, set[str]], set[str]]:
+    """thing key -> its categories (`counts`, else the linked `entries`; two names of one thing merge), and the
+    unlinked categories (`unlinked`, else the entries without a thing)."""
+    things: dict[str, set[str]] = defaultdict(set)
+    unlinked: set[str] = set()
+    counts = answer.get("counts")
+    if isinstance(counts, dict):
+        for thing, cats in counts.items():
+            things[key(thing)] |= {str(c) for c in (cats or {})}
+        unlinked = {str(c) for c in (answer.get("unlinked") or {})}
+    else:
+        for e in answer.get("entries") or []:
+            if isinstance(e, dict):
+                (unlinked if e.get("thing") is None else things[key(e["thing"])]).add(str(e.get("category")))
+    return dict(things), unlinked
+
+
+def score_limitations(exp: dict[str, Any], answer: dict[str, Any], canon: Canon) -> dict[str, Any]:
+    """C, limitations: per compared thing (truth's and the answer's, by key), the category sets compared: Jaccard
+    (shared over all; a thing on one side only is 0) and exact match. `jaccard_mean` (the headline) and
+    `exact_match` are over those things; the unlinked categories are compared apart (`unlinked_exact`)."""
+    key = _thing(canon)
+    want, want_unlinked = _categories(exp, key)
+    got, got_unlinked = _categories(answer, key)
+    rows = []
+    for thing in sorted(want.keys() | got.keys(), key=lambda t: (t.casefold(), t)):
+        a, b = want.get(thing, set()), got.get(thing, set())
+        rows.append({"thing": thing, "expected": sorted(a), "given": sorted(b),
+                     "jaccard": len(a & b) / len(a | b) if a | b else 1.0, "exact": a == b})
+    jaccard = _mean([r["jaccard"] for r in rows])
+    return {"kind": "limitations", "system": answer.get("system", "unknown"), "thing": exp["thing"],
+            "things_scored": len(rows), "jaccard_mean": jaccard,
+            "exact_match": share(sum(r["exact"] for r in rows), len(rows)),
+            "unlinked": sorted(got_unlinked), "expected_unlinked": sorted(want_unlinked),
+            "unlinked_exact": got_unlinked == want_unlinked, "headline": jaccard, "things": rows}
+
+
+def _followers(answer: dict[str, Any], key: Any) -> tuple[dict[str, set[str]], dict[str, int]]:
+    """thing key -> its followers and its influence (`influence`, else the number of followers); two names of one
+    thing merge (followers joined, the larger influence)."""
+    followers: dict[str, set[str]] = defaultdict(set)
+    influence: dict[str, int] = {}
+    for thing, docs in (answer.get("followers") or {}).items():
+        followers[key(thing)] |= {str(d) for d in docs or []}
+    given = answer.get("influence") or {}
+    for thing in followers.keys() | {key(t) for t in given}:
+        followers.setdefault(thing, set())
+    for thing, n in given.items():
+        if isinstance(n, (int, float)) and not isinstance(n, bool):
+            influence[key(thing)] = max(influence.get(key(thing), 0), int(n))
+    for thing, docs in followers.items():
+        influence.setdefault(thing, len(docs))
+    return dict(followers), influence
+
+
+def score_builds_on(exp: dict[str, Any], answer: dict[str, Any], canon: Canon) -> dict[str, Any]:
+    """C, builds_on: per compared thing (truth's and the answer's, by key) the follower sets' F1 (both empty: 1; a
+    thing on one side only scores against an empty set); `follower_f1_mean` (the headline) over them. The influence
+    ranking: Kendall tau (scipy.stats.kendalltau, tau-b) of truth's influence against the answer's over truth's
+    things (a thing the answer leaves out has 0; null when either side is constant), and `top1_correct`: the answer's
+    first ranked thing is one of truth's most influential (null when truth has no thing)."""
+    key = _thing(canon)
+    want, want_influence = _followers(exp, key)
+    got, got_influence = _followers(answer, key)
+    rows = []
+    for thing in sorted(want.keys() | got.keys(), key=lambda t: (t.casefold(), t)):
+        a, b = want.get(thing, set()), got.get(thing, set())
+        rows.append({"thing": thing, "expected": sorted(a), "given": sorted(b),
+                     "f1": 2 * len(a & b) / (len(a) + len(b)) if a or b else 1.0})
+    things = sorted(want_influence)
+    tau = None
+    if len(things) > 1:
+        found = kendalltau([want_influence[t] for t in things], [got_influence.get(t, 0) for t in things]).statistic
+        tau = None if found != found else float(found)   # NaN: a constant side
+    most = max(want_influence.values(), default=None)
+    ranking = [key(t) for t in answer.get("ranking") or []]
+    top1 = None if most is None else bool(ranking) and want_influence.get(ranking[0]) == most
+    f1 = _mean([r["f1"] for r in rows])
+    return {"kind": "builds_on", "system": answer.get("system", "unknown"), "thing": exp["thing"],
+            "things_scored": len(rows), "follower_f1_mean": f1, "ranking_tau": tau, "top1_correct": top1,
+            "ranking": ranking, "expected_ranking": list(exp["ranking"]), "headline": f1, "things": rows}
+
+
+def copied_counted(truth: GroundTruth, answer: dict[str, Any]) -> list[str]:
+    """The documents whose counted study entry is a copied comparison: the study reports a result of a study it
+    copies from (a truth measurement's `copied_from`) and the entry's treatment and control values are both values
+    of that study (rounded as rules.duplicate_key rounds them), so the copied result is counted a second time.
+    Counted: a determined direction (supports, contradicts, neutral) and no `duplicate_of`."""
+    paper = {s["study_id"]: s["paper"] for s in truth.studies}
+    values = {s["paper"]: {round(float(m["value"]), VALUE_DECIMALS) for m in s.get("measurements") or []}
+              for s in truth.studies}
+    origins = {s["paper"]: {paper.get(m["copied_from"], m["copied_from"]) for m in s.get("measurements") or []
+                            if m.get("copied_from")} for s in truth.studies}
+    out = []
+    for e in answer.get("studies") or []:
+        if not isinstance(e, dict) or e.get("direction") not in COUNTED_DIRECTIONS or e.get("duplicate_of"):
+            continue
+        sides = [_number((e.get(side) or {}).get("value")) for side in ("treatment", "control")]
+        if None in sides:
+            continue
+        if any(all(round(v, VALUE_DECIMALS) in values.get(o, set()) for v in sides if v is not None)
+               for o in origins.get(str(e.get("document")), ())):
+            out.append(str(e["document"]))
+    return out
+
+
 def score_kind(truth: GroundTruth, kind: str, params: QuestionTruth, protocol: Protocol | None,
                answer: dict[str, Any], canon: Canon | None = None) -> dict[str, Any]:
     """C of one system's answer to a question of `kind`, against the expected answer (evaluation/expected.py) with
     the question's truth parameters; `protocol` only decides the saved-answer shortcut (its id) and the effect
     question text; `canon` is the corpus's name table (`Canon.from_truth(truth)` unless given). effect:
-    score_synthesis against `effect_truth`."""
+    score_synthesis against `effect_truth`, plus, on a builds_on truth, `copied_counted_once` (no counted study is a
+    copied comparison, `copied_counted`) and the documents that are (`copied_counted_twice`)."""
     canon = canon or Canon.from_truth(truth)
     if kind == "effect":
-        return score_synthesis(effect_truth(truth, params, protocol, canon), answer)
+        out = score_synthesis(effect_truth(truth, params, protocol, canon), answer)
+        if "dependency" in truth.fact_lists:   # a builds_on truth (copied results possible); old corpora unchanged
+            twice = copied_counted(truth, answer)
+            out |= {"copied_counted_once": not twice, "copied_counted_twice": twice}
+        return out
     exp = expected_answer(truth, kind, params, protocol, canon)   # type: ignore[arg-type]
     if kind == "inventory":
         return score_inventory(exp, answer, canon)
+    if kind in NEW_KINDS:
+        return {"chaining": score_chaining, "limitations": score_limitations,
+                "builds_on": score_builds_on}[kind](exp, answer, canon)
     return {"consistency": score_consistency, "best": score_best}[kind](exp, answer)
 
 
@@ -1303,11 +1477,63 @@ def integration_consistency(m: Matching) -> dict[str, Any]:
     return {"kind": "consistency", "claims": n, "claim_correct": ok, "claim_accuracy": share(ok, n), "rows": rows}
 
 
+def integration_chaining(m: Matching, comparisons: dict[str, Any] | None) -> dict[str, Any]:
+    """B, chaining (comparisons built from pairs): precision and recall of the run's comparisons (comparisons.json
+    `comparisons`; the `copied` ones are not counted) against the truth network's, as (document, the two things by
+    key, unordered, metric, context case-folded). Truth leaves out duplicate studies, so their documents are left
+    out on both sides. Null rates for a run without comparisons.json."""
+    key = _thing(m.canon)
+    skip = {s["paper"] for s in m.truth.studies if s.get("duplicate_of")}
+
+    def of(c: dict[str, Any]) -> tuple[Any, ...]:
+        context = c.get("context")
+        return (str(c.get("document")), tuple(sorted((key(c.get("a")), key(c.get("b"))))), c.get("metric"),
+                None if context is None else _fold(context))
+
+    want = {of(c) for c in (m.truth.network or {}).get("comparisons") or [] if c["document"] not in skip}
+    if comparisons is None:
+        return {"kind": "chaining", "comparisons": None, "expected_comparisons": len(want), "matched_comparisons": None,
+                "comparison_precision": None, "comparison_recall": None}
+    got = {of(c) for c in comparisons.get("comparisons") or [] if isinstance(c, dict) and c.get("document") not in skip}
+    counts = prf(len(want & got), len(got), len(want))
+    return {"kind": "chaining", "comparisons": counts["items"], "expected_comparisons": counts["facts"],
+            "matched_comparisons": counts["matched"], "comparison_precision": counts["precision"],
+            "comparison_recall": counts["recall"], "missed": sorted(map(list, want - got)),
+            "false_positives": sorted(map(list, got - want))}
+
+
+def integration_limitations(m: Matching) -> dict[str, Any]:
+    """B, limitations (thing links): the run's limitation items and the share that link a compared thing (whether
+    the link is right is A's: a limitation matches only through its thing)."""
+    found = [i for i in m.items.values() if i.evidence_type == LIMITATION]
+    linked = sum(1 for i in found if link(i, limitation_rules.THING) in m.items)
+    return {"kind": "limitations", "items": len(found), "linked": linked, "link_share": share(linked, len(found))}
+
+
+def integration_builds_on(m: Matching, answer: dict[str, Any]) -> dict[str, Any]:
+    """B, builds_on (dependency links): precision and recall of the answer's `links` as (from, to, reuses) against the
+    planted dependencies (`expected.truth_links`; a dependency outside the corpus is no link)."""
+    want = {(x["from"], x["to"], x["reuses"]) for x in truth_links(m.truth)[0]}
+    got = {(str(x.get("from")), str(x.get("to")), str(x.get("reuses"))) for x in answer.get("links") or []
+           if isinstance(x, dict)}
+    counts = prf(len(want & got), len(got), len(want))
+    return {"kind": "builds_on", "links": counts["items"], "expected_links": counts["facts"],
+            "matched_links": counts["matched"], "link_precision": counts["precision"], "link_recall": counts["recall"],
+            "missed": sorted(map(list, want - got)), "false_positives": sorted(map(list, got - want))}
+
+
 def integration_kind(m: Matching, kind: str, answer: dict[str, Any] | None, protocol: Protocol | None = None,
-                     truth: GroundTruth | None = None) -> dict[str, Any]:
-    """B of the engine's answer to a question of `kind`; `truth` the effect truth (effect_truth) for effect."""
+                     truth: GroundTruth | None = None, comparisons: dict[str, Any] | None = None) -> dict[str, Any]:
+    """B of the engine's answer to a question of `kind`; `truth` the effect truth (effect_truth) for effect;
+    `comparisons` the run's comparisons.json (chaining)."""
     if kind == "effect":
         return score_integration(m, answer, truth)
+    if kind == "chaining":
+        return integration_chaining(m, comparisons)
+    if kind == "limitations":
+        return integration_limitations(m)
+    if kind == "builds_on":
+        return integration_builds_on(m, answer or {})
     if kind == "inventory":
         return integration_inventory(m, answer or {})
     if kind == "best":
@@ -1367,7 +1593,8 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "run_id": (run.run or {}).get("run_id", run.root.name), "protocol": score_protocol(run),
         "question_id": entry.id, "kind": entry.kind,
         "question": _question_text(truth, entry), "extraction": score_extraction(m),
-        "integration": integration_kind(m, entry.kind, run.answer, protocol, scored), "synthesis": systems,
+        "integration": integration_kind(m, entry.kind, run.answer, protocol, scored, run.comparisons),
+        "synthesis": systems,
         "intervals": score_intervals(m, systems, entry.kind),
         "locate": score_locate(truth, run.locate), "cascade": score_cascade(m, run.run),
         "extractors": score_extractors(m, run),

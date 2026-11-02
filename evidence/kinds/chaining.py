@@ -14,8 +14,9 @@ once, at its origin. Rules, in this order:
 3, 4. Each path is judged by `rules.chain_verdict` (the rule the truth network uses): steps that both name a
    context must name the same one (`context_differs`); better at every step concludes better, worse at every step
    worse, anything else (a neutral step included) `mixed_directions`.
-5. The paths that conclude decide: one verdict among them is the answer (`inferred` true, reason null, `note`
-   "inferred through {via}, not tested directly"); different verdicts give `refused`, `paths_disagree`. A path
+5. The paths that conclude decide (`rules.chain_paths`, which the truth's expected answer uses too): one verdict
+   among them is the answer (`inferred` true, reason null, `note` "inferred through {via}, not tested directly");
+   different verdicts give `refused`, `paths_disagree`. A path
    refused by rule 3 or 4 does not stand against a concluding one (it is listed under `paths` with its reason).
    When no path concludes, the reason is `mixed_directions` when a path has it, else `context_differs`.
 6. No path on the metric: `metric_differs` when a path of 1 to `max_hops` steps links source and target over
@@ -151,17 +152,10 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
     for steps in _paths(edges, source, target, 2, chain.max_hops):   # rules 2-4
         verdict, why = rules.chain_verdict([(_direction(s, chain, groups), s[0].context) for s in steps])
         listed.append((steps, path_json(steps, verdict, why)))
-    concluding = [(s, p) for s, p in listed if p["reason"] is None]
-    if concluding:                                               # rule 5
-        verdicts = {p["verdict"] for _, p in concluding}
-        if len(verdicts) == 1:
-            out.update(verdict=verdicts.pop(), inferred=True)
-        else:
-            out.update(reason=DISAGREE)
-        return _finish(out, documents, listed, concluding)
-    if listed:
-        out.update(reason=MIXED if any(p["reason"] == MIXED for _, p in listed) else CONTEXT_DIFFERS)
-        return _finish(out, documents, listed, listed)
+    if listed:                                                   # rule 5 (rules.chain_paths)
+        verdict, why, chosen = rules.chain_paths([(p["verdict"], p["reason"]) for _, p in listed])
+        out.update(verdict=verdict, inferred=why is None, reason=why)
+        return _finish(out, documents, listed, [listed[n] for n in chosen])
     other = [(s, path_json(s, "refused", METRIC_DIFFERS))                # rule 6
              for s in _paths(_edges(every, groups), source, target, 1, chain.max_hops)]
     out.update(reason=METRIC_DIFFERS if other else NO_PATH)

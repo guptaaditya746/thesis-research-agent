@@ -35,6 +35,18 @@ Rules:
   name over the relevant papers (a name the table does not know is its own key, whitespace collapsed); `aliases`
   are the other forms truth uses for the key, `papers` sorted study ids, `items` the fact ids. best: each
   condition's kind is `Canon.kind_of` its label; the kind with the top value wins, a tie gives none.
+- chaining, limitations, builds_on (plan 2 Task 13; truth of a recipe with a network and the builds_on preset): a
+  compared thing is its `Canon.key` (`thing_key`; the label, whitespace collapsed, when the table has none) and is
+  shown by it. chaining: the truth `network` (synth/network.py) on `params.metric`. Comparisons of `params.source`
+  and `params.target` are a direct result (reason `direct_comparison`, verdict source over target, `refused` when
+  they differ); else the truth `chains` of that pair (2 steps, each judged by `rules.chain_verdict`) are combined
+  by `rules.chain_paths`, the engine's rule; none gives `no_path` (truth lists comparisons on the question metric
+  only, so `metric_differs` is never expected). `via` and `studies` are those of the paths the answer rests on.
+  limitations: every study's planted limitations, by (thing, category), papers in study order; `counts` keyed by
+  thing for the linked ones, `unlinked` for those without a thing. builds_on: links (from, to, reuses) from the
+  planted dependencies; a dependency marked `outside_corpus` is `unresolved` (its cited label), never a link. A
+  thing's origin and followers are the engine's rules (`builds_on.origin_of`, `followers_of`) over the truth's
+  conditions (mentions), dependency things (taken) and study labels (years).
 
 The name table (`Canon`) is the corpus's own, `Canon.from_truth(truth)`, unless the caller passes one.
 """
@@ -47,6 +59,8 @@ from typing import Any
 
 from evidence import rules
 from evidence.kinds import best as best_rules
+from evidence.kinds import builds_on as builds_on_rules
+from evidence.kinds import chaining as chaining_rules
 from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK, Kind, Protocol, Synthesis
 from evidence.protocol import load as load_protocol
@@ -297,7 +311,153 @@ def _best(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, 
             "winner": leaders[0] if len(leaders) == 1 else None, "tied": leaders if len(leaders) > 1 else []}
 
 
-BUILDERS = {"effect": _effect, "consistency": _consistency, "inventory": _inventory, "best": _best}
+# chaining ----------------------------------------------------------------------------------------------------
+
+def thing_key(canon: Canon, name: str) -> str:
+    """A compared thing as truth and the scores name it: its `Canon.key`, else the name (whitespace collapsed)."""
+    return canon.key("condition", name) or " ".join(str(name).split())
+
+
+def _on(metric: str, wanted: str, canon: Canon) -> bool:
+    return _matches({"canonical": metric, "name": metric}, wanted, canon)
+
+
+def _papers(truth: GroundTruth) -> dict[str, int]:
+    """paper -> its position (study order: the manifest's)."""
+    return {s["paper"]: n for n, s in enumerate(truth.studies)}
+
+
+def _chaining(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
+    assert params.metric and params.source and params.target, "chaining truth takes metric, source and target"
+    network = truth.network or {}
+    source, target = thing_key(canon, params.source), thing_key(canon, params.target)
+    position = _papers(truth)
+    out: dict[str, Any] = {"kind": "chaining", "system": SYSTEM, "source": params.source, "target": params.target,
+                           "metric": params.metric, "verdict": "refused", "inferred": False, "via": [],
+                           "studies": [], "paths": [], "reason": None, "note": None}
+    direct = []
+    for c in network.get("comparisons") or []:
+        a, b = thing_key(canon, c["a"]), thing_key(canon, c["b"])
+        if {a, b} == {source, target} and a != b and _on(c["metric"], params.metric, canon):
+            turned = c["direction"] if a == source else chaining_rules.FLIP[c["direction"]]
+            direct.append({"via": [], "studies": [c["document"]], "context": c["context"],
+                           "verdict": chaining_rules.VERDICT[turned] or "refused", "reason": chaining_rules.DIRECT})
+    if direct:
+        verdicts = {p["verdict"] for p in direct}
+        out.update(verdict=verdicts.pop() if len(verdicts) == 1 else "refused", reason=chaining_rules.DIRECT)
+        return _chain_finish(out, direct, direct, position)
+    paths = [{"via": [thing_key(canon, v) for v in c["via"]], "studies": list(c["studies"]), "context": c["context"],
+              "verdict": c["verdict"], "reason": c["reason"]}
+             for c in network.get("chains") or []
+             if thing_key(canon, c["source"]) == source and thing_key(canon, c["target"]) == target
+             and _on(c["metric"], params.metric, canon)]
+    if not paths:
+        out.update(reason=chaining_rules.NO_PATH)
+        return out
+    verdict, why, chosen = rules.chain_paths([(p["verdict"], p["reason"]) for p in paths])
+    out.update(verdict=verdict, inferred=why is None, reason=why)
+    return _chain_finish(out, paths, [paths[n] for n in chosen], position)
+
+
+def _chain_finish(out: dict[str, Any], paths: list[dict[str, Any]], chosen: list[dict[str, Any]],
+                  position: dict[str, int]) -> dict[str, Any]:
+    """`paths`, and the chosen paths' `via` (path order), `studies` (study order) and `note` (the engine's _finish)."""
+    via: list[str] = []
+    for p in chosen:
+        via += [v for v in p["via"] if v not in via]
+    docs = {d for p in chosen for d in p["studies"]}
+    out.update(paths=paths, via=via, studies=sorted(docs, key=lambda d: (position.get(d, len(position)), d)))
+    if out["inferred"]:
+        out["note"] = chaining_rules.NOTE.format(via=", ".join(via))
+    return out
+
+
+# limitations -------------------------------------------------------------------------------------------------
+
+def _limitations(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
+    wanted = thing_key(canon, params.thing) if params.thing is not None else None
+    found: dict[tuple[str | None, str], dict[str, Any]] = {}
+    for s in truth.studies:
+        labels = {c["id"]: c["label"] for c in s.get("conditions") or []}
+        for lim in s.get("limitations") or []:
+            label = labels.get(lim.get("thing") or "")
+            thing = thing_key(canon, label) if label is not None else None
+            if wanted is not None and thing != wanted:
+                continue
+            entry = found.setdefault((thing, lim["category"]), {"thing": thing, "category": lim["category"],
+                                                                "papers": [], "items": []})
+            if s["paper"] not in entry["papers"]:
+                entry["papers"].append(s["paper"])
+            entry["items"].append(lim["id"])
+    entries = [found[k] for k in sorted(found, key=lambda k: (k[0] is None, (k[0] or "").casefold(), k[1]))]
+    counts: dict[str, dict[str, int]] = {}
+    unlinked: dict[str, int] = {}
+    for e in entries:
+        (unlinked if e["thing"] is None else counts.setdefault(e["thing"], {}))[e["category"]] = len(e["papers"])
+    return {"kind": "limitations", "system": SYSTEM, "thing": params.thing, "entries": entries, "counts": counts,
+            "unlinked": unlinked}
+
+
+# builds_on ---------------------------------------------------------------------------------------------------
+
+def truth_links(truth: GroundTruth) -> tuple[list[dict[str, Any]], list[str]]:
+    """The planted dependency links (from, to, reuses, items: the dependency ids), in study order of the citing
+    then the cited study, then by reuses; and the cited labels of the dependencies `outside_corpus` (each once)."""
+    paper = {s["study_id"]: s["paper"] for s in truth.studies}
+    position = _papers(truth)
+    found: dict[tuple[str, str, str], list[str]] = {}
+    unresolved: list[str] = []
+    for s in truth.studies:
+        for d in s.get("dependencies") or []:
+            to = paper.get(d["cites"])
+            if d.get("outside_corpus") or to is None:
+                if d.get("label") and d["label"] not in unresolved:
+                    unresolved.append(d["label"])
+                continue
+            found.setdefault((s["paper"], to, str(d["reuses"])), []).append(d["id"])
+    ordered = sorted(found, key=lambda k: (position[k[0]], position[k[1]], k[2]))
+    return [{"from": f, "to": t, "reuses": r, "items": found[(f, t, r)]} for f, t, r in ordered], unresolved
+
+
+def _builds_on(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None, canon: Canon) -> dict[str, Any]:
+    wanted = thing_key(canon, params.thing) if params.thing is not None else None
+    position = _papers(truth)
+    links, unresolved = truth_links(truth)
+    citers: dict[str, list[str]] = {}
+    for link in links:
+        citers.setdefault(link["to"], []).append(link["from"])
+    mentions: dict[str, list[str]] = {}
+    taken: set[tuple[str, str]] = set()
+    years: dict[str, int | None] = {}
+    for s in truth.studies:
+        doc = s["paper"]
+        labels = {c["id"]: c["label"] for c in s.get("conditions") or []}
+        years[doc] = builds_on_rules.year_of((s.get("study_label") or {}).get("label"))
+        for label in labels.values():
+            docs = mentions.setdefault(thing_key(canon, label), [])
+            if doc not in docs:
+                docs.append(doc)
+        for d in s.get("dependencies") or []:   # a dependency links its thing whether or not it resolves
+            if d.get("thing") in labels:
+                taken.add((doc, thing_key(canon, labels[d["thing"]])))
+    origins: dict[str, str | None] = {}
+    followers: dict[str, list[str]] = {}
+    for key, docs in mentions.items():
+        if wanted is not None and key != wanted:
+            continue
+        origin = builds_on_rules.origin_of([d for d in docs if (d, key) not in taken], years, position)
+        origins[key] = origin
+        followers[key] = builds_on_rules.followers_of(origin, citers, position) if origin is not None else []
+    if wanted is not None and wanted not in origins:   # the asked thing is mentioned nowhere
+        origins[wanted], followers[wanted] = None, []
+    ranking = sorted(origins, key=lambda k: (-len(followers[k]), k.casefold(), k))
+    return {"kind": "builds_on", "system": SYSTEM, "thing": params.thing, "links": links,
+            "origins": {k: origins[k] for k in ranking}, "followers": {k: followers[k] for k in ranking},
+            "influence": {k: len(followers[k]) for k in ranking}, "ranking": ranking, "unresolved": unresolved}
+
+
+BUILDERS = {"effect": _effect, "consistency": _consistency, "inventory": _inventory, "best": _best,
+            "chaining": _chaining, "limitations": _limitations, "builds_on": _builds_on}
 
 
 def saved_answer(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None) -> bool:
