@@ -154,7 +154,8 @@ def cmd_draft(args: argparse.Namespace) -> int:
     cache = args.cache or DOMAINS / args.domain / "draft-calls.jsonl"
     try:
         path = draft(args.domain, args.papers, model=model_for(args.model, exchange),
-                     verify_model=model_for(args.verify_model, exchange), cache=cache)
+                     verify_model=model_for(args.verify_model, exchange), cache=cache,
+                     allow_empty_heldout=args.allow_empty_heldout)
     except (ValueError, ModelCallError) as exc:
         print(f"ERROR: drafting failed: {exc}", file=sys.stderr, flush=True)
         return 1
@@ -224,6 +225,8 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--verify-model", required=True, help="LiteLLM alias of the quoting model, or exchange:<name>")
     d.add_argument("--cache", type=Path, default=None, help="default domains/<domain>/draft-calls.jsonl")
     d.add_argument("--exchange", type=Path, default=None, help="default domains/<domain>/.draft-exchange")
+    d.add_argument("--allow-empty-heldout", action="store_true",
+                   help="draft even though domains/heldout.yaml lists no id (by default an empty list is refused)")
     d.set_defaults(func=cmd_draft)
     args = parser.parse_args(argv)
     return args.func(args)

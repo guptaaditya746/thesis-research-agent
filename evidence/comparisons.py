@@ -78,7 +78,7 @@ class Comparison:
     def key(self, groups: NameGroups | None = None) -> tuple[Any, ...]:
         """What a copied comparison shares with its origin's (rule 4): the things by their keys (rule 6), not by
         how a paper spells them."""
-        return (_key(self.a, groups), _key(self.b, groups), self.metric, self.context,
+        return (thing_key(self.a, groups), thing_key(self.b, groups), self.metric, self.context,
                 round(self.a_value, rules.VALUE_DECIMALS), round(self.b_value, rules.VALUE_DECIMALS))
 
 
@@ -100,7 +100,10 @@ def _of_role(items: list[Item], roles: RoleMap, role: str) -> list[Item]:
     return [i for i in items if i.evidence_type in types]
 
 
-def _name(item: Item, roles: RoleMap) -> str | None:
+def name_of(item: Item | None, roles: RoleMap) -> str | None:
+    """The item's name (whitespace runs as one space); None for no item, no name field or a blank name."""
+    if item is None:
+        return None
     field = roles.field_or_none(item.evidence_type, "name")
     value = item.fields.get(field) if field is not None else None
     text = " ".join(str(value).split()) if value is not None else ""
@@ -112,15 +115,11 @@ def _sort(key: str) -> tuple[str, str]:
     return key.split(":", 1)[1], key
 
 
-def _key(name: str, groups: NameGroups | None) -> str:
-    """The thing a name stands for (rule 6): its group, else its clean form (kept apart from group names)."""
+def thing_key(name: str, groups: NameGroups | None) -> str:
+    """The thing a name stands for (rule 6): its group, else its clean form (kept apart from group names). The kinds
+    that read comparisons match things by it too."""
     group = groups.group_of(name) if groups is not None else None
     return f"group:{group}" if group is not None else f"clean:{names.clean(name)}"
-
-
-def thing_key(name: str, groups: NameGroups | None) -> str:
-    """The thing a name stands for, as comparisons match things (rule 6): for the kinds that read comparisons."""
-    return _key(name, groups)
 
 
 def resolve_cited(documents: Sequence[str], items: Mapping[str, list[Item]], roles: RoleMap,
@@ -131,15 +130,15 @@ def resolve_cited(documents: Sequence[str], items: Mapping[str, list[Item]], rol
     labelled: dict[str, str] = {}
     for doc in documents:
         for label in sorted(_of_role(items.get(doc, []), roles, "study_label"), key=lambda i: (i.first_start(), i.item_id)):
-            text = _name(label, roles)
+            text = name_of(label, roles)
             if text is not None:
-                labelled.setdefault(_key(text, groups), doc)
+                labelled.setdefault(thing_key(text, groups), doc)
     out: dict[str, str | None] = {}
     for doc in documents:
         for dep in _of_role(items.get(doc, []), roles, "dependency"):
-            cited = _name(dep, roles)
+            cited = name_of(dep, roles)
             if cited is not None:
-                out[cited] = labelled.get(_key(cited, groups))
+                out[cited] = labelled.get(thing_key(cited, groups))
     return out
 
 
@@ -163,15 +162,15 @@ def build_comparisons(document: str, items: list[Item], roles: RoleMap, groups: 
         thing, metric = linked.get(Role.COMPARED_THING), linked.get(Role.METRIC)
         canonical_field = roles.field_or_none(metric.evidence_type, "canonical") if metric is not None else None
         canonical = metric.fields.get(canonical_field) if metric is not None and canonical_field else None
-        name = _name(thing, roles) if thing is not None else None
+        name = name_of(thing, roles)
         if name is None or canonical is None:
             continue
         dep = linked.get(Role.DEPENDENCY)
         copied: tuple[str | None, str] | None = None
         if dep is not None and dep.fields.get(REUSES_FIELD) == COPIED_RESULT:
-            text = _name(dep, roles) or ""
+            text = name_of(dep, roles) or ""
             copied = ((cited or {}).get(text), text)
-        key = _key(name, groups)
+        key = thing_key(name, groups)
         shown.setdefault(key, key.split(":", 1)[1] if key.startswith("group:") else name)
         found.setdefault(str(canonical), {}).setdefault(key, []).append((value, thing, metric, copied))
     out: list[Comparison] = []

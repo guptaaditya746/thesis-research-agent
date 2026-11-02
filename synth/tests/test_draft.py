@@ -203,3 +203,23 @@ def test_a_short_code_inside_a_word_or_in_other_case_passes(tmp_path):
 def test_an_empty_or_tiny_quote_is_refused(tmp_path, quote):
     with pytest.raises(ValueError, match="verbatim"):
         run(tmp_path, papers_dir(tmp_path, n=5), model=scripted_recipe(), verify=scripted_quotes(quote))
+
+
+def test_an_empty_heldout_list_is_refused_unless_allowed(tmp_path):
+    folder = papers_dir(tmp_path, 5)
+    with pytest.raises(ValueError, match="held-out id list is empty"):
+        run(tmp_path, folder, heldout=set())
+    empty = tmp_path / "heldout.yaml"
+    empty.write_text("yun2024: []\nscilead: []\n", encoding="utf-8")
+    assert heldout_ids(empty) == set()
+    path = run(tmp_path, folder, scripted_recipe(), scripted_quotes(), heldout=set(), allow_empty_heldout=True)
+    assert path.is_file()
+
+
+def test_draft_cli_refuses_the_empty_shipped_list(tmp_path, monkeypatch, capsys):
+    from synth import cli, draft as draft_module
+    monkeypatch.setattr(draft_module, "heldout_ids", lambda *_: set())      # as the shipped file is until filled
+    code = cli.main(["draft", "--domain", "toy", "--papers", str(papers_dir(tmp_path, 5)), "--model", "exchange:w",
+                     "--verify-model", "exchange:v", "--exchange", str(tmp_path / "ex"),
+                     "--cache", str(tmp_path / "c.jsonl")])
+    assert code == 1 and "held-out id list is empty" in capsys.readouterr().err

@@ -3,7 +3,9 @@ second model quotes the source sentence behind each value, and code checks the r
 
 The checks, all deterministic, each a refusal (ValueError) before anything is written:
 - 5 to 10 papers;
-- no held-out paper (its file stem, or a PMCID in its text, is in `domains/heldout.yaml`);
+- no held-out paper (its file stem, or a PMCID in its text, is in `domains/heldout.yaml`); a held-out list with no
+  id at all is refused too (the OWED fill must not be skipped silently), unless `allow_empty_heldout`
+  (`--allow-empty-heldout`) says so;
 - the draft is a valid `Recipe` (a failure goes back to the model once, with the error: `ask` retries);
 - every name of a side but the network's reference is invented (the reference and the other conditions are generic
   comparators, such as a placebo or standard care, which real papers always name; the recipe check makes every network
@@ -109,13 +111,17 @@ def not_invented(recipe: Any, papers: list[dict[str, str]]) -> list[str]:
 
 
 def draft(domain: str, papers: Path, *, model: Any, verify_model: Any, cache: Path, root: Path = DOMAINS,
-          heldout: Collection[str] | None = None) -> Path:
+          heldout: Collection[str] | None = None, allow_empty_heldout: bool = False) -> Path:
     """Write `root/<domain>/generator.yaml` drafted from the papers in `papers` and log it in provenance.json."""
     root = Path(root)
     target = root / domain / "generator.yaml"
     if target.exists():
         raise ValueError(f"{target} exists: a drafted recipe never replaces a recipe already there")
-    sources = read_papers(papers, heldout_ids() if heldout is None else heldout)
+    heldout = heldout_ids() if heldout is None else heldout
+    if not heldout and not allow_empty_heldout:
+        raise ValueError(f"the held-out id list is empty, so no paper could be refused as held out: fill {HELDOUT} "
+                         "first (plan 2 Task 18 Step 3), or pass --allow-empty-heldout to draft without the check")
+    sources = read_papers(papers, heldout)
     calls = JsonlCache(cache)
     settings = modelcall.CallSettings()
     gen_prompt = load_prompt(PROMPT_DIR / "draft-generator-v1.txt", DraftRecipe)

@@ -68,15 +68,6 @@ def _types(roles: RoleMap, role: str) -> set[str]:
     return set(roles.types_of(Role(role)))
 
 
-def _name(item: Item | None, roles: RoleMap) -> str | None:
-    """The item's name (whitespace runs as one space); None for no item, no name field or a blank name."""
-    if item is None:
-        return None
-    field = roles.field_or_none(item.evidence_type, "name")
-    value = item.fields.get(field) if field is not None else None
-    return " ".join(str(value).split()) or None if value is not None else None
-
-
 def _labels(items: list[Item], roles: RoleMap) -> list[Item]:
     labels = _types(roles, "study_label")
     return sorted((i for i in items if i.evidence_type in labels), key=lambda i: (i.first_start(), i.item_id))
@@ -90,7 +81,7 @@ def year_of(label: str | None) -> int | None:
 
 def _year(items: list[Item], roles: RoleMap) -> int | None:
     """The year of the document's first study label (`year_of`)."""
-    return year_of(next((n for n in (_name(i, roles) for i in _labels(items, roles)) if n is not None), None))
+    return year_of(next((n for n in (cmp.name_of(i, roles) for i in _labels(items, roles)) if n is not None), None))
 
 
 def origin_of(own: list[str], years: dict[str, int | None], position: dict[str, int]) -> str | None:
@@ -148,16 +139,16 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
             return key
 
         for item in items.get(doc, []):
-            if item.evidence_type in things and (name := _name(item, roles)) is not None:
+            if item.evidence_type in things and (name := cmp.name_of(item, roles)) is not None:
                 key = key_of(name)
                 if doc not in mentions.setdefault(key, []):
                     mentions[key].append(doc)
             if item.evidence_type not in dependencies:
                 continue
             for target in (by_id.get(t) for t in item.links.values()):
-                if target is not None and target.evidence_type in things and (name := _name(target, roles)):
+                if target is not None and target.evidence_type in things and (name := cmp.name_of(target, roles)):
                     taken.add((doc, key_of(name)))
-            cited = _name(item, roles)
+            cited = cmp.name_of(item, roles)
             if cited is None:
                 continue
             to = cited_doc.get(cited)
