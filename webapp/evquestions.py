@@ -2,12 +2,12 @@
 types it.
 
     questions:
-      - id: rag-factuality                       # a plain name (webapp/files.py ID)
-        question: Does retrieval-augmented ...?  # the exact question; a hand-written protocol must ask it too
+      - id: <question-id>                        # a plain name (webapp/files.py ID)
+        question: Does <treatment> ...?          # the exact question; a hand-written protocol must ask it too
         kind: effect                             # effect | inventory | consistency | best; the protocol's kind
-        truth: {metric: factual_accuracy, min_effect: 0.01}   # the expected answer's parameters (evaluation)
-        protocol: protocols/rag-factuality.yaml           # optional: the hand-written protocol
-        agentic_protocol: protocols/rag-factuality-agentic.yaml   # optional: its agentic variant
+        truth: {metric: <canonical metric>, min_effect: 0.01}   # the expected answer's parameters (evaluation)
+        protocol: protocols/<question-id>.yaml         # optional: the hand-written protocol
+        agentic_protocol: protocols/<question-id>-agentic.yaml # optional: its agentic variant
 
 Paths are relative to the questions file's folder (the pack folder) and must lie in the protocols directory
 (`$EV_PROTOCOLS`), where the run step finds protocols by name; a protocol must parse (evidence/protocol.py)

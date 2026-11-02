@@ -14,9 +14,9 @@ import { evCell, splitExtractor } from "@/lib/ev"
 
 export default function BenchmarkPage() {
   const { id = "" } = useParams()
-  const bench = useBenchmark(id)
+  const benchmark = useBenchmark(id)
   return (
-    <QueryPage query={bench} what={`benchmark ${id}`} back={{ to: "/report", label: "Report" }}>
+    <QueryPage query={benchmark} what={`benchmark ${id}`} back={{ to: "/report", label: "Report" }}>
       {({ ref, records, markdown }) => (
         <div className="space-y-6">
           <PageHeader title={<span className="font-mono">{ref.id}</span>} description={`${records.length} extractor records, pooled over the reports given to evaluate benchmark.`} />

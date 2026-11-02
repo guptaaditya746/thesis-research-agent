@@ -57,7 +57,7 @@ function TypedQuestion() {
           <div className="grid gap-1.5">
             <Label htmlFor="typed-question">Question</Label>
             <Textarea id="typed-question" className="min-h-16" maxLength={600} value={text} onChange={(e) => setText(e.target.value)}
-              placeholder="Which retriever is best on long documents?" aria-describedby="typed-question-help" />
+              placeholder="Type your own question about these papers" aria-describedby="typed-question-help" />
             <p id="typed-question-help" className="text-xs text-muted-foreground">
               At least {MIN_QUESTION} characters{text.trim().length > 0 && !ok ? ` (${MIN_QUESTION - text.trim().length} to go)` : ""}. Up to 600.
             </p>

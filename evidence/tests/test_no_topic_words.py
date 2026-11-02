@@ -11,11 +11,14 @@ import yaml
 from evidence.pack import DOMAINS, load_pack
 
 # evaluation: plan 2 Task 14 (preflight P2); packbuilder: its prompts are where topic examples creep in (D35)
-CHECKED_DIRS = ["evidence", "agent", "synth", "evaluation", "packbuilder"]
+CHECKED_DIRS = ["evidence", "agent", "synth", "evaluation", "packbuilder", "webapp"]
 ROOT = DOMAINS.parent
-SUFFIXES = {".py", ".md", ".txt", ".yaml"}
+SUFFIXES = {".py", ".md", ".txt", ".yaml", ".ts", ".tsx"}
 # examples: synth/examples/rag-demo-* are committed corpora, pinned byte for byte (D36), not code.
-SKIPPED = {"tests", "fixtures", "__pycache__", "examples"}
+# webapp: dependencies, the build, the mock data and the public folder are not code of ours (F41)
+SKIPPED = {"tests", "fixtures", "__pycache__", "examples", "node_modules", "dist", "mocks", "public"}
+# generated file of the web app: the API types are written by openapi-typescript
+GENERATED = {"webapp/web/src/api/schema.d.ts"}
 # Files kept with their topic words, by path, each with its reason (D8: replay needs their exact bytes).
 _REPLAY = ("kept byte for byte so corpora built before the prompts became recipe templates replay with their "
            "cached calls (D36); the v3 template filled from the default recipe is this text")
@@ -37,6 +40,8 @@ LEGACY = {
 _BM25 = ("the answer-level baseline is a passage-retrieval system of any domain (BM25 over the papers): its own "
          "method word, its answer.json keys `retrieved` and `settings.retrieval`/`retriever` and the CLI flag "
          "`--retrieval`, which old answers and runbooks carry (D36)")
+_QID = ("`rag-factuality` is the id of the repo's default question (domains/rag/questions.yaml): it names the "
+        "run folders the baselines wrote (runs/<system>/<corpus>, D36), an id and not text a user reads")
 FILE_WORDS = {
     "evaluation/baselines/rag.py": ({"retriev"}, _BM25),
     "evaluation/cli.py": ({"retriev"}, _BM25),
@@ -47,6 +52,17 @@ FILE_WORDS = {
                                      "Evidence Inference 2.0's label vocabulary, quoted as its release writes it "
                                      "('significantly increased' / 'significantly decreased'), is the gold the "
                                      "engine's direction is mapped onto (D42)"),
+    # the web app (plan 3 Task 14): ids and field names of the answer-level baseline and of the default question,
+    # never text shown to a user; the user-facing topic words come from EvRunDetail.display (Pack.display)
+    "webapp/evfiles.py": ({"retriev"}, _BM25),
+    "webapp/evjobs.py": ({"retriev", "factuality"}, _BM25 + "; " + _QID),
+    "webapp/evmodels.py": ({"retriev", "factuality"}, _BM25 + "; " + _QID),
+    **{f"webapp/web/src/{f}": ({"retriev"}, _BM25 + "; the labels name that baseline's method")
+       for f in ("components/ev/AnswerPanel.tsx", "components/ev/EvidenceView.tsx",
+                 "components/flow/RunStep.tsx", "pages/ev/RunPage.tsx")},
+    "webapp/web/src/lib/jobs.ts": ({"factuality"}, _QID),
+    "webapp/web/src/pages/ev/CorporaPage.tsx": ({"generation"}, "the synthetic corpus generator's settings: "
+                                                 "'generation' of papers, a word of any domain"),
 }
 
 
@@ -111,10 +127,11 @@ def allowlist() -> set[str]:
 
 
 def code_files(dirs: list[str]) -> list[Path]:
-    """The .py, .md, .txt and .yaml files under `dirs`, without tests/, fixtures, examples and the LEGACY files."""
+    """The .py, .md, .txt, .yaml, .ts and .tsx files under `dirs`, without tests/, fixtures, examples and the LEGACY files."""
     return sorted(f for d in dirs for f in (ROOT / d).rglob("*")
                   if f.suffix in SUFFIXES and f.is_file() and not SKIPPED & set(f.relative_to(ROOT).parts)
-                  and f.relative_to(ROOT).as_posix() not in LEGACY)
+                  and f.relative_to(ROOT).as_posix() not in {*LEGACY, *GENERATED}
+                  and not re.search(r"\.test\.tsx?$", f.name))
 
 
 def text_of(f: Path) -> str:

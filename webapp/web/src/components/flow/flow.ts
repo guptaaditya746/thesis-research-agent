@@ -1,5 +1,5 @@
 /**
- * The guided flow's state, kept in the URL (`/flow/:qid/:step?protocol=repo:rag-factuality&corpus=...&run=...`),
+ * The guided flow's state, kept in the URL (`/flow/:qid/:step?protocol=repo:<protocol>&corpus=...&run=...`),
  * so a reload, a link or the back button keep the choices: the protocol, the corpus, the run (an engine run's
  * `<group>~<name>`) and the proposal being worked on.
  */
@@ -51,7 +51,7 @@ export function useFlow(question: Question): Flow {
   return { question, protocol, corpus: params.get("corpus"), run: params.get("run"), proposal: params.get("proposal"), set, href }
 }
 
-/** "hand-written rag-factuality", "proposal p1 (frozen)". */
+/** "hand-written <protocol>", "proposal p1 (frozen)". */
 export function protocolLabel(ref: ProtocolRef | null): string {
   if (!ref) return "none chosen"
   return ref.source === "repo" ? `hand-written ${ref.name}` : `proposal ${ref.name}`
