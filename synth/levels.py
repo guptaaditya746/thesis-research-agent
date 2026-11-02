@@ -117,6 +117,16 @@ class Plan:
                 "limitations": [x.id for x in self.limitations], "dependencies": [d.id for d in self.dependencies],
                 "study_label": [self.byline.fact] if self.byline else []}[key]
 
+    def truth_name(self, cid: str) -> tuple[str, tuple[str, ...]]:
+        """(label, aliases) of a condition in its ground-truth record: the name the paper writes it by and its other
+        renderings, except that a spelling variant ("QUIN-TAPRIDE") keeps the real label and is an alias of it, so a
+        reader of the truth can link the spelling to the thing (a hereafter or code-name variant already lists the
+        label among its aliases)."""
+        kind, form = self.variants.get(cid, ("", ""))
+        if kind == "spelling":
+            return self.condition(cid).label, (*self.cond_aliases[cid], form)
+        return self.cond_name[cid], self.cond_aliases[cid]
+
     def first(self, cid: str) -> Seg:
         """The name a condition is first mentioned by (the abstract): its label when the paper then calls it by a
         short form it defines (a hereafter or code-name variant), else its name."""

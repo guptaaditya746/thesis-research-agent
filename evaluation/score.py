@@ -287,8 +287,9 @@ def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None,
     return f.get("direction") == d.get("direction")
 
 
-def main_spans(item: Item) -> list[tuple[int, int]]:
-    role = MAIN_ROLE.get(item.evidence_type)
+def main_spans(item: Item, roles: dict[str, str] = MAIN_ROLE) -> list[tuple[int, int]]:
+    """The item's spans of its type's main role (`roles`: a truth's `main_role`), else all its spans."""
+    role = roles.get(item.evidence_type)
     spans = [s for s in item.spans if s.role == role] or list(item.spans)
     return [(s.selector["start"], s.selector["end"]) for s in spans]
 
@@ -302,13 +303,13 @@ def overlap_size(item: Item, fact: Fact, truth: GroundTruth) -> int:
     """Characters the item's main-role spans share with the fact's main-role placements (summed over pairs)."""
     places = [(p["start"], p["end"]) for p in truth.placements_of(fact.id, truth.main_role[fact.type])
               if p.get("paper", fact.paper) == fact.paper]
-    return sum(max(0, min(a[1], b[1]) - max(a[0], b[0])) for a in main_spans(item) for b in places)
+    return sum(max(0, min(a[1], b[1]) - max(a[0], b[0])) for a in main_spans(item, truth.main_role) for b in places)
 
 
 def span_hit(item: Item, fact: Fact, truth: GroundTruth) -> bool:
     places = [(p["start"], p["end"]) for p in truth.placements_of(fact.id, truth.main_role[fact.type])
               if p.get("paper", fact.paper) == fact.paper]
-    return any(overlaps(s, p) for s in main_spans(item) for p in places)
+    return any(overlaps(s, p) for s in main_spans(item, truth.main_role) for p in places)
 
 
 def _labels_agree(item: Item, fact: Fact) -> bool:
@@ -1093,8 +1094,9 @@ def _entry_key(truth_entries: list[dict[str, Any]], target: Target, canon: Canon
     """A function: system inventory entry -> its key, ("key", folded truth name) or ("unknown", folded name).
 
     A form (the entry's name, then its aliases) the name table knows gives its `Canon.key`; else a form that folds to a
-    form of a truth entry the recipe does not know (an ablation condition of the hard corpus) gives that entry; else
-    the entry is a key of its own (a false positive, never an error)."""
+    form of a truth entry the table does not know gives that entry (with a truth-built table every truth name has a
+    key, so this matters only for a table built without the truth, such as `default_canon`); else the entry is a key
+    of its own (a false positive, never an error)."""
     unkeyed = {fold(form): fold(e["name"]) for e in truth_entries if canon.key(target, e["name"]) is None
                for form in (e["name"], *(e.get("aliases") or []))}
 
@@ -1112,8 +1114,8 @@ def _entry_key(truth_entries: list[dict[str, Any]], target: Target, canon: Canon
 
 def score_inventory(exp: dict[str, Any], answer: dict[str, Any], canon: Canon | None = None) -> dict[str, Any]:
     """C, inventory: precision, recall and F1 of the set of keys, and of the set of (key, paper) pairs (sets: the
-    engine lists papers in manifest order, truth sorted); `canon` the corpus's name table (default: the default
-    pack's)."""
+    engine lists papers in manifest order, truth sorted); `canon` the corpus's name table. Without one, the default
+    pack's (`default_canon`: `exp` alone does not tell the corpus); score_kind always passes the corpus's."""
     target = exp["target"]
     truth_entries = exp["entries"]
     key = _entry_key(truth_entries, target, canon or default_canon())

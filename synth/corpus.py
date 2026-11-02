@@ -106,7 +106,8 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
         "study_id": s.study_id, "paper": s.study_id, "level": p.level,
         "relevant": s.relevant, "flags": study_flags(r, spec, s), "duplicate_of": s.duplicate_of, "missing": s.missing,
         # `variants`: the name variant the paper writes the thing by (none at the paraphrased level)
-        "conditions": [{"id": c.id, "role": c.role, "label": p.cond_name[c.id], "aliases": list(p.cond_aliases[c.id]),
+        # (a spelling variant keeps the real label, the spelling an alias of it: Plan.truth_name)
+        "conditions": [{"id": c.id, "role": c.role, "label": p.truth_name(c.id)[0], "aliases": list(p.truth_name(c.id)[1]),
                         **({"variants": [list(p.variants[c.id])]} if c.id in p.variants else {})}
                        for c in p.conditions],
         "metrics": [{"id": k.id, "canonical": k.canonical, "name": p.metric_name[k.id],

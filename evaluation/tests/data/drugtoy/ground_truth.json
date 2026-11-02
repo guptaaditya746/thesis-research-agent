@@ -397,8 +397,10 @@
         {
           "id": "S005.c2",
           "role": "drug",
-          "label": "QUINTAPRIDE",
-          "aliases": [],
+          "label": "Quintapride",
+          "aliases": [
+            "QUINTAPRIDE"
+          ],
           "variants": [
             [
               "spelling",

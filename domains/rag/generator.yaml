@@ -13,18 +13,22 @@ sides:
       synonym: model that answers from its own parameters
       description: answers each question from what it learned in pre-training, without access to any documents
       code: B
+      kind: no-retrieval
     - label: parametric-only model
       synonym: generator without any document access
       description: relies on its parametric knowledge alone and never sees an external source
       code: B
+      kind: no-retrieval
     - label: no-retrieval baseline
       synonym: language model used on its own
       description: receives only the question and produces an answer directly
       code: B
+      kind: no-retrieval
     - label: vanilla LLM
       synonym: plain generator with no lookup step
       description: is prompted with the question and nothing else
       code: B
+      kind: no-retrieval
   rag:
     role: treatment
     names:
@@ -32,37 +36,47 @@ sides:
       synonym: model that consults the document index before answering
       description: retrieves passages from the reference collection and conditions its answer on them
       code: R
+      kind: rag
     - label: RAG pipeline
       synonym: system grounded in retrieved passages
       description: first searches the reference collection and then writes an answer from the passages it found
       code: R
+      kind: rag
     - label: retrieval-augmented generator
       synonym: variant that reads retrieved evidence first
       description: is given the top passages of a dense retriever together with the question
       code: R
+      kind: rag
     - label: retrieve-then-read model
       synonym: configuration that looks up supporting documents
       description: looks up supporting documents for each question and reads them before it answers
       code: R
+      kind: rag
 others:
 - label: RAG without reranking
   synonym: retrieval variant that skips the reranker
   description: uses the same retriever but keeps the passages in their original order
+  kind: rag-no-rerank
 - label: RAG with random passages
   synonym: variant fed with randomly drawn passages
   description: receives passages drawn at random from the collection instead of retrieved ones
+  kind: rag-random
 - label: fine-tuned model
   synonym: generator adapted to the domain by further training
   description: was trained further on in-domain question and answer pairs
+  kind: fine-tuned
 - label: chain-of-thought prompting
   synonym: model prompted to reason step by step
   description: is asked to write out its reasoning before giving the final answer
+  kind: chain-of-thought
 - label: self-consistency decoding
   synonym: model that samples several answers and votes
   description: samples several answers and returns the most frequent one
+  kind: self-consistency
 - label: query-rewriting variant
   synonym: variant that reformulates the question before the search
   description: rewrites each question into a search query before it consults the collection
+  kind: query-rewriting
 other_codes:
 - A1
 - A2

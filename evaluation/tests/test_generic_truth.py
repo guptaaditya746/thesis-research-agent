@@ -20,10 +20,12 @@ from evidence import protocol as protocol_module
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = Path(__file__).resolve().parent / "data"
-# A template-built drugtoy corpus (synth build --domain drugtoy --root evidence/tests/fixtures --seed 1 --studies 6
-# --levels explicit --preset builds_on): S003 and S006 write Zelvora by its code name ZV-604, S004 Quintapride as
-# QT-737, S002 Morvectin as "MV" (hereafter); S001 and S004 write Zelvora plainly.
+# Template-built drugtoy corpora (synth build --domain drugtoy --root evidence/tests/fixtures --seed 1 --studies 6
+# --levels explicit,distributed --preset builds_on): S003 and S006 write Zelvora by its code name ZV-604, S004
+# Quintapride as QT-737, S002 Morvectin as "MV" (hereafter), S005 Quintapride as QUINTAPRIDE (spelling); S001 and S004
+# write Zelvora plainly. At the distributed level every condition also has its paper-local code ("Z") as an alias.
 DRUG_GT = DATA / "drugtoy" / "ground_truth.json"
+DRUG_DISTRIBUTED = DATA / "drugtoy-distributed" / "ground_truth.json"
 FIXTURES = ROOT / "evidence" / "tests" / "fixtures"
 MIXED = ROOT / "tests" / "EV2" / "corpora" / "rag-claude-s1-mixed" / "ground_truth.json"
 # The modules Task 12 makes stand on their own (preflight P15; evaluation/review.py reads synth's review sheet on
@@ -62,6 +64,36 @@ def test_canon_built_from_truth_knows_name_variants():
     assert c.key("condition", "Avelumab") is None
     assert c.key("metric", "responder proportion") == "responder proportion"   # no recipe under domains/: as truth
     assert c.key("dataset", "older adults") == "older adults"
+
+
+def test_distributed_codes_never_become_keys():
+    """At the distributed level synth lists the paper's code first and the label after it (aliases ["Z", "Zelvora"]):
+    the variant keys to the label, never to the code."""
+    c = Canon.from_truth(GroundTruth.load(DRUG_DISTRIBUTED))
+    assert c.key("condition", "ZV-604") == c.key("condition", "Zelvora") == "Zelvora"
+    assert c.key("condition", "QT-737") == c.key("condition", "Quintapride") == "Quintapride"
+    assert c.key("condition", "Z") is None and c.key("condition", "Q") is None
+
+
+def _hand_truth(tmp_path: Path, conditions: list[list[dict]]) -> GroundTruth:
+    studies = [{"study_id": f"S{i + 1:03d}", "paper": f"S{i + 1:03d}", "level": "distributed", "conditions": cs}
+               for i, cs in enumerate(conditions)]
+    path = tmp_path / "ground_truth.json"
+    path.write_text(json.dumps({"corpus_id": "hand", "studies": studies}), encoding="utf-8")
+    return GroundTruth.load(path)
+
+
+def test_a_variant_written_first_keys_to_its_label_not_its_code(tmp_path):
+    """No recipe, and the code-name paper comes before any paper that writes the label plainly."""
+    truth = _hand_truth(tmp_path, [
+        [{"id": "S001.c1", "label": "ZV-604", "aliases": ["B", "Zelvora"], "variants": [["code_name", "ZV-604"]]}],
+        [{"id": "S002.c1", "label": "Zelvora", "aliases": ["A"]}],
+        [{"id": "S003.c1", "label": "Quintapride", "aliases": ["Q", "quin-tapride"],
+          "variants": [["spelling", "quin-tapride"]]}]])
+    c = Canon.from_truth(truth)
+    assert c.key("condition", "ZV-604") == c.key("condition", "Zelvora") == "Zelvora"
+    assert c.key("condition", "quin-tapride") == c.key("condition", "Quintapride") == "Quintapride"
+    assert c.key("condition", "B") is None
 
 
 def test_canon_reads_the_domain_recipe_as_data():

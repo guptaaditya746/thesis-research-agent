@@ -9,18 +9,17 @@ this order (a form keeps the first key it is given):
    name, abbreviation or description gives the metric name; a condition's label or synonym gives its label; a
    context's name gives the name.
 2. the ground truth: a condition's label and its name `variants` (a code name, a spelling, a "hereafter" short
-   form) give the key of the first of its label, variant forms or aliases already known, else its first alias when
-   it has variants (the name the variant stands for), else its label; a metric's name and a dataset's name give
-   their known key, else themselves. A condition's `aliases` only find a key and are never added: they can be
+   form) give the key of the first of its label, variant forms or aliases already known, else, when the label is
+   itself a variant form, its last alias (the name the variant stands for: synth lists a paper-local code first and
+   the label after it), else its label (a spelling variant keeps the real label; synth/levels.py Plan.truth_name); a metric's name and a dataset's name give their known key, else themselves. A condition's `aliases` only find a key and are never added: they can be
    paper-local codes (the distributed level's "B", "R"), which name different things in different papers.
 
 `key(target, name)` (case-folded, whitespace collapsed) gives the stable key, or None for a name the corpus does
 not know (a baseline's unknown name is then a false positive, never an error).
 
 `kind_of(label)` gives the method kind of a condition (any known form of its name) for the `best` questions: a truth
-condition's `kind`, else a recipe name's `kind`, else the domain's best protocols' `best.kinds` (kind -> names; the
-protocols in `<domains>/<domain>/protocols/` with `kind: best`, read as YAML data in file order). `kinds` lists the
-kinds in that order.
+condition's `kind`, else a recipe name's `kind` (P16; never the pack's protocols, which a user may edit: truth does
+not change with them). `kinds` lists the kinds in that order.
 
 `question_canonicals` are the canonicals of the question metrics, the studies' (each study's first metric) and the
 recipe's (`other` is none): a fact with one of them is compared on its canonical alone (score.same_metric).
@@ -59,17 +58,6 @@ def recipe_data(domain: str, root: Path = DOMAINS) -> dict[str, Any] | None:
     return data if isinstance(data, dict) else None
 
 
-def best_kinds(domain: str, root: Path = DOMAINS) -> dict[str, list[str]]:
-    """kind -> condition names, from the `best.kinds` of the domain's best protocols (file order)."""
-    out: dict[str, list[str]] = {}
-    for path in sorted((Path(root) / domain / "protocols").glob("*.yaml")):
-        data = _yaml(path)
-        if isinstance(data, dict) and data.get("kind") == "best":
-            for kind, names in ((data.get("best") or {}).get("kinds") or {}).items():
-                out.setdefault(kind, []).extend(str(n) for n in names or [])
-    return out
-
-
 @dataclass
 class Canon:
     """The name table of one corpus (module docstring)."""
@@ -101,8 +89,8 @@ class Canon:
 
     @classmethod
     def from_truth(cls, truth: GroundTruth | None, root: Path = DOMAINS) -> Canon:
-        """The table of `truth`'s corpus; `root` the folder of domains its recipe and protocols are read from. Without
-        a truth, the default pack's table from its recipe and protocols alone (`default_canon`)."""
+        """The table of `truth`'s corpus; `root` the folder of domains its recipe is read from. Without a truth, the
+        default pack's table from its recipe alone (`default_canon`)."""
         canon = cls((truth.domain if truth is not None else None) or DEFAULT_PACK, Path(root))
         recipe = recipe_data(canon.domain, root) or {}
         canon._from_recipe(recipe)
@@ -114,8 +102,7 @@ class Canon:
                        if c.get("kind")]
         recipe_kinds = [(str(n["label"]), str(n["kind"])) for n in (*names, *(recipe.get("others") or []))
                         if n.get("kind")]
-        best = [(name, kind) for kind, kind_names in best_kinds(canon.domain, root).items() for name in kind_names]
-        for name, kind in (*truth_kinds, *recipe_kinds, *best):
+        for name, kind in (*truth_kinds, *recipe_kinds):
             if (k := canon.key("condition", name)) is not None:
                 canon.kinds_of.setdefault(k, kind)
         canon.question_canonicals = frozenset(
@@ -139,7 +126,9 @@ class Canon:
                 variants = [str(form) for _, form in c.get("variants") or []]
                 aliases = [str(a) for a in c.get("aliases") or []]
                 own = [str(c["label"]), *variants]
-                k = self._known("condition", [*own, *aliases]) or (aliases[0] if variants and aliases else own[0])
+                # the label itself a variant (a code name, a hereafter form): the name it stands for is the last alias
+                k = self._known("condition", [*own, *aliases]) or (aliases[-1] if aliases and own[0] in variants
+                                                                   else own[0])
                 self._add("condition", own, k)
             for m in study.get("metrics") or []:
                 name = str(m["name"])
@@ -151,5 +140,5 @@ class Canon:
 
 @functools.cache
 def default_canon() -> Canon:
-    """The default pack's table without a corpus (recipe and protocols only): for a caller that has no truth."""
+    """The default pack's table without a corpus (its recipe only): for a caller that has no truth."""
     return Canon.from_truth(None)

@@ -259,6 +259,20 @@ def test_ground_truth_records_dependencies_limitations_and_variants():
     assert all("variants" not in c for r in records for c in r["conditions"][2:])
 
 
+def test_a_spelling_variant_keeps_the_real_label_in_the_truth():
+    """A paper that writes Quintapride as "quin-tapride" (or "QUINTAPRIDE"): the record's label is the real label and
+    the spelling is its alias, so a reader of the truth links the two; a code name keeps the label among its aliases."""
+    s, c, form = next((s, c, c.variants[0][1]) for s in generate(6, 6, recipe=DRUGTOY, spec=SPEC, preset="builds_on")
+                      for c in s.conditions if c.variants and c.variants[0][0] == "spelling" and "-" in c.variants[0][1])
+    for level in ("explicit", "distributed"):
+        record = corpus.study_truth(corpus.Rendered(s, make_plan(s, level, random.Random(0)), "", [], [], None), SPEC)
+        cond = next(x for x in record["conditions"] if x["id"] == c.id)
+        assert cond["label"] == c.label and cond["aliases"][-1] == form and cond["variants"] == [["spelling", form]]
+    coded = [x for r in (record_of(s) for s in BUILT) for x in r["conditions"]
+             if x.get("variants") and x["variants"][0][0] == "code_name"]
+    assert coded and all(x["label"] == x["variants"][0][1] and x["aliases"] for x in coded)
+
+
 def test_rag_records_and_settings_gain_no_keys():
     r = record_of(generate(1, 2)[0], truth.default_spec())
     assert not {"dependencies", "limitations"} & set(r)

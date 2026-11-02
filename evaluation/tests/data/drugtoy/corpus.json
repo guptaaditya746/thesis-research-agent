@@ -4,7 +4,7 @@
   "generator": {
     "name": "synth",
     "version": "3",
-    "code_sha256": "34341a546cead38a5fba1c889425b94275989000d6076f8eb0d360a759cdff40"
+    "code_sha256": "908214f312893c9bc4999f8f7b588735d848edc18d09ed03a1de2bdeac1f946c"
   },
   "renderer": "template",
   "level": "explicit",
@@ -59,7 +59,8 @@
       "neutral": 0.2
     },
     "levels": [
-      "explicit"
+      "explicit",
+      "distributed"
     ],
     "duplicates": 0,
     "missing": 0,
@@ -72,6 +73,11 @@
     "records": 6,
     "retained_studies": 6,
     "per_level": {
+      "distributed": {
+        "passed": 6,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
       "explicit": {
         "passed": 6,
         "failed_checks": {},
