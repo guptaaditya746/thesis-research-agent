@@ -7,8 +7,10 @@ import json
 import sys
 from pathlib import Path
 
+from evidence.pack import DOMAINS
+from evidence.protocol import DEFAULT_PACK
 from synth.levels import LEVELS
-from synth.truth import DIRECTIONS, KNOBS
+from synth.truth import DIRECTIONS, KNOBS, PRESETS
 
 
 def parse_levels(text: str) -> list[str]:
@@ -85,10 +87,13 @@ def cmd_build(args: argparse.Namespace) -> int:
     if args.hard and args.renderer == "llm":
         print(f"ERROR: {HARD_LLM}", file=sys.stderr, flush=True)
         return 2
+    if args.renderer == "llm" and not corpus.gate(args.domain, args.root):
+        print(f"ERROR: {corpus.GATE_MESSAGE}", file=sys.stderr, flush=True)
+        return 2
     renderer = make_renderer(args, args.out)
     result = corpus.build(name=args.name, seed=args.seed, studies=args.studies, renderer=renderer, out=args.out,
                           levels=args.levels, mix=args.effects, protocol=args.protocol, hard=args.hard,
-                          **{knob: getattr(args, knob) for knob in KNOBS})
+                          domain=args.domain, root=args.root, preset=args.preset, **{knob: getattr(args, knob) for knob in KNOBS})
     print(json.dumps(result, indent=2))
     if result["excluded"]:
         print(f"WARNING: {len(result['excluded'])} studies failed fidelity and were left out; see fidelity.json")
@@ -103,6 +108,15 @@ def cmd_build(args: argparse.Namespace) -> int:
               f"{args.min_retained:g}", file=sys.stderr, flush=True)
         return 1
     return 0
+
+
+def cmd_trial(args: argparse.Namespace) -> int:
+    from synth import corpus
+    args.renderer = "llm"
+    renderer = make_renderer(args, args.root / args.domain)
+    result = corpus.trial(args.domain, renderer=renderer, root=args.root, seed=args.seed)
+    print(json.dumps({k: result[k] for k in ("recipe_sha256", "passed", "studies")}, indent=2))
+    return 0 if result["passed"] else 1
 
 
 def cmd_variant(args: argparse.Namespace) -> int:
@@ -131,6 +145,24 @@ def cmd_sample(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_draft(args: argparse.Namespace) -> int:
+    from evidence.pack import DOMAINS
+    from modelcall import ModelCallError
+    from modelcall.exchange import model_for
+    from synth.draft import draft
+    exchange = args.exchange or DOMAINS / args.domain / ".draft-exchange"
+    cache = args.cache or DOMAINS / args.domain / "draft-calls.jsonl"
+    try:
+        path = draft(args.domain, args.papers, model=model_for(args.model, exchange),
+                     verify_model=model_for(args.verify_model, exchange), cache=cache,
+                     allow_empty_heldout=args.allow_empty_heldout)
+    except (ValueError, ModelCallError) as exc:
+        print(f"ERROR: drafting failed: {exc}", file=sys.stderr, flush=True)
+        return 1
+    print(f"wrote {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="synth", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -142,8 +174,11 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--effects", type=parse_effects, default=None,
                    help="true effect mix, e.g. supports=0.6,contradicts=0.2,neutral=0.2 (the default)")
     b.add_argument("--out", type=Path, default=Path("corpora"))
+    b.add_argument("--domain", default=DEFAULT_PACK,
+                   help=f"the pack whose recipe (domains/<domain>/generator.yaml) gives the words (default {DEFAULT_PACK})")
     b.add_argument("--protocol", type=Path, default=None,
-                   help="the protocol whose synthesis block defines the ground truth (default: the RAG protocol)")
+                   help="the protocol whose synthesis block defines the ground truth (default: the recipe's "
+                        "effect_protocol)")
     b.add_argument("--min-retained", type=float, default=0.0, metavar="FRACTION",
                    help="exit 1 when fewer than this fraction of the requested studies pass fidelity (default 0)")
     b.add_argument("--duplicates", type=count, default=0, help="extra papers that report an existing study again")
@@ -154,16 +189,27 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--hard", action="store_true",
                    help="about a third of the studies report a further experiment and/or an ablation, all in the "
                         "complex level's table (template renderer only)")
+    b.add_argument("--preset", choices=PRESETS, default="plain",
+                   help="builds_on: about the recipe's builds_on.share of the studies reuse an earlier study's method, "
+                        "dataset or result (the recipe needs a builds_on block); default plain")
+    b.add_argument("--root", type=Path, default=DOMAINS, help="the folder of domains (default domains/)")
     add_renderer_options(b)
     b.set_defaults(func=cmd_build)
+    t = sub.add_parser("trial", help="write 5 builds_on papers with the LLM renderer and record whether they all pass "
+                                     "(domains/<domain>/trial.json); build --renderer llm needs a passing one")
+    t.add_argument("--domain", required=True)
+    t.add_argument("--seed", type=int, default=0)
+    t.add_argument("--root", type=Path, default=DOMAINS, help="the folder of domains (default domains/)")
+    add_renderer_options(t, default="llm")
+    t.set_defaults(func=cmd_trial)
     v = sub.add_parser("variant", help="change one study's effect and re-render only its paper (counterfactual)")
     v.add_argument("--corpus", type=Path, required=True, help="a built corpus directory")
     v.add_argument("--study", required=True)
     v.add_argument("--direction", choices=DIRECTIONS, required=True, help="the study's new effect direction")
     v.add_argument("--out", type=Path, default=None, help="default <corpus>-cf-<study>-<direction>")
     v.add_argument("--protocol", type=Path, default=None,
-                   help="the protocol the base corpus was built from (default: the RAG protocol); refused if its "
-                        "sha256 differs from the base corpus.json's")
+                   help="the protocol the base corpus was built from (default: its recipe's effect_protocol); refused "
+                        "if its sha256 differs from the base corpus.json's")
     add_renderer_options(v, default=None, statements=None)
     v.set_defaults(func=cmd_variant)
     s = sub.add_parser("sample", help="write a human fidelity review sheet (Markdown + CSV) for a corpus")
@@ -172,6 +218,16 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--out", type=Path, default=None, help="default <corpus>/review")
     s.set_defaults(func=cmd_sample)
+    d = sub.add_parser("draft", help="draft domains/<domain>/generator.yaml from 5-10 real papers (D39)")
+    d.add_argument("--domain", required=True)
+    d.add_argument("--papers", type=Path, required=True, help="a folder of 5-10 .txt/.md papers, none held out")
+    d.add_argument("--model", default="sub-model-1", help="LiteLLM alias of the drafting model, or exchange:<name>")
+    d.add_argument("--verify-model", required=True, help="LiteLLM alias of the quoting model, or exchange:<name>")
+    d.add_argument("--cache", type=Path, default=None, help="default domains/<domain>/draft-calls.jsonl")
+    d.add_argument("--exchange", type=Path, default=None, help="default domains/<domain>/.draft-exchange")
+    d.add_argument("--allow-empty-heldout", action="store_true",
+                   help="draft even though domains/heldout.yaml lists no id (by default an empty list is refused)")
+    d.set_defaults(func=cmd_draft)
     args = parser.parse_args(argv)
     return args.func(args)
 

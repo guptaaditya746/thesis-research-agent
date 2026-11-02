@@ -28,15 +28,16 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 from pydantic_ai.models import Model
 
 from .. import rules
+from ..pack import DEFAULT_PACK, protocol_path
 from ..protocol import Kind, LocateStrategy
 from . import critic as critic_module, frame as frame_module
 from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask, dump_yaml, fresh, guard,
-                     mark_written, model_for, need, now, prompt, read_json, read_yaml, sha, write_json, write_text)
+                     mark_written, model_for, need, now, pack_propose, prompt, read_json, read_yaml, sha, write_json,
+                     write_text)
 from .frame import ID, Frame
 
 PROMPT = "cards-v3.md"
 CARDS_FILE = Path(__file__).resolve().parent / "cards.yaml"
-PROTOCOLS = Path(__file__).resolve().parent.parent / "protocols"
 CUSTOM, MODEL = "custom", "model"
 
 
@@ -259,7 +260,7 @@ def _apply_claim_check(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]
     p.setdefault("consistency", {})["by"] = v["by"]
 
 
-INVENTORY_TEMPLATES = {"metric": "inv-metrics", "condition": "inv-methods", "dataset": "inv-datasets"}
+INVENTORY_TEMPLATES: dict[str, str] = pack_propose()["inventory_templates"]   # target type -> protocol id
 
 
 def _read_list_target(p: dict[str, Any], f: Frame) -> dict[str, Any]:
@@ -271,7 +272,7 @@ def _apply_list_target(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]
     hand-written inventory protocol of that target; the merged names belong to the old target and go."""
     if p["inventory"]["target"] == v["target"]:
         return
-    template = read_yaml(PROTOCOLS / f"{INVENTORY_TEMPLATES[v['target']]}.yaml")
+    template = read_yaml(protocol_path(DEFAULT_PACK, INVENTORY_TEMPLATES[v["target"]]))
     run.setdefault("replaced_types", []).extend(p["evidence_types"])   # the cascade card must not name them any more
     p["evidence_types"] = copy.deepcopy(template["evidence_types"])
     p["inventory"] = {"target": v["target"]}
@@ -339,11 +340,18 @@ HANDLERS: dict[str, Handler] = {
 
 
 def definitions() -> list[CardSpec]:
-    """The fixed cards of cards.yaml, checked against the handlers (same ids)."""
+    """The fixed cards of cards.yaml, checked against the handlers (same ids). A card's options are its own, then
+    the default pack's options for it (propose.yaml `card_options`: the options that name topic words)."""
     cards = yaml.safe_load(CARDS_FILE.read_text(encoding="utf-8"))
     ids = [c["id"] for c in cards]
     if sorted(ids) != sorted(HANDLERS):
         raise AssertionError(f"cards.yaml lists {ids}, the handlers {list(HANDLERS)}")
+    extra = pack_propose().get("card_options") or {}
+    if unknown := sorted(set(extra) - set(ids)):
+        raise AssertionError(f"propose.yaml card_options names cards cards.yaml does not have: {unknown}")
+    for c in cards:
+        if c["id"] in extra:
+            c["options"] = [*(c.get("options") or []), *extra[c["id"]]]
     known = set(get_args(Kind))
     for c in cards:
         if not c.get("kinds") or not set(c["kinds"]) <= known or not isinstance(c.get("advanced"), bool):

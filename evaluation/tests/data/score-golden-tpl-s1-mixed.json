@@ -88,6 +88,7 @@
       "seconds": 236.259
     }
   },
+  "domain": "rag",
   "extraction": {
     "missed": [
       "S002.c1",
@@ -3734,6 +3735,12 @@
           "n": 2
         }
       ],
+      "cost": {
+        "input_tokens": 66112,
+        "model_calls": 67,
+        "output_tokens": 8592,
+        "tokens": 74704
+      },
       "errors": [],
       "expected_label": "mixed",
       "flags": {
@@ -4062,5 +4069,6 @@
       ],
       "system": "evidence-engine"
     }
-  ]
+  ],
+  "unresolved_names": null
 }

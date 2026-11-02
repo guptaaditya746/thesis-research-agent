@@ -1,8 +1,9 @@
-"""The committed example corpora (synth/examples/rag-demo-*) are what the generator makes now; the CLI and
-the review sample work on them."""
+"""The committed example corpora (synth/examples/rag-demo-*) are pinned by sha256; the CLI and the review sample
+work on them."""
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 
@@ -14,19 +15,21 @@ from synth.render_template import TemplateRenderer
 from synth.review import CHECKS, write_sample
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples"
-REBUILD = "uv run synth build --name rag-demo --seed 1 --studies 6 --out synth/examples"
+PINS = Path(__file__).resolve().parent / "data" / "example_sha256.json"
 
 
-def tree(root: Path, prefix: str) -> dict[str, bytes]:
-    return {p.relative_to(root).as_posix(): p.read_bytes() for p in sorted(root.rglob("*"))
-            if p.is_file() and p.relative_to(root).as_posix().startswith(prefix) and "/review/" not in p.as_posix()}
+def tree_sha256(root: Path) -> dict[str, str]:
+    """sha256 of every file under `root`, by its path relative to `root`."""
+    return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(root.rglob("*")) if p.is_file()}
 
 
-def test_example_corpus_is_up_to_date(tmp_path: Path) -> None:
-    corpus.build(name="rag-demo", seed=1, studies=6, renderer=TemplateRenderer(), out=tmp_path)
-    want, have = tree(tmp_path, "rag-demo-"), tree(EXAMPLES, "rag-demo-")
-    stale = sorted(k for k in want.keys() | have.keys() if want.get(k) != have.get(k))
-    assert not stale, f"synth/examples is stale ({stale[:5]} ...); rebuild with: {REBUILD}"
+def test_example_corpora_unchanged_on_disk() -> None:
+    """The committed example corpora stay as they are (D36: old corpora keep their bytes; spec section 5, "sha256
+    test on the files"). They are no longer rebuilt and compared: corpus.json records the generator's code hash,
+    which moves with every edit of synth/. That the generator still makes the same rag set is pinned in
+    test_reads_recipe.py."""
+    assert tree_sha256(EXAMPLES) == json.loads(PINS.read_text(encoding="utf-8"))
 
 
 def test_example_papers_are_lf_only() -> None:

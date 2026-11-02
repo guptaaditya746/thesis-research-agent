@@ -1,5 +1,5 @@
 /**
- * A comparison `/scores/compares/:id` (evaluate compare): one row per corpus (level) and system with the
+ * A comparison `/report/compares/:id` (evaluate compare): one row per corpus (level) and system with the
  * headline numbers of A, B and C; over corpora it shows how the systems fare per level, on one corpus with
  * an `all` and a `gaps` run it is the funnel's cost against its accuracy (Part D). The intervals of each row
  * are listed beneath.
@@ -19,7 +19,7 @@ export default function ComparePage() {
   const { id = "" } = useParams()
   const compare = useCompare(id)
   return (
-    <QueryPage query={compare} what={`comparison ${id}`} back={{ to: "/scores", label: "All scores" }}>
+    <QueryPage query={compare} what={`comparison ${id}`} back={{ to: "/report", label: "Report" }}>
       {(c) => {
         const strategies = new Set(c.rows.map((r) => r.strategy).filter(Boolean)).size > 1
         const series = [...new Set(c.rows.map((r) => seriesOf(r, strategies)))]

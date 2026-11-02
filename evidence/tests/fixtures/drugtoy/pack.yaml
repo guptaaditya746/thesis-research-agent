@@ -1,0 +1,16 @@
+# A toy drug-trial pack (evidence/tests/test_numreader.py, test_comparisons.py): invented drugs against placebo, one
+# response rate. Its types have prefixes no other pack uses (the item-prefix registry is global). A result names its
+# population (the context type) in its field `population` (context_field). The limitation, dependency and study-label
+# types are read by the general LLM extractor (no topic extractor; plan 2 preflight P10).
+name: drugtoy
+types:
+  arm: {prefix: xa, role: compared_thing, name_field: label, side_field: role}
+  outcome: {prefix: xo, role: metric, name_field: name, canonical_field: canonical}
+  result: {prefix: xr, role: measured_value, context_field: population}
+  population: {prefix: xp, role: context, name_field: name}
+  limitation: {prefix: xl, role: limitation}
+  dependency: {prefix: xd, role: dependency, name_field: cited}
+  study_label: {prefix: xs, role: study_label, name_field: label}
+display: {treatment: "Zelvora", control: "placebo"}
+names_seed: {}
+limitation_categories: [small_sample, side_effects, cost]

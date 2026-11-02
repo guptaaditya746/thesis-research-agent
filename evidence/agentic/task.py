@@ -5,7 +5,7 @@ full, so the task travels in the concept: a table with one column per field of t
 schema, the paper (the only file in its corpus), the scope, the fields' meaning, the context items it
 may refer to by id, how to claim, and (a targeted task of the funnel, Part D) `scope.focus`: what is
 still missing. TEMPLATE_VERSION names this wording; it is part of the extractor's config, so a change
-of wording is a new extractor id (v2: the focus line).
+of wording is a new extractor id (v2: the focus line; v3: the examples come from the domain pack).
 """
 from __future__ import annotations
 
@@ -15,17 +15,35 @@ from typing import Any
 
 from evidence.contract import EvidenceType, ExtractionTask, Item
 
-TEMPLATE_VERSION = "agentic-task-v2"
+TEMPLATE_VERSION = "agentic-task-v3"
 NOUN = {"condition": "condition", "metric": "metric", "measurement": "measurement", "author_claim": "author claim"}
+# What one row is, per evidence type. The examples come from the protocol's domain pack (`words`: its
+# `display` names of the two compared sides and its question `metric_names`, Pack.extractor_config); without
+# them the text names no topic.
 WHAT = {
-    "condition": "a system or setting the paper compares (for example a model without retrieval, a retrieval-augmented "
-                 "variant, an ablation or another system)",
-    "metric": "a quantity the paper measures its systems with (for example answer accuracy, hallucination rate, latency)",
+    "condition": "a system or setting the paper compares{examples}",
+    "metric": "a quantity the paper measures its systems with{examples}",
     "measurement": "one reported number: the value of one metric for one condition (in a table, or in the text)",
-    "author_claim": "the authors' own conclusion about whether retrieval improves the factual accuracy of answers",
+    "author_claim": "the authors' own conclusion about whether {subject} does better or worse than {other}",
 }
 COLUMN_NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 SCALARS = {"number": "number", "integer": "integer", "boolean": "boolean", "string": "string"}
+
+
+def what(kind: EvidenceType, words: dict[str, Any] | None = None) -> str:
+    """The built-in description of one row of `kind`, with the pack's examples when `words` gives them."""
+    display = (words or {}).get("display") or {}
+    metrics = [m.replace("_", " ") for m in (words or {}).get("metric_names") or []]
+    treatment, control = display.get("treatment"), display.get("control")
+    examples = ""
+    if kind == "condition" and treatment and control:
+        examples = f" (for example a {control}, a {treatment}, an ablation or another system)"
+    elif kind == "metric" and metrics:
+        examples = f" (for example {', '.join(metrics)})"
+    if kind not in WHAT:   # a pack's own type: the protocol's description says what a row is
+        return f"one {kind.replace('_', ' ')} the paper states"
+    return WHAT[kind].format(examples=examples, subject=f"the {treatment}" if treatment else "the studied system",
+                             other=f"the {control}" if control else "the systems it is compared with")
 
 
 def column_type(schema: dict[str, Any]) -> str:
@@ -69,15 +87,15 @@ def describe_context(context: list[Item]) -> str:
 
 
 def concept_for(task: ExtractionTask, field_schema: dict[str, Any], links: dict[str, str], context: list[Item],
-                file: str, length: int, description: str = "") -> dict[str, Any]:
+                file: str, length: int, description: str = "", words: dict[str, Any] | None = None) -> dict[str, Any]:
     """The concept brief that asks the agent for every item of the task's evidence type in `file`.
 
     `links` (link_names): the columns that name earlier items; `description`: the protocol's text for
-    the evidence type, used instead of the built-in one when given.
+    the evidence type, used instead of the built-in one (`what`, with the pack's `words`) when given.
     """
     kind: EvidenceType = task.evidence_type
-    noun = NOUN[kind]
-    what = (" ".join(description.split()) or WHAT[kind]).rstrip(".") + "."
+    noun = NOUN.get(kind, kind.replace("_", " "))
+    row = (" ".join(description.split()) or what(kind, words)).rstrip(".") + "."
     where = ("the whole paper" if task.scope.kind == "document" or not task.scope.ranges else
              "only these character ranges of the file (offsets into the file as stored, of "
              f"{length} characters): " + ", ".join(f"{a}-{b}" for a, b in task.scope.ranges)
@@ -85,7 +103,7 @@ def concept_for(task: ExtractionTask, field_schema: dict[str, Any], links: dict[
     scope = {
         "paper": f"only {file}, the one paper in the corpus",
         "passages": where,
-        "item": f"one row per {noun}: {what} List every one the paper states, each once; a value stated twice "
+        "item": f"one row per {noun}: {row} List every one the paper states, each once; a value stated twice "
                 "(abstract and table) is one row with both quotes",
         "fields": describe_fields(field_schema, links),
         "claims": "for each field of a row, claim a verbatim quote that states it: s = the row id (r1, r2, ...), "

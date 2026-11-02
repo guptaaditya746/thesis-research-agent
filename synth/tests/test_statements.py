@@ -9,9 +9,10 @@ import json
 import re
 from pathlib import Path
 
+import yaml
 from pydantic_ai.models.function import FunctionModel
 
-from evidence.protocol import load
+from evidence.protocol import parse
 from synth import statements, truth, variant
 from synth.levels import make_plan, plan_rng
 from synth.render_llm import LlmRenderer
@@ -22,10 +23,21 @@ REPO = Path(__file__).resolve().parents[2]
 DIAG = REPO / "tests" / "EV1" / "diagnostics"
 
 
+def step10_protocol():
+    """rag-factuality.yaml as the Step-10 corpus was built from it: without the measurement's `form` field and
+    `value_total` role (D35/D36, EV4 Task 6); the caller checks the sha256 the corpus recorded."""
+    data = yaml.safe_load((REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8"))
+    measurement = data["evidence_types"]["measurement"]
+    del measurement["fields"]["properties"]["form"]
+    measurement["roles"].remove("value_total")
+    return parse(yaml.safe_dump(data, sort_keys=False))
+
+
 def step10_plan():
     """The plan Step 10 rendered: S002 made to contradict, at the paraphrased level (as review_repro.py builds it)."""
     meta = json.loads((DIAG / "rag-llm-s1-corpus.json").read_text(encoding="utf-8"))
-    protocol = load(REPO / "evidence" / "protocols" / "rag-factuality.yaml")
+    protocol = step10_protocol()
+    assert protocol.sha256 == meta["protocol"]["sha256"]
     studies = variant.base_studies(meta, protocol)
     _, _, after = variant.counterfactual(meta["seed"], studies, "S002", "contradicts", protocol.synthesis)
     return make_plan(after, "paraphrased", plan_rng(meta["seed"], "S002", "paraphrased"))
@@ -177,6 +189,7 @@ def test_no_statements_keeps_the_old_call_pattern(tmp_path: Path) -> None:
 
 def test_cli_statements_flag() -> None:
     import argparse
+
     from synth.cli import add_renderer_options
     p = argparse.ArgumentParser()
     add_renderer_options(p)
@@ -199,7 +212,7 @@ def test_a_built_llm_corpus_records_the_statement_mode(tmp_path: Path) -> None:
         corpus.build(name="m", seed=SEED, studies=N, renderer=renderer, out=tmp_path / str(on), levels=["explicit"])
         for lv in ("explicit", "mixed"):
             models = json.loads((tmp_path / str(on) / f"m-{lv}" / "corpus.json").read_text(encoding="utf-8"))["models"]
-            assert (models["statements"], models["paper_prompt"]) == (on, "render-v2.txt" if on else "render.txt")
+            assert (models["statements"], models["paper_prompt"]) == (on, "render-v3.txt" if on else "render.txt")
 
 
 def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:
@@ -208,7 +221,8 @@ def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:
 
     import modelcall
     from modelcall.cache import cache_key
-    from synth.render_llm import INSTRUCTIONS, PaperReply, plan_json
+    from synth.render_llm import PaperReply, plan_json
+    INSTRUCTIONS = modelcall.load_prompt(REPO / "synth" / "prompts" / "render.txt").text
     assert hashlib.sha256((REPO / "synth" / "prompts" / "render.txt").read_bytes()).hexdigest() == \
         "9e8ff1fedb40b65e2a0e98801e4b8b61605aba1aefe39d45b9f16fa99cc49d9d"
     s = truth.generate(SEED, N)[0]

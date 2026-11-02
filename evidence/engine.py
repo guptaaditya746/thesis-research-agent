@@ -19,7 +19,7 @@ supervisor's):
   `undetermined` with reason `screened_out`. Otherwise position 0 of every type's cascade runs; then, while
   the kind's `study()` (evidence/kinds/; for effect `synthesis.study()`) on the document's merged items gives
   a reason, the gap's reason code names the evidence types to escalate (the kind's `gap_types`; for effect
-  `synthesis.GAP_TYPES`), and each of those runs the NEXT position of its own
+  `synthesis.GAP_ROLES`, the pack roles whose protocol types escalate), and each of those runs the NEXT position of its own
   cascade with a targeted task (`contract.Focus`, `focus_for`), the merged items of its context types as
   context, re-merged with its earlier results; the funnel stops when the study is complete or when no gap
   type has a position left (the gap is recorded). `cascade: until_found` is an `all`-mode rule; the funnel's
@@ -44,6 +44,29 @@ results and merged items), and the merge event lists the pairs (`relinked`). Aft
 point to no item are listed in funnel.json (`dangling_links`, per document and as a run total, also in run.json),
 so a dangling link is never silent. With `off` (runs before 1 Nov) neither happens: those links dangled.
 
+Names (`Settings.names`, D38; off by default, as runs before it): after every document, the names of the items whose
+pack type has a name field are grouped corpus-wide (evidence/names.py `group_names`, with the pack's `names_seed`),
+and unless the selection is `regex-only` each name no step matched is put to a model check
+(`names.confirm_leftovers`, prompts/names-confirm-v1.md) whose calls go through the record cache like an extractor's
+(`CallCache.recorded`, owner id `names_confirm@<version>#<digest>`), so a replay never asks a model. It asks the model
+of the protocol's LLM extractors (`names_alias`). Each check is a `names_check` event and a calls/<call_id>.json result
+(error reason `model_call` when the gateway failed it), so a failed check is a failed call: the CLI exits 2, the web
+app counts it, `--retry-errors` asks it again. The groups are
+names.json; the names left unresolved are counted in funnel.json and run.json (`unresolved_names`), as dangling links
+are; the kind's answer gets the groups (`groups`). With `off` none of it happens and no file changes.
+
+Reasoner (`Settings.reason`, spec 6.3, D25, D30; on by default, off for a run made before it): after the names step and
+before the answer, `reasoner.reason` reads the pack's ontology and gives the run's inferences: which names have a
+broader class (so a narrower metric answers a broader question metric) and which links point at an item of the wrong
+kind (`link_flags`). They are reason.json, an output, and the kind's answer gets them (`reason`). A replay reads the
+recorded reason.json and never reasons again (`execute_run(source_dir=...)`); a reexec reasons again, since its items
+may differ. With `off` none of it happens and no file changes.
+
+Comparisons (plan 2 Task 8, spec section 6.2): after the reasoner, for every kind, the comparisons built from
+pairs in each study (evidence/comparisons.py, with the names step's groups or none) are comparisons.json, and the
+kind's answer gets them (`comparisons`). The order is names, reason, comparisons, answer (D25). Runs made before it
+have no comparisons.json; their replay reports the file as added (replay.ADDED_OUTPUTS), not as a mismatch.
+
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
@@ -66,35 +89,49 @@ chain, so it changes no hash; its row order may vary with workers.
 """
 from __future__ import annotations
 
+import dataclasses
 import importlib
+import json
 import os
+import sys
 import tempfile
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal
 
+from pydantic import BaseModel
+
 from agent.anchor import Index
 from jsonio import sha256_hex, write_json
 from agent.rundir import utc_now
+import modelcall
 from modelcall import JsonlCache
 
-from . import checks, extractors, graph, kinds, merge
+from . import checks, comparisons, extractors, graph, lockfile, kinds, merge, names, reasoner
+from . import seal as sealing
+from .extractors import base as extractor_base
 from .extractors import gliner
+from .extractors import llm as llm_extractor
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
-from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
+from .contract import DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
-from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
-from .recording import Provider, usage
-from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, RunDirExists,
-                     new_run_id, write_lines)
+from .pack import DOMAINS, Role, RoleMap, load_pack
+from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
+from .contract import digest
+from .recording import ModelCallError, Provider, Recorder, usage
+from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE,
+                     GRAPH_FILE, LOCATE_FILE, LOCK_FILE, NAMES_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE,
+                     RUN_FILE, Corpus, Events, RunCalls, RunDirExists, new_run_id, read_json, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
 Confirm = Literal["none", "llm"]
 Relink = Literal["off", "on"]
+Names = Literal["off", "on"]
+Reason = Literal["off", "on"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -117,13 +154,54 @@ class Settings:
     gliner_model: str | None = None
     confirm: Confirm = "llm"                       # llm: GLiNER-only items need the LLM extractor too; none: keep all
     relink: Relink = "on"                          # on: links follow an item a later merge gave a new id; off: as before 1 Nov
+    domains: str | None = None                     # the folder of the protocol's pack (None: domains/; a test pack)
+    names: Names = "off"                           # on: corpus-wide name groups, names.json (D38); off: as before
+    reason: Reason = "on"                          # on: the reasoner's inferences, reason.json (spec 6.3); off: as before
 
     def json(self) -> dict[str, Any]:
-        # `confirm` only when it is llm, `relink` only when on: the settings of a run made before them are unchanged
+        # `confirm` only when it is llm, `relink`, `names` and `reason` only when on: the settings of a run made before
+        # them are unchanged
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
                 "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
                 "gliner_model": self.gliner_model, **({"confirm": self.confirm} if self.confirm == "llm" else {}),
-                **({"relink": self.relink} if self.relink == "on" else {})}
+                **({"relink": self.relink} if self.relink == "on" else {}),
+                **({"domains": self.domains} if self.domains is not None else {}),
+                **({"names": self.names} if self.names == "on" else {}),
+                **({"reason": self.reason} if self.reason == "on" else {})}
+
+
+# --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
+
+NAMES_VERSION = 1
+NAMES_PROMPT = Path(__file__).resolve().parent / "prompts" / "names-confirm-v1.md"
+NAMES_SETTINGS: dict[str, Any] = {"temperature": 0.0, "seed": 0, "max_tokens": 512}
+
+
+class NamesVerdict(BaseModel):
+    same: bool
+    quote: str
+
+
+def names_alias(cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], model: str | None) -> str:
+    """The model the names check asks ("same model for all systems"): the model the protocol's LLM extractors were
+    built with (their `model` config: the protocol's pin, replaced by the run's `--model` when given, see
+    build_extractors), the first LLM extractor in the protocol's type order, the screen last; with none, the run's
+    model, else the LLM extractors' default."""
+    for cascade in cascades.values():
+        for _, extractor in cascade:
+            if extractor.spec.kind == "llm" and extractor.spec.config.get("model"):
+                return str(extractor.spec.config["model"])
+    return model or str(llm_extractor.DEFAULTS["model"])
+
+
+def names_check(alias: str) -> tuple[str, str, str]:
+    """(owner id, model alias, instructions) of the names check: the id covers the code, the prompt with its output
+    schema, the model alias and the call settings, so a change to any of them is a new cache key."""
+    instructions = modelcall.load_prompt(NAMES_PROMPT).text
+    config = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, NamesVerdict), **NAMES_SETTINGS}
+    here = Path(__file__).resolve().parent
+    code = extractor_base.source_sha256(here / "names.py", NAMES_PROMPT, here / "recording.py")
+    return f"names_confirm@{NAMES_VERSION}#{digest([code, config])[:12]}", alias, instructions
 
 
 def default_provider(alias: str) -> Any:
@@ -138,7 +216,9 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     under the key `screen` the screening cascade of the protocol's `screen` block (Part D), whose extractors
     get the same injected configuration plus the block's `terms` and `question`. The gliner_* extractors also
     get `gliner_url` (None: unavailable) and, unless their config pins one, `model` = `gliner_model`; only
-    they, so no other extractor's config (and id) changes."""
+    they, so no other extractor's config (and id) changes. Each config starts from the topic words of the
+    protocol's domain pack (`Pack.extractor_config`); the protocol's own config is put over them (it wins)."""
+    pack = protocol.pack()
     out: dict[str, list[tuple[ExtractorRef, Extractor]]] = {}
     specs: dict[str, tuple[EvidenceTypeSpec, dict[str, Any]]] = {etype: (spec, {}) for etype, spec in protocol.evidence_types.items()}
     question = kinds.of(protocol).extractor_config(protocol)   # the kind's part (effect: question_metrics, compare)
@@ -147,8 +227,10 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     for etype, (spec, extra) in specs.items():
         chosen = []
         for ref in spec.extractors:
-            config = {**ref.config, "evidence_type": etype, "field_schema": spec.fields, "links": dict(spec.links),
-                      "roles": list(spec.roles), "description": spec.description, **question, **extra}
+            config = {**pack.extractor_config(etype, ref.name), **ref.config, "evidence_type": etype,
+                      "field_schema": spec.fields, "links": dict(spec.links), "roles": list(spec.roles), "description": spec.description, **question, **extra}
+            if spec.optional_links:   # given only when there are any, so no other extractor's config (and id) changes
+                config["optional_links"] = list(spec.optional_links)
             if ref.name in gliner.FACTORIES:
                 config[gliner.URL_KEY] = gliner_url
                 if gliner_model and "model" not in ref.config:
@@ -162,22 +244,36 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
     return out
 
 
-def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[Item]]) -> Focus:
-    """The targeted task of an escalation (Part D): the gap code, what was found (condition roles, canonical
-    metrics) and the request in words, from the gap code and the protocol's roles. For effect and consistency
-    protocols (or a `synthesis` block given directly); for the other kinds the task names the gap only (nothing
-    in `have`) with the generic request."""
+def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[Item]],
+              roles: RoleMap | None = None) -> Focus:
+    """The targeted task of an escalation (Part D): the gap code, what was found (the sides of the compared things,
+    the canonical metrics; types and fields by pack role) and the request in words, from the gap code and the
+    protocol's compared sides. For effect and consistency protocols (or a `synthesis` block given directly, read
+    with `roles`, else the default pack); for the other kinds the task names the gap only (nothing in `have`) with
+    the generic request."""
     if isinstance(protocol, Synthesis):
         spec = protocol
+        roles = roles if roles is not None else RoleMap(load_pack(DEFAULT_PACK))
+        thing, metric = roles.type_of(Role.COMPARED_THING), roles.type_of(Role.METRIC)
     elif protocol.kind in ("effect", "consistency") and protocol.synthesis is not None:
         spec = protocol.synthesis
+        roles = roles if roles is not None else protocol.roles()
+        thing = roles.type_in(Role.COMPARED_THING, protocol.evidence_types)
+        metric = roles.type_in(Role.METRIC, protocol.evidence_types)
     else:
         return Focus(gap=gap, have={}, want=f"the study is incomplete ({gap}); find what is missing")
     t, c = spec.compare.treatment, spec.compare.control
-    roles = sorted({str(i.fields.get("role")) for i in merged.get("condition", []) if i.fields.get("role") is not None})
-    metrics = sorted({str(i.fields.get("canonical")) for i in merged.get("metric", []) if i.fields.get("canonical") is not None})
+    side = roles.field_or_none(thing, "side") if thing is not None else None
+    canonical = roles.field_or_none(metric, "canonical") if metric is not None else None
+
+    def values(etype: str | None, field: str | None) -> list[str]:
+        if etype is None or field is None:
+            return []
+        return sorted({str(i.fields.get(field)) for i in merged.get(etype, []) if i.fields.get(field) is not None})
+
+    roles_found, metrics = values(thing, side), values(metric, canonical)
+    found = ", ".join(roles_found) or "none"
     question = ", ".join(spec.metric_names)
-    found = ", ".join(roles) or "none"
     want = {
         "no_treatment_condition": f"the {t} condition is missing (condition roles found: {found}); find the condition the "
                                   f"paper reports as its {t} system, with the label the paper gives it",
@@ -190,7 +286,7 @@ def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[I
                    f"one dataset was found; find the values of both conditions on the same dataset and metric "
                    f"({', '.join(m for m in metrics if m in spec.metric_names) or question}), tables first",
     }.get(gap, f"the study is incomplete ({gap}); find what is missing")
-    return Focus(gap=gap, have={"roles": roles, "metrics": metrics}, want=want)
+    return Focus(gap=gap, have={"roles": roles_found, "metrics": metrics}, want=want)
 
 
 @dataclass
@@ -224,9 +320,17 @@ class Execution:
     def __init__(self, protocol: Protocol, corpus: Corpus, root: Path, run_id: str, calls: CallCache,
                  cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
                  locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
-                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off") -> None:
+                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
+                 names: Names = "off", names_model: str | None = None, names_ask: bool = True,
+                 reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None) -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
+        # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
+        self.reason, self.domains, self.recorded_reason = reason, domains or DOMAINS, recorded_reason
         self.confirm, self.relink = confirm, relink
+        self.names, self.names_model, self.names_ask = names, names_model, names_ask   # `names_ask`: the model check
+        self.texts: dict[str, str] = {}                  # document -> text (`names: on` only)
+        self.unresolved_names = 0
+        self.roles = protocol.roles()                    # the pack's types by role, for the kind's rules
         self.dangling = 0                                 # links to no item, over the run (`relink: on` only)
         self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
@@ -244,6 +348,8 @@ class Execution:
 
     def document(self, paper: Any) -> None:
         text = self.corpus.text(paper)
+        if self.names == "on":
+            self.texts[paper.id] = text
         state = DocState(paper.ref, text, Index(text))
         self.screen(state)
         screen = self.protocol.screen
@@ -320,7 +426,7 @@ class Execution:
             if not pending:
                 return   # exhausted: the gap stays recorded in the last decision
             round_no += 1
-            focus = focus_for(gap or "", self.protocol, state.merged)
+            focus = focus_for(gap or "", self.protocol, state.merged, self.roles)
             for etype in pending:
                 state.focus[etype] = focus
                 self.run_position(state, [etype], state.next_position[etype], round_no=round_no)
@@ -382,7 +488,8 @@ class Execution:
                     step["types"].append(etype)
                     step["calls"].append(call_id)
                 state.next_position[etype] = llm + 1
-            items, sources, collisions, remap = merge.merge_from(results, spec, before)
+            items, sources, collisions, remap = merge.merge_from(results, spec, before,
+                                                                 descriptive=merge.descriptive(etype, self.roles))
             dropped = (self._unconfirmed(etype, items)
                        if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
             items = [i for i in items if i.item_id not in dropped]
@@ -439,7 +546,8 @@ class Execution:
         """The type's results so far, merged, have unconfirmed items and its LLM position has not run yet (`gaps`)."""
         llm = self._llm_position(etype)
         return (llm is not None and state.next_position.get(etype, 0) <= llm
-                and bool(self._unconfirmed(etype, merge.merge(results, spec)[0])))
+                and bool(self._unconfirmed(etype, merge.merge(results, spec,
+                                                              descriptive=merge.descriptive(etype, self.roles))[0])))
 
     def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
         """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the
@@ -466,10 +574,10 @@ class Execution:
         effect: a direction), or the gap's reason code and the evidence types to escalate (`gap_types`). A
         `completeness` event and a funnel.json entry."""
         rules = kinds.of(self.protocol)
-        entry, _ = rules.study(self.protocol, state.doc.id, state.items())
+        entry, _ = rules.study(self.protocol, state.doc.id, state.items(), roles=self.roles)
         complete = entry["reason"] is None
         gap = None if complete else entry["reason"]["code"]
-        gap_types = rules.gap_types(self.protocol, gap) if gap else ()
+        gap_types = rules.gap_types(self.protocol, gap, roles=self.roles) if gap else ()
         decision = {"after_round": round_no, "after_position": max((s["position"] for s in state.steps), default=None),
                     "complete": complete, "gap": gap, "gap_types": list(gap_types)}
         state.decisions.append(decision)
@@ -520,20 +628,131 @@ class Execution:
                                 "rejected": len(result.rejected), "focus": task.focus.gap if task.focus else None})
         return call_id, result
 
+    # --- the names step -------------------------------------------------------------------------------
+
+    def names_step(self) -> names.NameGroups | None:
+        """`names: on`: group the names of every item whose type has a name field, corpus-wide (seeded by the pack),
+        then the model check of what is left (not under `regex-only`); names.json, `unresolved_names` and a `names`
+        event with every check's cache key and attempt (replay reads them). None with `off`."""
+        if self.names != "on":
+            return None
+        mentions: list[names.Mention] = []
+        used: list[str] = []
+        for paper in self.corpus.papers:
+            for item in self.items.get(paper.id, []):
+                field = self.roles.field_or_none(item.evidence_type, "name")
+                value = item.fields.get(field) if field is not None else None
+                if value is None or not str(value).strip() or not item.spans:
+                    continue
+                span = min(item.spans, key=lambda s: (s.selector["start"], s.selector["end"]))
+                mentions.append(names.Mention(" ".join(str(value).split()), paper.id, span.selector["start"],
+                                              span.selector["end"], item.evidence_type))
+                used.append(item.item_id)
+        groups = names.group_names(mentions, self.texts, seed=self.roles.pack.names_seed)
+        owner, alias, instructions = names_check(self.names_model or names_alias(self.cascades, None))
+        asks: list[dict[str, Any]] = []
+        if self.names_ask:
+            groups = names.confirm_leftovers(
+                groups, self.texts, lambda prompt: self._names_ask(owner, alias, instructions, prompt, asks))
+        self.unresolved_names = len(groups.unresolved)
+        self.outputs[NAMES_FILE] = write_json(self.root / NAMES_FILE, dataclasses.asdict(groups))
+        self.events.add("names", used=sorted(set(used)), generated=[], agent_id=owner if asks else ENGINE,
+                        custom={"groups": len(groups.groups), "matches": len(groups.matches),
+                                "unresolved": self.unresolved_names, "checks": asks})
+        return groups
+
+    def _names_ask(self, owner: str, alias: str, instructions: str, prompt: str, asks: list[dict[str, Any]]) -> str:
+        """One question of the names check through the record cache: the reply as JSON, or {"error": ...}. Counted in
+        the run's cost like an extractor call; one row of calls.jsonl when it made model calls."""
+        def make() -> tuple[dict[str, Any], list[dict[str, Any]]]:
+            recorder = Recorder(self.provider)
+            try:
+                out, _ = recorder.structured(alias, instructions, prompt, NamesVerdict, **NAMES_SETTINGS)
+                return {"status": "ok", "output": out.model_dump(mode="json")}, recorder.records
+            except ModelCallError as exc:
+                return {"status": "error", "error": exc.reason}, recorder.records
+        request = {"user_prompt": prompt}
+        started = utc_now()
+        asked = self.calls.recorded(owner, request, make)
+        # the check's result as an extraction result in calls/ (error reason `model_call`, as an LLM extractor's), so a
+        # failed check is a failed call wherever failed calls are counted (RunDir.failed_calls: the CLI's exit 2, the
+        # web app) and `--retry-errors` asks it again
+        failed = asked.value.get("status") == "error"
+        call_id = self.events.next_id()
+        result = ExtractionResult(
+            call_id=call_id, extractor_id=owner, task_sha256=digest(request), status="error" if failed else "ok",
+            error=ExtractionError(reason="model_call", detail=str(asked.value.get("error") or "")[:300]) if failed else None,
+            model_calls=tuple(r["id"] for r in asked.model_calls))
+        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
+                                                               result.model_dump(mode="json"))
+        check = {"call_id": call_id, "key": cache_key(owner, digest(request)), "attempt": asked.attempt,
+                 "source": asked.source, "status": result.status, "model_calls": list(result.model_calls)}
+        self.events.add("names_check", used=[], generated=[], agent_id=owner, status=result.status, started_at=started,
+                        custom={k: v for k, v in check.items() if k != "call_id"})
+        asks.append(check)
+        if self.run_calls is not None and asked.model_calls:
+            self.run_calls.add({"key": cache_key(owner, digest(request), asked.attempt), "phase": self.phase,
+                                "document": "", "evidence_type": "names", "extractor_id": owner,
+                                "attempt": asked.attempt, "status": result.status, "source": asked.source,
+                                "started_at": started, "ended_at": utc_now(), "task": request,
+                                "result": result.model_dump(mode="json"), "model_calls": asked.model_calls})
+        tokens_in, tokens_out = usage(asked.model_calls)
+        self.cost["calls"] += 1
+        self.cost["cached_calls"] += asked.source == "cache"
+        self.cost["model_calls"] += len(asked.model_calls)
+        self.cost["made_model_calls"] += len(asked.model_calls) if asked.source == "fresh" else 0
+        self.cost["input_tokens"] += tokens_in
+        self.cost["output_tokens"] += tokens_out
+        return json.dumps(asked.value.get("output") or {"error": asked.value.get("error")})
+
+    def reason_step(self) -> reasoner.Inferences | None:
+        """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a
+        replay, the recorded ones (`recorded_reason`), never reasoned again; reason.json and a `reason` event. None
+        with `off`."""
+        if self.reason != "on":
+            return None
+        if self.recorded_reason is not None:
+            if not self.recorded_reason.is_file():
+                raise NotRecorded(f"the recorded run has no {REASON_FILE}: {self.recorded_reason}")
+            inferred = reasoner.from_json(read_json(self.recorded_reason))
+        else:
+            inferred = reasoner.reason(self.roles.pack, self.protocol, self.items, self.domains)
+        self.outputs[REASON_FILE] = write_json(self.root / REASON_FILE, reasoner.to_json(inferred))
+        self.events.add("reason", used=sorted({f[0] for f in inferred.link_flags}), generated=[], agent_id=ENGINE,
+                        custom={"ontology_sha256": inferred.ontology_sha256, "broader": len(inferred.broader),
+                                "link_flags": len(inferred.link_flags),
+                                "source": "recorded" if self.recorded_reason is not None else "reasoned"})
+        return inferred
+
+    # --- the comparisons step -------------------------------------------------------------------------
+
+    def comparisons_step(self, groups: names.NameGroups | None) -> comparisons.Comparisons:
+        """Every kind: the comparisons built from pairs in each study (evidence/comparisons.py), with the names step's
+        groups (None with `names: off`), written to comparisons.json."""
+        built = comparisons.of_run(self.protocol, [p.id for p in self.corpus.papers], self.items, self.roles, groups)
+        self.outputs[COMPARISONS_FILE] = write_json(self.root / COMPARISONS_FILE, built.json())
+        return built
+
     # --- the run --------------------------------------------------------------------------------------
 
     def finish(self) -> dict[str, Any]:
         papers = self.corpus.papers
         funnel = {p.id: {"screened": self.funnel[p.id]["screen"]["relevant"] is False if self.funnel[p.id]["screen"] else False,
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
+        groups = self.names_step()
+        inferred = self.reason_step()
+        built = self.comparisons_step(groups)
         answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
-                                                      funnel)
+                                                      funnel, roles=self.roles, groups=groups, comparisons=built,
+                                                      reason=inferred)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
         dangling = {"dangling_links": self.dangling} if self.relink == "on" else {}
+        unresolved = {"unresolved_names": self.unresolved_names} if self.names == "on" else {}
         self.outputs[FUNNEL_FILE] = write_json(self.root / FUNNEL_FILE, {"strategy": self.strategy,
-                                                                               "documents": self.funnel, **dangling})
+                                                                               "documents": self.funnel, **dangling,
+                                                                               **unresolved})
         self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
         self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
         if self.protocol.kind == "effect":
@@ -570,36 +789,55 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
 def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, *, mode: Mode = "run",
                 run_id: str | None = None, provider: Provider | None = None, locator: Locator | None = None,
                 bypass: Any = None, retry_errors: bool = False, source_run: str | None = None,
-                attempts: dict[str, int] | None = None, workers: int = 1) -> Path:
-    """Execute and write one run directory; returns its path."""
+                attempts: dict[str, int] | None = None, workers: int = 1, source_dir: Path | None = None,
+                before_seal: Callable[[Path], None] | None = None) -> Path:
+    """Execute and write one run directory; returns its path. `source_dir`: the folder of the recorded run; in
+    mode replay its reason.json is read instead of reasoning again (a reexec reasons again: its items may differ).
+    `before_seal(root)`: writes more files into the finished run (reexec.json) before manifest.json seals it."""
     for module in settings.imports:
         importlib.import_module(module)
-    protocol = parse(protocol_bytes.decode("utf-8"))
+    protocol = parse(protocol_bytes.decode("utf-8"), settings.domains)
     corpus = Corpus(settings.corpus)
     run_id = run_id or new_run_id(protocol.id, "" if mode == "run" else f"-{mode}")
     root = Path(out_dir) / run_id
+    # everything that can refuse the run (the pack, the extractor names, the lock's digests) comes before the folder
+    if settings.gliner_url and settings.gliner_model is None and _uses_gliner(protocol):
+        served = gliner.info(settings.gliner_url)
+        settings = replace(settings, gliner_model=served["model"] if served else None)
+    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
+    domains = Path(settings.domains) if settings.domains is not None else None
+    lock = lockfile.lock(protocol, cascades, domains)
     try:
         root.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         raise RunDirExists(root) from None
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
-    if settings.gliner_url and settings.gliner_model is None and _uses_gliner(protocol):
-        served = gliner.info(settings.gliner_url)
-        settings = replace(settings, gliner_model=served["model"] if served else None)
-    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
-                   confirm=settings.confirm, relink=settings.relink)
+                   confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
+                   names_ask=settings.selection != "regex-only", reason=settings.reason,
+                   domains=Path(settings.domains) if settings.domains is not None else None,
+                   recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
+    ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
-    if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
-        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
-              settings.confirm, settings.relink)
-    for paper in corpus.papers:
-        ex.document(paper)
-    ex.finish()
+    try:
+        if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
+            _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
+                  settings.confirm, settings.relink)
+        for paper in corpus.papers:
+            ex.document(paper)
+        ex.finish()
+    except BaseException as exc:   # a crash or Ctrl-C: every file a reader expects, a failed seal, no run.json
+        try:
+            sealing.fill_expected(root, settings)
+            sealing.seal(root, corpus.manifest_sha256, status="failed",
+                         error=f"{type(exc).__name__}: {modelcall.redact(str(exc))[:300]}")
+        except Exception as failed:   # the caller must still see the run's own error (its type sets the exit code)
+            print(f"WARN {root}: could not seal the failed run: {type(failed).__name__}: {failed}", file=sys.stderr)
+        raise
     ex.cost["seconds"] = round(time.monotonic() - t0, 3)
     if settings.gliner_model is None:   # GLiNER came up after the run started: record the model it served
         served = sorted({e.model for c in cascades.values() for ref, e in c
@@ -607,12 +845,19 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         if served:
             settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
+    final = lockfile.lock(protocol, cascades, domains)
+    if final["extractors"] != lock["extractors"]:   # a GLiNER extractor learned its model during the run: the lock names the ids it used
+        ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, final)
     write_json(root / RUN_FILE, {
         "run_id": run_id, "mode": mode, "source_run": source_run, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "manifest_sha256": corpus.manifest_sha256, "corpus_id": corpus.corpus_id, "extractors": list(specs),
         "extractor_specs": {k: _spec_json(s) for k, s in specs.items()}, "outputs": dict(sorted(ex.outputs.items())),
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
-        **({"dangling_links": ex.dangling} if settings.relink == "on" else {})})
+        **({"dangling_links": ex.dangling} if settings.relink == "on" else {}),
+        **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {})})
+    if before_seal is not None:
+        before_seal(root)
+    sealing.seal(root, corpus.manifest_sha256, status="complete")   # last: after run.json and the final lock
     return root
 
 
@@ -630,12 +875,14 @@ def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, c
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
         retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
-        relink: Relink = "on") -> Path:
-    """A normal run: cached calls are reused, new ones are made and stored."""
+        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off", reason: Reason = "on") -> Path:
+    """A normal run: cached calls are reused, new ones are made and stored. `domains`: the folder of the protocol's
+    pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm=confirm, relink=relink)
+                        confirm=confirm, relink=relink, names=names, reason=reason,
+                        domains=str(Path(domains).resolve()) if domains is not None else None)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
                        retry_errors=retry_errors, workers=workers)

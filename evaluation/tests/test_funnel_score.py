@@ -17,7 +17,7 @@ from evidence.protocol import load
 from . import fixtures as fx
 
 REPO = Path(__file__).resolve().parents[2]
-PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
+PROTOCOL = REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml"
 
 
 def event(subtype: str, document: str, **custom: Any) -> dict[str, Any]:

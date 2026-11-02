@@ -42,6 +42,7 @@ from pydantic_ai.models import Model
 from .. import extractors
 from ..extractors import terms as regex_terms
 from ..extractors.screen import term_pattern
+from ..pack import load_pack
 from ..protocol import Protocol, parse
 from . import frame as frame_module
 from .draft import rate_like
@@ -101,6 +102,11 @@ def _patterns(p: Protocol, name: str, key: str, default: Any) -> Any | None:
     return None
 
 
+def _default(p: Protocol, etype: str, extractor: str, key: str) -> Any:
+    """The words a step reads when the protocol does not set them: its domain pack's (evidence/pack.py)."""
+    return load_pack(p.domain).extractor_config(etype, extractor)[key]
+
+
 def _extractable(p: Protocol, f: Frame) -> list[Any]:
     """The frame outcomes the protocol's metric extractors may still emit (the metric enum, else the question
     metrics): a person may drop one at freeze; outcomes_complete reports that, the metric checks leave it out."""
@@ -113,14 +119,14 @@ def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
     misses: list[str] = []
     roles = ({f.treatment.role: p.synthesis.compare.treatment, f.control.role: p.synthesis.compare.control}
              if p.synthesis else {})   # an inventory or best protocol compares no two roles
-    conditions = _patterns(p, "regex_condition", "conditions", regex_terms.CONDITIONS)
+    conditions = _patterns(p, "regex_condition", "conditions", _default(p, "condition", "regex_condition", "conditions"))
     if conditions is not None and roles:
         compiled = regex_terms.condition_patterns(conditions)
         for r in (f.treatment, f.control):
             for name in r.names:
                 if not any(m.key == roles[r.role] for m in regex_terms.find_all(name, compiled)):
                     misses.append(f"{r.role} name {name!r} (regex_condition)")
-    metrics = _patterns(p, "regex_metric", "metrics", [list(m) for m in regex_terms.METRICS])
+    metrics = _patterns(p, "regex_metric", "metrics", _default(p, "metric", "regex_metric", "metrics"))
     if metrics is not None:
         compiled = [tuple(m) for m in metrics]
         for o in _extractable(p, f):
@@ -142,8 +148,10 @@ def _regex_enums(p: Protocol) -> tuple[bool, str]:
     `other` has at least one pattern (else the regex step can never find it)."""
     problems: list[str] = []
     for type_name, field, key, default, steps in (
-            ("condition", "role", "conditions", regex_terms.CONDITIONS, ("regex_condition", "regex_measurement")),
-            ("metric", "canonical", "metrics", [list(m) for m in regex_terms.METRICS], ("regex_metric", "regex_measurement"))):
+            ("condition", "role", "conditions", _default(p, "condition", "regex_condition", "conditions"),
+             ("regex_condition", "regex_measurement")),
+            ("metric", "canonical", "metrics", _default(p, "metric", "regex_metric", "metrics"),
+             ("regex_metric", "regex_measurement"))):
         enum = p.evidence_types[type_name].enum_of(field) if type_name in p.evidence_types else None
         if enum is None:
             continue
@@ -182,7 +190,7 @@ def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
 def metric_collisions(p: Protocol, f: Frame) -> list[str]:
     """`"<surface>: <a> vs <b>"` for every frame name that two metric rules of different canonicals match at the
     same place (the first rule would decide the metric)."""
-    patterns = _patterns(p, "regex_metric", "metrics", [list(m) for m in regex_terms.METRICS])
+    patterns = _patterns(p, "regex_metric", "metrics", _default(p, "metric", "regex_metric", "metrics"))
     if patterns is None:
         return []
     out: list[str] = []

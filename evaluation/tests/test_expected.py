@@ -8,17 +8,16 @@ from typing import Any
 import pytest
 import yaml
 
-from evaluation import canon
+from evaluation.canon import Canon, default_canon, recipe_data
 from evaluation.expected import expected
 from evaluation.truth import TYPES, GroundTruth
 from evidence import protocol as protocol_module
 from evidence.questions import QuestionTruth
-from synth import vocab
 
 ROOT = Path(__file__).resolve().parents[2]
 MIXED = ROOT / "tests" / "EV2" / "corpora" / "rag-claude-s1-mixed" / "ground_truth.json"
 HARD = ROOT / "tests" / "EV2" / "corpora" / "rag-tpl-hard-complex" / "ground_truth.json"
-PROTOCOLS = ROOT / "evidence" / "protocols"
+PROTOCOLS = ROOT / "domains" / "rag" / "protocols"
 
 
 @pytest.fixture(scope="module")
@@ -85,12 +84,14 @@ def test_effect_computed_agrees_with_saved_directions(mixed):
 def test_inventory_datasets_are_vocab_names(mixed):
     got = expected(mixed, "inventory", QuestionTruth(target="dataset"))
     assert got["kind"] == "inventory" and got["target"] == "dataset" and got["entries"]
+    contexts = recipe_data("rag")["contexts"]
     for entry in got["entries"]:
-        assert entry["name"] in vocab.DATASETS
+        assert entry["name"] in contexts
         assert entry["papers"] and entry["papers"] == sorted(entry["papers"])
 
 
 def test_inventory_metrics_merge_synonyms(mixed):
+    canon = Canon.from_truth(mixed)
     assert canon.key("metric", "answer accuracy") == canon.key("metric", "AA") == "answer accuracy"
     assert canon.key("metric", "  Answer   ACCURACY ") == "answer accuracy"
     assert canon.key("metric", "proportion of questions answered with correct facts") == "answer accuracy"
@@ -105,6 +106,7 @@ def test_inventory_metrics_merge_synonyms(mixed):
 
 
 def test_inventory_conditions_key_to_labels(mixed):
+    canon = Canon.from_truth(mixed)
     assert canon.key("condition", "model that answers from its own parameters") == "closed-book model"
     assert canon.key("condition", "RAG Pipeline") == "RAG pipeline"
     assert canon.key("dataset", "openfactqa") == "OpenFactQA"
@@ -116,13 +118,16 @@ def test_inventory_conditions_key_to_labels(mixed):
 
 
 def test_kind_of_matches_best_protocol():
+    canon = default_canon()
     data = yaml.safe_load((PROTOCOLS / "best-accuracy.yaml").read_text(encoding="utf-8"))
     kinds = data["best"]["kinds"]
-    assert list(dict.fromkeys(canon.KIND_OF.values())) == list(kinds)
+    assert list(canon.kinds) == list(kinds)
     for kind, names in kinds.items():
         for name in names:
-            assert canon.KIND_OF[canon.key("condition", name)] == kind, name
-    assert set(canon.KIND_OF) == {label for label, _, _ in (*vocab.BASELINES, *vocab.RAGS, *vocab.OTHERS)}
+            assert canon.kind_of(name) == kind, name
+    recipe = recipe_data("rag")
+    names = [n for s in recipe["sides"].values() for n in s["names"]] + recipe["others"]
+    assert set(canon.kinds_of) == {n["label"] for n in names}
 
 
 def test_best_uses_main_experiment_only(tmp_path):

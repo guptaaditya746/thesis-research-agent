@@ -121,7 +121,7 @@ def probe(proposal: Path) -> list[dict]:
                     "The closed-book model attains factual accuracy of 60%.\n")
         bad_corpus = corpus_of(root / "range-corpus", {"P": bad_text})
         for tag, protocol_path in (("proposal", proposal / "protocol.yaml"),
-                                   ("hand", Path("evidence/protocols/rag-factuality.yaml"))):
+                                   ("hand", Path("domains/rag/protocols/rag-factuality.yaml"))):
             path = engine.run(protocol_path, bad_corpus, root / f"range-{tag}", selection="regex-only")
             items = [json.loads(s) for s in (path / "evidence.jsonl").read_text().splitlines()]
             vals = [i["fields"]["value"] for i in items if i["evidence_type"] == "measurement"]
@@ -152,7 +152,7 @@ def probe(proposal: Path) -> list[dict]:
                      "scope": scope.model_dump(), "params_ignored_as_designed": scope == changed})
 
         meta = json.loads((HERE / "rag-llm-s1-corpus.json").read_text())
-        protocol = load("evidence/protocols/rag-factuality.yaml")
+        protocol = load("domains/rag/protocols/rag-factuality.yaml")
         studies = variant.base_studies(meta, protocol)
         _, _, after = variant.counterfactual(meta["seed"], studies, "S002", "contradicts", protocol.synthesis)
         plan = make_plan(after, "paraphrased", plan_rng(meta["seed"], "S002", "paraphrased"))

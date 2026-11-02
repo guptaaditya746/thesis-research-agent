@@ -1,9 +1,9 @@
 """Regex extractors, one per evidence type (kind regex, determinism exact).
 
 They find the explicit cases: condition and metric names from fixed wording, measurements in sentences
-("the retrieval-augmented model reaches 71%, compared with 62% for the closed-book model") and in
+("the tuned model reaches 71%, compared with 62% for the baseline model") and in
 Markdown tables (row and column labels matched to the context's conditions and metrics, by label or by a
-code the method section defines: "its retrieval-augmented variant (R)"), and author claims from effect
+code the method section defines: "its tuned variant (T)"), and author claims from effect
 phrases. Paraphrased, distributed and complex renderings are expected to be missed; how much they miss is
 measured on the synthetic benchmark, not hidden.
 """
@@ -18,9 +18,11 @@ from . import base, terms
 from .measure import measurements
 
 VERSION = 2
-SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
+SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "numreader.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
-INJECTED = ("evidence_type", "field_schema", "links", "roles", "question_metrics", "compare")   # added by the engine
+# added by the engine (`types`: the pack's type of each role, for the measured-value extractors)
+INJECTED = ("evidence_type", "field_schema", "links", "roles", "question_metrics", "compare", "types", "context_field",
+            "optional_links")
 
 
 class RegexExtractor:
@@ -31,12 +33,14 @@ class RegexExtractor:
     def __init__(self, config: dict[str, Any]) -> None:
         given = {k: v for k, v in config.items() if k in INJECTED}
         self.given = given
+        self.emits = base.emitted(given, self.evidence_type)
         self.patterns = self.default_patterns() | {k: v for k, v in config.items() if k not in INJECTED}
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex",
-                                  evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
+                                  evidence_types=(self.emits,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config={**given, **self.patterns}, determinism="exact")
 
     def default_patterns(self) -> dict[str, Any]:
+        """Generic settings only; the topic words come from the config (the domain pack, or the protocol)."""
         return {}
 
     def extract(self, task: ExtractionTask, ctx: RunContext) -> ExtractionResult:
@@ -54,14 +58,15 @@ class ConditionRegex(RegexExtractor):
     evidence_type, name = "condition", "regex_condition"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"conditions": terms.CONDITIONS, "alias": terms.ALIAS, "max_spans": 4}
+        return {"alias": terms.ALIAS, "max_spans": 4}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         patterns = terms.condition_patterns(self.patterns["conditions"])
         enum = self.given.get("field_schema", {}).get("properties", {}).get("role", {}).get("enum")
         roles = list(enum or self.patterns["conditions"])   # "other" (a qualified ablation) only if the type has it
         treatment = (self.given.get("compare") or {}).get("treatment")
-        mentions = [m for a, b in parts for m in terms.find_conditions(text, patterns, roles, a, b, treatment)]
+        mentions = [m for a, b in parts for m in terms.find_conditions(text, patterns, roles, a, b, treatment,
+                                                                     not_a_system=self.patterns["not_a_system"])]
         defined = {m: (a, b) for m, _, a, b in terms.aliases(text, mentions)}
         found = []
         for role in dict.fromkeys([*self.patterns["conditions"], *(["other"] if "other" in roles else [])]):
@@ -72,14 +77,14 @@ class ConditionRegex(RegexExtractor):
             spans = [base.span(task, text, *defined.get(m, (m.start, m.end)), "condition_label")
                      for m in chosen[: self.patterns["max_spans"]]]
             found.append(({"label": " ".join(mine[0].text.split()), "role": role}, {}, spans))
-        return base.group("condition", found)
+        return base.group(self.emits, found)
 
 
 class MetricRegex(RegexExtractor):
     evidence_type, name = "metric", "regex_metric"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"metrics": [list(m) for m in terms.METRICS], "max_spans": 2}
+        return {"max_spans": 2}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         patterns = [tuple(m) for m in self.patterns["metrics"]]
@@ -93,29 +98,29 @@ class MetricRegex(RegexExtractor):
             spans = [base.span(task, text, m.start, m.end, "metric_label") for m in mentions[: self.patterns["max_spans"]]]
             fields = {"name": " ".join(first.text.split()), "canonical": first.key, "higher_is_better": first.higher_is_better}
             found.append((fields, {}, spans))
-        return base.group("metric", found)
+        return base.group(self.emits, found)
 
 
 class MeasurementRegex(RegexExtractor):
     evidence_type, name = "measurement", "regex_measurement"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"conditions": terms.CONDITIONS, "metrics": [list(m) for m in terms.METRICS], "alias": terms.ALIAS}
+        return {"alias": terms.ALIAS}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         # the question metrics come from the protocol's synthesis block (the engine injects them), never from here
         found = measurements(task, text, parts, ctx.context_items(),
                              {**self.patterns, "question_metrics": self.given.get("question_metrics", []),
-                              "treatment": (self.given.get("compare") or {}).get("treatment")})
-        return base.group("measurement", found)
+                              "treatment": (self.given.get("compare") or {}).get("treatment"),
+                              "slots": base.Slots.of(self.given)})
+        return base.group(self.emits, found)
 
 
 class AuthorClaimRegex(RegexExtractor):
     evidence_type, name = "author_claim", "regex_author_claim"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"subject": terms.CLAIM_SUBJECT, "claims": [list(c) for c in terms.CLAIMS],
-                "skip": r"(?i)\bwhether\b|\?|\bif\b|\bprior work\b|\bprevious work\b",
+        return {"skip": r"(?i)\bwhether\b|\?|\bif\b|\bprior work\b|\bprevious work\b",
                 "sections": list(terms.CLAIM_SECTIONS), "max_spans": 3}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
@@ -135,7 +140,7 @@ class AuthorClaimRegex(RegexExtractor):
         best = min(candidates)
         same = [c for c in sorted(candidates) if c[0] == best[0] and c[3] == best[3]][: self.patterns["max_spans"]]
         spans: list[Span] = [base.span(task, text, s, e, "claim") for _, s, e, _ in same]
-        return base.group("author_claim", [({"direction": best[3]}, {}, spans)])
+        return base.group(self.emits, [({"direction": best[3]}, {}, spans)])
 
     def _priority(self, heads: list[tuple[int, int, str | None]], pos: int) -> int:
         """Index of the first preferred section word in the heading the position falls under."""

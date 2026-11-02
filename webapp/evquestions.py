@@ -1,18 +1,20 @@
-"""The questions the app offers (evidence/questions.yaml, `$EV_QUESTIONS`): the user selects one, never types it.
+"""The questions the app offers (domains/rag/questions.yaml, `$EV_QUESTIONS`): the user selects one, never
+types it.
 
     questions:
-      - id: rag-factuality                       # a plain name (webapp/files.py ID)
-        question: Does retrieval-augmented ...?  # the exact question; a hand-written protocol must ask it too
+      - id: <question-id>                        # a plain name (webapp/files.py ID)
+        question: Does <treatment> ...?          # the exact question; a hand-written protocol must ask it too
         kind: effect                             # effect | inventory | consistency | best; the protocol's kind
-        truth: {metric: factual_accuracy, min_effect: 0.01}   # the expected answer's parameters (evaluation)
-        protocol: evidence/protocols/rag-factuality.yaml           # optional: the hand-written protocol
-        agentic_protocol: evidence/protocols/rag-factuality-agentic.yaml   # optional: its agentic variant
+        truth: {metric: <canonical metric>, min_effect: 0.01}   # the expected answer's parameters (evaluation)
+        protocol: protocols/<question-id>.yaml         # optional: the hand-written protocol
+        agentic_protocol: protocols/<question-id>-agentic.yaml # optional: its agentic variant
 
-Paths are relative to the repository and must lie in the protocols directory (`$EV_PROTOCOLS`), where the run
-step finds protocols by name; a protocol must parse (evidence/protocol.py) and ask the entry's question with
-the entry's kind. The entry model is evidence/questions.py's (shared with the evaluation). A
-question without a protocol gets one through the proposal flow (docs/evidence-system.md Part E). The file is
-validated when it is read (re-read when it changes); a broken file is a 409 naming the problem.
+Paths are relative to the questions file's folder (the pack folder) and must lie in the protocols directory
+(`$EV_PROTOCOLS`), where the run step finds protocols by name; a protocol must parse (evidence/protocol.py)
+and ask the entry's question with the entry's kind. The entry model is evidence/questions.py's (shared with
+the evaluation). A question without a protocol gets one through the proposal flow (docs/evidence-system.md
+Part E). The file is validated when it is read (re-read when it changes); a broken file is a 409 naming the
+problem.
 """
 from __future__ import annotations
 
@@ -28,7 +30,7 @@ from evidence.questions import QuestionEntry, parse
 from .evfiles import subdirs
 from .evmodels import Question
 from .files import Conflict, NotFound, read_json, signature
-from .settings import REPO, Settings
+from .settings import Settings
 
 
 # The entry and file models are evidence/questions.py's (shared with the evaluation); this module adds the
@@ -36,7 +38,7 @@ from .settings import REPO, Settings
 Entry = QuestionEntry
 
 
-def protocol_name(path_text: str, protocols: Path, question: str, base: Path = REPO, kind: str | None = None) -> str:
+def protocol_name(path_text: str, protocols: Path, question: str, base: Path, kind: str | None = None) -> str:
     """The protocol's name (file stem) after checking it lies in `protocols`, parses, asks `question` and (when
     `kind` is given) is of that kind."""
     path = (base / path_text).resolve()
@@ -56,9 +58,11 @@ def protocol_name(path_text: str, protocols: Path, question: str, base: Path = R
     return path.stem
 
 
-def load(path: Path, protocols: Path, base: Path = REPO) -> list[Question]:
-    """The questions of the file, checked (ValueError naming every problem)."""
-    parsed = parse(path)
+def load(path: Path, protocols: Path, base: Path | None = None) -> list[Question]:
+    """The questions of the file, checked (ValueError naming every problem). Protocol paths are relative to
+    `base`, by default the file's folder."""
+    base = path.parent if base is None else base
+    parsed = parse(path, base)   # the pack folder: inventory targets are its types
     out, problems = [], []
     for q in parsed.questions:
         names: dict[str, str | None] = {"protocol": None, "agentic_protocol": None}

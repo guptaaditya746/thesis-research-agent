@@ -9,9 +9,13 @@ from evidence import engine, protocol
 from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef
 from evidence.extractors import get
 from evidence.extractors.abbrev import definitions
-from synth.vocab import QUESTION_METRICS
+from evidence.protocol import DEFAULT_PACK
+from synth.recipe import load_recipe
 
-from .conftest import PROTOCOL, corpus_of
+from .conftest import PROTOCOL, corpus_of, pack_words
+
+# The generator recipe's question metrics: canonical -> forms (name, abbreviation, description).
+QUESTION_METRICS = {m.canonical: m.forms for m in load_recipe(DEFAULT_PACK).question_metrics}
 
 PROTO = protocol.load(PROTOCOL)
 
@@ -37,7 +41,7 @@ def extract(name: str, text: str, evidence_type: str, config: dict | None = None
     doc = DocumentRef(id="P", file="papers/P.md", sha256=text_sha256(text))
     task = ExtractionTask(protocol=ProtocolRef(id=PROTO.id, sha256=PROTO.sha256), evidence_type=evidence_type,  # type: ignore[arg-type]
                           field_schema_sha256="x", document=doc)
-    return get(name, config or {}).extract(task, Ctx(text))
+    return get(name, {**pack_words(name, evidence_type), **(config or {})}).extract(task, Ctx(text))
 
 
 def test_definition_found() -> None:
@@ -99,7 +103,7 @@ def test_scope_limits_uses_not_definitions() -> None:
     from evidence.contract import Scope
     task = ExtractionTask(protocol=ProtocolRef(id=PROTO.id, sha256=PROTO.sha256), evidence_type="metric",
                           field_schema_sha256="x", document=doc, scope=Scope(kind="ranges", ranges=((text.index("Later"), len(text)),)))
-    [item] = get("abbrev_metric", {}).extract(task, Ctx(text)).items
+    [item] = get("abbrev_metric", pack_words("abbrev_metric", "metric")).extract(task, Ctx(text)).items
     assert [s.selector["start"] for s in item.spans] == [text.index("FLA is high")]
 
 

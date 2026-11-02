@@ -8,7 +8,7 @@ evaluation adds later reaches the page without a change here.
 """
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapter, model_validator
 
@@ -48,7 +48,7 @@ class EvConfig(Base):
     cache: Root = Field(description="the engine's record cache directory (extractor_calls.jsonl)")
     agent_work: Root = Field(description="the agentic extractor's agent run directories")
     protocols: Root
-    questions: Root = Field(description="the questions file (evidence/questions.yaml; `exists`: the file is there)")
+    questions: Root = Field(description="the questions file (domains/rag/questions.yaml; `exists`: the file is there)")
     jobs: Root = Field(description="$EV/.jobs: the state and logs of the jobs the app starts (none without $EV)")
     user: str = Field(description="who decides a card in the app (`by` in decisions.yaml, $WEBAPP_USER)")
     default_model: str = Field(description="the model alias every model job uses unless told otherwise (orch-model)")
@@ -387,6 +387,85 @@ class BestAnswer(Open):
     tied: list[str] = []
 
 
+class ChainStep(Open):
+    """One step of a chaining path: a comparison of `from` and `to` in one paper; `direction` is from over to."""
+    model_config = ConfigDict(extra="allow", json_schema_serialization_defaults_required=True, serialize_by_alias=True,
+                              validate_by_name=True, validate_by_alias=True)
+
+    comparison: str
+    document: str
+    from_: str = Field(alias="from")
+    to: str
+    metric: str | None = None
+    direction: Literal["better", "worse", "no_difference"] | None = None
+    context: str | None = None
+
+
+class ChainPath(Open):
+    via: list[str] = []
+    steps: list[ChainStep] = []
+    verdict: str
+    reason: str | None = None
+
+
+class ChainingAnswer(Open):
+    """evidence/kinds/chaining.py: is the source better than the target, directly or through things each was
+    compared with? `reason` is the rule that decided (null when a chain concluded)."""
+    kind: Literal["chaining"]
+    system: str
+    source: str
+    target: str
+    metric: str | None = None
+    verdict: str
+    inferred: bool = False
+    via: list[str] = []
+    studies: list[str] = []
+    paths: list[ChainPath] = []
+    reason: str | None = None
+    note: str | None = None
+
+
+class LimitationEntry(Open):
+    thing: str | None = None
+    category: str
+    papers: list[str] = []
+    items: list[str] = []
+
+
+class LimitationsAnswer(Open):
+    """evidence/kinds/limitations.py: the limitations the papers state, per compared thing and category."""
+    kind: Literal["limitations"]
+    system: str
+    thing: str | None = None
+    entries: list[LimitationEntry] = []
+    counts: dict[str, dict[str, int]] = {}
+    unlinked: dict[str, int] = {}
+
+
+class DependencyLink(Open):
+    """A paper (`from`) that builds on an earlier one (`to`), reusing a method, dataset or result."""
+    model_config = ConfigDict(extra="allow", json_schema_serialization_defaults_required=True, serialize_by_alias=True,
+                              validate_by_name=True, validate_by_alias=True)
+
+    from_: str = Field(alias="from")
+    to: str
+    reuses: str
+    items: list[str] = []
+
+
+class BuildsOnAnswer(Open):
+    """evidence/kinds/builds_on.py: which papers build on which, and how influential each compared thing is."""
+    kind: Literal["builds_on"]
+    system: str
+    thing: str | None = None
+    links: list[DependencyLink] = []
+    origins: dict[str, str | None] = {}
+    followers: dict[str, list[str]] = {}
+    influence: dict[str, int] = {}
+    ranking: list[str] = []
+    unresolved: list[str] = []
+
+
 def _answer_kind(value: Any) -> str:
     """The union's tag: the `kind` key, effect when there is none (answer.json before the question kinds)."""
     kind = value.get("kind") if isinstance(value, dict) else getattr(value, "kind", None)
@@ -401,10 +480,12 @@ class UnknownAnswer(Open):
     system: str | None = None
 
 
-KNOWN_ANSWER_KINDS = ("effect", "inventory", "consistency", "best")
+KNOWN_ANSWER_KINDS = ("effect", "inventory", "consistency", "best", "chaining", "limitations", "builds_on")
 EvAnswer = Annotated[
     Annotated[EffectAnswer, Tag("effect")] | Annotated[InventoryAnswer, Tag("inventory")]
     | Annotated[ConsistencyAnswer, Tag("consistency")] | Annotated[BestAnswer, Tag("best")]
+    | Annotated[ChainingAnswer, Tag("chaining")] | Annotated[LimitationsAnswer, Tag("limitations")]
+    | Annotated[BuildsOnAnswer, Tag("builds_on")]
     | Annotated[UnknownAnswer, Tag("unknown")],
     Discriminator(_answer_kind),
 ]
@@ -486,6 +567,11 @@ class EvRunDetail(EvRunSummary):
     baselines: list[str] = Field([], description="baseline runs (ids) of the same corpus")
     reports: list[str] = Field([], description="score reports (ids) of this run")
     has_trace: bool = Field(False, description="baseline: the agent baseline's run directory is there")
+    link_flags: int | None = Field(None, description="engine: links to an item of the wrong kind (reason.json "
+                                                     "`link_flags`); null when the run has no reason.json")
+    display: dict[str, str] = Field({}, description="engine: the run's pack's display names (pack.yaml `display`), "
+                                                    "e.g. what the treatment and control sides are called; empty "
+                                                    "for a baseline or when the pack cannot be read")
 
 
 class RunPaper(Base):
@@ -656,7 +742,42 @@ class BenchmarkView(Base):
     markdown: str | None = None
 
 
-# --- questions (evidence/questions.yaml; webapp/evquestions.py) --------------------------------------------
+LossCause = Literal["missed", "wrongly linked", "names not grouped", "wrong rule"]
+CAUSES: tuple[str, ...] = get_args(LossCause)   # evaluation/losses.py CAUSES (plan 3 Task 6), in its order
+
+
+class SystemCost(Open):
+    """One system's cost on a question (evaluation/score.py `system_cost`): model calls and tokens; a count the
+    system does not report is null (the agent baseline does not split input and output tokens)."""
+    model_calls: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    tokens: int | None = None
+
+
+class LossRow(Open):
+    question_id: str
+    kind: str
+    systems: dict[str, float | None] = Field(description="system -> its headline score on the question")
+    cost: dict[str, SystemCost] = {}
+    engine_loss: bool = Field(description="the engine's headline is below the best baseline's, or its label "
+                                          "(effect) or winner (best) is wrong")
+    cause: LossCause | None = Field(None, description="an engine loss's first cause; null when not a loss")
+    report: str = Field(description="the score report (`<group>~<name>`) the row comes from")
+
+
+class Losses(Open):
+    """losses.json of `evaluate losses` (evaluation/losses.py `losses(reports)`): per domain, the questions with
+    the engine's losses first, then by question id."""
+    domains: dict[str, list[LossRow]] = {}
+
+
+class LossesView(Base):
+    losses: Losses | None = Field(None, description="null when the scores root has no losses/losses.json")
+    markdown: str | None = None
+
+
+# --- questions (domains/rag/questions.yaml; webapp/evquestions.py) --------------------------------------------
 
 class Question(Base):
     id: str

@@ -22,7 +22,7 @@ def test_settings_from_the_environment(tmp_path: Path, monkeypatch: pytest.Monke
     s = Settings()
     assert (s.agent_root, s.litellm_base_url, s.python, s.model_jobs, s.cpu_jobs) == (
         None, "http://proxy:4000/v1", sys.executable, 2, 2)
-    assert s.user == "aditya" and s.questions == REPO / "evidence" / "questions.yaml"
+    assert s.user == "aditya" and s.questions == REPO / "domains" / "rag" / "questions.yaml"
     assert s.jobs_dir is None   # no jobs without $EV
     assert "sk-never-a-setting" not in s.model_dump_json()
     assert Settings(EV="ev").jobs_dir == tmp_path / "ev" / ".jobs"   # type: ignore[call-arg]

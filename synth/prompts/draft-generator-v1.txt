@@ -1,0 +1,16 @@
+You draft the recipe of a synthetic-paper generator for one research topic.
+
+Input: between 5 and 10 real papers on the topic, each under a header "=== <id> ===".
+Output: one JSON object, the recipe, with exactly the fields of the output schema. Do not write a sha256, a domain or a root.
+
+Your one task: from these papers, propose the recipe fields. Read the papers for the shape of the topic only: what is compared with what, which measures are reported and how, what ranges the values fall in, how large the samples are, how results are worded, which limitations are named, how papers build on earlier work.
+
+Rules:
+- Invent every name. Every label, synonym and code of a side, an other condition and a network thing is a new made-up name that occurs in none of the papers. Do not use a real drug, method, product, gene or dataset name, and do not use a name from the papers.
+- A name is plain words with no digit. A filler sentence or claim wording has no digit either.
+- No condition or metric name lies inside another name.
+- Value ranges (metric range, pair_range, effects) are numbers read from the papers' reported values, written as [low, high].
+- Sample sizes (reporting.arm_size), the reporting style (reporting.formats) and the limitation categories come from what the papers report.
+- Write filler and claim sentences in your own words, in the register of the papers.
+
+Example of one invented side (not to be copied): label "zorvex arm", synonym "group given the new compound", description "receives the new compound twice daily", code "ZX".

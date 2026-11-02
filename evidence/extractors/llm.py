@@ -45,19 +45,22 @@ class Proposal:
 
 
 class LLMExtractor:
-    def __init__(self, evidence_type: str, config: dict[str, Any]) -> None:
+    def __init__(self, name_type: str, config: dict[str, Any], name: str | None = None) -> None:
+        """`name_type` names the extractor (`llm_<name_type>`, unless `name` is given); its items are of the evidence
+        type the engine configures (`evidence_type`, a domain pack may call the type otherwise), else of `name_type`.
+        Everything the model is asked comes from the configured type's schema, links, span roles and description."""
         cfg = DEFAULTS | config
-        if cfg.get("evidence_type", evidence_type) != evidence_type:
-            raise ValueError(f"llm_{evidence_type} built for evidence type {cfg['evidence_type']}")
+        evidence_type = str(cfg.get("evidence_type") or name_type)
         self.evidence_type = evidence_type
         self.cfg = cfg
         self.roles = list(cfg.get("roles") or ["quote"])
         self.links = dict(cfg.get("links") or {})
+        self.optional_links = tuple(cfg.get("optional_links") or ())   # links an item may leave null
         schema = cfg.get("field_schema") or {"type": "object", "properties": {}}
-        self.output_type = llm_schema.output_model(evidence_type, schema, self.links, self.roles)
+        self.output_type = llm_schema.output_model(evidence_type, schema, self.links, self.roles, self.optional_links)
         template = cfg.get("instructions") or llm_schema.read_prompt(cfg["prompt"])
         self.instructions = llm_schema.instructions(template, evidence_type, cfg.get("description", ""), schema,
-                                                    self.links, self.roles)
+                                                    self.links, self.roles, self.optional_links)
         self.retry_instructions = llm_schema.read_prompt(cfg["retry_prompt"])
         config_out = {k: cfg[k] for k in ("model", "prompt", "retry_prompt", "temperature", "seed", "max_tokens",
                                           "retry_max_tokens", "chunk_chars", "quote_retry")}
@@ -69,7 +72,7 @@ class LLMExtractor:
                                                                 max_tokens=cfg["max_tokens"])),
                        "retry_model_settings": dict(modelcall.settings(temperature=cfg["temperature"], seed=cfg["seed"],
                                                                       max_tokens=cfg["retry_max_tokens"]))}
-        self.spec = ExtractorSpec(name=f"llm_{evidence_type}", version=VERSION, kind="llm",
+        self.spec = ExtractorSpec(name=name or f"llm_{name_type}", version=VERSION, kind="llm",
                                   evidence_types=(evidence_type,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config=config_out, determinism="near_exact")
 
@@ -167,6 +170,8 @@ class LLMExtractor:
         links: dict[str, str] = {}
         for name in self.links:
             local = p.links.get(name)
+            if local is None and name in self.optional_links:
+                continue
             if local not in context or context[local].evidence_type != self.links[name]:
                 return None, [Rejected(evidence_type=self.evidence_type, fields=p.fields, quotes=quotes,  # type: ignore[arg-type]
                                        reason="dangling_link", detail=f"{name}={local!r}")]
@@ -202,3 +207,6 @@ def _factory(evidence_type: str) -> Any:
 
 
 FACTORIES = {f"llm_{t}": _factory(t) for t in ("condition", "metric", "measurement", "author_claim")}
+# `llm`: the general LLM extractor of any evidence type a pack declares (the type the engine configures), e.g. a
+# limitation, a dependency or a study label, which no topic extractor reads (plan 2 preflight P10)
+FACTORIES["llm"] = lambda config: LLMExtractor(str(config.get("evidence_type") or "item"), config, name="llm")

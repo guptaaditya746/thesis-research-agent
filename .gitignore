@@ -7,3 +7,7 @@ concepts/*/cache/
 webapp/web/node_modules/
 .venv-*/
 .synth-cache/
+.draft-exchange/
+# packbuilder exchange folders (the JSONL call cache beside them is the committed record of the calls)
+.propose-exchange/
+.helper-exchange/

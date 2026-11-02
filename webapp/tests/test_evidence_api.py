@@ -3,6 +3,7 @@ corpora, protocols and proposals, engine and baseline runs with their funnel, sp
 from __future__ import annotations
 
 import json
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -10,11 +11,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agent.anchor import read_text
+from evaluation import losses as losses_module
+from evaluation.report import dumps
+from evidence.rundir import RunDir
 from webapp.app import create_app
 from webapp.evfiles import RecordCache, segments
+from webapp.evmodels import CAUSES, Losses
 from webapp.settings import Settings
 
 from .evidence_world import NAME, POSIX, EvidenceWorld
+from .test_evanswers import BUILDS_ON, CHAINING, LIMITATIONS
 
 MIXED, EXPLICIT = f"{NAME}-mixed", f"{NAME}-explicit"
 
@@ -50,6 +56,7 @@ def test_unconfigured_roots_are_404_with_the_variable(tmp_path: Path) -> None:
         response = c.get("/api/ev/corpora/x")
         assert response.status_code == 404 and "$CORPORA" in response.json()["detail"]
         assert c.get("/api/ev/scores").json() == {"reports": [], "compares": [], "shifts": [], "benchmarks": []}
+        assert c.get("/api/ev/losses").json() == {"losses": None, "markdown": None}
 
 
 def test_corpora_list_levels_knobs_variant(ev: TestClient, ev_world: EvidenceWorld) -> None:
@@ -128,7 +135,8 @@ def test_runs_list_engine_and_baselines(ev: TestClient, ev_world: EvidenceWorld)
     assert (gaps["kind"], gaps["strategy"], gaps["selection"], gaps["corpus"]) == ("engine", "gaps", "cascade", MIXED)
     assert gaps["label"] and gaps["counts"] is not None and gaps["cost"]["calls"] > 0
     rag = runs[f"rag-baseline~{MIXED}"]
-    assert (rag["kind"], rag["system"], rag["strategy"], rag["corpus"]) == ("baseline", "rag-baseline", "global", MIXED)
+    assert (rag["kind"], rag["system"], rag["strategy"], rag["corpus"]) == (
+        "baseline", "bm25-answer-baseline", "global", MIXED)
 
 
 def test_run_detail_answer_funnel_links(ev: TestClient) -> None:
@@ -189,7 +197,7 @@ def test_llm_call_with_its_model_records(ev: TestClient) -> None:
 def test_baseline_run_detail_and_paper_citations(ev: TestClient) -> None:
     run = ev.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()
     answer = run["answer"]
-    assert answer["system"] == "rag-baseline" and answer["citations"] and answer["retrieved"]
+    assert answer["system"] == "bm25-answer-baseline" and answer["citations"] and answer["retrieved"]
     cited = answer["citations"][0]
     paper = ev.get(f"/api/ev/runs/rag-baseline~{MIXED}/papers/{cited['document']}").json()
     assert any(f"cited:{cited['start']}-{cited['end']}" in s["marks"] for s in paper["segments"])
@@ -234,7 +242,7 @@ def test_scores_index(ev: TestClient, ev_world: EvidenceWorld) -> None:
     index = ev.get("/api/ev/scores").json()
     reports = {r["id"]: r for r in index["reports"]}
     gaps = reports[f"cascade-gaps~{MIXED}"]
-    assert gaps["strategy"] == "gaps" and gaps["run_id"] == MIXED and "rag-baseline" in gaps["systems"]
+    assert gaps["strategy"] == "gaps" and gaps["run_id"] == MIXED and "bm25-answer-baseline" in gaps["systems"]
     assert {c["id"] for c in index["compares"]} >= {"compare-cascade", f"compare-funnel~{MIXED}"}
     assert {s["group"] for s in index["shifts"]} == {"shift-regex-only", "shift-cascade", "shift-cascade-gaps"}
     (bench,) = index["benchmarks"]
@@ -244,7 +252,8 @@ def test_scores_index(ev: TestClient, ev_world: EvidenceWorld) -> None:
 def test_report_compare_shift_benchmark(ev: TestClient, ev_world: EvidenceWorld) -> None:
     view = ev.get(f"/api/ev/scores/reports/cascade-gaps~{MIXED}").json()
     report = view["report"]
-    assert report["corpus_id"] and {s["system"] for s in report["synthesis"]} >= {"evidence-engine", "rag-baseline"}
+    systems = {s["system"] for s in report["synthesis"]}
+    assert report["corpus_id"] and systems >= {"evidence-engine", "bm25-answer-baseline"}
     assert report["extraction"]["rows"] and report["intervals"]["synthesis"] and report["funnel"]["strategy"] == "gaps"
     assert view["markdown"].startswith("# Evaluation of run")
     compare = ev.get(f"/api/ev/scores/compares/compare-funnel~{MIXED}").json()
@@ -257,6 +266,111 @@ def test_report_compare_shift_benchmark(ev: TestClient, ev_world: EvidenceWorld)
     for bad in ("/api/ev/scores/reports/nope~x", "/api/ev/scores/reports/a~b~c", "/api/ev/scores/compares/cascade",
                 "/api/ev/scores/reports/..~cascade", "/api/ev/scores/reports/%2e%2e", "/api/ev/scores/benchmarks/cascade"):
         assert ev.get(bad).status_code == 404, bad
+
+
+def test_losses_endpoint_reads_the_file(ev_fresh: EvidenceWorld) -> None:
+    ev_fresh.write_losses({"domains": {"rag": []}})
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        view = client.get("/api/ev/losses").json()
+    assert view["losses"]["domains"] == {"rag": []} and "We should not assume" in view["markdown"]
+
+
+def test_no_losses_file_is_an_empty_view_not_a_404(ev_fresh: EvidenceWorld) -> None:
+    shutil.rmtree(ev_fresh.scores / "losses")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        assert client.get("/api/ev/losses").json() == {"losses": None, "markdown": None}
+
+
+@pytest.mark.parametrize("text", ["{not json", '{"domains": {"rag": [{"question_id": "q"}]}}'])
+def test_a_damaged_losses_file_is_422_not_a_500(ev_fresh: EvidenceWorld, text: str) -> None:
+    (ev_fresh.scores / "losses" / "losses.json").write_text(text, encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        response = client.get("/api/ev/losses")
+    assert response.status_code == 422 and "losses/losses.json" in response.json()["detail"]
+
+
+def test_the_worlds_losses_put_the_losses_first_with_a_cause(ev: TestClient) -> None:
+    rows = ev.get("/api/ev/losses").json()["losses"]["domains"]["rag"]
+    assert rows[0]["engine_loss"] and rows[0]["cause"] in CAUSES
+    assert [r["engine_loss"] for r in rows] == sorted((r["engine_loss"] for r in rows), reverse=True)
+    assert rows[0]["cost"]["bm25-answer-baseline"]["model_calls"] == 2
+    assert {r["report"] for r in rows} <= {r["id"] for r in ev.get("/api/ev/scores").json()["reports"]}
+
+
+def test_losses_json_of_evaluate_validates_as_LossesView(ev_world: EvidenceWorld) -> None:
+    """The contract with plan 3 Task 6 (preflight F6): what `evaluation.losses.losses` makes from the world's
+    reports (read as `evaluate losses` reads them: read_reports tags each with its `<group>~<name>`) is what the
+    Report page reads, and so is the losses.json `evaluate losses` wrote into the world."""
+    result = losses_module.losses(losses_module.read_reports(ev_world.scores))
+    made = Losses.model_validate(result)
+    assert made.domains and tuple(losses_module.CAUSES) == CAUSES
+    ids = {"~".join(p.parent.relative_to(ev_world.scores).parts)   # one- and two-level reports, as the web app
+           for p in [*ev_world.scores.glob("*/report.json"), *ev_world.scores.glob("*/*/report.json")]}
+    assert {r.report for rows in made.domains.values() for r in rows} == ids
+    assert all(r.cost for rows in made.domains.values() for r in rows)   # every system's model calls and tokens
+    written = json.loads((ev_world.scores / "losses" / "losses.json").read_text(encoding="utf-8"))
+    assert written == json.loads(dumps(result)) and Losses.model_validate(written)
+
+
+def test_run_detail_counts_the_link_flags_of_reason_json(ev_fresh: EvidenceWorld) -> None:
+    run_dir = ev_fresh.runs / "cascade-gaps" / MIXED
+    reason = json.loads((run_dir / "reason.json").read_text(encoding="utf-8"))
+    reason["link_flags"] = [["m1", "condition", "c1", "not a condition"], ["m2", "metric", "c1", "not a metric"]]
+    (run_dir / "reason.json").write_text(json.dumps(reason), encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        assert client.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["link_flags"] == 2
+        assert client.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()["link_flags"] is None
+    (run_dir / "reason.json").unlink()
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        assert client.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["link_flags"] is None
+
+
+
+@pytest.mark.parametrize("raw", [CHAINING, LIMITATIONS, BUILDS_ON], ids=lambda raw: raw["kind"])
+def test_a_run_of_each_new_kind_opens(ev_fresh: EvidenceWorld, raw: dict[str, object]) -> None:
+    """Plan 2's answer kinds load as their own models, so their run pages open (preflight F43)."""
+    (ev_fresh.runs / "cascade-gaps" / MIXED / "answer.json").write_text(json.dumps(raw), encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        response = client.get(f"/api/ev/runs/cascade-gaps~{MIXED}")
+    assert response.status_code == 200
+    answer = response.json()["answer"]
+    assert answer["kind"] == raw["kind"] and {k: answer[k] for k in raw} == raw
+
+
+def test_run_detail_has_the_packs_display_names(ev: TestClient, ev_world: EvidenceWorld) -> None:
+    """The two sides by the topic's own names (Pack.display); a baseline has no pack, so none."""
+    pack = RunDir(ev_world.runs / "cascade-gaps" / MIXED).register_pack()
+    assert pack is not None and pack.display
+    assert ev.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()["display"] == pack.display
+    assert ev.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()["display"] == {}
+
+
+def test_a_run_of_a_second_pack_opens_in_a_fresh_registry(ev_fresh: EvidenceWorld) -> None:
+    """A run whose protocol names another pack (drugtoy) opens on the first request: the run page registers the
+    run's pack before it reads the extractor specs, whose evidence types belong to that pack (final review C1)."""
+    from evidence import contract
+    from evidence.pack import load_pack
+    fixtures = Path(__file__).resolve().parents[2] / "evidence" / "tests" / "fixtures"
+    pack = load_pack("drugtoy", root=fixtures)
+    run_dir = ev_fresh.runs / "cascade-gaps" / MIXED
+    protocol = run_dir / "protocol.yaml"
+    protocol.write_text("domain: drugtoy\n" + protocol.read_text(encoding="utf-8"), encoding="utf-8")
+    run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    run["settings"] = {**(run.get("settings") or {}), "domains": str(fixtures)}
+    next(iter(run["extractor_specs"].values()))["evidence_types"] = ["outcome"]
+    (run_dir / "run.json").write_text(json.dumps(run), encoding="utf-8")
+    before = dict(contract.ITEM_PREFIX)
+    for name in pack.types:   # a fresh server process: nothing has registered the drugtoy types
+        contract.ITEM_PREFIX.pop(name, None)
+    try:
+        with TestClient(create_app(settings_for(ev_fresh))) as client:
+            response = client.get(f"/api/ev/runs/cascade-gaps~{MIXED}")
+        assert response.status_code == 200, response.text
+        assert "outcome" in response.json()["extractors"][0]["evidence_types"]
+        assert response.json()["display"] == dict(pack.display)
+    finally:
+        contract.ITEM_PREFIX.clear()
+        contract.ITEM_PREFIX.update(before)
 
 
 # --- pieces --------------------------------------------------------------------------------------------

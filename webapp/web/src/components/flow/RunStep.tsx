@@ -291,7 +291,7 @@ export function RunStep({ flow }: { flow: Flow }) {
             </Button>
             <span className="text-xs text-muted-foreground">
               {scored.length < 2 ? "Needs two scored engine runs (e.g. cascade all and gaps)." : `${scored.length} reports into scores/compare-${corpus}.`}
-              {(scores.data?.compares ?? []).some((c) => c.id === `compare-${corpus}`) && <> <Link to={`/scores/compares/${encodeURIComponent(`compare-${corpus}`)}`} className="underline">Open the comparison</Link></>}
+              {(scores.data?.compares ?? []).some((c) => c.id === `compare-${corpus}`) && <> <Link to={`/report/compares/${encodeURIComponent(`compare-${corpus}`)}`} className="underline">Open the comparison</Link></>}
             </span>
           </div>}
         </CardContent>

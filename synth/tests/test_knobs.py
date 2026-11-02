@@ -11,6 +11,7 @@ import pytest
 from evidence import protocol, rules
 from synth import corpus, truth
 from synth.levels import LEVELS
+from synth.recipe import default_recipe
 from synth.render_template import TemplateRenderer, render_study
 
 PROTO = protocol.load(truth.DEFAULT_PROTOCOL)
@@ -93,7 +94,8 @@ def test_outliers() -> None:
     out = [s for s in studies if "large_effect" in s.flags]
     assert len(out) == 2
     for s in out:
-        assert s.effect.direction == "supports" and truth.LARGE_DELTA[0] <= s.effect.delta <= truth.LARGE_DELTA[1]
+        low, high = default_recipe().effects["large"]
+        assert s.effect.direction == "supports" and low <= s.effect.delta <= high
         assert rules.claim_agrees(s.claim, "supports", SPEC.claim_map)
         q, (c2, t2) = s.primary, s.pair(s.datasets[1])
         assert rules.effect(t2.value, c2.value, q.higher_is_better, SPEC.min_effect)[0] == "supports"

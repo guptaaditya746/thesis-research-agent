@@ -15,8 +15,8 @@ describe("how the flow names things", () => {
   })
   it("titles a job and links what it writes", () => {
     expect(jobTitle({ kind: "run", refs: { run: "cascade~c1", corpus: "c1" } })).toBe("engine run cascade~c1")
-    expect(jobTarget({ kind: "score", refs: { score: "cascade~c1" } })).toBe("/scores/reports/cascade~c1")
-    expect(jobTarget({ kind: "compare", refs: { score: "compare-c1" } })).toBe("/scores/compares/compare-c1")
+    expect(jobTarget({ kind: "score", refs: { score: "cascade~c1" } })).toBe("/report/reports/cascade~c1")
+    expect(jobTarget({ kind: "compare", refs: { score: "compare-c1" } })).toBe("/report/compares/compare-c1")
     expect(jobTarget({ kind: "synth", refs: { corpus_set: "c", corpus: "c-mixed" } })).toBe("/corpora/c-mixed")
   })
 })

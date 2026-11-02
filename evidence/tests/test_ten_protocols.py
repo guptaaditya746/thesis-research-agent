@@ -1,4 +1,4 @@
-"""The ten hand-written protocols (evidence/protocols/) and the question list (evidence/questions.yaml)."""
+"""The ten hand-written protocols (domains/rag/protocols/) and the question list (domains/rag/questions.yaml)."""
 from __future__ import annotations
 
 import json
@@ -7,12 +7,13 @@ from pathlib import Path
 import pytest
 
 from evidence import engine, protocol, questions
-from synth import vocab
+from evidence.pack import DOMAINS
+from evidence.protocol import DEFAULT_PACK
+from synth.recipe import load_recipe
 
 from .conftest import make_corpus, regex_run
 
-REPO = Path(__file__).resolve().parents[2]
-PROTOCOLS = REPO / "evidence" / "protocols"
+PROTOCOLS = DOMAINS / "rag" / "protocols"
 IDS = ("rag-factuality", "rag-hallucination", "rag-latency", "inv-metrics", "inv-methods", "inv-datasets",
        "cons-accuracy", "cons-hallucination", "best-accuracy", "best-hallucination")
 NEW = IDS[1:]
@@ -28,8 +29,9 @@ TRUTH = {"rag-factuality": {"metric": "factual_accuracy", "min_effect": 0.01},
          "cons-accuracy": {"metric": "factual_accuracy", "min_effect": 0.01},
          "cons-hallucination": {"metric": "hallucination_rate", "min_effect": 0.01},
          "best-accuracy": {"metric": "factual_accuracy"}, "best-hallucination": {"metric": "hallucination_rate"}}
-HASHES = {"rag-factuality": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
-          "rag-factuality-agentic": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79"}
+# D35/D36: the measurement type gained form and value_total (Task 6)
+HASHES = {"rag-factuality": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",
+          "rag-factuality-agentic": "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2"}
 
 
 def load(qid: str) -> protocol.Protocol:
@@ -40,13 +42,13 @@ def test_all_ten_parse_and_match_questions_yaml() -> None:
     entries = questions.load()
     assert [e.id for e in entries] == list(IDS)
     for e in entries:
-        assert e.protocol == f"evidence/protocols/{e.id}.yaml"
+        assert e.protocol == f"protocols/{e.id}.yaml"
         p = load(e.id)
         assert (p.id, p.question, p.kind) == (e.id, e.question, e.kind), e.id
         assert e.kind == KINDS[e.id]
         assert e.truth.model_dump(exclude_none=True) == TRUTH[e.id], e.id
     extra = {e.id: e.agentic_protocol for e in entries if e.agentic_protocol}
-    assert extra == {"rag-factuality": "evidence/protocols/rag-factuality-agentic.yaml"}
+    assert extra == {"rag-factuality": "protocols/rag-factuality-agentic.yaml"}
 
 
 @pytest.mark.parametrize("name", list(HASHES))
@@ -55,19 +57,22 @@ def test_rag_factuality_untouched(name: str) -> None:
 
 
 def test_best_kinds_cover_vocab() -> None:
-    kinds_of = {**{label: "no-retrieval" for label, _, _ in vocab.BASELINES},
-                **{label: "rag" for label, _, _ in vocab.RAGS},
-                **dict(zip((label for label, _, _ in vocab.OTHERS),
+    recipe = load_recipe(DEFAULT_PACK)
+    control, treatment = ([n for s in recipe.sides.values() if s.role == role for n in s.names]
+                          for role in ("control", "treatment"))
+    kinds_of = {**{n.label: "no-retrieval" for n in control},
+                **{n.label: "rag" for n in treatment},
+                **dict(zip((n.label for n in recipe.others),
                            ("rag-no-rerank", "rag-random", "fine-tuned", "chain-of-thought", "self-consistency",
                             "query-rewriting"), strict=True))}
     for qid in ("best-accuracy", "best-hallucination"):
         best = load(qid).best
         assert best is not None
-        for conditions in (vocab.BASELINES, vocab.RAGS, vocab.OTHERS):
-            for label, synonym, _ in conditions:
-                for name in (label, synonym):
+        for conditions in (control, treatment, recipe.others):
+            for n in conditions:
+                for name in (n.label, n.synonym):
                     owners = [k for k, names in best.kinds.items() if name in names]
-                    assert owners == [kinds_of[label]], (qid, name, owners)
+                    assert owners == [kinds_of[n.label]], (qid, name, owners)
         assert sum(len(names) for names in best.kinds.values()) == 2 * len(kinds_of)
 
 

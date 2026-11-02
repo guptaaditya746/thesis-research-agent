@@ -78,7 +78,7 @@ export function ArxivFetchDialog({ onStarted }: { onStarted?: (job: Job) => void
         <form id="arxiv-fetch" className="space-y-4" aria-label="Fetch from arXiv" onSubmit={(e) => { e.preventDefault(); if (ok) submit() }}>
           <div className="grid gap-1.5">
             <Label htmlFor="arxiv-query">Search words</Label>
-            <Input id="arxiv-query" placeholder="retrieval augmented generation factuality" value={query} onChange={(e) => setQuery(e.target.value)}
+            <Input id="arxiv-query" placeholder="a few words of your topic" value={query} onChange={(e) => setQuery(e.target.value)}
               aria-describedby="arxiv-query-hint" />
             <p id="arxiv-query-hint" className="text-xs text-muted-foreground">Every word must appear in the paper's arXiv record.</p>
           </div>

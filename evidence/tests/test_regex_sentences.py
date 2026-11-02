@@ -3,13 +3,15 @@ system or another number, signed deltas and "from X to Y" changes are no values,
 names another system."""
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 
 from evidence.extractors import terms
+from evidence.pack import DOMAINS
 
-from .conftest import PROTOCOL, measurements, regex_run
+from .conftest import PROTOCOL, measurements, pack_words, regex_run
 
 ABSTRACT = "# P\n\n## Abstract\n\nWe compare a closed-book model with a retrieval-augmented model. {}\n"
 
@@ -19,6 +21,20 @@ def test_no_reach_back_across_another_system(tmp_path: Path) -> None:
                            "reaches 57%, compared with 62% for the closed-book model.")
     _, items = regex_run({"S": text}, tmp_path)
     assert measurements(items, "S") == [("rag", 0.71), ("baseline", 0.62)]
+
+
+def test_no_reach_back_across_a_pack_system_noun(tmp_path: Path) -> None:
+    """"retriever" blocks as before, now as a rag pack system noun (words.yaml `system_nouns`), not a code word: a
+    copy of the pack without `system_nouns` takes the value across it."""
+    text = ABSTRACT.format("The retrieval-augmented model was tested, and the dense retriever got 57% accuracy.")
+    _, items = regex_run({"S": text}, tmp_path / "rag")
+    assert measurements(items, "S") == []
+    pack = tmp_path / "domains" / "rag"
+    shutil.copytree(DOMAINS / "rag", pack)
+    words = (pack / "words.yaml").read_text(encoding="utf-8")
+    (pack / "words.yaml").write_text(words[:words.index("# System nouns")], encoding="utf-8")
+    _, items = regex_run({"S": text}, tmp_path / "bare", domains=tmp_path / "domains")
+    assert measurements(items, "S") == [("rag", 0.57)]
 
 
 def test_signed_delta_is_not_a_value(tmp_path: Path) -> None:
@@ -104,7 +120,9 @@ def test_a_qualified_row_label_resolves_to_its_role(protocol: Path, control: str
 @pytest.mark.parametrize("roles", [["rag", "baseline", "other"], ["rag", "baseline"]])
 def test_a_negated_qualifier_on_a_control_keeps_the_control(roles: list[str]) -> None:
     text = "the closed-book model (no fine-tuning) reaches 40%"
-    found = terms.find_conditions(text, terms.condition_patterns(), roles)
+    words = pack_words("regex_condition", "condition")
+    found = terms.find_conditions(text, terms.condition_patterns(words["conditions"]), roles,
+                                  not_a_system=words["not_a_system"])
     assert [(m.key, m.text) for m in found] == [("baseline", "closed-book model")]
 
 

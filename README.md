@@ -13,7 +13,7 @@ is open.
 
 | Package | Command | What |
 |---|---|---|
-| `evidence/` | `evidence` | The evidence-level system. **Supervisor's design, 14 Oct: protocol, extractor library, engine, evidence graph, deterministic synthesis.** Hand-written protocol (`evidence/protocols/`), regex and single-call LLM extractors behind one contract, the engine, `graph.json`, `answer.json` |
+| `evidence/` | `evidence` | The evidence-level system. **Supervisor's design, 14 Oct: protocol, extractor library, engine, evidence graph, deterministic synthesis.** Hand-written protocol (`domains/rag/protocols/`), regex and single-call LLM extractors behind one contract, the engine, `graph.json`, `answer.json` |
 | `synth/` | `synth` | Synthetic benchmark (supervisor's design): seeded ground truth, difficulty levels, template and LLM renderers, fidelity checks ([`synth/README.md`](synth/README.md)) |
 | `evaluation/` | `evaluate` | Scores A (extraction), B (integration), C (synthesis) per level (supervisor's design); the retrieve-then-answer baseline; plus our additions below |
 | `agent/` | `agent` | Earlier work: the research agent (sandboxed loop, `claim` broker, graph, PROV-O, replay). Now used only as the agentic extractor and the agent baseline |
@@ -32,7 +32,7 @@ packages, Part B the extractor contract). One synthetic corpus end to end, offli
 model):
 
 ```bash
-uv run evidence run --protocol evidence/protocols/rag-factuality.yaml --corpus synth/examples/rag-demo-explicit \
+uv run evidence run --protocol domains/rag/protocols/rag-factuality.yaml --corpus synth/examples/rag-demo-explicit \
     --out runs/evidence --extractors regex-only --run-id demo
 uv run evidence replay runs/evidence/demo                  # rebuilds from the record cache; every output hash must match
 uv run evaluate score --run runs/evidence/demo --corpus synth/examples/rag-demo-explicit --out runs/eval/demo
@@ -54,7 +54,7 @@ uv run evidence propose amend proposals/rag --reason "..." [--before-main-run]  
 ## Web app
 
 The supervisor's flow as a guided stepper per question, which views what is on disk and starts what is
-missing: select a question (from [`evidence/questions.yaml`](evidence/questions.yaml), never typed) →
+missing: select a question (from [`domains/rag/questions.yaml`](domains/rag/questions.yaml), never typed) →
 protocol → corpus → run → evidence graph → answer → scores A/B/C, the RAG and agent baselines beside the
 engine. Every result page of the viewer is linked from it (per paper the funnel, the items with their spans,
 every call down to its model records or the agent's trace; scores with 95 % intervals, all against gaps, shift,

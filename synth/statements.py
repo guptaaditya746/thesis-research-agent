@@ -1,7 +1,7 @@
 """Atomic Results statements: every value a level writes in prose is first written as one checked sentence.
 
-EV1 Step 10 failed three whole-paper attempts on one sentence ("... yields 662 out of 1,000 answers judged
-factually correct" never names the metric as planned). So the LLM renderer asks the model, in one call per
+EV1 Step 10 failed three whole-paper attempts on one sentence (a paraphrased count, "... yields 662 out of
+1,000 ...", that never named the metric as planned). So the LLM renderer asks the model, in one call per
 paper, for one sentence per prose value; code checks each sentence alone with the paper checks that apply
 to a single sentence (the value and, where the level names it verbatim, the metric; the association of
 `assoc`; no other number; the level's wording for explicit and paraphrased); failed sentences go back in a
@@ -23,7 +23,7 @@ from synth.fidelity import Check
 from synth.levels import Plan
 from synth.text import Placement
 
-PROSE_FORMATS = ("pct", "frac", "count", "relative")     # cell_pct and cell_raw are table cells
+PROSE_FORMATS = ("pct", "frac", "count", "k_of_n", "relative")     # cell_pct and cell_raw are table cells
 HEADER = "Statement tasks:"
 REPAIR_HEADER = "Statement tasks (repair; rewrite only these sentences):"
 # The level checks that hold for one sentence; the others are about tables and the whole paper.
@@ -64,7 +64,7 @@ class StatementReply(BaseModel):
 
 def plan_statements(plan: Plan) -> list[StatementTask]:
     """One task per measurement the level writes in prose, in plan order."""
-    control = plan.study.condition(plan.study.control_role).id if plan.study.relevant else None
+    control = plan.study.control_condition.id if plan.study.relevant else None
     out = []
     for m in plan.measurements:
         seg = plan.values[m.id]

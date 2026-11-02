@@ -1,0 +1,40 @@
+# Direction and scale of the SciLead leaderboard metrics, read by evaluation/realpapers/scilead.py only (the engine
+# never reads it; not part of Pack.sha256). Kept here, not in code (D35: no topic words in code).
+#   direction  higher | lower: which value is better
+#   scale      percent: a value may be printed as a percentage or a fraction (90.5 and 0.905 are one value);
+#              raw: the number is compared as printed, never multiplied or divided by 100
+# Names are SciLead's normalised metric names, matched after `evidence.names.clean`. A metric not listed takes
+# `default` and is counted in real.json (`metrics_by_default`).
+# Source: the authors' code, github.com/UKPLab/leaderboard-generation, leaderboard_eval.py: Perplexity and TER sort
+# ascending (lower is better), every other metric descending; the percent list is their list of metrics whose
+# values under 1 are scaled by 100. Perplexity is not in that list (raw). The abbreviated names of their list were
+# read from a summary of the file, not copied character for character: the live step checks them against the 27
+# leaderboards and logs any change here.
+default: {direction: higher, scale: raw}
+metrics:
+  Perplexity: {direction: lower, scale: raw}
+  TER: {direction: lower, scale: percent}
+  AVG: {direction: higher, scale: percent}
+  Accuracy: {direction: higher, scale: percent}
+  BERTScore: {direction: higher, scale: percent}
+  BLEU: {direction: higher, scale: percent}
+  BLEU-4: {direction: higher, scale: percent}
+  Exact Match (EM): {direction: higher, scale: percent}
+  F-Score (F-S): {direction: higher, scale: percent}
+  F1: {direction: higher, scale: percent}
+  Fuzzy B-Cubed (FBC): {direction: higher, scale: percent}
+  Fuzzy normalized mutual information (FNMI): {direction: higher, scale: percent}
+  Labeled Attachment Score: {direction: higher, scale: percent}
+  METEOR: {direction: higher, scale: percent}
+  Matthew's Correlation Coefficient (MCC): {direction: higher, scale: percent}
+  NIST-4: {direction: higher, scale: percent}
+  Overall-Accuracy: {direction: higher, scale: percent}
+  Precision: {direction: higher, scale: percent}
+  ROGUE-1: {direction: higher, scale: percent}
+  ROGUE-2: {direction: higher, scale: percent}
+  ROGUE-L: {direction: higher, scale: percent}
+  Recall: {direction: higher, scale: percent}
+  Sent-Accuracy: {direction: higher, scale: percent}
+  Spearman Correlation: {direction: higher, scale: percent}
+  Unlabeled Attachment Score: {direction: higher, scale: percent}
+  V-Measure (V-M): {direction: higher, scale: percent}

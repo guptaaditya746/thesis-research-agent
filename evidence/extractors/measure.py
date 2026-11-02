@@ -5,19 +5,20 @@ A label is matched to a context condition by a code the text defines ("variant (
 by condition wording covering the whole label; to a context metric by name, or by its canonical metric
 when only one context metric has it. A value without both links is not reported (R2 requires them).
 
-In a sentence, a value belongs to the condition named right after it ("62% for the closed-book model"),
+In a sentence, a value belongs to the condition named right after it ("62% for the baseline model"),
 else to the nearest condition named before it, but never across another system noun or another number
 ("71%, while a fine-tuned model reaches 57%": 57% is nobody's). Signed numbers ("+9%") are deltas and
 "from 62% to 71%" is a change, not two results; neither gives a value.
 """
 from __future__ import annotations
 
+import functools
 import re
 from collections.abc import Callable, Sequence
 from typing import Any, NamedTuple
 
 from ..contract import ExtractionTask, Item, Span
-from . import base, terms
+from . import base, numreader, terms
 
 Found = tuple[dict[str, Any], dict[str, str], list[Span]]
 CELL = re.compile(r"^[*_]*\s*(\d+(?:\.\d+)?|\.\d+)\s*(%?)\s*[*_]*(?:\s*(?:±|\+/-|\+-)\s*\d+(?:\.\d+)?)?\s*[*_]*$")
@@ -32,9 +33,30 @@ CORRECT_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}correct")
 SAMPLE_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}?(?:were|are|was)\s+(?:randomly\s+)?(?:sampled|selected|drawn|chosen|used)\b")
 SIGNED = re.compile(r"[+±\-−–]\s*$")
 FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
-_SYSTEMS = r"(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|retriever|ablation)s?"
-BLOCKERS = re.compile(r"\d|(?i:\b" + _SYSTEMS + r"\b)")
-HEAD_NOUN = re.compile(r"(?i:\s+" + _SYSTEMS + r"\b)")
+# Generic system nouns: a value is not taken across one ("71%, while a fine-tuned model reaches 57%"); a pack adds
+# its domain's own (words.yaml `system_nouns`, config key `system_nouns`).
+GENERIC_SYSTEM_NOUNS = ("model", "system", "variant", "baseline", "pipeline", "generator", "approach", "method", "LLM",
+                        "ablation")
+
+
+class SystemNouns(NamedTuple):
+    """The system-noun regexes of one extractor: `blockers` (a digit or a system noun), `head` (a mention's own
+    noun right after it) and `systems` (any system noun, word-bounded)."""
+    blockers: re.Pattern[str]
+    head: re.Pattern[str]
+    systems: re.Pattern[str]
+
+    @staticmethod
+    def of(extra: Sequence[str] = ()) -> SystemNouns:
+        return _system_nouns(tuple(extra))
+
+
+@functools.lru_cache(maxsize=32)
+def _system_nouns(extra: tuple[str, ...]) -> SystemNouns:
+    nouns = "|".join(re.escape(n) for n in dict.fromkeys([*GENERIC_SYSTEM_NOUNS, *extra]))
+    systems = r"(?:" + nouns + r")s?"
+    return SystemNouns(re.compile(r"\d|(?i:\b" + systems + r"\b)"), re.compile(r"(?i:\s+" + systems + r"\b)"),
+                       re.compile(r"(?i)\b" + systems + r"\b"))
 
 
 class Resolver:
@@ -45,10 +67,13 @@ class Resolver:
         self.cond_patterns = terms.condition_patterns(patterns["conditions"])
         self.roles = [*patterns["conditions"], "other"]   # a mention qualified as other links only to an other item
         self.treatment = patterns.get("treatment")
+        self.not_a_system = patterns["not_a_system"]
         self.metric_patterns = [tuple(m) for m in patterns["metrics"]]
         self.question = set(patterns["question_metrics"])
-        self.conditions = [i for i in context if i.evidence_type == "condition"]
-        self.metrics = [i for i in context if i.evidence_type == "metric"]
+        self.slots: base.Slots = patterns.get("slots") or base.Slots()   # which context types, which links
+        self.nouns = SystemNouns.of(patterns.get("system_nouns") or ())   # generic ones plus the pack's
+        self.conditions = [i for i in context if i.evidence_type == self.slots.thing]
+        self.metrics = [i for i in context if i.evidence_type == self.slots.metric]
         self.codes: dict[str, tuple[Item, tuple[int, int]]] = {}
         for mention, code, a, b in terms.aliases(text, self.mentions(text)):
             item = self.condition_for(mention)
@@ -78,8 +103,9 @@ class Resolver:
         return None
 
     def mentions(self, text: str, start: int = 0, end: int | None = None) -> list[terms.Mention]:
-        """Condition mentions with their qualifiers: "RAG (no retrieval)" is the control, not RAG."""
-        return terms.find_conditions(text, self.cond_patterns, self.roles, start, end, self.treatment)
+        """Condition mentions with their qualifiers: "TM (no tuning)" is the control, not TM."""
+        return terms.find_conditions(text, self.cond_patterns, self.roles, start, end, self.treatment,
+                                     not_a_system=self.not_a_system)
 
     def metric_for(self, mention: terms.Mention) -> Item | None:
         named = [i for i in self.metrics if terms.norm(str(i.fields.get("name", ""))) == terms.norm(mention.text)]
@@ -175,11 +201,11 @@ def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> l
                      base.span(task, text, metric_cell.start, metric_cell.end, "metric_label")]
             if defined is not None:
                 spans.append(base.span(task, text, *defined, "condition_label"))
-            out.append(({"value": value, "dataset": dataset}, {"condition": item.item_id, "metric": metric.item_id}, spans))
+            out.append(({"value": value, r.slots.context_field: dataset}, r.slots.links(item, metric), spans))
     return out
 
 
-def _sample_size(text: str, s: int, e: int, hit: re.Match[str]) -> bool:
+def sample_size(text: str, s: int, e: int, hit: re.Match[str]) -> bool:
     """A count that sizes a sample, not an outcome: a result verb between the trigger and the count, or
     "correct(ly)" after it, keeps it a result."""
     if CORRECT_AFTER.match(text[hit.end():e]):
@@ -200,10 +226,10 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         return []
     out: list[Found] = []
     changes = [(m.start(), m.end()) for m in FROM_TO.finditer(text, s, e)]
-    counts = list(base.COUNT.finditer(text, s, e))
+    counts = list(numreader.COUNT.finditer(text, s, e))
     numbers = [h for h in base.NUMBER.finditer(text, s, e) if not any(c.start() <= h.start() < c.end() for c in counts)]
     for hit in sorted([*numbers, *counts], key=lambda h: h.start()):
-        count = hit.re is base.COUNT
+        count = hit.re is numreader.COUNT
         raw, pct = hit.group(1), (not count and bool(hit.group(2)))
         if not count and not pct and not ("." in raw and float(raw) <= 1):
             continue
@@ -215,18 +241,18 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         after = AFTER.match(text, hit.end(), e)
         following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)
         preceding = [(m, i) for m, i in conditions if m.end <= hit.start()]
-        head = HEAD_NOUN.match(text, preceding[-1][0].end) if preceding else None   # the mention's own noun
-        if preceding and BLOCKERS.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
+        head = r.nouns.head.match(text, preceding[-1][0].end) if preceding else None   # the mention's own noun
+        if preceding and r.nouns.blockers.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
             preceding = []   # another system or another number stands between: the value is not its
         cond = following or (preceding[-1] if preceding else None)
         before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]
         met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
         if cond is None or met is None:
             continue
-        if count and _sample_size(text, s, e, hit):
+        if count and sample_size(text, s, e, hit):
             continue
         if count:
-            value = base.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None
+            value = numreader.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None
         else:
             value = base.to_fraction(raw + ("%" if pct else ""), percent=pct, rate_like=r.rate_like(met[1]))
         if value is None:
@@ -235,5 +261,5 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         spans = [base.span(task, text, hit.start(1), end, "value"),
                  base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                  base.span(task, text, met[0].start, met[0].end, "metric_label")]
-        out.append(({"value": value, "dataset": None}, {"condition": cond[1].item_id, "metric": met[1].item_id}, spans))
+        out.append(({"value": value, r.slots.context_field: None}, r.slots.links(cond[1], met[1]), spans))
     return out

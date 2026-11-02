@@ -8,7 +8,10 @@ follows the new effect, a contradictory-level paper keeps a false claim), re-ren
 level with the same fidelity checks as `build`, re-applies the flags to the whole set, and writes a corpus
 whose every other paper is byte for byte the base corpus's (copied, sha256 verified). `variant.json`
 records what changed and the expected answer before and after. The base corpus does not hold the
-protocol file: `--protocol` (default the RAG protocol) must hash to the base's `protocol.sha256`.
+protocol file: `--protocol` (default the recipe's effect protocol) must hash to the base's `protocol.sha256` (a
+corpus built before its domain had a pack names the protocol by `synthesis_sha256`: the synthesis blocks must match).
+The set is drawn from the recipe corpus.json `recipe` names (a corpus from before generator version 3 names
+none: the default pack's), which must still hash to its `sha256`.
 """
 from __future__ import annotations
 
@@ -21,7 +24,9 @@ from typing import Any
 from evidence import protocol as protocol_module
 from evidence.protocol import Protocol
 from synth import truth
-from synth.corpus import GENERATOR, GENERATOR_VERSION, Renderer, code_sha256, corpus_id, dump, prepare, study_flags, study_truth
+from synth.corpus import (GENERATOR, GENERATOR_VERSION, EffectProtocol, Renderer, code_sha256, corpus_id, dump,
+                          effect_protocol, prepare, protocol_record, same_protocol, study_flags, study_truth)
+from synth.recipe import Recipe, default_recipe, load_recipe
 from synth.truth import Study
 
 
@@ -32,18 +37,30 @@ def _read(directory: Path, name: str) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def base_studies(meta: dict[str, Any], protocol: Protocol) -> list[Study]:
-    """The base corpus's study set, drawn again from corpus.json `settings` with the base's protocol."""
+def base_recipe(meta: dict[str, Any]) -> Recipe:
+    """The recipe the base corpus was drawn from (corpus.json `recipe`; none recorded: the default pack's)."""
+    recorded = meta.get("recipe")
+    if not recorded:
+        return default_recipe()
+    recipe = load_recipe(recorded["domain"])
+    if recipe.sha256 != recorded["sha256"]:
+        raise SystemExit(f"domains/{recorded['domain']}/generator.yaml (sha256 {recipe.sha256[:12]}...) is not the "
+                         f"recipe the base corpus was drawn from ({recorded['sha256'][:12]}...)")
+    return recipe
+
+
+def base_studies(meta: dict[str, Any], protocol: Protocol | EffectProtocol) -> list[Study]:
+    """The base corpus's study set, drawn again from corpus.json `settings` with the base's protocol and recipe."""
     st = meta.get("settings")
     if not st:
         raise SystemExit("the base corpus.json has no `settings` (built by an older generator); rebuild it first")
-    if protocol.sha256 != meta["protocol"]["sha256"]:
-        raise SystemExit(f"protocol {protocol.id} (sha256 {protocol.sha256[:12]}...) is not the one the base corpus "
-                         f"was built from ({meta['protocol']['id']}, {meta['protocol']['sha256'][:12]}...); pass it "
-                         "with --protocol")
-    return truth.generate(meta["seed"], st["studies"], st["mix"], protocol.synthesis, duplicates=st["duplicates"],
-                          missing=st["missing"], outliers=st["outliers"], irrelevant=st["irrelevant"],
-                          hard=st.get("hard", False))
+    if not same_protocol(protocol, meta["protocol"]):
+        raise SystemExit(f"protocol {protocol_record(protocol)} is not the one the base corpus was built from "
+                         f"({meta['protocol']}); pass it with --protocol")
+    return truth.generate(meta["seed"], st["studies"], st["mix"], protocol.synthesis, recipe=base_recipe(meta),
+                          duplicates=st["duplicates"], missing=st["missing"], outliers=st["outliers"],
+                          irrelevant=st["irrelevant"], hard=st.get("hard", False),
+                          preset=st.get("preset", "plain"))
 
 
 def counterfactual(seed: int, studies: list[Study], study_id: str, direction: str, spec: protocol_module.Synthesis,
@@ -69,12 +86,14 @@ def counterfactual(seed: int, studies: list[Study], study_id: str, direction: st
 
 
 def make(*, corpus_dir: Path, study_id: str, direction: str, renderer: Renderer, out: Path | None = None,
-         protocol: Protocol | Path | str | None = None) -> dict[str, Any]:
+         protocol: Protocol | EffectProtocol | Path | str | None = None) -> dict[str, Any]:
     corpus_dir = Path(corpus_dir)
     meta, gt, manifest = _read(corpus_dir, "corpus.json"), _read(corpus_dir, "ground_truth.json"), _read(corpus_dir, "manifest.json")
     fid, decoys = _read(corpus_dir, "fidelity.json"), _read(corpus_dir, "decoys.json")
-    if not isinstance(protocol, Protocol):
-        protocol = protocol_module.load(protocol or truth.DEFAULT_PROTOCOL)
+    if protocol is None:
+        protocol = effect_protocol(base_recipe(meta))
+    elif not isinstance(protocol, (Protocol, EffectProtocol)):
+        protocol = protocol_module.load(protocol)
     spec = protocol.synthesis
     seed = meta["seed"]
     studies = base_studies(meta, protocol)
@@ -107,6 +126,7 @@ def make(*, corpus_dir: Path, study_id: str, direction: str, renderer: Renderer,
     (out / "corpus.json").write_bytes(dump({
         **meta, "corpus_id": cid,
         "generator": {"name": GENERATOR, "version": GENERATOR_VERSION, "code_sha256": code_sha256()},
+        "recipe": {"domain": after.recipe.domain, "sha256": after.recipe.sha256},
         "renderer": renderer.name, "models": renderer.models(), "variant": variant,
     }))
 

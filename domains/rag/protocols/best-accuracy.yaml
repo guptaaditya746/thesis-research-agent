@@ -1,0 +1,138 @@
+# Research protocol: which method kind reaches the highest factual accuracy inside each paper? (question-first redesign,
+# 25 Oct 2026). Conditions carry a method kind; per paper the kind with the top value of factual_accuracy wins, and the
+# answer is the kind with the most wins (evidence/kinds/best.py). best.kinds holds each kind's condition names
+# from synth/vocab.py (label and synonym): BASELINES are no-retrieval, RAGS are rag, each OTHERS entry its own kind.
+# Written by hand; its sha256 is the digest of the parsed content (evidence/protocol.py).
+
+id: best-accuracy
+version: 2
+kind: best
+question: Which method achieves the highest factual accuracy within each paper?
+
+locate:
+  strategy: exhaustive        # exhaustive | bm25 | agent
+  params:
+    chunk_chars: 1500         # bm25: size of the ranked passages
+    top_k: 6                  # bm25: passages kept per document and evidence type
+
+screen:                       # per document, before any extraction (the funnel engine, Part D)
+  question: >-
+    Does the paper report an experiment that compares a retrieval-augmented system with the same model
+    answering without retrieval?
+  terms: [retrieval-augmented, retrieval augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors:
+    - name: regex_screen      # no term in the paper: not relevant
+    - name: llm_screen        # otherwise the model answers the question
+  on_fail: skip               # skip | extract_anyway
+
+evidence_types:
+  condition:
+    description: >-
+      An experimental condition the paper compares: a system variant or method whose results are reported.
+      kind is its method kind: no-retrieval (the model answering without retrieval, closed-book), rag (the
+      retrieval-augmented system), rag-no-rerank (retrieval without reranking), rag-random (randomly drawn
+      instead of retrieved passages), fine-tuned (a model trained further on the domain), chain-of-thought
+      (prompted to reason step by step), self-consistency (several sampled answers and a vote),
+      query-rewriting (the question reformulated before the search).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label, kind]
+      properties:
+        label: {type: string, minLength: 1, description: the condition's name as the paper gives it}
+        kind: {type: string, enum: [no-retrieval, rag, rag-no-rerank, rag-random, fine-tuned, chain-of-thought, self-consistency, query-rewriting], description: the method kind}
+    roles: [condition_label]
+    merge_key: [label, kind]
+    query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare, method]
+    extractors:
+      - name: regex_condition_kind   # the names of best.kinds (injected), with their kind
+      - name: llm_condition
+
+  metric:
+    description: >-
+      An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the
+      answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or
+      unsupported answers, other for anything else (latency, BLEU, fluency).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name, canonical, higher_is_better]
+      properties:
+        name: {type: string, minLength: 1, description: the metric's name as the paper gives it}
+        canonical: {type: string, enum: [factual_accuracy, hallucination_rate, other]}
+        higher_is_better: {type: boolean}
+    roles: [metric_label]
+    merge_key: [name, canonical]
+    query: [accuracy, factual, hallucination, rate, metric, measure, evaluate, score, exact, match]
+    extractors:
+      - name: regex_metric
+      - name: abbrev_metric
+      - name: gliner_metric
+      - name: llm_metric
+
+  measurement:
+    description: >-
+      One reported result: the value of one metric for one condition. value is normalised to a fraction
+      (62% and 62.0 under a % header are 0.62). dataset is the dataset it was measured on, or null.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [value, dataset]
+      properties:
+        value: {type: number, description: the value as a fraction for accuracies and rates}
+        dataset: {type: [string, "null"], description: "the dataset, or null when the paper does not say"}
+        form: {type: [string, "null"], enum: [plain, percent, fraction, k_of_n, range, plus_minus, null], description: "how the paper wrote the number (41 of 120 is k_of_n)"}
+    links: {condition: condition, metric: metric}
+    bounds:                   # accuracies and rates are fractions; a value outside [0, 1] is rejected (schema)
+      - {field: value, min: 0, max: 1, when: {link: metric, field: canonical, values: [factual_accuracy, hallucination_rate]}}
+    context: [condition, metric]
+    roles: [value, condition_label, metric_label, value_total]   # value_total: the n of a count "k of n"
+    merge_key: [value]
+    query: [table, results, accuracy, rate, achieves, reaches, compared, "%"]
+    extractors:
+      - name: regex_measurement
+      - name: number_measurement
+      - name: llm_measurement
+
+best:
+  metric: {canonical: factual_accuracy, higher_is_better: true}
+  kinds:                      # kind -> the condition names that belong to it
+    no-retrieval:
+      - closed-book model
+      - model that answers from its own parameters
+      - parametric-only model
+      - generator without any document access
+      - no-retrieval baseline
+      - language model used on its own
+      - vanilla LLM
+      - plain generator with no lookup step
+    rag:
+      - retrieval-augmented model
+      - model that consults the document index before answering
+      - RAG pipeline
+      - system grounded in retrieved passages
+      - retrieval-augmented generator
+      - variant that reads retrieved evidence first
+      - retrieve-then-read model
+      - configuration that looks up supporting documents
+    rag-no-rerank:
+      - RAG without reranking
+      - retrieval variant that skips the reranker
+    rag-random:
+      - RAG with random passages
+      - variant fed with randomly drawn passages
+    fine-tuned:
+      - fine-tuned model
+      - generator adapted to the domain by further training
+    chain-of-thought:
+      - chain-of-thought prompting
+      - model prompted to reason step by step
+    self-consistency:
+      - self-consistency decoding
+      - model that samples several answers and votes
+    query-rewriting:
+      - query-rewriting variant
+      - variant that reformulates the question before the search
+  pairing:                    # the same dataset for every kind; a table cell, then the earlier value
+    rule: same_dataset
+    prefer: [table_cell, document_order]

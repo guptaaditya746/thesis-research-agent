@@ -48,8 +48,8 @@ def make_script(seen: list[tuple[str, str]], *, measurement: bool = True, screen
                                "quotes": {"condition_label": "standard generator (S)"}}]}
         if doc == "P2" and kind == "measurement" and measurement:
             base, acc = context_id(prompt, '"baseline"'), context_id(prompt, '"factual_accuracy"')
-            return {"items": [{"fields": {"value": 0.6, "dataset": "NQ"}, "links": {"condition": base, "metric": acc},
-                               "quotes": {"value": "60.0", "condition_label": None, "metric_label": None}}]}
+            return {"items": [{"fields": {"value": 0.6, "dataset": "NQ", "form": None}, "links": {"condition": base, "metric": acc},
+                               "quotes": {"value": "60.0", "condition_label": None, "metric_label": None, "value_total": None}}]}
         return {"items": []}
     return script
 
@@ -137,8 +137,8 @@ def test_best_escalates_the_metric_cascade_when_the_question_metric_is_missing(
                                "quotes": {"metric_label": "FLA"}}]}
         if kind == "measurement":
             fla, closed, rag = (context_id(prompt, f) for f in ('"FLA"', '"closed-book model"', '"retrieval-augmented model"'))
-            return {"items": [{"fields": {"value": v, "dataset": "NQ"}, "links": {"condition": c, "metric": fla},
-                               "quotes": {"value": q, "condition_label": None, "metric_label": None}}
+            return {"items": [{"fields": {"value": v, "dataset": "NQ", "form": None}, "links": {"condition": c, "metric": fla},
+                               "quotes": {"value": q, "condition_label": None, "metric_label": None, "value_total": None}}
                               for c, v, q in ((closed, 0.41, "0.41"), (rag, 0.58, "0.58"))]}
         return {"items": []}
 
@@ -233,15 +233,15 @@ def test_a_failed_llm_screen_call_leaves_the_regex_decision_standing(tmp_path: P
 
 # --- screen.lexical_miss: a keyword miss escalates to the next screen extractor, or is final (default) ----------
 
-EV1 = PROTOCOL.parents[2] / "tests" / "EV1"
+EV1 = Path(__file__).resolve().parents[2] / "tests" / "EV1"
 EV1_PROPOSAL = EV1 / "diagnostics" / "proposal" / "protocol.yaml"
 # tests/EV1/diagnostics/review_repro.py: a treatment and a comparator synonym that none of the screen terms name
 SYNONYMS = ("# Retrieval comparison\nThe retrieve-then-read system and the parametric-only model "
             "answer the same questions. We compare exact match: 75% versus 60%.\n")
 # sha256 of every existing protocol, captured on main before `screen.lexical_miss` existed
 SHA_BEFORE = {
-    PROTOCOL: "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
-    AGENTIC: "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79",
+    PROTOCOL: "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",   # D35/D36: measurement gained form and value_total (Task 6)
+    AGENTIC: "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2",   # D35/D36
     EV1_PROPOSAL: "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
     EV1 / "live-rerun" / "proposals" / "rag-factuality" / "protocol.yaml":
         "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
@@ -467,7 +467,7 @@ def test_focus_is_part_of_the_task_hash_and_of_the_prompts() -> None:
     prompt = llm_schema.user_prompt("S001", 1, 1, 0, 10, "text", {}, focus)
     assert "Focus (gap no_pair): find both values (metrics found: factual_accuracy; roles found: baseline, rag)." in prompt
     assert "Focus" not in llm_schema.user_prompt("S001", 1, 1, 0, 10, "text", {})
-    assert TEMPLATE_VERSION == "agentic-task-v2"
+    assert TEMPLATE_VERSION == "agentic-task-v3"
     brief = concept_for(targeted, MEASUREMENT_SCHEMA, {"condition": "condition", "metric": "metric"}, context(), "S001.md", 10)
     assert brief["scope"]["focus"] == "gap no_pair: find both values (metrics found: factual_accuracy; roles found: baseline, rag)"
     assert "focus" not in concept_for(plain, MEASUREMENT_SCHEMA, {}, [], "S001.md", 10)["scope"]

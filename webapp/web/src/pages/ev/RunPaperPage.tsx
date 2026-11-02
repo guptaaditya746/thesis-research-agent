@@ -8,7 +8,7 @@
  */
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { useMemo, useState } from "react"
-import { Link, useParams } from "react-router"
+import { Link, useParams, useSearchParams } from "react-router"
 
 import { useEvRun, useRunPaper, type CallSummary, type RunPaper } from "@/api/ev"
 import { CallSheet } from "@/components/ev/CallSheet"
@@ -78,7 +78,9 @@ function Funnel({ paper, strategy, calls, onOpen }: { paper: RunPaper; strategy?
 
 function PaperView({ runId, paper, documents, strategy }: { runId: string; paper: RunPaper; documents: string[]; strategy?: string | null }) {
   const [call, setCall] = useState<string | null>(null)
-  const [selected, setSelected] = useState<string | null>(null)
+  const [params] = useSearchParams()
+  // ?item=<id> (a claim's item in the evidence graph) opens the paper with that item selected, its spans marked
+  const [selected, setSelected] = useState<string | null>(() => params.get("item"))
   const types = useMemo(() => new Map(paper.items.map((i) => [i.item_id, i.evidence_type])), [paper.items])
   const calls = useMemo(() => new Map(paper.calls.map((c) => [c.call_id, c])), [paper.calls])
   const at = documents.indexOf(paper.document)

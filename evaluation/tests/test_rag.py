@@ -10,7 +10,7 @@ from typing import Any, Callable
 import pytest
 
 from evaluation.baselines import rag
-from evaluation.baselines.common import MAP_INSTRUCTIONS, SystemCorpus
+from evaluation.baselines.common import SystemCorpus, map_prompt
 from evaluation.score import score_answers
 from modelcall import JsonlCache
 
@@ -42,7 +42,7 @@ def test_rag_baseline_answers_with_citations_then_maps(tmp_path: Path, monkeypat
     model = scripted()
     answer = rag.rag_baseline(corpus, model=model.model(), k=3, mode="global", max_chars=200)
     assert attempts == []
-    assert answer["system"] == "rag-baseline" and answer["label"] == "mixed"
+    assert answer["system"] == "bm25-answer-baseline" and answer["label"] == "mixed"
     assert answer["studies"] == [{"document": "S001", "direction": "supports"},
                                  {"document": "S002", "direction": "contradicts"}]  # S999 dropped, S001 once
     assert answer["dropped"] == ["S999"] and answer["supporting"] == ["S001"] and answer["contradicting"] == ["S002"]
@@ -59,7 +59,7 @@ def test_rag_baseline_answers_with_citations_then_maps(tmp_path: Path, monkeypat
         assert passage not in mapping and f"[{hit['document']}, {hit['start']}-{hit['end']}]" in mapping  # headers only
     assert answering.startswith("Question: " + fx.QUESTION) and "Labels" not in answering and "stance" not in answering
     assert "Corpus paper ids: S001, S002" in mapping and "Cited passages:" in mapping and ANSWER_TEXT in mapping
-    assert "Labels (the same rule" in MAP_INSTRUCTIONS and "cite" in rag.INSTRUCTIONS
+    assert "Labels (the same rule" in map_prompt(None)[0] and "cite" in rag.INSTRUCTIONS
     assert answer["model_call"]["prompt_sha256"] != answer["mapping_call"]["prompt_sha256"]
     assert "cached" not in answer["model_call"] and "cached" not in answer["mapping_call"]
     monkeypatch.undo()

@@ -19,6 +19,7 @@ import {
   splitRef,
   synthesisByLevel,
   synthesisSummary,
+  systemLabel,
   systemOrder,
 } from "./ev"
 import { toEvFlow } from "./evgraph"
@@ -52,6 +53,11 @@ describe("names and formats", () => {
   it("orders systems engine first and levels by difficulty", () => {
     expect(["agent-baseline", "zeta", "rag-baseline", "evidence-engine"].sort(systemOrder)).toEqual(["evidence-engine", "rag-baseline", "agent-baseline", "zeta"])
     expect(["all", "mixed", "explicit", "complex"].sort(levelOrder)).toEqual(["explicit", "complex", "mixed", "all"])
+  })
+
+  it("labels the RAG baseline under its old and its new id", () => {
+    expect([systemLabel("rag-baseline"), systemLabel("bm25-answer-baseline")]).toEqual(["RAG baseline", "RAG baseline"])
+    expect(["agent-baseline", "bm25-answer-baseline", "evidence-engine"].sort(systemOrder)).toEqual(["evidence-engine", "bm25-answer-baseline", "agent-baseline"])
   })
 
   it("labels items by their fields", () => {

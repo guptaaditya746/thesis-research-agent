@@ -1,6 +1,6 @@
 """`regex_condition_kind`: condition labels from configured names, for condition types without a `role`.
 
-regex_condition writes `{label, role}` from fixed rag/baseline wording; the best and inventory-of-methods
+regex_condition writes `{label, role}` from the pack's fixed role wording; the best and inventory-of-methods
 protocols have condition types without a role (`{label, kind}`, `{label}`). This extractor finds the names it
 is given instead: `kinds` (kind -> names; the engine injects best.kinds for a best protocol) or `names` (a plain
 list, from the protocol step's config). A name matches case-insensitively, word-bounded, any run of white space
@@ -42,10 +42,11 @@ class ConditionKindRegex:
             for n in members:
                 self.kind_of.setdefault(fold(n), kind)
         self.write_kind = bool(kinds) and "kind" in (given.get("field_schema") or {}).get("properties", {})
-        # longest first, so that at one place "RAG without reranking" wins over "RAG"
+        # longest first, so that at one place "TM without pruning" wins over "TM"
         self.patterns = [pattern(n) for n in sorted(dict.fromkeys([*names, *(n for m in kinds.values() for n in m)]),
                                                     key=lambda n: (-len(n), n))]
-        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=("condition",),
+        self.emits = base.emitted(given, self.evidence_type)
+        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.emits,),
                                   code_sha256=CODE_SHA256, config={**given, "kinds": kinds, "names": names},
                                   determinism="exact")
 
@@ -69,7 +70,7 @@ class ConditionKindRegex:
             if self.write_kind and self.kind_of.get(key) is not None:
                 fields["kind"] = self.kind_of[key]
             found.append((fields, {}, [base.span(task, text, s, e, "condition_label")]))
-        items: list[Item] = base.group("condition", found)
+        items: list[Item] = base.group(self.emits, found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 

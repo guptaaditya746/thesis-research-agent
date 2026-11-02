@@ -25,6 +25,7 @@ from .evmodels import (
     EvGraph,
     EvRunDetail,
     EvRunSummary,
+    LossesView,
     PreviewResult,
     ProposalDetail,
     ProposalSummary,
@@ -148,5 +149,9 @@ def evidence_router(files: EvidenceFiles) -> APIRouter:  # noqa: C901 (one route
     @api.get("/scores/benchmarks/{score_id}", response_model=BenchmarkView)
     def ev_benchmark(score_id: str) -> BenchmarkView:
         return files.benchmark(score_id)
+
+    @api.get("/losses", response_model=LossesView)
+    def ev_losses() -> LossesView:
+        return files.losses()
 
     return api

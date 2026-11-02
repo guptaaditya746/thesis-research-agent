@@ -4,14 +4,14 @@
   "generator": {
     "name": "synth",
     "version": "2",
-    "code_sha256": "1d851bce08dd1c0e71c76b040ece8c8deb7efc394ec8b0fb787d980e00247ce7"
+    "code_sha256": "c895e1e724b4681ec6f5db86c001a1267c749915a39e31f5228a82dac6dd9fa3"
   },
   "renderer": "template",
   "level": "contradictory",
   "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
   "protocol": {
     "id": "rag-factuality",
-    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+    "sha256": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f"
   },
   "papers": [
     {

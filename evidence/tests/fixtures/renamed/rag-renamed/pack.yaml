@@ -1,0 +1,13 @@
+# domains/rag/pack.yaml with its evidence types renamed (evidence/tests/test_roles.py): condition -> arm,
+# metric -> outcome, measurement -> result, author_claim -> conclusion. The prefixes are new because the contract
+# keeps c, k, m and a for the rag types (evidence_types.register refuses a prefix of another type).
+name: rag-renamed
+types:
+  arm: {prefix: ar, role: compared_thing, name_field: label, side_field: role, kind_field: kind}
+  outcome: {prefix: ou, role: metric, name_field: name, canonical_field: canonical}
+  result: {prefix: re, role: measured_value}
+  conclusion: {prefix: co, role: author_claim, direction_field: direction}
+  dataset: {prefix: d, role: context, name_field: name}
+display: {treatment: "RAG system", control: "closed-book model"}
+names_seed: {}
+limitation_categories: []

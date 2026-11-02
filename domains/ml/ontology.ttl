@@ -1,0 +1,13 @@
+# Ontology of the ML-papers pack: the CS-KG 2.0 seed (https://scholkg.kmi.open.ac.uk/cskg/ontology), hand-written
+# from the CS-KG specification (no download); see provenance.json. pack.yaml maps the roles onto it (one class per
+# role: the context role takes cskg:Material; cskg:Task is in the seed for the task type).
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix cskg: <https://w3id.org/cskg/ontology#> .
+
+cskg:Method a owl:Class .
+cskg:Metric a owl:Class .
+cskg:Material a owl:Class .
+cskg:Task a owl:Class .
+cskg:OtherEntity a owl:Class .
+cskg:based-on a owl:ObjectProperty .

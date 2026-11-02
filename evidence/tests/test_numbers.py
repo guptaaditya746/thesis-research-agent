@@ -12,11 +12,12 @@ from evidence import engine, protocol
 from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef, Span
 from evidence.extractors import base, get, numbers
 
-from .conftest import PROTOCOL, corpus_of
+from .conftest import PROTOCOL, corpus_of, pack_words
 
 PROTO = protocol.load(PROTOCOL)
 SPAN = Span(role="label", selector={"file": "papers/X.md", "start": 0, "end": 1, "exact": "X"})
 LATENCY = PROTOCOL.parent / "rag-latency.yaml"
+WORDS = pack_words("number_measurement", "measurement")
 EFFECT = {"question_metrics": ["factual_accuracy"], "compare": {"treatment": "rag", "control": "baseline"}}
 
 RAG = Item.build("condition", {"label": "retrieval-augmented model", "role": "rag"}, [SPAN])
@@ -49,7 +50,7 @@ def run(text: str, context: list[Item] | None = None, config: dict[str, Any] | N
     task = ExtractionTask(protocol=ProtocolRef(id=PROTO.id, sha256=PROTO.sha256), evidence_type="measurement",
                           field_schema_sha256="x", document=doc)
     ctx = Ctx(text, context if context is not None else [RAG, CB, ACC])
-    return list(get("number_measurement", {**EFFECT, **(config or {})}).extract(task, ctx).items)
+    return list(get("number_measurement", {**WORDS, **EFFECT, **(config or {})}).extract(task, ctx).items)
 
 
 def found(items: list[Item]) -> list[tuple[str, str, float, Any]]:
@@ -148,7 +149,10 @@ def test_ranges_sections_and_shares_are_not_values() -> None:
     assert run(sentence("Accuracy of the closed-book model drops from 71% to 62%.")) == []
     text = sentence("Section 4.1 reports the latency of the closed-book model.")
     assert run(text, [RAG, CB, LAT]) == []
-    assert run(sentence("For 40% of the questions, the closed-book model's accuracy is reported.")) == []
+    # D35: a percentage followed by "of" is no longer turned away as a share ("34% of patients responded")
+    [share] = run(sentence("For 40% of the questions, the closed-book model's accuracy is reported."))
+    assert (share.fields["value"], share.fields["form"]) == (0.4, "percent")
+    assert run(sentence("For 0.4 of the questions, the closed-book model's accuracy is reported.")) == []
 
 
 def test_percent_only_normalised_for_fraction_metrics() -> None:
@@ -223,11 +227,11 @@ def test_condition_code_in_a_table_row_from_context_spans() -> None:
 # --- identity ----------------------------------------------------------------------------------------------
 
 def test_registered_as_regex_with_own_hash() -> None:
-    ex = get("number_measurement", {})
+    ex = get("number_measurement", WORDS)
     assert ex.spec.kind == "regex" and ex.spec.evidence_types == ("measurement",)
     assert ex.spec.code_sha256 == numbers.CODE_SHA256 == base.source_sha256(*numbers.SOURCES)
     names = {p.name for p in numbers.SOURCES}
-    assert {"numbers.py", "measure.py", "terms.py", "units.py", "regex.py", "base.py"} <= names
+    assert {"numbers.py", "numreader.py", "measure.py", "terms.py", "units.py", "regex.py", "base.py"} <= names
 
 
 # --- the engine: [regex_measurement, number_measurement] --------------------------------------------------
@@ -251,3 +255,22 @@ def test_engine_cascade_finds_treatment_and_control_by_number(tmp_path: Path) ->
     values = [i for i in items if i["evidence_type"] == "measurement"]
     assert sorted(i["fields"]["value"] for i in values) == [0.62, 0.71]
     assert all([f.split("@")[0] for f in i["found_by"]] == ["number_measurement"] for i in values)   # regex missed both
+
+
+def test_one_value_written_in_prose_and_in_a_table_is_one_item() -> None:
+    # `form` is not identity: "71%" in prose and "71.0" under a (%) header are one item, form from the earliest span
+    text = (sentence("The retrieval-augmented model reaches an accuracy of 71%.")
+            + "\n| Model | Accuracy (%) |\n|---|---|\n| retrieval-augmented model | 71.0 |\n")
+    [item] = run(text)
+    assert (item.fields["value"], item.fields["form"]) == (0.71, "percent")
+    assert sorted(s.selector["exact"] for s in item.spans if s.role == "value") == ["71%", "71.0"]
+
+
+def test_a_pack_system_noun_blocks_a_value_and_comes_from_the_pack() -> None:
+    """"reader" is a system noun of the rag pack (words.yaml `system_nouns`), not of the code: with the rag words the
+    57% is the reader's, not the retrieval-augmented model's (as before the noun moved); a pack without it
+    (config `system_nouns: []`) takes the value across it."""
+    text = "The retrieval-augmented model was tested, and the reader got 57% accuracy."
+    assert "reader" in WORDS["system_nouns"]
+    assert found(run(text)) == []
+    assert found(run(text, config={"system_nouns": []})) == [("rag", "acc", 0.57, None)]

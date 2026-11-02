@@ -7,8 +7,9 @@ searched again (agent/anchor.find, ties broken by prefix and suffix) and the spa
 found. An item with a span that cannot be anchored is rejected with the anchor's reason.
 R2: fields validate against the evidence type's JSON schema (jsonschema) and its `bounds` (a question
 metric's value is a fraction in [0, 1]); span roles are the type's declared roles and the first (required)
-role is present; links name exactly the declared links and point to context items or items of this
-result, of the declared type. Failures are rejected with reason schema or dangling_link.
+role is present; links name exactly the declared links (an item may leave out the type's `optional_links`)
+and point to context items or items of this result, of the declared type. Failures are rejected with reason
+schema or dangling_link.
 R3: spans lie inside the task's scope. A span of an optional role outside the scope is dropped and noted
 in `rejected` (reason out_of_scope, the item kept) as long as a span of the required role is inside;
 otherwise the item is rejected.
@@ -152,8 +153,9 @@ def check(result: ExtractionResult, task: ExtractionTask, index: Index, spec: Ev
 
 
 def _link_problem(item: Item, spec: EvidenceTypeSpec, known: dict[str, Any]) -> str:
-    if set(item.links) != set(spec.links):
-        return f"links {sorted(item.links)}, the evidence type declares {sorted(spec.links)}"
+    if not set(spec.links) - set(spec.optional_links) <= set(item.links) <= set(spec.links):
+        optional = f" ({sorted(spec.optional_links)} optional)" if spec.optional_links else ""
+        return f"links {sorted(item.links)}, the evidence type declares {sorted(spec.links)}{optional}"
     for name, target in item.links.items():
         linked = known.get(target)
         if linked is None or linked.evidence_type != spec.links[name]:

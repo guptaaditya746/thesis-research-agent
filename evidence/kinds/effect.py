@@ -1,12 +1,18 @@
 """Kind `effect`: does the treatment change the question metric? evidence/synthesis.py, unchanged."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .. import synthesis
 from ..contract import Item
 from ..evidence_types import EvidenceType
 from ..protocol import Protocol, Synthesis
+
+if TYPE_CHECKING:
+    from ..comparisons import Comparisons
+    from ..names import NameGroups
+    from ..pack import RoleMap
+    from ..reasoner import Inferences
 
 
 def spec(protocol: Protocol) -> Synthesis:
@@ -14,19 +20,25 @@ def spec(protocol: Protocol) -> Synthesis:
     return protocol.synthesis
 
 
-def study(protocol: Protocol, document: str, items: list[Item],
-          preset: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
-    return synthesis.study(protocol, document, items, preset)
+def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str, str] | None = None, *,
+          roles: RoleMap | None = None) -> tuple[dict[str, Any], list[str]]:
+    return synthesis.study(protocol, document, items, preset, roles=roles)
 
 
-def gap_types(protocol: Protocol, code: str) -> tuple[EvidenceType, ...]:
-    return synthesis.GAP_TYPES.get(code, ())  # type: ignore[return-value]
+def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) -> tuple[EvidenceType, ...]:
+    return synthesis.gap_types(protocol, code, roles)
 
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
-           funnel: dict[str, dict[str, Any]] | None = None) -> tuple[dict[str, Any], list[str]]:
-    return synthesis.answer(protocol, documents, items, reasons, funnel)
+           funnel: dict[str, dict[str, Any]] | None = None, *,
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           comparisons: Comparisons | None = None,
+           reason: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`groups` (the names step) is not read: an effect answer compares sides and canonical metrics, not names.
+    Nor is `comparisons` (comparisons.json): an effect answer keeps synthesis's pair per study (spec section 6.2).
+    `reason` (the reasoner's inferences): a narrower metric answers a broader question metric."""
+    return synthesis.answer(protocol, documents, items, reasons, funnel, roles=roles, inferred=reason)
 
 
 def extractor_config(protocol: Protocol) -> dict[str, Any]:

@@ -3,19 +3,21 @@
  * corpus, cost) and tabs for the answer (the evidence table: the answer, a row per paper by verdict, one click
  * to the sentence; a baseline's text, citations and retrieved passages), the papers (each with where the
  * funnel stopped, opening the paper view), the protocol it ran, its extractors, the agent baseline's trace,
- * and for an engine run the Developer tools tab: its step trace (live) and the raw evidence graph
- * (graph.json in React Flow, and as JSON). The baselines on the same corpus and the run's score reports are
- * linked. The tab is in the URL (?tab=, and ?dev= inside Developer tools; the old ?tab=graph opens the
- * graph there). While a job of the app writes the run, the page polls, so an incomplete run fills in as the
- * engine writes it.
+ * and for an engine run the Developer tools tab: its step trace (live) and the evidence graph (papers ->
+ * claims -> verdict; the raw graph.json items behind a "raw items" switch, and as JSON). An engine run with a score report has a Scores tab: its first
+ * report's C and A, the cost per system when the report has it, and how many values the run linked to the
+ * wrong kind of thing. The baselines on the same corpus and the run's score reports are linked. The tab is
+ * in the URL (?tab=, and ?dev= inside Developer tools; the old ?tab=graph opens the graph there). While a
+ * job of the app writes the run, the page polls, so an incomplete run fills in as the engine writes it.
  */
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 
-import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
+import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useReport, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
 import { ErrorCallsBadge } from "@/components/badges"
 import { JsonBlock, KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
+import { ClaimGraph } from "@/components/ev/ClaimGraph"
 import { TraceTab } from "@/components/ev/TraceTab"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { EvidenceView } from "@/components/ev/EvidenceView"
@@ -24,24 +26,40 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { effectAnswer, funnelStop } from "@/lib/ev"
+import { effectAnswer, evCell, extractionRows, funnelStop, synthesisSummary, systemOrder, typeLabel } from "@/lib/ev"
 import { duration, tokens } from "@/lib/format"
 
 const runHref = (id: string) => `/runs/${encodeURIComponent(id)}`
 
+/** The evidence graph: papers, the claims read from them and the verdict; the raw items behind a switch. */
 function GraphTab({ run }: { run: EvRunDetail }) {
   const graph = useRunGraph(run.id)
+  const [raw, setRaw] = useState(false)
   if (graph.isPending) return <CardsSkeleton count={1} />
   if (graph.isError) return <ErrorState error={graph.error} />
+  const paperHref = (d: string, item?: string) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}${item ? `?item=${encodeURIComponent(item)}` : ""}`
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        The engine's raw evidence graph (graph.json): every item and link, for debugging. The Answer tab shows the same
-        evidence as a row per paper.
-      </p>
-      <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {raw
+            ? "The engine's raw evidence graph (graph.json): every item and link, for debugging."
+            : "Which papers the answer rests on, what each one claims, and how each claim bears on the verdict. Click a claim for its items."}
+        </p>
+        <div className="flex items-center gap-2">
+          <Switch id="graph-raw" checked={raw} onCheckedChange={setRaw} />
+          <Label htmlFor="graph-raw" className="text-sm">raw items</Label>
+        </div>
+      </div>
+      {raw
+        ? <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => paperHref(d)} />
+        : run.answer
+          ? <ClaimGraph graph={graph.data} answer={run.answer} kind={run.answer.kind ?? "effect"} display={run.display} itemHref={paperHref} />
+          : <p className="text-sm">No answer.json, so no claims to draw; the raw items are behind the switch.</p>}
       <details>
         <summary className="cursor-pointer text-sm">graph.json</summary>
         <JsonBlock value={graph.data} label="graph.json" className="mt-2" />
@@ -77,6 +95,37 @@ function AgentTraceTab({ runId }: { runId: string }) {
   if (trace.isPending) return <CardsSkeleton count={1} />
   if (trace.isError) return <ErrorState error={trace.error} />
   return <AgentTraceView trace={trace.data} />
+}
+
+const reportHref = (id: string) => `/report/reports/${encodeURIComponent(id)}`
+
+/** The run's own scores: C and A of its first report, the cost per system once the report carries it, the link flags. */
+function ScoresTab({ run }: { run: EvRunDetail }) {
+  const id = run.reports[0]
+  const view = useReport(id)
+  if (view.isPending) return <CardsSkeleton count={1} />
+  if (view.isError) return <ErrorState error={view.error} />
+  const report = view.data.report
+  const costs = [...(report.synthesis ?? [])].sort((a, b) => systemOrder(a.system, b.system))
+    .filter((s) => s.cost && typeof s.cost === "object")
+    .map((s) => ({ system: s.system, ...(s.cost as Record<string, unknown>) }))
+  return (
+    <div className="space-y-4">
+      <p className="text-sm">
+        Values linked to the wrong kind of thing: {run.link_flags ?? "not checked in this run"}.{" "}
+        <Link to={reportHref(id)} className="underline">The full report</Link>
+        {run.reports.length > 1 && <span className="text-muted-foreground"> (one of {run.reports.length})</span>}
+      </p>
+      <RowsTable caption="Synthesis per system" rows={synthesisSummary(report)} columns={["system", "label", "expected", "label_correct", "direction_accuracy", "completeness"]}
+        render={(c, v) => (c === "system" ? <SystemBadge system={String(v)} /> : evCell(v))} />
+      <RowsTable caption="Extraction over all levels" rows={extractionRows(report)} columns={["evidence_type", "precision", "recall", "f1"]}
+        render={(c, v) => (c === "evidence_type" ? typeLabel(String(v)) : evCell(v))} />
+      {costs.length > 0 && (
+        <RowsTable caption="Cost per system" rows={costs} columns={["system", "model_calls", "input_tokens", "output_tokens", "tokens"]}
+          render={(c, v) => (c === "system" ? <SystemBadge system={String(v)} /> : evCell(v))} />
+      )}
+    </div>
+  )
 }
 
 function PapersTab({ run }: { run: EvRunDetail }) {
@@ -116,6 +165,7 @@ function RunView({ run }: { run: EvRunDetail }) {
   const tabs = [
     { value: "answer", label: "Answer" },
     { value: "papers", label: "Papers" },
+    ...(engine && run.reports.length ? [{ value: "scores", label: "Scores" }] : []),
     ...(engine ? [{ value: "protocol", label: "Protocol" }, { value: "extractors", label: "Extractors" }, { value: "dev", label: "Developer tools" }] : []),
     ...(run.has_trace ? [{ value: "trace", label: "Agent trace" }] : []),
   ]
@@ -154,7 +204,7 @@ function RunView({ run }: { run: EvRunDetail }) {
           <CardHeader><CardTitle className="text-base">Beside it</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>Baselines on this corpus: {run.baselines.length ? run.baselines.map((b) => <Link key={b} to={runHref(b)} className="mr-2 font-mono text-xs underline">{b}</Link>) : "none"}</div>
-            <div>Score reports: {run.reports.length ? run.reports.map((r) => <Link key={r} to={`/scores/reports/${encodeURIComponent(r)}`} className="mr-2 font-mono text-xs underline">{r}</Link>) : "none"}</div>
+            <div>Score reports: {run.reports.length ? run.reports.map((r) => <Link key={r} to={reportHref(r)} className="mr-2 font-mono text-xs underline">{r}</Link>) : "none"}</div>
           </CardContent>
         </Card>
       </div>
@@ -164,6 +214,7 @@ function RunView({ run }: { run: EvRunDetail }) {
           <EvidenceView run={run} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null} />
         </TabsContent>
         <TabsContent value="papers"><PapersTab run={run} /></TabsContent>
+        {engine && run.reports.length > 0 && <TabsContent value="scores">{tab === "scores" && <ScoresTab run={run} />}</TabsContent>}
         {engine && <TabsContent value="protocol">{tab === "protocol" && <ProtocolTab runId={run.id} />}</TabsContent>}
         {engine && (
           <TabsContent value="extractors">

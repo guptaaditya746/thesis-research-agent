@@ -15,7 +15,9 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+import yaml
 
 from jsonio import GENESIS, canonical_bytes, file_sha256, sha256_hex
 from agent.chain import FIELDS, line, seal, task_id
@@ -25,13 +27,21 @@ from modelcall import JsonlCache
 
 from .contract import DocumentRef, Item
 
+if TYPE_CHECKING:
+    from .pack import Pack
+
 RUN_FILE, PROTOCOL_FILE, EVENTS_FILE = "run.json", "protocol.yaml", "events.jsonl"
 LOCATE_FILE, EVIDENCE_FILE, GRAPH_FILE, ANSWER_FILE = "locate.json", "evidence.jsonl", "graph.json", "answer.json"
 CALLS_DIR, REEXEC_FILE, PROV_FILE = "calls", "reexec.json", "prov.ttl"
 FUNNEL_FILE = "funnel.json"   # the funnel's steps and decisions per document (Part D)
+NAMES_FILE = "names.json"     # the corpus-wide name groups (D38; `names: on` only)
+LOCK_FILE = "protocol.lock.json"   # what the run was built from: protocol, pack, ontology, extractor ids (spec 6.6)
+REASON_FILE = "reason.json"   # the reasoner's inferences (spec 6.3; `reason: on` only)
+COMPARISONS_FILE = "comparisons.json"   # the comparisons built from pairs in each study (evidence/comparisons.py)
 CACHE_FILE = "extractor_calls.jsonl"
 RUN_CALLS_FILE = "calls.jsonl"   # the run's own copy of every model-backed call (RunCalls); not an output
-ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR)   # what only the engine writes in a run dir
+ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR, NAMES_FILE, REASON_FILE, LOCK_FILE,
+                  COMPARISONS_FILE)   # what only the engine writes in a run dir
 REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes next to a run
 
 
@@ -230,8 +240,27 @@ class RunDir:
             return None
 
     def items(self) -> list[Item]:
+        """The run's evidence items. The run's pack is registered first (`register_pack`), so items of a pack
+        other than the default one validate in a process that has not parsed the run's protocol."""
         path = self.file(EVIDENCE_FILE)
-        return [Item.model_validate(row) for row in read_lines(path)] if path.is_file() else []
+        if not path.is_file():
+            return []
+        self.register_pack()
+        return [Item.model_validate(row) for row in read_lines(path)]
+
+    def register_pack(self) -> Pack | None:
+        """Register the types of the run's domain pack and return the pack: the `domain` of its protocol.yaml (no
+        key: the default pack), read from the `domains` folder run.json's settings name (none: domains/). Only the
+        pack is read, not the whole protocol, so a protocol an older code wrote still loads. Without protocol.yaml
+        (a baseline) nothing is registered and the result is None."""
+        from .protocol import DEFAULT_PACK, _pack
+        text = self.file(PROTOCOL_FILE)
+        if not text.is_file():
+            return None
+        data = yaml.safe_load(text.read_bytes().decode("utf-8"))
+        domain = data.get("domain", DEFAULT_PACK) if isinstance(data, dict) else DEFAULT_PACK
+        settings = (self.try_json(RUN_FILE) or {}).get("settings") or {}
+        return _pack(domain, settings.get("domains"))
 
     def events(self) -> list[dict[str, Any]] | None:
         path = self.file(EVENTS_FILE)

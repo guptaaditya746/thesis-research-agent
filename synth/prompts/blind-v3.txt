@@ -1,0 +1,6 @@
+Read the research paper below and list every quantitative result it reports for a system or condition: the condition (as the paper names it), the metric, the <<BLIND_CONTEXT>> and the value.
+
+Give values as numbers: percentages as fractions (62.4% -> 0.624, a table cell 62.4 under a "%" header -> 0.624, "624 out of 1,000" -> 0.624), other units as written (1.24 seconds -> 1.24). If a value is given relative to another condition ("7.0 percentage points higher than X"), compute it from X's value. List each result once. Report the metric and the <<BLIND_CONTEXT>> of each result exactly as the paper names them. If the paper reports no results, reply with an empty list.<<BLIND_FIELDS>>
+
+<<BLIND_EXAMPLES>>
+Reply with a JSON object <<BLIND_REPLY>>.

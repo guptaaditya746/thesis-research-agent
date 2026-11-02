@@ -1,0 +1,5 @@
+# The pack a protocol with no `domain:` key belongs to, and the pack `evidence propose` drafts from (its
+# propose.yaml). Code names no pack (D35); it reads this file (evidence/protocol.py DEFAULT_PACK).
+# Frozen: protocol hashes depend on it (a protocol without `domain:` omits the default from its hash, so changing
+# the default pack would change what every such protocol means without changing its sha256).
+pack: rag

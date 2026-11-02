@@ -1,14 +1,18 @@
-"""`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain.
+"""`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain and
+its file hashes.
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--relink on|off]
-                 [--workers N] [--import MODULE] [--run-id ID]
+                 [--names off|on] [--reason on|off] [--workers N] [--import MODULE] [--run-id ID]
                  [--retry-errors] [--allow-failed-calls]
+    evidence estimate --protocol P --corpus DIR [--strategy gaps|all] [--extractors regex-only|llm-only|cascade]
+                      [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
+    evidence pack check NAME
     evidence propose frame --question Q --out DIR [--model ALIAS] [--force] [--refresh]
     evidence propose draft DIR [--template P]
     evidence propose critic DIR [--model ALIAS] [--refresh]
@@ -17,11 +21,16 @@
     evidence propose amend DIR --reason R [--before-main-run]
     evidence fetch --query TEXT --out DIR [--max N] [--category CAT]
 
-`--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
+`estimate` prints the extractor and screen calls (low, high) and the tokens a run would need, from a regex-only
+pass over the corpus (no model; nothing is written): `--from-run` takes the tokens per call of a finished run
+instead of chars/4. `--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
 screen, then escalate only the gaps; `all` runs every extractor on every document and records the
 screen decision. LLM extractors reach LiteLLM through modelcall.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
-and both baselines) is the alias of the LLM and agentic extractors. `protocol check` validates a protocol file
+and both baselines) is the alias of the LLM and agentic extractors. `pack check` reads the domain pack
+domains/NAME/, registers its evidence types, checks that it has a type of every role its questions' kinds need and
+that every protocol its questions name validates, and prints {pack, sha256, types, kinds, protocols} (exit 2 when
+it does not). `protocol check` validates a protocol file
 and prints {id, version, revision, sha256, phases, extractors per type}. `propose` is the proposal flow
 (docs/evidence-system.md Part E, evidence/propose): question -> frame -> draft -> critic -> cards (the person
 edits decisions.yaml) -> freeze -> amend, all files in one directory; frame, critic and cards make one cached
@@ -29,7 +38,7 @@ model call each (`--model`, default orch-model), the rest is deterministic, and 
 `fetch` writes a demonstration corpus of real arXiv papers (evidence/arxiv.py): manifest.json, papers/ and
 source.json with `ground_truth: false`; there is nothing to score it against.
 Exit status: 0 ok,
-1 a replay mismatch, a cache miss, a broken chain or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
+1 a replay mismatch, a cache miss, a broken chain, a run file whose sha256 differs from its manifest.json or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
 refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
 `run` also exits 2 when the run it wrote has failed extractor calls (calls/*.json status error or partial: the
 model gateway or the GLiNER service did not answer): the run stays on disk, and stderr has
@@ -44,6 +53,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -82,6 +92,13 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--relink", default="on", choices=["on", "off"],
                    help="on: links follow an item whose id a later funnel round changed, and the run counts the links "
                         "to no item (default); off: the engine of runs before 1 Nov")
+    r.add_argument("--names", default="off", choices=["off", "on"],
+                   help="on: group the names of compared things, metrics and datasets across papers (names.json), a "
+                        "model check for names no rule joins, and count the names left (unresolved_names); off: as "
+                        "before (default)")
+    r.add_argument("--reason", default="on", choices=["on", "off"],
+                   help="on: the reasoner reads the pack's ontology, so a narrower metric answers a broader question "
+                        "metric, and flags links to an item of the wrong kind (reason.json; default); off: as before")
     r.add_argument("--workers", type=_workers, default=3,
                    help="papers whose model calls run at once; outputs do not depend on it")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
@@ -89,6 +106,14 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--retry-errors", action="store_true", help="run cached error and partial results again")
     r.add_argument("--allow-failed-calls", action="store_true",
                    help="exit 0 even when extractor calls failed (default: exit 2 with a FAIL engine-errors line)")
+    e = sub.add_parser("estimate", help="the calls and tokens a run would need, before it is made")
+    e.add_argument("--protocol", required=True, type=Path)
+    e.add_argument("--corpus", required=True, type=Path)
+    e.add_argument("--strategy", default="gaps", choices=["all", "gaps"])
+    e.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
+    e.add_argument("--from-run", type=Path, help="a finished run: its tokens per model call replace chars/4")
+    e.add_argument("--names", default="off", choices=["on", "off"],
+                   help="on: also count the names check's model calls (as the run's --names on; an upper bound)")
     for name, text in (("replay", "rebuild a run from the record cache and check its output hashes"),
                        ("reexec", "run extractors again, bypassing the cache, and compare")):
         s = sub.add_parser(name, help=text)
@@ -99,9 +124,14 @@ def _parser() -> argparse.ArgumentParser:
         if name == "reexec":
             s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
-    sub.add_parser("verify", help="check the run's hash chain").add_argument("run", type=Path)
+    sub.add_parser("verify", help="check the run's hash chain and file hashes").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
     proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
+    d = proto.add_parser("diff", help="what differs between two protocols or two runs (exit 0 same, 1 differ, 2 unreadable)")
+    d.add_argument("a", type=Path, help="a protocol .yaml or a run directory")
+    d.add_argument("b", type=Path, help="a protocol .yaml or a run directory")
+    pk = sub.add_parser("pack", help="check a domain pack").add_subparsers(dest="pack_command", required=True)
+    pk.add_parser("check", help="check a domain pack's types against its questions and protocols").add_argument("name")
     _propose_parser(sub)
     arxiv.add_parser(sub)
     return p
@@ -180,7 +210,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         try:
             root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                        model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
-                       strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink)
+                       strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink,
+                       names=args.names, reason=args.reason)
         except RunDirExists as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
@@ -200,6 +231,15 @@ def _dispatch(args: argparse.Namespace) -> int:
                   "once the service answers, run again into a new run dir with --retry-errors.", file=sys.stderr)
             return 2
         return 0
+    if args.command == "estimate":
+        from .estimate import estimate
+        try:
+            print(json.dumps(estimate(args.protocol, args.corpus, strategy=args.strategy, selection=args.extractors,
+                                      from_run=args.from_run, names=args.names), indent=1))
+        except (OSError, ValueError, KeyError, yaml.YAMLError) as exc:   # unreadable protocol, corpus or run
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        return 0
     if args.command == "replay":
         from .replay import replay
         new, report = replay(args.run, cache=args.cache, corpus=args.corpus, out_dir=args.out)
@@ -217,14 +257,75 @@ def _dispatch(args: argparse.Namespace) -> int:
         print(path)
         return 0
     if args.command == "protocol":
-        return _protocol_check(args.protocol)
+        return _protocol_diff(args.a, args.b) if args.protocol_command == "diff" else _protocol_check(args.protocol)
+    if args.command == "pack":
+        return _pack_check(args.name)
     if args.command == "propose":
         return _propose(args)
     if args.command == "fetch":
         return arxiv.run(args)
-    report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
-    print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
-    return 0 if report.ok else 1
+    return _verify(args.run)
+
+
+def _verify(run: Path) -> int:
+    """The chain (against run.json's head; a failed run has no run.json, so its chain is checked with no head) and
+    the manifest's file hashes; a run made before sealing is judged on the chain only."""
+    from . import seal
+    head = read_json(run / RUN_FILE).get("chain_head") if (run / RUN_FILE).is_file() else None
+    report = verify(run / EVENTS_FILE, head=head)
+    manifest = seal.check(run)
+    sealed = manifest == seal.PRE_EV4 or bool(manifest["intact"])
+    print(json.dumps({"ok": report.ok and sealed, "records": report.records, "head": report.head, "chain_head": head,
+                      "errors": report.errors, "manifest": manifest}, indent=1))
+    return 0 if report.ok and sealed else 1
+
+
+def pack_check(name: str, root: Path | None = None) -> dict[str, Any]:
+    """`evidence pack check NAME` on `root/NAME/` (None: domains/): load the pack, register its types, check it has a
+    type of every role its questions' kinds need, and validate every protocol file (each must name the pack). Returns
+    {pack, sha256, types, kinds, protocols, question_protocols}; a failure raises (OSError, ValueError, YAMLError)."""
+    from . import pack, questions
+    from .protocol import load
+    root = Path(root) if root is not None else pack.DOMAINS
+    p = pack.load_pack(name, root=root)
+    pack.register_pack(p)
+    qfile = root / name / "questions.yaml"
+    entries = questions.load(qfile) if qfile.is_file() else []
+    kinds = sorted({q.kind for q in entries})
+    pack.check(p, kinds)
+    named = {questions.protocol_file(f, qfile) for q in entries for f in (q.protocol, q.agentic_protocol) if f}
+    # every protocol of the pack, not only those questions.yaml names (a protocol kept for later must parse too)
+    files = sorted({*(root / name / "protocols").glob("*.yaml"), *named})
+    for path in files:
+        try:
+            domain = load(path, domains=root).domain
+        except (OSError, ValueError, yaml.YAMLError) as exc:
+            raise ValueError(f"{path}: {exc}") from exc
+        if domain != name:
+            raise ValueError(f"{path}: its domain is not {name!r}")
+    return {"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
+            "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}
+
+
+def _pack_check(name: str) -> int:
+    try:
+        report = pack_check(name)
+    except (OSError, ValueError, yaml.YAMLError) as exc:   # PackError and pydantic's ValidationError are ValueErrors
+        print(f"error: pack {name!r}: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps(report, indent=1))
+    return 0
+
+
+def _protocol_diff(a: Path, b: Path) -> int:
+    from . import lockfile
+    try:
+        lines = lockfile.diff(a, b)
+    except (OSError, ValueError, yaml.YAMLError) as exc:   # a missing file, bad JSON or YAML
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print("\n".join(lines))
+    return 0 if lines == ["same"] else 1
 
 
 def _protocol_check(path: Path) -> int:

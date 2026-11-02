@@ -1,7 +1,7 @@
 /**
  * The flow's last two steps, on the chosen engine run, built from the viewer's own parts and linked to its
  * pages: the evidence graph and the answer, in the form of the question's kind (with the baselines' answers on
- * the same corpus beside it). The scores are not a step: they stay on their own pages (/scores).
+ * the same corpus beside it). The scores are not a step: they are on the run's Scores tab and the Report (/report).
  */
 import type { ReactNode } from "react"
 import { Link } from "react-router"

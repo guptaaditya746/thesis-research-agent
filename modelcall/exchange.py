@@ -8,6 +8,12 @@ answers the requests on disk. Under `root`:
     replies/<id>.json   the reply: one JSON object under that schema, written by the answerer
     done/<id>.json      the request once its reply was accepted
 
+A call that offers tools (an agent with a toolset, such as the pack builder over the corpus tool server) also lists
+them in the request under `tools` ({name, description, parameters}). Its reply is then either the output, as above,
+or `{"tool_calls": [{"tool": <name>, "args": {...}}]}` (its schema is under `tool_calls_schema`): the tools run,
+and the next request's prompt holds the calls and their results (`[tool call <id>] name {args}`,
+`[tool result <id>] name: <result>`, `[tool error <id>] name: <message>`), so every turn is a request of its own.
+
 The id is the sha256 of the model name, the seed, the instructions and the conversation so far, so a
 rerun asks the same request again and an answered reply is reused. A reply is read only after it has
 not changed for a moment (`settle_s`), so a file still being written is never taken half done. A reply that does not parse or
@@ -31,7 +37,8 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
-from pydantic_ai.messages import ModelMessage, ModelResponse, RetryPromptPart, TextPart, ToolCallPart, UserPromptPart
+from pydantic_ai.messages import (ModelMessage, ModelResponse, RetryPromptPart, TextPart, ToolCallPart,
+                                  ToolReturnPart, UserPromptPart)
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.profiles.openai import OpenAIModelProfile
 
@@ -45,16 +52,46 @@ def _write(path: Path, data: dict[str, Any]) -> None:
     os.replace(tmp, path)
 
 
-def _conversation(messages: list[ModelMessage]) -> str:
-    """The user prompt, and any retry pydantic-ai sent back, in order."""
+def _json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def _conversation(messages: list[ModelMessage], tools: frozenset[str] = frozenset(),
+                  outputs: frozenset[str] = frozenset()) -> str:
+    """The user prompt, and any retry pydantic-ai sent back, in order; with the calls the model made of the function
+    tools `tools`, and their results or errors. With tools, an output given through an output tool of `outputs` is
+    shown too (`[output <id>] name {args}`), so a retry shows the rejected output it is about. A call without tools
+    renders as before."""
     parts = []
     for m in messages:
         for p in getattr(m, "parts", []):
             if isinstance(p, UserPromptPart):
                 parts.append(str(p.content))
+            elif isinstance(p, ToolCallPart) and p.tool_name in tools:
+                parts.append(f"[tool call {p.tool_call_id}] {p.tool_name} {_json(p.args_as_dict())}")
+            elif isinstance(p, ToolCallPart) and tools and p.tool_name in outputs:
+                parts.append(f"[output {p.tool_call_id}] {p.tool_name} {_json(p.args_as_dict())}")
+            elif isinstance(p, ToolReturnPart) and p.tool_name in tools:
+                parts.append(f"[tool result {p.tool_call_id}] {p.tool_name}: {_json(p.content)}")
+            elif isinstance(p, RetryPromptPart) and p.tool_name in tools:
+                parts.append(f"[tool error {p.tool_call_id}] {p.tool_name}: {p.model_response()}")
             elif isinstance(p, RetryPromptPart):
                 parts.append(p.model_response())
     return "\n\n".join(parts)
+
+
+def _tools(info: AgentInfo) -> list[dict[str, Any]]:
+    """The function tools offered on this call (not the output tool), as {name, description, parameters}."""
+    return [{"name": t.name, "description": t.description or "", "parameters": t.parameters_json_schema}
+            for t in info.function_tools]
+
+
+def tool_calls_schema(tools: list[dict[str, Any]]) -> dict[str, Any]:
+    """The schema of a reply that calls tools: {"tool_calls": [{"tool": one of `tools`, "args": {...}}, ...]}."""
+    return {"type": "object", "additionalProperties": False, "required": ["tool_calls"],
+            "properties": {"tool_calls": {"type": "array", "minItems": 1, "items": {
+                "type": "object", "additionalProperties": False, "required": ["tool", "args"],
+                "properties": {"tool": {"enum": [t["name"] for t in tools]}, "args": {"type": "object"}}}}}}
 
 
 def _schema(info: AgentInfo) -> tuple[dict[str, Any], str | None]:
@@ -67,17 +104,15 @@ def _schema(info: AgentInfo) -> tuple[dict[str, Any], str | None]:
     return {"type": "string"}, None
 
 
-def request_id(model: str, seed: Any, instructions: str, prompt: str) -> str:
-    blob = json.dumps([model, seed, instructions, prompt], ensure_ascii=False)
+def request_id(model: str, seed: Any, instructions: str, prompt: str,
+               tools: list[dict[str, Any]] | None = None) -> str:
+    """The request's id; the tools offered count only when there are some, so a call without tools keeps its id."""
+    fields: list[Any] = [model, seed, instructions, prompt, *([tools] if tools else [])]
+    blob = json.dumps(fields, ensure_ascii=False)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:24]
 
 
-def problem(reply_file: Path, schema: dict[str, Any]) -> str | None:
-    """Why this reply is not accepted, or None."""
-    try:
-        data = json.loads(reply_file.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        return f"not JSON: {exc}"
+def _invalid(data: Any, schema: dict[str, Any]) -> str | None:
     try:
         jsonschema.validate(data, schema)
     except jsonschema.ValidationError as exc:
@@ -85,30 +120,65 @@ def problem(reply_file: Path, schema: dict[str, Any]) -> str | None:
     return None
 
 
-def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0, settle_s: float = 2.0) -> FunctionModel:
+def is_tool_call(data: Any) -> bool:
+    """A reply that calls tools: an object whose only key is `tool_calls`."""
+    return isinstance(data, dict) and set(data) == {"tool_calls"}
+
+
+def problem(reply_file: Path, schema: dict[str, Any], tools: list[dict[str, Any]] | None = None) -> str | None:
+    """Why this reply is not accepted, or None. With `tools`, a reply may call them instead (`is_tool_call`): each
+    call must name an offered tool, and its args must fit that tool's parameters."""
+    try:
+        data = json.loads(reply_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return f"not JSON: {exc}"
+    if tools and is_tool_call(data):
+        if why := _invalid(data, tool_calls_schema(tools)):
+            return why
+        params = {t["name"]: t["parameters"] for t in tools}
+        for n, call in enumerate(data["tool_calls"]):
+            if why := _invalid(call["args"], params[call["tool"]]):
+                return f"tool call {n} ({call['tool']}): its args {why}"
+        return None
+    return _invalid(data, schema)
+
+
+def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0, settle_s: float = 2.0,
+                   timeout_s: float | None = None) -> FunctionModel:
     """A pydantic-ai model named `name` whose calls are answered through files under `root`. A reply is read
-    once it has not changed for `settle_s` seconds, so a file still being written is not taken half done."""
+    once it has not changed for `settle_s` seconds, so a file still being written is not taken half done. A call
+    waits as long as it takes, or `timeout_s` seconds (then TimeoutError; tests set it so they fail, not hang)."""
     root = Path(root)
 
     async def answer(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         instructions = info.instructions or ""
-        prompt = _conversation(messages)
+        tools = _tools(info)
+        prompt = _conversation(messages, frozenset(t["name"] for t in tools),
+                               frozenset(t.name for t in info.output_tools))
         seed = (info.model_settings or {}).get("seed")
         schema, tool = _schema(info)
-        rid = request_id(name, seed, instructions, prompt)
+        rid = request_id(name, seed, instructions, prompt, tools)
         request = {"id": rid, "model": name, "seed": seed, "instructions": instructions, "prompt": prompt,
                    "output_schema": schema}
+        if tools:
+            request |= {"tools": tools, "tool_calls_schema": tool_calls_schema(tools)}
         pending, reply, done = root / "pending" / f"{rid}.json", root / "replies" / f"{rid}.json", root / "done" / f"{rid}.json"
         if not reply.exists():
             _write(pending, request)
         rejected: list[str] = []
+        deadline = None if timeout_s is None else time.monotonic() + timeout_s
         while True:
+            if deadline is not None and time.monotonic() > deadline:
+                raise TimeoutError(f"exchange {name}: no accepted reply to request {rid} in {timeout_s} s")
             if reply.exists() and time.time() - reply.stat().st_mtime >= settle_s:
-                why = problem(reply, schema)
+                why = problem(reply, schema, tools)
                 if why is None:
                     data = json.loads(reply.read_text(encoding="utf-8"))
                     _write(done, request)
                     pending.unlink(missing_ok=True)
+                    if tools and is_tool_call(data):
+                        return ModelResponse(parts=[ToolCallPart(c["tool"], c["args"], tool_call_id=f"{rid[:8]}-{n}")
+                                                    for n, c in enumerate(data["tool_calls"], 1)], model_name=name)
                     if tool is not None:
                         return ModelResponse(parts=[ToolCallPart(tool, data)], model_name=name)
                     return ModelResponse(parts=[TextPart(json.dumps(data, ensure_ascii=False))], model_name=name)
@@ -151,7 +221,8 @@ def main(argv: list[str] | None = None) -> int:
     for f in pending:
         reply = args.root / "replies" / f.name
         if reply.exists():
-            why = problem(reply, json.loads(f.read_text(encoding="utf-8"))["output_schema"])
+            req = json.loads(f.read_text(encoding="utf-8"))
+            why = problem(reply, req["output_schema"], req.get("tools"))
             if why:
                 bad += 1
                 print(f"{f.stem}: {why}")

@@ -44,8 +44,8 @@ export function jobTitle(job: Pick<Job, "kind" | "refs">): string {
 /** Where the job's result is shown in the viewer, when there is a page for it. */
 export function jobTarget(job: Pick<Job, "kind" | "refs">): string | null {
   if (job.refs.run) return `/runs/${encodeURIComponent(job.refs.run)}`
-  if (job.kind === "score" && job.refs.score) return `/scores/reports/${encodeURIComponent(job.refs.score)}`
-  if (job.kind === "compare" && job.refs.score) return `/scores/compares/${encodeURIComponent(job.refs.score)}`
+  if (job.kind === "score" && job.refs.score) return `/report/reports/${encodeURIComponent(job.refs.score)}`
+  if (job.kind === "compare" && job.refs.score) return `/report/compares/${encodeURIComponent(job.refs.score)}`
   if (job.refs.proposal) return `/proposals/${encodeURIComponent(job.refs.proposal)}`
   if (job.refs.corpus) return `/corpora/${encodeURIComponent(job.refs.corpus)}`
   return null

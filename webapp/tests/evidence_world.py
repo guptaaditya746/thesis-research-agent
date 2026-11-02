@@ -7,7 +7,7 @@ The layout is the one a live run writes (docs/slurm-evidence-runbook.md), under 
                     agentic protocol), plus rag-baseline/ and agent-baseline/ answers
     cache/engine/   the engine's record cache (extractor_calls.jsonl)
     agent-work/     the agentic extractor's agent run directories
-    scores/         `evaluate score` per selection and corpus, `compare`, `shift`, `benchmark`
+    scores/         `evaluate score` per selection and corpus, `compare`, `shift`, `benchmark`, `losses`
     proposals/      `evidence propose` frame -> draft -> critic -> cards -> (a person's decision) -> freeze -> amend
 
 Every model is scripted (pydantic-ai FunctionModels as evidence/tests and evaluation/tests script them; the
@@ -36,8 +36,8 @@ from typing import Any
 from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
-PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
-AGENTIC = REPO / "evidence" / "protocols" / "rag-factuality-agentic.yaml"
+PROTOCOL = REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml"
+AGENTIC = REPO / "domains" / "rag" / "protocols" / "rag-factuality-agentic.yaml"
 NAME = "rag-tpl-w1"
 FENCE = "`" * 3
 POSIX = os.name == "posix" and shutil.which("bash") is not None and shutil.which("timeout") is not None
@@ -75,6 +75,14 @@ class EvidenceWorld:
     def copy(self, target: Path) -> EvidenceWorld:
         shutil.copytree(self.root, target)
         return dataclasses.replace(self, root=target)
+
+    def write_losses(self, losses: dict[str, Any]) -> Path:
+        """losses.json and losses.md under scores/losses, as `evaluate losses` writes them (evaluation/losses.py)."""
+        from evaluation.losses import write_losses
+
+        out = self.scores / "losses"
+        write_losses(losses, out)
+        return out
 
 
 # --- scripted models -------------------------------------------------------------------------------------
@@ -263,6 +271,7 @@ def build(root: Path, *, agent: bool | None = None) -> EvidenceWorld:
                               "--out", str(scores / f"shift-{selection}" / variant.name)]) == 0
     assert evaluate.main(["benchmark", str(scores / "cascade" / f"{NAME}-explicit"),
                           "--out", str(scores / "benchmark-tpl")]) == 0
+    assert evaluate.main(["losses", "--scores", str(scores), "--out", str(scores / "losses")]) == 0
     proposal(world.proposals / "rag-factuality")
     return world
 
@@ -323,7 +332,8 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
              "/api/ev/proposals", "/api/ev/proposals/rag-factuality", "/api/ev/runs", "/api/ev/scores",
              f"/api/ev/scores/reports/cascade-gaps~{mixed}", f"/api/ev/scores/reports/cascade~{explicit}",
              "/api/ev/scores/compares/compare-cascade", f"/api/ev/scores/compares/compare-funnel~{mixed}",
-             f"/api/ev/scores/shifts/shift-cascade~{variant}", "/api/ev/scores/benchmarks/benchmark-tpl"]
+             f"/api/ev/scores/shifts/shift-cascade~{variant}", "/api/ev/scores/benchmarks/benchmark-tpl",
+             "/api/ev/losses"]
     paths += [f"/api/ev/run-group?source=repo&name={protocol}&extractors={extractors}&strategy={strategy}"
               for protocol in ("rag-factuality", "rag-factuality-agentic")
               for extractors in ("regex-only", "cascade") for strategy in ("all", "gaps")]   # the app's key order

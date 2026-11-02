@@ -42,6 +42,9 @@ export type EffectAnswer = S["EffectAnswer"]
 export type InventoryAnswer = S["InventoryAnswer"]
 export type ConsistencyAnswer = S["ConsistencyAnswer"]
 export type BestAnswer = S["BestAnswer"]
+export type ChainingAnswer = S["ChainingAnswer"]
+export type LimitationsAnswer = S["LimitationsAnswer"]
+export type BuildsOnAnswer = S["BuildsOnAnswer"]
 /** answer.json of any question kind (a `kind` key; effect when it is absent in an old file). */
 export type RunAnswer = NonNullable<S["EvRunDetail"]["answer"]>
 export type EvAnswer = EffectAnswer
@@ -69,6 +72,10 @@ export type SynthesisScore = S["SynthesisScore"]
 export type CompareTable = S["CompareTable"]
 export type ShiftView = S["ShiftView"]
 export type BenchmarkView = S["BenchmarkView"]
+export type LossesView = S["LossesView"]
+export type Losses = S["Losses"]
+export type LossRow = S["LossRow"]
+export type SystemCost = S["SystemCost"]
 export type Question = S["Question"]
 export type Job = S["Job"]
 export type JobStep = S["JobStep"]
@@ -152,6 +159,7 @@ export const evApi = {
   compare: (id: string, signal?: AbortSignal) => getJson<CompareTable>(`/api/ev/scores/compares/${seg(id)}`, undefined, signal),
   shift: (id: string, signal?: AbortSignal) => getJson<ShiftView>(`/api/ev/scores/shifts/${seg(id)}`, undefined, signal),
   benchmark: (id: string, signal?: AbortSignal) => getJson<BenchmarkView>(`/api/ev/scores/benchmarks/${seg(id)}`, undefined, signal),
+  losses: (signal?: AbortSignal) => getJson<LossesView>("/api/ev/losses", undefined, signal),
   jobs: (signal?: AbortSignal) => getJson<Job[]>("/api/ev/jobs", undefined, signal),
   job: (id: string, signal?: AbortSignal) => getJson<Job>(`/api/ev/jobs/${seg(id)}`, undefined, signal),
   jobLog: (id: string, lines = 200, signal?: AbortSignal) => getText(`/api/ev/jobs/${seg(id)}/log`, { lines }, signal),
@@ -247,6 +255,8 @@ export const useReport = (id: string) => useEv(["scores", "reports", id], (s) =>
 export const useCompare = (id: string) => useEv(["scores", "compares", id], (s) => evApi.compare(id, s), !!id)
 export const useShift = (id: string) => useEv(["scores", "shifts", id], (s) => evApi.shift(id, s), !!id)
 export const useBenchmark = (id: string) => useEv(["scores", "benchmarks", id], (s) => evApi.benchmark(id, s), !!id)
+/** losses.json of `evaluate losses`: per domain, the questions with the engine's losses first (`losses` null when there is none). */
+export const useLosses = () => useEv(["scores", "losses"], (s) => evApi.losses(s))
 
 // --- jobs ----------------------------------------------------------------------------------------------
 

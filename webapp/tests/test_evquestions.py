@@ -11,7 +11,8 @@ from webapp.app import create_app
 from webapp.evquestions import load
 from webapp.settings import REPO, Settings
 
-PROTOCOLS = REPO / "evidence" / "protocols"
+PACK = REPO / "domains" / "rag"   # question files name protocols relative to the pack folder
+PROTOCOLS = PACK / "protocols"
 KINDS = {"rag-factuality": "effect", "rag-hallucination": "effect", "rag-latency": "effect",
          "inv-metrics": "inventory", "inv-methods": "inventory", "inv-datasets": "inventory",
          "cons-accuracy": "consistency", "cons-hallucination": "consistency",
@@ -28,9 +29,9 @@ def test_questions_api_lists_ten_with_kind(ev_world) -> None:  # noqa: ANN001
 def test_an_entry_whose_kind_differs_from_its_protocol_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "questions.yaml"
     path.write_text(f"questions:\n  - {{id: a, question: '{QUESTION}', kind: best, truth: {{metric: factual_accuracy}},"
-                    " protocol: evidence/protocols/rag-factuality.yaml}\n", encoding="utf-8")
+                    " protocol: protocols/rag-factuality.yaml}\n", encoding="utf-8")
     with pytest.raises(ValueError, match="kind"):
-        load(path, PROTOCOLS)
+        load(path, PROTOCOLS, base=PACK)
 
 
 @pytest.mark.parametrize(("entry", "message"), [
@@ -44,4 +45,4 @@ def test_truth_must_fit_the_kind(tmp_path: Path, entry: str, message: str) -> No
     path = tmp_path / "questions.yaml"
     path.write_text(f"questions:\n  - {{id: a, question: 'Q?', {entry}}}\n", encoding="utf-8")
     with pytest.raises(ValueError, match=message):
-        load(path, PROTOCOLS)
+        load(path, PROTOCOLS, base=PACK)

@@ -18,7 +18,7 @@ project venv being the main checkout's .venv (worktrees have none).
 
 --prepare copies tests/EV1/live-rerun/corpora/rag-llm-s1-mixed to <work>/llm-corpus (line endings
 normalised to LF, so the manifest sha256 match on Windows checkouts), then runs, with the project venv:
-    python -m evidence.cli run --protocol evidence/protocols/rag-factuality.yaml --corpus <work>/llm-corpus
+    python -m evidence.cli run --protocol domains/rag/protocols/rag-factuality.yaml --corpus <work>/llm-corpus
         --out <work>/runs-llm --extractors regex-only --run-id regex-llm
     evaluation oracle  --protocol ... --corpus <work>/llm-corpus --out <work>/oracle-llm
     evaluation score   --run <work>/runs-llm/regex-llm --corpus <work>/llm-corpus
@@ -52,7 +52,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 EV1 = REPO / "tests" / "EV1" / "live-rerun"
 LLM_CORPUS_SRC = EV1 / "corpora" / "rag-llm-s1-mixed"
-PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
+PROTOCOL = REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml"
 IMG = HERE / "img"
 OUT = HERE / "tim-2026-10-22.pptx"
 STUDY = "S005"
@@ -609,7 +609,7 @@ def build(d: dict, have_shot: bool) -> None:
             "engine; SPARQL optional for querying the graph). Protocol generation exists as an LLM proposal flow "
             "with a critic and choice cards, but that flow is OURS and he made it optional (§8: 'I would not "
             "make either of these extensions a requirement'), so all runs today use the hand-written protocol "
-            "evidence/protocols/rag-factuality.yaml.\n\nProvenance and replay are ours. Motivation, reported by "
+            "domains/rag/protocols/rag-factuality.yaml.\n\nProvenance and replay are ours. Motivation, reported by "
             "Aditya on 16 Oct (not in his written messages): an answer without its steps is like a calculator "
             "result, hard to check and trust. EV1: 43 engine replays, 0 mismatches (run-summary.json).\n\n"
             "Next six slides: one paper through these boxes, from the real files.")
@@ -678,7 +678,7 @@ def build(d: dict, have_shot: bool) -> None:
         cond_ = " & ".join(f"{a}{b}" for a, b in row.get("when", {}).items())
         y_lines.append(("  label:  " if k == 0 else "          ") + f"[{cond_}] → {row['then']}")
     y_lines.append("          …")
-    D.code(s, 0.6, 2.55, 6.5, 4.3, y_lines, size=13, label="evidence/protocols/rag-factuality.yaml (condensed)")
+    D.code(s, 0.6, 2.55, 6.5, 4.3, y_lines, size=13, label="domains/rag/protocols/rag-factuality.yaml (condensed)")
     rows = [("Which models and experimental conditions were compared?", "condition"),
             ("Was RAG compared against a baseline without retrieval?", "synthesis.compare: rag vs baseline"),
             ("Which metrics were used to measure factual accuracy?", "metric"),

@@ -1,8 +1,10 @@
-"""Patterns of the regex extractors: condition, metric and claim wording, and how mentions are found.
+"""How the regex extractors find mentions of condition, metric and claim wording.
 
-The patterns are data: they go into each regex extractor's `config`, so a changed pattern is a changed
-extractor id (contract principle 6). Inline flags carry case sensitivity ("RAG" is matched in capitals
-only, "accuracy" in any case).
+The wording itself is topic data: it lives in the domain pack (domains/<name>/words.yaml) and reaches each
+extractor through its `config` (the engine fills it, evidence/pack.py `Pack.extractor_config`), so a changed
+pattern is a changed extractor id (contract principle 6). Inline flags carry case sensitivity ("NLP" is
+matched in capitals only, "accuracy" in any case). Only generic wording (alias codes, qualifiers, negation,
+system head nouns) stays here.
 """
 from __future__ import annotations
 
@@ -12,80 +14,21 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 _NOUNS = r"(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+"
-# "no retrieval failures", "without retrieval errors": the words after the negation are an object, not a system.
-NOT_A_SYSTEM = r"(?!\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\b)"
 
 
-def control_cue(term: str) -> str:
-    """A control term's pattern that does not match where a negated object follows ("no retrieval failures")."""
-    return term + NOT_A_SYSTEM
+def control_cue(term: str, not_a_system: str) -> str:
+    """A control term's pattern that does not match where a negated object follows ("no tuning failures");
+    `not_a_system` is the pack's lookahead for such objects (words.yaml `not_a_system`)."""
+    return term + not_a_system
 
-
-# "RAG with reranking", "RAG without reranking", "retrieval-augmented model without reranking" name other
-# systems (ablations), not the rag condition: the optional parts are possessive so the lookahead cannot be
-# dodged by matching less.
-CONDITIONS: dict[str, list[str]] = {
-    "rag": [
-        r"(?i)\bretrieval[- ]augmented(?:\s+generation)?+" + _NOUNS + r"(?!\s+without\b)",
-        r"\bRAG\b(?:\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+"
-        r"(?!\s+(?i:with|without)\b)",
-        r"(?i)\b(?:model|LLM|system|variant|generator)\s+with\s+retrieval\b",
-    ],
-    "baseline": [control_cue(p) for p in (
-        r"(?i)\bclosed[- ]book(?:\s+(?:baseline|model|variant|system|setting|condition|LLM|generation))?",
-        r"(?i)\b(?:(?:model|LLM|system|variant|baseline|generation)\s+)?without\s+(?:any\s+)?retrieval\b",
-        r"(?i)\bno[- ]retrieval(?:\s+(?:baseline|model|variant|setting|condition))?",
-        r"(?i)\bvanilla\s+(?:LLM|model)\b",
-    )],
-}
-
-METRICS: list[tuple[str, str, bool]] = [   # pattern, canonical, higher_is_better
-    (r"(?i)\bfactual(?:ity)?\s+accuracy\b", "factual_accuracy", True),
-    (r"(?i)\b(?:answer|exact[- ]match|EM|QA)\s+accuracy\b", "factual_accuracy", True),
-    (r"(?i)\baccuracy\b", "factual_accuracy", True),
-    (r"(?i)\bexact[- ]match\b", "factual_accuracy", True),
-    (r"(?i)\bFActScore\b|\bfactuality\s+score\b", "factual_accuracy", True),
-    (r"(?i)\bhallucination[- ]rate\b|\brate\s+of\s+hallucinat(?:ion|ions|ed\s+answers)\b", "hallucination_rate", False),
-    (r"(?i)\blatency\b", "other", False),
-    (r"\bBLEU\b|\bROUGE(?:-[12L])?\b", "other", True),
-    (r"(?i)\bperplexity\b", "other", False),
-    (r"(?i)\bfluency\b", "other", True),
-    (r"\bF1\b", "other", True),
-]
-
-# Author claims: a sentence that names retrieval and states an effect. Checked in this order, so a
-# negated statement ("does not measurably reduce", "does not make the answers more accurate") is no_effect,
-# never improves: any words (adverbs, objects) may stand between "not" and the verb or the comparison.
-CLAIM_SUBJECT = r"(?i)\bretriev\w*|\bRAG\b"
-_NOT = r"\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn't|wasn't)\b"
-_VERBS = (r"improve|help|increase|change|reduce|lower|decrease|raise|boost|enhance|affect|alter|make|lead|yield"
-          r"|matter")
-CLAIMS: list[tuple[str, str]] = [
-    # Match verb endings, rather than arbitrary suffixes ("alternative" is not "alter").
-    (r"(?i)(?:" + _NOT + r")(?:\s+\w+){0,3}?\s+(?:" + _VERBS + r")(?:s|d|ed|ing)?\b"
-     r"|(?:" + _NOT + r")[^.;]{0,80}?\bmore\s+(?:accurate|factual|reliable|correct)"
-     r"|\b(?:fails?|failed)\s+to\s+(?:improve|help)|\bno\s+(?:significant\s+|clear\s+|measurable\s+)?"
-     r"(?:improvement|effect|difference|gain|benefit|change)|\bon\s+par\s+with\b|\b(?:essentially\s+)?unchanged\b",
-     "no_effect"),
-    (r"(?i)\b(?:increases?|increased|raises?|raised)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat"
-     r"|\bmore\s+hallucinat|\bless\s+(?:accurate|factual|correct)\b"
-     r"|\b(?:hurts?|harms?|harmed|degrades?|degraded|worsens?|worsened|impairs?|impaired)\b"
-     r"|\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased)\s+(?:the\s+)?(?:factual\s+|answer\s+)?accuracy",
-     "worsens"),
-    (r"(?i)\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased|cuts?)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat"
-     r"|\b(?:fewer|less)\s+hallucinat"
-     r"|\b(?:improves?|improved|improving|increases?|increased|boosts?|boosted|raises?|raised|enhances?|enhanced)\b"
-     r"|\b(?:outperforms?|outperformed)\b|\bmore\s+(?:factual|accurate)\b",
-     "improves"),
-]
 
 ALIAS = r"\s*\(\s*([A-Za-z][\w+\-]{0,5})\s*\)"   # a short code in brackets right after a mention: "(R)"
-QUALIFIER = r"\s*\(([^)]{1,40})\)"                 # a bracketed qualifier after a condition: "RAG (no retrieval)"
+QUALIFIER = r"\s*\(([^)]{1,40})\)"                 # a bracketed qualifier after a condition: "TM (no tuning)"
 NEGATION = r"(?i)\b(?:no|without|w/o)\b"
-# a system noun the condition's own pattern left out, between it and its code: "closed-book baseline (B)"
+# a system noun the condition's own pattern left out, between it and its code: "untuned baseline (B)"
 _HEAD_NOUNS = r"(?i:model|baseline|system|variant|setting|pipeline|condition|configuration|LLM|approach|generator)"
 _HEAD = r"(?:\s+" + _HEAD_NOUNS + r")?"
-# a mention that is a negated term on its own ("no retrieval"), not one ending in its system ("no-retrieval baseline")
+# a mention that is a negated term on its own ("no tuning"), not one ending in its system ("no-tuning baseline")
 _BARE_NEGATION = r"(?i)^(?:no|without|w/o)\b(?!.*[\s-]" + _HEAD_NOUNS + r"$)"
 CLAIM_SECTIONS = ("conclusion", "abstract", "discussion", "summary")   # where an author claim is looked for first
 
@@ -122,35 +65,36 @@ def find_all(text: str, patterns: list[tuple[str, str, bool]], start: int = 0, e
     return out
 
 
-def condition_patterns(conditions: dict[str, list[str]] | None = None) -> list[tuple[str, str, bool]]:
-    return [(p, role, True) for role, ps in (conditions or CONDITIONS).items() for p in ps]
+def condition_patterns(conditions: dict[str, list[str]]) -> list[tuple[str, str, bool]]:
+    return [(p, role, True) for role, ps in conditions.items() for p in ps]
 
 
-def _negated_object(text: str, m: Mention, end: int) -> bool:
-    """A bare negated term followed by an object: "no retrieval failures" names no system ("no-retrieval
+def _negated_object(text: str, m: Mention, end: int, not_a_system: str) -> bool:
+    """A bare negated term followed by an object: "no tuning failures" names no system ("no-tuning
     baseline errors" does: the errors are the baseline's)."""
-    return bool(_compiled(_BARE_NEGATION).match(m.text)) and _compiled(NOT_A_SYSTEM).match(text, m.end, end) is None
+    return bool(_compiled(_BARE_NEGATION).match(m.text)) and _compiled(not_a_system).match(text, m.end, end) is None
 
 
 def find_conditions(text: str, patterns: list[tuple[str, str, bool]], roles: Sequence[str],
-                    start: int = 0, end: int | None = None, treatment: str | None = None) -> list[Mention]:
+                    start: int = 0, end: int | None = None, treatment: str | None = None, *,
+                    not_a_system: str) -> list[Mention]:
     """Condition mentions in text[start:end] as `find_all` finds them, with their local qualifier: a bracketed
-    part right after a mention that names a role ("RAG (no retrieval)": that role) or holds a negation ("RAG
+    part right after a mention that names a role ("TM (no tuning)": that role) or holds a negation ("TM
     (no reranking)": other) belongs to the mention; an alias code ("(B)") does not. Only a treatment head
-    becomes other (an ablation); any other head keeps its role ("the closed-book model (no fine-tuning)"). A
-    negated object ("no retrieval failures") is no mention. `roles`: the role enum; without "other" an "other"
-    mention is dropped. `treatment`: the treatment role (default: the first pattern's)."""
+    becomes other (an ablation); any other head keeps its role ("the baseline model (no fine-tuning)"). A
+    negated object ("no tuning failures", by the pack's `not_a_system` lookahead) is no mention. `roles`: the
+    role enum; without "other" an "other" mention is dropped. `treatment`: the treatment role (default: the first pattern's)."""
     end = len(text) if end is None else end
     treatment = treatment if treatment is not None else (patterns[0][1] if patterns else None)
     out: list[Mention] = []
     covered = start
     for m in find_all(text, patterns, start, end):
-        if m.start < covered or _negated_object(text, m, end):
+        if m.start < covered or _negated_object(text, m, end, not_a_system):
             continue
         covered = m.end
         q = _compiled(QUALIFIER).match(text, m.end, end)
         if q and not _compiled(ALIAS).fullmatch(text, m.end, q.end()):
-            inner = [i for i in find_all(text, patterns, q.start(1), q.end(1)) if not _negated_object(text, i, q.end(1))]
+            inner = [i for i in find_all(text, patterns, q.start(1), q.end(1)) if not _negated_object(text, i, q.end(1), not_a_system)]
             role = inner[0].key if inner else "other" if _compiled(NEGATION).search(q.group(1)) else None
             if role == "other" and m.key != treatment:
                 role = None   # a qualified control is still the control

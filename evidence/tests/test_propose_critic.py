@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from evidence.pack import protocol_path
 from evidence.propose import critic, frame
 from evidence.propose.common import dump_yaml
 
@@ -53,7 +54,7 @@ def test_critic_flags_a_broken_draft(tmp_path: Path) -> None:
 
 def test_checks_on_a_protocol_that_does_not_parse() -> None:
     f = frame.annotate("Q?", frame.FrameReply.model_validate(RAG_FRAME))
-    text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
+    text = protocol_path("rag", "rag-factuality").read_text(encoding="utf-8")
     broken = text.replace("    - {then: insufficient}", "    - {when: {neutral: \"==0\"}, then: insufficient}")
     checks = by_id(critic.checks(broken, f))
     assert not checks["parses"]["ok"] and not checks["label_complete"]["ok"]
@@ -66,14 +67,14 @@ def test_coverage_names_what_the_regex_patterns_miss() -> None:
     reply["control"]["synonyms"].append("parametric-only model")
     reply["outcomes"][0]["synonyms"].append("F1")
     f = frame.annotate("Q?", frame.FrameReply.model_validate(reply))
-    text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
+    text = protocol_path("rag", "rag-factuality").read_text(encoding="utf-8")
     check = by_id(critic.checks(text, f))["terms_cover_synonyms"]
     assert not check["ok"]
     assert "'parametric-only model' (regex_condition)" in check["message"] and "'F1' (regex_metric)" in check["message"]
 
 
 def test_critic_says_exhaustive_ignores_params() -> None:
-    text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
+    text = protocol_path("rag", "rag-factuality").read_text(encoding="utf-8")
     check = by_id(critic.checks(text, None))["locate_params_used"]
     assert not check["ok"] and "chunk_chars" in check["message"] and "top_k" in check["message"]
     bare = "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith(("chunk_chars:", "top_k:")))

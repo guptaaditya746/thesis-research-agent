@@ -13,13 +13,20 @@ import pytest
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
+from evidence.pack import load_pack, protocol_path
 from jsonio import sha256_hex
 
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE / "fixtures" / "papers"
-PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"
+PROTOCOL = protocol_path("rag", "rag-factuality")
 POISON = ("ground_truth.json", "corpus.json", "fidelity.json")
 DOCS = ("S001", "S002", "S003", "S004", "S005")
+
+
+def pack_words(extractor: str, evidence_type: str) -> dict[str, Any]:
+    """The rag pack's words for an extractor built directly (the engine fills them; a test calling
+    extractors.get itself must too: the extractors have no word fallback in code)."""
+    return load_pack("rag").extractor_config(evidence_type, extractor)
 
 
 def make_corpus(root: Path, docs: tuple[str, ...] = DOCS) -> Path:
@@ -47,13 +54,48 @@ def corpus_of(root: Path, docs: dict[str, str]) -> Path:
     return root
 
 
-def regex_run(docs: dict[str, str], tmp: Path, protocol: Path = PROTOCOL) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(answer.json, evidence items by id) of a regex-only run over inline papers."""
+def regex_run(docs: dict[str, str], tmp: Path, protocol: Path = PROTOCOL,
+              domains: Path | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(answer.json, evidence items by id) of a regex-only run over inline papers; `domains` is the folder of the
+    protocol's pack when it is not domains/ (a test pack)."""
     from evidence import engine
     run = engine.run(protocol, corpus_of(tmp / "corpus", docs), tmp / "runs", selection="regex-only", provider=None,
-                     strategy="all")
+                     strategy="all", domains=domains)
     items = [json.loads(x) for x in (run / "evidence.jsonl").read_text(encoding="utf-8").splitlines()]
     return json.loads((run / "answer.json").read_text(encoding="utf-8")), {i["item_id"]: i for i in items}
+
+
+def regex_run_dir(docs: dict[str, str] | list[str] | Path, tmp: Path, protocol: Path = PROTOCOL, *,
+                  domains: Path | None = None, settings: dict[str, Any] | None = None) -> Path:
+    """The run directory of a regex-only run (strategy `all`, no provider) written under `tmp / "runs"`.
+
+    `docs`: paper texts by id, a list of texts (ids P1, P2, ...), or the path of a corpus already on disk.
+    `domains`: the folder of the protocol's pack when it is not domains/. `settings`: more `engine.run` keyword
+    arguments (`names`, `relink`, `run_id`, ...), over the defaults above."""
+    from evidence import engine
+    if isinstance(docs, Path):
+        corpus = docs
+    else:
+        texts = docs if isinstance(docs, dict) else {f"P{n}": text for n, text in enumerate(docs, 1)}
+        corpus = corpus_of(tmp / "corpus", texts)
+    kwargs: dict[str, Any] = {"selection": "regex-only", "provider": None, "strategy": "all", "domains": domains,
+                              **(settings or {})}
+    return engine.run(protocol, corpus, tmp / "runs", **kwargs)
+
+
+def run_json(out: Path) -> dict[str, Any]:
+    """The run.json of run directory `out`."""
+    return json.loads((out / "run.json").read_text(encoding="utf-8"))
+
+
+def funnel_json(out: Path) -> dict[str, Any]:
+    """The funnel.json of run directory `out`."""
+    return json.loads((out / "funnel.json").read_text(encoding="utf-8"))
+
+
+def answer_of(out: Path) -> dict[str, Any]:
+    """The answer.json of run directory `out`."""
+    return json.loads((out / "answer.json").read_text(encoding="utf-8"))
 
 
 def measurements(items: dict[str, Any], doc: str) -> list[tuple[str, float]]:
@@ -64,6 +106,12 @@ def measurements(items: dict[str, Any], doc: str) -> list[tuple[str, float]]:
             start = min(s["selector"]["start"] for s in i["spans"] if s["role"] == "value")
             out.append((start, items[i["links"]["condition"]]["fields"]["role"], i["fields"]["value"]))
     return [(role, value) for _, role, value in sorted(out)]
+
+
+@pytest.fixture(autouse=True)
+def code_commit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every sealed run names commit `test`: no `git rev-parse` per run, and the manifest does not depend on HEAD."""
+    monkeypatch.setenv("EVIDENCE_CODE_COMMIT", "test")
 
 
 @pytest.fixture

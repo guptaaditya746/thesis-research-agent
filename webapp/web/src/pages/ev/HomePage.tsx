@@ -4,6 +4,8 @@
  * baselines beside the engine. Below: what is on disk, the active jobs, and the directories the app reads and
  * its jobs write.
  */
+import { Link } from "react-router"
+
 import { isActiveJob, useCorpora, useEvConfig, useEvRuns, useJobs, useScores } from "@/api/ev"
 import { QuestionStep } from "@/components/flow/QuestionStep"
 import { JobPanel } from "@/components/jobs/JobPanel"
@@ -27,7 +29,7 @@ export default function HomePage() {
       {corpora.isPending || runs.isPending || scores.isPending ? <Skeleton className="h-5 w-full max-w-2xl" aria-label="Counting what is on disk" /> : (
         <p className="text-sm text-muted-foreground">
           On disk: {corpora.data?.length ?? "?"} corpora, {runs.data?.filter((r) => r.kind === "engine").length ?? "?"} engine runs,{" "}
-          {runs.data?.filter((r) => r.kind === "baseline").length ?? "?"} baseline answers, {scores.data?.reports.length ?? "?"} score reports
+          {runs.data?.filter((r) => r.kind === "baseline").length ?? "?"} baseline answers, <Link to="/report" className="underline">{scores.data?.reports.length ?? "?"} score reports</Link>{" "}
           (made here, on the command line or on Slurm: the same layout).
         </p>
       )}

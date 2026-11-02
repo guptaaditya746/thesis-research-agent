@@ -19,25 +19,38 @@ every corpus that records their sha256 are unchanged. Fields added later do the 
 """
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import yaml
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationInfo, model_validator
 
 from . import rules
 from .contract import Budget, digest
 from .evidence_types import EvidenceType
 
+if TYPE_CHECKING:   # pack.py imports this module (Strict); the pack is imported where it is used
+    from .pack import FieldName, Pack, Role, RoleMap
+
+# The pack of a protocol with no `domain:` key, named in domains/default.yaml (code names no pack, D35). Keep that
+# file frozen: a protocol without `domain:` hashes with the default left out (DIGEST_OMIT_AT_DEFAULT), so naming
+# another default pack would silently move every such protocol, and its hash's meaning, to that pack.
+DEFAULT_PACK: str = yaml.safe_load((Path(__file__).resolve().parents[1] / "domains" / "default.yaml")
+                                   .read_text(encoding="utf-8"))["pack"]
+
 LocateStrategy = Literal["exhaustive", "bm25", "agent"]
 # What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,
-# or which method kind wins. Each kind has its own block (`synthesis`, `inventory`, `best`, `consistency`).
-Kind = Literal["effect", "inventory", "consistency", "best"]
+# which method kind wins, whether A beats C through a shared B (chaining, spec section 6.10), the limitations
+# papers report, or which studies build on which (section 6.18). Each kind has its own block (`synthesis`,
+# `inventory`, `best`, `consistency`, `chaining`, `limitations`, `builds_on`).
+Kind = Literal["effect", "inventory", "consistency", "best", "chaining", "limitations", "builds_on"]
 # The blocks each kind needs; a block of another kind is refused (Protocol._consistent).
 KIND_BLOCKS: dict[str, tuple[str, ...]] = {"effect": ("synthesis",), "consistency": ("synthesis", "consistency"),
-                                           "inventory": ("inventory",), "best": ("best",)}
+                                           "inventory": ("inventory",), "best": ("best",), "chaining": ("chaining",),
+                                           "limitations": ("limitations",), "builds_on": ("builds_on",)}
 
 
 class Strict(BaseModel):
@@ -70,6 +83,9 @@ class EvidenceTypeSpec(Strict):
     description: str = ""
     fields: dict[str, Any]                  # JSON schema (an object schema) of an item's fields
     links: dict[str, EvidenceType] = Field(default_factory=dict)   # link name -> evidence type it points to
+    # links an item may leave out (a value copied from an earlier study links its dependency; others link none);
+    # every other link is required
+    optional_links: tuple[str, ...] = ()
     context: tuple[EvidenceType, ...] = ()  # earlier types whose items the extractors receive
     roles: tuple[str, ...] = Field(min_length=1)   # span roles; the first one is required on every item
     merge_key: tuple[str, ...] | None = None       # fields compared when merging a cascade (default: all)
@@ -80,8 +96,10 @@ class EvidenceTypeSpec(Strict):
 
     @property
     def schema_sha256(self) -> str:
-        """The task's field_schema_sha256: fields and links together, so a change to either is a new task."""
-        return digest({"fields": self.fields, "links": self.links})
+        """The task's field_schema_sha256: fields and links together, so a change to either is a new task (the
+        optional links too, when there are any, so a type without them hashes as before they existed)."""
+        optional = {"optional_links": list(self.optional_links)} if self.optional_links else {}
+        return digest({"fields": self.fields, "links": self.links, **optional})
 
     @property
     def properties(self) -> dict[str, Any]:
@@ -104,8 +122,11 @@ SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False
                                                 "reason": {"type": "string", "minLength": 1, "description": "why, in one sentence"}}}
 # Fields added after protocols were hashed (dotted path -> default): left out of `Protocol.sha256` while at
 # their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
+# A `*` step stands for every key of that mapping (each evidence type).
 DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject", "kind": "effect", "synthesis": None,
-                                          "inventory": None, "best": None, "consistency": None}
+                                          "inventory": None, "best": None, "consistency": None, "domain": DEFAULT_PACK,
+                                          "chaining": None, "limitations": None, "builds_on": None,
+                                          "evidence_types.*.optional_links": []}
 
 SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
 
@@ -214,9 +235,10 @@ class Synthesis(Strict):
 
 
 class Inventory(Strict):
-    """An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to
-    the other names it goes by."""
-    target: Literal["metric", "condition", "dataset"]
+    """An inventory question: list every distinct item of one evidence type. `target` is any evidence type the
+    protocol declares whose pack type has a name field (Protocol checks both); `same` maps a canonical name to the
+    other names it goes by."""
+    target: str = Field(min_length=1)
     same: dict[str, tuple[str, ...]] = Field(default_factory=dict)
 
 
@@ -233,6 +255,28 @@ class Consistency(Strict):
     by: Literal["direction"] = "direction"
 
 
+class Chaining(Strict):
+    """A chaining question (spec section 6.10): is `source` better than `target` on `metric`, through compared
+    things each was tested against (at most `max_hops` steps)? `min_effect` is the neutral band of every step."""
+    source: str = Field(min_length=1)
+    target: str = Field(min_length=1)
+    metric: QuestionMetric
+    min_effect: float = Field(gt=0)
+    max_hops: int = Field(default=2, ge=1)
+
+
+class LimitationsQ(Strict):
+    """A limitations question (spec section 6.18): the limitations papers report, for one compared thing (`thing`)
+    or for every one (None)."""
+    thing: str | None = None
+
+
+class BuildsOnQ(Strict):
+    """A builds-on question (spec section 6.18): which studies build on which, for one compared thing (`thing`) or
+    for every one (None)."""
+    thing: str | None = None
+
+
 class Protocol(Strict):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*$")
     version: int = Field(ge=1)              # the protocol format (2: Part C)
@@ -246,9 +290,19 @@ class Protocol(Strict):
     inventory: Inventory | None = None
     best: Best | None = None
     consistency: Consistency | None = None
+    chaining: Chaining | None = None
+    limitations: LimitationsQ | None = None
+    builds_on: BuildsOnQ | None = None
+    domain: str = Field(default=DEFAULT_PACK, pattern=r"^[a-z0-9][a-z0-9_-]*$")   # the pack in domains/ (no key: the default)
+    # The folder the pack is read from (`parse(..., domains=)`; None: pack.DOMAINS). Not part of the protocol's
+    # content or hash: the same protocol text under a test pack folder is the same protocol.
+    _domains: Path | None = PrivateAttr(default=None)
 
     @model_validator(mode="after")
-    def _consistent(self) -> Protocol:
+    def _consistent(self, info: ValidationInfo) -> Protocol:
+        root = (info.context or {}).get("domains")
+        if root is not None:
+            self._domains = Path(root)
         own = KIND_BLOCKS[self.kind]
         for block in own:
             if getattr(self, block) is None:
@@ -259,6 +313,12 @@ class Protocol(Strict):
                                  f"(it belongs to another kind; set kind or remove the block)")
         if SCREEN_TYPE in self.evidence_types:
             raise ValueError(f"evidence_types may not be named {SCREEN_TYPE!r}: it is the funnel's screening pseudo type")
+        from .pack import check
+        pack = self.pack()
+        check(pack, [self.kind])   # the pack has a type of every role the kind needs (spec section 6.2)
+        unknown = [t for t in self.evidence_types if t not in pack.types]
+        if unknown:
+            raise ValueError(f"evidence_types {unknown} are not types of pack {pack.name!r} (it has {sorted(pack.types)})")
         for name, spec in self.evidence_types.items():
             try:
                 Draft202012Validator.check_schema(spec.fields)
@@ -272,58 +332,105 @@ class Protocol(Strict):
             for target in spec.links.values():
                 if target not in spec.context:
                     raise ValueError(f"{name} links to {target!r} but does not list it as context")
+            unknown_links = [link for link in spec.optional_links if link not in spec.links]
+            if unknown_links:
+                raise ValueError(f"{name}.optional_links names {unknown_links}, which are not links of {name}")
             for bound in spec.bounds:
                 if bound.field not in spec.properties or (bound.when and bound.when.link not in spec.links):
                     raise ValueError(f"{name}.bounds names an unknown field or link: {bound}")
             missing = [k for k in spec.merge_key or () if k not in spec.properties]
             if missing:
                 raise ValueError(f"{name}.merge_key names unknown fields {missing}")
+        from .pack import RoleMap
+        roles = RoleMap(pack)
         if self.synthesis is not None:
-            self._synthesis_matches_types()
-        self._kind_matches_types()
+            self._synthesis_matches_types(roles)
+        self._kind_matches_types(roles)
         self.phases()  # raises on a cycle
         return self
 
-    def _synthesis_matches_types(self) -> None:
-        """The synthesis parameters name values the evidence types can carry (when the types declare enums)."""
+    def _synthesis_matches_types(self, roles: RoleMap) -> None:
+        """The synthesis parameters name values the evidence types can carry (when the types declare enums): the
+        compared sides (the compared thing's side field), the metrics (the metric's canonical field) and the claim
+        map (the claim's direction field), each type found by its role in the pack."""
+        from .pack import Role
         s = self.synthesis
         assert s is not None
-        roles = self.evidence_types["condition"].enum_of("role") if "condition" in self.evidence_types else None
-        if roles is not None:
-            bad = [r for r in (s.compare.treatment, s.compare.control) if r not in roles]
+        side = self._enum(roles, Role.COMPARED_THING, "side")
+        if side is not None:
+            (etype, field), allowed = side
+            bad = [r for r in (s.compare.treatment, s.compare.control) if r not in allowed]
             if bad:
-                raise ValueError(f"synthesis.compare names roles {bad} that condition.role does not allow {roles}")
-        canon = self.evidence_types["metric"].enum_of("canonical") if "metric" in self.evidence_types else None
+                raise ValueError(f"synthesis.compare names roles {bad} that {etype}.{field} does not allow {allowed}")
+        canon = self._enum(roles, Role.METRIC, "canonical")
         if canon is not None:
-            bad = [m for m in s.metric_names if m not in canon]
+            (etype, field), allowed = canon
+            bad = [m for m in s.metric_names if m not in allowed]
             if bad:
-                raise ValueError(f"synthesis.metrics names {bad}, which metric.canonical does not allow {canon}")
-        claims = (self.evidence_types["author_claim"].enum_of("direction")
-                  if "author_claim" in self.evidence_types else None)
-        if claims is not None and set(s.claim_map) != set(claims):
-            raise ValueError(f"synthesis.claim_map must map exactly author_claim.direction {claims}; got {sorted(s.claim_map)}")
+                raise ValueError(f"synthesis.metrics names {bad}, which {etype}.{field} does not allow {allowed}")
+        claims = self._enum(roles, Role.CLAIM, "direction")
+        if claims is not None:
+            (etype, field), allowed = claims
+            if set(s.claim_map) != set(allowed):
+                raise ValueError(f"synthesis.claim_map must map exactly {etype}.{field} {allowed}; got {sorted(s.claim_map)}")
 
-    def _kind_matches_types(self) -> None:
+    def _enum(self, roles: RoleMap, role: Role, which: FieldName) -> tuple[tuple[str, str], list[Any]] | None:
+        """((type, field), the field's enum) for the protocol's type of `role` and its `which` field; None when the
+        protocol declares no type of that role, or the type's field has no enum."""
+        etype = roles.type_in(role, self.evidence_types)
+        if etype is None:
+            return None
+        field = roles.field(etype, which)
+        allowed = self.evidence_types[etype].enum_of(field)
+        return None if allowed is None else ((etype, field), allowed)
+
+    def _kind_matches_types(self, roles: RoleMap) -> None:
         """The kind's block names evidence types and values the protocol declares."""
-        if self.kind == "consistency" and "author_claim" not in self.evidence_types:
-            raise ValueError("a consistency protocol needs an author_claim evidence type")
-        if self.inventory is not None and self.inventory.target not in self.evidence_types:
-            raise ValueError(f"inventory.target {self.inventory.target!r} is not a declared evidence type")
+        from .pack import Role
+        if self.kind == "consistency" and not any(t in self.evidence_types for t in roles.types_of(Role.CLAIM)):
+            raise ValueError(f"a consistency protocol needs an evidence type of role {Role.CLAIM.value!r} "
+                             f"(pack {roles.pack.name!r}: {roles.types_of(Role.CLAIM)})")
+        if self.inventory is not None:
+            target = self.inventory.target
+            if target not in self.evidence_types:
+                raise ValueError(f"inventory.target {target!r} is not a declared evidence type")
+            if roles.field_or_none(target, "name") is None:
+                raise ValueError(f"inventory.target {target!r}: pack {roles.pack.name!r} declares no name_field for it")
+        limitation = roles.type_in(Role.LIMITATION, self.evidence_types)
+        if limitation is not None:   # the categories a limitation can have are the pack's, so a run's counts name them
+            enum = self.evidence_types[limitation].enum_of("category")
+            if enum is None or set(enum) != set(roles.pack.limitation_categories):
+                raise ValueError(f"{limitation}.category enum {enum} must equal pack {roles.pack.name!r} "
+                                 f"limitation_categories {roles.pack.limitation_categories}")
         if self.best is not None:
-            enum = self.evidence_types["condition"].enum_of("kind") if "condition" in self.evidence_types else None
+            thing = roles.type_in(Role.COMPARED_THING, self.evidence_types)
+            field = roles.field_or_none(thing, "kind") if thing is not None else None
+            enum = self.evidence_types[thing].enum_of(field) if thing is not None and field is not None else None
             if enum is None or set(self.best.kinds) != set(enum):
-                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal condition.kind enum {enum}")
+                where = f"{thing}.{field}" if thing and field else f"the kind field of the {Role.COMPARED_THING.value} type"
+                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal {where} enum {enum}")
+
+    def pack(self) -> Pack:
+        """The protocol's domain pack (from its `domains` folder, else domains/), its types registered."""
+        return _pack(self.domain, self._domains)
+
+    def roles(self) -> RoleMap:
+        """The pack's evidence types by role (pack.RoleMap)."""
+        from .pack import RoleMap
+        return RoleMap(self.pack())
 
     @property
     def sha256(self) -> str:
         data = self.model_dump(mode="json", exclude={"revision"} if self.revision is None else None)
         for path, default in DIGEST_OMIT_AT_DEFAULT.items():
             *parents, name = path.split(".")
-            node: Any = data
+            nodes: list[Any] = [data]
             for key in parents:
-                node = node.get(key) if isinstance(node, dict) else None
-            if isinstance(node, dict) and node.get(name, object()) == default:
-                del node[name]
+                nodes = [n for node in nodes if isinstance(node, dict)
+                         for n in (node.values() if key == "*" else [node.get(key)])]
+            for node in nodes:
+                if isinstance(node, dict) and node.get(name, object()) == default:
+                    del node[name]
         return digest(data)
 
     def phases(self) -> list[EvidenceType]:
@@ -339,12 +446,29 @@ class Protocol(Strict):
         return done
 
 
-def parse(text: str) -> Protocol:
+@lru_cache(maxsize=None)
+def _cached_pack(domain: str, root: Path) -> Pack:
+    from .pack import load_pack
+    return load_pack(domain, root=root)
+
+
+def _pack(domain: str, root: Path | None = None) -> Pack:
+    """The protocol's domain pack, read once per process from `root` (None: domains/, pack.DOMAINS read at call
+    time), its types registered with the contract (each time; registering again is a no-op) so items of them
+    validate."""
+    from . import pack
+    loaded = _cached_pack(domain, Path(root) if root is not None else pack.DOMAINS)
+    pack.register_pack(loaded)
+    return loaded
+
+
+def parse(text: str, domains: Path | str | None = None) -> Protocol:
+    """The protocol in `text`; its pack is read from `domains` (None: domains/)."""
     data = yaml.safe_load(text)
     if not isinstance(data, dict):
         raise ValueError("a protocol is a YAML mapping")
-    return Protocol.model_validate(data)
+    return Protocol.model_validate(data, context={"domains": Path(domains)} if domains is not None else None)
 
 
-def load(path: Path | str) -> Protocol:
-    return parse(Path(path).read_bytes().decode("utf-8"))
+def load(path: Path | str, domains: Path | str | None = None) -> Protocol:
+    return parse(Path(path).read_bytes().decode("utf-8"), domains)

@@ -2,10 +2,10 @@
 
 `definitions` finds "Long Form (LF)" and "LF (Long Form)" where the short form's letters are, in order, the
 initials of the long form's words (the parts of a hyphenated word count as words; "of", "the" and similar may
-be left out). It also reads phrase definitions ("hallucination rate, abbreviated HR", "the vanilla LLM, denoted
+be left out). It also reads phrase definitions ("error rate, abbreviated ER", "the plain model, denoted
 by the code B", "hereafter CB", "FLA for short"); a one-letter code only with the "code" wording, and a code
 names a condition, never a metric. The two extractors then find every use of such a short form whose long form names a protocol
-term (the terms the regex extractors use, evidence/extractors/terms.py): "FLA" in a table header is the metric
+term (the terms the regex extractors use, from the config: the domain pack's words or the protocol's): "FLA" in a table header is the metric
 "fact-level accuracy". The item's name is the long form, its role or canonical comes from the term found in the
 long form, and its spans are on the short forms. A definition anywhere in the document is used inside whatever
 parts the task allows. Own module, so every existing extractor keeps its id.
@@ -30,11 +30,6 @@ AFTER_LONG = re.compile(r"\(\s*(" + SHORT + r")\s*\)")                        # 
 BEFORE_LONG = re.compile(r"(?<![\w-])(" + SHORT + r")\s*\(([^()\n]{3,80})\)")  # "LF (long form)"
 BREAK = re.compile(r"[.;:!?\n|()]")
 MAX_WORDS = 8
-# Wording for the question canonicals that terms.METRICS lacks, consulted after it ("unsupported-answer rate").
-SUPPLEMENT: list[tuple[str, str, bool]] = [
-    (r"(?i)\bhallucinat\w*|\bunsupported\b|\binvented\b|\bfabricat\w*", "hallucination_rate", False),
-    (r"(?i)\baccura\w*|\bcorrect\w*", "factual_accuracy", True),
-]
 # a long form that ends in a measure noun, and names no known term, is an "other" metric
 METRIC_NOUN = re.compile(r"(?i)\b(?:rate|score|ratio|frequency|error|accuracy|latency|time)\s*$")
 
@@ -99,7 +94,7 @@ PHRASES = [
     re.compile(r"(?:\s*,\s*or|\s*\()\s*(" + SHORT + r")\s+for\s+short\b(?:\s*\))?"),
 ]
 CLAUSE_START = re.compile(r"[.!?;:\n]\s*")
-# words between the long form and the phrase: "the vanilla LLM, which is denoted"; "and"/"it" mean the phrase
+# words between the long form and the phrase: "the plain model, which is denoted"; "and"/"it" mean the phrase
 # speaks of the sentence's subject ("..., and is denoted by its code R")
 TRAILING = re.compile(r"(?i)(?:[\s,(]+|\b(?:which|that|it|is|are|was|and|also)\b)+$")
 CUT = re.compile(r"(?i)^.*(?:,|\(|:|\b(?:is|are|was|with|as|called|on|of|for|reports?|uses?|runs?|measures?|"
@@ -136,7 +131,7 @@ SUBJECT_END = re.compile(r"(?i),\s*which\b|;|,\s*and\b|\band\s+it\b|\bwhich\b")
 
 
 def _subject(text: str, m: re.Match[str], *, code: bool) -> list[Definition]:
-    """"The vanilla LLM is prompted with the question, and it is denoted by the code B": the phrase speaks of the
+    """"The plain model is prompted with the question, and it is denoted by the code B": the phrase speaks of the
     sentence's subject. The long form is the sentence up to its first clause break ("which", "; ", ", and"),
     marked `subject`: the item takes the term found in it as its name (Abbrev.named)."""
     cuts = [c.end() for c in SENTENCE_START.finditer(text, max(0, m.start() - 400), m.start())]
@@ -172,7 +167,8 @@ class Abbrev:
     def __init__(self, config: dict[str, Any]) -> None:
         self.given = {k: v for k, v in config.items() if k in regex.INJECTED}
         self.patterns = self.default_patterns() | {k: v for k, v in config.items() if k not in regex.INJECTED}
-        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
+        self.emits = base.emitted(self.given, self.evidence_type)
+        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex", evidence_types=(self.emits,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config={**self.given, **self.patterns}, determinism="exact")
 
     def default_patterns(self) -> dict[str, Any]:
@@ -189,7 +185,7 @@ class Abbrev:
             if uses:
                 spans = [base.span(task, text, s, e, role) for s, e in uses[: self.patterns["max_spans"]]]
                 found.append((self.fields(long, mention), {}, spans))
-        items: list[Item] = base.group(self.evidence_type, found)
+        items: list[Item] = base.group(self.emits, found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
 
@@ -215,15 +211,12 @@ class Abbrev:
 class AbbrevCondition(Abbrev):
     evidence_type, name = "condition", "abbrev_condition"
 
-    def default_patterns(self) -> dict[str, Any]:
-        return super().default_patterns() | {"conditions": terms.CONDITIONS}
-
     def term(self, long: str) -> terms.Mention | None:
         enum = self.given.get("field_schema", {}).get("properties", {}).get("role", {}).get("enum")
         roles = list(enum or self.patterns["conditions"])
         treatment = (self.given.get("compare") or {}).get("treatment")
         mentions = terms.find_conditions(long, terms.condition_patterns(self.patterns["conditions"]), roles,
-                                         treatment=treatment)
+                                         treatment=treatment, not_a_system=self.patterns["not_a_system"])
         return mentions[0] if mentions else None
 
     def fields(self, long: str, mention: terms.Mention) -> dict[str, Any]:
@@ -233,15 +226,12 @@ class AbbrevCondition(Abbrev):
 class AbbrevMetric(Abbrev):
     evidence_type, name = "metric", "abbrev_metric"
 
-    def default_patterns(self) -> dict[str, Any]:
-        return super().default_patterns() | {"metrics": [list(m) for m in terms.METRICS],
-                                             "supplement": [list(m) for m in SUPPLEMENT]}
-
     def term(self, long: str) -> terms.Mention | None:
         found = terms.find_all(long, [tuple(m) for m in self.patterns["metrics"]])  # type: ignore[misc]
         if found:
             return found[0]
-        for pattern, canonical, higher in self.patterns["supplement"]:   # wording terms.METRICS lacks
+        # wording the metric patterns lack, consulted after them ("unsupported-answer rate"; pack metric_supplement)
+        for pattern, canonical, higher in self.patterns["supplement"]:
             if re.search(pattern, long):
                 return terms.Mention(0, len(long), canonical, long, higher)
         enum = self.given.get("field_schema", {}).get("properties", {}).get("canonical", {}).get("enum")

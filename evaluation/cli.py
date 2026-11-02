@@ -10,17 +10,54 @@
     evaluate compare REPORT [REPORT ...] [--corpora DIR] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
+    evaluate losses --scores DIR --out DIR
     evaluate review --csv REVIEW.csv
+    evaluate scirex corpus --jsonl F --out DIR [--limit N]
+    evaluate scirex score --run R --corpus C --out D [--estimate ESTIMATE.json]
+    evaluate scilead ids --data DIR --out ids.txt
+    evaluate scilead score --run R --corpus C --data DIR --out D
+    evaluate yun corpus --repo DIR --ei DIR --out C
+    evaluate yun score --run R --corpus C --out D
+    evaluate edits apply --corpus C --edits F --out DIR
+    evaluate edits check --original R --runs DIR --edits F --out D [--corpora DIR]
+    evaluate sheet --run R --corpus C (--sample N | --papers N) [--seed 0] --out F.csv
+    evaluate sheet-summary F.csv [--out D]
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
 wrong studies to upstream or downstream errors with the oracle's answer.json. `score --question-id` names the question of
-evidence/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
-B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that question: its text is
-asked and its kind picks the answer.json shape (default: the RAG factuality question, as before).
+the default pack's questions.yaml the run and the answers answer (default its default question, the corpus's own);
+its kind picks how B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that
+question: its text is asked and its kind picks the answer.json shape (default: the default question, as before). The
+BM25 baseline's answers say `system: bm25-answer-baseline` (spec section 6.1); the command keeps its name (D36).
+
+`scirex` is a real-paper check (D21, evaluation/realpapers/scirex.py): `corpus` turns SciREX JSON lines into a corpus
+plus the gold only `score` reads; `score` writes real.json and real.md, never a report.json. `--limit` is chosen with
+`evidence estimate` on the corpus; give its saved output as `--estimate` so real.md reports it.
+
+`scilead` is a real-paper check (D42, evaluation/realpapers/scilead.py) on the unpacked SciLead release (`--data`):
+`ids` writes the papers' arXiv ids for `evidence fetch --ids` and prints the papers with none; `score` scores a run
+of domains/ml/protocols/values.yaml on the fetched corpus: values found and linked, "best" per leaderboard and
+pairwise order, in real.json and real.md.
+
+`yun` is a real-paper check (D42, evaluation/realpapers/yun.py) on Yun et al. 2024 and Evidence Inference 2.0:
+`corpus` turns a checkout of hyesunyun/llm-meta-analysis (`--repo`) and Evidence Inference's annotations/ folder
+(`--ei`) into a corpus plus the gold only `score` reads; `score` scores a drug-trials run (its comparisons.json) on
+A names, A values, B and C separately, in real.json and real.md.
+
+`edits` is the arXiv edit test (spec 6.12 item 3, evaluation/realpapers/edits.py): `apply` writes one corpus per
+edit of the edits file (`DIR/<edit id>`); run the engine on each with `--run-id <edit id>` under one folder, then
+`check` compares the original run with `DIR/<edit id>` per edit (item, link, answer) into real.json and real.md.
+`sheet` writes a hand-check CSV of a run's items with their source sentences (N random items, or every item of the
+first N papers); `sheet-summary` prints the marked rows' precision with its Wilson 95% interval and, with `--out`,
+writes real.json and real.md labelled "demonstration, not an evaluation".
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
+
+`losses` (spec 6.16, evaluation/losses.py) reads every report.json one or two folders under `--scores` and writes
+losses.json and losses.md: per domain, each question's headline per system with its model calls and tokens, the
+engine's losses first, each with one cause. The web app reads them from `<scores root>/losses/`.
 
 Model calls go to the LiteLLM gateway ($LITELLM_BASE_URL, default http://127.0.0.1:4000/v1); the
 key is read from $LITELLM_MASTER_KEY when a model is made and is never printed or written. `--model`
@@ -51,18 +88,22 @@ def _write_answer(answer: dict[str, Any], out: Path) -> Path:
 
 
 def _question(args: argparse.Namespace) -> dict[str, Any]:
-    """The baseline's question keyword: `question_id` (checked here, so a bad id stops before any call), else
+    """The baseline's question keywords: `question_id` and the questions file of the pack that has it (checked
+    here, so a bad id stops before any call), else
     `question` from --question-file or --question, else the default question."""
+    from evidence.questions import find
+
     from .baselines.common import DEFAULT_QUESTION, kind_params
 
     if args.question_id is not None:
         if args.question or args.question_file:
             raise SystemExit(f"evaluate {args.cmd}: give --question-id or --question/--question-file, not both")
         try:
-            kind_params(args.question_id)
+            _, questions = find(args.question_id)
+            kind_params(args.question_id, questions)
         except ValueError as exc:
             raise SystemExit(f"evaluate {args.cmd}: {exc}") from None
-        return {"question_id": args.question_id}
+        return {"question_id": args.question_id, "questions": questions}
     if args.question_file:
         return {"question": args.question_file.read_text(encoding="utf-8").strip()}
     return {"question": args.question or DEFAULT_QUESTION}
@@ -109,15 +150,17 @@ def cmd_oracle(args: argparse.Namespace) -> int:
 
 
 def cmd_rag(args: argparse.Namespace) -> int:
-    from .baselines.rag import ORACLE_SYSTEM, SYSTEM, rag_baseline
+    from .baselines.rag import ORACLE_SYSTEM, rag_baseline
 
     question = _question(args)
     model, model_id = _model(args.model)
-    system = ORACLE_SYSTEM if args.oracle_passages else SYSTEM
+    # the default cache file keeps the command's name (rag-baseline-calls.jsonl), not the system id
+    # (bm25-answer-baseline): an old output folder's cached answering calls still hit (D36)
+    cache_name = ORACLE_SYSTEM if args.oracle_passages else args.cmd
     if args.oracle_passages and (args.k is not None or args.retrieval != "global" or args.max_chars != 1500):
         raise SystemExit("evaluate rag-baseline: --oracle-passages takes no --k, --retrieval or --max-chars")
     answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
-                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, cache_name),
                           seed=args.seed, oracle=args.oracle_passages, max_tokens=args.max_tokens)
     print(f"{_write_answer(answer, args.out)}: {_summary(answer)}")
     return 0
@@ -199,6 +242,22 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_losses(args: argparse.Namespace) -> int:
+    from .losses import losses, read_reports, write_losses
+
+    reports = read_reports(args.scores)
+    if not reports:
+        raise SystemExit(f"evaluate losses: no report.json one or two folders under {args.scores}")
+    try:
+        result = losses(reports)
+    except KeyError as exc:   # a new kind's score without its headline
+        raise SystemExit(f"evaluate losses: {exc.args[0]}") from None
+    js, md = write_losses(result, args.out)
+    lost = sum(r["engine_loss"] for rows in result["domains"].values() for r in rows)
+    print(f"wrote {js} and {md}: {len(reports)} report(s), {lost} engine loss(es)")
+    return 0
+
+
 def cmd_review(args: argparse.Namespace) -> int:
     from .review import render, summarise
 
@@ -207,6 +266,103 @@ def cmd_review(args: argparse.Namespace) -> int:
     except ValueError as exc:
         raise SystemExit(f"evaluate review: {exc}") from None
     print(render(summary))
+    return 0
+
+
+def cmd_scirex(args: argparse.Namespace) -> int:
+    from .realpapers import scirex
+    from .realpapers.common import write_real
+
+    try:
+        if args.scirex_cmd == "corpus":
+            corpus = scirex.to_corpus(args.jsonl, args.out, limit=args.limit)
+            print(json.dumps(json.loads((corpus / scirex.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
+            return 0
+        estimate = json.loads(args.estimate.read_text(encoding="utf-8")) if args.estimate else None
+        result = scirex.report(args.run, args.corpus, estimate)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate scirex {args.scirex_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "SciREX")
+    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
+    return 0
+
+
+def cmd_scilead(args: argparse.Namespace) -> int:
+    from .realpapers import scilead
+    from .realpapers.common import write_real
+
+    try:
+        if args.scilead_cmd == "ids":
+            found = scilead.ids(args.data)
+            args.out.write_text("".join(f"{i}\n" for i in found), encoding="utf-8", newline="\n")
+            print(json.dumps({"ids": len(found), "out": str(args.out), "no_arxiv_id": scilead.no_arxiv(args.data)}))
+            return 0
+        result = scilead.report(args.run, args.corpus, args.data)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate scilead {args.scilead_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "SciLead")
+    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
+    return 0
+
+
+def cmd_yun(args: argparse.Namespace) -> int:
+    from .realpapers import yun
+    from .realpapers.common import write_real
+
+    try:
+        if args.yun_cmd == "corpus":
+            corpus = yun.to_corpus(args.repo, args.ei, args.out)
+            print(json.dumps(json.loads((corpus / yun.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
+            return 0
+        result = yun.report(args.run, args.corpus)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate yun {args.yun_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "Yun et al. 2024 + Evidence Inference")
+    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
+    return 0
+
+
+def cmd_edits(args: argparse.Namespace) -> int:
+    from .realpapers import edits
+    from .realpapers.common import write_real
+
+    try:
+        loaded = edits.load_edits(args.edits)
+        if args.edits_cmd == "apply":
+            made = [str(edits.apply(args.corpus, e, args.out)) for e in loaded]
+            print(json.dumps({"corpora": made}))
+            return 0
+        result = edits.report(args.original, args.runs, loaded, args.corpora)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate edits {args.edits_cmd}: {exc}") from None
+    js, md = write_real(result, args.out, "arXiv edit test")
+    print(json.dumps({"real_json": str(js), "real_md": str(md), "carried": result["carried"],
+                      "missing": result["missing"], "not_testable": result["not_testable"]}))
+    return 0
+
+
+def cmd_sheet(args: argparse.Namespace) -> int:
+    from .realpapers.sheet import sheet, write_sheet
+
+    try:
+        rows = sheet(args.run, args.corpus, sample=args.sample, papers=args.papers, seed=args.seed)
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(f"evaluate sheet: {exc}") from None
+    print(json.dumps({"rows": len(rows), "out": str(write_sheet(rows, args.out))}))
+    return 0
+
+
+def cmd_sheet_summary(args: argparse.Namespace) -> int:
+    from .realpapers.common import write_real
+    from .realpapers.sheet import TITLE, summarise
+
+    try:
+        result = summarise(args.csv)
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"evaluate sheet-summary: {exc}") from None
+    if args.out:
+        write_real({**result, "sheet": str(args.csv), "label": "demonstration, not an evaluation"}, args.out, TITLE)
+    print(json.dumps(result))
     return 0
 
 
@@ -221,7 +377,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--reexec", type=Path, help="re-execution report (default: <run>/reexec.json if present)")
     s.add_argument("--oracle", type=Path, help="an oracle's answer.json: attribute wrong studies upstream/downstream")
     s.add_argument("--question-id",
-                   help="the question id (evidence/questions.yaml) the run and the answers answer; its kind picks B "
+                   help="the question id (any pack's domains/<pack>/questions.yaml) the run and the answers answer; its kind picks B "
                         "and C (default: the question the run's protocol asks, else the one every --baseline "
                         "answer asks; refused when that cannot be told, and an unknown id is refused)")
     s.add_argument("--out", type=Path, required=True)
@@ -238,12 +394,13 @@ def parser() -> argparse.ArgumentParser:
         q.add_argument("--out", type=Path, required=True)
         q.add_argument("--model", default=DEFAULT_ALIAS,
                        help=f"LiteLLM alias of the answer and mapping calls and of the agent (default {DEFAULT_ALIAS})")
-        q.add_argument("--question", help="default: the RAG factuality question")
+        q.add_argument("--question", help="default: the default pack's default question")
         q.add_argument("--question-file", type=Path)
-        q.add_argument("--question-id", help="a question id of evidence/questions.yaml: its text is asked and its kind "
-                       "picks the answer's shape (not with --question or --question-file; default: the RAG "
-                       "factuality question)")
-        q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<system>-calls.jsonl)")
+        q.add_argument("--question-id", help="a question id of any pack's domains/<pack>/questions.yaml: its text is asked and "
+                       "its kind picks the answer's shape (not with --question or --question-file; default: the "
+                       "default pack's default question)")
+        q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<name>-calls.jsonl, name "
+                       "rag-baseline, rag-oracle-passages or agent-baseline)")
         q.add_argument("--seed", type=int, default=0, help="seed of the answer/mapping call")
 
     r = sub.add_parser("rag-baseline", help="BM25 passages + an answer with citations + the mapping call -> answer.json")
@@ -291,9 +448,88 @@ def parser() -> argparse.ArgumentParser:
     b.add_argument("--out", type=Path, required=True, help="writes <out>/<extractor_id>/benchmark.json and benchmark.md")
     b.set_defaults(func=cmd_benchmark)
 
+    lo = sub.add_parser("losses", help="the losses-first table: per domain, each question's headline and cost per "
+                                       "system, the engine's losses first with their cause")
+    lo.add_argument("--scores", type=Path, required=True,
+                    help="the scores root: every <group>/report.json and <group>/<name>/report.json under it")
+    lo.add_argument("--out", type=Path, required=True, help="writes <out>/losses.json and losses.md "
+                                                            "(the web app reads <scores root>/losses/)")
+    lo.set_defaults(func=cmd_losses)
+
     rv = sub.add_parser("review", help="summarise a filled-in fidelity review sheet (synth review CSV)")
     rv.add_argument("--csv", type=Path, required=True, help="review-s<seed>.csv with the three checks ticked yes/no")
     rv.set_defaults(func=cmd_review)
+
+    sx = sub.add_parser("scirex", help="real-paper check: SciREX names at mention and salient-cluster level (D21)")
+    sxs = sx.add_subparsers(dest="scirex_cmd", required=True)
+    sc = sxs.add_parser("corpus", help="SciREX JSON lines -> manifest.json, papers/ and the gold (read by score only)")
+    sc.add_argument("--jsonl", type=Path, required=True, help="a SciREX split file (e.g. test.jsonl)")
+    sc.add_argument("--out", type=Path, required=True, help="the corpus directory to write")
+    sc.add_argument("--limit", type=int, help="keep the first N papers (chosen with `evidence estimate`)")
+    sc.set_defaults(func=cmd_scirex)
+    ss = sxs.add_parser("score", help="score a run of domains/ml/protocols/names.yaml -> real.json and real.md")
+    ss.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    ss.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `scirex corpus`")
+    ss.add_argument("--out", type=Path, required=True)
+    ss.add_argument("--estimate", type=Path, help="the saved output of `evidence estimate` that chose --limit")
+    ss.set_defaults(func=cmd_scirex)
+
+    sl = sub.add_parser("scilead", help="real-paper check: SciLead values, best per leaderboard, pairwise order (D42)")
+    sls = sl.add_subparsers(dest="scilead_cmd", required=True)
+    li = sls.add_parser("ids", help="the papers' arXiv ids, one per line, for `evidence fetch --ids`")
+    li.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release")
+    li.add_argument("--out", type=Path, required=True, help="the ids file to write")
+    li.set_defaults(func=cmd_scilead)
+    ls = sls.add_parser("score", help="score a run of domains/ml/protocols/values.yaml -> real.json and real.md")
+    ls.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    ls.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `evidence fetch --ids`")
+    ls.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release (the gold)")
+    ls.add_argument("--out", type=Path, required=True)
+    ls.set_defaults(func=cmd_scilead)
+
+    ed = sub.add_parser("edits", help="real-paper check: the arXiv edit test (a number, a name, a limitation changed)")
+    eds = ed.add_subparsers(dest="edits_cmd", required=True)
+    ea = eds.add_parser("apply", help="one edited corpus per edit -> <out>/<edit id>")
+    ea.add_argument("--corpus", type=Path, required=True, help="the original corpus (e.g. from `evidence fetch --ids`)")
+    ea.add_argument("--edits", type=Path, required=True, help="the frozen edits file (evaluation/realpapers/data/)")
+    ea.add_argument("--out", type=Path, required=True, help="the folder of the edited corpora")
+    ea.set_defaults(func=cmd_edits)
+    ec = eds.add_parser("check", help="item, link and answer per edit -> real.json and real.md")
+    ec.add_argument("--original", type=Path, required=True, help="the run directory on the original corpus")
+    ec.add_argument("--runs", type=Path, required=True, help="the folder holding one run per edit, named by edit id")
+    ec.add_argument("--edits", type=Path, required=True)
+    ec.add_argument("--corpora", type=Path, help="the folder `edits apply` wrote: each edit is placed by its "
+                    "edit.json (default: the edited run's corpus, else the original run's spans)")
+    ec.add_argument("--out", type=Path, required=True)
+    ec.set_defaults(func=cmd_edits)
+
+    sh2 = sub.add_parser("sheet", help="a hand-check CSV: items with their source sentences, to mark right or wrong")
+    sh2.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    sh2.add_argument("--corpus", type=Path, required=True, help="the run's corpus (manifest.json and papers/)")
+    pick = sh2.add_mutually_exclusive_group(required=True)
+    pick.add_argument("--sample", type=int, help="N random items of the run")
+    pick.add_argument("--papers", type=int, help="every item of the first N papers in manifest order")
+    sh2.add_argument("--seed", type=int, default=0, help="seed of --sample (default 0)")
+    sh2.add_argument("--out", type=Path, required=True, help="the CSV to write")
+    sh2.set_defaults(func=cmd_sheet)
+
+    ssum = sub.add_parser("sheet-summary", help="precision of a marked hand-check sheet, with its Wilson 95%% interval")
+    ssum.add_argument("csv", type=Path, help="the sheet with right_or_wrong filled in (blank rows are not counted)")
+    ssum.add_argument("--out", type=Path, help="also write real.json and real.md (demonstration, not an evaluation)")
+    ssum.set_defaults(func=cmd_sheet_summary)
+
+    yn = sub.add_parser("yun", help="real-paper check: Yun et al. 2024 + Evidence Inference, A/B/C separately (D42)")
+    yns = yn.add_subparsers(dest="yun_cmd", required=True)
+    yc = yns.add_parser("corpus", help="the records' markdown papers -> manifest.json, papers/ and the gold")
+    yc.add_argument("--repo", type=Path, required=True, help="a checkout of hyesunyun/llm-meta-analysis")
+    yc.add_argument("--ei", type=Path, required=True, help="Evidence Inference 2.0's annotations/ folder")
+    yc.add_argument("--out", type=Path, required=True, help="the corpus directory to write")
+    yc.set_defaults(func=cmd_yun)
+    ys = yns.add_parser("score", help="score a drug-trials run (its comparisons.json) -> real.json and real.md")
+    ys.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
+    ys.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `yun corpus`")
+    ys.add_argument("--out", type=Path, required=True)
+    ys.set_defaults(func=cmd_yun)
     return p
 
 

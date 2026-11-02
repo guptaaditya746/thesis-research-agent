@@ -1,8 +1,9 @@
 """Replay and re-execution of a recorded run (contract section 8).
 
 `replay(run)`: the same protocol, corpus and settings, from the record cache only (a miss is
-NotRecorded); writes a new run directory (mode replay) and checks that every output hash equals the one
-in the recorded run.json. This is what "every time we run the provenance we get the same data" means.
+NotRecorded) and the recorded reasoner inferences (reason.json, never reasoned again); writes a new run directory
+(mode replay) and checks that every output hash equals the one in the recorded run.json. This is what "every time
+we run the provenance we get the same data" means. A reexec reasons again: its items may differ.
 
 `reexec(run, extractor)`: runs the chosen extractor (all when none is named) again from scratch, bypassing
 the cache, writes a new run directory (mode reexec) and in it reexec.json, which compares each call with
@@ -25,9 +26,13 @@ from .locate import Locator
 from .recording import Provider
 from jsonio import write_json
 
-from .rundir import CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, PROTOCOL_FILE, REEXEC_FILE, RUN_FILE, RunDir, read_json, read_lines
+from .rundir import (CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, LOCK_FILE, PROTOCOL_FILE, REEXEC_FILE,
+                     RUN_FILE, RunDir, read_json, read_lines)
 
 OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_missing", "fields_differ")
+# Outputs the engine writes since a later change (the lock since EV4, comparisons.json since plan 2): a replay of a run
+# recorded before it lists them as `added`, not as a mismatch (every recorded output must still match).
+ADDED_OUTPUTS = (LOCK_FILE, COMPARISONS_FILE)
 
 
 def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | str | None) -> Settings:
@@ -37,21 +42,28 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     # $GLINER_URL wins: the service may have moved; the recorded model keeps the ids
                     gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"),
                     confirm=s.get("confirm", "none"),   # a run made before confirmation kept every item
-                    relink=s.get("relink", "off"))      # a run made before relinking left those links dangling
+                    relink=s.get("relink", "off"),      # a run made before relinking left those links dangling
+                    domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
+                    names=s.get("names", "off"),        # a run made before the names step grouped no names
+                    reason=s.get("reason", "off"))      # a run made before the reasoner had no inferences
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
            out_dir: Path | str | None = None, locator: Locator | None = None) -> tuple[Path, dict[str, Any]]:
-    """(new run directory, {ok, mismatched}); raises NotRecorded on a cache miss."""
+    """(new run directory, {ok, mismatched}, plus `added`: the ADDED_OUTPUTS the recorded run lacks, when there are
+    any); raises NotRecorded on a cache miss."""
     run_dir = Path(run_dir)
     record = read_json(run_dir / RUN_FILE)
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
                       out_dir or run_dir.parent, mode="replay", provider=None, locator=locator,
-                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}")
+                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}",
+                      source_dir=run_dir)   # the recorded reason.json: a replay never reasons again
     outputs = read_json(new / RUN_FILE)["outputs"]
     names = sorted(set(outputs) | set(record["outputs"]))
-    mismatched = [n for n in names if outputs.get(n) != record["outputs"].get(n)]
-    return new, {"ok": not mismatched, "mismatched": mismatched, "source_run": record["run_id"], "replay_run": new.name}
+    added = sorted(n for n in names if n in ADDED_OUTPUTS and n not in record["outputs"])
+    mismatched = [n for n in names if n not in added and outputs.get(n) != record["outputs"].get(n)]
+    return new, {"ok": not mismatched, "mismatched": mismatched, "source_run": record["run_id"], "replay_run": new.name,
+                 **({"added": added} if added else {})}
 
 
 def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | str | None = None,
@@ -67,9 +79,8 @@ def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | s
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
                       out_dir or run_dir.parent, mode="reexec", bypass=bypass, locator=locator,
                       provider=provider if provider is not None else default_provider,
-                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}")
-    report = compare(run_dir, new, extractor)
-    write_json(new / REEXEC_FILE, report)
+                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}",
+                      before_seal=lambda new: write_json(new / REEXEC_FILE, compare(run_dir, new, extractor)))
     return new
 
 
@@ -79,9 +90,12 @@ def _stamp() -> str:
 
 
 def _attempts(run: Path) -> dict[str, int]:
-    """cache key -> the attempt of the record each call of the run used (calls.py)."""
-    return {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
-            for e in RunDir(run).events_of("extractor_call") or [] if e["status"] != "skipped"}
+    """cache key -> the attempt of the record each call of the run used (calls.py), the names checks too."""
+    run_dir = RunDir(run)
+    used = {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
+            for e in run_dir.events_of("extractor_call") or [] if e["status"] != "skipped"}
+    return used | {c["key"]: c["attempt"] for e in run_dir.events_of("names") or []
+                   for c in e["custom_metadata"].get("checks", [])}
 
 
 def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:

@@ -11,7 +11,7 @@ from evaluation import cli
 from evidence import engine, extractors, replay
 
 REPO = Path(__file__).resolve().parents[2]
-PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
+PROTOCOL = REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml"
 EXAMPLES = REPO / "synth" / "examples"
 
 

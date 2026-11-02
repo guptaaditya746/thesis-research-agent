@@ -10,22 +10,12 @@ from agent.anchor import Index, text_sha256
 from evidence import engine, protocol
 from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef
 from evidence.extractors import get
+from evidence.pack import protocol_path
 
-from .conftest import PROTOCOL, make_corpus, regex_run
+from .conftest import PROTOCOL, make_corpus, pack_words, regex_run
 
 PROTO = protocol.load(PROTOCOL)
-LATENCY = Path(__file__).resolve().parents[1] / "protocols" / "rag-latency.yaml"
-# code_sha256 of the extractors that existed before these two modules: unchanged, the EV2 runs' own (the regex and
-# LLM ones as at 946b138, test_old_extractor_ids); regex_dataset hashes evidence/evidence_types.py too
-EXISTING = {"regex_condition": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
-            "regex_metric": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
-            "regex_measurement": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
-            "regex_author_claim": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
-            "regex_dataset": "f2016c9bb49e41eb7fe1a3214b0fb5167746f9316d884b3a104248ea22fa590d",
-            "llm_condition": "1d83b14e028cfd528e61d308ab058a0d9305d0f6164ace19a7c97658517f6e26",
-            "llm_measurement": "1d83b14e028cfd528e61d308ab058a0d9305d0f6164ace19a7c97658517f6e26",
-            "regex_screen": "023d920f90d2d58196b825fc6a5b767cb5167df0b74d32a725a07a34e1b90b66",
-            "llm_screen": "28fe652e63d2c056b1b257ddefa1c7d435074cafda562ce66a576c7d65afafc6"}
+LATENCY = protocol_path("rag", "rag-latency")
 
 
 class Ctx:
@@ -49,11 +39,7 @@ def extract(name: str, text: str, config: dict, evidence_type: str, context: lis
     doc = DocumentRef(id="P", file="papers/P.md", sha256=text_sha256(text))
     task = ExtractionTask(protocol=ProtocolRef(id=PROTO.id, sha256=PROTO.sha256), evidence_type=evidence_type,  # type: ignore[arg-type]
                           field_schema_sha256="x", document=doc)
-    return get(name, config).extract(task, Ctx(text, context))
-
-
-def test_existing_extractor_ids_unchanged() -> None:
-    assert {n: get(n, {}).spec.code_sha256 for n in EXISTING} == EXISTING
+    return get(name, {**pack_words(name, evidence_type), **config}).extract(task, Ctx(text, context))
 
 
 # --- regex_measurement_units -------------------------------------------------------------------------------
@@ -102,9 +88,10 @@ def test_milliseconds_become_seconds(tmp_path: Path) -> None:
 
 
 def test_fraction_metrics_config_keeps_the_old_normalisation() -> None:
-    ex = get("regex_measurement_units", {"fraction_metrics": ["latency"]})
+    words = pack_words("regex_measurement_units", "measurement")
+    ex = get("regex_measurement_units", {**words, "fraction_metrics": ["latency"]})
     assert ex.spec.config["fraction_metrics"] == ["latency"]
-    assert get("regex_measurement_units", {}).spec.config["fraction_metrics"] == ["factual_accuracy", "hallucination_rate"]
+    assert get("regex_measurement_units", words).spec.config["fraction_metrics"] == ["factual_accuracy", "hallucination_rate"]
 
 
 def test_latency_smoke_direction_on_the_fixture_corpus(tmp_path: Path) -> None:

@@ -1,0 +1,4 @@
+id,evidence_inference_prompt_id,pmcid,outcome,intervention,comparator,outcome_type,intervention_events,intervention_group_size,comparator_events,comparator_group_size,intervention_mean,intervention_standard_deviation,comparator_mean,comparator_standard_deviation,notes,is_data_in_figure_graphics,is_relevant_data_in_table,is_table_in_graphic_format,is_data_complete,tiktoken_with_attributes_xml_token_num,tiktoken_without_attributes_xml_token_num,tiktoken_without_attributes_markdown_token_num,split
+1,9001,1001,response rate,Zelvora,placebo,binary,41,120,22,118,,,,,,FALSE,FALSE,FALSE,TRUE,120,100,80,TEST
+2,9002,1001,pain score,Zelvora,placebo,continuous,,60,,58,3.1,,"4.0",,"standard deviations not given, means only",FALSE,FALSE,FALSE,FALSE,120,100,80,TEST
+3,9003,1002,response rate,Zelvora,placebo,binary,10,50,,,,,,,Comparator events not given.,FALSE,FALSE,FALSE,FALSE,90,70,60,TEST

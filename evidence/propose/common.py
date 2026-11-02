@@ -15,15 +15,21 @@ from pydantic_ai.models import Model
 from jsonio import file_sha256, sha256_hex
 import modelcall
 
+from ..pack import DEFAULT_PACK, DOMAINS, protocol_path
+
 HERE = Path(__file__).resolve().parent
-# The effect template is rag-factuality.yaml with the funnel steps (regex -> abbrev -> GLiNER -> number -> LLM),
-# like the templates of the other kinds, so an effect draft and its cascade card offer them too.
-EFFECT_TEMPLATE = HERE.parent / "protocols" / "rag-factuality-funnel.yaml"
-# The draft starts from the hand-written protocol of the question's kind.
-KIND_TEMPLATES = {"effect": EFFECT_TEMPLATE,
-                  "consistency": HERE.parent / "protocols" / "cons-accuracy.yaml",
-                  "inventory": HERE.parent / "protocols" / "inv-metrics.yaml",
-                  "best": HERE.parent / "protocols" / "best-accuracy.yaml"}
+
+
+def pack_propose(pack: str = DEFAULT_PACK) -> dict[str, Any]:
+    """domains/<pack>/propose.yaml: the pack's protocol templates by kind (`templates`) and by inventory target
+    (`inventory_templates`), its topic card options (`card_options`, by card id) and its prompt words
+    (`prompt_words`, by placeholder name)."""
+    return yaml.safe_load((DOMAINS / pack / "propose.yaml").read_text(encoding="utf-8"))
+
+
+# The draft starts from the hand-written protocol of the question's kind, in the default pack (its propose.yaml).
+KIND_TEMPLATES = {kind: protocol_path(DEFAULT_PACK, pid) for kind, pid in pack_propose()["templates"].items()}
+EFFECT_TEMPLATE = KIND_TEMPLATES["effect"]
 DEFAULT_MODEL = "orch-model"   # the one model of every extractor and both baselines (Part G.3)
 
 FRAME, DRAFT, SOURCES, CRITIC = "frame.json", "draft.yaml", "draft.sources.json", "critic.json"
@@ -38,8 +44,14 @@ class ProposalError(ValueError):
 
 
 def prompt(name: str) -> str:
-    """A prompt template from prompts/ with LF line ends, so its hash is the same on every checkout."""
-    return modelcall.load_prompt(HERE / "prompts" / name, strip=True).text
+    """A prompt template from prompts/ with LF line ends, so its hash is the same on every checkout, its
+    `<<NAME>>` placeholders filled from the default pack's `prompt_words` (none may be left)."""
+    text = modelcall.load_prompt(HERE / "prompts" / name, strip=True).text
+    for key, value in pack_propose()["prompt_words"].items():
+        text = text.replace(f"<<{key}>>", value)
+    left = re.findall(r"<<[A-Z_]+>>", text)
+    assert not left, f"prompt {name}: placeholders without a pack value: {left}"
+    return text
 
 
 def need(directory: Path, name: str, step: str) -> Path:

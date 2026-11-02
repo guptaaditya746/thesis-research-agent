@@ -15,6 +15,8 @@ from agent.anchor import selector_at
 from jsonio import sha256_hex
 
 from ..contract import Coverage, ExtractionTask, Item, Span, digest
+from ..evidence_types import DATASET
+from ..pack import DEFAULT_CONTEXT_FIELD
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -54,6 +56,61 @@ def coverage(parts: list[tuple[int, int]], items: list[Item]) -> tuple[Coverage,
     return tuple(out)
 
 
+def emitted(given: dict[str, Any], native: str) -> str:
+    """The evidence type an extractor's items are of: the type the engine configured it for (a domain pack may
+    call it otherwise, e.g. `arm` for a condition), else the extractor's own (`native`, an extractor built directly)."""
+    return str(given.get("evidence_type") or native)
+
+
+@dataclass(frozen=True)
+class Slots:
+    """A measured value's two context types and its links to them: the compared thing (`thing`, linked as
+    `to_thing`) and the metric (`metric`, `to_metric`). From the pack's `types` (role -> type) and the protocol's
+    `links` (link name -> type) the engine configures; the names below when the config has neither. Also the type of
+    role `context` (`context`, a dataset or a population) whose item names the values' context, and the value field
+    that holds that name (`context_field`, the pack's TypeDecl.context_field; pack.DEFAULT_CONTEXT_FIELD when the
+    config gives none)."""
+    thing: str = "condition"
+    metric: str = "metric"
+    to_thing: str = "condition"
+    to_metric: str = "metric"
+    context: str = DATASET
+    context_field: str = DEFAULT_CONTEXT_FIELD
+
+    @classmethod
+    def of(cls, given: dict[str, Any]) -> Slots:
+        """The slots of an extractor config. A role the pack gives several types (a list) takes the one the
+        measured-value type links to; none or several of them linked is a ValueError, never a silent default."""
+        types = given.get("types") or {}
+        links = dict(given.get("links") or {})
+
+        def one(role: str, default: str) -> str:
+            found = types.get(role, default)
+            if not isinstance(found, list):
+                return str(found)
+            linked = [str(t) for t in found if t in links.values()]
+            if len(linked) != 1:
+                raise ValueError(f"the pack has several types of role {role!r} ({found}) and the measured-value type "
+                                 f"links to {len(linked)} of them: link exactly one, or name it in the extractor's "
+                                 f"config `types: {{{role}: <type>}}`")
+            return linked[0]
+
+        thing, metric = one("compared_thing", cls.thing), one("metric", cls.metric)
+        context = types.get("context", cls.context)
+        if isinstance(context, list):   # contexts are not linked, so nothing picks one: the config must name it
+            raise ValueError(f"the pack has several types of role 'context' ({context}): name the one the values' "
+                             f"context comes from in the extractor's config `types: {{context: <type>}}`")
+
+        def to(target: str) -> str:
+            return next((str(name) for name, t in links.items() if t == target), target)
+
+        return cls(thing=thing, metric=metric, to_thing=to(thing), to_metric=to(metric), context=str(context),
+                   context_field=str(given.get("context_field") or cls.context_field))
+
+    def links(self, thing: Item, metric: Item) -> dict[str, str]:
+        return {self.to_thing: thing.item_id, self.to_metric: metric.item_id}
+
+
 def group(evidence_type: Any, found: list[tuple[dict[str, Any], dict[str, str], list[Span]]]) -> list[Item]:
     """Items from (fields, links, spans) triples; equal fields and links become one item with all spans
     (the same value reported in the abstract and in a table is one item with two value spans)."""
@@ -74,17 +131,7 @@ def group(evidence_type: Any, found: list[tuple[dict[str, Any], dict[str, str], 
 
 # Numbers -----------------------------------------------------------------------------------------------
 
-NUMBER = re.compile(r"(?<![\w.,])(\d{1,3}(?:\.\d+)?|0?\.\d+)(\s?%)?(?![\w.]*\d)")
-
-COUNT = re.compile(r"(?<![\w.,])(\d{1,3}(?:,\d{3})*|\d+)\s+out\s+of\s+(\d{1,3}(?:,\d{3})*|\d+)\b")
-
-
-def count_fraction(num: str, den: str) -> float | None:
-    """"N out of M" as a fraction; None for an empty denominator or more successes than trials."""
-    n, d = int(num.replace(",", "")), int(den.replace(",", ""))
-    if d == 0 or n > d:
-        return None
-    return round(n / d, 6)
+NUMBER = re.compile(r"(?<![\w.,])(\d{1,3}(?:\.\d+)?|0?\.\d+)(\s?%)?(?![\w.]*\d)")   # "N out of M": numreader.COUNT
 
 
 def to_fraction(raw: str, *, percent: bool, rate_like: bool) -> float | None:

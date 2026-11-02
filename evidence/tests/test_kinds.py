@@ -103,7 +103,10 @@ def test_effect_kind_is_todays_synthesis() -> None:
     for doc, its in items.items():
         assert kinds.of(p).study(p, doc, its) == synthesis.study(p, doc, its)
     assert kinds.of(p).answer(p, list(items), items, {}, {}) == synthesis.answer(p, list(items), items, {}, {})
-    for code, types in synthesis.GAP_TYPES.items():
+    rag_types = {"no_treatment_condition": ("condition",), "no_control_condition": ("condition",),
+                 "no_question_metric": ("metric",), "no_pair": ("measurement",), "screened_out": ()}
+    assert set(rag_types) == set(synthesis.GAP_ROLES)   # the rag pack's types of the gap roles
+    for code, types in rag_types.items():
         assert kinds.of(p).gap_types(p, code) == types
     assert kinds.of(p).extractor_config(p) == {"question_metrics": ["factual_accuracy", "hallucination_rate"],
                                                "compare": {"treatment": "rag", "control": "baseline"}}

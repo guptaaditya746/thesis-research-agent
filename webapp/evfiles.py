@@ -14,7 +14,7 @@ layout the runbook makes:
   directories under `$EV_AGENT_WORK` (`<agent run id>-<random>/runs/<agent run id>/`);
 - scores: `$SCORES/<group>/[<name>/]` with report.json, compare.json, shift.json or a benchmark directory
   (benchmark.md and `<extractor id>/benchmark.json`); an id joins the directory names with `~`;
-- proposals: `$EV_PROPOSALS/<name>/` (`evidence propose`); protocols: `evidence/protocols/*.yaml`.
+- proposals: `$EV_PROPOSALS/<name>/` (`evidence propose`); protocols: `domains/rag/protocols/*.yaml`.
 
 Ids from URLs are plain names (webapp/files.py `ID`) and every path is checked to stay inside its root
 (`inside`); a path written inside a file (run.json `settings.corpus`, `settings.cache`) is never opened: the
@@ -27,6 +27,7 @@ strings UTF-16 units, so the page never converts an offset.
 from __future__ import annotations
 
 import json
+import logging
 import re
 import threading
 from collections.abc import Iterable
@@ -44,7 +45,7 @@ from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.propose.common import CARDS, CRITIC, DRAFT, FRAME, PROPOSAL
 from evidence.protocol import parse
 from evidence.rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, PROTOCOL_FILE,
-                             RUN_FILE, RunDir)
+                             REASON_FILE, RUN_FILE, RunDir)
 
 from .agenttrace import claim_of, steps_of
 from .evmodels import (
@@ -68,6 +69,8 @@ from .evmodels import (
     EvRunDetail,
     EvRunSummary,
     FunnelDoc,
+    Losses,
+    LossesView,
     ModelCallRecord,
     Placement,
     ProposalDetail,
@@ -93,6 +96,7 @@ from .files import ID, RUN_SEP, Damaged, NotFound, check_id, inside, read_json, 
 from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
 
+LOG = logging.getLogger(__name__)
 STEPS = ("frame", "draft", "critic", "cards", "freeze")
 STEP_FILES = {"frame": FRAME, "draft": DRAFT, "critic": CRITIC, "cards": CARDS, "freeze": PROPOSAL}
 REVISION_FILE = re.compile(r"^protocol\.v(\d+)\.yaml$")
@@ -585,6 +589,7 @@ class EvidenceFiles:
         run = run if isinstance(run, dict) else {}
         answer = rd.try_json(ANSWER_FILE)
         funnel = rd.try_json(FUNNEL_FILE)
+        reason = rd.try_json(REASON_FILE) if summary.kind == "engine" else None
         documents: list[str] = []
         if summary.corpus:
             manifest = read_json(self.corpus_dir(summary.corpus) / "manifest.json") or {}
@@ -598,6 +603,7 @@ class EvidenceFiles:
                 and ((r.corpus and r.corpus == summary.corpus) or (r.corpus_id and r.corpus_id == summary.corpus_id))]
         reports = [r.id for r in self.scores().reports if r.run_id == summary.name and r.corpus_id == summary.corpus_id
                    and r.group == summary.group] if summary.kind == "engine" else []
+        display = self._display(rd) if summary.kind == "engine" else {}   # registers the run's pack: specs need it
         specs = [ExtractorSpec.model_validate({k: v for k, v in spec.items() if k in ExtractorSpec.model_fields})
                  for spec in (run.get("extractor_specs") or {}).values()]
         return EvRunDetail(**summary.model_dump(), extractors=specs, settings=run.get("settings"),
@@ -606,7 +612,20 @@ class EvidenceFiles:
                            funnel={d: FunnelDoc.model_validate(v) for d, v in (funnel.get("documents") or {}).items()}
                            if isinstance(funnel, dict) else None,
                            documents=documents, baselines=same, reports=reports,
-                           has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None)
+                           has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None,
+                           link_flags=len(reason.get("link_flags") or []) if isinstance(reason, dict) else None,
+                           display=display)
+
+    @staticmethod
+    def _display(rd: RunDir) -> dict[str, str]:
+        """The display names of the run's pack (`Pack.display`): what the topic calls the two sides. Empty when
+        the run has no protocol.yaml or its pack cannot be read (moved, or written by an older code)."""
+        try:
+            pack = rd.register_pack()
+        except (OSError, ValueError, yaml.YAMLError) as exc:   # the page then names the sides treatment and control
+            LOG.warning("run %s: the display names of its pack cannot be read: %s", rd.root, str(exc)[:200])
+            return {}
+        return dict(pack.display) if pack is not None else {}
 
     def _items(self, path: Path) -> list[Item]:
         """The run's evidence items; a damaged line (not the torn tail) is `Damaged`, named `group/run/file:line`
@@ -888,6 +907,20 @@ class EvidenceFiles:
     def shift(self, score_id: str) -> ShiftView:
         path, ref = self.score_dir(score_id, "shift.json")
         return ShiftView(ref=ref, shift=read_json(path / "shift.json") or {}, markdown=self._markdown(path / "shift.md"))
+
+    def losses(self) -> LossesView:
+        """`evaluate losses` output (plan 3 Task 6): <scores root>/losses/losses.json and losses.md; an empty view
+        when there is none yet."""
+        root = self.s.scores_dir
+        path = root / "losses" if root is not None else None
+        if path is None or not (path / "losses.json").is_file():
+            return LossesView()
+        data = read_json(path / "losses.json")
+        try:
+            losses = Losses.model_validate(data)
+        except ValidationError as e:   # also not JSON (data None): a 422 naming the file, not a 500
+            raise Damaged(f"losses/losses.json does not read as `evaluate losses` output: {str(e)[:400]}") from None
+        return LossesView(losses=losses, markdown=self._markdown(path / "losses.md"))
 
     def benchmark(self, score_id: str) -> BenchmarkView:
         path, ref = self.score_dir(score_id, "benchmark.md")

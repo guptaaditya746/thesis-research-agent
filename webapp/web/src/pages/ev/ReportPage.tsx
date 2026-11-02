@@ -1,5 +1,5 @@
 /**
- * A score report `/scores/reports/:id` (evaluate score, evaluation/report.py; the supervisor's A/B/C, §5):
+ * A score report `/report/reports/:id` (evaluate score, evaluation/report.py; the supervisor's A/B/C, §5):
  *
  * - C synthesis first: per system the label against the expected one, direction accuracy, completeness,
  *   accuracy over the answered studies and traceability (baselines), with the 95 % intervals and the paired
@@ -178,7 +178,7 @@ export default function ReportPage() {
   const { id = "" } = useParams()
   const report = useReport(id)
   return (
-    <QueryPage query={report} what={`report ${id}`} back={{ to: "/scores", label: "All scores" }}>
+    <QueryPage query={report} what={`report ${id}`} back={{ to: "/report", label: "Report" }}>
       {({ ref, report: r, markdown }) => {
         const { group, name } = splitRef(ref.id)
         const runId = name ? `${group}~${name}` : null

@@ -1,0 +1,12 @@
+name: rag
+types:
+  condition: {prefix: c, role: compared_thing, name_field: label, side_field: role, kind_field: kind}
+  metric: {prefix: k, role: metric, name_field: name, canonical_field: canonical}
+  measurement: {prefix: m, role: measured_value, context_field: dataset}
+  author_claim: {prefix: a, role: author_claim, direction_field: direction}
+  dataset: {prefix: d, role: context, name_field: name}
+display: {treatment: "RAG system", control: "closed-book model"}
+names_seed: {}
+limitation_categories: []
+ontology:
+  roles: {compared_thing: "cskg:Method", metric: "cskg:Metric", context: "cskg:Material"}

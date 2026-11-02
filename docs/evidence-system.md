@@ -62,9 +62,9 @@ comes from the rendering alone. Paper ids stay the same across the variant corpo
 `evidence fetch --query "<words>" --max 30 --out <corpus> [--category cs.CL]` (`evidence/arxiv.py`; in the
 web app the "Fetch from arXiv" button on the corpus step and the Corpora page, a job into
 `$EV/corpora/arxiv-<slug>-<yyyymmdd>`) builds a corpus of **real papers**: it asks the arXiv API for the
-query's papers (one request every three seconds, as arXiv's terms ask), converts each PDF to Markdown with
-pymupdf4llm and writes the A1 layout the engine reads: `manifest.json` (plus title, authors, published,
-url, pdf_sha256 per paper), `papers/<arxiv id>.md` and `source.json` (`kind: arxiv`, the query, when,
+query's papers (one request every three seconds, as arXiv's terms ask), takes each paper's arXiv HTML page (else its PDF) and converts it to Markdown with
+Docling (`uv sync --group fetch`; `--ids FILE` instead of `--query` fetches a list of ids) and writes the A1 layout the engine reads: `manifest.json` (plus title, authors, published,
+url, source, html_sha256 or pdf_sha256 per paper), `papers/<arxiv id>.md` and `source.json` (`kind: arxiv`, the query, when,
 `ground_truth: false`, the papers skipped and why). There is no `corpus.json`, `ground_truth.json` or
 `fidelity.json`.
 
@@ -79,7 +79,7 @@ corpus (question → cards → freeze → run → graph and answer). What a read
 2. **A hand-checked sample of 5 papers.** Pick 5 papers at random from `manifest.json`, open each in the
    run's paper view, and check against the PDF (`url`) whether the extracted conditions, metrics and
    values are right and whether anything the question needs was missed. Write down hits, errors and misses.
-   Also check the conversion: a table or formula pymupdf4llm garbled is a corpus problem, not an engine one.
+   Also check the conversion: a table or formula Docling garbled is a corpus problem, not an engine one.
 3. **Re-execution stability.** `evidence reexec <run>` runs the extractors again without the cache and
    reports per call whether the items came out the same (B8). A stable run is not a correct one, but an
    unstable one should not be trusted.
@@ -206,7 +206,7 @@ every system the same way.
 - **Protocol:** `bounds` per evidence type (question-metric values must be fractions in [0, 1]) and
   `synthesis.pairing: same_dataset_table_first` (rag and baseline on the same dataset, a table cell before
   prose, then document order).
-- **Agentic extractor:** registered lazily as `agentic`; `evidence/protocols/rag-factuality-agentic.yaml` puts
+- **Agentic extractor:** registered lazily as `agentic`; `domains/rag/protocols/rag-factuality-agentic.yaml` puts
   it last in every cascade. A cited claim must belong to its row and field, and a value claim's quote must
   hold the cell's number.
 - **Baselines:** may open only `manifest.json` and files directly in `papers/`. The retrieve-then-answer
@@ -473,7 +473,7 @@ The supervisor's protocol says "how the evidence is synthesised" (§2). Until 16
 was Python with the question's names inside it (`rules.METRICS`, `rules.label`); the protocol only named
 them. From version 2 the protocol holds every parameter and `evidence/rules.py` holds only the machinery,
 with no knowledge of the question. The benchmark generator (`synth`) reads the same block (`synth build
---protocol P`, default `evidence/protocols/rag-factuality.yaml`) and records the protocol's id and sha256
+--protocol P`, default `domains/rag/protocols/rag-factuality.yaml`) and records the protocol's id and sha256
 in `corpus.json` and `ground_truth.json`, so "the engine and the generator share one definition" is
 literal. Our design (not the supervisor's): the choice of parameters and the decision-table form.
 
@@ -569,7 +569,7 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
   `screened_out` and the screen's text; in `all` the decision is recorded and extraction runs anyway, so
   screening precision and recall can be scored on the same run.
 - **Completeness** = `synthesis.study()` on the document's merged items gives a direction. The gap is the
-  reason code; its evidence types (`synthesis.GAP_TYPES`: `no_*_condition` → condition,
+  reason code; its evidence types (`synthesis.GAP_ROLES`, by pack role: `no_*_condition` → condition,
   `no_question_metric` → metric, `no_pair` → measurement) are the only types the next position runs,
   with the merged items of their context types as context.
 - **Targeted task**: `ExtractionTask.focus: {gap: code, have: {roles: [...], metrics: [...]}, want: text}`
@@ -801,7 +801,7 @@ sent without a snapshot), so its prompt is unchanged.
   `--protocol P` form (amend a protocol outside a proposal directory) is not built: it has no frozen base to
   compare with.
 - **What test (1) compares**: the frozen protocol of the RAG question (scripted frame, critic and cards
-  replies; every card's default `draft`) and `evidence/protocols/rag-factuality.yaml`, both parsed, without
+  replies; every card's default `draft`) and `domains/rag/protocols/rag-factuality.yaml`, both parsed, without
   `id` and `revision`, without free text (every `description`, inside field schemas too, and the screening
   question), with the screen terms as a set and the bm25 `query` lists left out; the query tokens of the
   hand-written protocol must be a subset of the frozen one's per type. Everything else (field schemas and
