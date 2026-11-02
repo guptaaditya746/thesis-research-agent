@@ -22,14 +22,15 @@ from types import ModuleType
 from typing import Any
 
 from ..protocol import Protocol
-from . import best, chaining, consistency, effect, inventory, limitations
+from . import best, builds_on, chaining, consistency, effect, inventory, limitations
 
 MODULES: dict[str, ModuleType] = {"effect": effect, "consistency": consistency, "inventory": inventory, "best": best,
-                                  "chaining": chaining, "limitations": limitations}
+                                  "chaining": chaining, "limitations": limitations,
+                                  "builds_on": builds_on}
 # The reason of a document the funnel screened out, for the kinds other than effect (whose text is synthesis's).
 SCREENED_OUT: dict[str, str] = {"code": "screened_out", "text": "screened out"}
 
-__all__ = ["MODULES", "SCREENED_OUT", "best", "chaining", "consistency", "effect", "inventory", "limitations", "of", "screened_out"]
+__all__ = ["MODULES", "SCREENED_OUT", "best", "builds_on", "chaining", "consistency", "effect", "inventory", "limitations", "of", "screened_out"]
 
 
 def of(protocol: Protocol) -> Any:
