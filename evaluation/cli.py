@@ -23,9 +23,10 @@
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
 wrong studies to upstream or downstream errors with the oracle's answer.json. `score --question-id` names the question of
-domains/rag/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
-B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that question: its text is
-asked and its kind picks the answer.json shape (default: the RAG factuality question, as before).
+the default pack's questions.yaml the run and the answers answer (default its default question, the corpus's own);
+its kind picks how B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that
+question: its text is asked and its kind picks the answer.json shape (default: the default question, as before). The
+BM25 baseline's answers say `system: bm25-answer-baseline` (spec section 6.1); the command keeps its name (D36).
 
 `scirex` is a real-paper check (D21, evaluation/realpapers/scirex.py): `corpus` turns SciREX JSON lines into a corpus
 plus the gold only `score` reads; `score` writes real.json and real.md, never a report.json. `--limit` is chosen with
@@ -133,15 +134,17 @@ def cmd_oracle(args: argparse.Namespace) -> int:
 
 
 def cmd_rag(args: argparse.Namespace) -> int:
-    from .baselines.rag import ORACLE_SYSTEM, SYSTEM, rag_baseline
+    from .baselines.rag import ORACLE_SYSTEM, rag_baseline
 
     question = _question(args)
     model, model_id = _model(args.model)
-    system = ORACLE_SYSTEM if args.oracle_passages else SYSTEM
+    # the default cache file keeps the command's name (rag-baseline-calls.jsonl), not the system id
+    # (bm25-answer-baseline): an old output folder's cached answering calls still hit (D36)
+    cache_name = ORACLE_SYSTEM if args.oracle_passages else args.cmd
     if args.oracle_passages and (args.k is not None or args.retrieval != "global" or args.max_chars != 1500):
         raise SystemExit("evaluate rag-baseline: --oracle-passages takes no --k, --retrieval or --max-chars")
     answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
-                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, cache_name),
                           seed=args.seed, oracle=args.oracle_passages, max_tokens=args.max_tokens)
     print(f"{_write_answer(answer, args.out)}: {_summary(answer)}")
     return 0
@@ -342,12 +345,13 @@ def parser() -> argparse.ArgumentParser:
         q.add_argument("--out", type=Path, required=True)
         q.add_argument("--model", default=DEFAULT_ALIAS,
                        help=f"LiteLLM alias of the answer and mapping calls and of the agent (default {DEFAULT_ALIAS})")
-        q.add_argument("--question", help="default: the RAG factuality question")
+        q.add_argument("--question", help="default: the default pack's default question")
         q.add_argument("--question-file", type=Path)
         q.add_argument("--question-id", help="a question id of domains/rag/questions.yaml: its text is asked and "
-                       "its kind picks the answer's shape (not with --question or --question-file; default: the RAG "
-                       "factuality question)")
-        q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<system>-calls.jsonl)")
+                       "its kind picks the answer's shape (not with --question or --question-file; default: the "
+                       "default pack's default question)")
+        q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<name>-calls.jsonl, name "
+                       "rag-baseline, rag-oracle-passages or agent-baseline)")
         q.add_argument("--seed", type=int, default=0, help="seed of the answer/mapping call")
 
     r = sub.add_parser("rag-baseline", help="BM25 passages + an answer with citations + the mapping call -> answer.json")

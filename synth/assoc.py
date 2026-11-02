@@ -1,7 +1,7 @@
 """Is each value written next to its own condition, metric and dataset?
 
 Locating a value string proves the number is in the paper, not that it is attached to the right fact: a
-writer that swaps the rag and baseline numbers passes every presence check while the ground truth then
+writer that swaps the treatment and control numbers passes every presence check while the ground truth then
 says the opposite effect. So, where a value is written:
 
 - in a table: its row names its condition (full name or code) and no other; its column header names its
@@ -79,7 +79,7 @@ def _prose(text: str, plan: Plan, ps: list[Placement], p: Placement) -> list[str
     conds = facts_in(ps, "condition_label", a, b, skip=p)
     bad = []
     if p.fmt == "relative":
-        base = plan.study.condition(plan.study.control_role).id
+        base = plan.study.control_condition.id
         before = [q.fact for q in conds if q.end <= p.start]
         after = [q.fact for q in conds if q.start >= p.end]
         if not before or before[-1] != m.condition or not after or after[0] != base \

@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING, Any
 
 from . import rules
 from .contract import Item
+from .pack import DEFAULT_CONTEXT_FIELD
 from .protocol import Protocol, Synthesis
 from .reasoner import Inferences, counts_as
 
@@ -79,7 +80,8 @@ SIDE_THING, SIDE_VALUE = rules.SIDE_THING, rules.SIDE_VALUE   # answer.json keys
 class Types:
     """The protocol's evidence types by role and the fields and links the rules read (pack.RoleMap): `thing` (the
     compared thing; `side` is its treatment/control field), `metric` (`canonical`), `value` (the measured value;
-    `to_thing` and `to_metric` its links) and `claim` (`direction`); None where the protocol or pack has none."""
+    `to_thing` and `to_metric` its links, `context` its field naming its dataset or population) and `claim`
+    (`direction`); None where the protocol or pack has none."""
     thing: str | None
     side: str | None
     metric: str | None
@@ -89,6 +91,7 @@ class Types:
     to_metric: str | None
     claim: str | None
     direction: str | None
+    context: str = DEFAULT_CONTEXT_FIELD
 
     @classmethod
     def of(cls, protocol: Protocol, roles: RoleMap | None = None) -> Types:
@@ -107,7 +110,8 @@ class Types:
 
         return cls(thing=thing, side=field(thing, "side"), metric=metric, canonical=field(metric, "canonical"),
                    value=value, to_thing=link(thing), to_metric=link(metric), claim=claim,
-                   direction=field(claim, "direction"))
+                   direction=field(claim, "direction"),
+                   context=roles.context_field(value) if value is not None else cls.context)
 
     @staticmethod
     def of_type(items: list[Item], etype: str | None) -> list[Item]:
@@ -149,20 +153,22 @@ def _best(ms: list[Item], spec: Synthesis) -> Item:
     return best_value(ms, spec.pairing.prefer)
 
 
-def _pair(treatment: list[Item], control: list[Item], spec: Synthesis) -> tuple[Item, Item] | None:
+def _pair(treatment: list[Item], control: list[Item], spec: Synthesis,
+          context: str = DEFAULT_CONTEXT_FIELD) -> tuple[Item, Item] | None:
+    """`context`: the values' field naming their dataset (or population; Types.context)."""
     order: list[Any] = []
     for m in sorted(treatment + control, key=lambda m: (value_start(m), m.item_id)):
-        if m.fields.get("dataset") not in order:
-            order.append(m.fields.get("dataset"))
+        if m.fields.get(context) not in order:
+            order.append(m.fields.get(context))
     for dataset in order:  # the same dataset on both sides, first dataset in document order
-        t = [m for m in treatment if m.fields.get("dataset") == dataset]
-        c = [m for m in control if m.fields.get("dataset") == dataset]
+        t = [m for m in treatment if m.fields.get(context) == dataset]
+        c = [m for m in control if m.fields.get(context) == dataset]
         if t and c:
             return _best(t, spec), _best(c, spec)
     for dataset in order:  # fallback: one side names no dataset
-        t = [m for m in treatment if m.fields.get("dataset") in (dataset, None)]
-        c = [m for m in control if m.fields.get("dataset") in (dataset, None)]
-        if t and c and (dataset is None or any(m.fields.get("dataset") is None for m in t + c)):
+        t = [m for m in treatment if m.fields.get(context) in (dataset, None)]
+        c = [m for m in control if m.fields.get(context) in (dataset, None)]
+        if t and c and (dataset is None or any(m.fields.get(context) is None for m in t + c)):
             return _best(t, spec), _best(c, spec)
     return None
 
@@ -209,7 +215,7 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
             return thing.fields.get(side) if thing else None
 
         pair = _pair([m for m in on if side_of(m) == spec.compare.treatment],
-                     [m for m in on if side_of(m) == spec.compare.control], spec)
+                     [m for m in on if side_of(m) == spec.compare.control], spec, ty.context)
         if pair:
             break
     if pair is None:

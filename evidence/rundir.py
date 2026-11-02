@@ -34,9 +34,11 @@ FUNNEL_FILE = "funnel.json"   # the funnel's steps and decisions per document (P
 NAMES_FILE = "names.json"     # the corpus-wide name groups (D38; `names: on` only)
 LOCK_FILE = "protocol.lock.json"   # what the run was built from: protocol, pack, ontology, extractor ids (spec 6.6)
 REASON_FILE = "reason.json"   # the reasoner's inferences (spec 6.3; `reason: on` only)
+COMPARISONS_FILE = "comparisons.json"   # the comparisons built from pairs in each study (evidence/comparisons.py)
 CACHE_FILE = "extractor_calls.jsonl"
 RUN_CALLS_FILE = "calls.jsonl"   # the run's own copy of every model-backed call (RunCalls); not an output
-ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR, NAMES_FILE, REASON_FILE, LOCK_FILE)   # what only the engine writes in a run dir
+ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR, NAMES_FILE, REASON_FILE, LOCK_FILE,
+                  COMPARISONS_FILE)   # what only the engine writes in a run dir
 REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes next to a run
 
 

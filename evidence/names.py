@@ -1,6 +1,8 @@
 """Corpus-wide name grouping (D38). Mentions of one thing written differently join one group, by general code:
   seed   a pack's `names_seed` variants (after `clean`) form groups first;
-  clean  the same name after `clean` (case, hyphens, Greek, full-width, plural);
+  clean  the same name after `clean` (case, hyphens, Greek, full-width, plural), hyphens and spaces inside it
+         ignored ("zel-vora" / "Zelvora", `same_clean`) when the digit and single-letter guard agrees, so "X-1" /
+         "X1" and "Drug A" / "DrugA" stay apart;
   alias  the paper defines it ("compound 12 (hereafter Drug A)", abbrev.definitions), with the defining quote;
   near   a close spelling (rapidfuzz token_sort_ratio) whose digit runs and single-letter tokens are equal, so
          "GPT-3" / "GPT-3.5" and "Drug A" / "Drug B" stay apart;
@@ -34,6 +36,13 @@ def clean(name: str) -> str:
     return " ".join(w[:-1] if len(w) > 3 and w.endswith("s") else w for w in words)
 
 
+def same_clean(a: str, b: str) -> bool:
+    """Two `clean` forms name the same thing at the clean step: equal, or equal once the spaces inside them (a
+    hyphen or a space in the name) are dropped, with the same digit runs, digit tokens and single-letter tokens
+    (`_guard`), so "zel vora" / "zelvora" join and "x 1" / "x1" or "drug a" / "druga" do not."""
+    return a == b or (a.replace(" ", "") == b.replace(" ", "") and _guard(a, b))
+
+
 @dataclass(frozen=True)
 class Mention:
     name: str
@@ -65,7 +74,8 @@ class NameGroups:
             if name in forms or plain in (" ".join(f.split()) for f in forms):
                 return key
         folded = clean(name)
-        return next((key for key, forms in self.groups.items() if any(clean(f) == folded for f in forms)), None)
+        return next((key for key, forms in self.groups.items() if any(same_clean(clean(f), folded) for f in forms)),
+                    None)
 
 
 def _guard(a: str, b: str) -> bool:
@@ -156,6 +166,15 @@ def group_names(mentions: list[Mention], texts: dict[str, str], seed: dict[str, 
 
     def in_paper(key: str, doc: str) -> str:
         return key + LOCAL + doc if (doc, key) in local else key
+
+    by_compact: dict[str, list[str]] = {}            # clean, hyphens and spaces inside a name ignored (same_clean)
+    for k in sorted(k for k in parent if LOCAL not in k):
+        by_compact.setdefault(k.replace(" ", ""), []).append(k)
+    for ks in by_compact.values():
+        for i, a in enumerate(ks):
+            for b in ks[i + 1:]:
+                if same_clean(a, b):
+                    union(a, b, "clean")
 
     for long_key, short, doc, quote in aliases:
         union(in_paper(long_key, doc), short + LOCAL + doc, "alias", quote)

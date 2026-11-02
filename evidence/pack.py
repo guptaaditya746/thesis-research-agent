@@ -43,6 +43,14 @@ class Role(StrEnum):
     VALUE = "measured_value"
     CLAIM = "author_claim"
     CONTEXT = "context"
+    LIMITATION = "limitation"        # an author-stated limitation of a compared thing (kind `limitations`)
+    DEPENDENCY = "dependency"        # a study reusing an earlier one's method, dataset or result (kind `builds_on`)
+    STUDY_LABEL = "study_label"      # the label a paper is cited by, one per paper (kind `builds_on`)
+
+
+# The field of a measured value that holds its context (a dataset, a population) when its type declares no
+# `context_field`: the field every RAG protocol has always used, so a pack that says nothing reads as before.
+DEFAULT_CONTEXT_FIELD = "dataset"
 
 
 class TypeDecl(Strict):
@@ -53,6 +61,9 @@ class TypeDecl(Strict):
     canonical_field: str | None = None
     direction_field: str | None = None
     kind_field: str | None = None      # the compared thing's method kind (kind `best`), when the type carries one
+    # A measured value's field holding the name of its context item (the type of role `context`); None: the default
+    # field, DEFAULT_CONTEXT_FIELD (RoleMap.context_field).
+    context_field: str | None = None
 
 
 class Words(Strict):
@@ -83,9 +94,10 @@ READS: dict[str, tuple[str, ...]] = {
     "agentic": ("display", "metric_names"),   # the examples of its task brief (evidence/agentic/task.py)
 }
 # The measured-value extractors also read `types` (role -> the pack's type of that role): which context items are
-# the compared things and which the metrics, and so the links they fill (protocol EvidenceTypeSpec.links).
+# the compared things, the metrics and the contexts, and so the links they fill (protocol EvidenceTypeSpec.links).
+# They also read `context_field`: the field their values write the context's name in (TypeDecl.context_field).
 for _name in ("regex_measurement", "regex_measurement_units", "number_measurement"):
-    READS[_name] = (*READS[_name], "types")
+    READS[_name] = (*READS[_name], "types", "context_field")
 
 
 class OntologyDecl(Strict):
@@ -127,6 +139,11 @@ class Pack(Strict):
             "types": {str(role): found[0] if len(found) == 1 else found
                       for role in Role if (found := RoleMap(self).types_of(role))},
         }
+        decl = self.types.get(etype)
+        if decl is not None and decl.context_field not in (None, DEFAULT_CONTEXT_FIELD):
+            # only a field other than the default is given, so the config (and id) of every extractor of a pack
+            # whose values keep the default field is as before
+            words["context_field"] = decl.context_field
         if etype in w.gliner_labels:
             words["labels"] = list(w.gliner_labels[etype])
         return {key: words[key] for key in READS.get(extractor, ()) if key in words}
@@ -140,8 +157,11 @@ KIND_ROLES: dict[str, tuple[Role, ...]] = {
     "best": (Role.COMPARED_THING, Role.METRIC, Role.VALUE),
     "consistency": (Role.COMPARED_THING, Role.METRIC, Role.VALUE, Role.CLAIM),
     "inventory": (),
+    "chaining": (Role.COMPARED_THING, Role.METRIC, Role.VALUE),
+    "limitations": (Role.LIMITATION,),
+    "builds_on": (Role.DEPENDENCY, Role.STUDY_LABEL),
 }
-FieldName = Literal["name", "side", "canonical", "direction", "kind"]
+FieldName = Literal["name", "side", "canonical", "direction", "kind", "context"]
 
 
 class RoleMap:
@@ -183,6 +203,11 @@ class RoleMap:
         """`field`, or None when the type declares no such field."""
         decl = self.pack.types.get(etype)
         return getattr(decl, f"{which}_field") if decl is not None else None
+
+    def context_field(self, etype: str) -> str:
+        """The field of measured-value type `etype` that holds its context's name: its `context_field`, else
+        DEFAULT_CONTEXT_FIELD."""
+        return self.field_or_none(etype, "context") or DEFAULT_CONTEXT_FIELD
 
 
 def check(pack: Pack, kinds: Iterable[str]) -> None:

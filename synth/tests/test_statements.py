@@ -212,7 +212,7 @@ def test_a_built_llm_corpus_records_the_statement_mode(tmp_path: Path) -> None:
         corpus.build(name="m", seed=SEED, studies=N, renderer=renderer, out=tmp_path / str(on), levels=["explicit"])
         for lv in ("explicit", "mixed"):
             models = json.loads((tmp_path / str(on) / f"m-{lv}" / "corpus.json").read_text(encoding="utf-8"))["models"]
-            assert (models["statements"], models["paper_prompt"]) == (on, "render-v2.txt" if on else "render.txt")
+            assert (models["statements"], models["paper_prompt"]) == (on, "render-v3.txt" if on else "render.txt")
 
 
 def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:
@@ -221,7 +221,8 @@ def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:
 
     import modelcall
     from modelcall.cache import cache_key
-    from synth.render_llm import INSTRUCTIONS, PaperReply, plan_json
+    from synth.render_llm import PaperReply, plan_json
+    INSTRUCTIONS = modelcall.load_prompt(REPO / "synth" / "prompts" / "render.txt").text
     assert hashlib.sha256((REPO / "synth" / "prompts" / "render.txt").read_bytes()).hexdigest() == \
         "9e8ff1fedb40b65e2a0e98801e4b8b61605aba1aefe39d45b9f16fa99cc49d9d"
     s = truth.generate(SEED, N)[0]

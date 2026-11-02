@@ -163,7 +163,7 @@ def test_variant_cli_keeps_the_base_statement_mode(base: Path, tmp_path: Path, m
     assert cli.main(["variant", "--corpus", str(copy), "--study", study, "--direction", "contradicts",
                      "--out", str(tmp_path / "cf"), "--cache", str(tmp_path / "cache.jsonl")]) == 0
     models = load(tmp_path / "cf", "corpus.json")["models"]
-    assert (models["statements"], models["paper_prompt"]) == (statements, "render-v2.txt" if statements else "render.txt")
+    assert (models["statements"], models["paper_prompt"]) == (statements, "render-v3.txt" if statements else "render.txt")
     asked = [c.startswith("Statement tasks") for c in writer.calls]
     assert asked == ([True, False] if statements else [False])
     rec = next(r for r in load(tmp_path / "cf", "fidelity.json")["papers"] if r["id"] == study)

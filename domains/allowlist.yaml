@@ -179,3 +179,6 @@
 - word: reader
   reason: plain noun for anything that reads (the number reader numreader.py, file readers, a human reader); the rag
     pack lists it as a system noun only in the sense of a reading component, which stays in words.yaml
+- word: rag
+  reason: the name of the first domain pack (domains/rag/), kept in old baseline command and run-folder names and in the
+    committed example corpora (D36, old runs keep their names); a pack name, not a topic sentence

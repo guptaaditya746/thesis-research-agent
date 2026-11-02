@@ -32,6 +32,8 @@ Every answerer gets the same brief, given below. In short, it plays the model:
 
 Every call, including the rejected attempts and the repairs, is in the build's call cache, committed as `tests/EV2/claude-writer/*-calls.jsonl`. The cache key carries the model name.
 
+Note: an LLM build is refused (exit 2) until `domains/<domain>/trial.json` has passed on the current generator.yaml; for rag run `synth trial --domain rag --verify-model ...` first (D39).
+
 ```bash
 synth build --name rag-claude-s1 --seed 1 --studies 20 --levels all --renderer llm \
   --model exchange:claude-haiku-5-5 --verify-model exchange:claude-sonnet-5-5 \
@@ -44,6 +46,31 @@ The build waits on the pending requests. While it runs, subagents answer them in
 2. papers;
 3. repairs;
 4. blind readings.
+
+## Agent calls: replying with tool calls
+
+Some callers are agents with tools: `packbuilder propose` (plan 2 Task 18 Step 6) reads the corpus through the six
+tools of `packbuilder/server.py`. Its request file then has two more keys:
+
+- `tools`: the tools offered, each `{name, description, parameters}` (`parameters` is the JSON schema of its arguments);
+- `tool_calls_schema`: the schema of a reply that calls tools.
+
+The answerer replies in one of two ways:
+
+1. To use tools, reply with an object whose only key is `tool_calls`. Each call names an offered tool, and its
+   `args` fit that tool's `parameters`:
+
+   ```json
+   {"tool_calls": [{"tool": "grep", "args": {"regex": "(?i)placebo", "limit": 20}},
+                   {"tool": "read_paper", "args": {"paper_id": "S001"}}]}
+   ```
+
+2. To finish, reply with the output object under `output_schema`, as for any other request.
+
+After a tool call, the tools run and a new request appears, with a new id. Its `prompt` holds the conversation so
+far: `[tool call <id>] name {args}`, then `[tool result <id>] name: <result>`, or `[tool error <id>] name: <message>`
+(an unknown paper, a bad regex). Each turn is a request of its own, so answer the newest one. A reply that fits
+neither schema is rejected and the reason is listed under `rejected`, as before.
 
 ## Limits (say these in the thesis)
 

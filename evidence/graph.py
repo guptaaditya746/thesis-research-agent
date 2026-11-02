@@ -28,6 +28,8 @@ def build(papers: list[Paper], items: dict[str, list[Item]], answer: dict[str, A
             for name, target in sorted(item.links.items()):
                 edges.append({"src": item.item_id, "dst": target, "rel": name})
     for entry in answer.get("studies", []):   # an inventory answer has no studies; only effect studies pair
+        if not isinstance(entry, dict):        # a chaining answer's studies are document ids
+            continue
         if entry.get("direction") in ("supports", "contradicts") and entry.get("treatment"):
             edges.append({"src": entry["treatment"]["measurement"], "dst": entry["control"]["measurement"],
                           "rel": entry["direction"]})

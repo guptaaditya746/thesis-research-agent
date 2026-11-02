@@ -25,6 +25,15 @@ def table_lines(text: str) -> list[tuple[int, int]]:
     return out
 
 
+def section_at(text: str, offset: int) -> str:
+    """The name of the '## ' section an offset falls in ('title' before the first one)."""
+    head = text.rfind("\n## ", 0, offset + 1)
+    if head < 0:
+        return "title"
+    end = text.find("\n", head + 4)
+    return text[head + 4:end if end >= 0 else len(text)].strip()
+
+
 def in_table(text: str, start: int) -> bool:
     return any(a <= start < b for a, b in table_lines(text))
 
@@ -127,7 +136,7 @@ def _distributed(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
 
 def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     bad = []
-    if len(plan.datasets) < 2:
+    if len(plan.datasets) < min(2, len(plan.study.datasets)):    # a network study has one dataset, its population
         bad.append("fewer than two datasets")
     if not any(m.canonical == "other" for m in plan.metrics):
         bad.append("no distractor metric")
@@ -143,6 +152,10 @@ def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
             for dataset in e.datasets:
                 if sum(f"| {e.name} | {dataset} |" in r for r in rows) != len(e.conditions):
                     bad.append(f"the table lacks rows for {e.name} on {dataset}")
+        return bad
+    if len(plan.datasets) == 1:         # no Dataset column: one row per condition under the header and separator
+        if len(rows) - 2 != len(plan.conditions):
+            bad.append(f"the table has {len(rows) - 2} rows, not one per condition ({len(plan.conditions)})")
         return bad
     for dataset in plan.datasets:
         if sum(f"| {dataset} |" in r for r in rows) != len(plan.conditions):

@@ -42,7 +42,8 @@ class NumberSpan:
 _NUM = r"(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)"   # 0.68, 1,200, .5
 _INT = r"(?:\d{1,3}(?:,\d{3})+|\d+)"
 _PCT = r"(?:\s?%)?"
-_START = r"(?<![\w.,/])"                    # not inside a longer token ("v1.2", "1,000", "3/4/2020")
+# not inside a longer token ("v1.2", "1,000", "3/4/2020"), nor the number of a code name ("ZV-217", "COVID-19")
+_START = r"(?<![\w.,/])(?<![A-Za-z]-)"
 _STOP = r"(?![\d.,]\d|/\d|\w)"             # nor running on into one
 _ONE = rf"({_NUM}{_PCT})"
 

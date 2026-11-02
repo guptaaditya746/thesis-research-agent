@@ -163,7 +163,7 @@ Further implementation limits to inspect:
 - No stronger-model comparison, held-out live study families, optimizer, or
   external library experiment was run.
 
-To rerun without overwriting these observations, choose a new corpus name:
+To rerun without overwriting these observations, choose a new corpus name. Note: an LLM build is refused (exit 2) until `domains/<domain>/trial.json` has passed on the current generator.yaml; for rag run `synth trial --domain rag --verify-model ...` first (D39).
 
 ```bash
 "$EV/launch.sh" 1-protected-followup uv run synth build \

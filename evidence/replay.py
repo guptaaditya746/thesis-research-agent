@@ -26,10 +26,13 @@ from .locate import Locator
 from .recording import Provider
 from jsonio import write_json
 
-from .rundir import CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, LOCK_FILE, PROTOCOL_FILE, REEXEC_FILE, RUN_FILE, RunDir, read_json, read_lines
+from .rundir import (CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, LOCK_FILE, PROTOCOL_FILE, REEXEC_FILE,
+                     RUN_FILE, RunDir, read_json, read_lines)
 
-NEW_SINCE_EV4 = {LOCK_FILE}   # outputs a run made before EV4 lacks: reported as added, not as a mismatch
 OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_missing", "fields_differ")
+# Outputs the engine writes since a later change (the lock since EV4, comparisons.json since plan 2): a replay of a run
+# recorded before it lists them as `added`, not as a mismatch (every recorded output must still match).
+ADDED_OUTPUTS = (LOCK_FILE, COMPARISONS_FILE)
 
 
 def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | str | None) -> Settings:
@@ -47,7 +50,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
            out_dir: Path | str | None = None, locator: Locator | None = None) -> tuple[Path, dict[str, Any]]:
-    """(new run directory, {ok, mismatched}); raises NotRecorded on a cache miss."""
+    """(new run directory, {ok, mismatched}, plus `added`: the ADDED_OUTPUTS the recorded run lacks, when there are
+    any); raises NotRecorded on a cache miss."""
     run_dir = Path(run_dir)
     record = read_json(run_dir / RUN_FILE)
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
@@ -56,7 +60,7 @@ def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path
                       source_dir=run_dir)   # the recorded reason.json: a replay never reasons again
     outputs = read_json(new / RUN_FILE)["outputs"]
     names = sorted(set(outputs) | set(record["outputs"]))
-    added = sorted(n for n in names if n in NEW_SINCE_EV4 and n not in record["outputs"])
+    added = sorted(n for n in names if n in ADDED_OUTPUTS and n not in record["outputs"])
     mismatched = [n for n in names if n not in added and outputs.get(n) != record["outputs"].get(n)]
     return new, {"ok": not mismatched, "mismatched": mismatched, "source_run": record["run_id"], "replay_run": new.name,
                  **({"added": added} if added else {})}

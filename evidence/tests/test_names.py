@@ -111,3 +111,15 @@ def test_an_alias_joins_only_mentions_of_its_own_paper():
     assert all(m.group != p1_drug_a.group for m in p2_drug_a)
     assert len(g.groups) == 3 and len(set(g.groups)) == 3          # three distinct groups, none overwritten
     assert sorted(m.name for m in g.unresolved) == ["Drug A"]     # p2's own Drug A is alone
+
+
+@pytest.mark.parametrize("a,b", [("Zelvora", "zel-vora"), ("Zelvora", "Zel vora"), ("closed-book model", "closedbook model")])
+def test_clean_ignores_hyphens_and_spaces_inside_a_name(a, b):
+    g = group_names(ms(a, b), {})
+    assert len(g.groups) == 1 and {m.step for m in g.matches} == {"clean"}
+    assert g.group_of(b) == g.group_of(a) and g.group_of("ZEL-VORA" if a == "Zelvora" else a.upper()) == g.group_of(a)
+
+
+@pytest.mark.parametrize("a,b", [("X-1", "X1"), ("Drug A", "DrugA"), ("Model X1", "ModelX 1")])
+def test_dropping_spaces_keeps_the_digit_and_letter_guard(a, b):
+    assert len(group_names(ms(a, b), {}).groups) == 2

@@ -1,5 +1,6 @@
 """No topic words in code (D35): every word of every domain pack lives only in `domains/<name>/`, never in the
-code folders CHECKED_DIRS, apart from the generic words of domains/allowlist.yaml (each with its reason)."""
+code folders CHECKED_DIRS, apart from the generic words of domains/allowlist.yaml (each with its reason), the
+legacy files of LEGACY (each with its reason) and the few words FILE_WORDS lets one file keep (each with its reason)."""
 from __future__ import annotations
 
 import re
@@ -9,10 +10,40 @@ import yaml
 
 from evidence.pack import DOMAINS, load_pack
 
-CHECKED_DIRS = ["evidence", "agent"]
+# evaluation: plan 2 Task 14 (preflight P2); packbuilder: its prompts are where topic examples creep in (D35)
+CHECKED_DIRS = ["evidence", "agent", "synth", "evaluation", "packbuilder"]
 ROOT = DOMAINS.parent
 SUFFIXES = {".py", ".md", ".txt", ".yaml"}
-SKIPPED = {"tests", "fixtures", "__pycache__"}
+# examples: synth/examples/rag-demo-* are committed corpora, pinned byte for byte (D36), not code.
+SKIPPED = {"tests", "fixtures", "__pycache__", "examples"}
+# Files kept with their topic words, by path, each with its reason (D8: replay needs their exact bytes).
+_REPLAY = ("kept byte for byte so corpora built before the prompts became recipe templates replay with their "
+           "cached calls (D36); the v3 template filled from the default recipe is this text")
+LEGACY = {
+    "synth/prompts/render.txt": _REPLAY + " (render-plain-v2.txt); its sha256 is pinned "
+                                "(test_no_statements_cache_keys_are_unchanged)",
+    "synth/prompts/render-v2.txt": _REPLAY + " (render-v3.txt)",
+    "synth/prompts/statements-v1.txt": _REPLAY + " (statements-v2.txt)",
+    "synth/prompts/blind.txt": "the blind re-extraction prompt before blind-v2.txt, kept for replay (D36)",
+    "synth/prompts/blind-v2.txt": _REPLAY + " (blind-v3.txt)",
+    # The baselines' mapping prompts before plan 2 Task 14 filled them from the pack (map-<kind>-v2.md): no code
+    # loads them; kept byte for byte so mapping calls cached before plan 2 can be replayed by hand (D36).
+    **{f"evaluation/baselines/prompts/map-{kind}-v1.md": f"replay only: the {kind} mapping prompt before "
+       f"map-{kind}-v2.md (filled from the pack); MAP_PROMPTS no longer names it (D36)"
+       for kind in ("effect", "inventory", "consistency", "best")},
+}
+# Words one file may keep, by path: (the words or stems, matched as the start of a hit word; the reason). Narrower
+# than the allowlist, which frees a word everywhere.
+_BM25 = ("the answer-level baseline is a passage-retrieval system of any domain (BM25 over the papers): its own "
+         "method word, its answer.json keys `retrieved` and `settings.retrieval`/`retriever` and the CLI flag "
+         "`--retrieval`, which old answers and runbooks carry (D36)")
+FILE_WORDS = {
+    "evaluation/baselines/rag.py": ({"retriev"}, _BM25),
+    "evaluation/cli.py": ({"retriev"}, _BM25),
+    # plan 3 (D42), checked here since the merge with plan 2 widened CHECKED_DIRS to evaluation/
+    "evaluation/realpapers/scilead.py": ({"generation", "perplexity"},
+                                         "the SciLead release is quoted as its authors name it: their repository (leaderboard-generation) and the lower-is-better metrics of their code; the values come from domains/ml/metrics.yaml"),
+}
 
 
 def regex_words(pattern: str) -> set[str]:
@@ -76,9 +107,10 @@ def allowlist() -> set[str]:
 
 
 def code_files(dirs: list[str]) -> list[Path]:
-    """The .py, .md, .txt and .yaml files under `dirs`, without tests/ and fixtures."""
+    """The .py, .md, .txt and .yaml files under `dirs`, without tests/, fixtures, examples and the LEGACY files."""
     return sorted(f for d in dirs for f in (ROOT / d).rglob("*")
-                  if f.suffix in SUFFIXES and f.is_file() and not SKIPPED & set(f.relative_to(ROOT).parts))
+                  if f.suffix in SUFFIXES and f.is_file() and not SKIPPED & set(f.relative_to(ROOT).parts)
+                  and f.relative_to(ROOT).as_posix() not in LEGACY)
 
 
 def text_of(f: Path) -> str:
@@ -95,6 +127,30 @@ def test_pack_words_reduce_patterns_to_words() -> None:
 
 def test_every_allowlisted_word_is_a_pack_word() -> None:
     assert allowlist() - pack_words() == set()
+
+
+def test_every_legacy_file_exists_and_names_its_reason() -> None:
+    assert all((ROOT / path).is_file() and reason.strip() for path, reason in LEGACY.items())
+    assert all((ROOT / path).is_file() and words and reason.strip() for path, (words, reason) in FILE_WORDS.items())
+
+
+def test_every_file_word_is_still_needed() -> None:
+    """A FILE_WORDS entry whose words its file no longer holds is stale: drop it (as an allowlist word must be a
+    pack word)."""
+    for path, (words, _) in FILE_WORDS.items():
+        text = text_of(ROOT / path).lower()
+        assert all(re.search(rf"\b{re.escape(w)}", text) for w in words), path
+
+
+def test_legacy_prompts_are_not_loaded() -> None:
+    """A LEGACY mapping prompt is replay only: the baselines' MAP_PROMPTS names none of them."""
+    from evaluation.baselines.common import MAP_PROMPTS
+    assert not {f"evaluation/baselines/prompts/{name}" for name in MAP_PROMPTS.values()} & set(LEGACY)
+
+
+def kept(path: str, word: str) -> bool:
+    """`word` is one FILE_WORDS lets `path` keep."""
+    return any(word.lower().startswith(w) for w in FILE_WORDS.get(path, ((), ""))[0])
 
 
 def test_moved_prompt_words_fill_the_default_pack_prompts_as_before() -> None:
@@ -116,6 +172,6 @@ def test_no_pack_word_appears_in_checked_code() -> None:
     stems = pack_stems() - allowed
     checks = [(w, rf"\b{re.escape(w)}\b") for w in sorted(pack_words() - allowed - stems)]
     checks += [(w, rf"\b{re.escape(w)}") for w in sorted(stems)]
-    hits = [(str(f.relative_to(ROOT)), w) for f in code_files(CHECKED_DIRS) for w, rx in checks
-            if re.search(rx, text_of(f), re.I)]
+    hits = [(f.relative_to(ROOT).as_posix(), w) for f in code_files(CHECKED_DIRS) for w, rx in checks
+            if not kept(f.relative_to(ROOT).as_posix(), w) and re.search(rx, text_of(f), re.I)]
     assert hits == []

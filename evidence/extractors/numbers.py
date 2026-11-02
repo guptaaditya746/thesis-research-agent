@@ -17,6 +17,9 @@ defines: "baseline model (BM)") and also by the context items' own surface forms
 spans, so an abbreviation item ("ER" for error rate) or a condition whose code an earlier extractor
 quoted ("B") resolves in a table header, a row label or a sentence. A form that names two items is not used.
 A measurement is emitted only when both a condition and a metric resolve.
+"Dataset" above is the context: the context items are those of the pack's type of role `context` (a dataset, a
+population; base.Slots.context), and the value's field that holds the name is the pack's `context_field` of the
+measured-value type (base.Slots.context_field, `dataset` by default).
 
 Numbers are read by numreader.read_numbers (D35: one reader for every topic), which gives each its written form
 (`fields["form"]`): plain, percent, fraction, k_of_n, range or plus_minus. Values: a % sign or a % metric header
@@ -149,10 +152,11 @@ class NumberMeasurement:
         text = ctx.text()
         parts = base.ranges(task, text)
         context = ctx.context_items()
-        datasets = [str(i.fields["name"]) for i in context if i.evidence_type == "dataset" and i.fields.get("name")]
+        slots = base.Slots.of(self.given)   # the context type is the pack's type of role `context` (a dataset, a population)
+        datasets = [str(i.fields["name"]) for i in context if i.evidence_type == slots.context and i.fields.get("name")]
         treatment = (self.given.get("compare") or {}).get("treatment")
         resolver = Resolver(text, context, {**self.patterns, "question_metrics": self.fractions,
-                                            "treatment": treatment, "slots": base.Slots.of(self.given)})
+                                            "treatment": treatment, "slots": slots})
         found: list[Found] = []
         if resolver.conditions and resolver.metrics:
             names = Surfaces(resolver)
@@ -237,7 +241,7 @@ class NumberMeasurement:
                 if defined is not None:
                     spans.append(base.span(task, text, *defined, "condition_label"))
                 dataset = row_dataset or _named(col.text, datasets) or caption_dataset
-                out.append(({"value": value, "dataset": dataset, "form": number.form},
+                out.append(({"value": value, r.r.slots.context_field: dataset, "form": number.form},
                             r.r.slots.links(item, metric), spans))
         return out
 
@@ -269,7 +273,7 @@ class NumberMeasurement:
             spans = [*_value_spans(task, text, hit.n),
                      base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                      base.span(task, text, met[0].start, met[0].end, "metric_label")]
-            out.append(({"value": value, "dataset": dataset, "form": hit.n.form},
+            out.append(({"value": value, r.r.slots.context_field: dataset, "form": hit.n.form},
                         r.r.slots.links(cond[1], met[1]), spans))
         return out
 

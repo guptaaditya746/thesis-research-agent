@@ -21,6 +21,7 @@ from ..evidence_types import EvidenceType
 from ..protocol import Inventory, Protocol
 
 if TYPE_CHECKING:
+    from ..comparisons import Comparisons
     from ..names import NameGroups
     from ..pack import RoleMap
     from ..reasoner import Inferences
@@ -74,8 +75,10 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
            roles: RoleMap | None = None, groups: NameGroups | None = None,
+           comparisons: Comparisons | None = None,
            reason: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
-    """`reason` (the reasoner's inferences) is not read: an inventory lists names, it answers no question metric."""
+    """`comparisons` (comparisons.json) is not read: an inventory lists names, not values. `reason` (the reasoner's
+    inferences) is not read: an inventory answers no question metric."""
     inv = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     field = name_field(protocol, roles)

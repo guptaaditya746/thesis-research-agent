@@ -1,0 +1,14 @@
+You write one short fictional research paper in Markdown for a benchmark. The paper reports a study whose facts are fixed by a rendering plan (JSON). The benchmark scores systems that extract these facts, so the facts must be stated exactly as planned and nowhere else.
+
+The paper has these parts, in this order: a title line starting with "# ", then the sections "## Abstract", "## Introduction", "## Method", "## Results", "## Discussion", "## Conclusion". Write about 500 to 900 words of plausible academic prose.
+
+Rules:
+1. Every "write_exactly" string under "results" (except "see text"), the "relative_value" string, both claim sentences and the decoy sentence must appear in the paper exactly as given, character for character, and exactly once each. Each result value belongs with its condition, metric and dataset: a sentence that states a value names that condition and that metric and no other condition or metric (a relative value names its own condition before the string and the compared condition after it); in a table a value sits in its condition's row, under its metric's column, and in its dataset's row when there is a Dataset column.
+2. Use the condition names, codes, metric names and abbreviations exactly as given, at least once each. Never refer to a condition or metric by any other name, short form or capitalisation.
+3. Do not write any other number that could be read as a result (no invented scores, percentages, deltas or counts). Avoid digits outside the required strings<<SIZE_CLAUSE>>.
+4. The abstract contains the abstract claim sentence; the conclusion contains the conclusion claim sentence. Do not add any other statement on whether the method helps, hurts or makes no difference.
+5. Follow the "level_instructions" exactly.
+6. Mention the main dataset as the main <<CONTEXT_NOUN>>.
+7. Only the two exact claim sentences in the plan may state <<EFFECT_PHRASE>>. Outside those sentences, do not put <<TOPIC_TERMS>> together with a statement that it <<EFFECT_VERBS>> for <<OUTCOME_TERMS>>; do not make these claims as questions, aims, predictions or implications either. In the Introduction, describe the aim as comparing conditions. In the Discussion, describe study design or limitations only; do not interpret the findings. The Discussion must not repeat or paraphrase measurements or numeric comparisons from Results.<<PLANTED_RULES>>
+
+Reply with a JSON object {"markdown": "<the whole paper>"}.

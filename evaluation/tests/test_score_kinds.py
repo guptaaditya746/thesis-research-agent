@@ -90,11 +90,11 @@ def test_inventory_maps_names_through_canon_and_ignores_paper_order(hard: Ground
 
 def test_inventory_unkeyed_truth_names_match_by_folded_name(hard: GroundTruth) -> None:
     exp = _expected(hard, "inv-methods")
-    unkeyed = [e for e in exp["entries"] if canon.key("condition", e["name"]) is None]
-    assert unkeyed, "the hard corpus has ablation conditions vocab does not know"
+    unkeyed = [e for e in exp["entries"] if canon.default_canon().key("condition", e["name"]) is None]
+    assert unkeyed, "the hard corpus has ablation conditions the recipe does not know"
     answer = copy.deepcopy(exp)
     for entry in answer["entries"]:
-        if canon.key("condition", entry["name"]) is None:
+        if canon.default_canon().key("condition", entry["name"]) is None:
             entry["name"] = "  " + entry["name"].upper() + " "
     c = _c(hard, "inv-methods", answer)
     assert (c["precision"], c["recall"]) == (1.0, 1.0)
@@ -507,7 +507,7 @@ def test_perfect_latency_evidence_scores_one_on_a_and_b(corpus: Path) -> None:
     def as_protocol(item: Item) -> Item:
         if item.evidence_type != "metric":
             return item
-        lat = canon.key("metric", item.fields["name"]) == "latency"
+        lat = canon.default_canon().key("metric", item.fields["name"]) == "latency"
         return item.model_copy(update={"fields": {**item.fields, "canonical": "latency" if lat else "other"}})
 
     own = [as_protocol(i) for doc in items.values() for i in doc if i.evidence_type in protocol.evidence_types]

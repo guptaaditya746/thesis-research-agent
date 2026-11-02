@@ -19,5 +19,14 @@
     },
     "narrower_broader": [],
     "note": "the canonical metrics of words.yaml (other is the catch-all and has no class) have no narrower-to-broader pair among them; no pair is invented"
+  },
+  "generator": {
+    "source": "hand-moved from synth/vocab.py and synth/truth.py at tag ev3b-code"
+  },
+  "words": {
+    "source": "evidence/extractors/terms.py, gliner.py, units.py, dataset.py, abbrev.py; evidence/protocols/rag-factuality-funnel.yaml"
+  },
+  "pack": {
+    "source": "evidence types of rag-factuality-funnel.yaml"
   }
 }

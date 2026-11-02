@@ -103,3 +103,43 @@ def large_effects(deltas: Mapping[str, float | None], factor: float, min_studies
         return []
     cut = factor * median(sizes.values())
     return sorted(k for k, s in sizes.items() if s > cut)
+
+
+# Chaining (spec section 6.10, plan 2 Task 9): from A over B and B over C, conclude A over C. The truth network
+# (synth/network.py) and the chaining kind judge a path with this one rule, as `effect` is shared for a study.
+ChainVerdict = Literal["better", "worse", "no_difference", "refused"]
+CHAIN_REASONS = ("direct_comparison", "no_path", "metric_differs", "context_differs", "mixed_directions",
+                 "paths_disagree")
+
+
+def chain_verdict(steps: Sequence[tuple[Direction, str | None]]) -> tuple[ChainVerdict, str | None]:
+    """The verdict of one path source -> ... -> target and its refusal reason (None when it concludes). Each step
+    is (the direction of the step's earlier thing over its later one by `effect`, the step's context or None).
+    Two steps that both name a context must name the same one (`context_differs`); then better at every step
+    concludes better, worse at every step worse, and anything else, a neutral step included, `mixed_directions`.
+    The steps' metric is the caller's to check (`metric_differs`), as are paths and direct results."""
+    if len({context for _, context in steps if context is not None}) > 1:
+        return "refused", "context_differs"
+    directions = {direction for direction, _ in steps}
+    if directions == {"supports"}:
+        return "better", None
+    if directions == {"contradicts"}:
+        return "worse", None
+    return "refused", "mixed_directions"
+
+
+def chain_paths(paths: Sequence[tuple[ChainVerdict, str | None]]) -> tuple[ChainVerdict, str | None, list[int]]:
+    """Several paths of 2 or more steps (each its `chain_verdict`) combined into one answer: the paths that conclude
+    (reason None) decide, one verdict among them is the answer (reason None: inferred) and different verdicts give
+    `refused`, `paths_disagree`; a refused path does not stand against a concluding one. When none concludes, the
+    answer is refused with `mixed_directions` when a path has it, else `context_differs`. Also the indices of the
+    paths the answer rests on (the concluding ones; else every path). The chaining kind and the truth's expected
+    answer (evaluation/expected.py) both combine paths with this; an empty list is the caller's (`no_path`)."""
+    if not paths:
+        raise ValueError("no path to combine: the caller decides no_path or metric_differs")
+    concluding = [n for n, (_, reason) in enumerate(paths) if reason is None]
+    if concluding:
+        verdicts = {paths[n][0] for n in concluding}
+        return (verdicts.pop(), None, concluding) if len(verdicts) == 1 else ("refused", "paths_disagree", concluding)
+    reason = "mixed_directions" if any(r == "mixed_directions" for _, r in paths) else "context_differs"
+    return "refused", reason, list(range(len(paths)))

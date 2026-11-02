@@ -7,7 +7,7 @@
    needs to run (it requires one) and says nothing of conditions, metrics, values or rules. A brief
    picked through the concept step (`agent concepts propose/pick`) can be given instead.
 3. The agent's answer has no explicit per-paper stance, so the mapping call shared with the RAG
-   baseline (common.map_answer: MAP_INSTRUCTIONS, AnswerReply, temperature 0, cached by prompt
+   baseline (common.map_answer: map_prompt's instructions, AnswerReply, temperature 0, cached by prompt
    hash, model and input) maps its answer text (rows, facts, notes, and the quotes of the claims it
    cites) to the label and the stance of every paper it relies on. An answer with no rows is
    `insufficient` without a call.
@@ -16,7 +16,8 @@ The runner is an evidence.agentic.runner.AgentRunner: ResearchAgentRunner for re
 sandbox, LiteLLM gateway), a fake in tests. Its model is AgentSettings.model (`orch-model`, the one
 model every extractor and both baselines use; docs/evidence-system.md Part G.3).
 
-`question_id` (CLI `--question-id`): a question of domains/rag/questions.yaml instead of `question`; the agent
+`question_id` (CLI `--question-id`): a question of `questions` (a pack's questions.yaml, default the default pack's)
+instead of `question`; the agent
 researches its text, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
 common.kind_answer_json); an effect question keeps today's shape.
 """
@@ -31,8 +32,8 @@ from pydantic_ai.models import Model
 from evidence.agentic.runner import AgentJob, AgentRunner
 from modelcall import JsonlCache, redact
 
-from .common import (DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, empty_reply, kind_answer_json,
-                     kind_params, map_answer)
+from .common import (DEFAULT_QUESTION, DEFAULT_QUESTIONS, AnswerReply, SystemCorpus, answer_json, empty_reply,
+                     kind_answer_json, kind_params, map_answer)
 
 SYSTEM = "agent-baseline"
 BUDGET = {"steps": 60, "tokens": 2_000_000}  # the research runs' provisional budget (agent/rundir.BUDGET)
@@ -72,12 +73,13 @@ def answer_text(record: dict[str, Any]) -> str:
 def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, question: str | None = None,
                    concept: dict[str, Any] | None = None, budget: dict[str, int] | None = None,
                    cache: JsonlCache | None = None, model_id: str | None = None, run_id: str = "agent-baseline",
-                   seed: int = 0, question_id: str | None = None) -> dict[str, Any]:
-    """answer.json of the agent baseline for one corpus. `question_id`: a question of domains/rag/questions.yaml
-    (not with `question`; default the RAG factuality question)."""
+                   seed: int = 0, question_id: str | None = None,
+                   questions: Path = DEFAULT_QUESTIONS) -> dict[str, Any]:
+    """answer.json of the agent baseline for one corpus. `question_id`: a question of `questions`
+    (not with `question`; default the default question, common.DEFAULT_QUESTION)."""
     if question is not None and question_id is not None:
         raise ValueError("give question or question_id, not both")
-    params = kind_params(question_id) if question_id is not None else None
+    params = kind_params(question_id, questions) if question_id is not None else None
     question = params.question if params else (question or DEFAULT_QUESTION)
     corpus = SystemCorpus(corpus_dir)
     job = AgentJob(run_id=run_id, files={f"{p.id}.md": p.text for p in corpus.papers},
@@ -104,5 +106,5 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
              "agent_answer_text": text, "mapping_call": call}
     if params is not None and not effect:
         return kind_answer_json(SYSTEM, params, reply, corpus.ids, answer_text=text or "(no answer)", **extra)
-    return answer_json(SYSTEM, question, reply, corpus.ids, **extra,
+    return answer_json(SYSTEM, question, reply, corpus.ids, **extra, protocol=params.protocol if params else None,
                        **({"question_id": params.question_id} if params else {}))

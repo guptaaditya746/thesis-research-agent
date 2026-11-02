@@ -133,7 +133,8 @@ def test_runs_list_engine_and_baselines(ev: TestClient, ev_world: EvidenceWorld)
     assert (gaps["kind"], gaps["strategy"], gaps["selection"], gaps["corpus"]) == ("engine", "gaps", "cascade", MIXED)
     assert gaps["label"] and gaps["counts"] is not None and gaps["cost"]["calls"] > 0
     rag = runs[f"rag-baseline~{MIXED}"]
-    assert (rag["kind"], rag["system"], rag["strategy"], rag["corpus"]) == ("baseline", "rag-baseline", "global", MIXED)
+    assert (rag["kind"], rag["system"], rag["strategy"], rag["corpus"]) == (
+        "baseline", "bm25-answer-baseline", "global", MIXED)
 
 
 def test_run_detail_answer_funnel_links(ev: TestClient) -> None:
@@ -194,7 +195,7 @@ def test_llm_call_with_its_model_records(ev: TestClient) -> None:
 def test_baseline_run_detail_and_paper_citations(ev: TestClient) -> None:
     run = ev.get(f"/api/ev/runs/rag-baseline~{MIXED}").json()
     answer = run["answer"]
-    assert answer["system"] == "rag-baseline" and answer["citations"] and answer["retrieved"]
+    assert answer["system"] == "bm25-answer-baseline" and answer["citations"] and answer["retrieved"]
     cited = answer["citations"][0]
     paper = ev.get(f"/api/ev/runs/rag-baseline~{MIXED}/papers/{cited['document']}").json()
     assert any(f"cited:{cited['start']}-{cited['end']}" in s["marks"] for s in paper["segments"])
@@ -239,7 +240,7 @@ def test_scores_index(ev: TestClient, ev_world: EvidenceWorld) -> None:
     index = ev.get("/api/ev/scores").json()
     reports = {r["id"]: r for r in index["reports"]}
     gaps = reports[f"cascade-gaps~{MIXED}"]
-    assert gaps["strategy"] == "gaps" and gaps["run_id"] == MIXED and "rag-baseline" in gaps["systems"]
+    assert gaps["strategy"] == "gaps" and gaps["run_id"] == MIXED and "bm25-answer-baseline" in gaps["systems"]
     assert {c["id"] for c in index["compares"]} >= {"compare-cascade", f"compare-funnel~{MIXED}"}
     assert {s["group"] for s in index["shifts"]} == {"shift-regex-only", "shift-cascade", "shift-cascade-gaps"}
     (bench,) = index["benchmarks"]
@@ -249,7 +250,8 @@ def test_scores_index(ev: TestClient, ev_world: EvidenceWorld) -> None:
 def test_report_compare_shift_benchmark(ev: TestClient, ev_world: EvidenceWorld) -> None:
     view = ev.get(f"/api/ev/scores/reports/cascade-gaps~{MIXED}").json()
     report = view["report"]
-    assert report["corpus_id"] and {s["system"] for s in report["synthesis"]} >= {"evidence-engine", "rag-baseline"}
+    systems = {s["system"] for s in report["synthesis"]}
+    assert report["corpus_id"] and systems >= {"evidence-engine", "bm25-answer-baseline"}
     assert report["extraction"]["rows"] and report["intervals"]["synthesis"] and report["funnel"]["strategy"] == "gaps"
     assert view["markdown"].startswith("# Evaluation of run")
     compare = ev.get(f"/api/ev/scores/compares/compare-funnel~{MIXED}").json()
@@ -289,7 +291,7 @@ def test_the_worlds_losses_put_the_losses_first_with_a_cause(ev: TestClient) -> 
     rows = ev.get("/api/ev/losses").json()["losses"]["domains"]["rag"]
     assert rows[0]["engine_loss"] and rows[0]["cause"] in CAUSES
     assert [r["engine_loss"] for r in rows] == sorted((r["engine_loss"] for r in rows), reverse=True)
-    assert rows[0]["cost"]["rag-baseline"]["model_calls"] == 2
+    assert rows[0]["cost"]["bm25-answer-baseline"]["model_calls"] == 2
     assert {r["report"] for r in rows} <= {r["id"] for r in ev.get("/api/ev/scores").json()["reports"]}
 
 

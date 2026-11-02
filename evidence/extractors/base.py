@@ -15,6 +15,8 @@ from agent.anchor import selector_at
 from jsonio import sha256_hex
 
 from ..contract import Coverage, ExtractionTask, Item, Span, digest
+from ..evidence_types import DATASET
+from ..pack import DEFAULT_CONTEXT_FIELD
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -64,11 +66,16 @@ def emitted(given: dict[str, Any], native: str) -> str:
 class Slots:
     """A measured value's two context types and its links to them: the compared thing (`thing`, linked as
     `to_thing`) and the metric (`metric`, `to_metric`). From the pack's `types` (role -> type) and the protocol's
-    `links` (link name -> type) the engine configures; the names below when the config has neither."""
+    `links` (link name -> type) the engine configures; the names below when the config has neither. Also the type of
+    role `context` (`context`, a dataset or a population) whose item names the values' context, and the value field
+    that holds that name (`context_field`, the pack's TypeDecl.context_field; pack.DEFAULT_CONTEXT_FIELD when the
+    config gives none)."""
     thing: str = "condition"
     metric: str = "metric"
     to_thing: str = "condition"
     to_metric: str = "metric"
+    context: str = DATASET
+    context_field: str = DEFAULT_CONTEXT_FIELD
 
     @classmethod
     def of(cls, given: dict[str, Any]) -> Slots:
@@ -89,11 +96,16 @@ class Slots:
             return linked[0]
 
         thing, metric = one("compared_thing", cls.thing), one("metric", cls.metric)
+        context = types.get("context", cls.context)
+        if isinstance(context, list):   # contexts are not linked, so nothing picks one: the config must name it
+            raise ValueError(f"the pack has several types of role 'context' ({context}): name the one the values' "
+                             f"context comes from in the extractor's config `types: {{context: <type>}}`")
 
         def to(target: str) -> str:
             return next((str(name) for name, t in links.items() if t == target), target)
 
-        return cls(thing=thing, metric=metric, to_thing=to(thing), to_metric=to(metric))
+        return cls(thing=thing, metric=metric, to_thing=to(thing), to_metric=to(metric), context=str(context),
+                   context_field=str(given.get("context_field") or cls.context_field))
 
     def links(self, thing: Item, metric: Item) -> dict[str, str]:
         return {self.to_thing: thing.item_id, self.to_metric: metric.item_id}

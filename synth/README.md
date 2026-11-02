@@ -1,17 +1,22 @@
 # synth: the synthetic benchmark
 
 Structured ground truth → papers written from it → fidelity-checked corpora, so extraction, integration
-and synthesis can be scored separately against exact truth. Question: *Does retrieval-augmented
-generation improve the factual accuracy of LLM-generated answers?* The files written are exactly those of
-[docs/evidence-system.md](../docs/evidence-system.md) A1 and A2 (deviations at the end).
+and synthesis can be scored separately against exact truth. The topic comes from a recipe,
+`domains/<name>/generator.yaml` (`synth/recipe.py`; `--domain`, default the default pack of
+domains/default.yaml): the condition and metric names, the contexts, the filler and claim sentences, the
+prompt words and the value ranges. The code holds no topic word (D35; `evidence/tests/test_no_topic_words.py`
+checks synth/). The question is the one of the recipe's `effect_protocol`. The files written are exactly
+those of [docs/evidence-system.md](../docs/evidence-system.md) A1 and A2 (deviations at the end), and
+`corpus.json` records the recipe (`recipe: {domain, sha256}`, generator version 3).
 
 ```
-uv run synth build --name rag-s1 --seed 1 --studies 20 --renderer template \
+uv run synth build --name demo-s1 --seed 1 --studies 20 --renderer template [--domain D] \
     [--levels explicit,paraphrased|all] [--effects supports=0.6,contradicts=0.2,neutral=0.2] --out corpora/ \
     [--duplicates N] [--missing N] [--outliers N] [--irrelevant N]
+uv run synth trial --domain D --verify-model sub-model-2   # 5 builds_on papers; an llm build needs it to pass first (D39)
 uv run synth build ... --renderer llm --model sub-model-1 [--verify-model sub-model-2] [--attempts 3]
-uv run synth variant --corpus corpora/rag-s1-mixed --study S003 --direction contradicts [--out DIR] [--protocol P]
-uv run synth sample --corpus corpora/rag-s1-mixed --n 5 --seed 0     # human review sheet (.md + .csv)
+uv run synth variant --corpus corpora/demo-s1-mixed --study S003 --direction contradicts [--out DIR] [--protocol P]
+uv run synth sample --corpus corpora/demo-s1-mixed --n 5 --seed 0     # human review sheet (.md + .csv)
 ```
 
 `build` writes `<name>-<level>` for each level plus `<name>-mixed` (levels round robin over the studies).
@@ -32,8 +37,8 @@ missing never touches an outlier or a duplicated original, irrelevant papers com
 |---|---|---|
 | `--duplicates N` | N extra papers (ids after the set) that report an existing study again: same conditions, metrics, datasets and values (fact ids under the new study id), a different title (the template takes the next title template; the LLM renderer is told the original's title and a `title_differs` check enforces it) and filler, in the mixed corpus at the original's level | `duplicate_of`, `flags: ["duplicate"]`, effect as the original's; in `answer.duplicates`, not counted |
 | `--missing N` | N studies lack the control (alternately the treatment) measurement on the question metric on both datasets: no sentence states it, a table cell holds an en dash (`levels.MISSING_CELL`), no relative value, no decoy | `missing: "control" \| "treatment"`, `effect: {direction: "undetermined", delta: null, metric, treatment: id \| null, control: id \| null, reason: "missing_control" \| "missing_treatment"}`; in `answer.undetermined` |
-| `--outliers N` | N supporting studies get their pair redrawn with an improvement of 0.30-0.45 (`truth.LARGE_DELTA`) | `flags: ["large_effect"]`; counted |
-| `--irrelevant N` | N extra papers with no experiment, from `vocab.IRRELEVANT`: a survey of retrieval-augmented generation (the term screen lets it through; the screening question must say no) alternating with a paper on another topic (no screen term at all, not even as a substring of a word, so a screen without word boundaries finds nothing either); no digits; the same text at every level and in both renderers (the LLM renderer makes no call for them) | `relevant: false`, no conditions, metrics, measurements or claim, `effect.reason: "screened_out"`; in `answer.undetermined` |
+| `--outliers N` | N supporting studies get their pair redrawn with an improvement in the recipe's `effects.large` | `flags: ["large_effect"]`; counted |
+| `--irrelevant N` | N extra papers with no experiment, from the recipe's `text.irrelevant`: a survey of the question's topic (the term screen lets it through; the screening question must say no) alternating with a paper on another topic (no screen term at all, not even as a substring of a word, so a screen without word boundaries finds nothing either); no digits; the same text at every level and in both renderers (the LLM renderer makes no call for them) | `relevant: false`, no conditions, metrics, measurements or claim, `effect.reason: "screened_out"`; in `answer.undetermined` |
 
 Every study record has `relevant`, `flags` (sorted), `duplicate_of` and `missing`; the flags are what
 `evidence.rules.duplicates` and `rules.large_effects` find on the studies actually written (after fidelity
@@ -60,23 +65,26 @@ base manifest), `corpus.json` with `variant: {base_corpus_id, study, from, to}`,
 `{base_corpus_id, corpus_id, study, paper, from, to, changed: [{measurement, from, to}], expected:
 {before: {label, counts}, after: {label, counts}, label_changes}}`. S must be a counted study (not a
 duplicate, not missing, not irrelevant) and D must differ from its effect. The base corpus does not hold
-the protocol file, so `--protocol` (default the RAG protocol) must hash to the base's `protocol.sha256`;
-otherwise the command refuses.
+the protocol file, so `--protocol` (default the recipe's effect protocol) must hash to the base's
+`protocol.sha256`, and the recipe it names (`corpus.json` `recipe`; none before generator version 3: the
+default pack's) must hash to its `sha256`; otherwise the command refuses.
 
 ## Ground truth (`truth.py`)
 
-Seeded with one `random.Random(seed)`, no clock. Each study has a baseline and a rag condition plus 0-2
-distractor conditions (ablations, other systems), one question metric (`factual_accuracy` or
-`hallucination_rate`) plus 1-2 distractor metrics (BLEU, ROUGE-L, latency), two datasets (the first is the
-main one) and a measurement for every condition × metric × dataset. Fractions have three decimals with a
+Seeded with one `random.Random(seed)`, no clock. Each study has a control and a treatment condition (the
+protocol's compared roles, named from the recipe's `sides`) plus 0-2 distractor conditions (the recipe's
+`others`: ablations, other systems), one question metric (one of the protocol's synthesis metrics, named from
+the recipe's `question_metrics`) plus 1-2 distractor metrics (`other_metrics`), two datasets (the recipe's
+`contexts`; the first is the main one) and a measurement for every condition × metric × dataset, drawn in the
+metric's `range` (a compared pair from `pair_range`, its difference from `effects`). Fractions have three decimals with a
 non-zero last digit (so 62.4%, never 62.0%), all values within a study are pairwise more than 0.0075 apart
 (`truth.DECOY_GAP`, the evaluation tolerance 0.005 plus a margin; checked as `values_apart`), so a value
 read from the wrong cell never matches another fact by value alone (hence a neutral effect is a
 difference of 0.008 or 0.009, above the gap and below the protocol's `min_effect`), and the main
-rag-baseline difference differs from every value (the complex level writes it). The effect is
+treatment-control difference differs from every value (the complex level writes it). The effect is
 `evidence.rules.effect` with the protocol's parameters on the main dataset's treatment/control pair of the
 question metric (the second dataset shows the same direction); the answer is the protocol's label table
-(`evidence.rules.label`). Which protocol: `--protocol P` (default `domains/rag/protocols/rag-factuality.yaml`);
+(`evidence.rules.label`). Which protocol: `--protocol P` (default the recipe's `effect_protocol`);
 its `synthesis` block gives the condition roles, the question metrics and their direction, the neutral
 band, the claim vocabulary and the label table, and its id and sha256 are recorded in `corpus.json` and
 `ground_truth.json` (docs/evidence-system.md Part C). `--effects` sets the share of true effect directions
@@ -92,8 +100,8 @@ Facts per paper: all conditions on the question metric on the main dataset; comp
 | explicit | Each value is stated once, in one Results sentence that names the condition and the metric verbatim (the study's own labels) and the dataset; values as percent (`62.4%`). No tables. |
 | paraphrased | Conditions and the metric are never called by their labels, only by descriptive synonyms (`the model that answers from its own parameters`, `share of answers whose facts are all correct`); values in prose, in at least two of three formats: `62.4%`, `0.624`, `624 out of 1,000`. No tables. |
 | distributed | Values appear only in one Markdown table whose rows are short codes (`B`, `R`, `A1`, `A2`) and whose value column header is the metric's abbreviation (`FA (%)`, cells `62.4`); the codes and the abbreviation are defined in the Method section, at least 300 characters (in practice an implementation-details subsection) before the table. No sentence states a value; no full condition label is in the table. |
-| complex | All conditions with the distractors, the question metric and 1-2 distractor metrics, two datasets, in one table (columns System, Dataset, one per metric; full labels); the rag value on the question metric of the main dataset is `see text` in the table and given only relatively in a sentence (`7.0 percentage points higher than the …`). The reader must pick the question-metric pair on the main dataset. |
-| contradictory | Values in a table with full labels, but the stated claim (abstract and conclusion) disagrees with the data: an improvement where the data show none or a worsening, "no effect" where they show an improvement. In odd-index studies the abstract also states a wrong rag value (a decoy, `decoys.json`) that fits the false claim and lies more than 0.0075 (evaluation tolerance 0.005 plus a margin) from every true value of the study, so taking it never scores; in the rare study where no such value exists (about 2 %) there is no decoy. The table is the truth: `effect` comes from it, `author_claim` is the claim as stated. |
+| complex | All conditions with the distractors, the question metric and 1-2 distractor metrics, two datasets, in one table (columns System, Dataset, one per metric; full labels); the treatment value on the question metric of the main dataset is `see text` in the table and given only relatively in a sentence (`7.0 percentage points higher than the …`). The reader must pick the question-metric pair on the main dataset. |
+| contradictory | Values in a table with full labels, but the stated claim (abstract and conclusion) disagrees with the data: an improvement where the data show none or a worsening, "no effect" where they show an improvement. In odd-index studies the abstract also states a wrong treatment value (a decoy, `decoys.json`) that fits the false claim and lies more than 0.0075 (evaluation tolerance 0.005 plus a margin) from every true value of the study, so taking it never scores; in the rare study where no such value exists (about 2 %) there is no decoy. The table is the truth: `effect` comes from it, `author_claim` is the claim as stated. |
 
 ## Placements
 
@@ -109,10 +117,13 @@ synonym in paraphrased papers); `aliases` hold the codes.
 ## Renderers
 
 - `render_template.py`: deterministic Markdown (title, abstract, introduction, method, results, discussion,
-  conclusion) with filler from the fixed vocabularies in `vocab.py` (no digits, no fact names in filler).
-  Same seed, byte-identical corpus.
+  conclusion) with filler and sentence templates from the recipe's `text` (no digits, no fact names in
+  filler). Same seed, byte-identical corpus.
 - `render_llm.py`: the model gets the rendering plan (facts, level instructions, the exact strings: values,
-  claim sentences, decoy, names) and returns `{"markdown": …}` (`modelcall.ask`). Values, claims
+  claim sentences, decoy, names) and returns `{"markdown": …}` (`modelcall.ask`). Its prompts
+  (`prompts/render-v3.txt`, `statements-v2.txt`, `blind-v3.txt`) are templates filled from the recipe
+  (`text.prompt_words`, `text.blind_examples`, `reporting.dataset_size`); the older prompt files stay for
+  replay. Values, claims
   and the decoy are located with `anchor.find` (missing or ambiguous = failure); names at every
   word-bounded occurrence. Up to `--attempts` tries, each failure's reasons fed into the next prompt. All
   calls cached (`modelcall.JsonlCache`, `<out>/.synth-cache/llm.jsonl`), key = prompt hash + model identity +
@@ -125,20 +136,21 @@ Per paper: `lf_only`; `facts_rendered` (every planned fact has a rendering of it
 placement holds its exact text and `anchor.find` with its context lands on it); `values_match` (the rendered
 string reads as the true value; relative ones against the baseline); `values_unique` (a value string occurs
 only where placed); `values_associated` (a value's table row names its condition and no other, its column header its metric, its Dataset cell its dataset; in prose its sentence names its condition and metric and no other, a relative value its own condition before and the baseline after; `assoc.py`); `labels_covered` (every occurrence of a name is a recorded placement of that fact);
-`stray_numbers` (no other number reads as one of the study's values as is, as percent or per 1,000);
-`added_numbers` (no number outside the value placements, the decoys and the allowlist
-`fidelity.ALLOWED_NUMBERS`: `1,000 questions`, `Table n`, `Section n`, `Figure n`, `Appendix n`,
-`Equation n`, list markers, plus the `A1`-style codes of `vocab.py`; fails with the number, its offset and
-context); `added_claims` (no sentence outside the claim placements names retrieval and states an effect in
-the words of `evidence/extractors/terms.CLAIM_SUBJECT` and `CLAIMS`, over the regex extractor's own sentence
-split); `level_<level>` (the level's property; `irrelevant` for a paper with no experiment: nothing placed,
+`stray_numbers` (no other number reads as one of the study's values as is, as percent or per the recipe's
+`count_base`); `added_numbers` (no number outside the value placements, the decoys and
+`fidelity.allowed_numbers(recipe)`: the recipe's `reporting.allowed_numbers` (the dataset size), `Table n`,
+`Section n`, `Figure n`, `Appendix n`, `Equation n`, list markers, plus the `A1`-style codes of the recipe's
+`other_codes`; fails with the number, its offset and context); `added_claims` (no sentence outside the claim
+placements matches the recipe's `text.claim_subject` and one of its `text.claim_cues`, the generator's copy of
+the claim wording, over the regex extractor's own sentence split); `level_<level>` (the level's property;
+`irrelevant` for a paper with no experiment: nothing placed,
 no table); LLM only: `required_strings`, `model_call`, and with `--verify-model` `blind_reextraction` (a
 model that never saw the plan must recover every (condition, value) pair: the value within 0.005, reported
 under one of the condition's names or its code) and `blind_extra` (it must return nothing else; the decoy
 and the complex level's relative difference, which the paper does state, are allowed). The two added-content
 checks enforce the writer prompt's rules 3 and 4 (docs/evidence-system.md G.2); the template renderer's own
 papers pass them. What they cannot catch: a number spelled out in words ("seventy percent"), a claim that
-names the condition by a synonym without `retriev`/`RAG` ("the grounded variant is more accurate"), and
+names the condition by a synonym the `claim_subject` regex does not match, and
 anything in a heading or a table line, which the sentence split leaves out; `blind_extra` with a verify
 model is the check for those. A study failing at any level is left out of every corpus of the set and
 reported with `excluded_reason` and its attempt `history`.
@@ -150,9 +162,10 @@ truth in words, line, offsets, exact text, context, and tick columns `present`, 
 ## Example
 
 `synth/examples/rag-demo-*`: template renderer, seed 1, 6 studies (answer `mixed`: 4 supporting, 1
-contradicting, 1 neutral). A test rebuilds it and compares bytes; after changing anything in `synth/`, run
-`uv run synth build --name rag-demo --seed 1 --studies 6 --out synth/examples` (the generator's code hash
-is in `corpus.json`). `.gitattributes` keeps it LF on every checkout.
+contradicting, 1 neutral), built by generator version 2. Its files are pinned by sha256
+(`synth/tests/data/example_sha256.json`; D36: an old corpus keeps its bytes) and no longer rebuilt, since
+`corpus.json` holds the generator's code hash. That the generator still draws the same set and writes the
+same papers is pinned in `synth/tests/data/rag_set_sha256.json`. `.gitattributes` keeps it LF on every checkout.
 
 ## Deviations from docs/evidence-system.md (Part A)
 

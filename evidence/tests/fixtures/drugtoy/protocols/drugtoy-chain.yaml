@@ -1,0 +1,106 @@
+# Toy chaining protocol of the drugtoy pack (evidence/tests/test_chaining.py): is Zelvora better than Morvectin on
+# the response rate, through drugs each was tested against? The outcome by regex; the arms, the population, the study
+# label, the dependency and the result by the general LLM extractor (scripted in the test). A result copied from an
+# earlier study links the dependency that cites it (an optional link).
+
+id: drugtoy-chain
+domain: drugtoy
+version: 2
+question: Is Zelvora better than Morvectin on the response rate?
+kind: chaining
+
+locate:
+  strategy: exhaustive
+
+evidence_types:
+  arm:
+    description: A trial arm; role is drug for a drug, placebo for the placebo arm.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label, role]
+      properties:
+        label: {type: string, minLength: 1}
+        role: {type: string, enum: [drug, placebo, other]}
+    roles: [condition_label]
+    merge_key: [label, role]
+    extractors:
+      - name: llm
+
+  outcome:
+    description: A clinical outcome the trial reports.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name, canonical, higher_is_better]
+      properties:
+        name: {type: string, minLength: 1}
+        canonical: {type: string, enum: [response_rate, other]}
+        higher_is_better: {type: boolean}
+    roles: [metric_label]
+    merge_key: [name, canonical]
+    extractors:
+      - name: regex_metric
+
+  population:
+    description: The patient population the trial enrolled.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1}
+    roles: [population_label]
+    extractors:
+      - name: llm
+
+  study_label:
+    description: The label the paper is cited by (its byline, author and year).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label]
+      properties:
+        label: {type: string, minLength: 1}
+    roles: [label]
+    extractors:
+      - name: llm
+
+  dependency:
+    description: An earlier study this one builds on; cited is the label as written, reuses what it takes from it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [cited, reuses]
+      properties:
+        cited: {type: string, minLength: 1}
+        reuses: {type: string, enum: [method, dataset, result]}
+    roles: [citation]
+    extractors:
+      - name: llm
+
+  result:
+    description: One reported result, as a fraction for a rate, and the population it was measured in (or null).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [value, population]
+      properties:
+        value: {type: number}
+        population: {type: [string, "null"]}
+    links: {arm: arm, outcome: outcome, source: dependency}
+    optional_links: [source]
+    bounds:
+      - {field: value, min: 0, max: 1, when: {link: outcome, field: canonical, values: [response_rate]}}
+    context: [arm, outcome, population, dependency]
+    roles: [value, condition_label, metric_label]
+    merge_key: [value, population]
+    extractors:
+      - name: llm
+
+chaining:
+  source: Zelvora
+  target: Morvectin
+  metric: {canonical: response_rate, higher_is_better: true}
+  min_effect: 0.01
+  max_hops: 2

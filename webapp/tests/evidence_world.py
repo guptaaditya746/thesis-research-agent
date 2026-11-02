@@ -94,6 +94,9 @@ class EvidenceWorld:
 TIM_SENTENCE = "We should not assume that the evidence-level approach will necessarily perform better"
 
 
+FOLDER_OF = {"bm25-answer-baseline": "rag-baseline"}   # system id -> runs/ folder (evaluation/baselines/rag.py, D36)
+
+
 def stand_in_losses(world: EvidenceWorld) -> dict[str, Any]:
     """losses.json in the shape plan 3 Task 6's `losses(reports)` gives (the plan's Shared names), made from the
     world's own score reports until Task 6 adds `evaluate losses` (preflight F6), which then replaces this:
@@ -113,7 +116,8 @@ def stand_in_losses(world: EvidenceWorld) -> dict[str, Any]:
                 c = run.get("cost") or {}
                 calls, i, o = c.get("model_calls"), c.get("input_tokens"), c.get("output_tokens")
             else:
-                answer = json.loads((world.runs / s["system"] / corpus / "answer.json").read_text(encoding="utf-8"))
+                folder = FOLDER_OF.get(s["system"], s["system"])   # runs/<folder>: the baselines keep their old folders
+                answer = json.loads((world.runs / folder / corpus / "answer.json").read_text(encoding="utf-8"))
                 made = [m for m in (answer.get("model_call"), answer.get("mapping_call")) if m]
                 calls, i, o = len(made), sum(m["input_tokens"] for m in made), sum(m["output_tokens"] for m in made)
                 agent = answer.get("agent")

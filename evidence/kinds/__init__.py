@@ -8,9 +8,10 @@ Every module has the same four functions. Each reads evidence types and fields b
   `{code, text}`; `preset` is the pre-set reason of a document the funnel screened out.
 - `gap_types(protocol, code, *, roles=None) -> evidence types` the funnel escalates for a reason code (the
   protocol's types of the roles the module's `GAP_ROLES` names).
-- `answer(protocol, documents, items, reasons, funnel, *, roles=None, groups=None, reason=None) -> (answer, used item
-  ids)`: `groups` the names step's NameGroups, `reason` the reasoner's Inferences (a narrower metric answers a
-  broader question metric, reasoner.counts_as); a kind that reads neither still takes both.
+- `answer(protocol, documents, items, reasons, funnel, *, roles=None, groups=None, comparisons=None, reason=None) ->
+  (answer, used item ids)`: `groups` is the names step's NameGroups (None with `names: off`), `comparisons` the run's
+  comparisons.Comparisons (comparisons.json), `reason` the reasoner's Inferences (a narrower metric answers a broader
+  question metric, reasoner.counts_as); a kind that reads none of them still takes all three.
 - `extractor_config(protocol) -> dict`: the question's part of every extractor's config (engine.build_extractors).
 
 `effect` is evidence/synthesis.py unchanged, so an effect protocol gives byte-identical runs. Every other kind's
@@ -22,13 +23,15 @@ from types import ModuleType
 from typing import Any
 
 from ..protocol import Protocol
-from . import best, consistency, effect, inventory
+from . import best, builds_on, chaining, consistency, effect, inventory, limitations
 
-MODULES: dict[str, ModuleType] = {"effect": effect, "consistency": consistency, "inventory": inventory, "best": best}
+MODULES: dict[str, ModuleType] = {"effect": effect, "consistency": consistency, "inventory": inventory, "best": best,
+                                  "chaining": chaining, "limitations": limitations,
+                                  "builds_on": builds_on}
 # The reason of a document the funnel screened out, for the kinds other than effect (whose text is synthesis's).
 SCREENED_OUT: dict[str, str] = {"code": "screened_out", "text": "screened out"}
 
-__all__ = ["MODULES", "SCREENED_OUT", "best", "consistency", "effect", "inventory", "of", "screened_out"]
+__all__ = ["MODULES", "SCREENED_OUT", "best", "builds_on", "chaining", "consistency", "effect", "inventory", "limitations", "of", "screened_out"]
 
 
 def of(protocol: Protocol) -> Any:

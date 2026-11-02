@@ -19,6 +19,7 @@ from ..protocol import Protocol
 from . import effect
 
 if TYPE_CHECKING:
+    from ..comparisons import Comparisons
     from ..names import NameGroups
     from ..pack import RoleMap
     from ..reasoner import Inferences
@@ -49,9 +50,10 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
            roles: RoleMap | None = None, groups: NameGroups | None = None,
+           comparisons: Comparisons | None = None,
            reason: Inferences | None = None) -> tuple[dict[str, Any], list[str]]:
-    """`groups` (the names step) is not read: the studies are effect studies. `reason` (the reasoner's inferences):
-    a narrower metric answers a broader question metric, as in effect."""
+    """`groups` (the names step) and `comparisons` (comparisons.json) are not read: the studies are effect studies.
+    `reason` (the reasoner's inferences): a narrower metric answers a broader question metric, as in effect."""
     studies, used = [], []
     roles = roles if roles is not None else protocol.roles()
     for doc in documents:

@@ -42,16 +42,19 @@ def annotation(prop: dict[str, Any]) -> Any:
 
 
 def output_model(evidence_type: str, field_schema: dict[str, Any], links: dict[str, str],
-                 roles: list[str]) -> type[BaseModel]:
-    """{items: [{fields, links?, quotes}]} for one evidence type, every key required (null when unknown)."""
+                 roles: list[str], optional_links: tuple[str, ...] = ()) -> type[BaseModel]:
+    """{items: [{fields, links?, quotes}]} for one evidence type, every key required (null when unknown; an
+    optional link is null when the item has none)."""
     props = field_schema.get("properties", {})
     fields = create_model("Fields", **{name: (annotation(p), Field(..., description=p.get("description", "")))
                                        for name, p in props.items()})
     parts: dict[str, Any] = {"fields": (fields, ...)}
     if links:
         parts["links"] = (create_model("Links", **{
-            name: (str, Field(..., description=f"the id of the {target} from the context list, e.g. "
-                                               f"{ITEM_PREFIX[target]}1")) for name, target in links.items()}), ...)
+            name: (str | None if name in optional_links else str,
+                   Field(..., description=f"the id of the {target} from the context list, e.g. {ITEM_PREFIX[target]}1"
+                                          + (", or null if it has none" if name in optional_links else "")))
+            for name, target in links.items()}), ...)
     quotes = {role: (str if n == 0 else str | None,
                      Field(..., description=f"verbatim quote of the {role.replace('_', ' ')}"
                                             + ("" if n == 0 else ", or null if the text does not give one")))
@@ -71,8 +74,9 @@ class Retry(BaseModel):
 
 
 def instructions(template: str, evidence_type: str, description: str, field_schema: dict[str, Any],
-                 links: dict[str, str], roles: list[str]) -> str:
-    link_text = "".join(f"- {name}: the id of the {target} it belongs to, from the context list\n"
+                 links: dict[str, str], roles: list[str], optional_links: tuple[str, ...] = ()) -> str:
+    link_text = "".join(f"- {name}: the id of the {target} it belongs to, from the context list"
+                        + (" (or null when it has none)" if name in optional_links else "") + "\n"
                         for name, target in links.items())
     role_text = "\n".join(f"- {role}" + (" (required)" if n == 0 else " (optional)") for n, role in enumerate(roles))
     return template.format(

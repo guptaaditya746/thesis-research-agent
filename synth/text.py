@@ -8,7 +8,20 @@ from __future__ import annotations
 import re
 from dataclasses import asdict, dataclass
 
-ROLES = ("value", "condition_label", "metric_label", "claim")
+# Placement roles. plan 2 Task 6: `limitation` (a limitation sentence), `dependency` (a sentence citing the study it
+# builds on), `study_label` (the byline a paper is cited by); `context_label` names the span role of a context (dataset
+# or population) for the packs' context types; the generator places no context span yet.
+ROLES = ("value", "condition_label", "metric_label", "claim", "limitation", "dependency", "study_label", "context_label")
+# ground_truth.json `types`: each fact type -> the study record's key that lists its facts and the role of the placement
+# of a fact's main rendering. The fidelity check `facts_rendered` reads it too, so every fact a study record lists has
+# its main rendering in the paper. (synth/corpus.py writes it for a recipe with a network.)
+TRUTH_TYPES = {"condition": {"list": "conditions", "main_role": "condition_label"},
+               "metric": {"list": "metrics", "main_role": "metric_label"},
+               "measurement": {"list": "measurements", "main_role": "value"},
+               "author_claim": {"list": "author_claim", "main_role": "claim"},
+               "limitation": {"list": "limitations", "main_role": "limitation"},
+               "dependency": {"list": "dependencies", "main_role": "dependency"},
+               "study_label": {"list": "study_label", "main_role": "study_label"}}
 SLOT = re.compile(r"\{(\w+)\}")
 
 
@@ -79,6 +92,13 @@ class Doc:
         """Write `template` with its {slots}; a Seg or Decoy slot records where it landed."""
         for i, piece in enumerate(SLOT.split(template)):
             self.seg(slots[piece] if i % 2 else piece)
+
+    def placed(self, fact: str, role: str, template: str, **slots: str | Seg | Decoy) -> None:
+        """`fill`, and record the whole written text as one placement of `fact` (a sentence that renders a fact and
+        holds the placements of its slots, such as a limitation naming its thing)."""
+        start, mark = self.pos, len(self.parts)
+        self.fill(template, **slots)
+        self.placements.append(Placement(fact, role, self.paper, start, self.pos, "".join(self.parts[mark:])))
 
     def line(self, *pieces: str | Seg | Decoy) -> None:
         for p in pieces:

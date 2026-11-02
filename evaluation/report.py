@@ -194,7 +194,8 @@ def render(report: dict[str, Any]) -> str:
         rows = sorted(({"system": s["system"], **r} for s in att["systems"] for r in s["rows"]),
                       key=lambda r: (r["system"], _level_key(r["level"])))
         out += ["## Attribution", "", f"Wrong studies against the oracle `{att['oracle']}`: upstream when the oracle "
-                "is right (extraction or retrieval), downstream when it is wrong too (synthesis or reasoning).", "",
+                "is right (extraction or passage search), downstream when it is wrong too (synthesis or "
+                "reasoning).", "",
                 table(rows, ["system", "level", "studies", "system_correct", "oracle_correct", "upstream",
                              "downstream"]), ""]
         if att.get("not_attributed"):
@@ -232,7 +233,15 @@ KIND_B: dict[str, tuple[str, list[str], str]] = {
     "best": ("Kind assignment", ["conditions", "kind_correct", "kind_accuracy"],
              "Matched conditions whose label vocab gives a method kind, and the share the engine gave that kind."),
     "consistency": ("Claim to result", ["claims", "claim_correct", "claim_accuracy"],
-                    "Author-claim items whose claim span overlaps a true claim, and the share with its direction.")}
+                    "Author-claim items whose claim span overlaps a true claim, and the share with its direction."),
+    "chaining": ("Comparisons", ["comparisons", "expected_comparisons", "matched_comparisons", "comparison_precision",
+                                 "comparison_recall"],
+                 "The run's comparisons (comparisons.json) against the truth network's, as (document, the two things "
+                 "by name key, metric, context); duplicate studies left out."),
+    "limitations": ("Thing links", ["items", "linked", "link_share"],
+                    "Limitation items and the share that link a compared thing (a wrong link shows in A)."),
+    "builds_on": ("Dependency links", ["links", "expected_links", "matched_links", "link_precision", "link_recall"],
+                  "The answer's links (from, to, reuses) against the planted dependencies.")}
 KIND_C: dict[str, tuple[str, list[str], str]] = {
     "inventory": ("Inventory", ["system", "target", "entries", "expected_entries", "matched", "precision", "recall",
                                 "f1", "paper_precision", "paper_recall", "paper_f1"],
@@ -253,7 +262,21 @@ KIND_C: dict[str, tuple[str, list[str], str]] = {
                     "null: duplicates and papers with missing data or no claim drop out): a decidable paper left out "
                     "or called undetermined is wrong; completeness is the share given true or false; the agreeing and "
                     "disagreeing sets are over the same studies. `*_all_papers`: the old number over every study "
-                    "truth lists, `agrees` null right when truth's is null too.")}
+                    "truth lists, `agrees` null right when truth's is null too."),
+    "chaining": ("Chaining", ["system", "source", "target", "verdict", "expected_verdict", "reason", "expected_reason",
+                              "verdict_correct", "inferred_correct", "path_correct", "refusal_correct", "headline"],
+                 "`path_correct`: the `via` things (by name key) and the studies are truth's; `refusal_correct`: truth "
+                 "refuses and the answer refuses for the same reason (null when truth concludes); headline: the mean "
+                 "of verdict_correct and path_correct."),
+    "limitations": ("Limitations", ["system", "thing", "things_scored", "jaccard_mean", "exact_match",
+                                    "unlinked_exact", "headline"],
+                    "Per compared thing (by name key), the category sets of truth and the answer: Jaccard and exact "
+                    "match; headline: the mean Jaccard."),
+    "builds_on": ("Builds on", ["system", "thing", "things_scored", "follower_f1_mean", "ranking_tau", "top1_correct",
+                                "headline"],
+                  "Per compared thing (by name key), F1 of the follower sets; Kendall tau of the influence over "
+                  "truth's things; top1: the answer's first thing is one of truth's most influential; headline: the "
+                  "mean F1.")}
 
 
 def render_integration_kind(kind: str, integration: dict[str, Any] | None) -> list[str]:
@@ -594,7 +617,7 @@ def render_compare(comparison: dict[str, Any]) -> str:
     out = ["# Comparison over corpora", "", table(_marked(comparison["rows"]), COMPARE_COLUMNS), ""]
     if any(r.get("diagnostic") for r in comparison["rows"]):
         out += ["`(diagnostic)`: oracle-synthesis and rag-oracle-passages read the ground truth; they bound what "
-                "extraction or retrieval could give and are not baselines.", ""]
+                "extraction or passage search could give and are not baselines.", ""]
     if comparison.get("notes"):
         out += ["**Not shown:**", "", *[f"- {n}" for n in comparison["notes"]], ""]
     if comparison.get("selection"):
