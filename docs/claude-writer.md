@@ -32,6 +32,8 @@ Every answerer gets the same brief, given below. In short, it plays the model:
 
 Every call, including the rejected attempts and the repairs, is in the build's call cache, committed as `tests/EV2/claude-writer/*-calls.jsonl`. The cache key carries the model name.
 
+Note: an LLM build is refused (exit 2) until `domains/<domain>/trial.json` has passed on the current generator.yaml; for rag run `synth trial --domain rag --verify-model ...` first (D39).
+
 ```bash
 synth build --name rag-claude-s1 --seed 1 --studies 20 --levels all --renderer llm \
   --model exchange:claude-haiku-5-5 --verify-model exchange:claude-sonnet-5-5 \

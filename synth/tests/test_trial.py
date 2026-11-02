@@ -98,6 +98,18 @@ def test_trial_records_recipe_hash_and_stale_trial_refused(tmp_path):
     assert gate("drugtoy", root=root) is False
 
 
+def test_a_smaller_or_other_preset_trial_does_not_open_the_gate(tmp_path):
+    root = copy_fixture(tmp_path / "d")
+    assert trial("drugtoy", renderer=llm_renderer(tmp_path, root), root=root)["passed"]
+    path = root / "drugtoy" / "trial.json"
+    record = json.loads(path.read_text(encoding="utf-8"))
+    for key, value in (("studies", 1), ("preset", "plain"), ("passed", "yes")):
+        path.write_text(json.dumps({**record, key: value}), encoding="utf-8")
+        assert gate("drugtoy", root=root) is False, key
+    path.write_text(json.dumps(record), encoding="utf-8")
+    assert gate("drugtoy", root=root) is True
+
+
 def test_a_paper_that_fails_fails_the_trial_and_the_gate(tmp_path):
     root = copy_fixture(tmp_path / "d")
     t = trial("drugtoy", renderer=llm_renderer(tmp_path, root, spoil=True), root=root)

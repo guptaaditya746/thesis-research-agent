@@ -13,6 +13,7 @@ those of [docs/evidence-system.md](../docs/evidence-system.md) A1 and A2 (deviat
 uv run synth build --name demo-s1 --seed 1 --studies 20 --renderer template [--domain D] \
     [--levels explicit,paraphrased|all] [--effects supports=0.6,contradicts=0.2,neutral=0.2] --out corpora/ \
     [--duplicates N] [--missing N] [--outliers N] [--irrelevant N]
+uv run synth trial --domain D --verify-model sub-model-2   # 5 builds_on papers; an llm build needs it to pass first (D39)
 uv run synth build ... --renderer llm --model sub-model-1 [--verify-model sub-model-2] [--attempts 3]
 uv run synth variant --corpus corpora/demo-s1-mixed --study S003 --direction contradicts [--out DIR] [--protocol P]
 uv run synth sample --corpus corpora/demo-s1-mixed --n 5 --seed 0     # human review sheet (.md + .csv)

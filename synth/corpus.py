@@ -357,9 +357,10 @@ def trial(domain: str, *, renderer: Renderer, root: Path = DOMAINS, seed: int = 
 
 
 def gate(domain: str, root: Path = DOMAINS) -> bool:
-    """True when `root/<domain>/trial.json` passed on the recipe as it is now (same sha256)."""
+    """True when `root/<domain>/trial.json` is a passed 5-study builds_on trial of the recipe as it is now (same sha256)."""
     path = Path(root) / domain / "trial.json"
     if not path.is_file():
         return False
     record = json.loads(path.read_text(encoding="utf-8"))
-    return bool(record.get("passed")) and record.get("recipe_sha256") == load_recipe(domain, root).sha256
+    return (record.get("passed") is True and record.get("studies") == 5 and record.get("preset") == "builds_on"
+            and record.get("recipe_sha256") == load_recipe(domain, root).sha256)
