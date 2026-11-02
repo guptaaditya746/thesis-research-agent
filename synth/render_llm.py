@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -31,9 +32,9 @@ from agent import anchor
 import modelcall
 from synth import levelcheck, statements as statements_module
 from synth.corpus import Rendered
-from synth.fidelity import BlindExtraction, Check, PaperFidelity, blind_check, check_paper
+from synth.fidelity import Check, PaperFidelity, blind_check, blind_model, check_paper
 from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
-from synth.recipe import Recipe
+from synth.recipe import REUSES, Recipe
 from synth.render_template import render_study as render_with_template
 from synth.text import Decoy, Placement
 from synth.truth import Study
@@ -48,15 +49,62 @@ BLIND_TEMPLATE = modelcall.load_prompt(PROMPT_DIR / "blind-v3.txt").text
 
 def fill(template: str, recipe: Recipe) -> str:
     """`template` with every <<NAME>> placeholder filled from the recipe: the prompt words (key upper-cased),
-    BLIND_EXAMPLES and DATASET_SIZE. A placeholder the recipe has no value for is an error."""
+    BLIND_EXAMPLES, DATASET_SIZE and the parts written from the recipe's schema (`schema_parts`). A placeholder the
+    recipe has no value for is an error."""
     values = {k.upper(): v for k, v in recipe.text.prompt_words.items()}
     values["BLIND_EXAMPLES"] = recipe.text.blind_examples
     if recipe.reporting.dataset_size is not None:
         values["DATASET_SIZE"] = recipe.reporting.dataset_size
+    values |= schema_parts(recipe, next_rule(template))
     for name, value in values.items():
         template = template.replace(f"<<{name}>>", value)
     assert "<<" not in template, f"a placeholder is left (the recipe of {recipe.domain} has no value for it)"
     return template
+
+
+def next_rule(template: str) -> int:
+    """The number after the last numbered rule ("12. ...") of a prompt template."""
+    return max((int(m.group(1)) for m in re.finditer(r"(?m)^(\d+)\. ", template)), default=0) + 1
+
+
+def schema_parts(recipe: Recipe, rule: int) -> dict[str, str]:
+    """The prompt parts that follow the recipe's schema; each is empty, or the text it always was, for a recipe that
+    plants nothing (rag), so its filled prompts do not move:
+    - SIZE_CLAUSE (writer rule 3): that the context size may be mentioned, when the recipe has one;
+    - PLANTED_RULES (writer, numbered from `rule`): where the byline, limitation and dependency sentences and a name
+      variant's definition go;
+    - BLIND_CONTEXT, BLIND_FIELDS, BLIND_REPLY (blind reader): the context field (dataset or population), what to
+      list besides the results (limitations with the recipe's categories, cited studies with the reuse kinds) and
+      the reply's JSON shape (fidelity.blind_model)."""
+    size = recipe.reporting.dataset_size
+    planted = []
+    if recipe.text.authors:
+        planted.append('Write the "byline" string exactly as given, on its own line directly below the title.')
+    if recipe.limitations is not None:
+        planted.append('Write each "limitation_sentences" string exactly as given, once, in the Discussion.')
+    if recipe.builds_on is not None:
+        planted.append('Write each "dependency_sentences" string exactly as given, once, in the Method.')
+    if recipe.name_variants is not None:
+        planted.append('A condition with "introduce_exactly" is introduced once, in the Method, by a sentence that '
+                       'begins with that string exactly as given; everywhere else it is called by its "name".')
+    context = recipe.context
+    fields, reply = [], f'"measurements": [{{"condition": ..., "metric": ..., "{context}": ..., "value": ...}}]'
+    if recipe.limitations is not None:
+        fields.append("Also list every limitation the authors state about a condition: the condition (as the paper "
+                      "names it) and the category, exactly one of: " + ", ".join(recipe.limitations.categories)
+                      + ". If the paper states none, reply with an empty list.")
+        reply += ', "limitations": [{"condition": ..., "category": ...}]'
+    if recipe.builds_on is not None:
+        fields.append("Also list every earlier study the paper says it builds on: its label exactly as the paper "
+                      "writes it (an author-year label) and what the paper reuses from it, exactly one of: "
+                      + ", ".join(REUSES) + " (method: its way of running the study; dataset: its data or "
+                      "participants; result: a value it reported). If the paper builds on none, reply with an empty "
+                      "list.")
+        reply += ', "cites": [{"label": ..., "reuses": ...}]'
+    return {"SIZE_CLAUSE": f'; the dataset size "{size}" may be mentioned' if size is not None else "",
+            "PLANTED_RULES": "".join(f"\n{rule + i}. {r}" for i, r in enumerate(planted)),
+            "BLIND_CONTEXT": context, "BLIND_FIELDS": "".join("\n\n" + f for f in fields),
+            "BLIND_REPLY": "{" + reply + "}"}
 
 
 def instructions(recipe: Recipe) -> str:
@@ -121,7 +169,7 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
     treatment = plan.study.treatment_condition.id
     decoy = None
     if plan.decoy is not None:
-        decoy = (f"On {plan.datasets[0]}, the {plan.cond_name[treatment]} reaches {plan.decoy.exact} "
+        decoy = (f"On {plan.datasets[0]}, the {plan.first(treatment).text} reaches {plan.decoy.exact} "
                  f"{plan.metric_name[plan.metrics[0].id]}.")
     not_reported = None
     if plan.study.missing is not None:          # a --missing study: the key is present only then
@@ -136,7 +184,8 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
         "datasets": [{"name": d, "main": i == 0, "size": plan.recipe.reporting.dataset_size}
                      for i, d in enumerate(plan.datasets)],
         "conditions": [{"name": plan.cond_name[c.id], "does": c.description,
-                        **({"code": plan.cond_aliases[c.id][0]} if plan.cond_aliases[c.id] else {})}
+                        **({"code": plan.cond_aliases[c.id][0]} if plan.level == "distributed" else {}),
+                        **({"introduce_exactly": definition(plan, c.id)} if definition(plan, c.id) else {})}
                        for c in plan.conditions],
         "metrics": [{"name": plan.metric_name[k.id], "unit": units[k.unit],
                      **({"abbreviation": k.abbr} if plan.level == "distributed" else {}),
@@ -153,16 +202,27 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
         **({"title": {"must_differ_from": avoid_title,
                       "instruction": "Another paper already carries this title; give this one a different title."}}
            if avoid_title is not None else {}),
+        # plan 2 Task 6, each key only when the plan has it (so a rag plan is what it was)
+        **({"byline": {"write_exactly": plan.label}} if plan.label else {}),
+        **({"limitation_sentences": [{"write_exactly": x.sentence} for x in plan.limitations]}
+           if plan.limitations else {}),
+        **({"dependency_sentences": [{"write_exactly": d.sentence} for d in plan.dependencies]}
+           if plan.dependencies else {}),
     }
 
 
-def section_at(text: str, offset: int) -> str:
-    """The name of the '## ' section an offset falls in ('title' before the first one)."""
-    head = text.rfind("\n## ", 0, offset + 1)
-    if head < 0:
-        return "title"
-    end = text.find("\n", head + 4)
-    return text[head + 4:end if end >= 0 else len(text)].strip()
+def definition(plan: Plan, cid: str) -> str | None:
+    """How Method introduces a condition the paper calls by a short form it defines (a hereafter or code-name variant,
+    `Plan.introduce`): "Zelvora (hereafter ZV)", "Zelvora (ZV-217)"; None for any other condition."""
+    kind, form = plan.variants.get(cid, (None, None))
+    label = plan.condition(cid).label
+    return {"hereafter": f"{label} (hereafter {form})", "code_name": f"{label} ({form})"}.get(kind)
+
+
+def at_sentence_start(text: str, start: int) -> bool:
+    """`start` begins a sentence: the text before it, spaces dropped, is empty or ends a sentence or a line."""
+    before = text[:start].rstrip(" ")
+    return not before or before[-1] in ".!?:\n"
 
 
 def locate(text: str, plan: Plan) -> tuple[list[Placement], list[Decoy], list[str]]:
@@ -175,7 +235,7 @@ def locate(text: str, plan: Plan) -> tuple[list[Placement], list[Decoy], list[st
         if reason != "ambiguous":
             return ""
         spans = index.spans(anchor.normalize(quote))
-        sections = [section_at(text, start) for start, _ in spans]
+        sections = [levelcheck.section_at(text, start) for start, _ in spans]
         return (f": it occurs {len(spans)} times (in {', '.join(sections)}); write it exactly once, where the "
                 f"level instructions put it, and nowhere else")
 
@@ -198,6 +258,24 @@ def locate(text: str, plan: Plan) -> tuple[list[Placement], list[Decoy], list[st
             decoys.append(Decoy(plan.decoy.measurement, plan.decoy.stated_value, sel.exact, sel.start, sel.end))
         except anchor.AnchorError as exc:
             problems.append(f"decoy {plan.decoy.exact!r} is {exc.reason}")
+    if plan.byline is not None:
+        find_once(plan.byline.fact, "study_label", plan.label)
+    for x in plan.limitations:
+        find_once(x.id, "limitation", x.sentence)
+    for d in plan.dependencies:
+        find_once(d.id, "dependency", d.sentence)
+    for cid in plan.cond_name:
+        quote = definition(plan, cid)
+        if quote is None:
+            continue
+        try:
+            sel = anchor.find(index, quote)
+        except anchor.AnchorError as exc:
+            problems.append(f"{cid}/condition_label: required definition {quote!r} is {exc.reason}"
+                            f"{where(quote, exc.reason)}")
+            continue
+        if plan.variants[cid][0] == "hereafter" and not at_sentence_start(text, sel.start):
+            problems.append(f"{cid}/condition_label: the definition {quote!r} must begin its sentence")
     found = levelcheck.renderings(text, plan)
     have = {fact for fact, _, _, _, main in found if main}
     problems += [f"{c}/condition_label: name {plan.cond_name[c]!r} not found" for c in plan.cond_name if c not in have]
@@ -234,10 +312,10 @@ class LlmRenderer:
         self.served.add(answer.served_model or answer.model)
         return answer.output.model_dump()
 
-    async def _blind(self, text: str, recipe: Recipe, seed: int) -> BlindExtraction:
-        out = await self._call(blind_instructions(recipe), "Paper:\n\n" + text, BlindExtraction, self.verify_model,
-                               seed)
-        return BlindExtraction.model_validate(out)
+    async def _blind(self, text: str, recipe: Recipe, seed: int) -> BaseModel:
+        reply = blind_model(recipe)
+        out = await self._call(blind_instructions(recipe), "Paper:\n\n" + text, reply, self.verify_model, seed)
+        return reply.model_validate(out)
 
     async def render_one(self, study: Study, level: str, seed: int, avoid_title: str | None = None) -> Rendered:
         """`avoid_title`: for a duplicate, the title its original got at this level (`title_differs` check)."""

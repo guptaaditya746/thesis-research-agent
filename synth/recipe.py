@@ -113,9 +113,15 @@ class Network(Strict):
     contexts: list[str]
 
 
+REUSES = ("method", "dataset", "result")     # what a study can reuse; `BuildsOn.phrases` follow this order
+
+
 class BuildsOn(Strict):
     share: float
     reuses: dict[Literal["method", "dataset", "result"], float]
+    # How a paper says it builds on an earlier one, one phrase per kind in REUSES order, each naming the cited study's
+    # `{label}`: "we reuse the protocol of {label}", "the cohort of {label}", "as reported by {label}". synth/levels.py
+    # sets each in a fixed sentence frame of its kind.
     phrases: list[str]
 
 
@@ -205,6 +211,11 @@ class Recipe(Strict):
             unnamed = [c for c, ts in lim.categories.items() if not ts or any("{thing}" not in t for t in ts)]
             if unnamed:
                 raise ValueError(f"limitation categories {unnamed}: each needs templates, every one naming {{thing}}")
+        b = self.builds_on
+        if b is not None and (len(b.phrases) != len(REUSES) or any("{label}" not in p for p in b.phrases)
+                              or not self.text.authors):
+            raise ValueError(f"builds_on needs text.authors (a paper cites by author-year label) and one phrase per "
+                             f"reuse kind, in the order {', '.join(REUSES)}, each naming {{label}}; not {b.phrases}")
         bad = {k: v for k, v in (("builds_on.share", self.builds_on and self.builds_on.share),
                                  ("name_variants.share", self.name_variants and self.name_variants.share))
                if v is not None and not 0 <= v <= 1}

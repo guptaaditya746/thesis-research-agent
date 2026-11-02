@@ -100,3 +100,9 @@ def test_a_footnote_mark_glues_the_number_out_of_a_measurement(tmp_path):
     assert measurements(["Zelvora reached a response rate of 0.68¹."], tmp_path, DRUG_TOY_PROTOCOL) == []
     (item,) = measurements(["Zelvora reached a response rate of 0.68."], tmp_path / "b", DRUG_TOY_PROTOCOL)
     assert item.fields["value"] == 0.68
+
+
+def test_the_number_of_a_code_name_is_not_read():
+    """A drug's code name ("ZV-217", plan 2 Task 5 name variants) is a name, not a value; ranges still read."""
+    assert [n.raw for n in read_numbers("In adults, 41 of 120 patients on ZV-217 responded.")] == ["41 of 120"]
+    assert [(n.raw, n.form) for n in read_numbers("between 0.4-0.6 and -0.2")] == [("0.4-0.6", "range"), ("0.2", "plain")]

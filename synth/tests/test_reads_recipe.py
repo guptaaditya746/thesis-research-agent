@@ -15,7 +15,9 @@ from synth.render_template import TemplateRenderer
 PROMPTS = Path(__file__).resolve().parents[1] / "prompts"
 # Pinned after the move (preflight P8): sha256 of repr(generate(seed, 6)) for seeds 1-3, and of a template build
 # (name r, seed 1, 6 studies) file by file, corpus.json without `generator.code_sha256`. They equal the set and
-# the papers built before the move (checked by hand when pinned); Tasks 4-5 assert them again.
+# the papers built before the move (checked by hand when pinned); Tasks 4-5 assert them again. Task 6 re-pinned the
+# fidelity.json files only: each paper lists two more checks (limitations_placed, dependencies_placed), which pass with
+# nothing planted; every other file is as before.
 PINS = Path(__file__).resolve().parent / "data" / "rag_set_sha256.json"
 
 

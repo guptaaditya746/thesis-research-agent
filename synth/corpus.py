@@ -35,7 +35,7 @@ from synth import network, truth
 from synth.fidelity import PaperFidelity
 from synth.levels import LEVELS, Plan
 from synth.recipe import Recipe, effect_protocol_path, load_recipe
-from synth.text import Decoy, Placement
+from synth.text import TRUTH_TYPES, Decoy, Placement
 from synth.truth import Study
 
 GENERATOR = "synth"
@@ -43,12 +43,8 @@ GENERATOR = "synth"
 # (domains/<name>/generator.yaml), recorded in corpus.json `recipe`
 GENERATOR_VERSION = "3"
 PACKAGE = Path(__file__).resolve().parent
-# ground_truth.json `types` (a recipe with a network only): each fact type of a study record -> the record's key
-# that lists its facts and the role of the placement of a fact's main rendering (plan 2, Shared interfaces).
-TRUTH_TYPES = {"condition": {"list": "conditions", "main_role": "condition_label"},
-               "metric": {"list": "metrics", "main_role": "metric_label"},
-               "measurement": {"list": "measurements", "main_role": "value"},
-               "author_claim": {"list": "author_claim", "main_role": "claim"}}
+# ground_truth.json `types` (a recipe with a network only; plan 2, Shared interfaces) is synth.text.TRUTH_TYPES, which
+# the fidelity check `facts_rendered` reads as well.
 
 
 @dataclass
@@ -109,8 +105,9 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
     return {
         "study_id": s.study_id, "paper": s.study_id, "level": p.level,
         "relevant": s.relevant, "flags": study_flags(r, spec, s), "duplicate_of": s.duplicate_of, "missing": s.missing,
+        # `variants`: the name variant the paper writes the thing by (none at the paraphrased level)
         "conditions": [{"id": c.id, "role": c.role, "label": p.cond_name[c.id], "aliases": list(p.cond_aliases[c.id]),
-                        **({"variants": [list(v) for v in c.variants]} if c.variants else {})}
+                        **({"variants": [list(p.variants[c.id])]} if c.id in p.variants else {})}
                        for c in p.conditions],
         "metrics": [{"id": k.id, "canonical": k.canonical, "name": p.metric_name[k.id],
                      "higher_is_better": k.higher_is_better} for k in p.metrics],
@@ -126,12 +123,16 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
         # a network study's (synth/network.py); absent otherwise, so a rag record is what it was
         **({"population": s.population} if s.population is not None else {}),
         **({"label": s.label} if s.label else {}),
+        # the byline the paper carries (a relevant paper of a recipe with authors)
+        **({"study_label": {"id": p.byline.fact, "label": p.label}} if p.byline is not None else {}),
         **({"arm_sizes": dict(s.arm_sizes)} if s.arm_sizes else {}),
-        # plan 2 Task 5: present when the recipe plants them (a rag record is what it was)
+        # plan 2 Task 5: present when the recipe plants them (a rag record is what it was); the sentences as the paper
+        # writes them (Task 6)
         **({"limitations": [{"id": x.id, "thing": x.thing, "category": x.category, "sentence": x.sentence}
-                            for x in s.limitations]} if s.recipe.limitations is not None else {}),
+                            for x in p.limitations]} if s.recipe.limitations is not None else {}),
         **({"dependencies": [{"id": d.id, "cites": d.cites, "reuses": d.reuses, "thing": d.thing,
-                              "measurement": d.measurement} for d in s.dependencies]}
+                              "measurement": d.measurement, "label": d.label, "sentence": w.sentence}
+                             for d in s.dependencies for w in p.dependencies if w.id == d.id]}
            if s.recipe.builds_on is not None else {}),
     }
 

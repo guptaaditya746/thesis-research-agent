@@ -250,7 +250,7 @@ def test_ground_truth_records_dependencies_limitations_and_variants():
     assert all("dependencies" in r and "limitations" in r for r in records)
     deps = [d for r in records for d in r["dependencies"]]
     assert {d["reuses"] for d in deps} == {"method", "dataset", "result"}
-    assert all(set(d) == {"id", "cites", "reuses", "thing", "measurement"} for d in deps)
+    assert all(set(d) == {"id", "cites", "reuses", "thing", "measurement", "label", "sentence"} for d in deps)
     copied = [m for r in records for m in r["measurements"] if "copied_from" in m]
     assert len(copied) == sum(d["reuses"] == "result" for d in deps)
     assert all(set(l) == {"id", "thing", "category", "sentence"} for r in records for l in r["limitations"])

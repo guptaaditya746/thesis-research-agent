@@ -10,22 +10,22 @@ sides:
     role: treatment
     names:
     - label: Zelvora
-      synonym: the oral kinase blocker
+      synonym: oral kinase blocker
       description: is taken as one tablet each morning for the whole trial
       code: Z
     - label: Quintapride
-      synonym: the weekly injectable agent
+      synonym: weekly injectable agent
       description: is given as one injection under the skin each week
       code: Q
     - label: Morvectin
-      synonym: the twice-daily capsule
+      synonym: twice-daily capsule
       description: is taken as one capsule in the morning and one in the evening
       code: M
   placebo:
     role: control
     names:
     - label: placebo
-      synonym: the inactive look-alike tablet
+      synonym: inactive look-alike tablet
       description: looks and tastes like the study drug but holds no active substance
       code: P
 others:
@@ -93,15 +93,15 @@ text:
   claims:
     improves:
       response_rate:
-      - The study drug clearly raises the response rate over its comparator.
+      - The study drug clearly raises the share of responders over its comparator.
       - Treatment with the study drug leads to more responders than the comparator.
     no_effect:
       response_rate:
-      - The study drug does not measurably change the response rate over its comparator.
+      - The study drug does not measurably change the share of responders over its comparator.
       - The share of responders is essentially unchanged by the study drug.
     worsens:
       response_rate:
-      - The study drug lowers the response rate compared with its comparator.
+      - The study drug lowers the share of responders compared with its comparator.
       - Treatment with the study drug leads to fewer responders than the comparator.
   titles:
   - 'A Randomised Comparison of Two Treatments in {dataset}'
@@ -111,6 +111,8 @@ text:
   - Many patients do not respond to the treatments available today.
   - Several new drugs have been proposed, but direct comparisons are rare.
   - We report a randomised trial that compares two treatment arms head to head.
+  - Trials that compare active drugs help clinicians choose between them.
+  - Response is the outcome that patients and clinicians care about most.
   method:
   - Patients were assigned to the arms at random and treated for twelve weeks.
   - Response was judged by an assessor who did not know the assigned arm.
@@ -119,6 +121,10 @@ text:
   - The trial was approved by the ethics committee of every site.
   - All patients gave written consent before the first visit.
   - Visits took place every second week until the end of treatment.
+  - Blood samples were taken at the first and at the last visit.
+  - Doses were counted at every visit to check adherence.
+  - An independent board reviewed the safety data during the trial.
+  - The allocation list was kept by a pharmacist outside the study team.
   discussion:
   - The comparison suggests that the choice of drug matters for response.
   - Our trial was not powered to detect rare adverse events.
@@ -153,6 +159,18 @@ text:
       - Staff reported that the new schedule was easier to plan.
       conclusion:
       - We described a new visit schedule and what the staff thought of it.
+  templates:
+    abstract_without_names:
+    - We compare treatment arms in a randomised trial in {dataset}.
+    method_one_context:
+    - We enrolled {main} at several clinics and followed them through treatment.
+    method_two_contexts:
+    - We enrolled two groups at several clinics, {main} and {other}.
+    hard_more_experiments:
+    - Besides the {main} in both groups, we report {others} in {dataset}.
+    prose_k_of_n:
+    - In {dataset}, {value} on the {cond} counted towards the {metric}.
+    - For the {cond} in {dataset}, {value} counted towards the {metric}.
   hard:
     main_experiment: main comparison
     subset_experiments:
@@ -181,7 +199,13 @@ text:
     Examples.
 
     A sentence "In adults, 41 of 120 patients on Tavorin responded", with the metric named response rate, gives
-    {"condition": "Tavorin", "metric": "response rate", "dataset": "adults", "value": 0.342}
+    {"condition": "Tavorin", "metric": "response rate", "population": "adults", "value": 0.342}
+
+    A sentence "Few patients on Tavorin were followed after the last dose" gives the limitation
+    {"condition": "Tavorin", "category": "short_follow_up"}
+
+    A sentence "This study uses the cohort of Brandt et al. (2015)" gives the cited study
+    {"label": "Brandt et al. (2015)", "reuses": "dataset"}
   claim_subject: (?i)\bstudy\s+drug\b
   claim_cues:
   - (?i)\bno\s+(?:measurable\s+)?(?:effect|difference|change)|\bessentially\s+unchanged\b|\bdoes\s+not\s+measurably\b

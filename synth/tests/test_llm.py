@@ -24,6 +24,8 @@ from synth.render_llm import LEVEL_INSTRUCTIONS, LlmRenderer, locate, plan_json,
 from synth.render_template import render, render_study
 
 SEED, N = 3, 4
+# The blind checks, in order; the last two pass with nothing planted (a rag paper has no limitations or citations).
+BLIND_CHECKS = ["blind_reextraction", "blind_extra", "blind_limitations", "blind_dependencies"]
 
 
 def prompt_of(messages: list[ModelMessage]) -> str:
@@ -185,7 +187,7 @@ def test_paper_that_never_passes_is_reported_and_excluded_everywhere(tmp_path: P
         assert not checks["blind_reextraction"]["ok"] and "missing" in checks["blind_reextraction"]["detail"]
         assert checks["blind_extra"]["ok"]
         good = next(r for r in fid["papers"] if r["id"] != bad)
-        assert good["ok"] and [c["name"] for c in good["checks"]][-2:] == ["blind_reextraction", "blind_extra"]
+        assert good["ok"] and [c["name"] for c in good["checks"]][-4:] == BLIND_CHECKS
         gt = json.loads((d / "ground_truth.json").read_text(encoding="utf-8"))
         assert bad not in [s["paper"] for s in gt["studies"]] + [p["paper"] for p in gt["placements"]]
 
@@ -251,7 +253,7 @@ def test_blind_check_allows_the_decoy_and_the_relative_difference(studies: list[
     text, _, _ = render(plan, plan_rng(SEED, s.study_id, "contradictory:text"))
     rag = plan.cond_name[s.conditions[1].id]
     ok = read(plan, text, [BlindMeasurement(condition=rag, metric="m", dataset=s.datasets[0], value=s.decoy)])
-    assert all(c.ok for c in ok) and [c.name for c in ok] == ["blind_reextraction", "blind_extra"]
+    assert all(c.ok for c in ok) and [c.name for c in ok] == BLIND_CHECKS
     extra = read(plan, text, [BlindMeasurement(condition=rag, metric="m", dataset=s.datasets[0], value=0.999)])
     assert extra[0].ok and not extra[1].ok and "0.999" in extra[1].detail
     # the complex level's relative difference, read as a value of the treatment condition, is planned content

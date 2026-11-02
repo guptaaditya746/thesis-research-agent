@@ -23,7 +23,7 @@ from synth.fidelity import Check
 from synth.levels import Plan
 from synth.text import Placement
 
-PROSE_FORMATS = ("pct", "frac", "count", "relative")     # cell_pct and cell_raw are table cells
+PROSE_FORMATS = ("pct", "frac", "count", "k_of_n", "relative")     # cell_pct and cell_raw are table cells
 HEADER = "Statement tasks:"
 REPAIR_HEADER = "Statement tasks (repair; rewrite only these sentences):"
 # The level checks that hold for one sentence; the others are about tables and the whole paper.

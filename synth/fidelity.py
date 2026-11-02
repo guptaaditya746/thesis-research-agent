@@ -10,15 +10,16 @@ import functools
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
+from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
 
 from agent import anchor
 from evidence.extractors import base as extractor_base
 from synth import assoc, levelcheck
-from synth.levels import Plan, parse_value
-from synth.recipe import Recipe
-from synth.text import Decoy, Placement
+from synth.levels import DEPENDENCY_SECTION, LIMITATION_SECTION, Plan, Written, parse_value, written
+from synth.recipe import REUSES, Recipe, default_recipe
+from synth.text import TRUTH_TYPES, Decoy, Placement
 from synth.truth import DECOY_GAP
 
 NUMBER = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
@@ -73,12 +74,10 @@ def _check(name: str, problems: list[str]) -> Check:
 
 
 def facts_rendered(plan: Plan, ps: list[Placement]) -> list[str]:
-    """Every fact of the plan has at least one rendering of its role."""
+    """Every fact of the plan has at least one rendering of its type's main role: the fact types and their roles are
+    the ground truth's (`text.TRUTH_TYPES`, ground_truth.json `types`), the facts of each type the plan's."""
     have = {(p.fact, p.role) for p in ps}
-    want = [(m.id, "value") for m in plan.measurements] + [(c.id, "condition_label") for c in plan.conditions]
-    want += [(k.id, "metric_label") for k in plan.metrics]
-    if plan.study.relevant:
-        want.append((f"{plan.paper}.a1", "claim"))
+    want = [(fact, t["main_role"]) for t in TRUTH_TYPES.values() for fact in plan.facts(t["list"])]
     return [f"{fact} has no {role} rendering" for fact, role in want if (fact, role) not in have]
 
 
@@ -102,18 +101,23 @@ def anchored(text: str, ps: list[Placement]) -> list[str]:
 
 
 def values_match(plan: Plan, ps: list[Placement]) -> list[str]:
-    """Each value rendering states its fact's value (a relative one, relative to the control value)."""
+    """Each value rendering states its fact's value (a relative one, relative to the control value): it reads as the
+    truth written in its format reads (a count k of n exactly; a percent to its tenth, which for a value in thousandths
+    is the truth itself)."""
     study, bad = plan.study, []
     base = study.value_of(study.effect.control) if study.effect.control else None   # None: --missing, irrelevant
     for p in ps:
         if p.role != "value":
             continue
+        fmt = p.fmt or "frac"
+        m = next(x for x in study.measurements if x.id == p.fact)
         try:
-            got = parse_value(p.exact, p.fmt or "frac", base)
-        except (ValueError, IndexError):
+            got = parse_value(p.exact, fmt, base)
+            want = parse_value(written(study, m, fmt, base), fmt, base)
+        except (ValueError, IndexError, KeyError, TypeError):
             bad.append(f"{p.fact}: cannot read {p.exact!r}")
             continue
-        if abs(got - study.value_of(p.fact)) > 1e-9:
+        if abs(got - want) > 1e-9:
             bad.append(f"{p.fact}: {p.exact!r} reads {got}, truth {study.value_of(p.fact)}")
     return bad
 
@@ -168,12 +172,13 @@ def _around(text: str, start: int, end: int, width: int = 30) -> str:
 
 def added_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
     """No number outside the value placements, the decoys and `allowed_numbers` (plus the condition codes with a
-    digit, A1: the recipe's `other_codes` and the plan's aliases): a paper that adds a number adds a result the
-    ground truth does not have (the writer prompt's rule 3). Each offending number is reported with its offset
-    and context."""
+    digit, A1: the recipe's `other_codes`, the plan's aliases and its name variants, such as a code name ZV-217): a
+    paper that adds a number adds a result the ground truth does not have (the writer prompt's rule 3). Each offending
+    number is reported with its offset and context."""
     covered = [(p.start, p.end) for p in ps if p.role == "value"] + [(d.start, d.end) for d in decoys]
     covered += [(m.start(), m.end()) for m in allowed_numbers(plan.recipe).finditer(text)]
     codes = set(plan.recipe.other_codes) | {a for aliases in plan.cond_aliases.values() for a in aliases}
+    codes |= {form for _, form in plan.variants.values()}
     for code in sorted(codes):
         if any(ch.isdigit() for ch in code):
             covered += levelcheck.occurs(text, code)
@@ -202,6 +207,34 @@ def added_claims(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     return bad
 
 
+def sentences_placed(text: str, ps: list[Placement], planned: tuple[Written, ...], role: str,
+                     section: str) -> list[str]:
+    """Each planned sentence occurs exactly once in the text, verbatim, placed as its fact's `role` rendering, in the
+    '## `section`' section."""
+    index, bad = anchor.Index(text), []
+    for x in planned:
+        found = len(index.spans(anchor.normalize(x.sentence)))
+        if found != 1:
+            bad.append(f"{x.id}: {x.sentence!r} occurs {found} times, not once")
+            continue
+        placed = [p for p in ps if p.fact == x.id and p.role == role]
+        if not placed:
+            bad.append(f"{x.id}: {x.sentence!r} is not placed as its {role}")
+        elif levelcheck.section_at(text, placed[0].start) != section:
+            bad.append(f"{x.id}: {x.sentence!r} is in {levelcheck.section_at(text, placed[0].start)!r}, not {section!r}")
+    return bad
+
+
+def limitations_placed(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
+    """Each planted limitation sentence is in the Discussion, once (`sentences_placed`)."""
+    return sentences_placed(text, ps, plan.limitations, "limitation", LIMITATION_SECTION)
+
+
+def dependencies_placed(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
+    """Each dependency sentence (the builds_on preset) is in the Method, once (`sentences_placed`)."""
+    return sentences_placed(text, ps, plan.dependencies, "dependency", DEPENDENCY_SECTION)
+
+
 def check_paper(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[Check]:
     return [
         _check("values_apart", values_apart(plan)),
@@ -215,23 +248,42 @@ def check_paper(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy])
         _check("stray_numbers", stray_numbers(text, plan, ps, decoys)),
         _check("added_numbers", added_numbers(text, plan, ps, decoys)),
         _check("added_claims", added_claims(text, plan, ps)),
+        _check("limitations_placed", limitations_placed(text, plan, ps)),
+        _check("dependencies_placed", dependencies_placed(text, plan, ps)),
         _check(f"level_{plan.level}" if plan.study.relevant else "irrelevant",
                levelcheck.check_level(text, plan, ps, decoys)),
     ]
 
 
-class BlindMeasurement(BaseModel):
-    condition: str
-    metric: str
-    dataset: str
-    value: float
+@functools.cache
+def _blind_model(context: str, categories: tuple[str, ...] | None, cites: bool) -> type[BaseModel]:
+    measurement = create_model("BlindMeasurement", condition=(str, ...), metric=(str, ...), **{context: (str, ...)},
+                               value=(float, ...))
+    fields: dict[str, Any] = {"measurements": (list[measurement], ...)}
+    if categories is not None:
+        limitation = create_model("BlindLimitation", condition=(str, ...), category=(Literal[categories], ...))
+        fields["limitations"] = (list[limitation], ...)
+    if cites:
+        cite = create_model("BlindCite", label=(str, ...), reuses=(Literal[REUSES], ...))
+        fields["cites"] = (list[cite], ...)
+    return create_model("BlindExtraction", **fields)
 
 
-class BlindExtraction(BaseModel):
-    measurements: list[BlindMeasurement]
+def blind_model(recipe: Recipe) -> type[BaseModel]:
+    """The reply schema of the blind reader for papers of `recipe`, from its schema: `measurements` [{condition,
+    metric, <the recipe's context: dataset or population>, value}]; with planted limitations, `limitations`
+    [{condition, category}], the category one of the recipe's; with the builds_on block, `cites` [{label, reuses}],
+    reuses one of method, dataset, result. The thing is called `condition`, as the rag recipe's blind examples call it
+    (they are pinned with the recipe). For the rag recipe this is the schema the blind reader always had, so its
+    prompt hash does not move."""
+    lim = recipe.limitations
+    return _blind_model(recipe.context, tuple(lim.categories) if lim is not None else None, recipe.builds_on is not None)
 
 
-BlindExtractor = Callable[[str], Awaitable[BlindExtraction]]
+# The default pack's reply schema (and its measurement), as before the schema came from the recipe.
+BlindExtraction = blind_model(default_recipe())
+BlindMeasurement = BlindExtraction.model_fields["measurements"].annotation.__args__[0]
+BlindExtractor = Callable[[str], Awaitable[BaseModel]]
 
 
 def _norm(name: str) -> str:
@@ -274,27 +326,33 @@ def planned_extras(plan: Plan) -> list[tuple[str, float]]:
 
 
 async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> list[Check]:
-    """A model that never saw the plan reads the paper; every planned measurement must come back whole, in
-    one reply: the value within the evaluation tolerance, the condition, the metric and the dataset, so a
-    value written next to the wrong condition, metric or dataset fails (`blind_reextraction`, the detail
-    names the first failing field of the closest reply); and nothing else may come back, except the decoy
-    and the relative difference, which the paper does state (`blind_extra`, condition and value only: they
-    have no metric or dataset): an extra measurement is a result the ground truth does not have
-    (docs/evidence-system.md G.2)."""
-    got = (await extract(text)).measurements
+    """A model that never saw the plan reads the paper (its reply follows `blind_model` of the plan's recipe).
+
+    - `blind_reextraction`: every planned measurement comes back whole, in one reply: the value within the
+      evaluation tolerance, the condition, the metric and the context (dataset or population), so a value written
+      next to the wrong condition, metric or context fails (the detail names the first failing field of the closest
+      reply).
+    - `blind_extra`: nothing else comes back, except the decoy and the relative difference, which the paper does
+      state (condition and value only: they have no metric or context); an extra measurement is a result the ground
+      truth does not have (docs/evidence-system.md G.2).
+    - `blind_limitations`: every planted limitation comes back, its thing (`names_condition`) and its category exact.
+    - `blind_dependencies`: every dependency comes back as a cite whose label is the cited study's label, exactly.
+    A recipe that plants no limitations or dependencies (rag) passes the last two with nothing to find."""
+    reply = await extract(text)
+    got, context = reply.measurements, plan.recipe.context
 
     def near(v: float, truth: float) -> bool:      # a percent the model did not convert still counts
         return abs(v - truth) <= TOLERANCE or abs(v / 100 - truth) <= TOLERANCE
 
-    def matches(g: BlindMeasurement, condition: str, value: float) -> bool:
+    def matches(g: BaseModel, condition: str, value: float) -> bool:
         return near(g.value, value) and names_condition(g.condition, plan, condition)
 
-    def first_failure(g: BlindMeasurement, m) -> int:   # index of the first failing field; 4 = none
+    def first_failure(g: BaseModel, m) -> int:   # index of the first failing field; 4 = none
         checks = (near(g.value, m.value), names_condition(g.condition, plan, m.condition),
-                  names_metric(g.metric, plan, m.metric), names_dataset(g.dataset, m.dataset))
+                  names_metric(g.metric, plan, m.metric), names_dataset(getattr(g, context), m.dataset))
         return next((i for i, ok in enumerate(checks) if not ok), 4)
 
-    fields = ("value", "condition", "metric", "dataset")
+    fields = ("value", "condition", "metric", context)
     missing = []
     for m in plan.measurements:
         best = max((first_failure(g, m) for g in got), default=0)
@@ -302,5 +360,11 @@ async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> list[Ch
             missing.append(f"{m.id} ({fields[best]})")
     allowed = [(m.condition, m.value) for m in plan.measurements] + planned_extras(plan)
     extra = [(g.condition, g.value) for g in got if not any(matches(g, c, v) for c, v in allowed)]
+    limitations, cites = getattr(reply, "limitations", []), getattr(reply, "cites", [])
+    lost = [f"{x.id} ({x.category})" for x in plan.limitations
+            if not any(g.category == x.category and names_condition(g.condition, plan, x.thing) for g in limitations)]
+    unread = [f"{d.id} ({d.label})" for d in plan.dependencies if not any(c.label.strip() == d.label for c in cites)]
     return [Check("blind_reextraction", not missing, f"missing {missing}" if missing else "all values recovered"),
-            Check("blind_extra", not extra, f"extra {extra}" if extra else "nothing beyond the plan")]
+            Check("blind_extra", not extra, f"extra {extra}" if extra else "nothing beyond the plan"),
+            Check("blind_limitations", not lost, f"missing {lost}" if lost else "all limitations recovered"),
+            Check("blind_dependencies", not unread, f"missing {unread}" if unread else "all cited studies recovered")]

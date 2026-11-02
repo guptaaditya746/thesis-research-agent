@@ -134,22 +134,25 @@ class Dependency:
     both test; `thing` its condition id in this study), `dataset` (the same main context; `thing` None) or `result`
     (the cited study's value of this study's reference arm on the same thing, question metric and context: `thing` is
     that arm's condition id, `measurement` the copied fact, marked `copied_from`). A paper cites by the cited study's
-    `label`."""
+    author-year label, which `labelled` copies here (`label`) once every study has one."""
     id: str                        # <study id>.d<n>
     cites: str                     # the cited study's id, always an earlier one
     reuses: Reuse
     thing: str | None
     measurement: str | None
+    label: str = ""                # the cited study's label
 
 
 @dataclass(frozen=True)
 class Limitation:
     """A limitation the authors state about a compared thing (`thing`, its condition id): a recipe category and a
-    sentence from that category's templates with `{thing}` filled by the thing's label."""
+    sentence from that category's templates with `{thing}` filled by the thing's label. `template` is that template,
+    so a paper that names the thing otherwise (a synonym, a name variant) writes the sentence with its own name."""
     id: str                        # <study id>.l<n>
     thing: str
     category: str
     sentence: str
+    template: str = ""
 
 
 @dataclass(frozen=True)
@@ -891,8 +894,9 @@ def with_limitations(seed: int, studies: list[Study], recipe: Recipe) -> list[St
             limitations = []
             for category in picked:
                 thing = rng.choice(things)
-                sentence = rng.choice(plan.categories[category]).replace("{thing}", thing.label)
-                limitations.append(Limitation(f"{s.study_id}.l{len(limitations) + 1}", thing.id, category, sentence))
+                template = rng.choice(plan.categories[category])
+                limitations.append(Limitation(f"{s.study_id}.l{len(limitations) + 1}", thing.id, category,
+                                              template.replace("{thing}", thing.label), template))
             s = replace(s, limitations=tuple(limitations))
         out.append(s)
     return out
@@ -998,7 +1002,8 @@ LABEL_YEARS = range(2006, 2025)      # the years of the invented author-year lab
 def labelled(seed: int, studies: list[Study], recipe: Recipe) -> list[Study]:
     """Each study with a distinct author-year label ("<author> et al. (<year>)": an author of the recipe's
     `text.authors`, years never decreasing in study order, so an earlier study is never the newer paper), from its
-    own stream `synth:<seed>:labels`. A recipe without authors (rag) leaves the set as it is."""
+    own stream `synth:<seed>:labels`; each dependency gets the label of the study it cites. A recipe without authors
+    (rag) leaves the set as it is."""
     authors = recipe.text.authors
     if not authors:
         return studies
@@ -1007,7 +1012,9 @@ def labelled(seed: int, studies: list[Study], recipe: Recipe) -> list[Study]:
         raise ValueError(f"the recipe of {recipe.domain} has {len(authors)} authors: too few for {len(studies)} "
                          "distinct labels")
     picked = sorted(random.Random(f"synth:{seed}:labels").sample(pool, len(studies)), key=lambda p: p[1])
-    return [replace(s, label=f"{a} et al. ({y})") for s, (a, y) in zip(studies, picked)]
+    labels = {s.study_id: f"{a} et al. ({y})" for s, (a, y) in zip(studies, picked)}
+    return [replace(s, label=labels[s.study_id],
+                    dependencies=tuple(replace(d, label=labels[d.cites]) for d in s.dependencies)) for s in studies]
 
 
 def counted(studies: list[Study]) -> list[Study]:
