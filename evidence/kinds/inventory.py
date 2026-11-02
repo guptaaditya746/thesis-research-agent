@@ -21,6 +21,7 @@ from ..evidence_types import EvidenceType
 from ..protocol import Inventory, Protocol
 
 if TYPE_CHECKING:
+    from ..comparisons import Comparisons
     from ..names import NameGroups
     from ..pack import RoleMap
 
@@ -72,7 +73,9 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           comparisons: Comparisons | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`comparisons` (comparisons.json) is not read: an inventory lists names, not values."""
     inv = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     field = name_field(protocol, roles)

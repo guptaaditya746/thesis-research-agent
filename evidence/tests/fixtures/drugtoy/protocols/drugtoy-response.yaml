@@ -40,14 +40,14 @@ evidence_types:
       - name: regex_metric
 
   result:
-    description: One reported result, as a fraction for a rate; form is how the paper wrote the number.
+    description: One reported result, as a fraction for a rate, and the population it was measured in (or null); form is how the paper wrote the number.
     fields:
       type: object
       additionalProperties: false
-      required: [value, dataset]
+      required: [value, population]
       properties:
         value: {type: number}
-        dataset: {type: [string, "null"]}
+        population: {type: [string, "null"]}
         form: {type: [string, "null"], enum: [plain, percent, fraction, k_of_n, range, plus_minus, null]}
     links: {arm: arm, outcome: outcome}
     bounds:

@@ -2,11 +2,12 @@
 (webapp/evquestions.py) and the evaluation.
 
 Per entry: `id` (a plain name), `question` (exactly as its hand-written protocol asks it), `kind` (effect,
-inventory, consistency or best; the protocol's kind), `truth` (the parameters the expected answer is computed
+inventory, consistency, best, chaining, limitations or builds_on; the protocol's kind), `truth` (the parameters the expected answer is computed
 with, fixed here and never taken from a user's protocol), `protocol` (the hand-written protocol, a path from the
 questions file's folder, `protocol_file`) and `agentic_protocol` (optional). Truth parameters by
-kind: effect and consistency take `metric` and `min_effect`; inventory takes `target`; best takes `metric`. A
-parameter of another kind is refused. This module checks the file's shape only; the web app also checks that
+kind: effect and consistency take `metric` and `min_effect`; inventory takes `target`; best takes `metric`;
+chaining takes `metric`, `min_effect`, `source` and `target` (two compared things); limitations and builds_on take
+`thing` (a compared thing, or none for every one). A parameter of another kind is refused. This module checks the file's shape only; the web app also checks that
 each protocol parses and asks the entry's question with the entry's kind.
 """
 from __future__ import annotations
@@ -25,17 +26,22 @@ from .rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 DEFAULT = questions_path(DEFAULT_PACK)
 NAME = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"   # a directory name, never a flag or a path
 TRUTH_FIELDS: dict[str, tuple[str, ...]] = {"effect": ("metric", "min_effect"), "consistency": ("metric", "min_effect"),
-                                            "inventory": ("target",), "best": ("metric",)}
+                                            "inventory": ("target",), "best": ("metric",),
+                                            "chaining": ("metric", "min_effect", "source", "target"),
+                                            "limitations": ("thing",), "builds_on": ("thing",)}
 
 
 class QuestionTruth(BaseModel):
-    """What the expected answer is computed with (evaluation): the question metric and the neutral band, or the
-    inventory's target type (any type of the questions file's pack, `parse` checks it)."""
+    """What the expected answer is computed with (evaluation): the question metric and the neutral band, the
+    inventory's target type (any type of the questions file's pack, `parse` checks it), a chain's `source` and
+    `target` compared things, or the compared thing a limitations or builds-on question is about (`thing`)."""
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     metric: str | None = Field(None, min_length=1)
     min_effect: float | None = Field(None, gt=0)
     target: str | None = Field(None, min_length=1)
+    source: str | None = Field(None, min_length=1)
+    thing: str | None = Field(None, min_length=1)
 
 
 class QuestionEntry(BaseModel):
@@ -80,7 +86,8 @@ class QuestionsFile(BaseModel):
 
 def parse(path: Path, pack: Path | None = None) -> QuestionsFile:
     """The file, checked (ValueError naming every problem). When `pack` (default: the file's folder) is a pack
-    folder (it holds pack.yaml), every inventory `truth.target` must be a type of that pack."""
+    folder (it holds pack.yaml), every inventory `truth.target` must be a type of that pack (a chain's `target` is a
+    compared thing, not a type)."""
     try:
         data: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
     except OSError as exc:
@@ -95,7 +102,8 @@ def parse(path: Path, pack: Path | None = None) -> QuestionsFile:
     folder = Path(pack if pack is not None else path.parent).resolve()
     if (folder / "pack.yaml").is_file():   # a pack's questions file: every inventory target is a type of the pack
         types = load_pack(folder.name, root=folder.parent).types
-        bad = [f"{q.id}: {q.truth.target}" for q in found.questions if q.truth.target not in (None, *types)]
+        bad = [f"{q.id}: {q.truth.target}" for q in found.questions
+               if q.kind == "inventory" and q.truth.target not in (None, *types)]
         if bad:
             raise ValueError(f"{path.name}: truth.target names no type of pack {folder.name!r} ({sorted(types)}): "
                              + "; ".join(bad))

@@ -109,7 +109,7 @@ class MeasurementUnitsRegex:
             spans = [base.span(task, text, hit.start(1), hit.end(1), "value"),
                      base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                      base.span(task, text, met[0].start, met[0].end, "metric_label")]
-            out.append(({"value": round(value, 6), "dataset": None}, r.slots.links(cond[1], met[1]), spans))
+            out.append(({"value": round(value, 6), r.slots.context_field: None}, r.slots.links(cond[1], met[1]), spans))
         return out
 
 

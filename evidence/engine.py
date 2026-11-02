@@ -55,6 +55,11 @@ app counts it, `--retry-errors` asks it again. The groups are
 names.json; the names left unresolved are counted in funnel.json and run.json (`unresolved_names`), as dangling links
 are; the kind's answer gets the groups (`groups`). With `off` none of it happens and no file changes.
 
+Comparisons (plan 2 Task 8, spec section 6.2): after the names step, for every kind, the comparisons built from
+pairs in each study (evidence/comparisons.py, with the names step's groups or none) are comparisons.json, and the
+kind's answer gets them (`comparisons`). Runs made before it have no comparisons.json; their replay reports the
+file as added (replay.ADDED_OUTPUTS), not as a mismatch.
+
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
@@ -96,7 +101,7 @@ from agent.rundir import utc_now
 import modelcall
 from modelcall import JsonlCache
 
-from . import checks, extractors, graph, kinds, merge, names
+from . import checks, comparisons, extractors, graph, kinds, merge, names
 from .extractors import base as extractor_base
 from .extractors import gliner
 from .extractors import llm as llm_extractor
@@ -107,7 +112,7 @@ from .pack import Role, RoleMap, load_pack
 from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
-from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
+from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
                      LOCATE_FILE, NAMES_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, RunDirExists,
                      new_run_id, write_lines)
 
@@ -211,6 +216,8 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
         for ref in spec.extractors:
             config = {**pack.extractor_config(etype, ref.name), **ref.config, "evidence_type": etype,
                       "field_schema": spec.fields, "links": dict(spec.links), "roles": list(spec.roles), "description": spec.description, **question, **extra}
+            if spec.optional_links:   # given only when there are any, so no other extractor's config (and id) changes
+                config["optional_links"] = list(spec.optional_links)
             if ref.name in gliner.FACTORIES:
                 config[gliner.URL_KEY] = gliner_url
                 if gliner_model and "model" not in ref.config:
@@ -682,6 +689,15 @@ class Execution:
         self.cost["output_tokens"] += tokens_out
         return json.dumps(asked.value.get("output") or {"error": asked.value.get("error")})
 
+    # --- the comparisons step -------------------------------------------------------------------------
+
+    def comparisons_step(self, groups: names.NameGroups | None) -> comparisons.Comparisons:
+        """Every kind: the comparisons built from pairs in each study (evidence/comparisons.py), with the names step's
+        groups (None with `names: off`), written to comparisons.json."""
+        built = comparisons.of_run(self.protocol, [p.id for p in self.corpus.papers], self.items, self.roles, groups)
+        self.outputs[COMPARISONS_FILE] = write_json(self.root / COMPARISONS_FILE, built.json())
+        return built
+
     # --- the run --------------------------------------------------------------------------------------
 
     def finish(self) -> dict[str, Any]:
@@ -689,8 +705,9 @@ class Execution:
         funnel = {p.id: {"screened": self.funnel[p.id]["screen"]["relevant"] is False if self.funnel[p.id]["screen"] else False,
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
         groups = self.names_step()
+        built = self.comparisons_step(groups)
         answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
-                                                      funnel, roles=self.roles, groups=groups)
+                                                      funnel, roles=self.roles, groups=groups, comparisons=built)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)

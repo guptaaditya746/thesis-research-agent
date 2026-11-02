@@ -32,6 +32,7 @@ from ..evidence_types import EvidenceType
 from ..protocol import DEFAULT_PACK, Best, Protocol
 
 if TYPE_CHECKING:
+    from ..comparisons import Comparisons
     from ..names import NameGroups
     from ..pack import RoleMap
 
@@ -105,13 +106,14 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
     on = [m for m in ty.of_type(items, ty.value) if m.links.get(to_metric) in metrics and m.links.get(to_thing) in kinds]
     chosen: dict[str, Item] = {}
     order: list[Any] = []
+    context = ty.context   # the values' field naming their dataset (or population)
     for m in sorted(on, key=lambda m: (synthesis.value_start(m), m.item_id)):
-        if m.fields.get("dataset") not in order:
-            order.append(m.fields.get("dataset"))
+        if m.fields.get(context) not in order:
+            order.append(m.fields.get(context))
     def of(allowed: tuple[Any, ...]) -> dict[str, list[Item]]:
         by_kind: dict[str, list[Item]] = {}
         for m in on:
-            if m.fields.get("dataset") in allowed:
+            if m.fields.get(context) in allowed:
                 by_kind.setdefault(kinds[m.links[to_thing]], []).append(m)
         return by_kind
 
@@ -123,7 +125,7 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
     if groups is None:      # fallback, as synthesis._pair: values that name no dataset join a named one
         for dataset in order:
             by_kind = of((dataset, None))
-            if len(by_kind) >= 2 and (dataset is None or any(m.fields.get("dataset") is None
+            if len(by_kind) >= 2 and (dataset is None or any(m.fields.get(context) is None
                                                              for ms in by_kind.values() for m in ms)):
                 groups = by_kind
                 break
@@ -148,7 +150,9 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           comparisons: Comparisons | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`comparisons` (comparisons.json) is not read: a paper's winner is chosen among all its kinds at once."""
     best = spec(protocol)
     roles = roles if roles is not None else protocol.roles()
     studies, used = [], []

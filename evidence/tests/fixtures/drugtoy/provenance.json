@@ -1,7 +1,7 @@
 {
-  "source": "written by hand for evidence/tests/test_numreader.py",
+  "source": "written by hand for evidence/tests/test_numreader.py and test_comparisons.py",
   "files": {
     "words.yaml": "invented drug Zelvora against placebo, metric response rate",
-    "pack.yaml": "evidence types of protocols/drugtoy-response.yaml"
+    "pack.yaml": "evidence types of protocols/drugtoy-response.yaml and protocols/drugtoy-builds.yaml"
   }
 }

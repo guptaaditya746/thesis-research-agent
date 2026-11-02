@@ -43,11 +43,14 @@ DEFAULT_PACK: str = yaml.safe_load((Path(__file__).resolve().parents[1] / "domai
 
 LocateStrategy = Literal["exhaustive", "bm25", "agent"]
 # What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,
-# or which method kind wins. Each kind has its own block (`synthesis`, `inventory`, `best`, `consistency`).
-Kind = Literal["effect", "inventory", "consistency", "best"]
+# which method kind wins, whether A beats C through a shared B (chaining, spec section 6.10), the limitations
+# papers report, or which studies build on which (section 6.18). Each kind has its own block (`synthesis`,
+# `inventory`, `best`, `consistency`, `chaining`, `limitations`, `builds_on`).
+Kind = Literal["effect", "inventory", "consistency", "best", "chaining", "limitations", "builds_on"]
 # The blocks each kind needs; a block of another kind is refused (Protocol._consistent).
 KIND_BLOCKS: dict[str, tuple[str, ...]] = {"effect": ("synthesis",), "consistency": ("synthesis", "consistency"),
-                                           "inventory": ("inventory",), "best": ("best",)}
+                                           "inventory": ("inventory",), "best": ("best",), "chaining": ("chaining",),
+                                           "limitations": ("limitations",), "builds_on": ("builds_on",)}
 
 
 class Strict(BaseModel):
@@ -80,6 +83,9 @@ class EvidenceTypeSpec(Strict):
     description: str = ""
     fields: dict[str, Any]                  # JSON schema (an object schema) of an item's fields
     links: dict[str, EvidenceType] = Field(default_factory=dict)   # link name -> evidence type it points to
+    # links an item may leave out (a value copied from an earlier study links its dependency; others link none);
+    # every other link is required
+    optional_links: tuple[str, ...] = ()
     context: tuple[EvidenceType, ...] = ()  # earlier types whose items the extractors receive
     roles: tuple[str, ...] = Field(min_length=1)   # span roles; the first one is required on every item
     merge_key: tuple[str, ...] | None = None       # fields compared when merging a cascade (default: all)
@@ -90,8 +96,10 @@ class EvidenceTypeSpec(Strict):
 
     @property
     def schema_sha256(self) -> str:
-        """The task's field_schema_sha256: fields and links together, so a change to either is a new task."""
-        return digest({"fields": self.fields, "links": self.links})
+        """The task's field_schema_sha256: fields and links together, so a change to either is a new task (the
+        optional links too, when there are any, so a type without them hashes as before they existed)."""
+        optional = {"optional_links": list(self.optional_links)} if self.optional_links else {}
+        return digest({"fields": self.fields, "links": self.links, **optional})
 
     @property
     def properties(self) -> dict[str, Any]:
@@ -114,8 +122,11 @@ SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False
                                                 "reason": {"type": "string", "minLength": 1, "description": "why, in one sentence"}}}
 # Fields added after protocols were hashed (dotted path -> default): left out of `Protocol.sha256` while at
 # their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
+# A `*` step stands for every key of that mapping (each evidence type).
 DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject", "kind": "effect", "synthesis": None,
-                                          "inventory": None, "best": None, "consistency": None, "domain": DEFAULT_PACK}
+                                          "inventory": None, "best": None, "consistency": None, "domain": DEFAULT_PACK,
+                                          "chaining": None, "limitations": None, "builds_on": None,
+                                          "evidence_types.*.optional_links": []}
 
 SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
 
@@ -244,6 +255,28 @@ class Consistency(Strict):
     by: Literal["direction"] = "direction"
 
 
+class Chaining(Strict):
+    """A chaining question (spec section 6.10): is `source` better than `target` on `metric`, through compared
+    things each was tested against (at most `max_hops` steps)? `min_effect` is the neutral band of every step."""
+    source: str = Field(min_length=1)
+    target: str = Field(min_length=1)
+    metric: QuestionMetric
+    min_effect: float = Field(gt=0)
+    max_hops: int = Field(default=2, ge=1)
+
+
+class LimitationsQ(Strict):
+    """A limitations question (spec section 6.18): the limitations papers report, for one compared thing (`thing`)
+    or for every one (None)."""
+    thing: str | None = None
+
+
+class BuildsOnQ(Strict):
+    """A builds-on question (spec section 6.18): which studies build on which, for one compared thing (`thing`) or
+    for every one (None)."""
+    thing: str | None = None
+
+
 class Protocol(Strict):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*$")
     version: int = Field(ge=1)              # the protocol format (2: Part C)
@@ -257,6 +290,9 @@ class Protocol(Strict):
     inventory: Inventory | None = None
     best: Best | None = None
     consistency: Consistency | None = None
+    chaining: Chaining | None = None
+    limitations: LimitationsQ | None = None
+    builds_on: BuildsOnQ | None = None
     domain: str = Field(default=DEFAULT_PACK, pattern=r"^[a-z0-9][a-z0-9_-]*$")   # the pack in domains/ (no key: the default)
     # The folder the pack is read from (`parse(..., domains=)`; None: pack.DOMAINS). Not part of the protocol's
     # content or hash: the same protocol text under a test pack folder is the same protocol.
@@ -296,6 +332,9 @@ class Protocol(Strict):
             for target in spec.links.values():
                 if target not in spec.context:
                     raise ValueError(f"{name} links to {target!r} but does not list it as context")
+            unknown_links = [link for link in spec.optional_links if link not in spec.links]
+            if unknown_links:
+                raise ValueError(f"{name}.optional_links names {unknown_links}, which are not links of {name}")
             for bound in spec.bounds:
                 if bound.field not in spec.properties or (bound.when and bound.when.link not in spec.links):
                     raise ValueError(f"{name}.bounds names an unknown field or link: {bound}")
@@ -379,11 +418,13 @@ class Protocol(Strict):
         data = self.model_dump(mode="json", exclude={"revision"} if self.revision is None else None)
         for path, default in DIGEST_OMIT_AT_DEFAULT.items():
             *parents, name = path.split(".")
-            node: Any = data
+            nodes: list[Any] = [data]
             for key in parents:
-                node = node.get(key) if isinstance(node, dict) else None
-            if isinstance(node, dict) and node.get(name, object()) == default:
-                del node[name]
+                nodes = [n for node in nodes if isinstance(node, dict)
+                         for n in (node.values() if key == "*" else [node.get(key)])]
+            for node in nodes:
+                if isinstance(node, dict) and node.get(name, object()) == default:
+                    del node[name]
         return digest(data)
 
     def phases(self) -> list[EvidenceType]:

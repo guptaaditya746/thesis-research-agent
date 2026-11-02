@@ -1,0 +1,12 @@
+# The questions of the toy drug-trial pack (evidence/tests/test_comparisons.py; plan 2 preflight P19: drug questions
+# live in their pack). The chaining question has no protocol yet (plan 2 Task 9 writes the kind).
+questions:
+  - id: drugtoy-response
+    question: Does Zelvora improve the response rate over placebo?
+    kind: effect
+    truth: {metric: response_rate, min_effect: 0.01}
+    protocol: protocols/drugtoy-response.yaml
+  - id: drug-chain-zel-mor
+    question: Is Zelvora better than Morvectin on the response rate?
+    kind: chaining
+    truth: {metric: response_rate, min_effect: 0.01, source: Zelvora, target: Morvectin}

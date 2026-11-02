@@ -8,7 +8,9 @@ Every module has the same four functions. Each reads evidence types and fields b
   `{code, text}`; `preset` is the pre-set reason of a document the funnel screened out.
 - `gap_types(protocol, code, *, roles=None) -> evidence types` the funnel escalates for a reason code (the
   protocol's types of the roles the module's `GAP_ROLES` names).
-- `answer(protocol, documents, items, reasons, funnel, *, roles=None) -> (answer, used item ids)`.
+- `answer(protocol, documents, items, reasons, funnel, *, roles=None, groups=None, comparisons=None) -> (answer, used
+  item ids)`: `groups` is the names step's NameGroups (None with `names: off`), `comparisons` the run's
+  comparisons.Comparisons (comparisons.json), for the kinds that read them.
 - `extractor_config(protocol) -> dict`: the question's part of every extractor's config (engine.build_extractors).
 
 `effect` is evidence/synthesis.py unchanged, so an effect protocol gives byte-identical runs. Every other kind's

@@ -201,7 +201,7 @@ def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> l
                      base.span(task, text, metric_cell.start, metric_cell.end, "metric_label")]
             if defined is not None:
                 spans.append(base.span(task, text, *defined, "condition_label"))
-            out.append(({"value": value, "dataset": dataset}, r.slots.links(item, metric), spans))
+            out.append(({"value": value, r.slots.context_field: dataset}, r.slots.links(item, metric), spans))
     return out
 
 
@@ -261,5 +261,5 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         spans = [base.span(task, text, hit.start(1), end, "value"),
                  base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                  base.span(task, text, met[0].start, met[0].end, "metric_label")]
-        out.append(({"value": value, "dataset": None}, r.slots.links(cond[1], met[1]), spans))
+        out.append(({"value": value, r.slots.context_field: None}, r.slots.links(cond[1], met[1]), spans))
     return out

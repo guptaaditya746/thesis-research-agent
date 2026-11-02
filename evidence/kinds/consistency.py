@@ -19,6 +19,7 @@ from ..protocol import Protocol
 from . import effect
 
 if TYPE_CHECKING:
+    from ..comparisons import Comparisons
     from ..names import NameGroups
     from ..pack import RoleMap
 
@@ -47,8 +48,9 @@ def gap_types(protocol: Protocol, code: str, *, roles: RoleMap | None = None) ->
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
            reasons: dict[str, dict[str, str]] | None = None,
            funnel: dict[str, dict[str, Any]] | None = None, *,
-           roles: RoleMap | None = None, groups: NameGroups | None = None) -> tuple[dict[str, Any], list[str]]:
-    """`groups` (the names step) is not read: the studies are effect studies."""
+           roles: RoleMap | None = None, groups: NameGroups | None = None,
+           comparisons: Comparisons | None = None) -> tuple[dict[str, Any], list[str]]:
+    """`groups` (the names step) and `comparisons` (comparisons.json) are not read: the studies are effect studies."""
     studies, used = [], []
     roles = roles if roles is not None else protocol.roles()
     for doc in documents:
