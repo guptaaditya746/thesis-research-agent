@@ -1,0 +1,24 @@
+{
+  "pack_sha256": "022d89482ba5e00b1e654c71b22752dcba2fb1310332acc12b213316544c86aa",
+  "recipe_sha256": "eb75fe4eb3459cb74c0456c00ad4dfa705aa759d5388a1c36459e6f842e0a727",
+  "files": {
+    "generator.yaml": "eb75fe4eb3459cb74c0456c00ad4dfa705aa759d5388a1c36459e6f842e0a727",
+    "pack.yaml": "c0e544a5d7bba5a27f3c85b2a85eb06d30f38d930d5b3fa3bd8f65660704f461",
+    "propose.yaml": "7c4e7d60e65c0aea809bc04c67e9bb1c63aa74da47dfd6a06417a5965e47078e",
+    "protocols/best-accuracy.yaml": "a7d8003bdfe919927bcb9513c09d60e486e68d2fc4df3a72c929053a08fae924",
+    "protocols/best-hallucination.yaml": "615b9602b3bf60fd8fb5bf47f8b1b6d85e7fa84620dae3a3513de16565c4ff5c",
+    "protocols/cons-accuracy.yaml": "c3fa2fbe53ede1ec0e37321fb4219cccb27296a9f8c6e774579edecdf95c7cd4",
+    "protocols/cons-hallucination.yaml": "cb66a55b8d90b8c292e0fd94a4af4e3465c2db2349136fd83da29e03ee00c979",
+    "protocols/inv-datasets.yaml": "ee12d5f4b223385761070da3e9599c7d87dc44fa373b6645578a00a024737c2c",
+    "protocols/inv-methods.yaml": "c705bf954d19da10f27ed491300d493cb0dd6c882b8aa9b21bd88bbab6c37786",
+    "protocols/inv-metrics.yaml": "20004bb762f59a085e8ae2d835bcccad241f68695e791595894a4cb279295957",
+    "protocols/rag-factuality-agentic.yaml": "2c0a1b789df58901441656e9db96eb98fa504100cc2c9f845dc78981710773a4",
+    "protocols/rag-factuality-funnel.yaml": "fcc7931efd6a35d2ce4d1cc27ee6a43a9d0a330b39f7d97eed06007c9184cf0a",
+    "protocols/rag-factuality.yaml": "af9dc342c9fd92825369be71a381105ec766c942b7f3542c919796a18adee784",
+    "protocols/rag-hallucination.yaml": "8badad6a99ca1407f7d748e43804a9ae1a20958dbe0c1ba610687e786dc4eec1",
+    "protocols/rag-latency.yaml": "7438ef6a58809856b4568a1c1f688a8612d09c17abcb06816be540934f820ae2",
+    "provenance.json": "7ceaa2f0eb7909c945c393e63f21feacd038ca6556c08cde192351986f6028c7",
+    "questions.yaml": "82b945394dff68c73492432d4e2b5f1f8deacb1994cf278da2f75d590adf9ac2",
+    "words.yaml": "4c4d5f95a09bf802c6fb6db928be254bd5ecc71ea78b83e741cc20e47e15042c"
+  }
+}

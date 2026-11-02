@@ -12,6 +12,23 @@ and `docs/runbook-ev3b.md` ("EV3b") fully first. `docs/slurm-evidence-runbook.md
 Part A lists the steps done **before** this runbook is handed over, on Aditya's machine (not on Slurm). Codex
 starts at section 0 and only checks that Part A is done (section 0 and 1 stop when it is not).
 
+**This session is the SHORT RUN (Aditya, 2 Nov): RAG only.** Of Part A only the rag freeze is done; the drug-trials
+pack, the ml pack, the real-paper data and the arXiv corpora do not exist yet. The rules below override the
+sections they name; everything else stands.
+
+- Tags: only `ev4-code` and `ev4-pack-rag-v1`. There is no `TAG_DT` and no `TAG_ML`: set
+  `export TAG_RAG=ev4-pack-rag-v1` alone and check only `ev4-code` and `$TAG_RAG` (section 0).
+- Section 0 Part A check: only `tests/EV2/corpora/rag-claude-s1-mixed`, `tests/EV2/corpora/rag-tpl-hard-complex`
+  and `domains/rag/FROZEN.json`. Skip the `heldout.yaml` grep. In `in-job.env` leave out `TAG_DT`, `TAG_ML`,
+  `C_DRUG` and `DT_QS`; `pack_tags` in `session.json` holds the rag tag only.
+- Section 1: `evidence pack check rag` only; the frozen-tag loop and the digests script for `rag` only; skip the
+  drug-trials probe.
+- Run sections 2 (for section 3's cells only), 3, 7, 8 and 9. **Skip sections 4, 5 and 6** (drug trials,
+  real-paper checks, arXiv demo).
+- Section 8: write the losses-first table for `rag` only; under "Real papers" and "Demo" write "not run in this
+  session (short run)"; in Limits add one line: "EV4 short run: drug trials, real-paper checks and the arXiv demo
+  were built and unit-tested but not run". The hand-back tag message is "EV4 short run: RAG rerun".
+
 **What changed in the code (all on `ev4-code`)**
 
 - Domain packs: every topic word, type and protocol is in `domains/<pack>/` (`pack.yaml`, `words.yaml`,
