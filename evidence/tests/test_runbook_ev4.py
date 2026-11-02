@@ -55,3 +55,47 @@ def test_runbook_checks_verify_by_exit_code_and_syncs_without_the_fetch_group():
     assert "uv sync --locked\n" in text and "uv sync --group fetch" in text
     assert "reports/** -text" in text
     assert "--names on" in text
+
+
+def _section(title: str) -> str:
+    text = _text()
+    start = text.index(f"## {title}")
+    nxt = text.find("\n## ", start + 1)
+    return text[start:] if nxt == -1 else text[start:nxt]
+
+
+def test_the_hand_back_copies_every_file_a_run_writes(tmp_path):
+    """Final review I2: the hand-back copy list (section 9) names every file and folder a sealed EV4 run writes at
+    its top level (names on, reason on), so a handed-back run can be replayed, re-scored and verified. The list is
+    derived from a real run, so a new output file fails this test until the runbook copies it."""
+    from .conftest import PROTOCOL, make_corpus, regex_run_dir
+    run = regex_run_dir(make_corpus(tmp_path / "corpus"), tmp_path, PROTOCOL,
+                        settings={"names": "on", "reason": "on"})
+    copy = _section("9. Hand-back")
+    written = sorted(p.name for p in run.iterdir())
+    assert {"reason.json", "comparisons.json", "protocol.lock.json", "manifest.json", "names.json"} <= set(written)
+    for name in written:
+        kind = "-type d -name" if (run / name).is_dir() else "-name"
+        assert re.search(rf"{kind} {re.escape(name)}(?![\w.])", copy), name
+
+
+def test_losses_are_written_where_the_web_app_reads_them(tmp_path):
+    """Final review I4: the web app reads `<scores root>/losses/` (webapp/evfiles.py `losses`, $SCORES on Slurm,
+    reports/ev4/scores after the hand-back), so `evaluate losses` writes there and the hand-back copies it."""
+    from webapp.settings import Settings
+    assert Settings(EV=tmp_path).scores_dir == tmp_path / "scores"   # $SCORES=$EV/scores (slurm runbook 0.3)
+    assert re.search(r'evaluate losses --scores "\$SCORES" --out "\$SCORES/losses"', _text())
+    assert "-path './losses/losses.*'" in _section("9. Hand-back")
+
+
+def test_the_offline_probe_asks_the_scorer_too():
+    """Task 15 review I1: section 1 probes `evaluate score --question-id` beside the baselines."""
+    probe = _section("1. Offline check")
+    assert "evaluate rag-baseline --question-id" in probe and "evaluate score --question-id" in probe
+
+
+def test_licence_stops_and_the_reasoner_note():
+    text = " ".join(_text().split())   # one line: the runbook wraps at 120 characters
+    assert "USER stop (licences)" in text and "USER stop (arXiv licence)" in text
+    assert "licence decisions of steps 1 and 5" in text
+    assert "`broader` is expected to be empty" in text and "do not replay" in text

@@ -22,12 +22,26 @@ starts at section 0 and only checks that Part A is done (section 0 and 1 stop wh
   across papers (`names.json`), and `run.json` counts the names left (`unresolved_names`).
 - Reasoner, `--reason on` (the default): the run reads the pack's ontology, so a narrower metric answers a
   broader question metric, and links to an item of the wrong kind are flagged (`reason.json`, `link_flags`).
+  **With the shipped packs `broader` is expected to be empty** (`"broader": {}` in every `reason.json`): the rag
+  ontology lists every metric directly under one top metric (no narrower metric), the ml ontology has no
+  `subClassOf`, and drugtrials has no ontology yet. So `reason on` changes no answer in this session; its only live
+  output is `link_flags`. This is expected, not a failure; section 8 says so. (Whether chaining should use the
+  hierarchy is a design question for Aditya, not for this session.)
+- With `reason on`, a metric matches a question metric by its cleaned name (`names.clean`: case, spaces and
+  punctuation folded); with `reason off`, by its exact name. With the packs' canonical metric names (from
+  `words.yaml`) both give the same matches.
+- Runs made before EV4 (EV3, EV3b) still pass `evidence verify` (it prints `no manifest (pre-EV4)`) and
+  `evidence protocol diff` (`no lock (pre-EV4)`), but **do not replay** with `ev4-code`: the extractors' code
+  changed, so their ids differ and replay stops with `not recorded: ...`. This is by design; replay an EV3 run at
+  the tag `ev3b`. No step of this runbook replays an old run.
 - Protocol lock and diff: every run writes `protocol.lock.json` (protocol, pack and ontology sha256, extractor
   ids); `evidence protocol diff A B` compares two protocols or two runs (exit 0 and `same` when nothing differs).
 - Sealed runs: every run ends with `manifest.json` (`status: complete`, or `failed` with the error for a crashed
   run, which has no `run.json`). `evidence verify <run>` checks the hash chain and every file hash; **read its
   exit code** (0 good, 1 bad), never its printed JSON.
 - `evidence estimate --protocol P --corpus C`: the calls and tokens a run would need, before it is made (D41).
+  With `--names on` (as every drug-trials run) it adds the names check's model calls (`names_checks`, an upper
+  bound from the names the regex pass leaves unresolved).
 - `evaluate losses`: the losses-first table per domain, with the cause of each engine loss and the cost per
   system; it opens with Tim's sentence. The baselines' mapping prompts are filled from the pack (`map-<kind>-v2`).
 - Real-paper checks: `evaluate scirex`, `evaluate yun`, `evaluate scilead`, `evaluate edits`, `evaluate sheet`,
@@ -75,10 +89,15 @@ Each ends in a commit on the EV4 code branch, before the tag `ev4-code`.
    it finds). Download the SciREX release (github.com/allenai/SciREX, its `test.jsonl`) and the SciLead release
    (`https://aclanthology.org/attachments/2024.emnlp-main.453.data.zip`). Confirm the layouts the readers assume
    (Task 8, 9, 10 reports: SciREX `coref` salient clusters; SciLead link key, paper-key format, counts 43 / 295 /
-   27). Write `tests/EV4/real/SOURCES.md`: each source's URL, commit or file sha256, licence. Commit the SciREX
-   `test.jsonl` as `tests/EV4/real/scirex/test.jsonl` and the unpacked SciLead release as
-   `tests/EV4/real/scilead/` (the scorers' gold); build `uv run evaluate yun corpus --repo <clone> --ei
-   <evidence-inference>/annotations --out tests/EV4/corpora/real-yun` and commit it.
+   27). Write `tests/EV4/real/SOURCES.md`: each source's URL, commit or file sha256, licence. **USER stop
+   (licences)**: Aditya reads each licence in `SOURCES.md` and decides, per source, whether its data may be
+   committed to git (SciREX `test.jsonl`, the SciLead release, the Yun et al. papers and Evidence Inference
+   annotations); his decision is written into `SOURCES.md` next to the licence. Only what he allows is committed:
+   the SciREX `test.jsonl` as `tests/EV4/real/scirex/test.jsonl`, the unpacked SciLead release as
+   `tests/EV4/real/scilead/` (the scorers' gold), and the corpus of `uv run evaluate yun corpus --repo <clone>
+   --ei <evidence-inference>/annotations --out tests/EV4/corpora/real-yun`. What he does not allow is copied to
+   `$EV/corpora/` (or `$EV/real/`) on Slurm by hand, with only a `manifest.json` (or the `SOURCES.md` line)
+   committed, and the hand-over message says where it is.
 2. **Fill `domains/heldout.yaml`** (Claude; Aditya checks): the 120 PMCIDs of Yun et al.'s
    `annotated_rct_dataset.csv` under `yun2024`, the paper ids of SciLead (`evaluate scilead ids`) and SciREX
    under `scilead` and `scirex`. `synth draft` refuses an empty list.
@@ -108,9 +127,10 @@ Each ends in a commit on the EV4 code branch, before the tag `ev4-code`.
      --max 30 --out tests/EV4/corpora/real-arxiv-demo`;
    - the SciLead papers: `evaluate scilead ids --data tests/EV4/real/scilead --out <ids file>`, then `evidence
      fetch --ids <ids file> --out tests/EV4/corpora/real-scilead`.
-   Aditya decides before the commit whether the papers' licences allow them in git (arXiv's default licence does
-   not grant redistribution); if not, the corpora are copied to `$EV/corpora/` by hand and only their
-   `manifest.json` is committed, and sections 5-6 read them from there.
+   **USER stop (arXiv licence)**: before the commit, Aditya decides whether the papers' licences allow them in
+   git (arXiv's default licence does not grant redistribution). If not, the corpora are copied to `$EV/corpora/`
+   by hand and only their `manifest.json` is committed, and sections 5-6 read them from there. His decision is
+   repeated in the hand-over message (step 8).
 6. **ml pack words and freeze** (Claude; Aditya tags): a fresh helper drafts `domains/ml/words.yaml` from 10
    SciREX **train** papers (none in `test.jsonl`), logged in `domains/ml/provenance.json`; `uv run pytest -q
    evidence/tests/test_no_topic_words.py`; `packbuilder freeze domains/ml`; Aditya tags `ev4-ml-pack`.
@@ -120,8 +140,9 @@ Each ends in a commit on the EV4 code branch, before the tag `ev4-code`.
    `npm --prefix webapp/web run typecheck`, `npm --prefix webapp/web run build`, commit `webapp/web/dist/`, and
    regenerate the mock fixtures (`ev-fixtures.json`) on Linux, then commit.
 8. **Merge and tag** (Aditya): merge the EV4 branches into `main`, tag `ev4-code` there, push `main`, `ev4-code`
-   and the three pack tags. Then he writes the call plan of section 2 into the hand-over message and hands this
-   runbook to Codex.
+   and the three pack tags. Then he writes into the hand-over message the call plan of section 2 and the licence
+   decisions of steps 1 and 5 (which data and corpora are in git, and the `$EV/corpora/` path of each one that is
+   not), and hands this runbook to Codex.
 
 ## 0. Branch and setup (login node)
 
@@ -243,12 +264,16 @@ uv run evidence protocol diff "$EV/check/check" "$EV/check/check"               
 ```
 
 **The drug-trials questions reach the baselines and the scorer.** `evaluate rag-baseline`, `agent-baseline` and
-`score` take `--question-id`; it must know the drug-trials ids. This asks no model (the corpus does not exist):
+`score` take `--question-id`; it must know the drug-trials ids. The two baselines share one lookup; `score` is
+probed too. This asks no model (the corpus and the run do not exist, so a known id fails later, for that reason):
 
 ```bash
 for Q in $DT_QS; do
   uv run evaluate rag-baseline --question-id "$Q" --corpus "$EV/no-such-corpus" --out "$EV/check/probe-$Q" 2>&1 \
     | grep -q 'unknown question id' && echo "FAIL probe $Q: the baselines do not know the drug-trials ids"
+  uv run evaluate score --question-id "$Q" --run "$EV/no-such-run" --corpus "$EV/no-such-corpus" \
+    --out "$EV/check/probe-score-$Q" 2>&1 \
+    | grep -q 'unknown question id' && echo "FAIL probe $Q: evaluate score does not know the drug-trials ids"
 done
 ```
 
@@ -272,15 +297,17 @@ print(questions.protocol_file(entry.protocol, path).as_posix())
 EOF
 cat > "$EV/est.sh" <<'EOF'
 #!/usr/bin/env bash
-# est.sh <section>.<cell> <protocol> <corpus>: the estimate of one engine cell -> $EV/estimates/<section>.<cell>.json
-uv run evidence estimate --protocol "$2" --corpus "$3" > "$EV/estimates/$1.json" || echo "FAIL estimate $1"
+# est.sh <section>.<cell> <protocol> <corpus> [estimate flags]: one engine cell -> $EV/estimates/<section>.<cell>.json
+# (a run with --names on is estimated with --names on, so its names checks are counted)
+uv run evidence estimate --protocol "$2" --corpus "$3" "${@:4}" > "$EV/estimates/$1.json" || echo "FAIL estimate $1"
 EOF
 chmod +x "$EV/est.sh"
 for N in "$C_MAIN" "$C_HARD"; do for Q in $RAG_QS; do
   "$EV/est.sh" "rag.$(basename "$N").$Q" "domains/rag/protocols/$Q.yaml" "$N"
 done; done
 for Q in $DT_QS; do
-  "$EV/est.sh" "drugtrials.$(basename "$C_DRUG").$Q" "$(uv run python "$EV/protocol-of.py" drugtrials "$Q")" "$C_DRUG"
+  "$EV/est.sh" "drugtrials.$(basename "$C_DRUG").$Q" "$(uv run python "$EV/protocol-of.py" drugtrials "$Q")" "$C_DRUG" \
+    --names on
 done
 ```
 
@@ -415,7 +442,14 @@ nohup "$EV/launch.sh" dt-grid "$EV/grid.sh" drugtrials "$C_DRUG" $DT_QS > /dev/n
 
 It may run beside the two RAG grids (its own corpus, so its own cache files). Check every drug-trials engine
 run's `run.json`: `settings.names` is `on` and `unresolved_names` is there (section 7 counts it). For the
-chaining question, `comparisons.json` in its run dir is not empty; an empty one is a note under Failures.
+chaining question, its run's `comparisons.json` lists at least one comparison; this prints the count, and 0 is a
+note under Failures:
+
+```bash
+QC=$(uv run python -c 'from evidence import questions; print(next(q.id for q in questions.load("domains/drugtrials/questions.yaml") if q.kind == "chaining"))')
+uv run python -c 'import json, sys; print(len(json.load(open(sys.argv[1]))["comparisons"]))' \
+  "$RUNS/$QC-cascade-gaps/$(basename "$C_DRUG")/comparisons.json"
+```
 
 ## 5. Real-paper checks
 
@@ -450,7 +484,7 @@ there is no `--limit`, so if the estimate is over 2x the `yun` plan, stop (**USE
 ```bash
 QE=$(uv run python -c 'from evidence import questions; print(next(q.id for q in questions.load("domains/drugtrials/questions.yaml") if q.kind == "effect"))')
 PY=$(uv run python "$EV/protocol-of.py" drugtrials "$QE")          # the drug-trials effect protocol
-"$EV/est.sh" yun.real-yun "$PY" tests/EV4/corpora/real-yun
+"$EV/est.sh" yun.real-yun "$PY" tests/EV4/corpora/real-yun --names on
 "$EV/launch.sh" real-yun uv run evidence run --protocol "$PY" --corpus "$PWD/tests/EV4/corpora/real-yun" \
   --out "$RUNS/real/yun" --cache "$CACHE/real-yun" --model orch-model --strategy gaps --workers 3 --run-id yun --names on
 uv run evaluate yun score --run "$RUNS/real/yun/yun" --corpus tests/EV4/corpora/real-yun --out "$R4/real/yun"
@@ -463,7 +497,7 @@ uv run evaluate yun score --run "$RUNS/real/yun/yun" --corpus tests/EV4/corpora/
 --ids`); the gold is the release in `tests/EV4/real/scilead`:
 
 ```bash
-"$EV/est.sh" scilead.real-scilead domains/ml/protocols/values.yaml tests/EV4/corpora/real-scilead
+"$EV/est.sh" scilead.real-scilead domains/ml/protocols/values.yaml tests/EV4/corpora/real-scilead --names on
 "$EV/launch.sh" real-scilead uv run evidence run --protocol domains/ml/protocols/values.yaml \
   --corpus "$PWD/tests/EV4/corpora/real-scilead" --out "$RUNS/real/scilead" --cache "$CACHE/real-scilead" \
   --model orch-model --strategy gaps --workers 3 --run-id scilead --names on
@@ -480,6 +514,9 @@ after another (the unchanged papers come from the cache):
 E4=evaluation/realpapers/data/arxiv-edits.yaml
 uv run evaluate edits apply --corpus tests/EV4/corpora/real-arxiv5 --edits "$E4" --out "$EV/corpora/edits"
 "$EV/est.sh" edits.original domains/rag/protocols/rag-factuality.yaml tests/EV4/corpora/real-arxiv5
+for D in "$EV"/corpora/edits/*/; do                  # and every edited corpus: one run each
+  "$EV/est.sh" "edits.$(basename "$D")" domains/rag/protocols/rag-factuality.yaml "$D"
+done
 cat > "$EV/edits.sh" <<'EOF'
 #!/usr/bin/env bash
 # edits.sh: the original run, then one run per edited corpus (run id = edit id), one cache
@@ -497,6 +534,9 @@ chmod +x "$EV/edits.sh"
 uv run evaluate edits check --original "$RUNS/real/edits-original/original" --runs "$RUNS/real/edits" \
   --edits "$E4" --corpora "$EV/corpora/edits" --out "$R4/real/edits"
 ```
+
+The `edits` sum counts every edited run in full, so it is an upper bound: the edited runs share one cache with
+the original, and only the changed paper of each is asked again. Use it for the plan check as it is.
 
 Report the share carried through per part (`item`, `link`, `answer`) and the edits left out as not testable
 (`None`), as `real.md` lists them. This shows the system follows the text, not that it is right.
@@ -590,8 +630,13 @@ Failed and killed runs go to `$RUNS/failed/<corpus>/` (cell.sh `retry` / `rerun`
 ## 8. The deliverable: `reports/ev4/summary.md`
 
 ```bash
-uv run evaluate losses --scores "$SCORES" --out "$R4/losses"
+uv run evaluate losses --scores "$SCORES" --out "$SCORES/losses"   # where the web app reads it: <scores root>/losses/
+mkdir -p "$R4/losses" && cp "$SCORES/losses/"losses.* "$R4/losses/"
 ```
+
+The web app's Report page reads the losses from `<scores root>/losses/` (`$SCORES/losses` on Slurm; after the
+hand-back, `reports/ev4/scores/losses/`, which section 9 copies). `reports/ev4/losses/` is the copy `summary.md`
+links to.
 
 `summary.md`, in this order:
 
@@ -600,7 +645,8 @@ uv run evaluate losses --scores "$SCORES" --out "$R4/losses"
    wrongly linked, names not grouped, wrong rule). Under it, per corpus, the A / B / C table of EV3 section 6
    (three systems per question; the RAG row is `rag-per-paper`, k=2 main, k=1 hard: "every paper is seen, so a
    left-out paper is the model's choice, not the retriever's"), the GLiNER confirm line (EV3b section 5) and
-   `dangling links: <total> over <N> engine runs`. The B and C fields of the three new kinds are those `report.md`
+   `dangling links: <total> over <N> engine runs`, and the reasoner line `reasoner: no narrower names in the
+   packs; link flags <total per pack>` (section 0: `broader` is empty with these packs). The B and C fields of the three new kinds are those `report.md`
    shows for them; copy them by name.
 2. **Cost per system**: calls, input and output tokens per system and domain (the cost columns of `losses.md`),
    next to the estimate of section 2 (sum of `calls.low` / `calls.high` per section) and the plan.
@@ -629,15 +675,43 @@ nothing.
 
 ## 9. Hand-back
 
-As EV3 section 7 (the run files under `reports/ev4/runs/`, the score dirs, the caches), with `reports/ev4` in
-place of `reports/question-first`: `R=$PWD/reports/ev4`, the score dirs from `$SCORES`, the run files from
-`$RUNS` (the real-paper and demo runs under `runs/real/` come along; `$RUNS/failed` is kept), and
-`cp "$EV/failures.md" "$R/"`. The `reports/ev4/real/` folders are already in place.
+As EV3 section 7 (the caches, their size rule and split), with `reports/ev4` in place of
+`reports/question-first`, but with **this** copy list: every file an EV4 run writes (the EV3 list misses the new
+ones, and without them a handed-back run cannot be replayed, re-scored for chaining or verified). The run files
+come with their paths under `$RUNS` (the real-paper and demo runs under `runs/real/` come along; `$RUNS/failed` is
+kept), the score dirs and the losses table with their paths under `$SCORES`:
+
+```bash
+R=$PWD/reports/ev4; mkdir -p "$R/runs" "$R/scores"
+# every score dir and the losses table, with their paths under $SCORES (the real-paper checks wrote to $R4/real)
+(cd "$SCORES" && find . -path ./check -prune -o -type f \( -name 'report.*' -o -name 'shift.*' \
+  -o -path './losses/losses.*' \) -print0 | xargs -0 -r cp --parents -t "$R/scores")
+# the run files, with their paths under $RUNS
+(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name answer.json -o -name run.json -o -name funnel.json \
+  -o -name protocol.yaml -o -name locate.json -o -name graph.json -o -name reason.json -o -name comparisons.json \
+  -o -name protocol.lock.json -o -name manifest.json -o -name names.json \) -print0 \
+  | xargs -0 -r cp --parents -t "$R/runs")
+(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name events.jsonl -o -name evidence.jsonl \
+  -o -name calls.jsonl \) -print0 \
+  | while IFS= read -r -d '' f; do mkdir -p "$R/runs/$(dirname "$f")" && gzip -nc "$f" > "$R/runs/$f.gz"; done)
+(cd "$RUNS" && find . -path ./check -prune -o -type d -name calls -print0 | while IFS= read -r -d '' d; do
+  mkdir -p "$R/runs/$(dirname "$d")" && tar -C "$(dirname "$d")" -czf "$R/runs/$d.tar.gz" calls; done)
+cp "$EV/failures.md" "$R/" 2>/dev/null
+du -sh "$R/runs" "$R/scores"; find "$R" -type f -size +50M      # the last line prints nothing
+```
+
+`evidence verify` and `evidence replay` hold on the Slurm copy as it is. A handed-back run is packed (`.gz`,
+`calls.tar.gz`), so to verify or replay it later, unpack it into a copy first: in a copy of its folder, `gunzip`
+each `.gz` (which removes the `.gz`) and `tar -xzf calls.tar.gz && rm calls.tar.gz`. The unpacked files are byte
+for byte the sealed ones (`reports/** -text` keeps their line ends), so `verify` then exits 0.
 
 ```bash
 git fetch origin
 git checkout -b results-ev4 origin/results      # the only branch you create
-grep -qxF 'reports/** -text' .gitattributes 2>/dev/null || printf 'reports/** -text\n' >> .gitattributes
+if ! grep -qxF 'reports/** -text' .gitattributes 2>/dev/null; then
+  [ -s .gitattributes ] && [ -n "$(tail -c 1 .gitattributes)" ] && printf '\n' >> .gitattributes   # end its last line
+  printf 'reports/** -text\n' >> .gitattributes
+fi
 git add .gitattributes
 git commit -m "reports: keep report files byte for byte (reports/** -text)"   # the FIRST commit, before any report
 git add -f reports/ev4                           # -f: .gitignore ignores runs/

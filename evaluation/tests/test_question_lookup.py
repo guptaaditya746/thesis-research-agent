@@ -146,3 +146,17 @@ def test_score_command_scores_drug_answers_by_id(tmp_path: Path, drug_run: tuple
     assert cli.main(argv + ["--question-id", DRUG_CHAIN]) == 0
     report = json.loads((tmp_path / "o" / "report.json").read_text(encoding="utf-8"))
     assert report["question_id"] == DRUG_CHAIN and report["domain"] == "drugtoy"
+
+
+@pytest.mark.parametrize("cmd", ["score", "rag-baseline"])
+def test_the_runbook_probe_tells_a_known_id_from_an_unknown_one(tmp_path: Path, drug_packs: Path, cmd: str) -> None:
+    """docs/runbook-ev4.md section 1 probes with paths that do not exist and greps for `unknown question id`: an
+    unknown id says so, a known drug id fails later for another reason (the missing run or corpus)."""
+    none = str(tmp_path / "none")
+    where = ["--run", none] if cmd == "score" else []
+    argv = [cmd, *where, "--corpus", none, "--out", str(tmp_path / "o")]
+    with pytest.raises(SystemExit, match="unknown question id"):
+        cli.main(argv + ["--question-id", "nope"])
+    with pytest.raises((SystemExit, OSError, ValueError)) as known:
+        cli.main(argv + ["--question-id", DRUG_CHAIN])
+    assert "unknown question id" not in str(known.value)

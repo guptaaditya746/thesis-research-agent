@@ -43,7 +43,7 @@ Matching rules (A; B and the pair check reuse A's matching):
    character with) a placement of the matched fact with the main role, over the pairs whose fact has one
    (dataset facts have none); an item without a main-role span is checked with all its spans.
 
-Question kinds (question-first redesign; `score(question_id=...)`, any pack's domains/<pack>/questions.yaml; without an id, the
+Question kinds (question-first redesign; `score(question_id=...)`, any pack's questions.yaml; without an id, the
 question the run's frozen protocol asks, evidence/questions.answered_by): A is computed the same way for every kind,
 over the evidence types the run's protocol extracts (`scored_types`; report.json `extraction.scored_types`), so
 its `all` / `all` row means "all the types this protocol extracts". B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
