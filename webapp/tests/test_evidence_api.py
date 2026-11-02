@@ -2,6 +2,8 @@
 corpora, protocols and proposals, engine and baseline runs with their funnel, spans, calls and traces, scores."""
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import json
 import shutil
 from collections.abc import Iterator
@@ -275,6 +277,14 @@ def test_no_losses_file_is_an_empty_view_not_a_404(ev_fresh: EvidenceWorld) -> N
         assert client.get("/api/ev/losses").json() == {"losses": None, "markdown": None}
 
 
+@pytest.mark.parametrize("text", ["{not json", '{"domains": {"rag": [{"question_id": "q"}]}}'])
+def test_a_damaged_losses_file_is_422_not_a_500(ev_fresh: EvidenceWorld, text: str) -> None:
+    (ev_fresh.scores / "losses" / "losses.json").write_text(text, encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as client:
+        response = client.get("/api/ev/losses")
+    assert response.status_code == 422 and "losses/losses.json" in response.json()["detail"]
+
+
 def test_the_worlds_losses_put_the_losses_first_with_a_cause(ev: TestClient) -> None:
     rows = ev.get("/api/ev/losses").json()["losses"]["domains"]["rag"]
     assert rows[0]["engine_loss"] and rows[0]["cause"] in CAUSES
@@ -285,12 +295,16 @@ def test_the_worlds_losses_put_the_losses_first_with_a_cause(ev: TestClient) -> 
 
 def test_losses_json_of_evaluate_validates_as_LossesView(ev_world: EvidenceWorld) -> None:
     """The contract with plan 3 Task 6 (preflight F6): what `evaluation.losses.losses` makes from the world's
-    reports is what the Report page reads. Skipped until Task 6 adds evaluation/losses.py."""
-    losses_module = pytest.importorskip("evaluation.losses")
-    reports = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(ev_world.scores.glob("*/*/report.json"))]
-    made = losses_module.losses(reports)
-    assert Losses.model_validate(made).domains
-    assert tuple(losses_module.CAUSES) == CAUSES
+    reports is what the Report page reads. Skipped until Task 6 adds evaluation/losses.py; once the module is
+    there, an import error inside it fails this test instead of skipping it."""
+    if importlib.util.find_spec("evaluation.losses") is None:
+        pytest.skip("evaluation/losses.py is not there yet (plan 3 Task 6)")
+    losses_module = importlib.import_module("evaluation.losses")
+    paths = sorted(ev_world.scores.glob("*/*/report.json"))
+    made = Losses.model_validate(losses_module.losses([json.loads(p.read_text(encoding="utf-8")) for p in paths]))
+    assert made.domains and tuple(losses_module.CAUSES) == CAUSES
+    ids = {f"{p.parent.parent.name}~{p.parent.name}" for p in paths}
+    assert {r.report for rows in made.domains.values() for r in rows} <= ids
 
 
 def test_run_detail_counts_the_link_flags_of_reason_json(ev_fresh: EvidenceWorld) -> None:

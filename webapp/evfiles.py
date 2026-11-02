@@ -900,8 +900,12 @@ class EvidenceFiles:
         path = root / "losses" if root is not None else None
         if path is None or not (path / "losses.json").is_file():
             return LossesView()
-        return LossesView(losses=Losses.model_validate(read_json(path / "losses.json")),
-                          markdown=self._markdown(path / "losses.md"))
+        data = read_json(path / "losses.json")
+        try:
+            losses = Losses.model_validate(data)
+        except ValidationError as e:   # also not JSON (data None): a 422 naming the file, not a 500
+            raise Damaged(f"losses/losses.json does not read as `evaluate losses` output: {str(e)[:400]}") from None
+        return LossesView(losses=losses, markdown=self._markdown(path / "losses.md"))
 
     def benchmark(self, score_id: str) -> BenchmarkView:
         path, ref = self.score_dir(score_id, "benchmark.md")

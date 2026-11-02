@@ -17,6 +17,7 @@ import { EmptyState, ErrorState, TableSkeleton } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { evCell, systemLabel, systemOrder } from "@/lib/ev"
+import { tokens } from "@/lib/format"
 
 const reportHref = (kind: string, id: string) => `/report/${kind}/${encodeURIComponent(id)}`
 
@@ -42,6 +43,11 @@ function costPerSystem(rows: LossRow[], systems: string[]): Record<string, unkno
   })
 }
 
+/** "RAG baseline: 2 calls, 1.5k tokens" (a count the system does not report is left out). */
+function costLine(system: string, c: SystemCost): string {
+  return [`${systemLabel(system)}: ${c.model_calls ?? "?"} calls`, ...(c.tokens != null ? [`${tokens(c.tokens)} tokens`] : [])].join(", ")
+}
+
 function DomainLosses({ domain, rows }: { domain: string; rows: LossRow[] }) {
   const systems = [...new Set(rows.flatMap((r) => Object.keys(r.systems)))].sort(systemOrder)
   return (
@@ -53,7 +59,8 @@ function DomainLosses({ domain, rows }: { domain: string; rows: LossRow[] }) {
             <Table aria-label="Questions, losses first">
               <TableHeader>
                 <TableRow>
-                  {["question", "kind", ...systems.map(systemLabel), "engine lost", "why", "report"].map((h) => <TableHead key={h} className="text-xs whitespace-nowrap">{h}</TableHead>)}
+                  {[["question", "question"], ["kind", "kind"], ...systems.map((s) => [s, systemLabel(s)]), ["engine lost", "engine lost"], ["why", "why"], ["cost", "model calls, tokens"], ["report", "report"]]
+                    .map(([key, label]) => <TableHead key={`h:${key}`} className="text-xs whitespace-nowrap">{label}</TableHead>)}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -64,6 +71,9 @@ function DomainLosses({ domain, rows }: { domain: string; rows: LossRow[] }) {
                     {systems.map((s) => <TableCell key={s} className="text-xs tabular-nums">{evCell(r.systems[s])}</TableCell>)}
                     <TableCell className="text-xs">{r.engine_loss ? <Badge variant="destructive">lost</Badge> : "no"}</TableCell>
                     <TableCell className="max-w-96 text-xs">{r.cause ? <><span className="font-medium">{r.cause}</span>: {CAUSE_TEXT[r.cause] ?? ""}</> : "—"}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {systems.filter((s) => r.cost[s]).map((s) => <div key={s}>{costLine(s, r.cost[s])}</div>)}
+                    </TableCell>
                     <TableCell className="font-mono text-xs"><Link to={reportHref("reports", r.report)} className="hover:underline">{r.report.replace("~", " / ")}</Link></TableCell>
                   </TableRow>
                 ))}

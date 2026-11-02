@@ -116,11 +116,18 @@ def stand_in_losses(world: EvidenceWorld) -> dict[str, Any]:
                 answer = json.loads((world.runs / s["system"] / corpus / "answer.json").read_text(encoding="utf-8"))
                 made = [m for m in (answer.get("model_call"), answer.get("mapping_call")) if m]
                 calls, i, o = len(made), sum(m["input_tokens"] for m in made), sum(m["output_tokens"] for m in made)
+                agent = answer.get("agent")
+                if isinstance(agent, dict):   # the agent baseline: its own calls and tokens, in and out not split
+                    calls += int(agent.get("model_calls") or 0)
+                    cost[s["system"]] = {"model_calls": calls, "input_tokens": None, "output_tokens": None,
+                                         "tokens": i + o + int(agent.get("tokens") or 0)}
+                    continue
             cost[s["system"]] = {"model_calls": calls, "input_tokens": i, "output_tokens": o,
                                  "tokens": i + o if i is not None and o is not None else None}
         engine = next(s for s in report["synthesis"] if s["system"] == "evidence-engine")
         best = max((v for k, v in systems.items() if k != "evidence-engine" and v is not None), default=None)
-        loss = engine["label_correct"] is False or (best is not None and (systems["evidence-engine"] or 0) < best)
+        mine = systems["evidence-engine"]
+        loss = engine["label_correct"] is False or (best is not None and mine is not None and mine < best)
         cause = None if not loss else "missed" if (report.get("extraction") or {}).get("missed") else "wrong rule"
         rows.append({"question_id": run["protocol"]["id"], "kind": "effect", "systems": systems, "cost": cost,
                      "engine_loss": loss, "cause": cause, "report": f"{selection}~{corpus}"})

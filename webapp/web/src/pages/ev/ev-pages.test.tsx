@@ -357,8 +357,10 @@ describe("report", () => {
     renderRoutes(routes, "/report")
     const rows = within(await screen.findByRole("table", { name: "Questions, losses first" }, T)).getAllByRole("row")
     expect(rows[1]).toHaveTextContent("missed")
+    expect(rows[1]).toHaveTextContent(/RAG baseline: 2 calls, [\d,.]+k? tokens/)
     expect(screen.getByRole("table", { name: "Model calls and tokens per system" })).toBeInTheDocument()
-    expect(screen.getByText(/We should not assume that the evidence-level approach will necessarily perform better/)).toBeInTheDocument()
+    // the quote, not losses.md (in a closed <details> below, which holds the same sentence)
+    expect(screen.getByText(/We should not assume that the evidence-level approach will necessarily perform better/, { selector: "blockquote" })).toBeInTheDocument()
   })
 
   it("without a losses table the Report says how to make one and still lists the reports", async () => {
