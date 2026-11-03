@@ -8,6 +8,8 @@
     POST   /plan/{id}/confirm-all         -> the plan with every decision confirmed (flagged ones too)
     DELETE /plan/{id}/line/{lid}          -> the plan (409 for the oversell line)
     POST   /plan/{id}/run                 -> {run}; 409 until Plan.ready(); freezes the plan and saves the protocol
+    POST   /plan/{id}/main-rule           {rule} -> the plan with the main-answer rule changed
+    GET    /plan/{id}/result              -> the run's lines and answer (W4's after_run result, with the reruns)
     POST   /run/{rid}/links               {accepted, rejected} -> W2's review, then W4's rerun
 
 The model steps are the planner's (evidence/planner), the run and the links review are injected (`PlanBackend`):
@@ -62,6 +64,7 @@ class PlanBackend:
     propose: Callable[[str, list[dict[str, str]]], Plan] = lambda q, c: propose(q, c, write_words=_no_words)
     critic: Callable[[Plan], Plan] = critic
     run: Callable[[Plan, Path | None], str] = field(default_factory=lambda: _not_wired("the run (W4)"))
+    result: Callable[[str], dict[str, Any]] = field(default_factory=lambda: _not_wired("the run's result (W4)"))
     links: Callable[[str, list[str], list[str]], dict[str, Any]] = field(
         default_factory=lambda: _not_wired("the links review and rerun (W2, W4)"))
 
@@ -82,6 +85,10 @@ class ClarifyRequest(BaseModel):
 class DecisionRequest(BaseModel):
     confirm: bool = False
     change: Any = None
+
+
+class RuleRequest(BaseModel):
+    rule: str
 
 
 class LinksRequest(BaseModel):
@@ -222,6 +229,22 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
         if lid == OVERSELL_ID or not line.removable:
             raise Conflict("the oversell line cannot be removed")
         return update(e, e.plan.model_copy(update={"lines": [x for x in e.plan.lines if x.id != lid]}))
+
+    @api.post("/plan/{pid}/main-rule", response_model=PlanView, tags=["plan"])
+    def main_rule(pid: str, req: RuleRequest) -> PlanView:
+        e = plans.open(pid)
+        if e.plan is None:
+            raise Conflict("answer the clarifying questions first")
+        if not req.rule.strip():
+            raise BadRequest("the rule is empty")
+        return update(e, e.plan.model_copy(update={"main_rule": req.rule.strip()}))
+
+    @api.get("/plan/{pid}/result", tags=["plan"])
+    def result(pid: str) -> dict[str, Any]:
+        e = plans.get(pid)
+        if e.run is None:
+            raise Conflict("the plan has not been run")
+        return be.result(e.run)
 
     @api.post("/plan/{pid}/run", response_model=RunStarted, tags=["plan"])
     def run(pid: str) -> RunStarted:

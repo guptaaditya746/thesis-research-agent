@@ -46,7 +46,8 @@ class Fake:
             return {"reruns": [{"setting": "threshold", "flips": True}]}
 
         clar = [{"question": "Better at what?", "options": ["accuracy", "speed"]}] if self.ask else []
-        return PlanBackend(clarify=lambda q: clar, propose=make_plan, critic=flag_first, run=run, links=links)
+        return PlanBackend(clarify=lambda q: clar, propose=make_plan, critic=flag_first, run=run, links=links,
+                           result=lambda rid: {"status": "done", "lines": [], "answer": {"text": "No evidence found"}})
 
 
 @pytest.fixture
@@ -136,3 +137,14 @@ def test_unwired_parts_answer_501(tmp_path):
                                                         critic=lambda p: confirm_all(p, "x")))) as c:
         pid = start(c)["id"]
         assert c.post(f"/api/ev/plan/{pid}/run", json={}).status_code == 501
+
+
+def test_main_rule_change_and_result(world):
+    c, _, _ = world
+    pid = start(c)["id"]
+    assert c.get(f"/api/ev/plan/{pid}/result").status_code == 409  # not run yet
+    r = c.post(f"/api/ev/plan/{pid}/main-rule", json={"rule": "any line"}).json()
+    assert r["plan"]["main_rule"] == "any line"
+    c.post(f"/api/ev/plan/{pid}/confirm-all", json={})
+    c.post(f"/api/ev/plan/{pid}/run", json={})
+    assert c.get(f"/api/ev/plan/{pid}/result").json()["answer"]["text"] == "No evidence found"
