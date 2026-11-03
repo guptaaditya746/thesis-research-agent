@@ -311,11 +311,11 @@ def leak(run: Path, corpus: Path, out: Path) -> dict[str, Any]:
     """The leak split of a run's extraction recall: facts whose name is "on the list" vs "unseen". The word list is
     the one in the run's plan.json; ValueError for a corpus that is not Claude-written."""
     from . import leak as lk
-    from .score import score as score_run
+    from .score import score_extraction_only
     from .truth import GroundTruth
     plan = load_plan(Path(run) / PLAN_FILE)
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
-    result = score_run(Path(run), Path(corpus), [], None, None, None)
+    result = {"extraction": score_extraction_only(Path(run), Path(corpus))}
     marks = lk.mark(truth, plan.words, result["extraction"].get("scored_types"))
     split = lk.split_scores(result, marks)
     nl = chr(10)

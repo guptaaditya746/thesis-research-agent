@@ -158,8 +158,8 @@ def test_leak_command_splits_recall_on_the_list_and_unseen(tmp_path: Path, monke
     truth.facts["S.c0"] = Fact("S.c0", "condition", "S", "explicit", {"label": "closed book"})
     truth.facts["S.c1"] = Fact("S.c1", "condition", "S", "explicit", {"label": "brand new"})
     monkeypatch.setattr(GroundTruth, "load", classmethod(lambda cls, p: truth))
-    monkeypatch.setattr("evaluation.score.score",
-                        lambda *a, **k: {"extraction": {"missed": ["S.c1"], "scored_types": ["condition"]}})
+    monkeypatch.setattr("evaluation.score.score_extraction_only",
+                        lambda *a, **k: {"missed": ["S.c1"], "scored_types": ["condition"]})
     plan = make_plan().model_copy(update={"words": WordList(things={"t": ["Closed-Book"]}, cues=[],
                                                             written_by="orch-model", ontology_names={})})
     write_plan(plan, run / "plan.json")
@@ -172,7 +172,7 @@ def test_leak_command_splits_recall_on_the_list_and_unseen(tmp_path: Path, monke
 def test_leak_refuses_a_corpus_that_is_not_claude_written(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     truth = GroundTruth("rag-other", "q", [], [], {})
     monkeypatch.setattr(GroundTruth, "load", classmethod(lambda cls, p: truth))
-    monkeypatch.setattr("evaluation.score.score", lambda *a, **k: {"extraction": {"missed": []}})
+    monkeypatch.setattr("evaluation.score.score_extraction_only", lambda *a, **k: {"missed": []})
     write_plan(make_plan(), tmp_path / "plan.json")
     with pytest.raises(SystemExit, match="Claude-written"):
         cli.main(["leak", "--run", str(tmp_path), "--corpus", str(tmp_path), "--out", str(tmp_path / "o")])
@@ -220,7 +220,7 @@ def test_links_command_scores_builds_on_from_a_references_file(tmp_path: Path) -
 
 def test_links_command_scores_chaining_with_the_existing_scorer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[Any] = []
-    monkeypatch.setattr("evaluation.score.score", lambda *a, **k: seen.append((a, k)) or {
+    monkeypatch.setattr("evaluation.score.score_extraction_only", lambda *a, **k: seen.append((a, k)) or {
         "question_id": "q", "kind": "chaining", "systems": [{"kind": "chaining", "headline": 1.0}]})
     assert cli.main(["links", "--run", str(tmp_path), "--corpus", str(tmp_path), "--question-id", "chain",
                      "--out", str(tmp_path / "o")]) == 0
