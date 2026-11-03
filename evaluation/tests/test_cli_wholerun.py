@@ -60,7 +60,7 @@ def test_two_rows_per_set_and_both_reasoning_settings(tmp_path: Path) -> None:
     report = wholerun_cmd.wholerun(qs, build(tmp_path, qs), tmp_path / "out", set_name="demo", n=10, seed=0,
                                    left_out="left out: 1 of 3 (no open full text)", reasoning=("on", "off"))
     rows = report["rows"]
-    assert set(rows) == {"auto-confirmed/on", "auto-confirmed/off", "hand-confirmed/on"}
+    assert set(rows) == {"auto-confirmed/on", "auto-confirmed/off", "hand-confirmed/on", "hand-confirmed/off"}
     assert [r["top1"] for r in rows["auto-confirmed/on"]] == [1, 1, 1]
     assert [r["top1"] for r in rows["auto-confirmed/off"]] == [0, 0, 0]
     assert len(rows["hand-confirmed/on"]) == 3 and rows["hand-confirmed/on"][2]["missing_run"] and rows["hand-confirmed/on"][0]["confirmation"] == "hand-confirmed"
@@ -280,14 +280,16 @@ def test_pairing_uses_the_same_questions_for_both_sides(tmp_path: Path) -> None:
     assert hand["rag_mean"] == 1.0   # the same 3 questions on both sides
 
 
-def test_a_run_without_plan_json_is_not_scored(tmp_path: Path) -> None:
+def test_a_run_without_plan_json_is_scored_zero_and_listed(tmp_path: Path) -> None:
     qs = questions(2)
     runs = tmp_path / "runs"
     make_run(runs, "auto-confirmed", "on", qs[0], ["A", "B"])
     make_run(runs, "auto-confirmed", "on", qs[1], ["A", "B"], plan=False)
     report = wholerun_cmd.wholerun(qs, runs, tmp_path / "o", set_name="d", left_out="x", reasoning=("on",),
                                    confirm=("auto-confirmed",))
-    assert [r["id"] for r in report["rows"]["auto-confirmed/on"]] == ["q0"]
+    rows = report["rows"]["auto-confirmed/on"]
+    assert [r["id"] for r in rows] == ["q0", "q1"] and rows[1]["headline"] == 0.0 and "kendall_tau" not in rows[1]
+    assert report["summary"]["auto-confirmed/on"]["n"] == 2 and report["summary"]["auto-confirmed/on"]["n_missing_plan"] == 1
     assert report["missing_plan"] == {"auto-confirmed/on": ["q1"]}
     assert "Missing plan" in (tmp_path / "o" / "wholerun.md").read_text(encoding="utf-8")
 
@@ -310,3 +312,39 @@ def test_set_without_key_records_says_not_available(tmp_path: Path) -> None:
     report = wholerun_cmd.wholerun(qs, build(tmp_path, qs), tmp_path / "o", set_name="d", left_out="x",
                                    reasoning=("on",), confirm=("auto-confirmed",))
     assert report["rows"]["auto-confirmed/on"][0]["error_split"].startswith("not available")
+
+
+def test_missing_plan_is_a_loss_in_the_pairing(tmp_path: Path) -> None:
+    qs = questions(2, fx.write_corpus(tmp_path))
+    runs = tmp_path / "runs"
+    make_run(runs, "auto-confirmed", "on", qs[0], ["A", "B"])
+    make_run(runs, "auto-confirmed", "on", qs[1], ["A", "B"], plan=False)
+    report = wholerun_cmd.wholerun(qs, runs, tmp_path / "o", set_name="d", left_out="x", reasoning=("on",),
+                                   confirm=("auto-confirmed",), systems=("engine", "rag"), rag_answer=rag_fixed,
+                                   rag_model="orch-model")
+    c = next(x for x in report["comparison"] if x["rag"] == "rag/global")
+    assert (c["n"], c["n_missing_run"], c["losses"], c["ties"]) == (2, 1, 1, 1)
+
+
+def test_row_with_every_run_missing_keeps_its_summary_and_comparison(tmp_path: Path) -> None:
+    qs = questions(2, fx.write_corpus(tmp_path))
+    report = wholerun_cmd.wholerun(qs, tmp_path / "none", tmp_path / "o", set_name="d", left_out="x", reasoning=("on",),
+                                   confirm=("auto-confirmed",), systems=("engine", "rag"), rag_answer=rag_fixed,
+                                   rag_model="orch-model")
+    s = report["summary"]["auto-confirmed/on"]
+    assert (s["n"], s["n_missing_run"], s["point"]) == (2, 2, 0.0)
+    c = next(x for x in report["comparison"] if x["engine"] == "auto-confirmed/on" and x["rag"] == "rag/global")
+    assert (c["n"], c["n_missing_run"], c["engine_mean"], c["losses"]) == (2, 2, 0.0, 2)
+
+
+def test_cli_missing_corpus_manifest_is_a_clean_error(tmp_path: Path, capsys: pytest.CaptureFixture[str],
+                                                      monkeypatch: pytest.MonkeyPatch) -> None:
+    from evaluation.realpapers import sofc
+    q = sofc.questions(DATA / "sofc_tiny")[0]
+    runs = tmp_path / "runs"
+    make_run(runs, "auto-confirmed", "on", q, ["GDC", "YSZ", "LSM"])
+    monkeypatch.setattr(cli, "_model", lambda alias: (object(), alias))
+    monkeypatch.setattr("evaluation.baselines.real.rag_real", lambda *a, **k: Answer())
+    code = cli.main(["wholerun", "--set", "sofc", "--src", str(DATA / "sofc_tiny"), "--runs", str(runs),
+                     "--out", str(tmp_path / "o"), "--confirm", "auto", "--reasoning", "on"])
+    assert code == 2 and "evaluate wholerun:" in capsys.readouterr().err

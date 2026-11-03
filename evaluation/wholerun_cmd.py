@@ -10,8 +10,9 @@ sample.json, so a person must confirm exactly those 5. Rows are named "<confirma
 Rules for what is scored:
 - A question with no run folder is a "missing run": it counts as a loss for the engine (headline 0) in the row, the
   summary and the pairing, and is listed under `missing`.
-- A run folder without plan.json is a "missing plan": never scored, listed under `missing_plan`, left out of the row
-  and the pairing (its row n is smaller; every table shows n). A plan not confirmed as its row says is refused.
+- A run folder without plan.json is a "missing plan": treated as a missing run (headline 0, a loss in the pairing, in n)
+  and listed under `missing_plan`; never scored. A plan not confirmed as its row says is refused. A row whose every
+  question is missing is kept (mean 0).
 - With the RAG baseline, every engine run's run.json must name the same papers (corpus manifest) and the same model
   as the baseline (`rag_model`); a mismatch (or no run.json) is refused (ValueError).
 - Questions whose papers are in tune_split.json are dropped before sampling (`held_out_for_tuning`).
@@ -122,6 +123,7 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
 def _summary(rows: list[dict[str, Any]], seed: int) -> dict[str, Any]:
     taus = [r["kendall_tau"] for r in rows if r.get("kendall_tau") is not None]
     out = {"n": len(rows), "n_missing_run": sum(bool(r.get("missing_run")) for r in rows),
+           "n_missing_plan": sum(bool(r.get("missing_plan")) for r in rows),
            "n_unscored": sum(bool(r.get("unscored")) for r in rows),
            **stats.interval_row(stats.bootstrap_mean([headline(r) if not r.get("missing_run") else 0.0 for r in rows],
                                                      seed=seed))}
@@ -184,6 +186,8 @@ def wholerun(questions: list[RealQuestion], runs: Path, out: Path, *, set_name: 
                 plan = _plan(root)
                 if plan is None:
                     missing_plan[key].append(q.id)
+                    rows[key].append({"id": q.id, "kind": q.kind, "confirmation": conf, "missing_run": True,
+                                      "missing_plan": True, "headline": 0.0})
                     continue
                 _check_confirmed(plan, conf, root)
                 if "rag" in systems:
@@ -195,8 +199,6 @@ def wholerun(questions: list[RealQuestion], runs: Path, out: Path, *, set_name: 
                 result["error_split"] = error_split(q, root, plan, result["headline"])
                 rows[key].append(result)
                 fresh[conf].setdefault(q.id, is_fresh(plan, q))
-            if all(r.get("missing_run") for r in rows[key]):
-                del rows[key]    # no run at all for this row: only `missing` says so
     if "rag" in systems:
         for mode in RAG_MODES:
             rows[f"rag/{mode}"] = [(r := score(rag_answer(q, mode), q, groups=groups))   # type: ignore[misc]

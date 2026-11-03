@@ -84,6 +84,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -428,8 +429,9 @@ def cmd_wholerun(args: argparse.Namespace) -> int:
         report = wc.wholerun(questions, args.runs, args.out, set_name=args.set, n=args.sample, seed=args.seed,
                              left_out=left_out_of(args.set, args.src, args.corpus, questions), reasoning=reasoning,
                              confirm=confirm, systems=systems, rag_answer=rag, rag_model=args.model)
-    except ValueError as exc:
-        raise SystemExit(f"evaluate wholerun: {exc}") from None
+    except (ValueError, FileNotFoundError) as exc:   # a refused run, or a corpus manifest that is not there
+        print(f"evaluate wholerun: {exc}", file=sys.stderr)
+        return 2
     print(f"wrote {args.out / 'wholerun.json'}: {len(report['sample']['ids'])} questions; {report['left_out']}")
     return 0
 
