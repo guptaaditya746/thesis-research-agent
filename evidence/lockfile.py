@@ -21,12 +21,13 @@ __all__ = ["diff", "lock"]
 
 
 def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
-         domains: Path | None = None, *, plan: Plan | None = None) -> dict[str, Any]:
+         domains: Path | None = None, *, plan: Plan | None = None, reason: str = "on") -> dict[str, Any]:
     """The lock of a run of `protocol` with `cascades` (engine.build_extractors); `domains`: the pack's folder
     when it is not domains/; `plan`: the confirmed plan of a planned run, which adds `plan_sha256` and
     `words_sha256` and `field_ontology_sha256` ({file name: sha256} of the plan field's ontology files the plan run's
     graph and ontology report read, evidence/ontology `ontology_hashes`; the pack's own ontology stays under
-    `ontology_sha256`). A run without a plan locks exactly as before, without those keys."""
+    `ontology_sha256`; {} when `reason` is off: the run reads no field ontology). A run without a plan locks exactly
+    as before, without those keys."""
     pack = protocol.pack()
     onto = reasoner.ontology_sha256(pack) if domains is None else reasoner.ontology_sha256(pack, domains)
     out: dict[str, Any] = {
@@ -38,7 +39,7 @@ def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extrac
         out["plan_sha256"] = plan.sha256
         out["words_sha256"] = plan.words.sha256
         from .ontology.sources import ontology_hashes
-        out["field_ontology_sha256"] = ontology_hashes(plan.field)
+        out["field_ontology_sha256"] = ontology_hashes(plan.field) if reason == "on" else {}
     return out
 
 
