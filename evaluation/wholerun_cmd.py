@@ -307,14 +307,64 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
 
 # --- leak ---------------------------------------------------------------------------------------------------------
 
-def leak(run: Path, corpus: Path, out: Path) -> dict[str, Any]:
+TUNED_WORD_STEPS = ("write_words", "write_more_words")     # the tuned steps that write the word list
+CORPORA_ROOT = Path(__file__).resolve().parents[1] / "tests" / "EV2" / "corpora"
+
+
+def _condition_names(truth: Any, *, aliases: bool) -> set[str]:
+    """The cleaned names of a truth's conditions that the tuning gold holds (`tune._names_by_role`: every role but
+    `other`, label and aliases); with `aliases=False` the labels only (what the leak split marks)."""
+    from evidence.names import clean
+    names = set()
+    for fact in truth.facts.values():
+        if fact.type == "condition" and fact.data.get("role") != "other":
+            names |= {clean(n) for n in [fact.data.get("label"), *(fact.data.get("aliases") or [] if aliases else [])]
+                      if isinstance(n, str)}
+    return names - {""}
+
+
+def check_tuned_words(truth: Any, tuned_dir: Path | None = None, corpora: Iterable[Path] = ()) -> None:
+    """Refuse (ValueError) when a tuned word-writing step was tuned on corpora whose condition names (cleaned, not
+    hashed) overlap the leak corpus's: the tuned instructions may then hold the names the split calls "unseen".
+    `tuned_dir` holds the tuned files (default evidence/steps/tuned); no file, no refusal. The corpora a file lists
+    are looked up by id in `corpora` (default tests/EV2/corpora); one that cannot be read is refused too."""
+    from .truth import GroundTruth
+    if tuned_dir is None:
+        from evidence.steps import TUNED_DIR
+        tuned_dir = TUNED_DIR
+    roots = [Path(c) for c in corpora] or [CORPORA_ROOT]
+    mine = _condition_names(truth, aliases=False)
+    for step in TUNED_WORD_STEPS:
+        path = Path(tuned_dir) / f"{step}.json"
+        if not path.is_file():
+            continue
+        tuned = json.loads(path.read_text(encoding="utf-8"))
+        for side in ("train_corpora", "test_corpora"):
+            for corpus_id in tuned.get(side) or []:
+                found = next((r / corpus_id for r in roots if (r / corpus_id / "ground_truth.json").is_file()), None)
+                if found is None:
+                    raise ValueError(f"tuned {step} ({path}) lists {side[:-8]} corpus {corpus_id!r}, which cannot be "
+                                     f"read from {[str(r) for r in roots]}: cannot tell whether its names overlap; "
+                                     "pass --corpora")
+                shared = mine & _condition_names(GroundTruth.load(found / "ground_truth.json"), aliases=True)
+                if shared:
+                    raise ValueError(f"tuned {step} ({path}) was tuned with {side[:-8]} corpus {corpus_id!r}, which "
+                                     f"share {len(shared)} condition names with {truth.corpus_id!r} (for example "
+                                     f"{sorted(shared)[:3]}): the leak split would measure names the writer was tuned "
+                                     "on; tune on other corpora or move the tuned file aside")
+
+
+def leak(run: Path, corpus: Path, out: Path, *, tuned_dir: Path | None = None,
+         corpora: Iterable[Path] = ()) -> dict[str, Any]:
     """The leak split of a run's extraction recall: facts whose name is "on the list" vs "unseen". The word list is
-    the one in the run's plan.json; ValueError for a corpus that is not Claude-written."""
+    the one in the run's plan.json; ValueError for a corpus that is not Claude-written, or when the tuned word writer
+    was tuned on corpora sharing the corpus's condition names (`check_tuned_words`)."""
     from . import leak as lk
     from .score import score_extraction_only
     from .truth import GroundTruth
     plan = load_plan(Path(run) / PLAN_FILE)
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
+    check_tuned_words(truth, tuned_dir, corpora)
     result = {"extraction": score_extraction_only(Path(run), Path(corpus))}
     marks = lk.mark(truth, plan.words, result["extraction"].get("scored_types"))
     split = lk.split_scores(result, marks)

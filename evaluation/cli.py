@@ -26,7 +26,7 @@
                       [--confirm auto|hand|both] [--reasoning on|off|both] [--system engine|rag|both]
                       [--sample 10] [--seed 0] [--model ALIAS] [--cache F]
     evaluate tune-split --set S --src DIR [--corpus DIR] [--fraction 0.2] [--seed 0]
-    evaluate leak --run R --corpus C --out D
+    evaluate leak --run R --corpus C [--tuned-dir DIR] [--corpora DIR ...] --out D
     evaluate offtemplate --runs DIR --out D
     evaluate links --run R [--corpus C --question-id ID] [--references F.json] --out D
 
@@ -456,7 +456,7 @@ def cmd_leak(args: argparse.Namespace) -> int:
     from . import wholerun_cmd as wc
 
     try:
-        split = wc.leak(args.run, args.corpus, args.out)
+        split = wc.leak(args.run, args.corpus, args.out, tuned_dir=args.tuned_dir, corpora=args.corpora)
     except ValueError as exc:
         raise SystemExit(f"evaluate leak: {exc}") from None
     print(f"wrote {args.out / 'leak.json'}: " + "; ".join(f"{k} recall={v['recall']}" for k, v in split.items()))
@@ -673,6 +673,10 @@ def parser() -> argparse.ArgumentParser:
     lk = sub.add_parser("leak", help="extraction recall split: names on the word list vs unseen")
     lk.add_argument("--run", type=Path, required=True, help="a plan run (its plan.json holds the word list)")
     lk.add_argument("--corpus", type=Path, required=True, help="a Claude-written corpus with ground_truth.json")
+    lk.add_argument("--tuned-dir", type=Path, help="the tuned steps' folder (default evidence/steps/tuned); the run is "
+                    "refused when a tuned word writer saw corpora that share condition names with --corpus")
+    lk.add_argument("--corpora", type=Path, action="append", default=[],
+                    help="a folder holding the corpora the tuned files list (repeatable; default tests/EV2/corpora)")
     lk.add_argument("--out", type=Path, required=True)
     lk.set_defaults(func=cmd_leak)
 
