@@ -65,7 +65,7 @@ class ClarifySig(dspy.Signature):
     question is clear. Each question has 2 to 5 short options.
 
     Example: "Is it better?" -> [{"question": "Better at what?", "options": ["accuracy", "speed", "cost"]}]
-    Example: "Does retrieval improve factuality in question answering?" -> []"""
+    Example: "Does method A beat method B on measure M?" -> []"""
     question: str = dspy.InputField(desc="the research question")
     clarifications: list[Clarification] = dspy.OutputField(desc="0 to 2 multiple-choice questions")
 
@@ -78,9 +78,9 @@ class ProposeSig(dspy.Signature):
     must_match (what an experiment must share to be compared), counts_as (what counts as the thing asked about),
     threshold (the smallest effect that matters) and include (which papers or results to include), each with a
     one-sentence reason. Give the main-answer rule as one sentence, the field (cs, medicine, materials or other)
-    and the things the question names (short ids, e.g. "retrieval", "factuality").
+    and the things the question names (short ids, e.g. "method_a", "measure_m").
 
-    Example output (shape only): lines=[{"question": "Does retrieval raise factuality?", "kind": "effect",
+    Example output (shape only): lines=[{"question": "Does method A beat method B on M?", "kind": "effect",
     "template": "effect", "query": "SELECT ?c WHERE {...}"}], decisions=[{"type": "threshold", "value": "0.01",
     "reason": "smaller gaps are within noise"}]"""
     question: str = dspy.InputField(desc="the research question")
