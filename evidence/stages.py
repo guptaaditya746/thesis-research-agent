@@ -78,19 +78,24 @@ class StageContext:
     model: str                     # the run's default model alias for `ask`
 
     def ask(self, instructions: str, user_prompt: str, *, output_type: type[BaseModel], purpose: str,
-            model: str | None = None, temperature: float = 0.0, seed: int = 0, max_tokens: int = 2048) -> Any:
+            model: str | None = None, temperature: float = 0.0, seed: int = 0, max_tokens: int = 2048,
+            request_extra: dict[str, Any] | None = None) -> Any:
         """One recorded model call: the cache, the calls.jsonl row, calls/<id>.json, a `stage_call` event, the cost and
         failed-call counts, exactly as the engine's own calls. Returns an `output_type`; raises StageCallError when the
         model call failed (the failure is recorded). `purpose` names the stage's question (part of the cache key)."""
         return self._ask(instructions, user_prompt, output_type, purpose, model or self.model,
-                         {"temperature": temperature, "seed": seed, "max_tokens": max_tokens})
+                         {"temperature": temperature, "seed": seed, "max_tokens": max_tokens}, request_extra)
 
     def dspy_lm(self, purpose: str, model: str | None = None) -> Any:
         """A `modelcall.dspy_lm.RecordedLM` whose every call goes through `ask` (so DSPy steps in a stage are recorded
         and replayable too). DSPy's own text reply travels as the one field of a `Reply` model."""
         from modelcall.dspy_lm import RecordedLM
         alias = model or self.model
-        return RecordedLM(alias, lambda text: self.ask("", text, output_type=Reply, purpose=purpose, model=alias).text)
+        # the retry number and DSPy's call settings are part of the request, so a retry (same messages, attempt 1) is a
+        # new recorded call and never gets the bad reply of attempt 0 back
+        return RecordedLM(alias, lambda text, *, attempt, settings: self.ask(
+            "", text, output_type=Reply, purpose=purpose, model=alias,
+            request_extra={"attempt": attempt, "settings": settings}).text, with_call=True)
 
 
 def _reserved() -> frozenset[str]:

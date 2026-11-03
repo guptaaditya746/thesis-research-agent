@@ -6,6 +6,7 @@ import json
 from collections.abc import Iterator
 from pathlib import Path
 
+import dspy
 import pytest
 from pydantic import BaseModel
 from pydantic_ai.models.function import FunctionModel
@@ -15,9 +16,8 @@ from evidence.contract import Item
 from evidence.plan import Plan, WordList, write_plan
 from evidence.replay import replay
 from evidence.rundir import RunDir
-from evidence.tests.conftest import provider_of, respond
 from jsonio import sha256_hex
-from evidence.tests.conftest import PROTOCOL, make_corpus
+from evidence.tests.conftest import PROTOCOL, make_corpus, provider_of, respond
 
 GOLDEN = Path(__file__).resolve().parent / "fixtures" / "golden" / "regex_run_outputs.json"
 
@@ -198,7 +198,7 @@ def _provider(fail: bool = False, text: str = "hi there"):
     return provider_of(FunctionModel(reply, model_name="echo"))
 
 
-def _ask_stage(ctx_seen: list | None = None):
+def _ask_stage():
     def stage(run, ctx):
         out = ctx.ask("Echo the word.", "say hi", output_type=Echo, purpose="demo-echo")
         return {"answer": out.answer}
@@ -247,3 +247,46 @@ def test_a_stage_gets_a_recorded_dspy_lm(tmp_path: Path) -> None:
     assert len(_lines(root / "calls.jsonl")) == 1
     _, report = replay(root)
     assert report["ok"]
+
+
+def test_a_dspy_retry_through_ctx_is_a_new_recorded_call(tmp_path: Path) -> None:
+    def stage(run, ctx):
+        lm = ctx.dspy_lm("demo-retry")
+        return {"out": [list(lm("same words", attempt=0)), list(lm("same words", attempt=1))]}
+
+    stages.register("dsp", "after_run", stage)
+    root = _run(tmp_path, provider=_provider())
+    assert len(_lines(root / "calls.jsonl")) == 2
+    assert len({r["key"] for r in _lines(root / "calls.jsonl")}) == 2
+    _, report = replay(root)
+    assert report["ok"]
+
+
+class EchoSig(dspy.Signature):
+    """Echo the text."""
+    text: str = dspy.InputField()
+    echo: str = dspy.OutputField()
+
+
+def test_a_step_with_a_bad_first_reply_succeeds_on_attempt_1_and_replays_without_calls(tmp_path: Path) -> None:
+    from evidence import steps
+    asked: list[str] = []
+
+    def reply(messages, info):
+        asked.append("x")
+        return respond(info, {"text": "not json at all" if len(asked) == 1 else '{"echo": "ok"}'})
+
+    def stage(run, ctx):
+        steps.configure(ctx.dspy_lm("demo-step"))
+        try:
+            return {"echo": steps.Step(EchoSig, "echo")(text="hi").echo}
+        finally:
+            steps._LM = None
+
+    stages.register("stp", "after_run", stage)
+    root = _run(tmp_path, provider=provider_of(FunctionModel(reply, model_name="echo")))
+    assert json.loads((root / "stp.json").read_text(encoding="utf-8")) == {"echo": "ok"}
+    assert len(asked) == 2 and len(_lines(root / "calls.jsonl")) == 2
+    new, report = replay(root)
+    assert report["ok"] and len(asked) == 2
+    assert json.loads((new / "run.json").read_text(encoding="utf-8"))["cost"]["made_model_calls"] == 0

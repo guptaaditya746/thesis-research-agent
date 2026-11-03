@@ -27,12 +27,16 @@ def render(messages: list[dict[str, Any]]) -> str:
 
 
 class RecordedLM(dspy.BaseLM):
-    """A `dspy.BaseLM` answering from `ask(prompt_text) -> reply_text`, recorded in `cache` when given."""
+    """A `dspy.BaseLM` answering from `ask(prompt_text) -> reply_text`, recorded in `cache` when given. With
+    `with_call=True` the callback is `ask(prompt_text, *, attempt, settings)`: a recorder of its own (the engine's)
+    then keys on the retry number and the call settings too, so a retry is a new recorded call."""
 
-    def __init__(self, alias: str, ask: Callable[[str], str], cache: JsonlCache | None = None, **kwargs: Any) -> None:
+    def __init__(self, alias: str, ask: Callable[..., str], cache: JsonlCache | None = None, *, with_call: bool = False,
+                 **kwargs: Any) -> None:
         super().__init__(model=alias, model_type="chat", cache=False, **kwargs)
         self.alias = alias
         self._ask = ask
+        self._with_call = with_call   # True: ask(text, attempt=..., settings=...) also gets the retry number and settings
         self._recorder = cache
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -53,7 +57,8 @@ class RecordedLM(dspy.BaseLM):
         if hit is not None:
             text = hit["output"]
         else:
-            text = self._ask(render(msgs))
+            text = (self._ask(render(msgs), attempt=attempt, settings=json.loads(json.dumps(settings, default=repr)))
+                    if self._with_call else self._ask(render(msgs)))
             if self._recorder is not None:
                 self._recorder.put(key, {"output": text, "model": self.alias, "messages": msgs})
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text, tool_calls=None),

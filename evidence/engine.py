@@ -727,11 +727,11 @@ class Execution:
         return asked, check
 
     def stage_ask(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
-                  settings: dict[str, Any]) -> BaseModel:
+                  settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> BaseModel:
         """`StageContext.ask`: one recorded model call for a stage, through exactly the engine's own path (`_asked`)."""
         owner = f"stage:{purpose}"
         request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
-                   "user_prompt": user_prompt, "settings": settings}
+                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}   # plain asks: as before
         asked, _ = self._asked(owner, request, lambda: self._structured(alias, instructions, user_prompt, output_type, settings),
                                evidence_type="stage", event="stage_call", extra={"purpose": purpose})
         if asked.value.get("status") == "error":
@@ -804,7 +804,7 @@ class Execution:
 def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
           provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
           run_calls: RunCalls | None = None, confirm: Confirm = "none", relink: Relink = "off",
-          plan: Plan | None = None) -> None:
+          plan: Plan | None = None, names_model: str | None = None) -> None:
     """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
     except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
@@ -812,7 +812,7 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
             root = Path(tmp) / str(i)
             root.mkdir()
             Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
-                      run_calls, "warm", confirm, relink, plan=plan).document(paper)
+                      run_calls, "warm", confirm, relink, plan=plan, names_model=names_model).document(paper)
         futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
         try:
             for future in futures:
@@ -867,7 +867,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     try:
         if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
             _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
-                  settings.confirm, settings.relink, plan)
+                  settings.confirm, settings.relink, plan, names_alias(cascades, settings.model))
         for paper in corpus.papers:
             ex.document(paper)
         ex.finish()
