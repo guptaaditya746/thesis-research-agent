@@ -1675,7 +1675,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
 def _named(items: list[Item], truth: GroundTruth, canon: Canon) -> list[Item]:
     """The run's items with the plan's own labels taken out of the matching: a plan run labels a condition with a
     thing id of the plan ("cond", "rag") and a metric with the plan's measure id ("accuracy"), never the truth's roles
-    (baseline, rag) or canonicals (factual_accuracy). A condition item loses its `role` (so it matches by name) and a
+    (baseline, rag) or canonicals. A condition item loses its `role` (so it matches by name) and a
     metric item takes the canonical of the truth metric it is named like."""
     metrics = [f for f in truth.facts.values() if f.type == "metric"]
     out = []

@@ -220,6 +220,12 @@ def test_builds_on_recall_falls_back_to_doi_equality() -> None:
     assert got["per_paper"]["p1"]["found"] == 1 and got["recall"] == 0.5
 
 
+def test_a_link_whose_openalex_request_failed_is_neither_hit_nor_miss() -> None:
+    failed = {**link("p1", None, "10.1/zzz"), "text": "outside the set (resolve_failed: timeout)"}
+    got = wholerun_cmd.builds_on_recall([link("p1", "W1", "r"), failed], {"p1": ["W1", "W2"]})
+    assert got["n_links"] == 1 and got["n_unresolved"] == 1 and got["precision"] == 1.0
+
+
 def test_links_command_scores_builds_on_from_a_references_file(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()

@@ -406,7 +406,11 @@ def builds_on_recall(links: list[dict[str, Any]], references: dict[str, list[Any
     OpenAlex id the run resolved, "W..." or its URL); a DOI equal to the link's `ref` counts too (the fallback for a
     link with no `work`). None when a side is empty."""
     found: dict[str, dict[tuple[str | None, str | None], None]] = {}
+    unresolved = 0
     for link in links:
+        if link.get("resolve_failed") or "resolve_failed" in str(link.get("text", "")):
+            unresolved += 1          # OpenAlex did not answer: neither a hit nor a miss, left out
+            continue
         if link.get("paper") in references:
             key = (_work(link["work"]) if link.get("work") else None, _doi_of(link.get("ref")))
             found.setdefault(link["paper"], {})[key] = None
@@ -418,7 +422,7 @@ def builds_on_recall(links: list[dict[str, Any]], references: dict[str, list[Any
     total_want, total_links = sum(p["expected"] for p in per.values()), sum(p["links"] for p in per.values())
     return {"recall": sum(p["found"] for p in per.values()) / total_want if total_want else None,
             "precision": sum(p["links_right"] for p in per.values()) / total_links if total_links else None,
-            "n_expected": total_want, "n_links": total_links, "per_paper": per}
+            "n_expected": total_want, "n_links": total_links, "n_unresolved": unresolved, "per_paper": per}
 
 
 def build_references(run: Path, corpus: Path) -> dict[str, list[dict[str, Any]]]:
