@@ -23,6 +23,13 @@ function userStrings(source: string): string[] {
   return out.filter(Boolean)
 }
 
+/** The text of the page a user reads: the body without <script> and <style> text (injected tags are not page content). */
+function visibleText(): string {
+  const body = document.body.cloneNode(true) as HTMLElement
+  body.querySelectorAll("script, style").forEach((n) => n.remove())
+  return body.textContent ?? ""
+}
+
 beforeAll(async () => {
   await Promise.all([import("@/pages/ev/ReportPage"), import("@/pages/ev/RunPage")])
 }, 180_000)
@@ -36,7 +43,7 @@ describe("no ontology words on screen", () => {
   ] as const)("%s shows no ontology words", async (path, loaded) => {
     renderRoutes(routes, path)
     await loaded()
-    expect(document.body.textContent ?? "").not.toMatch(JARGON)
+    expect(visibleText()).not.toMatch(JARGON)
   })
 
   it("the link flags line, with flags set, shows no ontology words", async () => {
@@ -45,7 +52,7 @@ describe("no ontology words on screen", () => {
     renderRoutes(routes, `/runs/${RUN}?tab=scores`)
     const line = await screen.findByText(/Values linked to the wrong kind of thing: 2/, {}, T)
     expect(line.textContent ?? "").not.toMatch(JARGON)
-    expect(document.body.textContent ?? "").not.toMatch(JARGON)
+    expect(visibleText()).not.toMatch(JARGON)
   })
 })
 
