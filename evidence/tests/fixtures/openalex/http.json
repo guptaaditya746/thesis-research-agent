@@ -34,5 +34,15 @@
  },
  "https://api.openalex.org/works?search=Totally+Unknown+Work&per-page=1": {
   "results": []
+ },
+ "https://api.openalex.org/works?search=Retrieval+Study+Quoted+Wrongly&per-page=1": {
+  "results": [
+   {
+    "id": "https://openalex.org/W444",
+    "doi": "https://doi.org/10.7777/unrelated",
+    "title": "Quantum Chromodynamics On A Lattice",
+    "referenced_works": []
+   }
+  ]
  }
 }

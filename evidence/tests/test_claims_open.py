@@ -95,8 +95,10 @@ def test_bad_direction_is_a_parse_error(lm):
         find_claims(text, doc_of(text), CFG)
 
 
-def test_old_rag_claims_same_labels():
-    """On a committed EV2 corpus the labels equal the old `claims` patterns' labels for >= 95% of old claims."""
+def test_old_rag_claims_are_candidates():
+    """Checks the regex and plumbing only: with a stand-in model that copies the old patterns' labels, >= 95% of the old
+    claims of a committed EV2 corpus are found as candidates and carried through with a checked span. Whether the real
+    ReadClaim keeps the old labels is a runbook check (Task 8.4), not tested here."""
     from evidence.extractors import base
     from evidence.pack import load_pack
     words = load_pack("rag").extractor_config("author_claim", "regex_author_claim")

@@ -23,6 +23,7 @@ from agent.anchor import selector_at
 from .contract import DocumentRef, Span
 from .extractors import base
 from .records import ClaimRecord, item
+from . import steps
 from .steps import Step, configure
 
 __all__ = ["GroupRelations", "ReadClaim", "apply_groups", "candidate_sentences", "claim_stage", "count_by_group", "cue_words",
@@ -47,7 +48,7 @@ class ReadClaim(dspy.Signature):
     Example: "Method A shortens the delay." -> subject "Method A", relation "shortens", object "the delay", strength
     "firm", direction "improves".
     Example: "Our dataset is the largest of its kind." -> relation "is the largest", object "of its kind", direction null.
-    Example: "The results suggest Method A may help." -> strength "hedged", direction "improves"."""
+    Example: "The results suggest Method A may help." -> strength "hedged", direction null (nothing is compared)."""
     sentence: str = dspy.InputField(desc="one sentence of the paper, verbatim")
     is_claim: bool = dspy.OutputField(desc="true when the sentence states a claim of the authors")
     subject: str = dspy.OutputField(desc="what the claim is about, as written; empty when not a claim")
@@ -80,8 +81,12 @@ def run_step(step: Step, ctx: Any | None, purpose: str, **inputs: Any) -> dspy.P
     if ctx is None:
         return step(**inputs)
     with _LOCK:
+        before = steps._LM
         configure(ctx.dspy_lm(purpose))
-        return step(**inputs)
+        try:
+            return step(**inputs)
+        finally:
+            steps._LM = before   # a later ctx-less step never records under this paper's ctx
 
 
 def cue_words(cues: list[str]) -> list[str]:
@@ -99,7 +104,7 @@ def _stem(cue: str) -> str:
 
 def _cue_pattern(cues: list[str]) -> re.Pattern[str]:
     parts = [re.escape(_stem(c)).replace(r"\ ", r"\s+") for c in cue_words(cues) if c.strip()]
-    return re.compile(r"(?i)\b(?:%s)" % "|".join(sorted(set(parts), key=len, reverse=True))) if parts else re.compile(r"(?!)")
+    return re.compile(r"(?i)\b(?:%s)\w{0,3}\b" % "|".join(sorted(set(parts), key=len, reverse=True))) if parts else re.compile(r"(?!)")
 
 
 _SKIP = re.compile(r"(?i)\bwhether\b|\?")

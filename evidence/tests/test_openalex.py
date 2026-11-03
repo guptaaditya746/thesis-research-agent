@@ -27,14 +27,30 @@ def span() -> Span:
     return Span.of("link", selector_at(text, 0, len(text), file="papers/S002.md", sha256=text_sha256(text)))
 
 
+class Ctx:
+    def __init__(self, run_dir, mode="run"):
+        self.run_dir, self.mode = run_dir, mode
+
+
 def client(tmp_path, f=fetch) -> openalex.OpenAlex:
     return openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=f)
+
+
+def test_cache_is_required():
+    with pytest.raises(ValueError):
+        openalex.OpenAlex(None)  # type: ignore[arg-type]
 
 
 def test_doi_resolves_to_run_doc(tmp_path):
     rec = client(tmp_path).resolve("Lewis et al. 2020", "10.1234/rag.2020", None, RUN_DOCS, subject_doc="S002", span=span())
     assert (rec.object_doc, rec.outside_set, rec.object_ref) == ("S001", False, "10.1234/rag.2020")
     assert rec.subject_doc == "S002" and rec.relation == "cites"
+
+
+def test_doi_of_run_doc_unknown_to_openalex_still_matches_by_doi_boundary(tmp_path):
+    docs = {"S001": "# Some Title Here For It\n\nDOI 10.1234/rag.20201\n"}
+    rec = client(tmp_path).resolve("x", "10.1234/rag.2020", None, docs, subject_doc="S002", span=span())
+    assert rec.outside_set   # 10.1234/rag.2020 is not the start of the longer DOI ...rag.20201
 
 
 def test_arxiv_id_resolves_through_the_arxiv_doi(tmp_path):
@@ -55,37 +71,50 @@ def test_title_search_and_unknown_work_kept(tmp_path):
     assert lost.outside_set and lost.object_doc is None and lost.object_ref == "Totally Unknown Work"
 
 
+def test_synthetic_paper_unknown_to_openalex_is_in_the_set(tmp_path):
+    docs = {"S007": "# A Synthetic Study Of Caching Layers\n\nBody."}
+    seen: list[str] = []
+    rec = client(tmp_path, lambda u: seen.append(u) or None).resolve(
+        "Prior work: A Synthetic Study of Caching Layers (2024)", None, None, docs, subject_doc="S002", span=span())
+    assert (rec.object_doc, rec.outside_set) == ("S007", False)
+    assert seen == []   # found in the run itself
+
+
+def test_wrong_first_search_hit_is_not_trusted(tmp_path):
+    rec = client(tmp_path).resolve("Retrieval Study Quoted Wrongly", None, None, RUN_DOCS, subject_doc="S002", span=span())
+    assert rec.outside_set and rec.object_ref == "Retrieval Study Quoted Wrongly"   # not the unrelated work's DOI
+
+
 def test_offline_replay_uses_record(tmp_path):
-    first = client(tmp_path)
-    a = first.resolve("x", "10.1234/rag.2020", None, RUN_DOCS, subject_doc="S002", span=span())
-    first.references("doi:10.1234/rag.2020")
-    calls: list[str] = []
+    ctx = Ctx(tmp_path)
+    a = openalex.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, ctx, subject_doc="S002", span=span(), fetch=fetch)
+    openalex.references("doi:10.1234/rag.2020", ctx, fetch=fetch)
+    assert (tmp_path / "openalex.jsonl").exists()
 
     def never(url: str):
-        calls.append(url)
         raise AssertionError("network used")
 
-    replay = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=never, offline=True)
-    assert replay.resolve("x", "10.1234/rag.2020", None, RUN_DOCS, subject_doc="S002", span=span()) == a
-    assert replay.references("doi:10.1234/rag.2020") == ["https://openalex.org/W5", "https://openalex.org/W6"]
-    assert calls == []
+    replay = Ctx(tmp_path, "replay")
+    assert openalex.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, replay, subject_doc="S002", span=span(),
+                            fetch=never) == a
+    assert openalex.references("doi:10.1234/rag.2020", replay, fetch=never) == [
+        "https://openalex.org/W5", "https://openalex.org/W6"]
+
+
+def test_replay_miss_raises_and_never_fetches(tmp_path):
+    calls: list[str] = []
     with pytest.raises(openalex.NotRecorded):
-        replay.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+        openalex.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, Ctx(tmp_path, "replay"), subject_doc="S002",
+                         span=span(), fetch=lambda u: calls.append(u))
+    assert calls == []
 
 
 def test_a_request_is_made_once(tmp_path):
     seen: list[str] = []
     c = client(tmp_path, lambda u: seen.append(u) or fetch(u))
-    c.resolve("x", "10.1234/rag.2020", None, RUN_DOCS, subject_doc="S002", span=span())
-    c.resolve("x", "10.1234/rag.2020", None, RUN_DOCS, subject_doc="S002", span=span())
+    for _ in range(2):
+        c.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
     assert len(seen) == 1
-
-
-def test_module_functions_use_the_configured_client(tmp_path):
-    openalex.configure(client(tmp_path))
-    rec = openalex.resolve("x", "10.1234/rag.2020", None, RUN_DOCS, subject_doc="S002", span=span())
-    assert rec.object_doc == "S001"
-    assert openalex.references("doi:10.1234/rag.2020") == ["https://openalex.org/W5", "https://openalex.org/W6"]
 
 
 def test_read_link_open_relation(tmp_path, monkeypatch):

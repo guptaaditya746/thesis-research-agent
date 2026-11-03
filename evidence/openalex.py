@@ -15,6 +15,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -26,9 +27,10 @@ from .contract import Span
 from .records import LinkRecord
 from .steps import Step
 
-__all__ = ["NotRecorded", "OpenAlex", "ReadLink", "configure", "read_link", "references", "resolve"]
+__all__ = ["NotRecorded", "OpenAlex", "ReadLink", "read_link", "references", "resolve"]
 
 BASE = "https://api.openalex.org/"
+RECORD_FILE = "openalex.jsonl"
 Fetch = Callable[[str], "dict[str, Any] | None"]   # url -> parsed JSON, or None for a 404
 
 
@@ -75,26 +77,52 @@ def _norm(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
 
 
+def _title_of(text: str) -> str:
+    """The normalised first non-empty line of a paper (its title line)."""
+    return next((_norm(ln) for ln in text.splitlines() if ln.strip()), "")
+
+
+def _same_title(found: str, cited: str) -> bool:
+    a, b = _norm(found), _norm(cited)
+    if not a or not b:
+        return False
+    if a in b or b in a:
+        return True
+    ta, tb = set(a.split()), set(b.split())
+    return len(ta & tb) / len(ta | tb) >= 0.8
+
+
+def _has_doi(text: str, doi: str) -> bool:
+    """The DOI occurs in the text and is not the start of a longer one."""
+    return re.search(re.escape(doi) + r"(?![\w/-]|\.\w)", text.casefold()) is not None
+
+
 def _bare_doi(doi: str) -> str:
     return re.sub(r"(?i)^(?:https?://(?:dx\.)?doi\.org/|doi:)", "", doi.strip()).lower()
 
 
 class OpenAlex:
-    """An OpenAlex client whose every answer goes through `cache` (the run's record of HTTP calls)."""
+    """An OpenAlex client whose every answer goes through `cache` (required: the run's record of HTTP calls)."""
 
-    def __init__(self, cache: JsonlCache | None = None, *, fetch: Fetch | None = None, offline: bool = False) -> None:
+    def __init__(self, cache: JsonlCache, *, fetch: Fetch | None = None, offline: bool = False) -> None:
+        if cache is None:
+            raise ValueError("OpenAlex needs the run's cache: an unrecorded call would break replay")
         self.cache, self._fetch, self.offline = cache, fetch or _urlopen, offline
+
+    @classmethod
+    def for_ctx(cls, ctx: Any, *, fetch: Fetch | None = None) -> OpenAlex:
+        """The client of a run: record in `ctx.run_dir/openalex.jsonl`, offline when `ctx.mode == "replay"`."""
+        return cls(JsonlCache(Path(ctx.run_dir) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay")
 
     def get(self, url: str) -> dict[str, Any] | None:
         key = cache_key({"openalex": url})
-        hit = self.cache.get(key) if self.cache is not None else None
+        hit = self.cache.get(key)
         if hit is not None:
             return json.loads(hit["output"])
         if self.offline:
             raise NotRecorded(f"offline replay: no recorded OpenAlex answer for {url}")
         body = self._fetch(url)
-        if self.cache is not None:
-            self.cache.put(key, {"output": json.dumps(body), "url": url})
+        self.cache.put(key, {"output": json.dumps(body), "url": url})
         return body
 
     def work(self, cited_text: str, doi: str | None, arxiv_id: str | None) -> dict[str, Any] | None:
@@ -106,26 +134,43 @@ class OpenAlex:
         if cited_text.strip():
             found = self.get(f"{BASE}works?search={urllib.parse.quote_plus(cited_text.strip())}&per-page=1")
             results = (found or {}).get("results") or []
-            return results[0] if results else None
+            # the first hit is only a guess: take it when its title is the cited title
+            return results[0] if results and _same_title(results[0].get("title") or results[0].get("display_name") or "",
+                                                         cited_text) else None
         return None
 
     def resolve(self, cited_text: str, doi: str | None, arxiv_id: str | None, run_docs: Mapping[str, str], *,
                 subject_doc: str, span: Span, relation: str = "cites") -> LinkRecord:
         """The link from `subject_doc` to the cited work. `object_doc` is the run paper the work is, else None and
         `outside_set` is True (the work is kept either way)."""
-        work = self.work(cited_text, doi, arxiv_id)
-        object_doc = self._run_doc(work, run_docs) if work else None
+        # a paper of the run is found locally first (the synthetic papers and many preprints are unknown to OpenAlex)
+        object_doc = self._local_doc(cited_text, doi, run_docs)
+        work = None if object_doc else self.work(cited_text, doi, arxiv_id)
+        if work and object_doc is None:
+            object_doc = self._run_doc(work, run_docs)
         work_doi = _bare_doi(work["doi"]) if work and work.get("doi") else None
         ref = doi.strip() if doi else arxiv_id.strip() if arxiv_id else work_doi or cited_text
         return LinkRecord(subject_doc=subject_doc, relation=relation, object_ref=ref, object_doc=object_doc,
                           outside_set=object_doc is None, span=span)
 
     @staticmethod
+    def _local_doc(cited_text: str, doi: str | None, run_docs: Mapping[str, str]) -> str | None:
+        """The run paper a DOI or a cited title names, by the papers' own heads (no network)."""
+        cited = _norm(cited_text)
+        for doc_id, text in run_docs.items():
+            if doi and _has_doi(text[:3000], _bare_doi(doi)):
+                return doc_id
+            title = _title_of(text)
+            if len(cited) > 12 and len(title) > 12 and (title in cited or cited in _norm(text[:600])):
+                return doc_id
+        return None
+
+    @staticmethod
     def _run_doc(work: Mapping[str, Any], run_docs: Mapping[str, str]) -> str | None:
         doi = _bare_doi(work["doi"]) if work.get("doi") else None
         title = _norm(work.get("title") or work.get("display_name") or "")
         for doc_id, text in run_docs.items():
-            if doi and doi in text[:3000].casefold():
+            if doi and _has_doi(text[:3000], doi):
                 return doc_id
             if title and len(title) > 12 and title in _norm(text[:600]):
                 return doc_id
@@ -142,25 +187,12 @@ class OpenAlex:
         return list((work or {}).get("referenced_works") or [])
 
 
-_CLIENT: OpenAlex | None = None
+def resolve(cited_text: str, doi: str | None, arxiv_id: str | None, run_docs: Mapping[str, str], ctx: Any, *,
+            subject_doc: str, span: Span, relation: str = "cites", fetch: Fetch | None = None) -> LinkRecord:
+    """`OpenAlex.for_ctx(ctx).resolve(...)`: recorded in the run folder; a replay answers from the record only."""
+    return OpenAlex.for_ctx(ctx, fetch=fetch).resolve(cited_text, doi, arxiv_id, run_docs, subject_doc=subject_doc,
+                                                      span=span, relation=relation)
 
 
-def configure(client: OpenAlex) -> None:
-    """Set the client the module functions use (the run's recorded one)."""
-    global _CLIENT
-    _CLIENT = client
-
-
-def _client() -> OpenAlex:
-    if _CLIENT is None:
-        raise RuntimeError("no OpenAlex client: call evidence.openalex.configure(OpenAlex(cache)) first")
-    return _CLIENT
-
-
-def resolve(cited_text: str, doi: str | None, arxiv_id: str | None, run_docs: Mapping[str, str], *,
-            subject_doc: str, span: Span, relation: str = "cites") -> LinkRecord:
-    return _client().resolve(cited_text, doi, arxiv_id, run_docs, subject_doc=subject_doc, span=span, relation=relation)
-
-
-def references(doc_id: str) -> list[str]:
-    return _client().references(doc_id)
+def references(doc_id: str, ctx: Any, *, fetch: Fetch | None = None) -> list[str]:
+    return OpenAlex.for_ctx(ctx, fetch=fetch).references(doc_id)
