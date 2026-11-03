@@ -1,0 +1,9 @@
+PREFIX ev: <https://w3id.org/thesis-ev#>
+PREFIX kg: <https://w3id.org/thesis-ev/kg#>
+# Datasets that are scored with more than one metric.
+SELECT ?dataset (COUNT(DISTINCT ?m) AS ?metrics) WHERE {
+  ?v a ev:Value ; ev:onMetric ?m ; kg:context ?dataset .
+}
+GROUP BY ?dataset
+HAVING (COUNT(DISTINCT ?m) > 1)
+ORDER BY ?dataset

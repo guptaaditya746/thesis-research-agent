@@ -1,0 +1,18 @@
+# The generality check (W6, Task 6.6): 12 questions over the Claude-written synthetic corpora whose shape fits none of
+# the saved query templates (evidence/kg/templates). Each has a hand-written reference query; the gold answer is that
+# query run on the answer key's records (truth_store). Committed BEFORE any planner output exists: never edit a
+# question or a reference query after a planner has been run on it.
+corpus: tests/EV2/corpora/rag-claude-s1-mixed
+questions:
+  - {id: q01, question: "Which papers report a dataset no other paper uses?", reference: q01_unique_dataset.rq}
+  - {id: q02, question: "Which dataset is used by the most papers?", reference: q02_most_used_dataset.rq}
+  - {id: q03, question: "Which papers report results on two or more different datasets?", reference: q03_two_or_more_datasets.rq}
+  - {id: q04, question: "Which papers report more than one metric?", reference: q04_two_or_more_metrics.rq}
+  - {id: q05, question: "Which papers compare three or more different things on one metric?", reference: q05_three_things_one_metric.rq}
+  - {id: q06, question: "Which papers report a value below 0.15 on a metric where lower is better?", reference: q06_low_value_lower_better.rq}
+  - {id: q07, question: "Which pairs of datasets are used together in one paper?", reference: q07_dataset_pairs.rq}
+  - {id: q08, question: "Which paper shows the widest gap between two of its things on one metric?", reference: q08_widest_gap.rq}
+  - {id: q09, question: "Which papers measure the same thing on two different datasets?", reference: q09_same_thing_two_datasets.rq}
+  - {id: q10, question: "Which things are measured in two or more papers?", reference: q10_thing_in_most_papers.rq}
+  - {id: q11, question: "Which datasets are scored with more than one metric?", reference: q11_dataset_many_metrics.rq}
+  - {id: q12, question: "Which papers pair a dataset with a metric that no other paper pairs?", reference: q12_unique_dataset_metric_pair.rq}

@@ -1,0 +1,23 @@
+PREFIX ev: <https://w3id.org/thesis-ev#>
+PREFIX kg: <https://w3id.org/thesis-ev/kg#>
+# The dataset used by the most papers (ties all listed).
+SELECT ?dataset ?papers WHERE {
+  {
+    SELECT ?dataset (COUNT(DISTINCT ?p) AS ?papers) WHERE {
+      ?v a ev:Value ; ev:inExperiment ?e ; kg:context ?dataset .
+      ?e ev:inPaper ?p .
+    }
+    GROUP BY ?dataset
+  }
+  {
+    SELECT (MAX(?n) AS ?top) WHERE {
+      SELECT ?dataset (COUNT(DISTINCT ?p) AS ?n) WHERE {
+        ?v a ev:Value ; ev:inExperiment ?e ; kg:context ?dataset .
+        ?e ev:inPaper ?p .
+      }
+      GROUP BY ?dataset
+    }
+  }
+  FILTER(?papers = ?top)
+}
+ORDER BY ?dataset
