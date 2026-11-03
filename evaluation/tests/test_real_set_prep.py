@@ -41,6 +41,7 @@ def test_sofc_examples_from_labels(tmp_path, capsys):
     exp = [r for r in rows if r["step"] == "map_experiments"]
     assert len(exp) == 5 and exp[0]["gold"]["n"] == 2 and exp[0]["inputs"]["paper"].startswith(TEXT)
     rc = [r for r in rows if r["step"] == "recheck"]
+    assert all(r["inputs"]["items"][0].startswith("1. measurement | {\"dataset\": \"YSZ\", \"value\": ") for r in rc)
     pos = [r for r in rc if r["gold"]["keep"] == [True]]
     neg = [r for r in rc if r["gold"]["keep"] == [False]]
     assert pos and neg and len(neg) <= len(pos)
@@ -70,6 +71,26 @@ def test_cochrane_has_no_sentence_labels(tmp_path, capsys):
     assert not (s / "corpus" / "tune_examples.json").exists()
 
 
-def test_unknown_set_folder_refused(tmp_path):
-    with pytest.raises(SystemExit):
-        prep.tune_examples(tmp_path)
+def test_set_without_labels_skips_every_step(tmp_path, capsys):
+    assert prep.tune_examples(tmp_path) is None
+    out = capsys.readouterr().out
+    assert all(f"no examples for {step}" in out for step in T.REAL_STEPS)
+
+
+@pytest.mark.parametrize("para,value,found", [
+    ("It is 0.12 S/cm.", 0.12, "0.12"), ("It is 10.125 S/cm.", 0.12, None), ("It is 10.12 S/cm.", 0.12, None),
+    ("At 800 C.", 800.0, "800.0" if False else "800"), ("At 800.5 C.", 800.0, None), ("n=0.12.", 0.12, "0.12")])
+def test_number_in_whole_numbers_only(para, value, found):
+    assert prep._number_in(para, value) == found
+
+
+def test_negatives_prefer_hard_ones(tmp_path, capsys):
+    s = tmp_path / "sofc"
+    s.mkdir()
+    text = ("YSZ conductivity is 0.12 S/cm.\n\nYSZ films were 5 um thick.\n\nSamples were heated for 2 h.")
+    (s / "sofc.json").write_text(json.dumps({"papers": [{"id": "p1", "text": text, "experiments": [], "values": [
+        {"value": 0.12, "unit": "S/cm", "material": "YSZ", "measure": "conductivity"}]}]}), encoding="utf-8")
+    rows, note = prep.sofc_examples(s)
+    drops = [r for r in rows["recheck"] if r["gold"]["keep"] == [False]]
+    assert len(drops) == 1 and "YSZ films" in drops[0]["inputs"]["paragraph"]      # the hard one, not "heated for 2 h"
+    assert "1 hard" in note and "0 easy" in note

@@ -55,12 +55,27 @@ def _number_in(paragraph: str, value: float) -> str | None:
     return None
 
 
-def sofc_examples(src: Path) -> dict[str, list[dict]]:
+def _find(material: str, number: str) -> str:
+    """One find as the engine's recheck prompt shows it (evidence/extractors/recheck._describe): a regex find of a
+    measured value, type `measurement`, fields {"dataset": <the name>, "value": <number>}, quote = the number."""
+    fields = json.dumps({"dataset": material, "value": float(number)}, sort_keys=True, ensure_ascii=False)
+    return f"1. measurement | {fields} | {number}"
+
+
+def sofc_examples(src: Path) -> tuple[dict[str, list[dict]], str]:
     """From the SOFC labels only. map_experiments: the paper and its number of labelled experiments. recheck: a
-    paragraph holding a labelled value (its number and its material) is a find to keep; a number of a paragraph with
-    no labelled value, offered with the paper's material, is a find to drop (at most as many as the keeps)."""
+    paragraph holding a labelled value (its number and its material) is a find to keep. A find to drop is a number of
+    a paragraph with no labelled value; hard ones first (the paragraph names a labelled material of the paper, the
+    number is not its value: right name, wrong number), easy ones (no material named) only to fill up to as many as
+    the keeps. Returns (rows per step, a note with the hard/easy ratio)."""
     rows: dict[str, list[dict]] = {"map_experiments": [], "recheck": [], "claims.read_claim": []}
-    keep, drop = [], []
+    keep, hard, easy = [], [], []
+    number = r"(?<![\w.])\d+(?:\.\d+)?(?![\w]|\.\d)"
+
+    def row(pid: str, para: str, material: str, num: str, keeps: bool) -> dict:
+        return {"step": "recheck", "paper": pid, "inputs": {"paragraph": para, "items": [_find(material, num)]},
+                "gold": {"keep": [keeps]}}
+
     for paper in sofc._open(src):
         text, pid = str(paper["text"]), str(paper["id"])
         n = len(paper.get("experiments", []))
@@ -74,18 +89,22 @@ def sofc_examples(src: Path) -> dict[str, list[dict]]:
             hit = next(((v, num) for v in values if str(v["material"]).casefold() in para.casefold()
                         and (num := _number_in(para, float(v["value"])))), None)
             if hit:
-                v, num = hit
-                keep.append({"step": "recheck", "paper": pid, "inputs": {"paragraph": para, "items": [
-                    f'1. value | {json.dumps({"material": str(v["material"]), "number": num}, sort_keys=True)} | {num}']},
-                    "gold": {"keep": [True]}})
+                keep.append(row(pid, para, str(hit[0]["material"]), hit[1], True))
             elif not any(_number_in(para, float(v["value"])) for v in values):
-                tok = re.search(r"(?<![\w.])\d+(?:\.\d+)?(?![\w])", para)
-                if tok:
-                    drop.append({"step": "recheck", "paper": pid, "inputs": {"paragraph": para, "items": [
-                        f'1. value | {json.dumps({"material": str(values[0]["material"]), "number": tok.group()}, sort_keys=True)} | {tok.group()}']},
-                        "gold": {"keep": [False]}})
-    rows["recheck"] = keep + drop[:len(keep)]
-    return rows
+                tok = re.search(number, para)
+                if not tok:
+                    continue
+                named = next((str(v["material"]) for v in values if str(v["material"]).casefold() in para.casefold()), None)
+                if named:
+                    hard.append(row(pid, para, named, tok.group(), False))
+                else:
+                    easy.append(row(pid, para, str(values[0]["material"]), tok.group(), False))
+    drops = hard[:len(keep)]
+    drops += easy[:max(0, len(keep) - len(drops))]
+    rows["recheck"] = keep + drops
+    easy_used = len(drops) - min(len(hard), len(keep))
+    return rows, (f"recheck: {len(keep)} keep, {len(drops)} drop ({len(drops) - easy_used} hard: material named, wrong number; "
+                  f"{easy_used} easy: no material named)")
 
 
 def tune_examples(set_dir: Path, out_dir: Path | None = None) -> Path | None:
@@ -95,11 +114,13 @@ def tune_examples(set_dir: Path, out_dir: Path | None = None) -> Path | None:
     from evidence.steps.tune import EXAMPLES_FILE, REAL_STEPS
     set_dir = Path(set_dir)
     if (set_dir / sofc.SOURCE_FILE).is_file():
-        by_step = sofc_examples(set_dir)
+        by_step, note = sofc_examples(set_dir)
+        print(note)
     elif (set_dir / "release.json").is_file():
         by_step = {}
-    else:
-        raise SystemExit(f"real-set-prep: no {sofc.SOURCE_FILE} or release.json in {set_dir}")
+    else:       # SciLead, SciREX: no labels this script can use
+        print(f"real-set-prep: no {sofc.SOURCE_FILE} or release.json in {set_dir}: no labels to build examples from", file=sys.stderr)
+        by_step = {}
     rows = []
     for step in REAL_STEPS:
         got = by_step.get(step, [])
