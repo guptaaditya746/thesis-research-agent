@@ -1,0 +1,4 @@
+{"papers": [
+  {"id": "m1", "text": "The sample contained 5 mg/L of lead and was heated to 300 K.",
+   "quantities": [{"value": 5, "unit": "mg/L", "entity": "lead"}, {"value": 300, "unit": "K", "entity": "sample"}]}
+]}
