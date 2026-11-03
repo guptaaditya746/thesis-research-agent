@@ -217,6 +217,46 @@ systematic review" (M1).
   the duplicate guess, and SOFC-Exp's experiment frames score the step; (4) code checks every value against
   the source text or cell, else drops it; (5) two new generator difficulty settings: several experiments per
   paper, and messy tables.
+- **Agreed: scope of synthetic papers and scale.** The generator stays RAG comparisons only and is not
+  widened; other question kinds and fields come from the real labelled sets (SciLead: rankings; SciREX:
+  lists; CochraneForest: comparisons with effects; SOFC-Exp: rankings). No 10k-paper target: the scale is
+  the size of the external labelled sets.
+- **Agreed: the answer is a SPARQL query the plan writes.** Problem: the answer rules are fixed per kind:
+  `evidence/kinds/best.py` ranks method kinds typed in advance by wins inside each paper, and
+  `evidence/kinds/inventory.py` lists every item with no "for task T" filter, so SciLead (rank methods
+  across papers on dataset X by metric Y) and SciREX (datasets used for task T) would be answered by the wrong
+  rule. Fix: (1) every record goes into one graph with its links (paper, experiment, dataset, value, source
+  sentence) and the ontology; (2) a DSPy step writes a SPARQL query for the question, shown in the planning
+  panel for the human to confirm; it may filter, group, count, sort, join or take a maximum, and "kind of"
+  comes from the ontology (rdfs:subClassOf*); (3) code runs it, the query is locked with the run and replays;
+  (4) the same query also runs on the answer key's records: wrong there = synthesis error, right there but
+  wrong on ours = extraction error (Tim M2). Scoring: rankings by top-1 and Kendall tau, lists by precision
+  and recall. Our call: today's kinds (effect, best, inventory, consistency, chaining) become saved query
+  templates the DSPy step starts from (board Maybe cards h03 SPARQL and g06 query templates, Aditya said yes
+  3 Nov); a step SPARQL cannot express stays code, called after the query.
+- **Agreed: author claims are general records.** Problem: a claim is found only when it matches the rag
+  pack's `claim_subject` ("retriev…|RAG"), and its meaning is read by typed patterns (`claims` in
+  `domains/rag/words.yaml`) into improves / worsens / no_effect, with RAG words (hallucination, factual) in
+  them; claims in other fields and claims that are not comparisons ("X is the state of the art", "Y depends
+  on Z") are lost. Fix: (1) the subjects come from the LLM-written word list (the plan's things), and the
+  LLM also writes general claim cue words ("we show", "outperforms", "we conclude"); regex finds candidate
+  sentences, the LLM confirms each (funnel); (2) a claim record is subject, relation, object, setting and
+  strength (firm or hedged: "shows" vs "suggests"), open, not three labels; (3) a comparison claim also maps
+  its relation to improves / worsens / no_effect, so today's checks and synthetic RAG scoring keep working;
+  (4) claims go into the graph; the oversell check is a saved SPARQL query comparing a claim with the values
+  of the same experiment; (5) scored on CochraneForest conclusions, and on the three labels in synthetic RAG.
+- **Agreed: links between studies are graph paths (D41 settled).** Problem: `evidence/kinds/chaining.py`
+  reads only two-sided comparisons (comparisons.json, RAG vs baseline) and chains steps whose settings
+  differ (A vs B on dataset X with B vs C on dataset Y); `evidence/kinds/builds_on.py` resolves a cited
+  label by name to a paper of the run only (others dropped) and "reuses" has three fixed values. Fix:
+  (1) any two values of the same experiment (point 5's experiment map) on the same metric make a comparison
+  edge carrying the experiment's setting, for any two things; (2) "A vs C through B" is a SPARQL path query
+  that keeps only steps whose settings match on the must-match fields the human confirmed; this adopts the
+  2 Nov "connect through shared comparators" proposal: agreeing paths give "indirect", disagreeing ones
+  "conflicting", and the decision reruns show looser and stricter matching; (3) builds-on resolves a citation
+  by DOI or arXiv id through OpenAlex; a cited paper outside the run stays in the graph marked "outside the
+  set"; (4) "reuses" is an open relation (subject, relation, object), like claims; (5) scoring: the synthetic
+  truth network for chaining; OpenAlex's reference list for which cited papers builds-on found.
 
 ## Scoring
 
