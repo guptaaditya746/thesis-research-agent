@@ -1,4 +1,4 @@
-"""The RAG baseline on the real whole-run questions (W6, Task 6.5): the existing BM25 retrieve-then-answer of
+"""The RAG baseline on the real whole-run questions (W6, Task 6.5): the existing BM25 search-then-answer of
 `rag.py` on `q.corpus_dir`, then one mapping call per question kind that puts the free-text answer into the shape
 `wholerun.score` reads (rank: names best first; list: names; compare: a direction per study; claims: claim list).
 
@@ -33,7 +33,7 @@ MAP_INSTRUCTIONS = {
     "compare": COMMON + (" Output `studies`: one entry per paper the answer judges, with `document` its paper id (from "
                          "the list given) and `direction` improves, worsens or no_effect for the question's "
                          "treatment; and `conclusion`: the answer's overall direction, or null when it gives none. "
-                         "Example: \"S1 shows a benefit, S2 none\" -> S1 improves, S2 no_effect."),
+                         "Example: \"S1 is up, S2 is flat\" -> S1 improves, S2 no_effect."),
     "claims": COMMON + (" Output `claims`: one entry per conclusion the answer states, with `about` a short label of "
                         "what it is about and `direction` improves, worsens or no_effect."),
 }
