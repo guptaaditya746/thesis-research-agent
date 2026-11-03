@@ -8,7 +8,7 @@ from modelcall.dspy_lm import RecordedLM
 from modelcall.pins import ORCH_ALIAS
 
 from ..plan import WordList
-from ..steps import Step, configure
+from ..steps import Step, using
 
 MIN_NAMES, MAX_NAMES = 20, 50
 
@@ -82,22 +82,22 @@ def write_words_report(question: str, things: list[str], *, lm: RecordedLM, step
     on; it must be the pinned orchestrator alias (the list must not be written by the model that wrote the corpora)."""
     if lm.alias != ORCH_ALIAS:
         raise ValueError(f"the word list is written by {ORCH_ALIAS!r}, not {lm.alias!r}")
-    configure(lm)
-    step = step or Step(WriteWords, "write_words")
-    more_step = more_step or Step(WriteMoreWords, "write_more_words")
-    cue_step = cue_step or Step(WriteCues, "write_cues")
-    written: dict[str, list[str]] = {}
-    short: list[str] = []
-    for thing in things:
-        names = _tidy(list(step(question=question, thing=thing).names))
-        if len(names) < MIN_NAMES:
-            more = more_step(question=question, thing=thing, already=names).names
-            names = _tidy(names + list(more))
-        if len(names) < MIN_NAMES:
-            short.append(thing)
-        written[thing] = names[:MAX_NAMES]
-    out = cue_step(question=question)
-    cues = [cue_entry(d, c) for d in DIRECTIONS for c in _tidy(list(getattr(out, d)))[:MAX_NAMES]]
+    with using(lm):
+        step = step or Step(WriteWords, "write_words")
+        more_step = more_step or Step(WriteMoreWords, "write_more_words")
+        cue_step = cue_step or Step(WriteCues, "write_cues")
+        written: dict[str, list[str]] = {}
+        short: list[str] = []
+        for thing in things:
+            names = _tidy(list(step(question=question, thing=thing).names))
+            if len(names) < MIN_NAMES:
+                more = more_step(question=question, thing=thing, already=names).names
+                names = _tidy(names + list(more))
+            if len(names) < MIN_NAMES:
+                short.append(thing)
+            written[thing] = names[:MAX_NAMES]
+        out = cue_step(question=question)
+        cues = [cue_entry(d, c) for d in DIRECTIONS for c in _tidy(list(getattr(out, d)))[:MAX_NAMES]]
     return WordList(things=written, cues=cues, written_by=lm.alias, ontology_names={}), short
 
 

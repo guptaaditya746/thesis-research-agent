@@ -6,13 +6,12 @@ run's locked word list, never from code), then asks the DSPy step `ReadClaim` to
 model cannot place gets its own group `other: <verb>` and is shown, never dropped. Grouping is a counts-as decision:
 `grouped_line` is the text the answer shows, and a rerun with groups off just reads the raw `relation`.
 
-Model calls go through `Step`, which runs on the process-global recorded LM. With a `ctx` (a `StageContext`) the LM is
-`ctx.dspy_lm(purpose)`; configuring it and calling the step happen under one lock, so worker threads of two papers
-never record a call under each other's ctx."""
+Model calls go through `Step`. With a `ctx` (a `StageContext`) the step is given `ctx.dspy_lm(purpose)` per call, so
+worker threads of two papers never record a call under each other's ctx (no lock); without one it runs on the
+thread's model (`evidence.steps.using`) or the process default."""
 from __future__ import annotations
 
 import re
-import threading
 from collections import Counter
 from collections.abc import Mapping
 from typing import Any, Literal
@@ -23,13 +22,10 @@ from agent.anchor import selector_at
 from .contract import DocumentRef, Span
 from .extractors import base
 from .records import ClaimRecord, item
-from . import steps
-from .steps import Step, configure
+from .steps import Step
 
 __all__ = ["GroupRelations", "ReadClaim", "apply_groups", "candidate_sentences", "claim_stage", "count_by_group", "cue_words",
            "find_claims", "grouped_line", "group_relations", "run_step"]
-
-_LOCK = threading.RLock()  # Step opens dspy.context(lm=<process-global LM>): configure + call must not interleave
 
 
 class ReadClaim(dspy.Signature):
@@ -77,16 +73,10 @@ _GROUP = Step(GroupRelations, "claims.group_relations")
 
 
 def run_step(step: Step, ctx: Any | None, purpose: str, **inputs: Any) -> dspy.Prediction:
-    """Run `step`; with a `ctx` its LM is `ctx.dspy_lm(purpose)`, set and used under one lock."""
+    """Run `step`; with a `ctx` on `ctx.dspy_lm(purpose)`, given to this call only."""
     if ctx is None:
         return step(**inputs)
-    with _LOCK:
-        before = steps._LM
-        configure(ctx.dspy_lm(purpose))
-        try:
-            return step(**inputs)
-        finally:
-            steps._LM = before   # a later ctx-less step never records under this paper's ctx
+    return step(lm=ctx.dspy_lm(purpose), **inputs)
 
 
 def cue_words(cues: list[str]) -> list[str]:

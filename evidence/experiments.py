@@ -13,8 +13,6 @@ id is a hash of the document, the label and the quote's position, so the same ma
 """
 from __future__ import annotations
 
-import threading
-
 import dspy
 from pydantic import BaseModel
 
@@ -54,11 +52,11 @@ def _step() -> steps.Step:
     return steps.Step(MapExperiments, "map_experiments")
 
 
-def map_experiments(doc_text: str, document: str, file: str | None = None) -> list[Experiment]:
+def map_experiments(doc_text: str, document: str, file: str | None = None, *, lm=None) -> list[Experiment]:
     """The experiments of one paper, each anchored. `document` is the paper id; `file` (default `document`) names
     the file in the spans. Unanchored experiments (the quote is not in the text) and repeats of one quote are
-    dropped. The step must be configured (`evidence.steps.configure`) by the caller, under `LOCK`."""
-    proposed = _step()(paper=doc_text).experiments
+    dropped. `lm`: the model (default: the thread's, `evidence.steps.using`)."""
+    proposed = _step()(lm=lm, paper=doc_text).experiments
     index = Index(doc_text)
     out: list[Experiment] = []
     seen: set[tuple[int, int]] = set()
@@ -109,15 +107,10 @@ def attach(value_item: Item, experiments: list[Experiment], items: dict[str, Ite
     return nearest.exp_id if nearest else None
 
 
-LOCK = threading.RLock()   # `steps.configure` sets a process-wide model: hold this from configure through the call
-
-
 def _map(doc: object, ctx: stages.StageContext) -> list[Experiment]:
     """The document's map, one recorded call per run (a repeat is answered by the run's call cache). Nothing is kept
     between calls: a second run, or a replay, makes and records its own `map_experiments` call."""
-    with LOCK:
-        steps.configure(ctx.dspy_lm("map_experiments"))
-        return map_experiments(doc.text, doc.doc.id, doc.doc.file)   # type: ignore[attr-defined]
+    return map_experiments(doc.text, doc.doc.id, doc.doc.file, lm=ctx.dspy_lm("map_experiments"))   # type: ignore[attr-defined]
 
 
 def before_extract(doc: object, ctx: stages.StageContext) -> None:

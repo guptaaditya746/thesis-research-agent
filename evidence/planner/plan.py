@@ -16,15 +16,13 @@ Code checks (`check_plan`): at least one line, decision types in the fixed set, 
 non-empty, rule in RULES, every query parses. A plan with problems is not ready to run (webapp/evplan.py). The word
 writer (W1) and the saved SPARQL templates (W4) are injected: this module imports neither.
 
-The model is the recorded model of `evidence.steps.configure`; that process-global is guarded by `using(lm)`, one
-re-entrant lock around configure and every Step call, so two requests never record on each other's model."""
+The model is given with `using(lm)` (evidence.steps.using: this thread only), so two requests never record on each
+other's model, with no lock."""
 from __future__ import annotations
 
 import json
 import re
-import threading
-from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 from typing import Any, Literal
 
@@ -33,9 +31,8 @@ import pyoxigraph as ox
 from pydantic import BaseModel, Field
 
 from evidence.plan import Decision, EvidenceLine, Plan, WordList
-from evidence.steps import Step, configure
+from evidence.steps import Step, using
 from evidence.vocab import EV
-from modelcall.dspy_lm import RecordedLM
 
 OVERSELL_ID = "oversell"
 MAIN_RULE_ID = "main_rule"
@@ -81,19 +78,6 @@ _SPECIAL = re.compile(r"\$(?:include|must_match|must_match_values)\[[^\]]*\]")
 _NAME = re.compile(r"\$(\w+)")
 _DIRECTIVE = re.compile(r"^#[ \t]*(params|decisions|after):")
 _COMMENT_LINE = re.compile(r"^[ \t]*#.*$", re.MULTILINE)
-
-# ---- the model and its lock ---------------------------------------------------------------------------------------
-
-STEP_LOCK = threading.RLock()
-
-
-@contextmanager
-def using(lm: RecordedLM) -> Iterator[None]:
-    """Hold the one lock around `configure(lm)` and the Step calls made inside (Step reads a process-global)."""
-    with STEP_LOCK:
-        configure(lm)
-        yield
-
 
 # ---- signatures ---------------------------------------------------------------------------------------------------
 

@@ -8,7 +8,6 @@ asked about once per document; later rounds reuse the verdict. Not registered he
 stages.register("recheck_report", "after_run", recheck_report))."""
 from __future__ import annotations
 
-import threading
 from typing import Any, Literal
 
 import dspy
@@ -16,15 +15,12 @@ from dspy.utils.exceptions import AdapterParseError
 from pydantic import BaseModel
 
 from ..contract import Item, Rejected
-from ..steps import Step, configure
+from ..steps import Step
 
 LLM_KINDS = ("llm", "agent")        # extractor names starting so are the model kinds
 LABEL_FIELDS = ("label", "name", "canonical")
 PURPOSE = "recheck"
 STATE_ATTR = "_recheck_state"
-# Step runs on the process-wide model (steps.configure), so setting it and calling must not interleave between the
-# warm pass's threads: each call holds this lock from configure to the end of its paragraph calls.
-LOCK = threading.RLock()
 # run folder -> {document id: state}: what `recheck_report` writes at the end of the run
 _STORE: dict[str, dict[str, dict[str, Any]]] = {}
 
@@ -94,22 +90,21 @@ def recheck(doc: Any, etype: str, merged: list[Item], ctx: Any, *, step: Step | 
             continue
         fresh.setdefault(paragraph_bounds(doc.text, item.first_start()), []).append(item)
     if fresh:
-        with LOCK:
-            if step is None:
-                configure(ctx.dspy_lm(PURPOSE))
-                step = Step(Recheck, "recheck")
-            for (a, b), items in fresh.items():
-                try:
-                    out = step(paragraph=doc.text[a:b], items=[_describe(n, i, doc.text) for n, i in enumerate(items, 1)])
-                    said = {v.number: v for v in out.verdicts}
-                except AdapterParseError as exc:   # the finds stay, recorded as unchecked
-                    said, why = {}, f"unparseable reply: {str(exc)[:120]}"
-                else:
-                    why = "the model gave no verdict for this find"
-                for n, item in enumerate(items, 1):
-                    if n not in said:
-                        state["unchecked"][item.item_id] = why
-                    state["verdicts"][item.item_id] = said.get(n) or Verdict(number=n, verdict="keep")
+        # the model is this ctx's, given per call: the warm pass's threads never record on each other's model
+        lm = ctx.dspy_lm(PURPOSE)
+        step = step or Step(Recheck, "recheck")
+        for (a, b), items in fresh.items():
+            try:
+                out = step(lm=lm, paragraph=doc.text[a:b], items=[_describe(n, i, doc.text) for n, i in enumerate(items, 1)])
+                said = {v.number: v for v in out.verdicts}
+            except AdapterParseError as exc:   # the finds stay, recorded as unchecked
+                said, why = {}, f"unparseable reply: {str(exc)[:120]}"
+            else:
+                why = "the model gave no verdict for this find"
+            for n, item in enumerate(items, 1):
+                if n not in said:
+                    state["unchecked"][item.item_id] = why
+                state["verdicts"][item.item_id] = said.get(n) or Verdict(number=n, verdict="keep")
     result: list[Item] = []
     for item in merged:
         verdict = state["verdicts"].get(item.item_id)

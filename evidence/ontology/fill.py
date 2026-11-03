@@ -178,8 +178,8 @@ def ontology_stage(run: RunDir, ctx) -> dict[str, Any]:
             value = item.fields.get(key)
             if isinstance(value, str) and value.strip() and value not in names:
                 names.append(value)
-    steps.configure(ctx.dspy_lm("ontology"))
-    return stage_result(plan.field if plan else "other", names, plan.question if plan else "")
+    with steps.using(ctx.dspy_lm("ontology")):   # this run's model, in this thread only
+        return stage_result(plan.field if plan else "other", names, plan.question if plan else "")
 
 
 def review(run: RunDir, accepted: list[str], rejected: list[str]) -> None:

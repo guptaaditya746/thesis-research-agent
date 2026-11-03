@@ -88,3 +88,52 @@ def test_three_bad_replies_raise_after_three_calls(tmp_path, monkeypatch):
     with pytest.raises(AdapterParseError):
         Step(EchoSig, "echo")(text="x")
     assert len(seen) == 3
+
+
+# --- the model per call (Wave 2): no process-global race between threads -------------------------------------------
+
+def _slow_lm(tmp_path, name, seen):
+    import time
+
+    def ask(prompt: str) -> str:
+        time.sleep(0.05)   # widens the window in which another thread could swap a shared model
+        seen.append(prompt)
+        return json.dumps({"echo": name})
+
+    return RecordedLM("alias", ask, cache=JsonlCache(tmp_path / f"{name}.jsonl"))
+
+
+@pytest.mark.parametrize("how", ["using", "lm"])
+def test_two_threads_two_models_each_records_only_its_own_calls(tmp_path, monkeypatch, how):
+    import threading
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    monkeypatch.setattr(steps, "_LM", None)
+    seen = {"a": [], "b": []}
+    models = {k: _slow_lm(tmp_path, k, seen[k]) for k in seen}
+    got: dict[str, list[str]] = {"a": [], "b": []}
+    step = Step(EchoSig, "echo")
+
+    def work(name: str) -> None:
+        for i in range(4):
+            if how == "lm":
+                got[name].append(step(lm=models[name], text=f"{name}{i}").echo)
+            else:
+                with steps.using(models[name]):
+                    got[name].append(step(text=f"{name}{i}").echo)
+
+    threads = [threading.Thread(target=work, args=(k,)) for k in seen]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert got == {"a": ["a"] * 4, "b": ["b"] * 4}
+    assert all(f"{k}{i}" in p for k in seen for i, p in enumerate(seen[k]))
+
+
+def test_using_restores_the_previous_model(tmp_path, monkeypatch):
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    outer, inner = _slow_lm(tmp_path, "outer", []), _slow_lm(tmp_path, "inner", [])
+    configure(outer)
+    with steps.using(inner):
+        assert Step(EchoSig, "echo")(text="x").echo == "inner"
+    assert Step(EchoSig, "echo")(text="y").echo == "outer"
