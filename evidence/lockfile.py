@@ -13,6 +13,7 @@ import yaml
 
 from . import reasoner
 from .contract import Extractor
+from .plan import Plan
 from .protocol import ExtractorRef, Protocol
 from .rundir import LOCK_FILE, PROTOCOL_FILE
 
@@ -20,15 +21,21 @@ __all__ = ["diff", "lock"]
 
 
 def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
-         domains: Path | None = None) -> dict[str, Any]:
+         domains: Path | None = None, *, plan: Plan | None = None) -> dict[str, Any]:
     """The lock of a run of `protocol` with `cascades` (engine.build_extractors); `domains`: the pack's folder
-    when it is not domains/."""
+    when it is not domains/; `plan`: the confirmed plan of a planned run, which adds `plan_sha256` and
+    `words_sha256` (a run without a plan locks exactly as before, without those keys)."""
     pack = protocol.pack()
     onto = reasoner.ontology_sha256(pack) if domains is None else reasoner.ontology_sha256(pack, domains)
-    return {"protocol": {"id": protocol.id, "sha256": protocol.sha256},
-            "pack": {"name": pack.name, "sha256": pack.sha256},
-            "ontology_sha256": onto,
-            "extractors": {etype: [e.spec.extractor_id for _, e in cascade] for etype, cascade in cascades.items()}}
+    out: dict[str, Any] = {
+        "protocol": {"id": protocol.id, "sha256": protocol.sha256},
+        "pack": {"name": pack.name, "sha256": pack.sha256},
+        "ontology_sha256": onto,
+        "extractors": {etype: [e.spec.extractor_id for _, e in cascade] for etype, cascade in cascades.items()}}
+    if plan is not None:
+        out["plan_sha256"] = plan.sha256
+        out["words_sha256"] = plan.words.sha256
+    return out
 
 
 def _read(path: Path) -> tuple[Any, dict[str, Any] | None]:
