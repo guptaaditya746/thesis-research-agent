@@ -232,3 +232,15 @@ def test_the_default_question_is_the_first_effect_question():
     """The rule `evidence.questions.default_entry` applies; a reorder of domains/rag/questions.yaml is caught here."""
     assert common.default_question_id() == "rag-factuality" and str(common.DEFAULT_PROTOCOL).endswith(
         "rag-factuality.yaml")
+
+
+def test_the_consistency_schema_does_not_depend_on_what_is_imported_before_it():
+    """The claim values are spelled in two orders in the code base; typing and pydantic share a type by value, not by
+    order, so with evidence.replay imported first the mapping reply got the other order and its prompt hash changed
+    after the evidence tests ran."""
+    import subprocess
+    import sys
+    code = ("import evidence.replay; from evaluation.baselines.common import ConsistencyReply as R; "
+            "print(R.model_json_schema()['$defs']['ConsistencyStudy']['properties']['claim']['anyOf'][0]['enum'])")
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
+    assert out.strip() == "['improves', 'no_effect', 'worsens']"
