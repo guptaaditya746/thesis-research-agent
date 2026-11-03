@@ -21,7 +21,7 @@ ev:Value a rdfs:Class ;
     rdfs:comment "One reported number: a metric measured for a thing in an experiment." .
 
 ev:Claim a rdfs:Class ;
-    rdfs:comment "An open claim a paper makes about a subject (its own words in ev:relation), with strength and direction." .
+    rdfs:comment "An open claim a paper makes about a subject (its own words in ev:relation), with strength and direction. Claims also take ev:setting_<field> properties, one per setting key, like ev:Experiment." .
 
 ev:Link a rdfs:Class ;
     rdfs:comment "A link from one paper to another work it cites, or to a work outside the document set." .
@@ -54,7 +54,8 @@ ev:number a rdf:Property ;
     rdfs:comment "The reported number of a value, as a literal." .
 
 ev:source a rdf:Property ;
-    rdfs:comment "The source span of a record (JSON literal): where in the paper the record's text was found." .
+    rdfs:range xsd:string ;
+    rdfs:comment "The source span of a record, held as a JSON string (a string literal containing JSON): where in the paper the record's text was found." .
 
 ev:name a rdf:Property ;
     rdfs:comment "The name a paper gives a thing, metric or experiment, as a literal." .
@@ -87,8 +88,7 @@ ev:subject a rdf:Property ;
     rdfs:comment "What the claim is about: the subject, as a literal." .
 
 ev:relation a rdf:Property ;
-    rdfs:domain ev:Claim ;
-    rdfs:comment "The paper's own verb for the claim (for example 'raises' or 'hurts'), as a literal." .
+    rdfs:comment "The paper's own verb: for a claim (for example 'raises' or 'hurts') or for a link (the link's verb). No rdfs:domain, because claims and links both use it. As a literal." .
 
 ev:relationGroup a rdf:Property ;
     rdfs:domain ev:Claim ;
@@ -116,6 +116,10 @@ ev:cites a rdf:Property ;
 ev:outsideSet a rdf:Property ;
     rdfs:domain ev:Link ;
     rdfs:comment "True (boolean literal) when the link points to a work outside the document set." .
+
+ev:ref a rdf:Property ;
+    rdfs:domain ev:Link ;
+    rdfs:comment "The reference a link names, as a literal: a DOI, an arXiv id or the cited text, whatever the paper gave." .
 
 # ---- Properties: provenance ----
 

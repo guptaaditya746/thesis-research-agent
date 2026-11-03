@@ -14,7 +14,7 @@ RDF_PROPERTY = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")
 CLASSES = ["Paper", "Experiment", "Thing", "Metric", "Value", "Claim", "Link", "Comparison"]
 PROPERTIES = ["inPaper", "inExperiment", "of", "onMetric", "number", "source", "name", "a", "b", "delta", "better",
               "subject", "relation", "object", "strength", "direction", "cites", "outsideSet", "madeBy",
-              "relationGroup"]
+              "relationGroup", "ref"]
 
 
 @pytest.fixture(scope="module")
@@ -43,3 +43,27 @@ def test_no_fixed_setting_terms_declared(store):
     # ev:setting_<field> is one property per setting key, so none is declared in the ttl.
     declared = {str(q.subject) for q in store.quads_for_pattern(None, RDF_TYPE, None)}
     assert not [iri for iri in declared if iri.startswith(EV + "setting_")]
+
+
+RDFS_DOMAIN = NamedNode("http://www.w3.org/2000/01/rdf-schema#domain")
+RDFS_RANGE = NamedNode("http://www.w3.org/2000/01/rdf-schema#range")
+XSD = "http://www.w3.org/2001/XMLSchema#"
+RDFS = "http://www.w3.org/2000/01/rdf-schema#"
+
+
+def test_relation_has_no_domain(store):
+    # ev:relation serves both claims and links, so it must not be inferred as one of them.
+    assert not list(store.quads_for_pattern(NamedNode(EV + "relation"), RDFS_DOMAIN, None))
+
+
+def test_domains_and_ranges_name_declared_classes_or_builtin_types(store):
+    declared = {q.subject.value for q in store.quads_for_pattern(None, RDF_TYPE, RDFS_CLASS)}
+    bad = []
+    for pred in (RDFS_DOMAIN, RDFS_RANGE):
+        for q in store.quads_for_pattern(None, pred, None):
+            target = q.object.value
+            if target.startswith(XSD) or target.startswith(RDFS):
+                continue
+            if target not in declared:
+                bad.append((q.subject.value, target))
+    assert not bad, f"domain/range names an undeclared term: {bad}"
