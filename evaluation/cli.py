@@ -22,6 +22,21 @@
     evaluate edits check --original R --runs DIR --edits F --out D [--corpora DIR]
     evaluate sheet --run R --corpus C (--sample N | --papers N) [--seed 0] --out F.csv
     evaluate sheet-summary F.csv [--out D]
+    evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src DIR --runs DIR --out DIR [--corpus DIR]
+                      [--confirm auto|hand|both] [--reasoning on|off|both] [--system engine|rag|both]
+                      [--sample 10] [--seed 0] [--model ALIAS] [--cache F]
+    evaluate leak --run R --corpus C --out D
+    evaluate offtemplate --runs DIR --out D
+    evaluate links --run R [--corpus C --question-id ID] [--references F.json] --out D
+
+`wholerun` (evaluation/wholerun_cmd.py) scores the plan runs of one real set under `--runs`
+(<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<question id>/): two confirmation rows, both reasoning settings, a
+fixed sample (sample.json), the RAG baseline (global and per_paper, same model) beside them with wins, losses, ties
+and the paired interval, the line "left out: N of M (no open full text)", and how many questions got a fresh query.
+It starts no run. `leak` splits extraction recall into "on the list" and "unseen" (Claude-written corpora only).
+`offtemplate` reports the fresh-query share and the match rate of the 12 off-template questions
+(<runs>/<question id>/plan.json). `links` scores chaining with the existing scorer and builds-on by recall of OpenAlex
+references (`--references`: {paper id: [work ids]}).
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
@@ -366,6 +381,89 @@ def cmd_sheet_summary(args: argparse.Namespace) -> int:
     return 0
 
 
+REAL_SETS = ("scilead", "scirex", "cochraneforest", "sofc")
+
+
+def _real_questions(name: str, src: Path, corpus: Path | None) -> list[Any]:
+    from .realpapers import cochraneforest, scilead, scirex, sofc
+    return {"scilead": scilead, "scirex": scirex, "cochraneforest": cochraneforest, "sofc": sofc}[name].questions(src, corpus)
+
+
+def left_out_of(name: str, src: Path, corpus: Path | None, questions: list[Any]) -> str:
+    """The open-access line of a set: how many of its items have no open full text."""
+    from .realpapers import cochraneforest, sofc
+    from .wholerun import left_out_line
+    if name == "sofc":
+        return sofc.left_out(src)
+    if name == "cochraneforest":
+        path = (corpus if corpus is not None else Path(src) / "corpus") / cochraneforest.SOURCE_FILE
+        if path.is_file():
+            return json.loads(path.read_text(encoding="utf-8"))["left_out_line"]
+        return "left out: not recorded (run the cochraneforest corpus step)"
+    if name == "scilead":
+        gone = sum(q.gold.get("left_out", 0) for q in questions)
+        return left_out_line(gone, gone + sum(len(q.gold.get("ranking", [])) for q in questions))
+    return left_out_line(0, sum(len(q.gold.get("papers", [])) for q in questions))   # scirex: arXiv, all open
+
+
+def cmd_wholerun(args: argparse.Namespace) -> int:
+    from . import wholerun_cmd as wc
+
+    questions = _real_questions(args.set, args.src, args.corpus)
+    confirm = {"auto": ("auto-confirmed",), "hand": ("hand-confirmed",)}.get(args.confirm, wc.CONFIRMATIONS)
+    reasoning = ("on", "off") if args.reasoning == "both" else (args.reasoning,)
+    systems = ("engine", "rag") if args.system == "both" else (args.system,)
+    rag = None
+    if "rag" in systems:
+        from modelcall import JsonlCache
+
+        from .baselines.real import rag_real
+        model, model_id = _model(args.model)
+        cache = JsonlCache(args.cache or args.out / "rag-real-calls.jsonl")
+
+        def rag(q: Any, mode: str) -> Any:   # the engine's corpus and model are the question's own
+            return rag_real(q, model=model, model_id=model_id, mode=mode, engine_corpus=q.corpus_dir,
+                            engine_model_id=model_id, cache=cache, seed=args.seed)
+    try:
+        report = wc.wholerun(questions, args.runs, args.out, set_name=args.set, n=args.sample, seed=args.seed,
+                             left_out=left_out_of(args.set, args.src, args.corpus, questions), reasoning=reasoning,
+                             confirm=confirm, systems=systems, rag_answer=rag)
+    except ValueError as exc:
+        raise SystemExit(f"evaluate wholerun: {exc}") from None
+    print(f"wrote {args.out / 'wholerun.json'}: {len(report['sample']['ids'])} questions; {report['left_out']}")
+    return 0
+
+
+def cmd_leak(args: argparse.Namespace) -> int:
+    from . import wholerun_cmd as wc
+
+    try:
+        split = wc.leak(args.run, args.corpus, args.out)
+    except ValueError as exc:
+        raise SystemExit(f"evaluate leak: {exc}") from None
+    print(f"wrote {args.out / 'leak.json'}: " + "; ".join(f"{k} recall={v['recall']}" for k, v in split.items()))
+    return 0
+
+
+def cmd_offtemplate(args: argparse.Namespace) -> int:
+    from . import wholerun_cmd as wc
+
+    report = wc.offtemplate(args.runs, args.out)
+    print(f"wrote {args.out / 'offtemplate.json'}: {report['summary']}")
+    return 0
+
+
+def cmd_links(args: argparse.Namespace) -> int:
+    from . import wholerun_cmd as wc
+
+    try:
+        wc.links(args.run, args.out, corpus=args.corpus, question_id=args.question_id, references=args.references)
+    except ValueError as exc:
+        raise SystemExit(f"evaluate links: {exc}") from None
+    print(f"wrote {args.out / 'links.json'}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evaluate", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -530,6 +628,40 @@ def parser() -> argparse.ArgumentParser:
     ys.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `yun corpus`")
     ys.add_argument("--out", type=Path, required=True)
     ys.set_defaults(func=cmd_yun)
+
+    w = sub.add_parser("wholerun", help="score the plan runs of one real set, with the RAG baseline beside them")
+    w.add_argument("--set", choices=REAL_SETS, required=True)
+    w.add_argument("--src", type=Path, required=True, help="the set's source (release) folder")
+    w.add_argument("--runs", type=Path, required=True, help="<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<qid>/")
+    w.add_argument("--corpus", type=Path, help="the set's corpus folder (default <src>/corpus)")
+    w.add_argument("--confirm", choices=("auto", "hand", "both"), default="both")
+    w.add_argument("--reasoning", choices=("on", "off", "both"), default="both")
+    w.add_argument("--system", choices=("engine", "rag", "both"), default="both")
+    w.add_argument("--sample", type=int, default=10, help="questions in the fixed sample (default 10)")
+    w.add_argument("--seed", type=int, default=0)
+    w.add_argument("--model", default=DEFAULT_ALIAS, help="the RAG baseline's model: the engine's (default orch-model)")
+    w.add_argument("--cache", type=Path, help="JsonlCache file of the RAG calls (default <out>/rag-real-calls.jsonl)")
+    w.add_argument("--out", type=Path, required=True)
+    w.set_defaults(func=cmd_wholerun)
+
+    lk = sub.add_parser("leak", help="extraction recall split: names on the word list vs unseen")
+    lk.add_argument("--run", type=Path, required=True, help="a plan run (its plan.json holds the word list)")
+    lk.add_argument("--corpus", type=Path, required=True, help="a Claude-written corpus with ground_truth.json")
+    lk.add_argument("--out", type=Path, required=True)
+    lk.set_defaults(func=cmd_leak)
+
+    ot = sub.add_parser("offtemplate", help="the generality check: fresh-query share and off-template match rate")
+    ot.add_argument("--runs", type=Path, required=True, help="<runs>/<question id>/plan.json per off-template question")
+    ot.add_argument("--out", type=Path, required=True)
+    ot.set_defaults(func=cmd_offtemplate)
+
+    ln = sub.add_parser("links", help="chaining against the synthetic truth network; builds-on by OpenAlex references")
+    ln.add_argument("--run", type=Path, required=True)
+    ln.add_argument("--corpus", type=Path, help="the synthetic corpus (chaining)")
+    ln.add_argument("--question-id", help="the chaining question's id (chaining)")
+    ln.add_argument("--references", type=Path, help="JSON {paper id: [OpenAlex work ids]} (builds-on)")
+    ln.add_argument("--out", type=Path, required=True)
+    ln.set_defaults(func=cmd_links)
     return p
 
 
