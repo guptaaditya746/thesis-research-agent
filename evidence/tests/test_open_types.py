@@ -47,9 +47,9 @@ def toy_pack(tmp_path: Path, types: dict[str, tuple[str, str]] | None = None, dr
 
 
 def test_pack_type_registers_with_its_prefix(tmp_path):
-    pack = toy_pack(tmp_path, types={"arm": ("x", "compared_thing")})
+    pack = toy_pack(tmp_path, types={"arm": ("z", "compared_thing")})
     register_pack(pack)
-    assert contract.ITEM_PREFIX["arm"] == "x"
+    assert contract.ITEM_PREFIX["arm"] == "z"
 
 
 def test_existing_type_ids_keep_their_prefix():
@@ -70,7 +70,7 @@ def test_pack_check_names_missing_role(tmp_path):
 
 
 def test_an_inventory_needs_no_value_or_claim_types(tmp_path):
-    pack = toy_pack(tmp_path, types={"method": ("x", "compared_thing"), "task": ("t", "context")})
+    pack = toy_pack(tmp_path, types={"method": ("z", "compared_thing"), "task": ("t", "context")})
     check(pack, kinds=["inventory"])
     no_claims = toy_pack(tmp_path, drop_role="author_claim", name="noclaims")
     check(no_claims, kinds=["effect", "best"])
@@ -79,8 +79,8 @@ def test_an_inventory_needs_no_value_or_claim_types(tmp_path):
 
 
 def test_a_registered_pack_type_makes_items_and_an_unregistered_one_is_refused(tmp_path):
-    register_pack(toy_pack(tmp_path, types={"arm": ("x", "compared_thing")}))
-    assert Item.build("arm", {"name": "drug A"}, [SPAN]).item_id.startswith("x-")
+    register_pack(toy_pack(tmp_path, types={"arm": ("z", "compared_thing")}))
+    assert Item.build("arm", {"name": "drug A"}, [SPAN]).item_id.startswith("z-")
     with pytest.raises(ValueError, match="not registered"):
         Item.build("limb", {"name": "drug A"}, [SPAN])
 
