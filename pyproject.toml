@@ -5,6 +5,7 @@ description = "Research agent with provenance recorded while it researches, its 
 requires-python = ">=3.13"
 dependencies = [
     "argilla==2.8.0",
+    "dspy==3.4.1",
     "fastapi[standard]==0.143.0",
     "filelock==3.32.7",
     "httpx==0.28.1",
@@ -14,6 +15,7 @@ dependencies = [
     "numpy==2.5.4",
     "owlrl>=7.6.2",
     "pandas==3.0.6",
+    "pdfplumber==0.11.10",
     "pydantic-ai-slim[mcp,openai]==2.55.0",
     "pydantic-settings==2.15.0",
     "pyoxigraph==0.5.11",

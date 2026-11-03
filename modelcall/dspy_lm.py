@@ -1,0 +1,48 @@
+"""`RecordedLM`: a DSPy language model whose every call goes through the run's recorder.
+
+DSPy builds the messages; `RecordedLM` turns them into one prompt text, looks the call up in the repo's
+`JsonlCache` under `cache_key({"alias", "messages", "settings"})`, and on a miss makes the raw call `ask`
+(in production a wrapper of the gateway, in tests a fake) and stores its text. A rerun on the same cache file
+makes no new model call and gets the same outputs. DSPy's own disk and memory cache is switched off, so replay
+depends only on our recorder, never on ~/.dspy_cache."""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from types import SimpleNamespace
+from typing import Any
+
+import dspy
+
+from .cache import JsonlCache, cache_key
+
+
+def render(messages: list[dict[str, Any]]) -> str:
+    """The messages as one prompt text for the raw model call: each message under its role."""
+    return "\n\n".join(f"[{m.get('role', 'user')}]\n{m.get('content', '')}" for m in messages)
+
+
+class RecordedLM(dspy.BaseLM):
+    """A `dspy.BaseLM` answering from `ask(prompt_text) -> reply_text`, recorded in `cache` when given."""
+
+    def __init__(self, alias: str, ask: Callable[[str], str], cache: JsonlCache | None = None, **kwargs: Any) -> None:
+        super().__init__(model=alias, model_type="chat", cache=False, **kwargs)
+        self.alias = alias
+        self._ask = ask
+        self._recorder = cache
+
+    def forward(self, prompt: str | None = None, messages: list[dict[str, Any]] | None = None, **kwargs: Any) -> Any:
+        msgs = messages if messages is not None else [{"role": "user", "content": prompt or ""}]
+        settings = {k: v for k, v in {**self.kwargs, **kwargs}.items() if not k.startswith("api_") and k != "cache"}
+        key = cache_key({"alias": self.alias, "messages": msgs,
+                         "settings": json.loads(json.dumps(settings, default=repr))})
+        hit = self._recorder.get(key) if self._recorder is not None else None
+        if hit is not None:
+            text = hit["output"]
+        else:
+            text = self._ask(render(msgs))
+            if self._recorder is not None:
+                self._recorder.put(key, {"output": text, "model": self.alias, "messages": msgs})
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text, tool_calls=None),
+                                                        finish_reason="stop")],
+                               usage={}, model=self.alias, cache_hit=hit is not None)
