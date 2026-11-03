@@ -26,8 +26,10 @@ def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extrac
     when it is not domains/; `plan`: the confirmed plan of a planned run, which adds `plan_sha256` and
     `words_sha256` and `field_ontology_sha256` ({file name: sha256} of the plan field's ontology files the plan run's
     graph and ontology report read, evidence/ontology `ontology_hashes`; the pack's own ontology stays under
-    `ontology_sha256`; {} when `reason` is off: the run reads no field ontology). A run without a plan locks exactly
-    as before, without those keys."""
+    `ontology_sha256`; {} when `reason` is off: the run reads no field ontology) and `tuned_steps_sha256` ({step name:
+    sha256} of the tuned instruction files `evidence/steps/tuned/*.json` the run's DSPy steps read, {} when none; final
+    review C4: a reader can tell which instructions wrote the list and read the papers). A run without a plan locks
+    exactly as before, without those keys."""
     pack = protocol.pack()
     onto = reasoner.ontology_sha256(pack) if domains is None else reasoner.ontology_sha256(pack, domains)
     out: dict[str, Any] = {
@@ -40,7 +42,20 @@ def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extrac
         out["words_sha256"] = plan.words.sha256
         from .ontology.sources import ontology_hashes
         out["field_ontology_sha256"] = ontology_hashes(plan.field) if reason == "on" else {}
+        out["tuned_steps_sha256"] = tuned_steps_sha256()
     return out
+
+
+def tuned_steps_sha256() -> dict[str, str]:
+    """{step name: sha256 of its bytes} of every tuned step file (`evidence.steps.TUNED_DIR`/<name>.json); {} when
+    there is none."""
+    import hashlib
+
+    from . import steps
+    folder = Path(steps.TUNED_DIR)
+    if not folder.is_dir():
+        return {}
+    return {p.stem: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(folder.glob("*.json")) if p.is_file()}
 
 
 def _read(path: Path) -> tuple[Any, dict[str, Any] | None]:
@@ -105,6 +120,10 @@ def _lock_lines(a: dict[str, Any], b: dict[str, Any]) -> list[str]:
     for name in sorted(set(fa) | set(fb)):
         if fa.get(name) != fb.get(name):
             lines.append(f"field ontology {name}: {(fa.get(name) or 'none')[:12]} -> {(fb.get(name) or 'none')[:12]}")
+    ta, tb = a.get("tuned_steps_sha256") or {}, b.get("tuned_steps_sha256") or {}
+    for name in sorted(set(ta) | set(tb)):
+        if ta.get(name) != tb.get(name):
+            lines.append(f"tuned step {name}: {(ta.get(name) or 'none')[:12]} -> {(tb.get(name) or 'none')[:12]}")
     return lines
 
 

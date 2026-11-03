@@ -97,3 +97,23 @@ def test_the_answer_links_carry_the_openalex_work_id(tmp_path: Path, monkeypatch
                        provider=provider_of(failing_model(lambda p: False)), workers=1)
     links = read(root, "answer.json")["links"]
     assert links and {x["work"] for x in links} == {"W2741809807"}
+
+
+def test_the_lock_records_the_tuned_step_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Final review C4: {step: sha256} of evidence/steps/tuned/*.json in a plan run's lock; {} when none."""
+    import hashlib
+
+    from evidence import lockfile, steps
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "none")
+    assert lockfile.tuned_steps_sha256() == {}
+    root, _ = run(tmp_path / "a", monkeypatch, [])
+    assert read(root, "protocol.lock.json")["tuned_steps_sha256"] == {}
+    tuned = tmp_path / "tuned"
+    tuned.mkdir()
+    (tuned / "write_words.json").write_text('{"instructions": "x"}', encoding="utf-8")
+    monkeypatch.setattr(steps, "TUNED_DIR", tuned)
+    want = hashlib.sha256((tuned / "write_words.json").read_bytes()).hexdigest()
+    assert lockfile.tuned_steps_sha256() == {"write_words": want}
+    assert lockfile._lock_lines({"extractors": {}, "pack": 1, "ontology_sha256": None, "tuned_steps_sha256": {}},
+                                {"extractors": {}, "pack": 1, "ontology_sha256": None,
+                                 "tuned_steps_sha256": {"write_words": want}}) == [f"tuned step write_words: none -> {want[:12]}"]
