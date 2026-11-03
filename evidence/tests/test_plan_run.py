@@ -225,3 +225,16 @@ def test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex
     new, report = replay(root)
     assert report["ok"], report
     assert len(fetched) == n          # the replay read the recorded answers, never the network
+
+
+def test_a_plan_run_scores_through_the_wholerun_adapter(tmp_path: Path) -> None:
+    from evaluation.wholerun import RealQuestion, from_run, score
+    root = plan_run(tmp_path)
+    q = RealQuestion("q", "Does it help?", "cs", tmp_path / "corpus", {"directions": {"S001": "improves"},
+                                                                         "conclusion": "improves"}, "compare")
+    answer = from_run(root, q)
+    assert answer.directions.get("S001") == "improves"
+    assert score(answer, q)["per_study"] == {"S001": 1}
+    claims = from_run(root, RealQuestion("c", "?", "cs", tmp_path, {"conclusions": [{"id": "R1", "direction": "improves"}]},
+                                         "claims"))
+    assert claims.claims == [{"about": "R1", "direction": "improves"}]

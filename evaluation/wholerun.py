@@ -24,6 +24,12 @@ side is Wave 2 Task 8.1, the adapter "engine run -> Answer"):
   claims   Answer.claims    [{"about": <gold conclusion id>, "direction": ...}]; `about` must be one of
                             `gold["conclusions"][i]["id"]`, the ids the question gives
 An unused part stays empty: an empty answer is valid and scores 0 (recall) or None (precision).
+`from_run(run, q)` is that adapter for an engine run folder: a plan run's answer.json (its lines' rows: rank and list
+read the first answered line other than the oversell caveat, a ranking by its `paper` column when it has one, else
+its first column; compare reads `paper` + `direction` rows, else the kind's answer kept under `synthesis`), and for
+claims the run's claim records (evidence.jsonl): one claim per gold conclusion, the majority direction of the run's
+directed claims (a question gives one conclusion id per review; with several, a claim is about the conclusion whose
+id or text its subject or object names, else it is left out).
 `RealQuestion.records` (optional) are the set's answer-key records for the key-records run (see
 realpapers/keystore.py); None means "key-records run: not available" (`key_status`).
 """
@@ -32,6 +38,7 @@ from __future__ import annotations
 import json
 import random
 import warnings
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -68,6 +75,70 @@ class Answer:
     directions: dict[str, str] = field(default_factory=dict)    # compare: study -> direction
     conclusion: str | None = None                               # compare: the overall direction
     claims: list[dict[str, Any]] = field(default_factory=list)  # claims: {"about": conclusion id, "direction": ...}
+
+
+DIRECTION_OF = {"supports": "improves", "contradicts": "worsens", "neutral": "no_effect",
+                "improves": "improves", "worsens": "worsens", "no_effect": "no_effect"}
+OVERSELL = "oversell"
+
+
+def _lines(answer: dict[str, Any]) -> list[dict[str, Any]]:
+    """The answered lines with rows, the oversell caveat left out."""
+    return [x for x in answer.get("lines") or [] if x.get("status") == "done" and x.get("rows") and x.get("id") != OVERSELL]
+
+
+def _column(rows: list[dict[str, Any]], prefer: str | None = None) -> list[str]:
+    out: list[str] = []
+    for row in rows:
+        key = prefer if prefer is not None and prefer in row else next(iter(row), None)
+        value = row.get(key) if key is not None else None
+        if value is not None and str(value) not in out:
+            out.append(str(value))
+    return out
+
+
+def _majority(directions: list[str]) -> str | None:
+    counts = Counter(d for d in directions if d)
+    if not counts:
+        return None
+    top = counts.most_common()
+    return top[0][0] if len(top) == 1 or top[0][1] > top[1][1] else None
+
+
+def _about(claim: dict[str, Any], conclusions: list[dict[str, Any]]) -> str | None:
+    if len(conclusions) == 1:
+        return str(conclusions[0]["id"])
+    said = " ".join(str(claim.get(k) or "") for k in ("subject", "object")).casefold()
+    hits = [str(c["id"]) for c in conclusions
+            if str(c["id"]).casefold() in said or (c.get("text") and str(c["text"]).casefold() in said)]
+    return hits[0] if len(hits) == 1 else None
+
+
+def from_run(run: Path | str, q: RealQuestion) -> Answer:
+    """The `Answer` of an engine run folder for question `q` (the contract above)."""
+    root = Path(run)
+    answer = json.loads((root / "answer.json").read_text(encoding="utf-8"))
+    lines = _lines(answer)
+    if q.kind == "rank":
+        return Answer(ranking=_column(lines[0]["rows"], "paper") if lines else [])
+    if q.kind == "list":
+        return Answer(names=_column(lines[0]["rows"]) if lines else [])
+    if q.kind == "compare":
+        rows = next((x["rows"] for x in lines if all("paper" in r and "direction" in r for r in x["rows"])), None)
+        pairs = ([(r["paper"], r["direction"]) for r in rows] if rows is not None else
+                 [(s["document"], s["direction"]) for s in (answer.get("synthesis") or answer).get("studies") or []])
+        directions = {str(p): DIRECTION_OF[d] for p, d in pairs if d in DIRECTION_OF}
+        return Answer(directions=directions, conclusion=_majority(list(directions.values())))
+    from evidence.rundir import EVIDENCE_FILE, read_lines
+    path = root / EVIDENCE_FILE
+    claims = [r["fields"] for r in (read_lines(path) if path.is_file() else []) if r.get("evidence_type") == "claim"]
+    conclusions = list(q.gold.get("conclusions") or [])
+    by_about: dict[str, list[str]] = {}
+    for c in claims:
+        about = _about(c, conclusions) if c.get("direction") in DIRECTION_OF else None
+        if about is not None:
+            by_about.setdefault(about, []).append(DIRECTION_OF[c["direction"]])
+    return Answer(claims=[{"about": a, "direction": d} for a, ds in by_about.items() if (d := _majority(ds))])
 
 
 def _ratio(num: float, den: float) -> float | None:
