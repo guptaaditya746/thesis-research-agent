@@ -211,13 +211,12 @@ def _propose(args: argparse.Namespace) -> int:
 def _tune(args: argparse.Namespace) -> int:
     from modelcall.cache import JsonlCache
     from modelcall.dspy_lm import RecordedLM
-    from webapp.planwire import gateway_ask
 
+    from .stages import gateway_ask
     from .steps import tune
     try:
         # check the request before any model is made: overlap and missing examples exit 2 with no key needed
-        spec = tune.SPECS.get(args.step)
-        if spec is not None:
+        if args.step in tune.SPECS:
             tune.check_disjoint(tune.sources(args.step, args.train, "train"), tune.sources(args.step, args.test, "test"))
         args.cache.mkdir(parents=True, exist_ok=True)
         lm = RecordedLM(args.model, gateway_ask(args.model), cache=JsonlCache(args.cache / "tune.jsonl"))
@@ -225,6 +224,9 @@ def _tune(args: argparse.Namespace) -> int:
     except tune.TuneError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    except RuntimeError as exc:   # a failed model call or an optimizer over its call cap; nothing was written
+        print(f"error: model call failed: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 

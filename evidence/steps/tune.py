@@ -15,10 +15,26 @@ Train and test must not share a corpus id (or, in a real set, a paper): refused 
 Gold per step (the metric reads it, whatever the source): write_words / write_more_words {"names": [...]} (recall;
 on the test side only names not in the training answer keys count); recheck {"keep": [bool per item]} (precision of
 the finds kept); map_experiments {"n": count} (closeness of the count, and every quote must be in the paper);
-claims.read_claim {"is_claim": bool, "direction": str | None}; planner_query {} (the query must pass the plan's own
-parser check and use the run-filled `$sides` or `$metrics`; a proxy for the whole-run score, see the task report)."""
+claims.read_claim {"is_claim": bool, "direction": str | None} (claim sentences and non-claim sentences, balanced;
+the score is the mean over both, so calling every sentence a claim scores about 0.5).
+
+`tune_examples.json` (built per real set by the runbook, Task 8.4) has exactly this format:
+  {"examples": [{"step": "recheck" | "map_experiments" | "claims.read_claim", "paper": "<paper id of the set>",
+                 "inputs": {<the step signature's input fields>}, "gold": {<gold of the step, above>}}]}
+and sits next to `tune_split.json` ({"papers": [...], "rest": [...]}); a real-set folder without it is refused.
+
+Disjointness is by content, not by name: train and test must share no paper text (sha256, whitespace-normalised)
+and no ground-truth studies (hash), and in a real set no paper id.
+
+Budget (decision of Aditya): per step `min(GEPA's light budget for that step's train size, 500)`; the file records
+`light_budget`, `max_metric_calls` (the cap used), and the model calls really made. MIPROv2 is capped the same way
+(its number of trials is chosen to fit, and the calls of its compile are counted and refused above the cap).
+
+Known gap: `planner_query` is not tunable yet (its metric must be the whole-run score on synthetic questions, which
+is not wired); the planner stays untuned."""
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
 import re
@@ -28,12 +44,14 @@ from pathlib import Path
 from typing import Any
 
 import dspy
+from dspy.utils.exceptions import AdapterParseError
 
 from modelcall.dspy_lm import RecordedLM
 
-from . import TUNED_DIR, Step
+from . import TUNED_DIR
 
 MAX_METRIC_CALLS = 500
+MAX_FAILED_SHARE = 0.2        # more failed (unparseable) examples than this share: no tuned file
 OPTIMIZERS = ("gepa", "miprov2")
 TUNE_FILE = "tune_split.json"       # same name and format as evaluation/wholerun.TUNE_FILE
 EXAMPLES_FILE = "tune_examples.json"
@@ -52,6 +70,7 @@ class Source:
     path: Path
     corpus_id: str
     papers: frozenset[str] | None       # None: every paper (synthetic)
+    hashes: frozenset[str] = frozenset()   # sha256 of each paper text and of the ground-truth studies
 
 
 def _read(path: Path) -> Any:
@@ -65,6 +84,20 @@ def _corpus_id(path: Path) -> str:
     return path.name
 
 
+def _text_hash(text: str) -> str:
+    return "paper:" + hashlib.sha256(" ".join(text.split()).encode("utf-8")).hexdigest()
+
+
+def _hashes(path: Path, papers: frozenset[str] | None) -> frozenset[str]:
+    """Content hashes of the papers a side may use (all of them, or the listed ids) and of the ground-truth studies."""
+    out = ({_text_hash(f.read_text(encoding="utf-8")) for f in sorted((path / "papers").glob("*.md"))
+            if papers is None or f.stem in papers} if (path / "papers").is_dir() else set())
+    if papers is None and (path / "ground_truth.json").is_file():
+        studies = json.dumps(_read(path / "ground_truth.json").get("studies"), sort_keys=True)
+        out.add("truth:" + hashlib.sha256(studies.encode("utf-8")).hexdigest())
+    return frozenset(out)
+
+
 def _split_of(path: Path) -> dict[str, Any] | None:
     for folder in (path, path.parent):
         if (folder / TUNE_FILE).is_file():
@@ -73,7 +106,8 @@ def _split_of(path: Path) -> dict[str, Any] | None:
 
 
 def sources(step: str, dirs: list[Path], side: str) -> list[Source]:
-    """The folders of one side ("train" or "test"). A real step reads its held-out slice (train) or the rest (test)."""
+    """The folders of one side ("train" or "test"). A real step reads its held-out slice (train) or the rest (test)
+    of a real set; a folder that is neither a real set with its example file nor a synthetic corpus is refused."""
     out = []
     for d in map(Path, dirs):
         if step in REAL_STEPS and (d / EXAMPLES_FILE).is_file():
@@ -81,23 +115,31 @@ def sources(step: str, dirs: list[Path], side: str) -> list[Source]:
             if split is None:
                 raise TuneError(f"{d}: a real set needs {TUNE_FILE} (the papers held out for tuning)")
             papers = frozenset(split["papers"] if side == "train" else split.get("rest", []))
-            out.append(Source(d, _corpus_id(d), papers))
+            out.append(Source(d, _corpus_id(d), papers, _hashes(d, papers)))
+        elif (d / "ground_truth.json").is_file():
+            out.append(Source(d, _corpus_id(d), None, _hashes(d, None)))
+        elif step in REAL_STEPS and _split_of(d) is not None:
+            raise TuneError(f"{d}: a real set ({TUNE_FILE} found) needs {EXAMPLES_FILE} (format in "
+                            "evidence/steps/tune.py); it is not tuned on without it")
         else:
-            out.append(Source(d, _corpus_id(d), None))
+            raise TuneError(f"{d}: neither a synthetic corpus (ground_truth.json) nor a real set ({EXAMPLES_FILE})")
     return out
 
 
 def check_disjoint(train: list[Source], test: list[Source]) -> None:
-    """Refuse a corpus id on both sides, and for a real set a paper on both sides."""
-    both = sorted({s.corpus_id for s in train if s.papers is None} & {s.corpus_id for s in test if s.papers is None})
-    if both:
-        raise TuneError(f"train and test share corpora {both}: tuning papers and test papers must be disjoint")
+    """Refuse any shared paper text or ground truth (by hash, whatever the corpus ids), a corpus id on both sides
+    that is a whole synthetic corpus, and a paper id on both sides of a real set."""
     for a in train:
         for b in test:
-            if a.papers is not None and b.papers is not None and a.corpus_id == b.corpus_id:
-                shared = sorted(a.papers & b.papers)
-                if shared:
-                    raise TuneError(f"train and test share papers {shared} of {a.corpus_id}")
+            shared = a.hashes & b.hashes
+            if shared:
+                raise TuneError(f"train corpus {a.corpus_id} and test corpus {b.corpus_id} share {len(shared)} paper "
+                                "texts or ground truths: tuning papers and test papers must be disjoint")
+            if a.corpus_id == b.corpus_id and (a.papers is None or b.papers is None):
+                raise TuneError(f"train and test share corpus {a.corpus_id}: tuning papers and test papers must "
+                                "be disjoint")
+            if a.corpus_id == b.corpus_id and a.papers is not None and b.papers is not None and a.papers & b.papers:
+                raise TuneError(f"train and test share papers {sorted(a.papers & b.papers)} of {a.corpus_id}")
 
 
 # ---- examples ---------------------------------------------------------------------------------------------------
@@ -171,29 +213,34 @@ def build_experiments(d: Path) -> list[Example]:
     return out
 
 
+_SENTENCE = re.compile(r"[^.!?\n]+[.!?]")
+
+
 def build_claims(d: Path) -> list[Example]:
+    """The claim sentences (gold: a claim, the study's direction) and as many non-claim sentences of the same papers
+    (gold: not a claim): sentences with no claim placement in them that hold a condition or a number."""
     truth, texts = _synthetic(d)
     claims = {s["paper"]: s["author_claim"]["direction"] for s in truth["studies"] if s.get("author_claim")}
-    out = []
-    for p in truth["placements"]:
-        paper = p["fact"].split(".")[0]
-        if p["role"] == "claim" and p["paper"] in texts and paper in claims:
-            direction = claims[paper]
-            out.append({"inputs": {"sentence": texts[p["paper"]][p["start"]:p["end"]]},
-                        "gold": {"is_claim": True,
-                                 "direction": direction if direction in ("improves", "worsens", "no_effect") else None}})
+    out: list[Example] = []
+    for paper, text in texts.items():
+        marks = [p for p in truth["placements"] if p["paper"] == paper]
+        pos = []
+        for p in marks:
+            direction = claims.get(p["fact"].split(".")[0])
+            if p["role"] == "claim" and direction is not None:
+                pos.append({"inputs": {"sentence": text[p["start"]:p["end"]]},
+                            "gold": {"is_claim": True,
+                                     "direction": direction if direction in ("improves", "worsens", "no_effect") else None}})
+        spans = [(p["start"], p["end"]) for p in marks if p["role"] == "claim"]
+        other = [p["start"] for p in marks if p["role"] in ("condition_label", "value")]
+        neg = []
+        for m in _SENTENCE.finditer(text):
+            a, b = m.span()
+            if len(m.group().split()) >= 5 and not any(a < e and x < b for x, e in spans) \
+                    and any(a <= x < b for x in other):
+                neg.append({"inputs": {"sentence": m.group().strip()}, "gold": {"is_claim": False, "direction": None}})
+        out += pos + neg[:len(pos)]
     return out
-
-
-def build_query(d: Path) -> list[Example]:
-    truth, _ = _synthetic(d)
-    roles = sorted({c["role"] for s in truth["studies"] for c in s["conditions"] if c["role"] != "other"})
-    metrics = sorted({m["canonical"] for s in truth["studies"] for m in s["metrics"] if m["canonical"] != "other"})
-    if not roles or not metrics:
-        return []
-    return [{"inputs": {"question": truth["question"], "line": truth["question"], "template": "",
-                        "choice_params": "[]", "things": json.dumps(roles), "measures": json.dumps(metrics),
-                        "problem": ""}, "gold": {}}]
 
 
 def real_examples(src: Source, step: str) -> list[Example]:
@@ -218,12 +265,15 @@ def metric_words(gold: dict, pred: Any, seen: frozenset[str] = frozenset()) -> f
 
 
 def metric_recheck(gold: dict, pred: Any, seen: frozenset[str] = frozenset()) -> float:
-    """Item precision: of the finds the model keeps, the share that are true finds (keeping none scores 0)."""
+    """Item precision: of the finds the model keeps, the share that are true finds (keeping none scores 0, and so does keeping under half of the true finds)."""
     said = {v.number: v.verdict for v in (getattr(pred, "verdicts", None) or [])}
     kept = [i for i in range(1, len(gold["keep"]) + 1) if said.get(i, "keep") != "drop"]
     if not kept:
         return 0.0 if any(gold["keep"]) else 1.0
-    return sum(gold["keep"][i - 1] for i in kept) / len(kept)
+    hit = sum(gold["keep"][i - 1] for i in kept)
+    if any(gold["keep"]) and hit / sum(gold["keep"]) < 0.5:
+        return 0.0                  # floor: dropping almost every true find is not a good check
+    return hit / len(kept)
 
 
 def metric_experiments(gold: dict, pred: Any, seen: frozenset[str] = frozenset()) -> float:
@@ -239,12 +289,6 @@ def metric_claims(gold: dict, pred: Any, seen: frozenset[str] = frozenset()) -> 
     if not gold["is_claim"]:
         return float(ok)
     return (float(ok) + float(getattr(pred, "direction", None) == gold["direction"])) / 2
-
-
-def metric_query(gold: dict, pred: Any, seen: frozenset[str] = frozenset()) -> float:
-    from evidence.planner.plan import query_problem
-    q = str(getattr(pred, "query", "") or "")
-    return float(query_problem(q) is None and bool(re.search(r"\$(sides|metrics)", q)))
 
 
 @dataclass(frozen=True)
@@ -265,7 +309,6 @@ SPECS: dict[str, Spec] = {s.name: s for s in (
     Spec("recheck", _sig("evidence.extractors.recheck", "Recheck"), build_recheck, metric_recheck),
     Spec("map_experiments", _sig("evidence.experiments", "MapExperiments"), build_experiments, metric_experiments),
     Spec("claims.read_claim", _sig("evidence.claims", "ReadClaim"), build_claims, metric_claims),
-    Spec("planner_query", _sig("evidence.planner.plan", "QuerySig"), build_query, metric_query),
 )}
 
 
@@ -292,31 +335,57 @@ def _dspy(ex: Example) -> dspy.Example:
 
 
 def _score(program: dspy.Module, examples: list[Example], metric: Callable[..., float], lm: RecordedLM,
-           seen: frozenset[str] = frozenset()) -> float:
-    total = 0.0
+           seen: frozenset[str] = frozenset()) -> tuple[float, int]:
+    """(mean metric, number of examples whose reply could not be parsed; those score 0). Other errors propagate."""
+    total, failed = 0.0, 0
     for ex in examples:
         try:
             with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
                 total += metric(ex["gold"], program(**ex["inputs"]), seen)
-        except Exception:   # an unparseable reply scores 0 (it is recorded as a failed attempt)
-            pass
-    return total / len(examples) if examples else 0.0
+        except AdapterParseError:
+            failed += 1
+    return (total / len(examples) if examples else 0.0), failed
 
 
-def default_optimizer(name: str, metric: Callable[..., float], lm: RecordedLM) -> Any:
-    """GEPA (light cap: max_metric_calls=500) or MIPROv2 (auto light), both on `lm`."""
+def light_budget(n_train: int) -> int:
+    """GEPA's own light budget (auto="light") for one predictor and `n_train` examples."""
+    return dspy.GEPA(metric=lambda *a, **k: 0.0, auto="light",
+                     reflection_lm=dspy.LM("openai/unused")).auto_budget(num_preds=1, num_candidates=6,
+                                                                          valset_size=n_train)
+
+
+class BudgetExceeded(RuntimeError):
+    pass
+
+
+def default_optimizer(name: str, metric: Callable[..., float], lm: RecordedLM, budget: int) -> Any:
+    """GEPA with `max_metric_calls=budget`, or MIPROv2 with trials chosen to fit `budget` calls; both on `lm`."""
     def gepa_metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
         return metric(gold.gold, pred)
 
     def mipro_metric(gold, pred, trace=None):
         return metric(gold.gold, pred)
     if name == "gepa":
-        return dspy.GEPA(metric=gepa_metric, max_metric_calls=MAX_METRIC_CALLS, reflection_lm=lm)
-    return dspy.MIPROv2(metric=mipro_metric, prompt_model=lm, task_model=lm, auto="light")
+        return dspy.GEPA(metric=gepa_metric, max_metric_calls=budget, reflection_lm=lm)
+    return _Mipro(dspy.MIPROv2(metric=mipro_metric, prompt_model=lm, task_model=lm, auto=None, num_candidates=3),
+                  budget)
+
+
+class _Mipro:
+    """MIPROv2 with an explicit trial count: about 3 candidate prompts + trials x minibatch calls must fit `budget`."""
+    MINIBATCH = 10
+
+    def __init__(self, inner: Any, budget: int) -> None:
+        self.inner, self.budget = inner, budget
+
+    def compile(self, student: Any, trainset: list) -> Any:
+        trials = max(1, (self.budget - 40) // (self.MINIBATCH + 2))
+        return self.inner.compile(student, trainset=trainset, num_trials=trials, minibatch_size=self.MINIBATCH,
+                                  max_bootstrapped_demos=0, max_labeled_demos=0, requires_permission_to_run=False)
 
 
 def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, optimizer: str = "gepa",
-         make_optimizer: Callable[[str, Callable[..., float], RecordedLM], Any] = default_optimizer,
+         make_optimizer: Callable[[str, Callable[..., float], RecordedLM, int], Any] = default_optimizer,
          tuned_dir: Path | None = None) -> dict[str, Any]:
     """Tune `step`; write `<tuned_dir>/<step>.json` and return the report (also in that file)."""
     if step not in SPECS:
@@ -327,32 +396,56 @@ def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, opti
     train_src, test_src = sources(step, train, "train"), sources(step, test, "test")
     check_disjoint(train_src, test_src)
     train_ex, test_ex = examples_of(spec, train_src), examples_of(spec, test_src)
-    if not train_ex or not test_ex:
-        raise TuneError(f"{step}: {len(train_ex)} train and {len(test_ex)} test examples; both sides need some")
     seen = frozenset(_norm(n) for ex in train_ex for n in ex["gold"].get("names", []))
-    calls = {"n": 0}
+    dropped = 0
+    if spec.metric is metric_words:     # a test example with no name unseen in training says nothing
+        kept = [e for e in test_ex if {_norm(n) for n in e["gold"]["names"]} - seen]
+        dropped, test_ex = len(test_ex) - len(kept), kept
+    if not train_ex or not test_ex:
+        raise TuneError(f"{step}: {len(train_ex)} train and {len(test_ex)} test examples"
+                        f"{f' ({dropped} test examples dropped: no unseen names)' if dropped else ''}; both sides need some")
+    light = light_budget(len(train_ex))
+    cap = min(light, MAX_METRIC_CALLS)
+    calls = {"n": 0, "limit": None}
     ask = lm._ask
 
     def counting(*a: Any, **k: Any) -> str:
         calls["n"] += 1
+        if calls["limit"] is not None and calls["n"] > calls["limit"]:
+            raise BudgetExceeded(f"the optimizer needed more than {cap} model calls")
         return ask(*a, **k)
     lm._ask = counting
+    previous = TUNED_DIR / f"{step}.json" if tuned_dir is None else Path(tuned_dir) / f"{step}.json"
     try:
         signature = spec.signature()
-        base = _Program(signature, Step(signature, step).instructions())
-        before = {"train": _score(base, train_ex, spec.metric, lm),
-                  "test": _score(base, test_ex, spec.metric, lm, seen)}
+        base = _Program(signature, signature.instructions)     # the signature's own text, never an earlier tuned file
+        b_train, f1 = _score(base, train_ex, spec.metric, lm)
+        b_test, f2 = _score(base, test_ex, spec.metric, lm, seen)
+        calls["limit"] = calls["n"] + cap if optimizer == "miprov2" else None
+        start = calls["n"]
         with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
-            tuned = make_optimizer(optimizer, spec.metric, lm).compile(base, trainset=[_dspy(e) for e in train_ex])
-        after = {"train": _score(tuned, train_ex, spec.metric, lm),
-                 "test": _score(tuned, test_ex, spec.metric, lm, seen)}
+            tuned = make_optimizer(optimizer, spec.metric, lm, cap).compile(base, trainset=[_dspy(e) for e in train_ex])
+        optimizer_calls = calls["n"] - start
+        calls["limit"] = None
+        a_train, f3 = _score(tuned, train_ex, spec.metric, lm)
+        a_test, f4 = _score(tuned, test_ex, spec.metric, lm, seen)
     finally:
         lm._ask = ask
+    failed = {"train": f3, "test": f4}
+    share = (f3 + f4) / (len(train_ex) + len(test_ex))
+    if share > MAX_FAILED_SHARE:
+        raise TuneError(f"{f3 + f4} of {len(train_ex) + len(test_ex)} examples of the tuned program failed to parse "
+                        f"(more than {MAX_FAILED_SHARE:.0%}); no tuned file written")
     report = {"instructions": tuned.predict.signature.instructions, "step": step, "optimizer": optimizer,
-              "max_metric_calls": MAX_METRIC_CALLS, "model_calls": calls["n"], "model": lm.alias,
+              "light_budget": light, "max_metric_calls": cap, "model_calls": calls["n"],
+              "optimizer_calls": optimizer_calls, "model": lm.alias,
               "train_corpora": sorted({s.corpus_id for s in train_src}),
               "test_corpora": sorted({s.corpus_id for s in test_src}),
-              "n_train": len(train_ex), "n_test": len(test_ex), "scores": {"before": before, "after": after}}
+              "n_train": len(train_ex), "n_test": len(test_ex), "test_dropped_no_unseen_names": dropped,
+              "n_failed": {"before": {"train": f1, "test": f2}, "after": failed},
+              "scores": {"before": {"train": b_train, "test": b_test}, "after": {"train": a_train, "test": a_test}}}
+    if previous.is_file():
+        report["previous_instructions"] = json.loads(previous.read_text(encoding="utf-8")).get("instructions")
     out = Path(tuned_dir or TUNED_DIR)
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{step}.json").write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n", encoding="utf-8",

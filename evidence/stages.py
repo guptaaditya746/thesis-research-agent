@@ -222,3 +222,13 @@ def after_run(run: RunDir, ctx: StageContext) -> dict[str, Any]:
         except Exception as exc:
             out[name] = {"failed": modelcall.redact(f"{type(exc).__name__}: {exc}")[:300]}
     return out
+
+
+def gateway_ask(alias: str):
+    """`ask(text) -> reply text` for a `RecordedLM`: one plain call of `alias` through the gateway (no cache here: the
+    RecordedLM records it)."""
+    from modelcall import Prompt, ask_sync, openai_model
+
+    def ask(text: str) -> str:
+        return ask_sync(Prompt.inline("", Reply), text, model=openai_model(alias)).output.text
+    return ask
