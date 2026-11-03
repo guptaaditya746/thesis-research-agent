@@ -53,6 +53,7 @@ from evidence.pack import DOMAINS, Role, RoleMap, load_pack
 from evidence.protocol import load as load_protocol
 from evidence.rundir import PROTOCOL_FILE
 
+from ..wholerun import RealQuestion
 from .common import items_of, name_groups as _groups, same_name as _same
 
 SOURCES = ("https://aclanthology.org/attachments/2024.emnlp-main.453.data.zip",
@@ -391,3 +392,66 @@ def report(run_dir: Path, corpus: Path, data: Path, metrics: Path = METRICS) -> 
     """The real.json of the check: `score`, the run, the sources and the notes (real.md lists them)."""
     return {"run": Path(run_dir).name, "sources": list(SOURCES), **score(run_dir, corpus, data, metrics),
             "notes": list(NOTES)}
+
+
+def _manifest_ids(corpus: Path, release: Release) -> dict[str, str] | None:
+    """Release paper key -> the corpus manifest id of its paper (by arXiv id without version); None without a
+    manifest (the corpus is not built yet: papers are then named by their arXiv id, as `evidence fetch` keys them)."""
+    path = Path(corpus) / "manifest.json"
+    if not path.is_file():
+        return None
+    ids = {_arxiv_key(str(p["id"])): str(p["id"]) for p in json.loads(path.read_text(encoding="utf-8"))["papers"]}
+    return {paper: ids[_arxiv_key(a)] for paper, a in release.arxiv.items() if a is not None and _arxiv_key(a) in ids}
+
+
+def _id_of(paper: str, release: Release, mapping: dict[str, str] | None) -> str | None:
+    if mapping is not None:
+        return mapping.get(paper)
+    arxiv = release.arxiv.get(paper)
+    return _arxiv_key(arxiv) if arxiv is not None else None
+
+
+def truth_items(src: Path, corpus_dir: Path | None = None, metrics: Path = METRICS) -> list[dict[str, Any]]:
+    """The answer-key records of the release (one per labelled result of a paper with an id in the corpus): thing =
+    the paper's id, metric, number = the result, context = the dataset, settings task and dataset (keystore.py)."""
+    release = _release(src)
+    rules = load_metrics(metrics)
+    corpus = Path(corpus_dir) if corpus_dir is not None else Path(src) / "corpus"
+    mapping = _manifest_ids(corpus, release)
+    out = []
+    for paper, rows in release.tuples.items():
+        pid = _id_of(paper, release, mapping)
+        if pid is None:
+            continue
+        for task, dataset, metric, result in rows:
+            number = _number(result)
+            if number is None:
+                continue
+            rule = _rule(metric, rules)
+            out.append({"paper": pid, "thing": pid, "metric": metric, "number": on_board_scale(number, rule.percent),
+                        "higher_is_better": rule.higher, "context": dataset,
+                        "settings": {"task": task, "dataset": dataset}})
+    return out
+
+
+def questions(src: Path, corpus_dir: Path | None = None, metrics: Path = METRICS) -> list[RealQuestion]:
+    """The whole-run questions of the release in `src`: one per leaderboard (27 in the release), "Which paper
+    reports the best result on <dataset> by <metric>?"; gold = the board's order in the metric's direction
+    (domains/ml/metrics.yaml), as corpus manifest ids (arXiv ids when the corpus has no manifest yet); a board
+    paper with no arXiv id, or not in the corpus, is left out of the gold (counted in `left_out`). Field `cs`; the
+    corpus is `corpus_dir` (default `src/corpus`). `records` are the answer-key records of the board's papers."""
+    release = _release(src)
+    corpus = Path(corpus_dir) if corpus_dir is not None else Path(src) / "corpus"
+    mapping = _manifest_ids(corpus, release)
+    keys = truth_items(src, corpus, metrics)
+    out = []
+    for n, board in enumerate(_boards(release, load_metrics(metrics)), 1):
+        ranking = [i for p in board["ranking"] if (i := _id_of(p, release, mapping)) is not None]
+        out.append(RealQuestion(
+            id=f"scilead-{n:02d}", question=f"Which paper reports the best result on {board['dataset']} by "
+                                            f"{board['metric']}?",
+            field="cs", corpus_dir=corpus, kind="rank",
+            gold={"ranking": ranking, "papers": list(ranking), "task": board["task"],
+                  "higher_is_better": board["rule"].higher, "left_out": len(board["ranking"]) - len(ranking)},
+            records=[r for r in keys if r["paper"] in set(ranking)]))
+    return out

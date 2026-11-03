@@ -32,6 +32,7 @@ from evidence.names import clean
 from evidence.pack import RoleMap, load_pack
 from jsonio import sha256_hex
 
+from ..wholerun import RealQuestion
 from .common import items_of
 
 GOLD_FILE = "scirex_gold.json"
@@ -247,3 +248,58 @@ def report(run_dir: Path, corpus: Path, estimate: dict[str, Any] | None = None) 
                                       "clusters_without_spans")},
             "salient": result["salient"], "mention": result["mention"], "estimate": estimate,
             "notes": [chosen, "headline: the salient-cluster level", *GOLD_NOTES]}
+
+
+def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
+    """The whole-run questions of a SciREX JSON-lines file: one per task named in a relation with at least two
+    distinct datasets, "Which datasets are used for <task>?"; gold = those datasets (the relations' dataset
+    names, cleaned of the file's underscores), `papers` = the documents holding such a relation. Field `cs`;
+    the corpus is `corpus_dir` (default: the file's folder, where `to_corpus` writes it)."""
+    tasks: dict[str, dict[str, set[str]]] = {}
+    for line in Path(src).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        doc = json.loads(line)
+        for relation in doc.get("n_ary_relations", []):
+            dataset = relation.get("Material") or relation.get("Dataset")
+            task = relation.get("Task")
+            if task and dataset:
+                tasks.setdefault(str(task).replace("_", " "), {}).setdefault(str(dataset).replace("_", " "),
+                                                                             set()).add(str(doc["doc_id"]))
+    corpus = Path(corpus_dir) if corpus_dir is not None else Path(src).parent
+    keys = truth_items(src)
+    out = []
+    for task in sorted(tasks):
+        datasets = tasks[task]
+        if len(datasets) < 2:
+            continue
+        out.append(RealQuestion(
+            id=f"scirex-{len(out) + 1:03d}", question=f"Which datasets are used for {task}?", field="cs",
+            corpus_dir=corpus, kind="list",
+            gold={"items": sorted(datasets), "papers": sorted(set().union(*datasets.values())), "task": task},
+            records=[r for r in keys if r["settings"]["task"] == task]))
+    return out
+
+
+def truth_items(src: Path) -> list[dict[str, Any]]:
+    """The answer-key records of a SciREX file (one per relation with a method, a dataset and a score): thing = the
+    method, metric, number = the score, context = the dataset, settings task and dataset (keystore.py)."""
+    out = []
+    for line in Path(src).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        doc = json.loads(line)
+        for rel in doc.get("n_ary_relations", []):
+            dataset = rel.get("Material") or rel.get("Dataset")
+            try:
+                number = float(str(rel.get("score")).rstrip("%"))
+            except ValueError:
+                continue
+            if not (rel.get("Method") and dataset and rel.get("Metric")):
+                continue
+            out.append({"paper": str(doc["doc_id"]), "thing": str(rel["Method"]).replace("_", " "),
+                        "metric": str(rel["Metric"]).replace("_", " "), "number": number, "higher_is_better": None,
+                        "context": str(dataset).replace("_", " "),
+                        "settings": {"task": str(rel.get("Task", "")).replace("_", " "),
+                                     "dataset": str(dataset).replace("_", " ")}})
+    return out

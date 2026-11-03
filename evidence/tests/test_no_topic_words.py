@@ -44,6 +44,7 @@ _QID = ("`rag-factuality` is the id of the repo's default question (domains/rag/
         "run folders the baselines wrote (runs/<system>/<corpus>, D36), an id and not text a user reads")
 FILE_WORDS = {
     "evaluation/baselines/rag.py": ({"retriev"}, _BM25),
+    "evaluation/baselines/real.py": ({"retriev"}, _BM25),
     "evaluation/cli.py": ({"retriev"}, _BM25),
     # plan 3 (D42), checked here since the merge with plan 2 widened CHECKED_DIRS to evaluation/
     "evaluation/realpapers/scilead.py": ({"generation", "perplexity"},

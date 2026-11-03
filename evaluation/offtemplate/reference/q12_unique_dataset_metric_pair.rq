@@ -1,0 +1,16 @@
+PREFIX ev: <https://w3id.org/thesis-ev#>
+PREFIX kg: <https://w3id.org/thesis-ev/kg#>
+# Papers whose pairing of a dataset with a metric is used by no other paper.
+SELECT DISTINCT ?paper ?dataset ?metric WHERE {
+  ?v a ev:Value ; ev:onMetric ?m ; ev:inExperiment ?e ; kg:context ?dataset .
+  ?m ev:name ?metric .
+  ?e ev:inPaper ?p .
+  ?p ev:name ?paper .
+  FILTER NOT EXISTS {
+    ?v2 a ev:Value ; ev:onMetric ?m2 ; ev:inExperiment ?e2 ; kg:context ?dataset .
+    ?m2 ev:name ?metric .
+    ?e2 ev:inPaper ?p2 .
+    FILTER(?p2 != ?p)
+  }
+}
+ORDER BY ?paper ?dataset ?metric

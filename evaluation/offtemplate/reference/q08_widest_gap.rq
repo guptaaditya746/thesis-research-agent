@@ -1,0 +1,11 @@
+PREFIX ev: <https://w3id.org/thesis-ev#>
+PREFIX kg: <https://w3id.org/thesis-ev/kg#>
+# The paper with the widest gap between two of its things on one metric (largest absolute difference).
+SELECT ?paper ?gap WHERE {
+  ?c a ev:Comparison ; ev:delta ?delta ; ev:inExperiment ?e .
+  ?e ev:inPaper ?p .
+  ?p ev:name ?paper .
+  BIND(ABS(?delta) AS ?gap)
+}
+ORDER BY DESC(?gap) ?paper
+LIMIT 1
