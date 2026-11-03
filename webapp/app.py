@@ -29,6 +29,7 @@ from evidence.rundir import RunDir
 from .evapi import evidence_router
 from .evfiles import EvidenceFiles
 from .evjobs import evjobs_router
+from .evplan import NotWired, PlanBackend, evplan_router
 from .evquestions import Questions
 from .files import BadRequest, Conflict, Damaged, NotFound, inside
 from .guard import Guard
@@ -75,7 +76,7 @@ class Services:
                                 "run again with 'retry errors' once the service answers")
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, plan_backend: PlanBackend | None = None) -> FastAPI:
     services = Services(settings or Settings())
 
     @asynccontextmanager
@@ -90,11 +91,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.services = services
     s = services.settings
     app.add_middleware(Guard, allowed_hosts=s.hosts, write_clients=s.writers)  # webapp/guard.py
-    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400), (Damaged, 422)):
+    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400), (Damaged, 422), (NotWired, 501)):
         app.add_exception_handler(exc_type, _handler(status))
     app.include_router(health_router(), prefix="/api")
     app.include_router(evidence_router(services.evidence), prefix="/api/ev")
     app.include_router(evjobs_router(s, services.evidence, services.jobs, services.questions), prefix="/api/ev")
+    app.include_router(evplan_router(s, plan_backend), prefix="/api/ev")  # the plan page (webapp/evplan.py)
     if s.web_dist.is_dir():
         add_frontend(app, s)
     return app
