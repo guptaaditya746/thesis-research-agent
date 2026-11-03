@@ -258,16 +258,23 @@ def links_stage(doc: Any, ctx: Any) -> list[Item]:
     from . import openalex
     from .contract import Span
     from .records import item
+    from .unchecked import ITEM_ERRORS, note, reason
     out: list[Item] = []
+    skipped: list[str] = []
     texts = {k: v for k, v in ctx.texts().items() if k != doc.doc.id}
     for s, e, doi, arxiv in link_sentences(doc.text):
-        relation, cited = openalex.read_link(doc.text[s:e], ctx)
+        try:
+            relation, cited = openalex.read_link(doc.text[s:e], ctx)
+        except ITEM_ERRORS as exc:   # one failed sentence is skipped, listed in stage_report.json
+            skipped.append(f"unchecked: sentence {s}-{e}: {reason(exc)}")
+            continue
         if not relation:
             continue
         span = Span.of("link", selector_at(doc.text, s, e, file=doc.doc.file, sha256=doc.doc.sha256))
         record = openalex.resolve(cited or doc.text[s:e], doi, arxiv, texts, ctx, subject_doc=doc.doc.id, span=span,
                                   relation=relation)
         out.append(item(record))
+    note(ctx, "links", doc.doc.id, skipped)
     return out
 
 
@@ -277,6 +284,7 @@ def stage_entries(plan: Plan) -> list[tuple[str, Any, Callable[..., Any]]]:
     from .claims import claim_stage
     from .extractors.recheck import recheck, recheck_report
     from .ontology.fill import ontology_stage
+    from . import unchecked
     return [
         ("map-experiments", "before_extract", experiments.before_extract),
         ("recheck", "after_type", recheck),
@@ -284,6 +292,7 @@ def stage_entries(plan: Plan) -> list[tuple[str, Any, Callable[..., Any]]]:
         ("claims", "after_document", claim_stage()),   # subject and cues from the plan's word list
         ("links", "after_document", links_stage),
         ("recheck_report", "after_run", recheck_report),
+        (unchecked.NAME, "after_run", unchecked.report),   # the items the per-item stages could not read
         ("ontology", "after_run", ontology_stage),
     ]
 
@@ -410,7 +419,8 @@ def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
                 f = it.fields
                 out.append({"paper": f["subject_doc"], "relation": f["relation"], "ref": f["object_ref"],
                             "in_set": f.get("object_doc"),
-                            "text": OUTSIDE if f["outside_set"] else f"in the set: {f.get('object_doc')}"})
+                            "text": OUTSIDE if f["outside_set"] else f"in the set: {f.get('object_doc')}",
+                            **({"resolve_failed": f["resolve_failed"]} if f.get("resolve_failed") else {})})
     return out
 
 

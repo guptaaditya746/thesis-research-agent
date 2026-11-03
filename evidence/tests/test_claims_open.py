@@ -207,10 +207,10 @@ def test_claim_stage_subject_defaults_to_the_plans_compiled_words():
     seen: list[dict] = []
     import evidence.claims as claims_mod
     original = claims_mod.find_claims
-    claims_mod.find_claims = lambda text, document, cfg, ctx=None: seen.append(cfg) or []
+    claims_mod.find_claims = lambda text, document, cfg, ctx=None, **kw: seen.append(cfg) or []
     try:
         plan = SimpleNamespace(words=words, measures=[])
-        claim_stage()(SimpleNamespace(text="Method A shortens the delay.", doc=None), SimpleNamespace(plan=plan))
+        claim_stage()(SimpleNamespace(text="Method A shortens the delay.", doc=SimpleNamespace(id="P1")), SimpleNamespace(plan=plan))
     finally:
         claims_mod.find_claims = original
     assert seen[0]["subject"] == compile_words(words)["subject"]

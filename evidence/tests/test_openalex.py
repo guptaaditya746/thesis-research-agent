@@ -155,3 +155,46 @@ def test_read_link_calls_stay_under_their_own_ctx(tmp_path, monkeypatch):
     [t.join() for t in ts]
     assert len(seen["a"]) == 6 and len(seen["b"]) == 6
     assert all("work A" in p for p in seen["a"]) and all("work B" in p for p in seen["b"])
+
+
+# --- final review C3: a failed request keeps the link and is never recorded as an answer --------------------------
+
+def _raise(exc: BaseException):
+    def f(url: str):
+        raise exc
+    return f
+
+
+@pytest.mark.parametrize("exc, why", [
+    (__import__("urllib.error").error.URLError("no route to host"), "URLError: no route to host"),
+    (TimeoutError("timed out"), "timeout"),
+    (__import__("urllib.error").error.HTTPError("u", 429, "Too Many Requests", {}, None), "HTTP 429"),
+    (__import__("urllib.error").error.HTTPError("u", 503, "Service Unavailable", {}, None), "HTTP 503"),
+])
+def test_a_failed_request_keeps_the_link_outside_the_set_with_its_reason(tmp_path, exc, why):
+    failed = JsonlCache(tmp_path / openalex.FAILED_FILE)
+    c = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=_raise(exc), failed=failed)
+    rec = c.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    assert (rec.object_doc, rec.outside_set, rec.resolve_failed) == (None, True, why)
+    assert rec.object_ref == "10.9999/outside.2019"
+    assert list(JsonlCache(tmp_path / "http.jsonl").items()) == []   # never recorded as an answer
+    asked: list[str] = []
+    again = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=lambda u: asked.append(u) or None, failed=failed)
+    assert again.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002",
+                         span=span()).resolve_failed is None and asked   # a later run asks again
+    replay = openalex.OpenAlex(JsonlCache(tmp_path / "none.jsonl"), offline=True, failed=failed)
+    assert replay.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002",
+                          span=span()).resolve_failed == why   # a replay fails it the same way, without the network
+
+
+def test_a_replay_without_the_failure_on_record_still_refuses(tmp_path):
+    replay = openalex.OpenAlex(JsonlCache(tmp_path / "none.jsonl"), offline=True,
+                               failed=JsonlCache(tmp_path / openalex.FAILED_FILE))
+    with pytest.raises(openalex.NotRecorded):
+        replay.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+
+
+def test_a_resolved_link_item_has_no_failure_field(tmp_path):
+    from evidence.records import item
+    rec = client(tmp_path).resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    assert "resolve_failed" not in item(rec).fields

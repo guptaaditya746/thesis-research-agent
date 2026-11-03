@@ -108,21 +108,32 @@ def candidate_sentences(text: str, config: Mapping[str, Any]) -> list[tuple[int,
             and not _SKIP.search(text[s:e])]
 
 
-def find_claims(doc_text: str, document: DocumentRef, config: Mapping[str, Any], ctx: Any | None = None) -> list[ClaimRecord]:
+def find_claims(doc_text: str, document: DocumentRef, config: Mapping[str, Any], ctx: Any | None = None, *,
+                unchecked: list[str] | None = None) -> list[ClaimRecord]:
     """The claims of one paper: regex candidates, each confirmed and read by `ReadClaim`. Deterministic given the
-    recorded replies, so safe to run twice (the warm pass). A candidate the model rejects is dropped."""
+    recorded replies, so safe to run twice (the warm pass). A candidate the model rejects is dropped. `unchecked`:
+    a candidate whose call fails (evidence.unchecked ITEM_ERRORS) is skipped and noted there ("unchecked: sentence
+    <start>-<end>: <reason>"); without it the error is raised."""
+    from .unchecked import ITEM_ERRORS, reason
     records: list[ClaimRecord] = []
     for s, e in candidate_sentences(doc_text, config):
         sentence = doc_text[s:e]
-        out = run_step(_READ, ctx, "claims.read_claim", sentence=sentence)
-        if not out.is_claim or not str(out.relation).strip():
+        try:
+            out = run_step(_READ, ctx, "claims.read_claim", sentence=sentence)
+            if not out.is_claim or not str(out.relation).strip():
+                continue
+            record = ClaimRecord(
+                subject=str(out.subject).strip(), relation=str(out.relation).strip(),
+                object=(str(out.object).strip() or None) if out.object is not None else None,
+                setting={str(k): str(v) for k, v in (out.setting or {}).items()}, strength=out.strength,
+                direction=out.direction,
+                span=Span.of("claim", selector_at(doc_text, s, e, file=document.file, sha256=document.sha256)))
+        except ITEM_ERRORS as exc:
+            if unchecked is None:
+                raise
+            unchecked.append(f"unchecked: sentence {s}-{e}: {reason(exc)}")
             continue
-        records.append(ClaimRecord(
-            subject=str(out.subject).strip(), relation=str(out.relation).strip(),
-            object=(str(out.object).strip() or None) if out.object is not None else None,
-            setting={str(k): str(v) for k, v in (out.setting or {}).items()}, strength=out.strength,
-            direction=out.direction,
-            span=Span.of("claim", selector_at(doc_text, s, e, file=document.file, sha256=document.sha256))))
+        records.append(record)
     return records
 
 
@@ -137,7 +148,11 @@ def claim_stage(config: Mapping[str, Any] | None = None):
         if "subject" not in cfg:
             from .words.compile import compile_words
             cfg["subject"] = compile_words(ctx.plan.words, metric_things=set(ctx.plan.measures))["subject"]
-        return [item(r) for r in find_claims(doc.text, doc.doc, cfg, ctx=ctx)]
+        from .unchecked import note
+        skipped: list[str] = []
+        out = [item(r) for r in find_claims(doc.text, doc.doc, cfg, ctx=ctx, unchecked=skipped)]
+        note(ctx, "claims", doc.doc.id, skipped)   # a failed sentence is skipped, listed in stage_report.json
+        return out
     return stage
 
 

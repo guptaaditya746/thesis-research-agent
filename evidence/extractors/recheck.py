@@ -13,10 +13,12 @@ from typing import Any, Literal
 
 import dspy
 from dspy.utils.exceptions import AdapterParseError
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ..contract import Item, Rejected
+from ..stages import StageCallError
 from ..steps import Step
+from ..unchecked import reason
 
 LLM_KINDS = ("llm", "agent")        # extractor names starting so are the model kinds
 LABEL_FIELDS = ("label", "name", "canonical")
@@ -102,6 +104,8 @@ def recheck(doc: Any, etype: str, merged: list[Item], ctx: Any, *, step: Step | 
                 said = {v.number: v for v in out.verdicts}
             except AdapterParseError as exc:   # the finds stay, recorded as unchecked
                 said, why = {}, f"unparseable reply: {str(exc)[:120]}"
+            except (StageCallError, ValidationError) as exc:   # a failed call: the finds stay, unchecked (C3)
+                said, why = {}, f"failed call: {reason(exc)[:120]}"
             else:
                 why = "the model gave no verdict for this find"
             for n, item in enumerate(items, 1):

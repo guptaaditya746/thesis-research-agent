@@ -7,9 +7,15 @@ the paper's head (`run_docs` maps doc id -> the paper's text). A work that is no
 open relation of a citing sentence with the DSPy step `ReadLink`.
 
 Every HTTP answer is recorded in a `JsonlCache` keyed by its URL, like a model call: a replay (`offline=True`) answers
-from the record and never touches the network; a request missing from the record raises `NotRecorded`."""
+from the record and never touches the network; a request missing from the record raises `NotRecorded`.
+
+A request that fails (no network, a timeout, HTTP 429 or 5xx, any HTTP error but 404, a body that is not JSON) is never
+put in the record: a later run asks again. `resolve` keeps the link, `object_doc` None, `outside_set` True and
+`resolve_failed` the reason. So that a replay fails it the same way, the failure is written to the run folder's
+`openalex-failed.jsonl`, which only an offline replay reads (final review C3)."""
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import urllib.error
@@ -27,15 +33,35 @@ from .contract import Span
 from .records import LinkRecord
 from .steps import Step
 
-__all__ = ["NotRecorded", "OpenAlex", "ReadLink", "read_link", "references", "resolve"]
+__all__ = ["NotRecorded", "OpenAlex", "ReadLink", "ResolveFailed", "read_link", "references", "resolve"]
 
 BASE = "https://api.openalex.org/"
 RECORD_FILE = "openalex.jsonl"
+FAILED_FILE = "openalex-failed.jsonl"   # failed requests, read by an offline replay only
 Fetch = Callable[[str], "dict[str, Any] | None"]   # url -> parsed JSON, or None for a 404
 
 
 class NotRecorded(RuntimeError):
     """A replay needs an OpenAlex answer the record does not hold."""
+
+
+class ResolveFailed(RuntimeError):
+    """An OpenAlex request failed (network, timeout, HTTP 429/5xx); `reason` is short and stable."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+def _failure(exc: BaseException) -> str:
+    """The short reason of a failed request (the same failure gives the same words)."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return f"HTTP {exc.code}"
+    if isinstance(exc, TimeoutError) or "timed out" in str(exc):
+        return "timeout"
+    if isinstance(exc, urllib.error.URLError):
+        return f"URLError: {str(exc.reason)[:100]}"
+    return f"{type(exc).__name__}: {str(exc)[:100]}"
 
 
 class ReadLink(dspy.Signature):
@@ -104,17 +130,19 @@ def _bare_doi(doi: str) -> str:
 class OpenAlex:
     """An OpenAlex client whose every answer goes through `cache` (required: the run's record of HTTP calls)."""
 
-    def __init__(self, cache: JsonlCache, *, fetch: Fetch | None = None, offline: bool = False) -> None:
+    def __init__(self, cache: JsonlCache, *, fetch: Fetch | None = None, offline: bool = False,
+                 failed: JsonlCache | None = None) -> None:
         if cache is None:
             raise ValueError("OpenAlex needs the run's cache: an unrecorded call would break replay")
-        self.cache, self._fetch, self.offline = cache, fetch or _urlopen, offline
+        self.cache, self._fetch, self.offline, self.failed = cache, fetch or _urlopen, offline, failed
 
     @classmethod
     def for_ctx(cls, ctx: Any, *, fetch: Fetch | None = None) -> OpenAlex:
         """The client of a run: record in `<run folder>/openalex.jsonl`, offline when `ctx.mode == "replay"`; a replay reads
         the RECORDED run's file (`ctx.record_dir`: its source folder), not the folder it writes."""
         folder = getattr(ctx, "record_dir", None) or ctx.run_dir
-        return cls(JsonlCache(Path(folder) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay")
+        return cls(JsonlCache(Path(folder) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay",
+                   failed=JsonlCache(Path(folder) / FAILED_FILE))
 
     def get(self, url: str) -> dict[str, Any] | None:
         key = cache_key({"openalex": url})
@@ -122,8 +150,17 @@ class OpenAlex:
         if hit is not None:
             return json.loads(hit["output"])
         if self.offline:
+            failed = self.failed.get(key) if self.failed is not None else None
+            if failed is not None:   # the recorded run's request failed: fail it the same way
+                raise ResolveFailed(failed["reason"])
             raise NotRecorded(f"offline replay: no recorded OpenAlex answer for {url}")
-        body = self._fetch(url)
+        try:
+            body = self._fetch(url)
+        except (OSError, ValueError, http.client.HTTPException) as exc:   # never recorded as an answer: asked again
+            reason = _failure(exc)
+            if self.failed is not None:
+                self.failed.put(key, {"reason": reason, "url": url})
+            raise ResolveFailed(reason) from None
         self.cache.put(key, {"output": json.dumps(body), "url": url})
         return body
 
@@ -147,13 +184,18 @@ class OpenAlex:
         `outside_set` is True (the work is kept either way)."""
         # a paper of the run is found locally first (the synthetic papers and many preprints are unknown to OpenAlex)
         object_doc = self._local_doc(cited_text, doi, run_docs)
-        work = None if object_doc else self.work(cited_text, doi, arxiv_id)
+        failed = None
+        try:
+            work = None if object_doc else self.work(cited_text, doi, arxiv_id)
+        except ResolveFailed as exc:   # the link is kept, outside the set, with the reason
+            work, failed = None, exc.reason
         if work and object_doc is None:
             object_doc = self._run_doc(work, run_docs)
         work_doi = _bare_doi(work["doi"]) if work and work.get("doi") else None
         ref = doi.strip() if doi else arxiv_id.strip() if arxiv_id else work_doi or cited_text
         return LinkRecord(subject_doc=subject_doc, relation=relation, object_ref=ref, object_doc=object_doc,
-                          outside_set=object_doc is None, span=span)
+                          outside_set=object_doc is None, span=span,
+                          **({"resolve_failed": failed} if failed is not None else {}))
 
     @staticmethod
     def _local_doc(cited_text: str, doi: str | None, run_docs: Mapping[str, str]) -> str | None:

@@ -113,7 +113,7 @@ def test_plan_run_end_to_end_fake_lm(tmp_path: Path) -> None:
     assert run["settings"]["stage_set"] == "plan"
     assert run["stages"] == {"before_extract": ["map-experiments"], "after_type": ["recheck"],
                              "after_document": ["experiment-items", "claims", "links"],
-                             "after_run": ["recheck_report", "ontology"]}
+                             "after_run": ["recheck_report", "stage_report", "ontology"]}
     # the protocol is written from the plan: the screen terms are the compiled word list, a miss goes to the model
     protocol = (root / "protocol.yaml").read_text(encoding="utf-8")
     words = compile_words(make_plan().words, metric_things={"accuracy"})
@@ -122,7 +122,7 @@ def test_plan_run_end_to_end_fake_lm(tmp_path: Path) -> None:
     lock = read(root, "protocol.lock.json")
     assert {"plan_sha256", "words_sha256", "field_ontology_sha256"} <= set(lock)
     # records graph, every output hashed
-    for name in ("records.nq", "answer.json", "ontology.json", "recheck_report.json"):
+    for name in ("records.nq", "answer.json", "ontology.json", "recheck_report.json", "stage_report.json"):
         assert run["outputs"][name] == sha256_hex((root / name).read_bytes())
     assert b"https://w3id.org/thesis-ev#Value" in (root / "records.nq").read_bytes()
     answer = read(root, "answer.json")
