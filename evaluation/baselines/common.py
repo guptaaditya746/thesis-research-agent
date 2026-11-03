@@ -273,10 +273,23 @@ class InventoryReply(BaseModel):
     entries: list[InventoryEntry] = Field(description="one entry per distinct name the answer gives")
 
 
+CLAIM_ORDER = ["improves", "no_effect", "worsens"]
+
+
+def _claim_enum_order(schema: dict[str, Any]) -> None:
+    """Pin the enum order of the claim in the schema. `Literal` is cached by value, not by order, so another module
+    that spells the same three values in another order and imports first would hand this field its order, and the
+    prompt hash (which includes the schema) would depend on import order."""
+    for branch in schema.get("anyOf", [schema]):
+        if "enum" in branch:
+            branch["enum"] = CLAIM_ORDER
+
+
 class ConsistencyStudy(BaseModel):
     paper: str = Field(description="a corpus paper id")
     claim: Literal["improves", "no_effect", "worsens"] | None = Field(
-        description="the authors' conclusion the answer attributes to this paper, or null")
+        description="the authors' conclusion the answer attributes to this paper, or null",
+        json_schema_extra=_claim_enum_order)
     agrees: bool | None = Field(description="whether the answer says the conclusion agrees with the results, or null")
 
 
