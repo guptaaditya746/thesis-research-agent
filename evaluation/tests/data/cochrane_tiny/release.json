@@ -1,0 +1,5 @@
+{"licence": "CC-BY-4.0", "released": true,
+ "plots": [{"id": "r1", "question": "Does drug X reduce mortality compared with placebo?", "conclusion": "improves",
+            "studies": [{"id": "s1", "direction": "improves", "text": "# Study one\n\nMortality fell with X."},
+                        {"id": "s2", "direction": "no_effect", "text": "# Study two\n\nNo difference seen."},
+                        {"id": "s3", "direction": "improves", "text": null}]}]}
