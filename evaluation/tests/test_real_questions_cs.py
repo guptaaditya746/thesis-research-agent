@@ -63,3 +63,16 @@ def test_truth_items_make_a_queryable_key_store() -> None:
     rows = run_query(key_store(q), "PREFIX ev: <https://w3id.org/thesis-ev#> "
                                    "SELECT ?paper WHERE { ?p a ev:Paper ; ev:name ?paper } ORDER BY ?paper", {}).rows
     assert [r["paper"] for r in rows] == ["t1", "t2"]
+
+
+def test_scirex_gold_keeps_only_documents_in_the_manifest(tmp_path: Path) -> None:
+    import json
+    src = DATA / "scirex_tasks.jsonl"
+    (tmp_path / "manifest.json").write_text(json.dumps({"corpus_id": "c", "papers": [{"id": "t1"}]}), encoding="utf-8")
+    assert scirex.questions(src, tmp_path) == []          # SQuAD alone is one dataset: no question
+    assert scirex.truth_items(src, tmp_path) == [r for r in scirex.truth_items(src) if r["paper"] == "t1"]
+    assert scirex.left_out(src, tmp_path) == "left out: 2 of 3 relations (document not in the corpus)"
+    (tmp_path / "manifest.json").write_text(json.dumps({"corpus_id": "c", "papers": [{"id": "t1"}, {"id": "t2"}]}),
+                                            encoding="utf-8")
+    assert [q.gold["items"] for q in scirex.questions(src, tmp_path)] == [["NaturalQuestions", "SQuAD"]]
+    assert scirex.left_out(src, tmp_path) == "left out: 0 of 3 relations (document not in the corpus)"
