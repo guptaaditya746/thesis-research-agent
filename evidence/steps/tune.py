@@ -358,7 +358,8 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
-def default_optimizer(name: str, metric: Callable[..., float], lm: RecordedLM, budget: int) -> Any:
+def default_optimizer(name: str, metric: Callable[..., float], lm: RecordedLM, budget: int,
+                      reflection_lm: RecordedLM | None = None) -> Any:
     """GEPA with `max_metric_calls=budget`, or MIPROv2 with trials chosen to fit `budget` calls; both on `lm`."""
     def gepa_metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
         return metric(gold.gold, pred)
@@ -366,7 +367,7 @@ def default_optimizer(name: str, metric: Callable[..., float], lm: RecordedLM, b
     def mipro_metric(gold, pred, trace=None):
         return metric(gold.gold, pred)
     if name == "gepa":
-        return dspy.GEPA(metric=gepa_metric, max_metric_calls=budget, reflection_lm=lm)
+        return dspy.GEPA(metric=gepa_metric, max_metric_calls=budget, reflection_lm=reflection_lm or lm)
     return _Mipro(dspy.MIPROv2(metric=mipro_metric, prompt_model=lm, task_model=lm, auto=None, num_candidates=3),
                   budget)
 
@@ -385,7 +386,7 @@ class _Mipro:
 
 
 def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, optimizer: str = "gepa",
-         make_optimizer: Callable[[str, Callable[..., float], RecordedLM, int], Any] = default_optimizer,
+         make_optimizer: Callable[..., Any] = default_optimizer,
          tuned_dir: Path | None = None) -> dict[str, Any]:
     """Tune `step`; write `<tuned_dir>/<step>.json` and return the report (also in that file)."""
     if step not in SPECS:
@@ -394,6 +395,9 @@ def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, opti
         raise TuneError(f"optimizer must be one of {OPTIMIZERS}")
     spec = SPECS[step]
     train_src, test_src = sources(step, train, "train"), sources(step, test, "test")
+    if step in REAL_STEPS and all(s.papers is None for s in train_src):
+        raise TuneError(f"{step} is a real-paper step: it tunes on the held-out slice of a real set "
+                        f"({TUNE_FILE} + {EXAMPLES_FILE}), not on synthetic corpora only")
     check_disjoint(train_src, test_src)
     train_ex, test_ex = examples_of(spec, train_src), examples_of(spec, test_src)
     seen = frozenset(_norm(n) for ex in train_ex for n in ex["gold"].get("names", []))
@@ -406,7 +410,7 @@ def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, opti
                         f"{f' ({dropped} test examples dropped: no unseen names)' if dropped else ''}; both sides need some")
     light = light_budget(len(train_ex))
     cap = min(light, MAX_METRIC_CALLS)
-    calls = {"n": 0, "limit": None}
+    calls = {"n": 0, "limit": None, "reflection": 0}
     ask = lm._ask
 
     def counting(*a: Any, **k: Any) -> str:
@@ -415,20 +419,28 @@ def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, opti
             raise BudgetExceeded(f"the optimizer needed more than {cap} model calls")
         return ask(*a, **k)
     lm._ask = counting
+
+    def reflecting(*a: Any, **k: Any) -> str:     # GEPA's reflection model: the same alias and record, counted apart
+        calls["reflection"] += 1
+        return ask(*a, **k)
+    reflection_lm = RecordedLM(lm.alias, reflecting, cache=lm._recorder, with_call=lm._with_call)
     previous = TUNED_DIR / f"{step}.json" if tuned_dir is None else Path(tuned_dir) / f"{step}.json"
     try:
         signature = spec.signature()
         base = _Program(signature, signature.instructions)     # the signature's own text, never an earlier tuned file
         b_train, f1 = _score(base, train_ex, spec.metric, lm)
         b_test, f2 = _score(base, test_ex, spec.metric, lm, seen)
+        scoring_before = calls["n"]
         calls["limit"] = calls["n"] + cap if optimizer == "miprov2" else None
         start = calls["n"]
         with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
-            tuned = make_optimizer(optimizer, spec.metric, lm, cap).compile(base, trainset=[_dspy(e) for e in train_ex])
+            tuned = make_optimizer(optimizer, spec.metric, lm, cap, reflection_lm).compile(base, trainset=[_dspy(e) for e in train_ex])
         optimizer_calls = calls["n"] - start
+        scoring_after_start = calls["n"]
         calls["limit"] = None
         a_train, f3 = _score(tuned, train_ex, spec.metric, lm)
         a_test, f4 = _score(tuned, test_ex, spec.metric, lm, seen)
+        scoring_after = calls["n"] - scoring_after_start
     finally:
         lm._ask = ask
     failed = {"train": f3, "test": f4}
@@ -437,8 +449,9 @@ def tune(step: str, train: list[Path], test: list[Path], *, lm: RecordedLM, opti
         raise TuneError(f"{f3 + f4} of {len(train_ex) + len(test_ex)} examples of the tuned program failed to parse "
                         f"(more than {MAX_FAILED_SHARE:.0%}); no tuned file written")
     report = {"instructions": tuned.predict.signature.instructions, "step": step, "optimizer": optimizer,
-              "light_budget": light, "max_metric_calls": cap, "model_calls": calls["n"],
-              "optimizer_calls": optimizer_calls, "model": lm.alias,
+              "light_budget": light, "max_metric_calls": cap, "model_calls": calls["n"] + calls["reflection"],
+              "optimizer_calls": optimizer_calls, "reflection_calls": calls["reflection"],
+              "scoring_calls": {"before": scoring_before, "after": scoring_after}, "model": lm.alias,
               "train_corpora": sorted({s.corpus_id for s in train_src}),
               "test_corpora": sorted({s.corpus_id for s in test_src}),
               "n_train": len(train_ex), "n_test": len(test_ex), "test_dropped_no_unseen_names": dropped,

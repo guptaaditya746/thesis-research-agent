@@ -26,7 +26,7 @@ def corpus(root: Path, cid: str, labels: dict[str, list[str]]) -> Path:
 
 class FakeOptimizer:
     """Stands in for GEPA: returns the student with new instructions, makes no model call."""
-    def __init__(self, name, metric, lm, budget):
+    def __init__(self, name, metric, lm, budget, reflection_lm=None):
         self.budget = budget
 
     def compile(self, student, trainset=None, **kw):
@@ -154,3 +154,15 @@ def test_unparseable_replies_counted_and_refused(two, tmp_path):
     with pytest.raises(T.TuneError, match="failed to parse"):
         T.tune("write_words", list(two)[:1], list(two)[1:], lm=bad, make_optimizer=FakeOptimizer, tuned_dir=tmp_path / "t")
     assert not (tmp_path / "t" / "write_words.json").exists()
+
+
+def test_real_step_refuses_synthetic_only_training(two, lm, tmp_path):
+    with pytest.raises(T.TuneError, match="real-paper step"):
+        T.tune("claims.read_claim", [two[0]], [two[1]], lm=lm, make_optimizer=FakeOptimizer, tuned_dir=tmp_path / "t")
+    assert main(["tune", "recheck", "--train", str(two[0]), "--test", str(two[1])]) == 2
+
+
+def test_calls_reported_apart(two, lm, tmp_path):
+    r = T.tune("write_words", [two[0]], [two[1]], lm=lm, make_optimizer=FakeOptimizer, tuned_dir=tmp_path / "t")
+    assert r["scoring_calls"]["before"] == r["n_train"] + r["n_test"] and r["optimizer_calls"] == 0
+    assert r["reflection_calls"] == 0 and r["model_calls"] == r["scoring_calls"]["before"] + r["scoring_calls"]["after"]
