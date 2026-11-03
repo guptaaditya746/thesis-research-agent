@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import dspy
 
+from modelcall.dspy_lm import RecordedLM
 from modelcall.pins import ORCH_ALIAS
 
 from ..plan import WordList
-from ..steps import Step
+from ..steps import Step, configure
 
 MIN_NAMES, MAX_NAMES = 20, 50
 
@@ -40,10 +41,27 @@ class WriteMoreWords(dspy.Signature):
 class WriteCues(dspy.Signature):
     """You write the cue words authors use when they state a claim about a result.
     Input `question`: the research question being asked of a set of papers.
-    Output `cues`: between 20 and 50 short phrases that authors write when they claim something about a result,
-    for example a phrase that announces a finding, a comparison or a conclusion. One phrase per list entry."""
+    Output `improves`: between 20 and 50 short phrases authors write when they claim the thing the question asks
+    about makes the result better. Output `worsens`: the same for claims that it makes the result worse.
+    Output `no_effect`: the same for claims that it makes no difference. One phrase per list entry."""
     question: str = dspy.InputField()
-    cues: list[str] = dspy.OutputField()
+    improves: list[str] = dspy.OutputField()
+    worsens: list[str] = dspy.OutputField()
+    no_effect: list[str] = dspy.OutputField()
+
+
+DIRECTIONS = ("no_effect", "worsens", "improves")   # the order a pack lists its claim patterns in
+
+
+def cue_entry(direction: str, cue: str) -> str:
+    """How a cue with its direction is kept in `WordList.cues` (a flat list of strings): "<direction>: <cue>"."""
+    return f"{direction}: {cue}"
+
+
+def split_cue(entry: str) -> tuple[str, str] | None:
+    """(direction, cue) of a `WordList.cues` entry, or None for an entry without a known direction prefix."""
+    direction, sep, cue = entry.partition(": ")
+    return (direction, cue.strip()) if sep and direction in DIRECTIONS and cue.strip() else None
 
 
 def _tidy(names: list[str]) -> list[str]:
@@ -58,9 +76,13 @@ def _tidy(names: list[str]) -> list[str]:
     return out
 
 
-def write_words_report(question: str, things: list[str], *, step: Step | None = None,
+def write_words_report(question: str, things: list[str], *, lm: RecordedLM, step: Step | None = None,
                        more_step: Step | None = None, cue_step: Step | None = None) -> tuple[WordList, list[str]]:
-    """(the word list, the things whose names stayed under 20 even after one retry)."""
+    """(the word list, the things whose names stayed under 20 even after one retry). `lm` is the model the steps run
+    on; it must be the pinned orchestrator alias (the list must not be written by the model that wrote the corpora)."""
+    if lm.alias != ORCH_ALIAS:
+        raise ValueError(f"the word list is written by {ORCH_ALIAS!r}, not {lm.alias!r}")
+    configure(lm)
     step = step or Step(WriteWords, "write_words")
     more_step = more_step or Step(WriteMoreWords, "write_more_words")
     cue_step = cue_step or Step(WriteCues, "write_cues")
@@ -74,11 +96,12 @@ def write_words_report(question: str, things: list[str], *, step: Step | None = 
         if len(names) < MIN_NAMES:
             short.append(thing)
         written[thing] = names[:MAX_NAMES]
-    cues = _tidy(list(cue_step(question=question).cues))[:MAX_NAMES]
-    return WordList(things=written, cues=cues, written_by=ORCH_ALIAS, ontology_names={}), short
+    out = cue_step(question=question)
+    cues = [cue_entry(d, c) for d in DIRECTIONS for c in _tidy(list(getattr(out, d)))[:MAX_NAMES]]
+    return WordList(things=written, cues=cues, written_by=lm.alias, ontology_names={}), short
 
 
-def write_words(question: str, things: list[str], *, step: Step | None = None,
+def write_words(question: str, things: list[str], *, lm: RecordedLM, step: Step | None = None,
                 more_step: Step | None = None, cue_step: Step | None = None) -> WordList:
-    """Names for each thing and the claim cues, written by the pinned `orch-model` alias."""
-    return write_words_report(question, things, step=step, more_step=more_step, cue_step=cue_step)[0]
+    """Names for each thing and the claim cues (kept as "<direction>: <cue>"), written on `lm`."""
+    return write_words_report(question, things, lm=lm, step=step, more_step=more_step, cue_step=cue_step)[0]

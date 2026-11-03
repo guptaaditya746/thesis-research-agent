@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import re
+import threading
+import time
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -54,7 +56,7 @@ def ctx(tmp_path, monkeypatch):
         return json.dumps({"verdicts": out})
 
     lm = RecordedLM("orch-model", ask, cache=JsonlCache(tmp_path / "c.jsonl"))
-    return SimpleNamespace(dspy_lm=lambda purpose: lm, asked=asked, verdicts=verdicts)
+    return SimpleNamespace(dspy_lm=lambda purpose: lm, asked=asked, verdicts=verdicts, run_dir=tmp_path / "run")
 
 
 def test_one_call_per_paragraph(ctx):
@@ -118,3 +120,48 @@ def test_no_screen_hit_goes_to_llm_screen(tmp_path: Path) -> None:
     entry = read(root, "funnel.json")["documents"]["P"]
     assert "screen" in seen and not entry["skipped"] and entry["screen"]["escalated"] is True
     assert entry["screen"]["extractor"].startswith("llm_screen")
+
+
+def test_each_thread_is_recorded_under_its_own_ctx(tmp_path, monkeypatch):
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    seen: dict[str, list[str]] = {"a": [], "b": []}
+
+    def ctx_of(name: str):
+        def ask(prompt: str) -> str:
+            time.sleep(0.05)
+            seen[name].append(prompt)
+            return json.dumps({"verdicts": [{"number": 1, "verdict": "keep"}]})
+        lm = RecordedLM(f"alias-{name}", ask, cache=JsonlCache(tmp_path / f"{name}.jsonl"))
+        return SimpleNamespace(dspy_lm=lambda purpose: lm, run_dir=tmp_path / name)
+
+    class SlowStep(steps.Step):
+        def __init__(self, *args):
+            super().__init__(*args)
+            time.sleep(0.1)   # widens the window between setting the model and calling it
+
+    monkeypatch.setattr(rc, "Step", SlowStep)
+
+    def work(name: str, quote: str) -> None:
+        d = doc_state()
+        rc.recheck(d, "condition", [item(d, quote, "x"), ] , ctx_of(name))
+
+    threads = [threading.Thread(target=work, args=("a", "alpha")), threading.Thread(target=work, args=("b", "beta"))]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(seen["a"]) == 1 and len(seen["b"]) == 1
+    assert "alpha" in seen["a"][0] and "beta" not in seen["a"][0].split("[user]")[-1]
+    assert "beta" in seen["b"][0] and "alpha" not in seen["b"][0].split("[user]")[-1]
+
+
+def test_report_lists_the_drops_and_the_unchecked(ctx):
+    d = doc_state()
+    ctx.verdicts["beta"] = {"verdict": "drop", "reason": "a Greek letter"}
+    rc.recheck(d, "condition", [item(d, "alpha", "a"), item(d, "beta", "b")], ctx)
+    report = rc.recheck_report(None, ctx)
+    assert list(report) == ["P"]
+    assert [r["reason"] for r in report["P"]["rejected"]] == ["out_of_scope"]
+    assert report["P"]["rejected"][0]["detail"] == "a Greek letter"
+    assert {v["verdict"] for v in report["P"]["verdicts"]} == {"keep", "drop"} and report["P"]["unchecked"] == []
+    assert rc.recheck_report(None, ctx) == {}   # handed over once

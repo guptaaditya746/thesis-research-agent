@@ -4,12 +4,15 @@ item. An item the model drops goes to `Rejected` (reason `out_of_scope`, the mod
 with `rejected_of(doc)`); a relabelled item keeps its spans and gets the new label. Items an LLM extractor found
 are not re-checked: a model has already read them. `after_type` runs after every funnel round, so each item is
 asked about once per document; later rounds reuse the verdict. Not registered here: the plan run registers
-`recheck` at `after_type` (stages.register("recheck", "after_type", recheck))."""
+`recheck` at `after_type` (stages.register("recheck", "after_type", recheck) and
+stages.register("recheck_report", "after_run", recheck_report))."""
 from __future__ import annotations
 
+import threading
 from typing import Any, Literal
 
 import dspy
+from dspy.utils.exceptions import AdapterParseError
 from pydantic import BaseModel
 
 from ..contract import Item, Rejected
@@ -19,6 +22,11 @@ LLM_KINDS = ("llm", "agent")        # extractor names starting so are the model 
 LABEL_FIELDS = ("label", "name", "canonical")
 PURPOSE = "recheck"
 STATE_ATTR = "_recheck_state"
+# Step runs on the process-wide model (steps.configure), so setting it and calling must not interleave between the
+# warm pass's threads: each call holds this lock from configure to the end of its paragraph calls.
+LOCK = threading.RLock()
+# run folder -> {document id: state}: what `recheck_report` writes at the end of the run
+_STORE: dict[str, dict[str, dict[str, Any]]] = {}
 
 
 class Verdict(BaseModel):
@@ -59,10 +67,12 @@ def paragraph_bounds(text: str, pos: int) -> tuple[int, int]:
     return start, len(text) if end < 0 else end
 
 
-def _state(doc: Any) -> dict[str, Any]:
+def _state(doc: Any, ctx: Any = None) -> dict[str, Any]:
     state = doc.__dict__.get(STATE_ATTR)
     if state is None:
-        state = doc.__dict__[STATE_ATTR] = {"verdicts": {}, "made": set(), "rejected": {}}
+        state = doc.__dict__[STATE_ATTR] = {"verdicts": {}, "made": set(), "rejected": {}, "unchecked": {}}
+        if ctx is not None and getattr(ctx, "run_dir", None) is not None:
+            _STORE.setdefault(str(ctx.run_dir), {})[doc.doc.id] = state   # a later pass over the document replaces it
     return state
 
 
@@ -77,20 +87,29 @@ def _describe(number: int, item: Item, text: str) -> str:
 
 
 def recheck(doc: Any, etype: str, merged: list[Item], ctx: Any, *, step: Step | None = None) -> list[Item]:
-    state = _state(doc)
+    state = _state(doc, ctx)
     fresh: dict[tuple[int, int], list[Item]] = {}
     for item in merged:
         if item.item_id in state["verdicts"] or item.item_id in state["made"] or not is_checkable(item):
             continue
         fresh.setdefault(paragraph_bounds(doc.text, item.first_start()), []).append(item)
-    if fresh and step is None:
-        configure(ctx.dspy_lm(PURPOSE))
-        step = Step(Recheck, "recheck")
-    for (a, b), items in fresh.items():
-        out = step(paragraph=doc.text[a:b], items=[_describe(n, i, doc.text) for n, i in enumerate(items, 1)])
-        said = {v.number: v for v in out.verdicts}
-        for n, item in enumerate(items, 1):
-            state["verdicts"][item.item_id] = said.get(n) or Verdict(number=n, verdict="keep")
+    if fresh:
+        with LOCK:
+            if step is None:
+                configure(ctx.dspy_lm(PURPOSE))
+                step = Step(Recheck, "recheck")
+            for (a, b), items in fresh.items():
+                try:
+                    out = step(paragraph=doc.text[a:b], items=[_describe(n, i, doc.text) for n, i in enumerate(items, 1)])
+                    said = {v.number: v for v in out.verdicts}
+                except AdapterParseError as exc:   # the finds stay, recorded as unchecked
+                    said, why = {}, f"unparseable reply: {str(exc)[:120]}"
+                else:
+                    why = "the model gave no verdict for this find"
+                for n, item in enumerate(items, 1):
+                    if n not in said:
+                        state["unchecked"][item.item_id] = why
+                    state["verdicts"][item.item_id] = said.get(n) or Verdict(number=n, verdict="keep")
     result: list[Item] = []
     for item in merged:
         verdict = state["verdicts"].get(item.item_id)
@@ -112,3 +131,14 @@ def recheck(doc: Any, etype: str, merged: list[Item], ctx: Any, *, step: Step | 
             result.append(new)
     return result
 
+
+
+def recheck_report(run: Any, ctx: Any) -> dict[str, Any]:
+    """The stage `recheck_report` at `after_run` (written as recheck_report.json): per document the verdict of every
+    checked find, the finds dropped (as `Rejected`) and those left unchecked. Register it together with `recheck`."""
+    docs = _STORE.pop(str(ctx.run_dir), {})
+    return {doc_id: {
+        "verdicts": [{"item_id": i, **v.model_dump(exclude={"number"})} for i, v in state["verdicts"].items()],
+        "rejected": [r.model_dump(mode="json") for r in state["rejected"].values()],
+        "unchecked": [{"item_id": i, "why": w} for i, w in state["unchecked"].items()],
+    } for doc_id, state in sorted(docs.items())}
