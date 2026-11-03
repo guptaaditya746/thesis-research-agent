@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 import dspy
+from dspy.utils.exceptions import AdapterParseError
 
 from modelcall.dspy_lm import RecordedLM
 
@@ -23,19 +24,28 @@ def configure(lm: RecordedLM) -> None:
 
 
 class Step:
+    ATTEMPTS = 3
+
     def __init__(self, signature: type[dspy.Signature], name: str) -> None:
         self.signature = signature
         self.name = name
+        path = TUNED_DIR / f"{name}.json"
+        self._instructions = (json.loads(path.read_text(encoding="utf-8"))["instructions"] if path.exists()
+                              else signature.instructions)
 
     def instructions(self) -> str:
-        path = TUNED_DIR / f"{self.name}.json"
-        if path.exists():
-            return json.loads(path.read_text(encoding="utf-8"))["instructions"]
-        return self.signature.instructions
+        return self._instructions
 
     def __call__(self, **inputs) -> dspy.Prediction:
         if _LM is None:
             raise RuntimeError("no model for the step: call evidence.steps.configure(RecordedLM(...)) first")
-        predict = dspy.Predict(self.signature.with_instructions(self.instructions()))
-        with dspy.context(lm=_LM, adapter=dspy.JSONAdapter()):
-            return predict(**inputs)
+        predict = dspy.Predict(self.signature.with_instructions(self._instructions))
+        # An unparseable reply stays recorded under attempt 0; the retry is a new recorded call (attempt 1, 2).
+        for attempt in range(self.ATTEMPTS):
+            try:
+                with dspy.context(lm=_LM, adapter=dspy.JSONAdapter()):
+                    return predict(config={"attempt": attempt}, **inputs)
+            except AdapterParseError:
+                if attempt == self.ATTEMPTS - 1:
+                    raise
+        raise AssertionError("unreachable")

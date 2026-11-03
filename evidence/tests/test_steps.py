@@ -5,6 +5,7 @@ import json
 
 import dspy
 import pytest
+from dspy.utils.exceptions import AdapterParseError
 
 from evidence import steps
 from evidence.steps import Step, configure
@@ -54,3 +55,36 @@ def test_step_without_configure_fails_clearly(monkeypatch):
     monkeypatch.setattr(steps, "_LM", None)
     with pytest.raises(RuntimeError, match="configure"):
         Step(EchoSig, "echo")(text="x")
+
+
+def _replies(tmp_path, monkeypatch, replies):
+    seen: list[str] = []
+    it = iter(replies)
+
+    def ask(prompt: str) -> str:
+        seen.append(prompt)
+        return next(it)
+
+    def lm():
+        return RecordedLM("alias", ask, cache=JsonlCache(tmp_path / "calls.jsonl"))
+
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    return seen, lm
+
+
+def test_bad_reply_is_retried_and_replays_with_no_calls(tmp_path, monkeypatch):
+    seen, lm = _replies(tmp_path, monkeypatch, ["not json {", '{"echo": "x"}'])
+    configure(lm())
+    assert Step(EchoSig, "echo")(text="x").echo == "x"
+    assert len(seen) == 2
+    configure(lm())
+    assert Step(EchoSig, "echo")(text="x").echo == "x"
+    assert len(seen) == 2
+
+
+def test_three_bad_replies_raise_after_three_calls(tmp_path, monkeypatch):
+    seen, lm = _replies(tmp_path, monkeypatch, ["bad {"] * 5)
+    configure(lm())
+    with pytest.raises(AdapterParseError):
+        Step(EchoSig, "echo")(text="x")
+    assert len(seen) == 3
