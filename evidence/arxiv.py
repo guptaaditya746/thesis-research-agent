@@ -4,14 +4,14 @@
     evidence fetch --ids ids.txt --out corpora/<name>          (one arXiv id per line, instead of --query)
 
 One request to the arXiv API (https://info.arxiv.org/help/api/index.html, an Atom feed: a search, or `id_list`
-for --ids), then each paper's arXiv HTML page (https://arxiv.org/html/<id>, LaTeXML), else its PDF; at most one
+for --ids), then (the CLI path, `structured`) each paper's arXiv LaTeX source (`/e-print/<id>`) and PMC XML when its PMC id is known, then its arXiv HTML page (https://arxiv.org/html/<id>, LaTeXML), else its PDF; at most one
 request every three seconds as its terms of use ask, with a User-Agent naming this tool. The HTML is used when
 it is a LaTeXML page (`ltx_page_main`) with at least MIN_HTML_CHARS characters of text, else the PDF, and the
 reason is kept. Docling turns either into Markdown, written as `papers/<arxiv id>.md` (a short header with
 the title, authors, date and link, then the converted text). The corpus directory holds:
 
 - manifest.json: `corpus_id` and per paper `id`, `file`, `sha256` (what evidence/rundir.py `Corpus` reads),
-  plus `title`, `authors`, `published`, `url`, `source` ("html" or "pdf") and `html_sha256` or `pdf_sha256`;
+  plus `title`, `authors`, `published`, `url`, `source` ("latex", "pmc_xml", "html" or "pdf") and `<source>_sha256`;
 - source.json: `{"kind": "arxiv", "query", "category", "fetched", "ground_truth": false, ...}`, how many
   papers came from HTML and from the PDF, the `fallbacks` (why a paper's HTML was not used) and the papers
   that were skipped and why. There is no ground_truth.json: these are real papers, nobody knows the right
@@ -76,6 +76,7 @@ class Entry:
     published: str
     url: str
     pdf_url: str
+    pmcid: str = ""   # PMC id (PMC1234567) when the paper is also in PubMed Central: the PMC XML rung needs it
 
 
 def search_query(query: str, category: str | None = None) -> str:
@@ -165,9 +166,20 @@ class Client:
         self.http.close()
 
 
-def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
-    """The page or PDF as Markdown (Docling), NUL characters dropped. FetchError when Docling is not installed;
-    ValueError for a file Docling cannot read."""
+def plumber_bytes(data: bytes) -> list[tuple[int, list[list[str]]]]:
+    """Every table pdfplumber reads in the PDF bytes, with its page (the second reader of evidence/tables.py)."""
+    import pdfplumber
+
+    out: list[tuple[int, list[list[str]]]] = []
+    with pdfplumber.open(BytesIO(data)) as doc:
+        for n, page in enumerate(doc.pages, start=1):
+            out += [(n, [[c or "" for c in row] for row in rows]) for rows in page.extract_tables()]
+    return out
+
+
+def _docling_convert(data: bytes, kind: Literal["html", "pdf"]) -> tuple[str, list[tuple[int, list[list[str]]]]]:
+    """(Markdown, Docling's tables as (page, rows of cell text) in export order). FetchError when Docling is not
+    installed; ValueError for a file Docling cannot read."""
     try:
         from docling.datamodel.base_models import DocumentStream, InputFormat
         from docling.datamodel.pipeline_options import PdfPipelineOptions
@@ -179,12 +191,33 @@ def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
     try:
         result = converter.convert(DocumentStream(name=f"paper.{kind}", stream=BytesIO(data)))
         text = result.document.export_to_markdown()
+        raw = [(t.prov[0].page_no if t.prov else 0, [[c.text for c in row] for row in t.data.grid])
+               for t in result.document.tables]
     except Exception as exc:   # Docling raises its own ConversionError and format errors
         raise ValueError(f"Docling could not read the {kind} ({type(exc).__name__}: {exc})") from exc
+    return text, raw
+
+
+def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
+    """The page or PDF as Markdown (Docling), NUL characters dropped. For a PDF every table is also read by
+    pdfplumber (evidence/tables.py): a Docling cell it does not confirm is followed by `<!-- table unsure: r,c -->`,
+    and a page where pdfplumber finds no table keeps Docling's cells, all unsure. FetchError when Docling is not
+    installed; ValueError for a file Docling cannot read."""
+    text, raw = _docling_convert(data, kind)
+    if kind == "pdf" and raw:
+        from evidence.tables import annotate
+        try:
+            other = plumber_bytes(data)
+        except Exception:   # pdfplumber cannot read it: nothing confirms Docling's cells
+            other = []
+        text = annotate(text, raw, other)
     return text.replace("\x00", "").encode("utf-8", "replace").decode("utf-8")
 
 
 Convert = Callable[[bytes, Literal["html", "pdf"]], str]
+Source = Literal["latex", "pmc_xml", "html", "pdf"]
+PMC_OAI = ("https://pmc.ncbi.nlm.nih.gov/api/oai/v1/mh/?verb=GetRecord"
+           "&identifier=oai:pubmedcentral.nih.gov:{num}&metadataPrefix=pmc")
 
 
 def paper_body(entry: Entry, client: Client, convert: Convert = docling_markdown
@@ -221,6 +254,55 @@ def paper_body(entry: Entry, client: Client, convert: Convert = docling_markdown
     return body, "pdf", sha256_hex(pdf), reason
 
 
+def _why(exc: Exception) -> str:
+    if isinstance(exc, httpx.HTTPStatusError):
+        return str(exc.response.status_code)
+    return f"{type(exc).__name__}: {exc}" if isinstance(exc, ValueError) else type(exc).__name__
+
+
+def ladder(entry: Entry, client: Client, convert: Convert = docling_markdown
+           ) -> tuple[str, Source, str, str | None]:
+    """(Markdown, source, sha256 of the source, why the earlier rungs were not used or None when the first worked):
+    the order of `paper_body`.
+
+    The rungs in order: arXiv LaTeX source (`/e-print/<id>`), PMC XML (only when `entry.pmcid` is set), the arXiv
+    HTML page, the PDF through Docling. Each failure is kept as "<rung>: <why>", joined with "; ". ValueError
+    when every rung fails."""
+    from evidence.sources.latex import latex_markdown
+    from evidence.sources.pmc import jats_markdown
+
+    reasons: list[str] = []
+    rungs: list[tuple[str, str, Callable[[bytes], str]]] = [
+        ("latex", entry.url.replace("/abs/", "/e-print/", 1), latex_markdown)]
+    if entry.pmcid:
+        rungs.append(("pmc_xml", PMC_OAI.format(num=entry.pmcid.removeprefix("PMC")), jats_markdown))
+    for name, url, to_markdown in rungs:
+        try:
+            blob = client.get(url)
+            body = to_markdown(blob)
+            return body, name, sha256_hex(blob), "; ".join(reasons) or None   # type: ignore[return-value]
+        except (httpx.HTTPError, ValueError) as exc:
+            reasons.append(f"{name}: {_why(exc)}")
+    try:
+        body, kind, sha, why = paper_body(entry, client, convert)
+    except ValueError as exc:
+        raise ValueError("; ".join([*reasons, str(exc)])) from exc
+    return body, kind, sha, "; ".join([*reasons, *([why] if why else [])]) or None
+
+
+def fetch_paper(ref: Entry, client: Client | None = None, convert: Convert = docling_markdown
+                ) -> tuple[str, Source, str]:
+    """(Markdown, source, reason): `ladder` without the source hash."""
+    own = client is None
+    client = client or Client()
+    try:
+        body, source, _, reason = ladder(ref, client, convert)
+        return body, source, reason or ""
+    finally:
+        if own:
+            client.close()
+
+
 def paper_text(entry: Entry, body: str) -> str:
     header = (f"# {entry.title}\n\n{', '.join(entry.authors)}. arXiv:{entry.id}, {entry.published[:10]}. "
               f"{entry.url}\n\n---\n\n")
@@ -230,9 +312,10 @@ def paper_text(entry: Entry, body: str) -> str:
 def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | None = None,
           client: Client | None = None, log: Callable[[str], None] = print,
           now: Callable[[], datetime] = lambda: datetime.now(timezone.utc), ids: list[str] | None = None,
-          convert: Convert | None = None) -> dict[str, Any]:
+          convert: Convert | None = None, structured: bool = False) -> dict[str, Any]:
     """Look the papers up (a search for `query`, or exactly `ids`; one of the two), download, convert, write the
-    corpus into `out` (which must not exist). `convert` defaults to docling_markdown. Returns source.json."""
+    corpus into `out` (which must not exist). `convert` defaults to docling_markdown. `structured` tries LaTeX and PMC XML
+    before the HTML and the PDF (`ladder`); off, as before. Returns source.json."""
     if (query is None) == (ids is None):
         raise ValueError("give a query or a list of ids, not both and not neither")
     if ids is not None:
@@ -274,7 +357,8 @@ def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | No
         fallbacks: list[dict[str, str]] = []
         for n, entry in enumerate(entries, start=1):
             try:
-                body, kind, source_sha, fallback = paper_body(entry, client, convert)
+                body, kind, source_sha, fallback = (
+                    ladder(entry, client, convert) if structured else paper_body(entry, client, convert))
             except ValueError as exc:
                 reason = f"{type(exc).__name__}: {exc}"
                 skipped.append({"id": entry.id, "url": entry.pdf_url, "reason": reason})
@@ -298,6 +382,8 @@ def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | No
                   "fetched": now().isoformat(timespec="seconds"), "ground_truth": False, "api": API_URL,
                   "converter": f"docling {_version('docling')}", "papers": len(papers),
                   "html": sum(p["source"] == "html" for p in papers), "pdf": sum(p["source"] == "pdf" for p in papers),
+                  **({"latex": sum(p["source"] == "latex" for p in papers),
+                      "pmc_xml": sum(p["source"] == "pmc_xml" for p in papers)} if structured else {}),
                   "fallbacks": fallbacks, "skipped": skipped,
                   "note": "real papers from arXiv: a demonstration corpus with no ground truth; runs on it are not scored"}
         (tmp / "source.json").write_text(json.dumps(source, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -339,7 +425,7 @@ def run(args: argparse.Namespace) -> int:
         ids = None
         if args.ids is not None:
             ids = [line.strip() for line in args.ids.read_text(encoding="utf-8").splitlines() if line.strip()]
-        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids)
+        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids, structured=True)
     except (ValueError, FileExistsError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

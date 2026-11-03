@@ -163,6 +163,45 @@ def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     return bad
 
 
+def _multi_experiment(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
+    """Every experiment has its own section (a study with one experiment: every dataset), the question metric's
+    values are in prose, the other metrics' in tables, and no condition is called by its label's own table code."""
+    bad = []
+    sections = [f"### {e.name} experiment\n" for e in plan.experiments] if plan.experiments \
+        else [f"### {d}\n" for d in plan.datasets]
+    bad += [f"no section {s.strip()!r}" for s in sections if s not in text]
+    q = plan.metrics[0].id
+    for p in ps:
+        if p.role != "value":
+            continue
+        m = next(x for x in plan.measurements if x.id == p.fact)
+        if in_table(text, p.start) != (m.metric != q):
+            bad.append(f"{p.fact}: a {'question' if m.metric == q else 'distractor'} metric value "
+                       f"{'in a table' if in_table(text, p.start) else 'in prose'}")
+    if len({p.fmt for p in ps if p.role == "value" and not in_table(text, p.start)}) < 2 \
+            and len(plan.recipe.reporting.formats) > 1 and len(plan.measurements) > 2:
+        bad.append("prose values in one format only")
+    return bad
+
+
+def _messy_tables(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
+    """One table: units in the header cells, a merged group cell row (the dataset's name, the covered cells empty),
+    footnote marks on values (explained under the table), no value in prose."""
+    bad = []
+    rows = [text[a:b] for a, b in table_lines(text)]
+    if not rows or not all(f"({'%' if k.unit == 'fraction' else 's'})" in rows[0] for k in plan.metrics):
+        bad.append("the header row lacks the units")
+    group = [r for r in rows[2:3]]
+    if not group or group[0].split("|")[1].strip() or group[0].split("|")[2].strip() != plan.datasets[0] \
+            or any(c.strip() for c in group[0].split("|")[3:-1]):
+        bad.append("no merged group cell row under the header")
+    values = [p for p in ps if p.role == "value"]
+    bad += [f"{p.fact}: value outside the table" for p in values if not in_table(text, p.start)]
+    if not any(p.exact[-1] in "*†‡" for p in values):
+        bad.append("no value carries a footnote mark")
+    return bad
+
+
 def _contradictory(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
     bad = []
     if plan.claim == plan.study.claim:
@@ -190,7 +229,7 @@ def check_level(text: str, plan: Plan, placements: list[Placement], decoys: list
     if plan.level == "contradictory":
         return _contradictory(text, plan, placements, decoys)
     fn = {"explicit": _explicit, "paraphrased": _paraphrased, "distributed": _distributed,
-          "complex": _complex}[plan.level]
+          "complex": _complex, "multi_experiment": _multi_experiment, "messy_tables": _messy_tables}[plan.level]
     bad = fn(text, plan, placements)
     if plan.level != "contradictory" and plan.claim != plan.study.claim:
         bad.append("claim disagrees with the effect outside the contradictory level")

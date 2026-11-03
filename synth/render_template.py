@@ -12,7 +12,7 @@ from collections.abc import Sequence
 
 from synth.corpus import Rendered
 from synth.fidelity import PaperFidelity, check_paper
-from synth.levels import LIMITATION_SECTION, MISSING_CELL, Plan, make_plan, plan_rng
+from synth.levels import FOOTNOTES, LIMITATION_SECTION, MISSING_CELL, PARAPHRASE_LEVELS, Plan, make_plan, plan_rng
 from synth.text import Decoy, Doc, Placement, Seg
 from synth.truth import Experiment, Study
 
@@ -93,7 +93,7 @@ def method(doc: Doc, plan: Plan, rng: random.Random) -> None:
                    **({"metric": plan.metric(d.metric)} if d.metric else {}))
     doc.add("\n\n")
     q = plan.metrics[0]
-    if plan.level == "paraphrased":
+    if plan.level in PARAPHRASE_LEVELS:
         doc.fill("Our main measure is the {k}.", k=plan.metric(q.id))
     elif plan.level == "distributed":
         doc.fill("Our main measure is the {k}, the {d}; the tables abbreviate it as {a}.",
@@ -112,13 +112,21 @@ def method(doc: Doc, plan: Plan, rng: random.Random) -> None:
         doc.add("\n")
 
 
-def prose_results(doc: Doc, plan: Plan, rng: random.Random) -> None:
+def prose_results(doc: Doc, plan: Plan, rng: random.Random, measurements: Sequence | None = None,
+                  used: set | None = None) -> None:
+    """The measurements as sentences. `used` (multi_experiment: shared by all sections) keeps one (template, condition)
+    from being written twice in a paper, where the two sentences would have the same context and could not be told
+    apart by their anchors."""
     out = []
-    for m in plan.measurements:
+    for m in (plan.measurements if measurements is None else measurements):
         v = plan.values[m.id]
         pool = (templates(plan, "paraphrased_count") if v.fmt == "count" else templates(plan, "prose_k_of_n")
-                if v.fmt == "k_of_n" else PARAPHRASED if plan.level == "paraphrased" else EXPLICIT)
-        out.append((rng.choice(pool), m, v))
+                if v.fmt == "k_of_n" else PARAPHRASED if plan.level in PARAPHRASE_LEVELS else EXPLICIT)
+        template = rng.choice(pool)
+        if used is not None:
+            template = next((t for t in [template, *pool] if (t, m.condition) not in used), template)
+            used.add((template, m.condition))
+        out.append((template, m, v))
     for i, (template, m, v) in enumerate(out):
         doc.fill(template, dataset=m.dataset, cond=plan.cond(m.condition), metric=plan.metric(m.metric), value=v)
         doc.add(" " if i + 1 < len(out) else "\n")
@@ -159,8 +167,74 @@ def row(doc: Doc, plan: Plan, use_codes: bool, cid: str, dataset: str, several: 
     doc.add("\n")
 
 
+def multi_experiment_results(doc: Doc, plan: Plan, rng: random.Random) -> None:
+    """One subsection per experiment (per dataset when the study has one experiment): prose with the question
+    metric of every condition, then a table of the other metrics (none when the study has no other metric)."""
+    q, study = plan.metrics[0], plan.study
+    groups = ([(f"{e.name} experiment", e.id, e.datasets, e.conditions) for e in plan.experiments] if plan.experiments
+              else [(d, None, (d,), tuple(c.id for c in plan.conditions)) for d in plan.datasets])
+    others = plan.metrics[1:]
+    used: set = set()
+    several = len(plan.datasets) > 1     # a table of a paper with several datasets always has a Dataset column
+    for heading, exp_id, datasets, conditions in groups:
+        doc.heading(heading, 3)
+        found = [m for d in datasets for cid in conditions if (m := study.find(cid, q.id, d, exp_id)) is not None]
+        prose_results(doc, plan, rng, found, used)
+        if not others:
+            continue
+        # the section's name is in every header cell: the metric headers of two sections differ in their context
+        name = heading.removesuffix(" experiment")
+        doc.add(f"\n| System: {name} |" + (" Dataset |" if several else ""))
+        for k in others:
+            doc.fill(" {k} ({u}) [" + name + "] |", k=plan.metric(k.id), u=CELL[k.unit])
+        doc.add("\n|---|" + ("---|" if several else "") + "---:|" * len(others) + "\n")
+        for d in datasets:
+            for cid in conditions:
+                doc.fill("| {c} |", c=plan.cond(cid))
+                doc.add(f" {d} |" if several else "")
+                for k in others:
+                    m = study.find(cid, k.id, d, exp_id)
+                    if m is None:
+                        doc.add(f" {MISSING_CELL} |")
+                    else:
+                        doc.fill(" {v} |", v=plan.values[m.id])
+                doc.add("\n")
+        doc.add("\n")
+
+
+def messy_table_results(doc: Doc, plan: Plan) -> None:
+    """One table of the main experiment: the metric names with their units as the header row, then the merged group
+    cell (the dataset's name over the metric columns, the cells it covers empty, as a converter flattens it) as the
+    first body row, values with footnote marks, the marks explained under the table."""
+    doc.add(f"The table below lists the results of all systems on {plan.datasets[0]}.\n\n")
+    doc.add("| System |")
+    for k in plan.metrics:
+        doc.fill(" {k} ({u}) |", k=plan.metric(k.id), u=CELL[k.unit])
+    doc.add("\n|---|" + "---:|" * len(plan.metrics) + "\n")
+    doc.add("| |" + f" {plan.datasets[0]} |" + " |" * (len(plan.metrics) - 1) + "\n")
+    used: list[str] = []
+    for c in plan.conditions:
+        doc.fill("| {c} |", c=plan.cond(c.id))
+        for k in plan.metrics:
+            m = plan.study.find(c.id, k.id, plan.datasets[0], None)
+            if m is None:
+                doc.add(f" {MISSING_CELL} |")
+                continue
+            v = plan.values[m.id]
+            used += [x for x in FOOTNOTES if x in v.text and x not in used]
+            doc.fill(" {v} |", v=v)
+        doc.add("\n")
+    doc.add("\n" + "\n".join(f"{x} {FOOTNOTES[x]}" for x in used) + ("\n" if used else ""))
+
+
 def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
     doc.heading("Results")
+    if plan.level == "multi_experiment":
+        multi_experiment_results(doc, plan, rng)
+        return
+    if plan.level == "messy_tables":
+        messy_table_results(doc, plan)
+        return
     if plan.level in ("explicit", "paraphrased"):
         prose_results(doc, plan, rng)
         return

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK
-from synth.levels import LEVELS
+from synth.levels import ALL_LEVELS, LEVELS
 from synth.truth import DIRECTIONS, KNOBS, PRESETS
 
 
@@ -17,9 +17,9 @@ def parse_levels(text: str) -> list[str]:
     if text == "all":
         return list(LEVELS)
     levels = [lv.strip() for lv in text.split(",") if lv.strip()]
-    unknown = [lv for lv in levels if lv not in LEVELS]
+    unknown = [lv for lv in levels if lv not in ALL_LEVELS]
     if unknown or not levels:
-        raise argparse.ArgumentTypeError(f"unknown levels {unknown}; choose from {', '.join(LEVELS)} or all")
+        raise argparse.ArgumentTypeError(f"unknown levels {unknown}; choose from {', '.join(ALL_LEVELS)} or all (the first five)")
     return list(dict.fromkeys(levels))
 
 

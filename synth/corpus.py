@@ -33,7 +33,7 @@ from evidence.pack import DOMAINS
 from evidence.protocol import DEFAULT_PACK, Protocol, Synthesis
 from synth import network, truth
 from synth.fidelity import PaperFidelity
-from synth.levels import LEVELS, Plan
+from synth.levels import ALL_LEVELS, LEVELS, Plan
 from synth.recipe import Recipe, effect_protocol_data, effect_protocol_path, effect_synthesis, load_recipe
 from synth.text import TRUTH_TYPES, Decoy, Placement
 from synth.truth import Study
@@ -344,9 +344,9 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
     vocabulary and label table; default the recipe's effect protocol, `effect_protocol`), apply the knobs (and
     `hard`, and the `preset`: plain or builds_on, truth.PRESETS), render it at every level, write the level corpora
     and the mixed one."""
-    unknown = [lv for lv in levels if lv not in LEVELS]
+    unknown = [lv for lv in levels if lv not in ALL_LEVELS]
     if unknown or not levels:
-        raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
+        raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(ALL_LEVELS)}")
     recipe = load_recipe(domain or DEFAULT_PACK, root)
     if protocol is None:
         protocol = effect_protocol(recipe)

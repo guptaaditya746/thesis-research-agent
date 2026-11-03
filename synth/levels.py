@@ -9,6 +9,7 @@ renderers write the same facts the same way and differ only in the prose around 
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass, field
 
 from synth.recipe import REUSES, Recipe
@@ -16,6 +17,16 @@ from synth.text import Decoy, Seg
 from synth.truth import Condition, Dependency, Experiment, Limitation, Measurement, Metric, Study
 
 LEVELS = ("explicit", "paraphrased", "distributed", "complex", "contradictory")
+# Two harder settings, kept out of LEVELS: the corpus builder, the CLI default and the mixed corpus's round robin
+# (synth/corpus.py `level_of`) read LEVELS, so growing it would change every existing corpus. `synth build --levels`
+# takes them once corpus.py and cli.py accept ALL_LEVELS; until then they are made with `make_plan` and `render`.
+EXTRA_LEVELS = ("multi_experiment", "messy_tables")
+ALL_LEVELS = LEVELS + EXTRA_LEVELS
+PARAPHRASE_LEVELS = ("paraphrased", "multi_experiment")   # named by synonyms and descriptions, never by labels
+# Footnote marks of the messy_tables level, written straight after a table value ("62.4*"); `parse_value` drops them.
+FOOTNOTE_MARKS = ("*", "†", "‡")
+FOOTNOTES = {"*": "Result as reported by the original authors.", "†": "Result rerun by us with the released code.",
+             "‡": "Result on a held-out subset."}
 # What a table cell shows for a measurement the paper never states (--missing, our addition): an en dash,
 # U+2013, which no number regex reads and which is not a Markdown separator.
 MISSING_CELL = "–"
@@ -46,6 +57,15 @@ DEFINITIONS = {
                      "more than 0.0075 from every true value; left out in the rare study where none fits). The "
                      "table is the truth: the effect is computed from it and the claim is recorded as stated. "
                      "Same facts as explicit.",
+    "multi_experiment": "Like complex, every experiment of the study is shown, at the paraphrased wording (synonyms "
+                        "for conditions, the metric's description): one Results subsection per experiment (per dataset "
+                        "for a study with one experiment), each with prose that states the question metric of every "
+                        "condition (paraphrased formats) and a table of the other metrics. The reader must take the "
+                        "values of the main experiment only.",
+    "messy_tables": "The main experiment's values are in one Markdown table with a merged group header (the "
+                    "dataset's name over the metric columns, the covered cells left empty), the metric names with "
+                    "their units in the column header row (Accuracy (%)), and values carrying footnote marks "
+                    "(62.4*, 61.0†) explained under the table. No sentence states a value. Full labels, no codes.",
 }
 
 
@@ -179,7 +199,7 @@ def pct(v: float) -> str:
 
 
 def write_value(v: float, fmt: str, base: float | None = None, *, k: int | None = None, n: int | None = None,
-                noun: str | None = None) -> str:
+                noun: str | None = None, mark: str = "") -> str:
     """The string a value is written as; `parse_value` inverts it. `k_of_n` writes the count k of the arm's n
     (`Measurement.k`, `Study.arm_sizes`) with the recipe's `text.unit_noun`: "41 of 120 <noun>"."""
     if fmt == "k_of_n":
@@ -196,6 +216,10 @@ def write_value(v: float, fmt: str, base: float | None = None, *, k: int | None 
         return pct(v)
     if fmt == "cell_raw":
         return f"{v:.2f}"
+    if fmt == "cell_pct_note":      # messy_tables: a table value followed by its footnote mark
+        return pct(v) + mark
+    if fmt == "cell_raw_note":
+        return f"{v:.2f}" + mark
     if fmt == "relative":
         tenths = thousandths(v) - thousandths(base)
         return f"{abs(tenths) // 10}.{abs(tenths) % 10} percentage points {'higher' if tenths > 0 else 'lower'}"
@@ -207,8 +231,9 @@ def parse_value(text: str, fmt: str, base: float | None = None) -> float:
     if fmt == "k_of_n":
         k, _, n = text.split()[:3]
         return round(int(k.replace(",", "")) / int(n.replace(",", "")), 6)
-    number = float(text.split()[0].rstrip("%").replace(",", ""))
-    if fmt in ("pct", "cell_pct"):
+    number = float(re.sub(r"(\^\w+|[*†‡§¹²³]+)$", "", text.split()[0]).rstrip("%")
+                   .replace(",", ""))
+    if fmt in ("pct", "cell_pct", "cell_pct_note"):
         return round(number / 100, 6)
     if fmt == "count":
         return round(number / 1000, 6)
@@ -221,7 +246,7 @@ def parse_value(text: str, fmt: str, base: float | None = None) -> float:
 def irrelevant_plan(study: Study, level: str) -> Plan:
     """The (empty) plan of a paper with no experiment: nothing to place, no claim; `level` is the corpus
     level the paper is filed under (its text is the same at every level)."""
-    if level not in LEVELS:
+    if level not in ALL_LEVELS:
         raise ValueError(f"unknown level {level!r}")
     if study.relevant:
         raise ValueError(f"{study.study_id} is a relevant study; use make_plan")
@@ -229,21 +254,24 @@ def irrelevant_plan(study: Study, level: str) -> Plan:
 
 
 def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
-    if level not in LEVELS:
+    if level not in ALL_LEVELS:
         raise ValueError(f"unknown level {level!r}")
     if not study.relevant:
         return irrelevant_plan(study, level)
     q, main = study.primary, study.datasets[0]
     # A --hard study shows all its experiments (the ablation among the conditions) only at the complex
     # level, one table with an Experiment column; the other levels show its main experiment alone.
-    if level == "complex":
+    if level in ("complex", "multi_experiment"):
         conditions, metrics, datasets, ms = study.conditions, study.metrics, study.datasets, study.measurements
         experiments = study.experiments
+    elif level == "messy_tables":      # the main experiment on the main dataset, every metric (a merged header needs two)
+        conditions, metrics, datasets, experiments = study.main_conditions, study.metrics, (main,), ()
+        ms = tuple(m for m in study.measurements if m.dataset == main and m.experiment == study.main_experiment)
     else:
         conditions, metrics, datasets, experiments = study.main_conditions, (q,), (main,), ()
         ms = tuple(m for m in study.measurements
                    if m.metric == q.id and m.dataset == main and m.experiment == study.main_experiment)
-    para = level == "paraphrased"
+    para = level in PARAPHRASE_LEVELS
     recipe = study.recipe
     # A name variant (truth.with_variants) is how this paper writes the thing: a spelling replaces the label; a
     # hereafter short form or a code name is the paper's name for it, the label being said once where it is defined.
@@ -265,15 +293,24 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
         return "k_of_n" in recipe.reporting.formats and m.k is not None and m.condition in study.arm_sizes
 
     # The prose formats the recipe reports, in PROSE_FORMATS order (the rag recipe's: pct, frac, count, as before).
-    fmts = [f for f in PROSE_FORMATS if f in recipe.reporting.formats and (f != "k_of_n" or all(map(counted, ms)))]
+    prose = [m for m in ms if m.metric == q.id] if level == "multi_experiment" else list(ms)
+    fmts = [f for f in PROSE_FORMATS if f in recipe.reporting.formats and (f != "k_of_n" or all(map(counted, prose)))]
     rng.shuffle(fmts)
     values: dict[str, Seg] = {}
+    marks = iter(FOOTNOTE_MARKS)       # messy_tables: the first value carries the first mark, then a draw per value
     for i, m in enumerate(ms):
         unit = next(k for k in metrics if k.id == m.metric).unit
         if level == "explicit":
             fmt = "k_of_n" if counted(m) else "pct"
+        elif level == "multi_experiment" and m.metric != q.id:
+            fmt = "cell_raw" if unit == "seconds" else "cell_pct"
         elif para:
-            fmt = fmts[i % len(fmts)]
+            fmt = fmts[i % len(fmts)] if level == "paraphrased" else fmts[prose.index(m) % len(fmts)]
+        elif level == "messy_tables":
+            mark = next(marks, None) or rng.choice(("",) + FOOTNOTE_MARKS)
+            fmt = "cell_raw_note" if unit == "seconds" else "cell_pct_note"
+            values[m.id] = Seg(m.id, "value", write_value(m.value, fmt, mark=mark), fmt)
+            continue
         elif level == "complex" and treat is not None and base is not None and m.id == treat.id:
             fmt = "relative"
         else:
