@@ -226,7 +226,7 @@ def test_records_hash_stable():
 
 **Interfaces:**
 - Consumes: `WordList` (from the run's locked plan), `evaluation.truth.GroundTruth`.
-- Produces: `mark(truth: GroundTruth, words: WordList) -> dict[str, Literal["on the list", "unseen"]]` per fact id (a fact is "on the list" when its name, after `names.clean`, equals a cleaned list name); `split_scores(score_json, marks) -> {"on the list": prf, "unseen": prf}`. Refuses (ValueError) a corpus whose manifest says it was not Claude-written.
+- Produces: `mark(truth: GroundTruth, words: WordList) -> dict[str, Literal["on the list", "unseen"]]` per fact id (a fact is "on the list" when its name, after `names.clean`, equals a cleaned list name); `split_scores(score_json, marks) -> {"on the list": prf, "unseen": prf}`. Refuses (ValueError) a corpus whose id does not start with `rag-claude-` (the Claude-written corpora).
 
 - [ ] **Step 1–5:** tests `test_mark_uses_clean_names`, `test_split_counts_sum_to_total`, `test_refuses_non_claude_corpus` → implement → commit `feat(eval): on-the-list vs unseen split`
 
@@ -340,7 +340,7 @@ def test_records_hash_stable():
 
 **Interfaces:**
 - Consumes: `Decision` (W0), `run_query`.
-- Produces: `alternatives(decision: Decision, fields: list[str]) -> list[tuple[Literal["strict", "main", "loose"], Any]]` (must-match ±1 field; counts-as ±1 value; threshold 0, main, 2× main); `rerun(store, line: EvidenceLine, decisions) -> Sensitivity` reruns one decision at a time; `label(results, min_count: int = 3) -> str` → "solid" | "same direction" | `f"depends on {field}"` | "too few to tell" (`min_count` = 3 is our call; the spec says "a minimum count"); only flipping settings are listed; records used only under a loose setting get `indirect on: <field>`.
+- Produces: `alternatives(decision: Decision, fields: list[str]) -> list[tuple[Literal["strict", "main", "loose"], Any]]` (must-match ±1 field; counts-as ±1 value; threshold 0, main, 2× main); `rerun(store, line: EvidenceLine, decisions) -> Sensitivity` reruns one decision at a time; `label(results, min_count: int = 3) -> str` → "solid" | "same direction" | `f"depends on {field}"` | "too few to tell" (`min_count` = 3 is our call; the spec says "a minimum count"); only flipping settings are listed; the optional split table by condition field (spec item 6) is left out of this plan (exploratory, unscored); records used only under a loose setting get `indirect on: <field>`.
 - [ ] **Step 1: Failing tests**: `test_threshold_alternatives_are_0_main_double`; `test_rag_example_depends_on_model_size` (fixture: 9 of 12 favour RAG; dropping models under 7B gives 5 of 9 → "depends on model size"); `test_best_author_example` (Chen 12 vs Rossi 9 main; counting papers Rossi 7 vs Chen 5 → "depends on what best means" shown as `depends on counts_as`); `test_too_few`.
 - [ ] **Step 2–5:** FAIL → implement → PASS → commit `feat(kg): decision reruns and labels`
 
@@ -349,7 +349,7 @@ def test_records_hash_stable():
 **Files:** Create `evidence/kg/truthgraph.py`; Test `evaluation/tests/test_truthgraph.py`
 
 **Interfaces:**
-- Produces: `truth_store(truth: GroundTruth | RealGold) -> pyoxigraph.Store` (answer-key records in the same vocabulary); `split(ours: Answer, gold_on_truth: Answer, expected) -> Literal["right", "synthesis error", "extraction error"]` (wrong on truth = synthesis; right on truth but wrong on ours = extraction).
+- Produces: `truth_store(truth: GroundTruth | RealQuestion) -> pyoxigraph.Store` (a `RealQuestion`'s `gold`, Task 6.1) (answer-key records in the same vocabulary); `split(ours: Answer, gold_on_truth: Answer, expected) -> Literal["right", "synthesis error", "extraction error"]` (wrong on truth = synthesis; right on truth but wrong on ours = extraction).
 - [ ] **Step 1–5:** tests `test_wrong_query_is_synthesis_error`, `test_missing_record_is_extraction_error` → implement → commit `feat(kg): answer-key graph and error split`
 
 ---
@@ -468,7 +468,7 @@ def test_records_hash_stable():
 **Files:** Modify `evaluation/cli.py`; Test `evaluation/tests/test_cli_wholerun.py`
 
 **Interfaces:**
-- Produces: `evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src <dir> --runs <dir>` (W6 questions → plan runs → `wholerun.score` + `truthgraph.split` per question) and `evaluate leak --run <dir> --corpus <dir>` (W1 split). Reasoning on/off: every whole-run question is scored twice (`--reasoning on|off`), both rows in the report.
+- Produces: `evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src <dir> --runs <dir>` (W6 questions → plan runs → `wholerun.score` + `truthgraph.split` per question) and `evaluate leak --run <dir> --corpus <dir>` (W1 split). Links: chaining answers scored against the synthetic truth network (as `evaluation/score.py` does for `chaining` today); builds-on scored by recall of OpenAlex `references` (W5). Reasoning on/off: every whole-run question is scored twice (`--reasoning on|off`), both rows in the report.
 - [ ] **Step 1–5:** tests on fixtures → implement → commit `feat(eval): wholerun and leak commands`
 
 ### Task 8.4: Runbook for the cluster run
