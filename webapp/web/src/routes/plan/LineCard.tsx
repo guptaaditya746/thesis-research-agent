@@ -1,4 +1,4 @@
-/** One evidence line of the plan: its question, "how?" (the steps as sentences, closed by default), a × to remove
+/** One evidence line of the plan: its question, "how?" (plain sentences, closed by default, never SPARQL), a × to remove
  * it (none on the oversell line), and its result in place after the run. */
 import { XIcon } from "lucide-react"
 
@@ -7,15 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import type { LineResult, PlanLine } from "./api"
-
-/** The steps a line takes, in plain sentences. */
-function howSentences(line: PlanLine): string[] {
-  return [
-    line.template ? `It starts from the saved question "${line.template}".` : "It is a new question written for this plan.",
-    line.query ? `It asks the evidence graph: ${line.query}` : "It has no query yet, so it cannot run.",
-    "Each answer it finds keeps a link to the sentence it came from.",
-  ]
-}
 
 function Result({ result }: { result: LineResult }) {
   if (result.status === "failed") {
@@ -40,8 +31,10 @@ function Result({ result }: { result: LineResult }) {
   )
 }
 
-export function LineCard({ line, result, onRemove, busy }: {
+export function LineCard({ line, how, result, onRemove, busy }: {
   line: PlanLine
+  /** Plain sentences from the backend (a template's header or an explain step); never the query. */
+  how?: string[]
   result?: LineResult
   onRemove?: (id: string) => void
   busy?: boolean
@@ -63,7 +56,7 @@ export function LineCard({ line, result, onRemove, busy }: {
         <details>
           <summary className="cursor-pointer text-sm text-muted-foreground">how?</summary>
           <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm">
-            {howSentences(line).map((s) => <li key={s}>{s}</li>)}
+            {(how && how.length > 0 ? how : ["No explanation yet."]).map((s) => <li key={s}>{s}</li>)}
           </ol>
         </details>
         {result && <Result result={result} />}

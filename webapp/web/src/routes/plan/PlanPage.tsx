@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-import { confirmAll, decide, deleteLine, isReady, sendAnswers, setMainRule, startPlan, startRun, useAction, usePlanResult, type PlanView, type Rerun } from "./api"
+import { confirmAll, decide, deleteLine, RULES, sendAnswers, setMainRule, startPlan, startRun, useAction, usePlanResult, type PlanView, type Rerun } from "./api"
 import { DecisionsPanel } from "./DecisionsPanel"
 import { LineCard } from "./LineCard"
 
@@ -47,12 +47,14 @@ function MainRule({ rule, busy, onChange }: { rule: string; busy: boolean; onCha
       <span className="font-medium">Main answer rule:</span>
       {editing ? (
         <form className="flex flex-1 gap-2" onSubmit={(e) => { e.preventDefault(); onChange(draft); setEditing(false) }}>
-          <Input aria-label="Main answer rule" value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <select aria-label="Main answer rule" className="h-9 flex-1 rounded-md border bg-background px-2 text-sm" value={draft} onChange={(e) => setDraft(e.target.value)}>
+            {Object.entries(RULES).map(([name, text]) => <option key={name} value={name}>{name}: {text}</option>)}
+          </select>
           <Button type="submit" size="sm" disabled={busy}>Save</Button>
         </form>
       ) : (
         <>
-          <span>{rule}</span>
+          <span>{rule}: {RULES[rule] ?? ""}</span>
           <Button variant="link" size="sm" onClick={() => setEditing(true)}>change</Button>
         </>
       )}
@@ -91,7 +93,7 @@ export default function PlanPage() {
   const start = useMutationOf(startPlan)
   const answers = useMutationOf((a: { question: string; answer: string }[]) => sendAnswers(view!.id, a))
   const confirm = useMutationOf((did: string) => decide(view!.id, did, { confirm: true }))
-  const change = useMutationOf((a: { id: string; value: string }) => decide(view!.id, a.id, { change: a.value }))
+  const change = useMutationOf((a: { id: string; value: unknown }) => decide(view!.id, a.id, { change: a.value }))
   const all = useMutationOf(() => confirmAll(view!.id))
   const remove = useMutationOf((lid: string) => deleteLine(view!.id, lid))
   const rule = useMutationOf((r: string) => setMainRule(view!.id, r))
@@ -118,16 +120,20 @@ export default function PlanPage() {
           <div className="space-y-3">
             <h2 className="text-lg font-semibold">What would prove it?</h2>
             {plan.lines.map((l) => (
-              <LineCard key={l.id} line={l} result={byLine.get(l.id)} busy={busy || view.frozen} onRemove={view.frozen ? undefined : (id) => remove.mutate(id)} />
+              <LineCard key={l.id} line={l} how={view.how[l.id]} result={byLine.get(l.id)} busy={busy || view.frozen} onRemove={view.frozen ? undefined : (id) => remove.mutate(id)} />
             ))}
             <MainRule rule={plan.main_rule} busy={busy || view.frozen} onChange={(r) => rule.mutate(r)} />
-            <Button disabled={busy || view.frozen || !isReady(plan)} onClick={() => run.mutate(undefined)}>Run</Button>
-            {!view.frozen && !isReady(plan) && <p className="text-xs text-muted-foreground">Confirm every decision to run.</p>}
+            <Button disabled={busy || view.frozen || !view.ready} onClick={() => run.mutate(undefined)}>Run</Button>
+            {view.problems.length > 0 && (
+              <ul role="alert" className="list-disc pl-5 text-sm text-destructive">{view.problems.map((p) => <li key={p}>{p}</li>)}</ul>
+            )}
+            {!view.frozen && view.problems.length === 0 && !view.ready && <p className="text-xs text-muted-foreground">Confirm every decision to run.</p>}
 
             {view.run && (
               <section aria-label="Answer" className="space-y-2">
                 <h2 className="text-lg font-semibold">Answer</h2>
-                {result.isPending ? <p className="text-sm text-muted-foreground">Running…</p> : result.data && (
+                {result.isError && <p role="alert" className="text-sm text-destructive">{result.error instanceof Error ? result.error.message : "The result could not be read."}</p>}
+                {(result.isPending || result.data?.status === "running") ? <p className="text-sm text-muted-foreground">Running…</p> : result.data && (
                   <>
                     <p className="text-sm">{result.data.answer.text}</p>
                     {(result.data.answer.missing ?? []).map((m) => <p key={m} className="text-sm font-medium text-destructive">{m}</p>)}

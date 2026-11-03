@@ -44,6 +44,12 @@ export interface PlanView {
   question: string
   clarifications: Clarification[]
   plan: PlanData | null
+  /** Per line id: plain sentences for "how?" (never code). */
+  how: Record<string, string[]>
+  /** What the backend's code checks found wrong; the plan cannot run while there is any. */
+  problems: string[]
+  /** Every decision confirmed and no problem (the backend's rule). */
+  ready: boolean
   frozen: boolean
   run: string | null
 }
@@ -56,6 +62,23 @@ export interface LineResult {
   text: string
 }
 
+/** The main-answer rules (mirror of evidence/planner RULES; the backend refuses any other). */
+export const RULES: Record<string, string> = {
+  any_line: "yes when any line found evidence",
+  all_lines: "yes when every line found evidence",
+  majority: "yes when more than half of the lines found evidence",
+}
+export const MAIN_RULE_ID = "main_rule"
+
+/** What the person typed as a decision's value: JSON when it is JSON (0.05, ["a"]), else the text. */
+export function parseValue(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
 export interface Rerun {
   setting: string
   flips: boolean
@@ -65,12 +88,9 @@ export interface Rerun {
 export interface PlanResult {
   status?: "running" | "done"
   lines: LineResult[]
-  answer: { text: string; missing?: string[]; main_rule?: string }
+  answer: { text: string; missing?: string[]; main_rule?: string | null; rule_met?: boolean | null; found?: string[] }
   reruns?: Rerun[]
 }
-
-/** The ready rule of the backend (Plan.ready()): every decision confirmed. */
-export const isReady = (plan: PlanData) => plan.decisions.every((d) => d.confirmed_by !== null)
 
 const base = (id: string) => `/api/ev/plan/${encodeURIComponent(id)}`
 

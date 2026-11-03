@@ -25,7 +25,9 @@ const plan = (decisions: PlanDecision[]): PlanData => ({
   ],
 })
 const view = (decisions: PlanDecision[], extra: Partial<PlanView> = {}): PlanView => ({
-  id: "p1", question: "Does it help?", clarifications: [], plan: plan(decisions), frozen: false, run: null, ...extra,
+  id: "p1", question: "Does it help?", clarifications: [], plan: plan(decisions), frozen: false, run: null,
+  how: { l1: ["It looks at every claim.", "It keeps the big numbers."], oversell: ["It finds firm claims the numbers do not back."] },
+  problems: [], ready: decisions.every((d) => d.confirmed_by !== null), ...extra,
 })
 
 describe("decisions panel", () => {
@@ -45,16 +47,47 @@ describe("line card", () => {
     const base = plan([]).lines
     const { rerender } = renderWithProviders(<LineCard line={base[1]} onRemove={() => {}} />)
     expect(screen.queryByRole("button", { name: /Remove line/ })).toBeNull()
-    rerender(<LineCard line={base[0]} onRemove={() => {}} result={{ id: "l1", question: "Does it help?", status: "failed", rows: [], text: "failed: bad query" }} />)
+    rerender(<LineCard line={base[0]} how={["It looks at every claim."]} onRemove={() => {}} result={{ id: "l1", question: "Does it help?", status: "failed", rows: [], text: "failed: bad query" }} />)
     expect(screen.getByRole("button", { name: /Remove line/ })).toBeInTheDocument()
     expect(screen.getByText("failed: bad query")).toBeInTheDocument()
     expect(document.querySelector("details")).not.toHaveAttribute("open")
+    expect(screen.getByText("It looks at every claim.")).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/SELECT/)
     rerender(<LineCard line={base[0]} result={{ id: "l1", question: "x", status: "done", rows: [], text: "0 found" }} />)
     expect(screen.getByText("No evidence found")).toBeInTheDocument()
   })
 })
 
+describe("decisions panel changes", () => {
+  it("sends a number as a number and offers only the fixed rules for the main rule", async () => {
+    const changes: [string, unknown][] = []
+    const user = userEvent.setup()
+    renderWithProviders(<DecisionsPanel decisions={[decision("d1"), decision("main_rule", { type: "counts_as", value: "any_line" })]}
+      onConfirm={() => {}} onChange={(id, v) => changes.push([id, v])} onConfirmAll={() => {}} />)
+    const [first, second] = screen.getAllByRole("button", { name: "Change" })
+    await user.click(first)
+    const box = screen.getByRole("textbox", { name: /New value/ })
+    await user.clear(box)
+    await user.type(box, "0.05")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+    await user.click(second)
+    await user.selectOptions(screen.getByRole("combobox", { name: "Main answer rule" }), "majority")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+    expect(changes).toEqual([["d1", 0.05], ["main_rule", "majority"]])
+  })
+})
+
 describe("plan page", () => {
+  it("shows the problems and keeps Run disabled even when every decision is confirmed", async () => {
+    server.use(http.post("/api/ev/plan", () => HttpResponse.json(view([decision("d1", { confirmed_by: "ada" })], { problems: ["the plan has no evidence line"], ready: false }))))
+    const user = userEvent.setup()
+    renderWithProviders(<PlanPage />)
+    await user.type(screen.getByRole("textbox", { name: "Question" }), "Does it help?")
+    await user.click(screen.getByRole("button", { name: "Plan" }))
+    expect(await screen.findByText("the plan has no evidence line", {}, T)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Run" })).toBeDisabled()
+  })
+
   it("keeps Run disabled until every decision is confirmed, then runs and shows failed and missing", async () => {
     let decisions = [decision("d1", { flagged: true, flag_reason: "maybe too small" }), decision("d2")]
     let run: string | null = null

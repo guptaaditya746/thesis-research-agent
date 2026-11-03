@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-import type { PlanDecision } from "./api"
+import { MAIN_RULE_ID, parseValue, RULES, type PlanDecision } from "./api"
 
 const LABELS: Record<PlanDecision["type"], string> = {
   must_match: "Must match",
@@ -18,11 +18,12 @@ const LABELS: Record<PlanDecision["type"], string> = {
 
 const show = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value))
 
+
 function DecisionRow({ d, busy, onConfirm, onChange }: {
   d: PlanDecision
   busy: boolean
   onConfirm: (id: string) => void
-  onChange: (id: string, value: string) => void
+  onChange: (id: string, value: unknown) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(show(d.value))
@@ -30,15 +31,21 @@ function DecisionRow({ d, busy, onConfirm, onChange }: {
     <li data-decision={d.id} data-flagged={d.flagged ? "true" : "false"}
       className={`space-y-1 rounded-md border p-3 ${d.flagged ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{LABELS[d.type]}</span>
+        <span className="text-sm font-medium">{d.id === MAIN_RULE_ID ? "Main answer rule" : LABELS[d.type]}</span>
         <span className="font-mono text-sm">{show(d.value)}</span>
         {d.confirmed_by ? <Badge variant="secondary">confirmed by {d.confirmed_by}</Badge> : <Badge variant="outline">made by LLM</Badge>}
       </div>
       <p className="text-xs text-muted-foreground">{d.reason}</p>
       {d.flagged && <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Doubted: {d.flag_reason}</p>}
       {editing ? (
-        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); onChange(d.id, draft); setEditing(false) }}>
-          <Input aria-label={`New value for ${LABELS[d.type]}`} value={draft} onChange={(e) => setDraft(e.target.value)} />
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); onChange(d.id, d.id === MAIN_RULE_ID ? draft : parseValue(draft)); setEditing(false) }}>
+          {d.id === MAIN_RULE_ID ? (
+            <select aria-label="Main answer rule" className="h-9 rounded-md border bg-background px-2 text-sm" value={draft} onChange={(e) => setDraft(e.target.value)}>
+              {Object.entries(RULES).map(([name, text]) => <option key={name} value={name}>{name}: {text}</option>)}
+            </select>
+          ) : (
+            <Input aria-label={`New value for ${LABELS[d.type]}`} value={draft} onChange={(e) => setDraft(e.target.value)} />
+          )}
           <Button type="submit" size="sm" disabled={busy}>Save</Button>
           <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
         </form>
@@ -56,7 +63,7 @@ export function DecisionsPanel({ decisions, busy = false, onConfirm, onChange, o
   decisions: PlanDecision[]
   busy?: boolean
   onConfirm: (id: string) => void
-  onChange: (id: string, value: string) => void
+  onChange: (id: string, value: unknown) => void
   onConfirmAll: () => void
 }) {
   const open = decisions.filter((d) => d.confirmed_by === null).length
