@@ -220,7 +220,7 @@ def test_links_command_scores_builds_on_from_a_references_file(tmp_path: Path) -
 
 def test_links_command_scores_chaining_with_the_existing_scorer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[Any] = []
-    monkeypatch.setattr("evaluation.score.score_extraction_only", lambda *a, **k: seen.append((a, k)) or {
+    monkeypatch.setattr("evaluation.score.score", lambda *a, **k: seen.append((a, k)) or {
         "question_id": "q", "kind": "chaining", "systems": [{"kind": "chaining", "headline": 1.0}]})
     assert cli.main(["links", "--run", str(tmp_path), "--corpus", str(tmp_path), "--question-id", "chain",
                      "--out", str(tmp_path / "o")]) == 0
