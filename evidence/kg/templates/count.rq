@@ -1,0 +1,15 @@
+# params: thing, counts_as
+# decisions: counts_as=counts_as
+# How many times a thing was measured, in each unit of $counts_as separately (one row per unit, never a sum):
+# "result" counts values, "paper" counts papers.
+SELECT ?kind (COUNT(DISTINCT ?unit) AS ?count) WHERE {
+  ?v a ev:Value ; ev:of ?t ; ev:inExperiment ?e .
+  ?t ev:name $thing .
+  ?e ev:inPaper ?p .
+  ?p ev:name ?paper .
+  VALUES ?kind { $counts_as }
+  BIND(IF(?kind = "paper", STR(?p), STR(?v)) AS ?unit)
+  $include[?paper]
+}
+GROUP BY ?kind
+ORDER BY ?kind

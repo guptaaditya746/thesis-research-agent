@@ -1,0 +1,18 @@
+# params: threshold
+# decisions: threshold=threshold
+# Firm claims the paper's own numbers do not back: a firm claim that a thing improves, where the thing is not better by
+# at least $threshold in any comparison of the paper. Params: threshold; include (optional papers).
+SELECT ?paper ?subject ?direction ?strength WHERE {
+  ?claim a ev:Claim ; ev:inPaper ?p ; ev:subject ?subject ; ev:direction ?direction ; ev:strength ?strength .
+  ?p ev:name ?paper .
+  FILTER(?strength = "firm" && ?direction = "improves")
+  FILTER NOT EXISTS {
+    ?c a ev:Comparison ; ev:better ?bv ; ev:delta ?d ; ev:inExperiment ?e .
+    ?e ev:inPaper ?p .
+    ?bv ev:of ?t .
+    ?t ev:name ?name .
+    FILTER(LCASE(STR(?name)) = LCASE(STR(?subject)) && ABS(?d) >= $threshold)
+  }
+  $include[?paper]
+}
+ORDER BY ?paper ?subject

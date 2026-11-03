@@ -1,0 +1,16 @@
+# params: context, metric
+# Leaderboard: things ordered by their best value on (context $context, metric $metric), across papers, in the
+# metric's direction (higher is better unless the metric says otherwise). Params: context, metric; include.
+SELECT (MIN(?name) AS ?thing) (IF(SAMPLE(?higher), MAX(?key), -MAX(?key)) AS ?score) WHERE {
+  ?v a ev:Value ; ev:of ?t ; ev:onMetric ?m ; ev:number ?number ; ev:inExperiment ?e ; kg:context $context .
+  ?m ev:name $metric .
+  ?t ev:name ?name .
+  ?e ev:inPaper ?p .
+  ?p ev:name ?paper .
+  OPTIONAL { ?m kg:higherIsBetter ?h }
+  BIND(COALESCE(?h, true) AS ?higher)
+  BIND(IF(?higher, ?number, -?number) AS ?key)
+  $include[?paper]
+}
+GROUP BY ?t
+ORDER BY DESC(MAX(?key)) ?thing

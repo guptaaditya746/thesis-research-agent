@@ -1,0 +1,11 @@
+# params: relation
+# Links between papers: what each paper cites with the relation $relation, "outside the set" for a work not in the
+# document set. Params: relation; include (optional papers).
+SELECT ?paper ?ref ?target WHERE {
+  ?l a ev:Link ; ev:inPaper ?p ; ev:relation $relation ; ev:ref ?ref ; ev:outsideSet ?outside .
+  ?p ev:name ?paper .
+  OPTIONAL { ?l ev:cites ?cited . ?cited ev:name ?citedName }
+  BIND(IF(?outside, "outside the set", COALESCE(?citedName, ?ref)) AS ?target)
+  $include[?paper]
+}
+ORDER BY ?paper ?ref
