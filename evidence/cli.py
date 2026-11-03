@@ -19,6 +19,7 @@ its file hashes.
     evidence propose cards DIR [--model ALIAS] [--force] [--refresh]
     evidence propose freeze DIR
     evidence propose amend DIR --reason R [--before-main-run]
+    evidence tune STEP --train DIR... --test DIR... [--optimizer gepa|miprov2] [--model ALIAS] [--cache DIR]
     evidence fetch --query TEXT --out DIR [--max N] [--category CAT]
 
 `run --plan` is a plan run (evidence/planrun.py): the confirmed plan file (every decision confirmed, else exit 2)
@@ -138,6 +139,13 @@ def _parser() -> argparse.ArgumentParser:
     pk = sub.add_parser("pack", help="check a domain pack").add_subparsers(dest="pack_command", required=True)
     pk.add_parser("check", help="check a domain pack's types against its questions and protocols").add_argument("name")
     _propose_parser(sub)
+    t = sub.add_parser("tune", help="DSPy tunes one step's instructions (GEPA light, 500 calls) -> steps/tuned/STEP.json")
+    t.add_argument("step")
+    t.add_argument("--train", required=True, nargs="+", type=Path, help="corpus or real-set folders to tune on")
+    t.add_argument("--test", required=True, nargs="+", type=Path, help="folders to score on (disjoint from --train)")
+    t.add_argument("--optimizer", default="gepa", choices=["gepa", "miprov2"])
+    t.add_argument("--model", default=DEFAULT_MODEL, help="alias of the one model of the tuning (default orch-model)")
+    t.add_argument("--cache", type=Path, default=Path("runs/tune-cache"), help="record cache folder of the model calls")
     arxiv.add_parser(sub)
     return p
 
@@ -197,6 +205,28 @@ def _propose(args: argparse.Namespace) -> int:
         print(f"error: model call failed: {exc}", file=sys.stderr)
         return 1
     print(out)
+    return 0
+
+
+def _tune(args: argparse.Namespace) -> int:
+    from modelcall.cache import JsonlCache
+    from modelcall.dspy_lm import RecordedLM
+
+    from .stages import gateway_ask
+    from .steps import tune
+    try:
+        # check the request before any model is made: overlap and missing examples exit 2 with no key needed
+        if args.step in tune.SPECS:
+            tune.check_disjoint(tune.sources(args.step, args.train, "train"), tune.sources(args.step, args.test, "test"))
+        args.cache.mkdir(parents=True, exist_ok=True)
+        lm = RecordedLM(args.model, gateway_ask(args.model), cache=JsonlCache(args.cache / "tune.jsonl"))
+        print(json.dumps(tune.tune(args.step, args.train, args.test, lm=lm, optimizer=args.optimizer), indent=1))
+    except tune.TuneError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except RuntimeError as exc:   # a failed model call or an optimizer over its call cap; nothing was written
+        print(f"error: model call failed: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -294,6 +324,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         return _pack_check(args.name)
     if args.command == "propose":
         return _propose(args)
+    if args.command == "tune":
+        return _tune(args)
     if args.command == "fetch":
         return arxiv.run(args)
     return _verify(args.run)

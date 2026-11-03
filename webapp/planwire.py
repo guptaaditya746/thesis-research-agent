@@ -26,15 +26,7 @@ PLAN_CORPUS = "EV_PLAN_CORPUS"
 PLANNER_CACHE = "planner.jsonl"
 
 
-def gateway_ask(alias: str):
-    """`ask(text) -> reply text` for a RecordedLM: one plain call of `alias` through the gateway (no cache here: the
-    RecordedLM records it)."""
-    from evidence.stages import Reply
-    from modelcall import Prompt, ask_sync, openai_model
-
-    def ask(text: str) -> str:
-        return ask_sync(Prompt.inline("", Reply), text, model=openai_model(alias)).output.text
-    return ask
+from evidence.stages import gateway_ask  # noqa: E402,F401  (moved to evidence.stages; kept importable here)
 
 
 def lm_factory(settings: Settings):
