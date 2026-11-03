@@ -215,6 +215,21 @@ def _dispatch(args: argparse.Namespace) -> int:
         if (args.protocol is None) == (args.plan is None):
             print("error: give --protocol or --plan (one of them)", file=sys.stderr)
             return 2
+        if args.plan is not None:
+            fixed = {"--names": (args.names, "off"), "--confirm": (args.confirm, "llm"), "--relink": (args.relink, "on"),
+                     "--reason": (args.reason, "on")}
+            bad = [f"{k} {v}" for k, (v, want) in fixed.items() if v != want]
+            if bad:
+                print(f"error: a plan run fixes {', '.join(bad)} (names off, confirm llm, relink on, reason on)",
+                      file=sys.stderr)
+                return 2
+            from .plan import load_plan
+            from .planrun import PlanNotRunnable, check_runnable
+            try:
+                check_runnable(load_plan(args.plan))
+            except (OSError, ValueError, PlanNotRunnable) as exc:   # unreadable, invalid or unconfirmed plan
+                print(f"error: {exc}", file=sys.stderr)
+                return 2
         try:
             if args.plan is not None:
                 from . import planrun
@@ -227,11 +242,6 @@ def _dispatch(args: argparse.Namespace) -> int:
                            strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink,
                            names=args.names, reason=args.reason)
         except RunDirExists as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            return 2
-        except ValueError as exc:   # an unconfirmed or unreadable plan
-            if args.plan is None:
-                raise
             print(f"error: {exc}", file=sys.stderr)
             return 2
         record = read_json(root / RUN_FILE)

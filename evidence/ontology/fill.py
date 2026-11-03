@@ -152,8 +152,8 @@ def mini_tree(found_names: list[str], question: str) -> rdflib.Graph:
 def stage_result(field: str, found_names: list[str], question: str) -> dict[str, Any]:
     """What the after_run stage writes (`ontology.json`): the report, then the LLM links that fill it. With a tree the
     unplaced names get parents; without one a mini-tree of the found names is built. Needs `steps.configure`."""
-    from . import load
-    graph = load(field)
+    from evidence.planrun import load_cached
+    graph = load_cached(field)
     first = report(graph, found_names)
     if first["tree"] == NO_TREE:
         links = [(s, o) for s, o in _named_links(mini_tree(found_names, question))]

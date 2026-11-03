@@ -9,7 +9,7 @@ from pydantic import Field, model_validator
 
 from .contract import Frozen, digest
 
-__all__ = ["MAIN_RULE", "Decision", "EvidenceLine", "Plan", "WordList", "load_plan", "write_plan"]
+__all__ = ["DIRECTION", "MAIN_RULE", "Decision", "EvidenceLine", "Plan", "WordList", "load_plan", "write_plan"]
 
 
 class WordList(Frozen):
@@ -26,13 +26,16 @@ class WordList(Frozen):
 
 
 MAIN_RULE = "main_rule"   # the id and the type of the main-answer rule's decision row
+DIRECTION = "direction"   # the type of a measure's direction row: id "direction:<measure>", value "higher" | "lower"
 
 
 class Decision(Frozen):
     """One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the
-    main-answer rule (its value one of evidence.planner.RULES); it fills no query parameter and is never rerun."""
+    main-answer rule (its value one of evidence.planner.RULES); type `direction` says whether a measure is better
+    higher or lower (id "direction:<measure id>", value "higher" | "lower"). Neither fills a query parameter by itself
+    nor is rerun."""
     id: str
-    type: Literal["must_match", "counts_as", "threshold", "include", "main_rule"]
+    type: Literal["must_match", "counts_as", "threshold", "include", "main_rule", "direction"]
     value: Any
     reason: str
     flagged: bool = False

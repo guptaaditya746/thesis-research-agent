@@ -26,7 +26,8 @@ WHO = {"confirmed_by": "aditya", "confirmed_at": "2026-11-03T10:00:00+00:00"}
 FRESH = """SELECT ?paper (COUNT(?v) AS ?values) WHERE {
   ?v a ev:Value ; ev:inExperiment ?e . ?e ev:inPaper ?p . ?p ev:name ?paper .
 } GROUP BY ?paper ORDER BY ?paper"""
-BROKEN = "SELECT ?x WHERE { ?x a ev:Value . FILTER(?x > }"
+# parses (the planner's check_plan accepts it) but fails when it runs: its after-step does not exist
+BROKEN = "# after: no_such_step\nSELECT ?x WHERE { ?x a ev:Value }"
 
 
 @pytest.fixture(autouse=True)
@@ -35,7 +36,8 @@ def clean_registry() -> Iterator[None]:
         yield
 
 
-def make_plan(field: str = "cs", things: dict[str, list[str]] | None = None) -> Plan:
+def make_plan(field: str = "cs", things: dict[str, list[str]] | None = None, measures: tuple[str, ...] = ("accuracy",),
+              direction: str = "higher") -> Plan:
     things = things or {"rag": ["retrieval-augmented model", "retrieval-augmented generation", "retrieval augmentation"],
                         "closed_book": ["closed-book model", "closed-book"],
                         "accuracy": ["answer accuracy", "accuracy"]}
@@ -53,8 +55,10 @@ def make_plan(field: str = "cs", things: dict[str, list[str]] | None = None) -> 
                        written_by="orch-model", ontology_names={}),
         decisions=[Decision(id="d1", type="threshold", value="0.01", reason="noise", **WHO),
                    Decision(id="d2", type="counts_as", value="accuracy", reason="the measure", **WHO),
+                   *[Decision(id=f"direction:{m}", type="direction", value=direction, reason="its direction", **WHO)
+                     for m in measures],
                    Decision(id="main_rule", type="main_rule", value="any_line", reason="any line", **WHO)],
-        clarifications=[], measures=["accuracy"])
+        clarifications=[], measures=list(measures))
 
 
 def fake_model(calls: list[str]) -> FunctionModel:
@@ -101,6 +105,8 @@ def read(root: Path, name: str) -> Any:
 
 
 def test_plan_run_end_to_end_fake_lm(tmp_path: Path) -> None:
+    from evidence.planner import check_plan
+    assert check_plan(make_plan()) == []   # a plan the planner's own checks (and the page) accept
     calls: list[str] = []
     root = plan_run(tmp_path, calls=calls)
     run = read(root, "run.json")
@@ -249,3 +255,77 @@ def test_rerun_verdict_of_an_effect_line_is_its_majority_direction() -> None:
     tie = planrun.verdict(Answer(rows=rows[1:3], empty=False))
     assert tie.label == "mixed"
     assert planrun.verdict(Answer(rows=[{"thing": "x", "score": 1}], empty=False)).label == "x"
+
+
+def test_a_fresh_query_the_planner_writes_runs_to_a_non_empty_answer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from evidence import steps
+    from evidence.planner import check_plan, confirm_all, propose
+    from modelcall.dspy_lm import RecordedLM
+    fresh = ("SELECT DISTINCT ?paper WHERE { ?v a ev:Value ; kg:side ?s ; ev:onMetric ?m ; ev:inExperiment ?e . "
+             "?m ev:name ?metric . ?e ev:inPaper ?p . ?p ev:name ?paper . VALUES ?s { $sides } "
+             "VALUES ?metric { $metrics } } ORDER BY ?paper")
+    replies = [{"lines": [{"question": "Which papers compare the two on accuracy?", "kind": "inventory", "template": None}]},
+               {"field": "cs", "things": ["rag", "closed_book", "accuracy"], "measures": ["accuracy"], "lower_is_better": []},
+               {"rule": "any_line"}, {"decisions": []}, {"query": fresh}, {"sentences": ["It lists papers."]}]
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    with steps.using(RecordedLM("fake", lambda prompt: json.dumps(replies.pop(0)))):
+        plan, _ = propose("Does retrieval-augmented generation improve answer accuracy?",
+                          write_words=lambda q, things: make_plan().words)
+    plan = confirm_all(plan, "aditya")
+    assert check_plan(plan) == [] and plan.lines[0].query == fresh
+    root = plan_run(tmp_path, plan)
+    line = read(root, "answer.json")["lines"][0]
+    assert line["status"] == "done" and {r["paper"] for r in line["rows"]} >= {"S001"}
+
+
+def test_a_one_method_question_compares_with_other_and_its_effect_line_runs(tmp_path: Path) -> None:
+    plan = make_plan(things={"rag": ["retrieval-augmented model", "retrieval-augmented generation"],
+                             "accuracy": ["answer accuracy", "accuracy"]})
+    assert planrun.compare_sides(plan) == ["rag", "other"]
+    assert planrun.line_params(plan, plan.lines[0].query)["sides"] == ["rag", "other"]
+    root = plan_run(tmp_path, plan)
+    lines = {x["id"]: x for x in read(root, "answer.json")["lines"]}
+    assert lines["l1"]["status"] == "done"
+
+
+def test_a_lower_is_better_measure_reads_a_rise_as_worse(tmp_path: Path) -> None:
+    """"Does retrieval reduce latency?": S001 has latency 655 ms with retrieval, 410 ms without: that is worse."""
+    things = {"rag": ["retrieval-augmented model", "retrieval-augmented generation"],
+              "closed_book": ["closed-book model", "closed-book"], "latency": ["latency"]}
+    plan = make_plan(things=things, measures=("latency",), direction="lower")
+    plan = plan.model_copy(update={"question": "Does retrieval-augmented generation reduce latency?", "decisions": [
+        d.model_copy(update={"value": "latency"}) if d.type == "counts_as" else d for d in plan.decisions]})
+    assert planrun.directions(plan) == {"latency": False}
+    assert "higher_is_better: false" in planrun.protocol_for(plan).decode()
+    root = plan_run(tmp_path, plan)
+    rows = {r["paper"]: r for r in {x["id"]: x for x in read(root, "answer.json")["lines"]}["l1"]["rows"]}
+    assert rows["S001"]["direction"] == "contradicts"
+    higher = make_plan(things=things, measures=("latency",), direction="higher")
+    higher = higher.model_copy(update={"decisions": [d.model_copy(update={"value": "latency"}) if d.type == "counts_as"
+                                                     else d for d in higher.decisions]})
+    rows = {r["paper"]: r for r in {x["id"]: x for x in read(plan_run(tmp_path / "h", higher), "answer.json")["lines"]}["l1"]["rows"]}
+    assert rows["S001"]["direction"] == "supports"
+
+
+def test_a_measure_without_a_direction_decision_takes_the_extracted_metrics_direction() -> None:
+    from evidence.contract import Item, Span
+    plan = make_plan(measures=("accuracy",))
+    plan = plan.model_copy(update={"decisions": [d for d in plan.decisions if d.type != "direction"]})
+    span = Span(role="metric_label", selector={"file": "p.md", "start": 0, "end": 3, "exact": "x", "sha256": "0" * 64})
+    lower = Item.build("metric", {"name": "err", "canonical": "accuracy", "higher_is_better": False}, [span])
+    assert planrun.directions(plan) == {"accuracy": None}
+    assert planrun.directions(plan, {"S1": [lower]}) == {"accuracy": False}
+
+
+def test_a_word_list_from_another_model_is_refused(tmp_path: Path) -> None:
+    plan = make_plan()
+    plan = plan.model_copy(update={"words": plan.words.model_copy(update={"written_by": "claude-haiku"})})
+    with pytest.raises(planrun.PlanNotRunnable, match="orch-model"):
+        plan_run(tmp_path, plan)
+
+
+def test_cli_refuses_flags_a_plan_run_fixes(tmp_path: Path) -> None:
+    path = tmp_path / "plan.json"
+    write_plan(make_plan(), path)
+    assert cli.main(["run", "--plan", str(path), "--corpus", str(make_corpus(tmp_path / "c")), "--out",
+                     str(tmp_path / "r"), "--names", "on"]) == 2

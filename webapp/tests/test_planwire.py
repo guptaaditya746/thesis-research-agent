@@ -18,17 +18,9 @@ from webapp.settings import Settings
 
 
 def page_plan():
-    """The test plan as the planner would write it: no broken line (the page refuses a query that does not parse) and
-    the effect template's non-decision placeholders filled with literals (the page refuses a free $placeholder)."""
+    """The test plan as the planner writes it, minus its line that fails at run time (this test wants a clean run)."""
     plan = make_plan()
-    lines = []
-    for x in plan.lines:
-        if x.id == "l1":
-            x = x.model_copy(update={"query": x.query.replace("$sides", '"rag" "closed_book"')
-                                                    .replace("$metrics", '"accuracy"')})
-        if x.id != "l3":
-            lines.append(x)
-    return plan.model_copy(update={"lines": lines})
+    return plan.model_copy(update={"lines": [x for x in plan.lines if x.id != "l3"]})
 
 
 @pytest.fixture(autouse=True)
@@ -76,3 +68,10 @@ def test_a_plan_runs_from_the_page_and_its_result_and_links_review_come_back(tmp
         review = c.post(f"/api/ev/run/{rid}/links", json={"accepted": [], "rejected": ["a -> b"]}).json()
         assert review["review"]["rejected"] == ["a -> b"] and {x["id"] for x in review["lines"]} == set(lines)
         assert (settings.ev_runs_dir / rid / "links_review.json").is_file()
+
+
+def test_a_run_with_no_seal_and_no_live_thread_says_it_stopped(tmp_path):
+    settings = Settings(EV=tmp_path)  # type: ignore[call-arg]
+    (settings.ev_runs_dir / "plan-x").mkdir(parents=True)
+    out = PlanRuns(settings).result("plan-x")
+    assert out["status"] == "done" and out["answer"]["text"] == "failed: run stopped"

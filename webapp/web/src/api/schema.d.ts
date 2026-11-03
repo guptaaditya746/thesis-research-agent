@@ -4437,7 +4437,9 @@ export interface components {
         /**
          * Decision
          * @description One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the
-         *     main-answer rule (its value one of evidence.planner.RULES); it fills no query parameter and is never rerun.
+         *     main-answer rule (its value one of evidence.planner.RULES); type `direction` says whether a measure is better
+         *     higher or lower (id "direction:<measure id>", value "higher" | "lower"). Neither fills a query parameter by itself
+         *     nor is rerun.
          */
         evidence__plan__Decision: {
             /** Id */
@@ -4446,7 +4448,7 @@ export interface components {
              * Type
              * @enum {string}
              */
-            type: "must_match" | "counts_as" | "threshold" | "include" | "main_rule";
+            type: "must_match" | "counts_as" | "threshold" | "include" | "main_rule" | "direction";
             /** Value */
             value: unknown;
             /** Reason */

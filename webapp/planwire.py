@@ -116,6 +116,9 @@ class PlanRuns:
         run = RunDir(root)
         answer = run.try_json("answer.json") if run.complete else None
         if answer is None:
+            thread = self.threads.get(rid)
+            if thread is None or not thread.is_alive():   # e.g. the server restarted during the run
+                return {"status": "done", "lines": [], "answer": {"text": "failed: run stopped"}, "reruns": []}
             return {"status": "running", "lines": [], "answer": {"text": "Running..."}, "reruns": []}
         return {"status": "done", "lines": answer["lines"], "answer": answer["answer"], "reruns": answer["reruns"],
                 "labels": answer.get("labels", {}), "links": answer.get("links", [])}

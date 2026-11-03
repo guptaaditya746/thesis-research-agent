@@ -49,7 +49,7 @@ def line(kind="effect", question="Does it help?", template=None):
 def script(replies, drafts, queries=None, decisions=None, things=("a",), rule="any_line"):
     """The replies of propose in order: lines, things, rule, decisions per line, queries, explanations."""
     replies.append(j(lines=drafts))
-    replies.append(j(field="cs", measures=[], things=list(things)))
+    replies.append(j(field="cs", measures=[], lower_is_better=[], things=list(things)))
     replies.append(j(rule=rule))
     for _ in drafts:
         replies.append(j(decisions=decisions if decisions is not None else [
@@ -161,7 +161,7 @@ def test_placeholder_without_a_decision_is_refused(lm):
 def test_plan_checks_in_code(lm):
     replies, _ = lm
     # no line twice (one retry), no thing twice
-    replies.extend([j(lines=[]), j(lines=[]), j(field="cs", measures=[], things=[]), j(field="cs", measures=[], things=[])])
+    replies.extend([j(lines=[]), j(lines=[]), j(field="cs", measures=[], lower_is_better=[], things=[]), j(field="cs", measures=[], lower_is_better=[], things=[])])
     plan, _ = propose("q", write_words=words)
     problems = check_plan(plan, {})
     assert any("no evidence line" in p for p in problems) and any("no thing" in p for p in problems)
@@ -169,7 +169,7 @@ def test_plan_checks_in_code(lm):
     replies.clear()
     replies.append(j(lines=[line(template="ghost")]))
     replies.append(j(lines=[line(template="real")]))
-    replies.extend([j(field="cs", measures=[], things=["a"]), j(rule="any_line"), j(decisions=[]), j(query=PLAIN)])
+    replies.extend([j(field="cs", measures=[], lower_is_better=[], things=["a"]), j(rule="any_line"), j(decisions=[]), j(query=PLAIN)])
     plan, _ = propose("q3", write_words=words, templates={"real": "# What it finds.\n" + PLAIN})
     assert plan.lines[0].template == "real" and check_plan(plan, {"real": ""}) == []
     assert any("unknown template" in p for p in check_plan(plan, {"other": ""}))
@@ -248,9 +248,29 @@ def test_fresh_line_keeps_its_how_sentences_in_the_plan(lm):
 def test_measures_come_from_the_things_step_and_must_be_things(lm):
     replies, _ = lm
     replies.append(j(lines=[line("inventory")]))
-    replies.append(j(field="cs", things=["a", "b", "m"], measures=["m", "ghost"]))
+    replies.append(j(field="cs", things=["a", "b", "m"], measures=["m", "ghost"], lower_is_better=["m"]))
     replies.extend([j(rule="any_line"), j(decisions=[]), j(query=PLAIN), j(sentences=["It lists."])])
     plan, _ = propose("Does a beat b on m?", write_words=words)
     assert plan.measures == ["m"] and list(plan.words.things) == ["a", "b", "m"]
     bad = plan.model_copy(update={"measures": ["zz"]})
     assert any("measure" in p for p in check_plan(bad))
+
+
+# --- Fix round 1: the planner's lines address the graph by the plan's ids; every measure gets a direction -----------
+
+SIDES_QUERY = ("SELECT DISTINCT ?paper WHERE { ?v a ev:Value ; kg:side ?s ; ev:onMetric ?m ; ev:inExperiment ?e . "
+               "?m ev:name ?metric . ?e ev:inPaper ?p . ?p ev:name ?paper . VALUES ?s { $sides } VALUES ?metric { $metrics } }")
+
+
+def test_a_query_keeping_the_run_params_is_accepted_and_the_query_step_sees_the_ids(lm):
+    replies, seen = lm
+    replies.append(j(lines=[line("inventory", "Which papers compare a and b on m?")]))
+    replies.append(j(field="cs", things=["a", "b", "m"], measures=["m"], lower_is_better=["m"]))
+    replies.extend([j(rule="any_line"), j(decisions=[]), j(query=SIDES_QUERY), j(sentences=["It lists papers."])])
+    plan, _ = propose("Does a beat b on m?", write_words=words)
+    assert plan.lines[0].query == SIDES_QUERY and check_plan(plan) == []
+    query_prompt = next(p for p in seen if "choice_params" in p and "Which papers compare" in p)
+    assert '["a", "b"]' in query_prompt and '["m"]' in query_prompt
+    direction = next(d for d in plan.decisions if d.type == "direction")
+    assert (direction.id, direction.value) == ("direction:m", "lower") and direction.confirmed_by is None
+    assert "direction" not in decision_params(plan, SIDES_QUERY)

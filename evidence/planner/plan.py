@@ -3,8 +3,9 @@ one task, one typed output, and the hard limits checked in code.
 
 Steps, in order (propose):
   1. lines      question -> 1-5 evidence lines (question, kind, saved template or none)
-  2. things     question -> the field, the things the question names (the one it asks about first) and which of
-                them are measures (Plan.measures: they become metrics in a plan run, the others compared things)
+  2. things     question -> the field, the things the question names (the one it asks about first), which of
+                them are measures (Plan.measures: they become metrics in a plan run, the others compared things) and
+                which measures are better lower (one confirmable `direction` decision per measure)
   3. rule       question + lines -> the main-answer rule, from the fixed set RULES (code applies it: lines.py)
   4. decisions  one call per line -> the research-policy choices that line needs (type, value, reason)
   5. query      one call per line -> one SPARQL query. Choices stay in the query as `$name` placeholders (the
@@ -31,7 +32,7 @@ import dspy
 import pyoxigraph as ox
 from pydantic import BaseModel, Field
 
-from evidence.plan import MAIN_RULE, Decision, EvidenceLine, Plan, WordList
+from evidence.plan import DIRECTION, MAIN_RULE, Decision, EvidenceLine, Plan, WordList
 from evidence.steps import Step, using
 from evidence.vocab import EV
 
@@ -39,6 +40,9 @@ OVERSELL_ID = "oversell"
 MAIN_RULE_ID = MAIN_RULE   # the rule's decision row: id and type "main_rule" (evidence.plan.Decision)
 NOT_PLANNED = "could not plan"
 DECISION_TYPES = ("must_match", "counts_as", "threshold", "include")
+# Parameters a plan run fills itself from the plan (evidence/planrun.py `line_params`): the compared sides (thing ids,
+# treatment first), the measure ids, each measure's direction and the threshold. A query may keep them as $name.
+RUN_PARAMS = ("sides", "metrics", "higher_is_better", "min_effect", "threshold")
 MAX_LINES = 5
 
 # The main-answer rules: name -> what it says. `evidence.planner.lines.apply_rule` applies them.
@@ -134,15 +138,19 @@ class ThingsSig(dspy.Signature):
     """Name the things the question is about and the field it belongs to. `things` are short ids, one per thing
     named in the question (a method, a measure, a dataset): first the thing the question asks about, then what it
     is compared with, then the rest. `measures` repeats the ids of `things` that are measures (a score, a rate, a
-    time, a count of outcomes); empty when the question names none. `field` is cs, medicine, materials or other.
+    time, a count of outcomes); empty when the question names none. `lower_is_better` repeats the ids of measures
+    where a lower value is better (an error rate, a delay, a cost, deaths). `field` is cs, medicine, materials or other.
 
     Example: "Does method A beat method B on measure M?" -> field "cs", things ["method_a", "method_b", "measure_m"],
-    measures ["measure_m"]"""
+    measures ["measure_m"], lower_is_better []
+    Example: "Does a cache reduce latency?" -> things ["cache", "latency"], measures ["latency"],
+    lower_is_better ["latency"]"""
     question: str = dspy.InputField(desc="the research question")
     problem: str = dspy.InputField(desc="why the last reply was refused; empty on the first call")
     field: Literal["cs", "medicine", "materials", "other"] = dspy.OutputField()
     things: list[str] = dspy.OutputField(desc="short ids of the things the question names; at least one")
     measures: list[str] = dspy.OutputField(desc="the ids among things that are measures; may be empty")
+    lower_is_better: list[str] = dspy.OutputField(desc="the ids among measures where lower is better; may be empty")
 
 
 class RuleSig(dspy.Signature):
@@ -159,13 +167,16 @@ class DecisionsSig(dspy.Signature):
     """Name the research-policy choices ONE evidence line needs, from these types only: must_match (what settings
     two experiments must share to be compared), counts_as (what counts as the thing asked about, or the unit
     counted), threshold (the smallest difference that matters), include (which papers to include, or "all").
-    Give each with a value and a one-sentence reason. Give none the line does not need.
+    Give each with a value and a one-sentence reason. Give none the line does not need. A counts_as value that names
+    measures uses the measure ids of `measures`, never other wording.
 
     Example: line "Is A better than B on M?" -> [{"type": "threshold", "value": "0.01", "reason": "smaller gaps are
     within noise"}, {"type": "include", "value": "all", "reason": "the corpus is small"}]"""
     question: str = dspy.InputField(desc="the research question")
     line: str = dspy.InputField(desc="the evidence line's question")
     template_help: str = dspy.InputField(desc="what the line's saved template finds, with its parameters; may be empty")
+    things: str = dspy.InputField(desc="JSON list of the compared thing ids, the one asked about first")
+    measures: str = dspy.InputField(desc="JSON list of the measure ids")
     decisions: list[DecisionDraft] = dspy.OutputField(desc="the choices this line needs")
 
 
@@ -175,14 +186,23 @@ class QuerySig(dspy.Signature):
     papers to include), write its placeholder from `choice_params` (for example $threshold) instead of a value.
     When `template` is given, adapt it: keep its structure, fill every `$name` that is NOT in `choice_params` with a
     literal value for this question, and leave the placeholders in `choice_params` and `$include[...]` as they are.
-    Do not write comment lines. Return only the query.
+    The graph names things and measures by ids, not paper wording: a value's side (kg:side) is one of the thing ids in
+    `things`, a metric's name (ev:name) one of the ids in `measures`. Match them with $sides (the compared thing ids,
+    the one asked about first) and $metrics (the measure ids), which the run fills; never write a paper's wording for
+    them. Do not write comment lines. Return only the query.
+
+    Example: things ["a", "b"], measures ["m"], line "Which papers measure a against b on m?" -> SELECT DISTINCT ?paper
+    WHERE { ?v a ev:Value ; kg:side ?s ; ev:onMetric ?m ; ev:inExperiment ?e . ?m ev:name ?metric . ?e ev:inPaper ?p .
+    ?p ev:name ?paper . VALUES ?s { $sides } VALUES ?metric { $metrics } }
 
     Example: choice_params ["threshold"], line "Is A better than B on M?" -> SELECT ?paper WHERE { ?c a ev:Comparison ;
     ev:delta ?d . FILTER(ABS(?d) >= $threshold) }"""
     question: str = dspy.InputField(desc="the research question")
     line: str = dspy.InputField(desc="the evidence line's question")
     template: str = dspy.InputField(desc="the saved template's text, or empty for a new query")
-    choice_params: str = dspy.InputField(desc="JSON list of the placeholder names the decisions fill")
+    choice_params: str = dspy.InputField(desc="JSON list of the placeholder names the decisions and the run fill")
+    things: str = dspy.InputField(desc="JSON list of the compared thing ids (kg:side values), the one asked about first")
+    measures: str = dspy.InputField(desc="JSON list of the measure ids (metric ev:name values)")
     problem: str = dspy.InputField(desc="why the last query was refused (parser message); empty on the first call")
     query: str = dspy.OutputField(desc="the SPARQL query")
 
@@ -247,7 +267,7 @@ def decision_params(plan: Plan, query: str) -> dict[str, Any]:
     decision changes what runs. `include` of "all" (or empty) is left out: no filter."""
     out: dict[str, Any] = {}
     for kind, param in decision_map(query).items():
-        d = next((x for x in plan.decisions if x.type == kind and x.id != MAIN_RULE_ID and x.type != MAIN_RULE), None)
+        d = next((x for x in plan.decisions if x.type == kind and x.id != MAIN_RULE_ID and x.type not in (MAIN_RULE, DIRECTION)), None)
         if d is None:
             continue
         value = _value(d.value)
@@ -283,7 +303,7 @@ def with_header(body: str, template: str | None) -> str:
 
 def _unfilled(query: str) -> list[str]:
     """`$name` placeholders that no decision fills: they would be free variables matching everything."""
-    ok = set(decision_map(query).values()) | set(DECISION_TYPES)
+    ok = set(decision_map(query).values()) | set(DECISION_TYPES) | set(RUN_PARAMS)
     body = _SPECIAL.sub("", _COMMENT_LINE.sub("", query))
     return sorted({n for n in _NAME.findall(body) if n not in ok})
 
@@ -314,7 +334,7 @@ def check_plan(plan: Plan, templates: Mapping[str, str] | None = None) -> list[s
     if len(plan.lines) > MAX_LINES + 1:
         problems.append(f"the plan has more than {MAX_LINES} evidence lines")
     problems += [f"decision {d.id} has the unknown type {d.type!r}" for d in plan.decisions
-                 if d.type not in DECISION_TYPES and d.type != MAIN_RULE]
+                 if d.type not in DECISION_TYPES and d.type not in (MAIN_RULE, DIRECTION)]
     problems += [f"the measure {m!r} is not one of the plan's things" for m in plan.measures if m not in plan.words.things]
     if templates is not None:
         problems += [f"line {x.id} names the unknown template {x.template!r}" for x in plan.lines
@@ -393,25 +413,28 @@ def _line_drafts(question: str, clar: list[dict[str, str]], templates: Mapping[s
     return drafts[:MAX_LINES]
 
 
-def _things_of(question: str) -> tuple[str, list[str], list[str]]:
-    """(field, things, measures); a measure that is not one of the things is dropped."""
+def _things_of(question: str) -> tuple[str, list[str], list[str], list[str]]:
+    """(field, things, measures, lower-is-better measures); a measure that is not a thing is dropped."""
     problem = ""
     for _ in range(2):
         out = _things(question=question, problem=problem)
         things = [t.strip() for t in out.things if t.strip()]
         if things:
-            measures = [m.strip() for m in (out.measures or []) if m.strip() in things]
-            return out.field, things, list(dict.fromkeys(measures))
+            measures = list(dict.fromkeys(m.strip() for m in (out.measures or []) if m.strip() in things))
+            lower = [m.strip() for m in (out.lower_is_better or []) if m.strip() in measures]
+            return out.field, things, measures, lower
         problem = "you named no thing; name at least one"
-    return out.field, [], []
+    return out.field, [], [], []
 
 
-def _query_for(question: str, line: LineDraft, template: str | None, choices: list[str]) -> str | None:
+def _query_for(question: str, line: LineDraft, template: str | None, choices: list[str],
+               ids: tuple[list[str], list[str]] = ([], [])) -> str | None:
     """The line's query, checked in code: on a problem one repair call with the message; still wrong: None."""
     problem = ""
     for _ in range(2):
         body = _query(question=question, line=line.question, template=template or "",
-                      choice_params=json.dumps(choices), problem=problem).query
+                      choice_params=json.dumps(choices), things=json.dumps(ids[0]), measures=json.dumps(ids[1]),
+                      problem=problem).query
         query = with_header(body, template)
         why = query_problem(query)
         if why is None:
@@ -428,7 +451,8 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
     clar = [dict(c) for c in clarifications or []]
     templates = dict(templates or {})
     drafts = _line_drafts(question, clar, templates)
-    field, things, measures = _things_of(question)
+    field, things, measures, lower = _things_of(question)
+    ids = ([t for t in things if t not in measures], measures)   # what the graph calls them (kg:side, metric ev:name)
     rule = _rule(question=question, lines=json.dumps([d.question for d in drafts])).rule if drafts else "any_line"
     if rule not in RULES:
         rule = "any_line"
@@ -436,7 +460,8 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
     decisions: list[Decision] = []
     for d in drafts:
         text = templates.get(d.template or "", "")
-        for draft in _decisions(question=question, line=d.question, template_help=_help(d.template or "", text)).decisions:
+        for draft in _decisions(question=question, line=d.question, template_help=_help(d.template or "", text),
+                                things=json.dumps(ids[0]), measures=json.dumps(ids[1])).decisions:
             if draft.type in DECISION_TYPES and all(x.type != draft.type for x in decisions):
                 decisions.append(Decision(id=f"d{len(decisions) + 1}", type=draft.type, value=draft.value,
                                           reason=draft.reason))
@@ -444,6 +469,9 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
     if oversell and all(x.type != "threshold" for x in decisions):
         decisions.append(Decision(id=f"d{len(decisions) + 1}", type="threshold", value=DEFAULT_THRESHOLD,
                                   reason="default: a difference smaller than this does not count as better"))
+    for m in measures:   # each measure's direction, a choice the person confirms (the run reads it)
+        decisions.append(Decision(id=f"{DIRECTION}:{m}", type=DIRECTION, value="lower" if m in lower else "higher",
+                                  reason=f"{m} is better when it is {'lower' if m in lower else 'higher'}"))
     decisions.append(Decision(id=MAIN_RULE_ID, type=MAIN_RULE, value=rule,
                               reason=f"how the lines add up to one answer ({RULES[rule]})"))
 
@@ -452,8 +480,8 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
     how: dict[str, list[str]] = {}
     for i, d in enumerate(drafts, 1):
         template = templates.get(d.template) if d.template else None
-        choices = sorted(set(decision_map(template or "").values()) | set(DECISION_TYPES))
-        query = _query_for(question, d, template, choices)
+        choices = sorted(set(decision_map(template or "").values()) | set(DECISION_TYPES) | set(RUN_PARAMS))
+        query = _query_for(question, d, template, choices, ids)
         lid = f"l{i}"
         if query and explain and not d.template:
             how[lid] = [s.strip() for s in _explain(query=query).sentences if s.strip()][:4]

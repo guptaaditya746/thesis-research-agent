@@ -59,6 +59,13 @@ describe("line card", () => {
 })
 
 describe("decisions panel changes", () => {
+  it("shows a measure's direction as its own decision", () => {
+    renderWithProviders(<DecisionsPanel decisions={[decision("direction:latency", { type: "direction", value: "lower" })]}
+      onConfirm={() => {}} onChange={() => {}} onConfirmAll={() => {}} />)
+    expect(screen.getByText("latency: better when")).toBeInTheDocument()
+    expect(screen.getByText("lower")).toBeInTheDocument()
+  })
+
   it("sends a number as a number and offers only the fixed rules for the main rule", async () => {
     const changes: [string, unknown][] = []
     const user = userEvent.setup()

@@ -8,7 +8,7 @@ import { ApiError, apiUrl, getJson, postJson } from "@/api/client"
 
 export interface PlanDecision {
   id: string
-  type: "must_match" | "counts_as" | "threshold" | "include" | "main_rule"
+  type: "must_match" | "counts_as" | "threshold" | "include" | "main_rule" | "direction"
   value: unknown
   reason: string
   flagged: boolean
@@ -35,6 +35,9 @@ export interface PlanData {
   clarifications: Record<string, string>[]
   measures?: string[]
 }
+
+/** A measure's direction decision: id "direction:<measure>", value "higher" | "lower" (better when). */
+export const DIRECTION_PREFIX = "direction:"
 
 export interface Clarification {
   question: string

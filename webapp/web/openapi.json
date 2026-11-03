@@ -10716,7 +10716,8 @@
               "counts_as",
               "threshold",
               "include",
-              "main_rule"
+              "main_rule",
+              "direction"
             ],
             "title": "Type"
           },
@@ -10775,7 +10776,7 @@
           "reason"
         ],
         "title": "Decision",
-        "description": "One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the\nmain-answer rule (its value one of evidence.planner.RULES); it fills no query parameter and is never rerun."
+        "description": "One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the\nmain-answer rule (its value one of evidence.planner.RULES); type `direction` says whether a measure is better\nhigher or lower (id \"direction:<measure id>\", value \"higher\" | \"lower\"). Neither fills a query parameter by itself\nnor is rerun."
       },
       "webapp__evmodels__Decision": {
         "properties": {

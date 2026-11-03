@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-import { MAIN_RULE_ID, parseValue, RULES, type PlanDecision } from "./api"
+import { DIRECTION_PREFIX, MAIN_RULE_ID, parseValue, RULES, type PlanDecision } from "./api"
 
 const LABELS: Record<PlanDecision["type"], string> = {
   must_match: "Must match",
@@ -15,6 +15,7 @@ const LABELS: Record<PlanDecision["type"], string> = {
   threshold: "Threshold",
   include: "Include",
   main_rule: "Main answer rule",
+  direction: "Better when",
 }
 
 const show = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value))
@@ -32,7 +33,7 @@ function DecisionRow({ d, busy, onConfirm, onChange }: {
     <li data-decision={d.id} data-flagged={d.flagged ? "true" : "false"}
       className={`space-y-1 rounded-md border p-3 ${d.flagged ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{d.id === MAIN_RULE_ID ? "Main answer rule" : LABELS[d.type]}</span>
+        <span className="text-sm font-medium">{d.id === MAIN_RULE_ID ? "Main answer rule" : d.type === "direction" ? `${d.id.slice(DIRECTION_PREFIX.length)}: better when` : LABELS[d.type]}</span>
         <span className="font-mono text-sm">{show(d.value)}</span>
         {d.confirmed_by ? <Badge variant="secondary">confirmed by {d.confirmed_by}</Badge> : <Badge variant="outline">made by LLM</Badge>}
       </div>
