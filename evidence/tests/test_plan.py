@@ -59,3 +59,35 @@ def test_lock_with_plan_has_plan_and_words_sha():
     plan = make_plan()
     out = lockfile.lock(protocol, cascades, plan=plan)
     assert out["plan_sha256"] == plan.sha256 and out["words_sha256"] == plan.words.sha256
+
+
+# --- Wave 2: the main-answer rule is its own decision type; "how?" sentences and the measures live in the plan --------
+
+def test_main_rule_is_its_own_decision_type():
+    d = Decision(id="main_rule", type="main_rule", value="any_line", reason="how lines add up")
+    assert d.type == "main_rule"
+
+
+def test_an_old_main_rule_row_is_migrated_on_load(tmp_path):
+    plan = make_plan()
+    data = plan.model_dump(mode="json")
+    data["decisions"].append({"id": "main_rule", "type": "counts_as", "value": "any_line", "reason": "r"})
+    data["lines"][0].pop("how", None)
+    data.pop("measures", None)
+    path = tmp_path / "old.json"
+    import json
+    path.write_text(json.dumps(data), encoding="utf-8")
+    loaded = load_plan(path)
+    rule = next(d for d in loaded.decisions if d.id == "main_rule")
+    assert rule.type == "main_rule" and rule.value == "any_line"
+    assert loaded.lines[0].how == [] and loaded.measures == []
+
+
+def test_how_sentences_and_measures_survive_a_reload(tmp_path):
+    plan = make_plan()
+    plan = plan.model_copy(update={"measures": ["rag"], "lines": [
+        plan.lines[0].model_copy(update={"how": ["It looks at values.", "It keeps big gaps."]}), plan.lines[1]]})
+    write_plan(plan, tmp_path / "plan.json")
+    again = load_plan(tmp_path / "plan.json")
+    assert again.lines[0].how == ["It looks at values.", "It keeps big gaps."]
+    assert again.measures == ["rag"] and again.sha256 == plan.sha256

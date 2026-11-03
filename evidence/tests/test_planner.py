@@ -49,7 +49,7 @@ def line(kind="effect", question="Does it help?", template=None):
 def script(replies, drafts, queries=None, decisions=None, things=("a",), rule="any_line"):
     """The replies of propose in order: lines, things, rule, decisions per line, queries, explanations."""
     replies.append(j(lines=drafts))
-    replies.append(j(field="cs", things=list(things)))
+    replies.append(j(field="cs", measures=[], things=list(things)))
     replies.append(j(rule=rule))
     for _ in drafts:
         replies.append(j(decisions=decisions if decisions is not None else [
@@ -161,7 +161,7 @@ def test_placeholder_without_a_decision_is_refused(lm):
 def test_plan_checks_in_code(lm):
     replies, _ = lm
     # no line twice (one retry), no thing twice
-    replies.extend([j(lines=[]), j(lines=[]), j(field="cs", things=[]), j(field="cs", things=[])])
+    replies.extend([j(lines=[]), j(lines=[]), j(field="cs", measures=[], things=[]), j(field="cs", measures=[], things=[])])
     plan, _ = propose("q", write_words=words)
     problems = check_plan(plan, {})
     assert any("no evidence line" in p for p in problems) and any("no thing" in p for p in problems)
@@ -169,7 +169,7 @@ def test_plan_checks_in_code(lm):
     replies.clear()
     replies.append(j(lines=[line(template="ghost")]))
     replies.append(j(lines=[line(template="real")]))
-    replies.extend([j(field="cs", things=["a"]), j(rule="any_line"), j(decisions=[]), j(query=PLAIN)])
+    replies.extend([j(field="cs", measures=[], things=["a"]), j(rule="any_line"), j(decisions=[]), j(query=PLAIN)])
     plan, _ = propose("q3", write_words=words, templates={"real": "# What it finds.\n" + PLAIN})
     assert plan.lines[0].template == "real" and check_plan(plan, {"real": ""}) == []
     assert any("unknown template" in p for p in check_plan(plan, {"other": ""}))
@@ -226,3 +226,31 @@ def test_two_requests_record_on_their_own_model(tmp_path, monkeypatch):
     [t.join() for t in threads]
     assert len(got["one"]) == 3 and len(got["two"]) == 3
     assert all("question two" not in p for p in got["one"]) and all("question one" not in p for p in got["two"])
+
+
+# --- Wave 2: the rule's own decision type, "how?" kept on the line, the measures among the things ---------------------
+
+def test_rule_row_has_its_own_type_and_is_no_query_parameter(lm):
+    replies, _ = lm
+    plan = make(replies, [line()], rule="majority")
+    row = next(d for d in plan.decisions if d.id == MAIN_RULE_ID)
+    assert row.type == "main_rule" and check_plan(plan) == []
+    assert "main_rule" not in decision_params(plan, plan.lines[0].query)
+
+
+def test_fresh_line_keeps_its_how_sentences_in_the_plan(lm):
+    replies, _ = lm
+    plan = make(replies, [line()])
+    assert plan.lines[0].how == ["It looks at claims.", "It keeps big numbers."]
+    assert how_sentences(plan.lines[0], plan, None)[:2] == ["It looks at claims.", "It keeps big numbers."]
+
+
+def test_measures_come_from_the_things_step_and_must_be_things(lm):
+    replies, _ = lm
+    replies.append(j(lines=[line("inventory")]))
+    replies.append(j(field="cs", things=["a", "b", "m"], measures=["m", "ghost"]))
+    replies.extend([j(rule="any_line"), j(decisions=[]), j(query=PLAIN), j(sentences=["It lists."])])
+    plan, _ = propose("Does a beat b on m?", write_words=words)
+    assert plan.measures == ["m"] and list(plan.words.things) == ["a", "b", "m"]
+    bad = plan.model_copy(update={"measures": ["zz"]})
+    assert any("measure" in p for p in check_plan(bad))

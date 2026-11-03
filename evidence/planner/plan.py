@@ -3,7 +3,8 @@ one task, one typed output, and the hard limits checked in code.
 
 Steps, in order (propose):
   1. lines      question -> 1-5 evidence lines (question, kind, saved template or none)
-  2. things     question -> the field and the things the question names
+  2. things     question -> the field, the things the question names (the one it asks about first) and which of
+                them are measures (Plan.measures: they become metrics in a plan run, the others compared things)
   3. rule       question + lines -> the main-answer rule, from the fixed set RULES (code applies it: lines.py)
   4. decisions  one call per line -> the research-policy choices that line needs (type, value, reason)
   5. query      one call per line -> one SPARQL query. Choices stay in the query as `$name` placeholders (the
@@ -30,12 +31,12 @@ import dspy
 import pyoxigraph as ox
 from pydantic import BaseModel, Field
 
-from evidence.plan import Decision, EvidenceLine, Plan, WordList
+from evidence.plan import MAIN_RULE, Decision, EvidenceLine, Plan, WordList
 from evidence.steps import Step, using
 from evidence.vocab import EV
 
 OVERSELL_ID = "oversell"
-MAIN_RULE_ID = "main_rule"
+MAIN_RULE_ID = MAIN_RULE   # the rule's decision row: id and type "main_rule" (evidence.plan.Decision)
 NOT_PLANNED = "could not plan"
 DECISION_TYPES = ("must_match", "counts_as", "threshold", "include")
 MAX_LINES = 5
@@ -131,13 +132,17 @@ class LinesSig(dspy.Signature):
 
 class ThingsSig(dspy.Signature):
     """Name the things the question is about and the field it belongs to. `things` are short ids, one per thing
-    named in the question (a method, a measure, a dataset). `field` is cs, medicine, materials or other.
+    named in the question (a method, a measure, a dataset): first the thing the question asks about, then what it
+    is compared with, then the rest. `measures` repeats the ids of `things` that are measures (a score, a rate, a
+    time, a count of outcomes); empty when the question names none. `field` is cs, medicine, materials or other.
 
-    Example: "Does method A beat method B on measure M?" -> field "cs", things ["method_a", "method_b", "measure_m"]"""
+    Example: "Does method A beat method B on measure M?" -> field "cs", things ["method_a", "method_b", "measure_m"],
+    measures ["measure_m"]"""
     question: str = dspy.InputField(desc="the research question")
     problem: str = dspy.InputField(desc="why the last reply was refused; empty on the first call")
     field: Literal["cs", "medicine", "materials", "other"] = dspy.OutputField()
     things: list[str] = dspy.OutputField(desc="short ids of the things the question names; at least one")
+    measures: list[str] = dspy.OutputField(desc="the ids among things that are measures; may be empty")
 
 
 class RuleSig(dspy.Signature):
@@ -242,7 +247,7 @@ def decision_params(plan: Plan, query: str) -> dict[str, Any]:
     decision changes what runs. `include` of "all" (or empty) is left out: no filter."""
     out: dict[str, Any] = {}
     for kind, param in decision_map(query).items():
-        d = next((x for x in plan.decisions if x.type == kind and x.id != MAIN_RULE_ID), None)
+        d = next((x for x in plan.decisions if x.type == kind and x.id != MAIN_RULE_ID and x.type != MAIN_RULE), None)
         if d is None:
             continue
         value = _value(d.value)
@@ -308,7 +313,9 @@ def check_plan(plan: Plan, templates: Mapping[str, str] | None = None) -> list[s
         problems.append("the plan has no evidence line")
     if len(plan.lines) > MAX_LINES + 1:
         problems.append(f"the plan has more than {MAX_LINES} evidence lines")
-    problems += [f"decision {d.id} has the unknown type {d.type!r}" for d in plan.decisions if d.type not in DECISION_TYPES]
+    problems += [f"decision {d.id} has the unknown type {d.type!r}" for d in plan.decisions
+                 if d.type not in DECISION_TYPES and d.type != MAIN_RULE]
+    problems += [f"the measure {m!r} is not one of the plan's things" for m in plan.measures if m not in plan.words.things]
     if templates is not None:
         problems += [f"line {x.id} names the unknown template {x.template!r}" for x in plan.lines
                      if x.template and x.template not in templates]
@@ -352,7 +359,7 @@ def how_sentences(line: EvidenceLine, plan: Plan, template: str | None, fresh: l
         out = [_NAME.sub(lambda m: str(values.get(m.group(1), "the chosen value")), s).rstrip(".") + "."
                for s in pieces if not s.startswith("Params")]
     else:
-        out = list(fresh or []) or ["This question was written for this plan; it has no explanation yet."]
+        out = list(fresh or line.how or []) or ["This question was written for this plan; it has no explanation yet."]
     for kind, value in _used_choices(plan, line.query):
         out.append(f"It uses your {LABELS[kind]} choice: {value if isinstance(value, str) else json.dumps(value)}.")
     return out
@@ -386,15 +393,17 @@ def _line_drafts(question: str, clar: list[dict[str, str]], templates: Mapping[s
     return drafts[:MAX_LINES]
 
 
-def _things_of(question: str) -> tuple[str, list[str]]:
+def _things_of(question: str) -> tuple[str, list[str], list[str]]:
+    """(field, things, measures); a measure that is not one of the things is dropped."""
     problem = ""
     for _ in range(2):
         out = _things(question=question, problem=problem)
         things = [t.strip() for t in out.things if t.strip()]
         if things:
-            return out.field, things
+            measures = [m.strip() for m in (out.measures or []) if m.strip() in things]
+            return out.field, things, list(dict.fromkeys(measures))
         problem = "you named no thing; name at least one"
-    return out.field, []
+    return out.field, [], []
 
 
 def _query_for(question: str, line: LineDraft, template: str | None, choices: list[str]) -> str | None:
@@ -419,7 +428,7 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
     clar = [dict(c) for c in clarifications or []]
     templates = dict(templates or {})
     drafts = _line_drafts(question, clar, templates)
-    field, things = _things_of(question)
+    field, things, measures = _things_of(question)
     rule = _rule(question=question, lines=json.dumps([d.question for d in drafts])).rule if drafts else "any_line"
     if rule not in RULES:
         rule = "any_line"
@@ -435,7 +444,7 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
     if oversell and all(x.type != "threshold" for x in decisions):
         decisions.append(Decision(id=f"d{len(decisions) + 1}", type="threshold", value=DEFAULT_THRESHOLD,
                                   reason="default: a difference smaller than this does not count as better"))
-    decisions.append(Decision(id=MAIN_RULE_ID, type="counts_as", value=rule,
+    decisions.append(Decision(id=MAIN_RULE_ID, type=MAIN_RULE, value=rule,
                               reason=f"how the lines add up to one answer ({RULES[rule]})"))
 
     empty = WordList(things={}, cues=[], written_by="none", ontology_names={})
@@ -446,10 +455,10 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
         choices = sorted(set(decision_map(template or "").values()) | set(DECISION_TYPES))
         query = _query_for(question, d, template, choices)
         lid = f"l{i}"
-        lines.append(EvidenceLine(id=lid, question=d.question if query else f"{d.question} ({NOT_PLANNED})",
-                                  query=query or "", template=d.template))
         if query and explain and not d.template:
             how[lid] = [s.strip() for s in _explain(query=query).sentences if s.strip()][:4]
+        lines.append(EvidenceLine(id=lid, question=d.question if query else f"{d.question} ({NOT_PLANNED})",
+                                  query=query or "", template=d.template, how=how.get(lid, [])))
     if oversell:
         text = templates.get(OVERSELL_ID)
         query = text if text else OVERSELL_QUERY
@@ -458,7 +467,7 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
                                       template=OVERSELL_ID if text else None, removable=False))
     words = write_words(question, things) if things else empty
     plan = Plan(question=question, field=field, lines=lines, main_rule=rule, words=words, decisions=decisions,
-                clarifications=clar)
+                clarifications=clar, measures=measures)
     return plan, how
 
 

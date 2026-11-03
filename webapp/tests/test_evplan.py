@@ -30,7 +30,7 @@ def make_plan(question: str, clar: list[dict[str, str]]) -> tuple[Plan, dict[str
                        EvidenceLine(id="oversell", question="Oversold?", query=Q, template=None, removable=False)],
                 decisions=[Decision(id="d1", type="threshold", value="0.01", reason="noise"),
                            Decision(id="d2", type="include", value="all", reason="small"),
-                           Decision(id="main_rule", type="counts_as", value="any_line", reason="fixed set")],
+                           Decision(id="main_rule", type="main_rule", value="any_line", reason="fixed set")],
                 clarifications=clar)
     return plan, {"l1": ["It looks at claims."]}
 

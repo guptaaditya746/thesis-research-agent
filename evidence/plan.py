@@ -5,9 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
+from pydantic import Field, model_validator
+
 from .contract import Frozen, digest
 
-__all__ = ["Decision", "EvidenceLine", "Plan", "WordList", "load_plan", "write_plan"]
+__all__ = ["MAIN_RULE", "Decision", "EvidenceLine", "Plan", "WordList", "load_plan", "write_plan"]
 
 
 class WordList(Frozen):
@@ -23,10 +25,14 @@ class WordList(Frozen):
         return digest(self.model_dump(mode="json"))
 
 
+MAIN_RULE = "main_rule"   # the id and the type of the main-answer rule's decision row
+
+
 class Decision(Frozen):
-    """One choice the planner made; `confirmed_by` stays None until a human confirms it."""
+    """One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the
+    main-answer rule (its value one of evidence.planner.RULES); it fills no query parameter and is never rerun."""
     id: str
-    type: Literal["must_match", "counts_as", "threshold", "include"]
+    type: Literal["must_match", "counts_as", "threshold", "include", "main_rule"]
     value: Any
     reason: str
     flagged: bool = False
@@ -36,15 +42,19 @@ class Decision(Frozen):
 
 
 class EvidenceLine(Frozen):
-    """One line of evidence to look for; the oversell line has `removable=False`."""
+    """One line of evidence to look for; the oversell line has `removable=False`. `how`: the plain sentences shown
+    under "how?" (never code), kept with the line so a reloaded plan still has them."""
     id: str
     question: str
     query: str
     template: str | None
     removable: bool = True
+    how: list[str] = Field(default_factory=list)
 
 
 class Plan(Frozen):
+    """`measures`: the thing ids (keys of `words.things`) that are measures (a score, a rate); the other things are
+    compared things, the first of them the one the question asks about (the treatment side of a plan run)."""
     question: str
     field: Literal["cs", "medicine", "materials", "other"]
     lines: list[EvidenceLine]
@@ -52,6 +62,17 @@ class Plan(Frozen):
     words: WordList
     decisions: list[Decision]
     clarifications: list[dict[str, str]]
+    measures: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_main_rule(cls, data: Any) -> Any:
+        """A plan written before the `main_rule` type kept the rule as a `counts_as` row with id main_rule."""
+        if isinstance(data, dict) and isinstance(data.get("decisions"), list):
+            data = {**data, "decisions": [
+                {**d, "type": MAIN_RULE} if isinstance(d, dict) and d.get("id") == MAIN_RULE and d.get("type") == "counts_as"
+                else d for d in data["decisions"]]}
+        return data
 
     def ready(self) -> bool:
         """True when every decision is confirmed."""
