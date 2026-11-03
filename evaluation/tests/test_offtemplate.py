@@ -67,16 +67,26 @@ def test_match_when_rows_equal() -> None:
                                    "match_on_run_rate": 2 / 3}
 
 
+def _plan_of(line):
+    from evidence.tests.test_plan_run import make_plan
+    return make_plan().model_copy(update={"lines": [line]})
+
+
+def _line(q, query, template=None):
+    from evidence.plan import EvidenceLine
+    return EvidenceLine(id="l1", question=q.question, query=query, template=template)
+
+
 def test_check_with_a_plan_line() -> None:
     pytest.importorskip("evidence.kg.query")
     from evidence.kg.truthgraph import truth_store
     qs = ot.load_questions()
     q = qs[2]
     key = truth_store(q)
-    run = lambda line, store=key: SimpleNamespace(plan=SimpleNamespace(lines=[line]), store=store)   # noqa: E731
-    fresh = SimpleNamespace(question=q.question, query=q.sparql, template=None)
-    saved = SimpleNamespace(question=q.question, query=q.sparql, template="count")
-    wrong = SimpleNamespace(question=q.question, query=qs[10].sparql, template=None)
+    run = lambda line, store=key: SimpleNamespace(plan=_plan_of(line), store=store)   # noqa: E731
+    fresh = _line(q, q.sparql)
+    saved = _line(q, q.sparql, "count")
+    wrong = _line(q, qs[10].sparql)
     got = ot.check(run(fresh), q)
     assert got["fresh"] is True and got["match_on_key"] is True and got["match_on_run"] is True
     assert ot.check(run(saved), q)["fresh"] is False
@@ -92,3 +102,33 @@ def test_questions_are_committed_before_the_checker() -> None:
     if questions is None or checker is None:
         pytest.skip("not committed yet")
     assert questions <= checker      # the questions were committed no later than (here: before) the checker
+
+
+def test_check_fills_the_plans_choices_in_a_planner_shaped_query() -> None:
+    """The planner keeps choices as placeholders ($threshold, $sides); check fills them from the plan (C1)."""
+    pytest.importorskip("evidence.kg.query")
+    from evidence.kg.truthgraph import truth_store
+    q = ot.load_questions()[2]
+    query = q.sparql.replace("WHERE {", "WHERE {\n  VALUES ?side { $sides }\n  FILTER($threshold > 0)\n", 1)
+    query = "# params: threshold, sides\n" + query
+    run = SimpleNamespace(plan=_plan_of(_line(q, query)), store=truth_store(q))
+    got = ot.check(run, q)
+    assert got["match_on_key"] is True and got["match_on_run"] is True
+
+
+def test_offtemplate_command_loads_records_and_reports_a_failed_question(tmp_path) -> None:
+    pytest.importorskip("evidence.kg.query")
+    from evaluation import wholerun_cmd
+    from evidence.kg.build import serialize
+    from evidence.kg.truthgraph import truth_store
+    from evidence.plan import write_plan
+    first, second = ot.load_questions()[:2]
+    runs = tmp_path / "runs"
+    for q, query in ((first, first.sparql), (second, "SELECT ?x WHERE { ?x $nope ?y }")):
+        (runs / q.id).mkdir(parents=True)
+        write_plan(_plan_of(_line(q, query)), runs / q.id / "plan.json")
+    (runs / first.id / "records.nq").write_bytes(serialize(truth_store(first)))
+    report = wholerun_cmd.offtemplate(runs, tmp_path / "o")
+    assert report["questions"][first.id]["match_on_run"] is True
+    assert report["questions"][second.id]["failed"].startswith("failed: ")
+    assert report["summary"]["questions"] == 2 and report["summary"]["match_rate"] == 0.5

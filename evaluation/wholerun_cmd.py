@@ -263,6 +263,18 @@ def render(report: dict[str, Any]) -> str:
 
 # --- off-template -------------------------------------------------------------------------------------------------
 
+def _records_store(root: Path) -> Any:
+    """The run's records graph (records.nq) as a pyoxigraph Store; None when the run wrote none."""
+    from evidence.planrun import RECORDS_FILE
+    path = root / RECORDS_FILE
+    if not path.is_file():
+        return None
+    import pyoxigraph as ox
+    store = ox.Store()
+    store.load(path.read_bytes(), format=ox.RdfFormat.N_QUADS)
+    return store
+
+
 def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
     """Check every off-template question that has `<runs>/<question id>/plan.json`: the two generality numbers."""
     from .offtemplate import check as ot
@@ -272,7 +284,11 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
         path = Path(runs) / q.id / PLAN_FILE
         if not path.is_file():
             continue
-        found = ot.check(SimpleNamespace(plan=load_plan(path)), q)
+        try:
+            found = ot.check(SimpleNamespace(plan=load_plan(path), store=_records_store(Path(runs) / q.id)), q)
+        except Exception as exc:   # noqa: BLE001 - one bad question is a "no match", never a dead report
+            found = {"fresh": False, "match_on_key": False, "match_on_run": None, "extra_columns": [],
+                     "failed": f"failed: {type(exc).__name__}: {exc}"}
         results.append(found)
         per[q.id] = found
     committed = ot.committed_at([ot.QUESTIONS, *sorted(ot.REFERENCE.glob("*.rq"))])
@@ -283,6 +299,7 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
             f"Answered with a fresh query: {_cell(report['summary']['fresh_share'])}.",
             f"Off-template match rate (answer key): {_cell(report['summary']['match_rate'])}.",
             f"Match rate on the run's own records: {_cell(report['summary']['match_on_run_rate'])}.",
+            *[f"- {i}: {r['failed']}" for i, r in per.items() if r.get("failed")],
             f"Questions first committed: {report['committed_at'] or 'not in git'}.", ""]
     rep.write_pair(report, chr(10).join(text), out, "offtemplate")
     return report

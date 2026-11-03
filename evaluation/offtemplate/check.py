@@ -103,11 +103,13 @@ def check(run: Any, q: OffTemplateQuestion) -> dict[str, Any]:
     (end to end; None when the run has no `store`), "extra_columns": plan columns beyond the gold's}."""
     from evidence.kg.query import run_query
     from evidence.kg.truthgraph import truth_store
+    from evidence.planrun import line_params
     line = plan_line(run.plan, q)
     gold = gold_rows(q)
-    on_key = run_query(truth_store(q), line.query, {}).rows
+    params = line_params(run.plan, line.query)      # the planner keeps $choices: fill them as the run does
+    on_key = run_query(truth_store(q), line.query, params).rows
     store = getattr(run, "store", None)
-    on_run = run_query(store, line.query, {}).rows if store is not None else None
+    on_run = run_query(store, line.query, params).rows if store is not None else None
     return {"fresh": line.template is None, "match_on_key": same_rows(on_key, gold),
             "match_on_run": None if on_run is None else same_rows(on_run, gold),
             "extra_columns": extra_columns(on_key, gold)}
@@ -117,6 +119,7 @@ def summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     """The two numbers of the generality claim over the checked questions: the share answered with a fresh query and
     the match rate on the answer key (`match_rate`); the end-to-end rate beside them (`match_on_run_rate`)."""
     n = len(results)
+    results = [{"fresh": False, "match_on_key": False, "match_on_run": None, **r} for r in results]   # failed: no match
     runs = [r["match_on_run"] for r in results if r.get("match_on_run") is not None]
     return {"questions": n, "fresh_share": sum(r["fresh"] for r in results) / n if n else None,
             "match_rate": sum(r["match_on_key"] for r in results) / n if n else None,
