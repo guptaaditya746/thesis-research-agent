@@ -28,6 +28,20 @@ from evidence.names import clean
 from ..wholerun import RealQuestion, left_out_line
 
 SOURCE_FILE = "sofc.json"
+LAYOUT_VERIFIED = False   # the release layout is assumed (module docstring): quote no number before this is True
+# measures where a lower value is better (a measure whose cleaned name holds one of these words); all others rank
+# higher-is-better
+LOWER_IS_BETTER = ("resistance", "degradation")
+
+
+def _lower_is_better(measure: str) -> bool:
+    return any(w in clean(measure) for w in LOWER_IS_BETTER)
+
+
+def _unit_key(unit: Any) -> str:
+    """A unit as a grouping key: its QUDT form when known, else its cleaned text."""
+    from .measeval import qudt
+    return qudt(unit) or clean(str(unit or ""))
 
 
 def _read(src: Path) -> list[dict[str, Any]]:
@@ -47,36 +61,56 @@ def label_check(src: Path) -> dict[str, Any]:
     """{"complete": bool, "why": str}: every annotated value names a material and a measure."""
     values = [v for p in _read(src) for v in p.get("values", [])]
     if not values:
-        return {"complete": False, "why": "no annotated values; only the experiment-frame check applies"}
+        return {"complete": False, "layout_verified": LAYOUT_VERIFIED,
+                "why": "no annotated values; only the experiment-frame check applies"}
     bad = [v for v in values if not v.get("material") or not v.get("measure")]
     if bad:
-        return {"complete": False, "why": f"{len(bad)} of {len(values)} values lack a material or a measure link; "
+        return {"complete": False, "layout_verified": LAYOUT_VERIFIED, "why": f"{len(bad)} of {len(values)} values lack a material or a measure link; "
                                           "only the experiment-frame check applies"}
-    return {"complete": True, "why": f"all {len(values)} values are linked to a material and a measure"}
+    return {"complete": True, "layout_verified": LAYOUT_VERIFIED, "why": f"all {len(values)} values are linked to a material and a measure"}
 
 
 def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
     """Rank questions per measure (see the module docstring); empty when `label_check` is not complete."""
     if not label_check(src)["complete"]:
         return []
-    by_measure: dict[str, dict[str, tuple[float, set[str]]]] = {}
+    by_measure: dict[tuple[str, str], dict[str, tuple[float, set[str]]]] = {}
     for paper in _open(src):
         for v in paper.get("values", []):
-            best, docs = by_measure.setdefault(str(v["measure"]), {}).get(str(v["material"]), (float("-inf"), set()))
-            by_measure[str(v["measure"])][str(v["material"])] = (max(best, float(v["value"])), docs | {str(paper["id"])})
+            key = (str(v["measure"]), _unit_key(v.get("unit")))
+            lower = _lower_is_better(key[0])
+            best, docs = by_measure.setdefault(key, {}).get(str(v["material"]), (float("inf") if lower else float("-inf"), set()))
+            value = float(v["value"])
+            by_measure[key][str(v["material"])] = (min(best, value) if lower else max(best, value),
+                                                   docs | {str(paper["id"])})
     corpus = Path(corpus_dir) if corpus_dir is not None else Path(src) / "corpus"
+    units_of: dict[str, set[str]] = {}
+    for measure, unit in by_measure:
+        units_of.setdefault(measure, set()).add(unit)
     out = []
-    for measure in sorted(by_measure):
-        materials = by_measure[measure]
+    for measure, unit in sorted(by_measure):
+        materials = by_measure[(measure, unit)]
         if len(materials) < 2:
             continue
-        ranking = sorted(materials, key=lambda m: (-materials[m][0], m))
+        lower = _lower_is_better(measure)
+        ranking = sorted(materials, key=lambda m: (materials[m][0] if lower else -materials[m][0], m))
+        shown = f"{measure} (in {unit})" if len(units_of[measure]) > 1 else measure
         out.append(RealQuestion(
-            id=f"sofc-{len(out) + 1:03d}", question=f"Which material gives the highest {measure}?", field="materials",
+            id=f"sofc-{len(out) + 1:03d}",
+            question=f"Which material gives the {'lowest' if lower else 'highest'} {shown}?", field="materials",
             corpus_dir=corpus, kind="rank",
             gold={"ranking": ranking, "papers": sorted(set().union(*(d for _, d in materials.values()))),
-                  "measure": measure}))
+                  "measure": measure, "unit": unit, "higher_is_better": not lower, "layout_verified": LAYOUT_VERIFIED},
+            records=[r for r in truth_items(src) if r["metric"] == measure]))
     return out
+
+
+def truth_items(src: Path) -> list[dict[str, Any]]:
+    """The answer-key records (one per annotated value of a paper with open text): thing = the material, metric =
+    the measure, number = the value (keystore.py)."""
+    return [{"paper": str(p["id"]), "thing": str(v["material"]), "metric": str(v["measure"]),
+             "number": float(v["value"]), "higher_is_better": None, "context": None, "settings": {}}
+            for p in _open(src) for v in p.get("values", []) if v.get("material") and v.get("measure")]
 
 
 def experiment_frames(src: Path) -> dict[str, list[dict[str, Any]]]:
@@ -103,14 +137,15 @@ def score_experiments(run: Any, src: Path) -> dict[str, Any]:
         mapped.setdefault(doc, []).append(values)
 
     def covers(values: list[str], frame: dict[str, Any]) -> bool:
-        wanted = [clean(str(v)) for v in frame["slots"].values() if str(v).strip()]
-        return bool(wanted) and all(any(w in have or have in w for have in values) for w in wanted)
+        wanted = [w for v in frame["slots"].values() if (w := clean(str(v)))]
+        values = [v for v in values if v]
+        return bool(wanted) and all(any(set(w.split()) <= set(have.split()) for have in values) for w in wanted)
 
     found = sum(any(covers(v, f) for v in mapped.get(doc, [])) for doc, fs in frames.items() for f in fs)
     total = sum(len(fs) for fs in frames.values())
     right = sum(any(covers(v, f) for f in frames.get(doc, [])) for doc, vs in mapped.items() for v in vs)
     n_run = sum(len(vs) for vs in mapped.values())
     counts = sum(len(mapped.get(doc, [])) == len(fs) for doc, fs in frames.items())
-    return {"recall": found / total if total else None, "precision": right / n_run if n_run else None,
+    return {"layout_verified": LAYOUT_VERIFIED, "recall": found / total if total else None, "precision": right / n_run if n_run else None,
             "frames": total, "run_experiments": n_run,
             "count_agreement": counts / len(frames) if frames else None}

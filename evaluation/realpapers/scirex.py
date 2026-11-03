@@ -267,6 +267,7 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
                 tasks.setdefault(str(task).replace("_", " "), {}).setdefault(str(dataset).replace("_", " "),
                                                                              set()).add(str(doc["doc_id"]))
     corpus = Path(corpus_dir) if corpus_dir is not None else Path(src).parent
+    keys = truth_items(src)
     out = []
     for task in sorted(tasks):
         datasets = tasks[task]
@@ -275,5 +276,30 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
         out.append(RealQuestion(
             id=f"scirex-{len(out) + 1:03d}", question=f"Which datasets are used for {task}?", field="cs",
             corpus_dir=corpus, kind="list",
-            gold={"items": sorted(datasets), "papers": sorted(set().union(*datasets.values())), "task": task}))
+            gold={"items": sorted(datasets), "papers": sorted(set().union(*datasets.values())), "task": task},
+            records=[r for r in keys if r["settings"]["task"] == task]))
+    return out
+
+
+def truth_items(src: Path) -> list[dict[str, Any]]:
+    """The answer-key records of a SciREX file (one per relation with a method, a dataset and a score): thing = the
+    method, metric, number = the score, context = the dataset, settings task and dataset (keystore.py)."""
+    out = []
+    for line in Path(src).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        doc = json.loads(line)
+        for rel in doc.get("n_ary_relations", []):
+            dataset = rel.get("Material") or rel.get("Dataset")
+            try:
+                number = float(str(rel.get("score")).rstrip("%"))
+            except ValueError:
+                continue
+            if not (rel.get("Method") and dataset and rel.get("Metric")):
+                continue
+            out.append({"paper": str(doc["doc_id"]), "thing": str(rel["Method"]).replace("_", " "),
+                        "metric": str(rel["Metric"]).replace("_", " "), "number": number, "higher_is_better": None,
+                        "context": str(dataset).replace("_", " "),
+                        "settings": {"task": str(rel.get("Task", "")).replace("_", " "),
+                                     "dataset": str(dataset).replace("_", " ")}})
     return out

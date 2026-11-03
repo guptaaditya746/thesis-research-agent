@@ -24,6 +24,8 @@ from ..wholerun import RealQuestion, left_out_line
 
 RELEASE_FILE = "release.json"
 SOURCE_FILE = "cochraneforest_corpus.json"
+LAYOUT_VERIFIED = False   # the release layout is assumed (module docstring): quote no number before this is True
+KEY_RECORDS = "key-records run: not available"   # a plot has per-study directions only, no value records
 ALLOWED_LICENCES = ("cc-by", "cc-by-4.0", "cc-by-sa", "cc-by-sa-4.0", "cc0", "cc0-1.0")
 
 
@@ -78,7 +80,7 @@ def to_corpus(src: Path, out: Path) -> Path:
             json.dumps({"corpus_id": f"cochraneforest-{plot['id']}", "papers": papers}, indent=1) + "\n",
             encoding="utf-8", newline="\n")
     (out / SOURCE_FILE).write_text(json.dumps(
-        {"licence": data.get("licence"), "plots": len(data["plots"]), "studies": total, "left_out": left,
+        {"layout_verified": LAYOUT_VERIFIED, "key_records": KEY_RECORDS, "licence": data.get("licence"), "plots": len(data["plots"]), "studies": total, "left_out": left,
          "left_out_line": left_out_line(left, total)}, indent=1) + "\n", encoding="utf-8", newline="\n")
     return out
 

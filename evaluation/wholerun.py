@@ -15,11 +15,23 @@ Run rules shared by every real set: `sample` (a fixed sample of questions, saved
 of each set's papers for tuning, written to tune_split.json; `score` refuses a question whose papers are in it) and
 `left_out_line` (the open-full-text count the report states). `score` accepts either plan confirmation row,
 "auto-confirmed" or "hand-confirmed", and writes it into the result.
+
+The `Answer` contract (what an engine run, or the RAG baseline, must produce to be scored; the owner of the engine
+side is Wave 2 Task 8.1, the adapter "engine run -> Answer"):
+  rank     Answer.ranking   paper ids (the corpus manifest ids) or names, best first; unknown ones are ignored
+  list     Answer.names     the names found, once each
+  compare  Answer.directions {paper id: "improves"|"worsens"|"no_effect"}; Answer.conclusion the overall direction
+  claims   Answer.claims    [{"about": <gold conclusion id>, "direction": ...}]; `about` must be one of
+                            `gold["conclusions"][i]["id"]`, the ids the question gives
+An unused part stays empty: an empty answer is valid and scores 0 (recall) or None (precision).
+`RealQuestion.records` (optional) are the set's answer-key records for the key-records run (see
+realpapers/keystore.py); None means "key-records run: not available" (`key_status`).
 """
 from __future__ import annotations
 
 import json
 import random
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -45,6 +57,7 @@ class RealQuestion:
     corpus_dir: Path
     gold: dict[str, Any]
     kind: Kind
+    records: list[dict[str, Any]] | None = None   # answer-key records (keystore.py); None: not available
 
 
 @dataclass(frozen=True)
@@ -78,7 +91,10 @@ def _rank(answer: Answer, gold: dict[str, Any], groups: NameGroups | None) -> di
 
 
 def _list(answer: Answer, gold: dict[str, Any], groups: NameGroups | None) -> dict[str, Any]:
-    want, got = list(gold["items"]), list(dict.fromkeys(answer.names))
+    want, got = list(gold["items"]), []
+    for name in answer.names:    # one entry per name: "SQuAD" and "squad" are one
+        if _find(name, got, groups) is None:
+            got.append(name)
     right = [n for n in got if _find(n, want, groups) is not None]
     found = [w for w in want if _find(w, got, groups) is not None]
     precision, recall = _ratio(len(right), len(got)), _ratio(len(found), len(want))
@@ -115,12 +131,33 @@ def question_papers(q: RealQuestion) -> list[str]:
 
 
 def tune_papers(q: RealQuestion) -> set[str]:
-    """The papers held out for tuning (tune_split.json in the corpus dir or its parent); empty without the file."""
+    """The papers held out for tuning (tune_split.json in the corpus dir or its parent); empty without the file.
+    Warns when none of the question's paper ids appears in the file's id space (held-out and rest), since the guard
+    could then never fire."""
     for folder in (Path(q.corpus_dir), Path(q.corpus_dir).parent):
         path = folder / TUNE_FILE
         if path.is_file():
-            return set(json.loads(path.read_text(encoding="utf-8"))["papers"])
+            data = json.loads(path.read_text(encoding="utf-8"))
+            known = set(data["papers"]) | set(data.get("rest", []))
+            mine = set(question_papers(q))
+            if known and mine and not mine & known:
+                warnings.warn(f"{q.id}: none of its paper ids is in {path}; the tune guard cannot check it",
+                              stacklevel=2)
+            return set(data["papers"])
     return set()
+
+
+def key_status(q: RealQuestion) -> str:
+    """"available" when the set has answer-key records, else the report line for a set without them."""
+    return "available" if q.records is not None else "key-records run: not available"
+
+
+def key_store(q: RealQuestion) -> Any:
+    """The question's answer-key records as a graph (keystore.store), or None when the set has none."""
+    if q.records is None:
+        return None
+    from .realpapers.keystore import store
+    return store(q.records)
 
 
 def score(answer: Answer, q: RealQuestion, *, confirmation: str | None = None,
@@ -169,3 +206,19 @@ def tune_split(papers: list[str], fraction: float = 0.2, seed: int = 0, out: Pat
 
 def left_out_line(left_out: int, total: int) -> str:
     return f"left out: {left_out} of {total} (no open full text)"
+
+
+def score_set(questions: list[RealQuestion], answers_auto: dict[str, Answer], answers_hand: dict[str, Answer],
+              out: Path, *, n: int = 10, seed: int = 0, groups: NameGroups | None = None) -> dict[str, Any]:
+    """The two rows of a set, "auto-confirmed" and "hand-confirmed" (hand: the first 5 sampled questions), over the
+    fixed sample (n questions, seed); writes sample.json and real_set.json into `out`. A question with no answer in
+    a row is scored as an empty answer."""
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    chosen = sample(questions, n, seed, out / SAMPLE_FILE)
+    rows = {"auto-confirmed": [score(answers_auto.get(q.id, Answer()), q, confirmation="auto-confirmed", groups=groups)
+                               for q in chosen],
+            "hand-confirmed": [score(answers_hand.get(q.id, Answer()), q, confirmation="hand-confirmed",
+                                     groups=groups) for q in chosen[:5]]}
+    (out / "real_set.json").write_text(json.dumps(rows, indent=1) + chr(10), encoding="utf-8", newline=chr(10))
+    return rows

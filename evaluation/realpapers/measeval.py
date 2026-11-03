@@ -24,6 +24,7 @@ from typing import Any
 from evidence.names import clean
 
 SOURCE_FILE = "measeval.json"
+LAYOUT_VERIFIED = False   # the release layout is assumed (module docstring): quote no number before this is True
 QUDT_BASE = "http://qudt.org/vocab/unit/"
 QUDT: dict[str, str] = {
     "%": "PERCENT", "percent": "PERCENT", "per cent": "PERCENT",
@@ -49,7 +50,7 @@ def fields(src: Path) -> dict[str, Any]:
     data = _read(src)
     listed = sorted({str(f) for f in data.get("fields") or []} | {str(p["field"]) for p in data["papers"]
                                                                   if p.get("field")})
-    return {"fields": listed, "status": "listed in the release" if listed else "unverified"}
+    return {"layout_verified": LAYOUT_VERIFIED, "fields": listed, "status": "listed in the release" if listed else "unverified"}
 
 
 def qudt(unit: str | None) -> str | None:
@@ -89,6 +90,6 @@ def values_check(run: Any, src: Path) -> dict[str, Any]:
             found += 1
             unit_ok += same_unit(hit.get("unit"), gold.get("unit"))
             entity_ok += _same_entity(hit.get("entity"), gold.get("entity"))
-    return {"quantities": total, "values_found": found / total if total else None,
+    return {"layout_verified": LAYOUT_VERIFIED, "quantities": total, "values_found": found / total if total else None,
             "unit_correct": unit_ok / found if found else None,
             "entity_correct": entity_ok / found if found else None}

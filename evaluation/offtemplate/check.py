@@ -6,8 +6,9 @@ query does on the answer key).
 the shape `evidence.kg.truthgraph.truth_store` reads. `gold_rows` runs the reference query on `truth_store`; both it and
 `check` import the query runner (evidence.kg.query, workstream W4) when called, so this module loads without it.
 
-`check(run, q)`: `run` has `.plan` (an evidence.plan.Plan) and `.store` (the run's records graph, a pyoxigraph Store).
-The line is the plan's line asking the question's text, else its first line.
+`check(run, q)`: `run` has `.plan` (an evidence.plan.Plan) and optionally `.store` (the run's records graph, a
+pyoxigraph Store). The line is the plan's line asking the question's text, else its first line. The plan's query runs
+on the answer key (planning alone: the generality number) and on the run's records (end to end).
 
 Commit-time rule: `committed_at(paths)` gives the time the files were first committed (None when not in git), so a
 report can show the questions were fixed before the planner ran.
@@ -49,13 +50,40 @@ def load_questions(path: Path = QUESTIONS, root: Path = ROOT) -> list[OffTemplat
     return [OffTemplateQuestion(q["id"], q["question"], REFERENCE / q["reference"], truth) for q in spec["questions"]]
 
 
-def _key(row: dict[str, Any]) -> tuple[tuple[str, Any], ...]:
-    return tuple(sorted((k, round(v, FLOAT_PLACES) if isinstance(v, float) else v) for k, v in row.items()))
+def _cell(v: Any) -> Any:
+    return round(v, FLOAT_PLACES) if isinstance(v, float) else v
 
 
-def same_rows(a: list[dict[str, Any]], b: list[dict[str, Any]]) -> bool:
-    """The two answers hold the same rows (order ignored, floats to six places)."""
-    return sorted(map(_key, a), key=repr) == sorted(map(_key, b), key=repr)
+def _column(rows: list[dict[str, Any]], name: str) -> list[str]:
+    return sorted(repr(_cell(r.get(name))) for r in rows)
+
+
+def same_rows(plan: list[dict[str, Any]], gold: list[dict[str, Any]]) -> bool:
+    """The plan's answer holds the gold rows: compared on VALUES, not on variable names. Each gold column is matched
+    to a plan column holding the same values (as a multiset); the rows, projected onto those columns, must then be
+    the same multiset. A plan column that matches no gold column (an extra count, say) is ignored, see
+    `extra_columns`. Floats compare to six places."""
+    if not plan or not gold:
+        return not plan and not gold
+    if len(plan) != len(gold):
+        return False
+    plan_cols = list(dict.fromkeys(k for r in plan for k in r))
+    picked: list[str] = []
+    for name in dict.fromkeys(k for r in gold for k in r):
+        want = _column(gold, name)
+        hit = next((c for c in plan_cols if c not in picked and _column(plan, c) == want), None)
+        if hit is None:
+            return False
+        picked.append(hit)
+    gold_cols = list(dict.fromkeys(k for r in gold for k in r))
+    project = lambda rows, cols: sorted(tuple(repr(_cell(r.get(c))) for c in cols) for r in rows)   # noqa: E731
+    return project(plan, picked) == project(gold, gold_cols)
+
+
+def extra_columns(plan: list[dict[str, Any]], gold: list[dict[str, Any]]) -> list[str]:
+    """Plan columns whose values equal no gold column (reported, never a failure)."""
+    gold_cols = [_column(gold, k) for k in dict.fromkeys(k for r in gold for k in r)]
+    return [c for c in dict.fromkeys(k for r in plan for k in r) if _column(plan, c) not in gold_cols]
 
 
 def gold_rows(q: OffTemplateQuestion) -> list[dict[str, Any]]:
@@ -69,19 +97,30 @@ def plan_line(plan: Any, q: OffTemplateQuestion) -> Any:
     return next((line for line in plan.lines if line.question == q.question), plan.lines[0])
 
 
-def check(run: Any, q: OffTemplateQuestion) -> dict[str, bool]:
-    """{"fresh": the plan's line is a fresh query, "match": its answer equals the gold answer}."""
+def check(run: Any, q: OffTemplateQuestion) -> dict[str, Any]:
+    """{"fresh": the plan's line is a fresh query, "match_on_key": its answer on the answer key's records equals the
+    gold answer (planning alone: THE generality number), "match_on_run": the same on the run's extracted records
+    (end to end; None when the run has no `store`), "extra_columns": plan columns beyond the gold's}."""
     from evidence.kg.query import run_query
+    from evidence.kg.truthgraph import truth_store
     line = plan_line(run.plan, q)
-    answer = run_query(run.store, line.query, {})
-    return {"fresh": line.template is None, "match": same_rows(answer.rows, gold_rows(q))}
+    gold = gold_rows(q)
+    on_key = run_query(truth_store(q), line.query, {}).rows
+    store = getattr(run, "store", None)
+    on_run = run_query(store, line.query, {}).rows if store is not None else None
+    return {"fresh": line.template is None, "match_on_key": same_rows(on_key, gold),
+            "match_on_run": None if on_run is None else same_rows(on_run, gold),
+            "extra_columns": extra_columns(on_key, gold)}
 
 
-def summary(results: list[dict[str, bool]]) -> dict[str, Any]:
-    """The two numbers of the generality claim over the checked questions."""
+def summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """The two numbers of the generality claim over the checked questions: the share answered with a fresh query and
+    the match rate on the answer key (`match_rate`); the end-to-end rate beside them (`match_on_run_rate`)."""
     n = len(results)
+    runs = [r["match_on_run"] for r in results if r.get("match_on_run") is not None]
     return {"questions": n, "fresh_share": sum(r["fresh"] for r in results) / n if n else None,
-            "match_rate": sum(r["match"] for r in results) / n if n else None}
+            "match_rate": sum(r["match_on_key"] for r in results) / n if n else None,
+            "match_on_run_rate": sum(runs) / len(runs) if runs else None}
 
 
 def committed_at(paths: list[Path], cwd: Path = ROOT) -> datetime | None:

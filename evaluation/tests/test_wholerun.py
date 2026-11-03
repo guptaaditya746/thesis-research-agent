@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from evaluation.wholerun import Answer, RealQuestion, left_out_line, sample, score, tune_split
+from evaluation.wholerun import (Answer, RealQuestion, key_status, left_out_line, sample, score, score_set,
+                                 tune_split)
 
 
 def rq(kind: str, gold: dict, tmp: Path | None = None) -> RealQuestion:
@@ -64,3 +65,24 @@ def test_sample_split_and_left_out(tmp_path: Path) -> None:
     split = tune_split([f"p{i}" for i in range(10)], 0.2, 0, tmp_path / "tune_split.json")
     assert len(split["papers"]) == 2 and not set(split["papers"]) & set(split["rest"])
     assert left_out_line(3, 43) == "left out: 3 of 43 (no open full text)"
+
+
+def test_list_dedups_by_name_not_by_string() -> None:
+    q = rq("list", {"items": ["SQuAD", "MNLI"]})
+    s = score(Answer(names=["SQuAD", "squad", "MNLI"]), q)
+    assert s["n_answer"] == 2 and s["precision"] == 1.0
+
+
+def test_tune_guard_warns_when_id_spaces_differ(tmp_path: Path) -> None:
+    (tmp_path / "tune_split.json").write_text(json.dumps({"papers": ["p9"], "rest": ["p8"]}))
+    with pytest.warns(UserWarning, match="tune guard"):
+        score(Answer(), rq("list", {"items": ["x"], "papers": ["2101.00001v1"]}, tmp_path))
+
+
+def test_score_set_writes_both_rows_and_the_sample(tmp_path: Path) -> None:
+    qs = [RealQuestion(f"q{i}", "?", "cs", tmp_path, {"items": ["a"], "papers": []}, "list") for i in range(12)]
+    rows = score_set(qs, {}, {}, tmp_path / "out")
+    assert len(rows["auto-confirmed"]) == 10 and len(rows["hand-confirmed"]) == 5
+    assert {r["confirmation"] for r in rows["hand-confirmed"]} == {"hand-confirmed"}
+    assert (tmp_path / "out" / "sample.json").is_file() and (tmp_path / "out" / "real_set.json").is_file()
+    assert key_status(qs[0]) == "key-records run: not available"
