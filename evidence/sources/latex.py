@@ -30,7 +30,10 @@ def read_files(blob: bytes) -> dict[str, str]:
                         files[m.name.removeprefix("./")] = f.read().decode("utf-8", "replace")
     except tarfile.TarError:
         try:
-            raw = gzip.decompress(blob)
+            with gzip.GzipFile(fileobj=io.BytesIO(blob)) as gz:
+                raw = gz.read(MAX_BYTES + 1)
+            if len(raw) > MAX_BYTES:
+                raise ValueError("source too large once decompressed")
         except OSError:
             raw = blob
         text = raw.decode("utf-8", "replace")

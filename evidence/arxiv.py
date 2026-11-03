@@ -4,14 +4,14 @@
     evidence fetch --ids ids.txt --out corpora/<name>          (one arXiv id per line, instead of --query)
 
 One request to the arXiv API (https://info.arxiv.org/help/api/index.html, an Atom feed: a search, or `id_list`
-for --ids), then each paper's arXiv HTML page (https://arxiv.org/html/<id>, LaTeXML), else its PDF; at most one
+for --ids), then (the CLI path, `structured`) each paper's arXiv LaTeX source (`/e-print/<id>`) and PMC XML when its PMC id is known, then its arXiv HTML page (https://arxiv.org/html/<id>, LaTeXML), else its PDF; at most one
 request every three seconds as its terms of use ask, with a User-Agent naming this tool. The HTML is used when
 it is a LaTeXML page (`ltx_page_main`) with at least MIN_HTML_CHARS characters of text, else the PDF, and the
 reason is kept. Docling turns either into Markdown, written as `papers/<arxiv id>.md` (a short header with
 the title, authors, date and link, then the converted text). The corpus directory holds:
 
 - manifest.json: `corpus_id` and per paper `id`, `file`, `sha256` (what evidence/rundir.py `Corpus` reads),
-  plus `title`, `authors`, `published`, `url`, `source` ("html" or "pdf") and `html_sha256` or `pdf_sha256`;
+  plus `title`, `authors`, `published`, `url`, `source` ("latex", "pmc_xml", "html" or "pdf") and `<source>_sha256`;
 - source.json: `{"kind": "arxiv", "query", "category", "fetched", "ground_truth": false, ...}`, how many
   papers came from HTML and from the PDF, the `fallbacks` (why a paper's HTML was not used) and the papers
   that were skipped and why. There is no ground_truth.json: these are real papers, nobody knows the right

@@ -66,8 +66,8 @@ def test_messy_table_values_parse_back() -> None:
             values = [p for p in placements if p.role == "value"]
             assert {p.fact for p in values} == {m.id for m in plan.measurements}
             lines = [ln for ln in text.split("\n") if ln.startswith("|")]
-            assert re.fullmatch(r"\| \| .+ \|( \|)+", lines[0])                       # merged group header, covered cells empty
-            assert lines[2].startswith("| System |") and "(%)" in lines[2]           # units in the header row
+            assert re.fullmatch(r"\| \| .+ \|( \|)+", lines[2])                       # merged group cell row, covered cells empty
+            assert lines[0].startswith("| System |") and "(%)" in lines[0]           # units in the header row
             for p in values:
                 m = next(m for m in plan.measurements if m.id == p.fact)
                 assert levelcheck.in_table(text, p.start)
@@ -94,3 +94,38 @@ def test_existing_levels_unchanged() -> None:
                     out[f"{hard}:{seed}:{s.study_id}:{lv}"] = hashlib.sha256(
                         (repr(p) + "\n" + text + repr(pl) + repr(dc)).encode()).hexdigest()[:12]
     assert hashlib.sha256(json.dumps(out, sort_keys=True).encode()).hexdigest() == OLD_LEVELS_SHA256
+
+
+@pytest.mark.parametrize("level", EXTRA_LEVELS)
+@pytest.mark.parametrize("hard", [False, True])
+def test_template_papers_pass_every_check(level: str, hard: bool) -> None:
+    """The fidelity checks (values_associated, anchored, the level's own) hold for every paper over a few seeds."""
+    from synth.render_template import render_study
+    n = 0
+    for seed in range(1, 7):
+        for s in truth.generate(seed, 6, hard=hard):
+            r = render_study(s, level, seed)
+            bad = [c for c in r.fidelity.checks if not c.ok]
+            assert not bad, (r.study.study_id, bad)
+            n += 1
+    assert n == 36
+
+
+def test_level_checks_catch_a_broken_paper() -> None:
+    for level in EXTRA_LEVELS:
+        s, plan, text, placements = next(made(level, hard=True))
+        assert levelcheck.check_level(text, plan, placements, []) == []
+    s, plan, text, placements = next(made("messy_tables", hard=False))
+    assert levelcheck.check_level(text.replace("(%)", ""), plan, placements, [])      # units gone
+    s, plan, text, placements = next(made("multi_experiment", hard=False))
+    assert levelcheck.check_level(text.replace("### ", "## "), plan, placements, [])  # sections gone
+
+
+def test_build_accepts_the_new_levels(tmp_path) -> None:
+    import argparse
+
+    from synth.cli import parse_levels
+    assert parse_levels("multi_experiment,messy_tables") == ["multi_experiment", "messy_tables"]
+    assert parse_levels("all") == list(LEVELS)
+    with pytest.raises(argparse.ArgumentTypeError):
+        parse_levels("nope")

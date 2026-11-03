@@ -112,13 +112,21 @@ def method(doc: Doc, plan: Plan, rng: random.Random) -> None:
         doc.add("\n")
 
 
-def prose_results(doc: Doc, plan: Plan, rng: random.Random, measurements: Sequence | None = None) -> None:
+def prose_results(doc: Doc, plan: Plan, rng: random.Random, measurements: Sequence | None = None,
+                  used: set | None = None) -> None:
+    """The measurements as sentences. `used` (multi_experiment: shared by all sections) keeps one (template, condition)
+    from being written twice in a paper, where the two sentences would have the same context and could not be told
+    apart by their anchors."""
     out = []
     for m in (plan.measurements if measurements is None else measurements):
         v = plan.values[m.id]
         pool = (templates(plan, "paraphrased_count") if v.fmt == "count" else templates(plan, "prose_k_of_n")
                 if v.fmt == "k_of_n" else PARAPHRASED if plan.level in PARAPHRASE_LEVELS else EXPLICIT)
-        out.append((rng.choice(pool), m, v))
+        template = rng.choice(pool)
+        if used is not None:
+            template = next((t for t in [template, *pool] if (t, m.condition) not in used), template)
+            used.add((template, m.condition))
+        out.append((template, m, v))
     for i, (template, m, v) in enumerate(out):
         doc.fill(template, dataset=m.dataset, cond=plan.cond(m.condition), metric=plan.metric(m.metric), value=v)
         doc.add(" " if i + 1 < len(out) else "\n")
@@ -166,20 +174,24 @@ def multi_experiment_results(doc: Doc, plan: Plan, rng: random.Random) -> None:
     groups = ([(f"{e.name} experiment", e.id, e.datasets, e.conditions) for e in plan.experiments] if plan.experiments
               else [(d, None, (d,), tuple(c.id for c in plan.conditions)) for d in plan.datasets])
     others = plan.metrics[1:]
+    used: set = set()
+    several = len(plan.datasets) > 1     # a table of a paper with several datasets always has a Dataset column
     for heading, exp_id, datasets, conditions in groups:
         doc.heading(heading, 3)
         found = [m for d in datasets for cid in conditions if (m := study.find(cid, q.id, d, exp_id)) is not None]
-        prose_results(doc, plan, rng, found)
+        prose_results(doc, plan, rng, found, used)
         if not others:
             continue
-        doc.add("\n| System |" + (" Dataset |" if len(datasets) > 1 else ""))
+        # the section's name is in every header cell: the metric headers of two sections differ in their context
+        name = heading.removesuffix(" experiment")
+        doc.add(f"\n| System: {name} |" + (" Dataset |" if several else ""))
         for k in others:
-            doc.fill(" {k} ({u}) |", k=plan.metric(k.id), u=CELL[k.unit])
-        doc.add("\n|---|" + ("---|" if len(datasets) > 1 else "") + "---:|" * len(others) + "\n")
+            doc.fill(" {k} ({u}) [" + name + "] |", k=plan.metric(k.id), u=CELL[k.unit])
+        doc.add("\n|---|" + ("---|" if several else "") + "---:|" * len(others) + "\n")
         for d in datasets:
             for cid in conditions:
                 doc.fill("| {c} |", c=plan.cond(cid))
-                doc.add(f" {d} |" if len(datasets) > 1 else "")
+                doc.add(f" {d} |" if several else "")
                 for k in others:
                     m = study.find(cid, k.id, d, exp_id)
                     if m is None:
@@ -191,15 +203,15 @@ def multi_experiment_results(doc: Doc, plan: Plan, rng: random.Random) -> None:
 
 
 def messy_table_results(doc: Doc, plan: Plan) -> None:
-    """One table of the main experiment: a group header over the metric columns (the merged cell, the cells it
-    covers empty), the metric names with their units as the next row, values with footnote marks, the marks explained
-    under the table."""
+    """One table of the main experiment: the metric names with their units as the header row, then the merged group
+    cell (the dataset's name over the metric columns, the cells it covers empty, as a converter flattens it) as the
+    first body row, values with footnote marks, the marks explained under the table."""
     doc.add(f"The table below lists the results of all systems on {plan.datasets[0]}.\n\n")
-    doc.add("| |" + f" {plan.datasets[0]} |" + " |" * (len(plan.metrics) - 1) + "\n")
-    doc.add("|---|" + "---|" * len(plan.metrics) + "\n| System |")
+    doc.add("| System |")
     for k in plan.metrics:
         doc.fill(" {k} ({u}) |", k=plan.metric(k.id), u=CELL[k.unit])
-    doc.add("\n")
+    doc.add("\n|---|" + "---:|" * len(plan.metrics) + "\n")
+    doc.add("| |" + f" {plan.datasets[0]} |" + " |" * (len(plan.metrics) - 1) + "\n")
     used: list[str] = []
     for c in plan.conditions:
         doc.fill("| {c} |", c=plan.cond(c.id))
