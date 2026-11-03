@@ -128,12 +128,15 @@ def find_claims(doc_text: str, document: DocumentRef, config: Mapping[str, Any],
 
 def claim_stage(config: Mapping[str, Any] | None = None):
     """An `after_document` stage function: `stages.register("claims", "after_document", claim_stage(...))`. Cues come
-    from the confirmed plan's word list (`ctx.plan.words.cues`); `config` needs the "subject" regex (and may give
-    "cues" instead of the plan)."""
+    from the confirmed plan's word list (`ctx.plan.words.cues`); the "subject" regex defaults to the plan's compiled
+    subject (evidence.words.compile.compile_words: any name of any thing); `config` may give either instead."""
     def stage(doc, ctx):
         cfg = dict(config or {})
         if "cues" not in cfg:
             cfg["cues"] = ctx.plan.words.cues
+        if "subject" not in cfg:
+            from .words.compile import compile_words
+            cfg["subject"] = compile_words(ctx.plan.words, metric_things=set(ctx.plan.measures))["subject"]
         return [item(r) for r in find_claims(doc.text, doc.doc, cfg, ctx=ctx)]
     return stage
 

@@ -195,3 +195,23 @@ def test_reads_are_recorded_under_their_own_ctx(tmp_path, monkeypatch):
     [t.join() for t in threads]
     assert len(seen["a"]) == 6 and len(seen["b"]) == 6
     assert all("accuracy A" in p for p in seen["a"]) and all("accuracy B" in p for p in seen["b"])
+
+
+def test_claim_stage_subject_defaults_to_the_plans_compiled_words():
+    from types import SimpleNamespace
+
+    from evidence.claims import candidate_sentences, claim_stage
+    from evidence.plan import WordList
+    from evidence.words.compile import compile_words
+    words = WordList(things={"method_a": ["Method A"]}, cues=["improves: shortens"], written_by="x", ontology_names={})
+    seen: list[dict] = []
+    import evidence.claims as claims_mod
+    original = claims_mod.find_claims
+    claims_mod.find_claims = lambda text, document, cfg, ctx=None: seen.append(cfg) or []
+    try:
+        plan = SimpleNamespace(words=words, measures=[])
+        claim_stage()(SimpleNamespace(text="Method A shortens the delay.", doc=None), SimpleNamespace(plan=plan))
+    finally:
+        claims_mod.find_claims = original
+    assert seen[0]["subject"] == compile_words(words)["subject"]
+    assert candidate_sentences("Method A shortens the delay.", seen[0]) == [(0, 28)]

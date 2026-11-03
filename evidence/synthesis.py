@@ -48,6 +48,8 @@ Every study carries `flags` (sorted, from rules.FLAGS) and `duplicate_of`; the a
 """
 from __future__ import annotations
 
+import json
+
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -246,12 +248,40 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
     return entry, used
 
 
-def flag(protocol: Protocol, studies: list[dict[str, Any]]) -> dict[str, list[str]]:
-    """Fills `flags` and `duplicate_of` of the entries (manifest order) in place; returns flag -> documents."""
+def experiment_key(study_entry: dict[str, Any], items: list[Item]) -> str | None:
+    """The setting of the experiment the study's treatment value belongs to (evidence/experiments.py `attach` over the
+    paper's experiment items), as one canonical string; None when the paper has no experiment map (a run without the
+    map stage) or the value precedes every experiment. The setting, not the experiment id, is the key: an id names
+    its paper, and the same numbers on the same setting in two papers are one study reported twice."""
+    from .experiments import attach
+    from .records import EXPERIMENT, Experiment
+    found = [i for i in items if i.evidence_type == EXPERIMENT]
+    if not found or study_entry.get("treatment") is None:
+        return None
+    by_id = {i.item_id: i for i in items}
+    value = by_id.get(study_entry["treatment"].get(SIDE_VALUE, ""))
+    if value is None:
+        return None
+    experiments = [Experiment(exp_id=str(i.fields["exp_id"]), document=str(i.fields["document"]),
+                              label=str(i.fields["label"]), setting=dict(i.fields.get("setting") or {}), span=i.spans[0])
+                   for i in found]
+    chosen = attach(value, sorted(experiments, key=lambda e: e.span.selector["start"]), by_id)
+    exp = next((e for e in experiments if e.exp_id == chosen), None)
+    if exp is None:
+        return None
+    return json.dumps(exp.setting or {"label": exp.label}, sort_keys=True)
+
+
+def flag(protocol: Protocol, studies: list[dict[str, Any]],
+         items: dict[str, list[Item]] | None = None) -> dict[str, list[str]]:
+    """Fills `flags` and `duplicate_of` of the entries (manifest order) in place; returns flag -> documents. `items`
+    (document -> items): with a paper's experiment map the duplicate key includes the value's experiment setting
+    (`experiment_key`), so the same numbers in two settings are two findings; without one the key is as before."""
     spec = protocol.synthesis
     settings = spec.flags
     determined = [s for s in studies if s["direction"] != "undetermined"]
-    duplicate_of = (rules.duplicates((s["document"], s["metric"], s["treatment"]["value"], s["control"]["value"])
+    duplicate_of = (rules.duplicates((s["document"], s["metric"], s["treatment"]["value"], s["control"]["value"],
+                                      experiment_key(s, (items or {}).get(s["document"], [])))
                                      for s in determined) if settings.duplicates else {})
     large = rules.large_effects({s["document"]: s["delta"] for s in determined if s["document"] not in duplicate_of},
                                 settings.large_effect.factor, settings.large_effect.min_studies, spec.min_effect)
@@ -294,7 +324,7 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
         entry["funnel"] = dict((funnel or {}).get(doc) or NO_FUNNEL)
         studies.append(entry)
         used += ids
-    flags = flag(protocol, studies)
+    flags = flag(protocol, studies, items)
     groups = {k: [s["document"] for s in studies if s["direction"] == d and s["duplicate_of"] is None]
               for k, d in (("supporting", "supports"), ("contradicting", "contradicts"), ("neutral", "neutral"),
                            ("undetermined", "undetermined"))}

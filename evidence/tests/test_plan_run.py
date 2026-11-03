@@ -191,3 +191,37 @@ def test_cli_runs_a_plan_and_refuses_plan_with_protocol(tmp_path: Path, monkeypa
                      "--extractors", "regex-only", "--workers", "1"]) == 0
     assert cli.main(["run", "--plan", str(path), "--protocol", str(PROTOCOL), "--corpus", str(corpus),
                      "--out", str(tmp_path / "runs2")]) == 2
+
+
+def test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex_answers(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from evidence import openalex
+    from evidence.tests.conftest import PAPERS, corpus_of
+    fetched: list[str] = []
+    monkeypatch.setattr(openalex, "_urlopen", lambda url: fetched.append(url) or {"results": []})
+    docs = {d: (PAPERS / f"{d}.md").read_text(encoding="utf-8").replace("\r\n", "\n") for d in ("S001", "S002")}
+    docs["S001"] += "\n\nWe build on Lewis et al. (2020) for the retrieval-augmented model.\n"
+    corpus_of(tmp_path / "corpus", docs)
+    calls: list[str] = []
+    model = fake_model(calls)
+    inner = model.function
+
+    def reply(messages: Any, info: Any) -> Any:
+        prompt = prompt_of(messages)
+        if "Your output fields are:\n1. `relation`" in prompt and "Lewis et al." in prompt:
+            calls.append(prompt)
+            return respond(info, {"text": json.dumps({"relation": "builds on", "object": "Lewis et al. (2020)"})})
+        return inner(messages, info)
+
+    path = tmp_path / "plan.json"
+    write_plan(make_plan(), path)
+    root = planrun.run(path, tmp_path / "corpus", tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
+                       provider=provider_of(FunctionModel(reply, model_name="fake")), workers=1)
+    links = read(root, "answer.json")["links"]
+    assert links == [{"paper": "S001", "relation": "builds on", "ref": "Lewis et al. (2020)", "in_set": None,
+                      "text": "outside the set"}]
+    assert (root / "openalex.jsonl").is_file() and fetched
+    n = len(fetched)
+    new, report = replay(root)
+    assert report["ok"], report
+    assert len(fetched) == n          # the replay read the recorded answers, never the network

@@ -35,7 +35,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
@@ -312,10 +312,13 @@ def paper_text(entry: Entry, body: str) -> str:
 def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | None = None,
           client: Client | None = None, log: Callable[[str], None] = print,
           now: Callable[[], datetime] = lambda: datetime.now(timezone.utc), ids: list[str] | None = None,
-          convert: Convert | None = None, structured: bool = False) -> dict[str, Any]:
+          convert: Convert | None = None, structured: bool = False,
+          pmcids: dict[str, str] | None = None) -> dict[str, Any]:
     """Look the papers up (a search for `query`, or exactly `ids`; one of the two), download, convert, write the
     corpus into `out` (which must not exist). `convert` defaults to docling_markdown. `structured` tries LaTeX and PMC XML
-    before the HTML and the PDF (`ladder`); off, as before. Returns source.json."""
+    before the HTML and the PDF (`ladder`); off, as before. `pmcids`: arXiv id (with or without its version) -> PMC id,
+    where the caller knows it (the arXiv feed never says): the entry's `pmcid`, so the PMC XML rung is tried. Returns
+    source.json."""
     if (query is None) == (ids is None):
         raise ValueError("give a query or a list of ids, not both and not neither")
     if ids is not None:
@@ -343,6 +346,9 @@ def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | No
             params = {"search_query": q, "start": 0, "max_results": max_papers,
                       "sortBy": "relevance", "sortOrder": "descending"}
         entries = parse_feed(client.get(API_URL, params))[:max_papers]
+        if pmcids:
+            base = {re.sub(r"v\d+$", "", k.replace("/", "_")): v for k, v in pmcids.items()}   # versions ignored
+            entries = [replace(e, pmcid=base.get(re.sub(r"v\d+$", "", e.id), "")) for e in entries]
         if not entries:
             raise FetchError(f"the arXiv API found no papers for {q or ids!r}")
         (tmp / "papers").mkdir(parents=True)
@@ -411,7 +417,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     f = sub.add_parser("fetch", help="a demonstration corpus of real papers from the arXiv API (no ground truth)")
     what = f.add_mutually_exclusive_group(required=True)
     what.add_argument("--query", help="search words; every word must occur (arXiv `all:` field)")
-    what.add_argument("--ids", type=Path, metavar="FILE", help="a file with one arXiv id per line (2411.18583v1)")
+    what.add_argument("--ids", type=Path, metavar="FILE", help="a file with one arXiv id per line (2411.18583v1), "
+                      "optionally followed by the paper's PMC id (PMC1234567): then the PMC XML rung is tried")
     f.add_argument("--max", type=int, default=30, help=f"papers to fetch, 1-{MAX_PAPERS} (default 30; ignored with --ids)")
     f.add_argument("--out", required=True, type=Path, help="the corpus directory to write; must not exist")
     f.add_argument("--category", help="arXiv category, e.g. cs.CL")
@@ -422,10 +429,12 @@ def run(args: argparse.Namespace) -> int:
         print(line, flush=True)
 
     try:
-        ids = None
-        if args.ids is not None:
-            ids = [line.strip() for line in args.ids.read_text(encoding="utf-8").splitlines() if line.strip()]
-        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids, structured=True)
+        ids, pmcids = None, {}
+        if args.ids is not None:   # one paper per line: an arXiv id, optionally followed by its PMC id
+            rows = [line.split() for line in args.ids.read_text(encoding="utf-8").splitlines() if line.strip()]
+            ids = [row[0] for row in rows]
+            pmcids = {row[0]: row[1] for row in rows if len(row) > 1}
+        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids, structured=True, pmcids=pmcids)
     except (ValueError, FileExistsError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

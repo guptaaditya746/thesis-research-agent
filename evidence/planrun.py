@@ -190,14 +190,21 @@ def protocol_for(plan: Plan) -> bytes:
 _DOI = re.compile(r"\b10\.\d{4,9}/[^\s\"<>)\]]+")
 _ARXIV = re.compile(r"\b(?:arXiv:)?(\d{4}\.\d{4,5})(?:v\d+)?\b")
 _CITED = re.compile(r"\[\d+(?:[,–-]\s*\d+)*\]|\bet al\.?,?\s*\(?(?:19|20)\d\d\)?")
+_ET_AL_END = re.compile(r"\bet al\.$")
 
 
 def link_sentences(text: str) -> list[tuple[int, int, str | None, str | None]]:
     """(start, end, doi, arxiv id) of each sentence that cites another work (a DOI, an arXiv id, a bracketed number
     or "et al." with a year), at most MAX_LINK_SENTENCES per paper, in text order."""
     from .extractors import base
+    spans: list[tuple[int, int]] = []
+    for s, e in base.sentences(text):   # the splitter cuts after "et al.": join that piece with the next
+        if spans and _ET_AL_END.search(text[spans[-1][0]:spans[-1][1]]):
+            spans[-1] = (spans[-1][0], e)
+        else:
+            spans.append((s, e))
     out = []
-    for s, e in base.sentences(text):
+    for s, e in spans:
         sentence = text[s:e]
         doi, arxiv = _DOI.search(sentence), _ARXIV.search(sentence)
         if doi or arxiv or _CITED.search(sentence):
@@ -229,21 +236,19 @@ def links_stage(doc: Any, ctx: Any) -> list[Item]:
     return out
 
 
-def _claims_stage(plan: Plan) -> Callable[[Any, Any], list[Item]]:
-    from .claims import claim_stage
-    return claim_stage({"subject": compiled(plan)["subject"]})
 
 
 def stage_entries(plan: Plan) -> list[tuple[str, Any, Callable[..., Any]]]:
     """The plan run's own stages, in order (name, seam, fn)."""
     from . import experiments
+    from .claims import claim_stage
     from .extractors.recheck import recheck, recheck_report
     from .ontology.fill import ontology_stage
     return [
         ("map-experiments", "before_extract", experiments.before_extract),
         ("recheck", "after_type", recheck),
         ("experiment-items", "after_document", experiments.after_document),
-        ("claims", "after_document", _claims_stage(plan)),
+        ("claims", "after_document", claim_stage()),   # subject and cues from the plan's word list
         ("links", "after_document", links_stage),
         ("recheck_report", "after_run", recheck_report),
         ("ontology", "after_run", ontology_stage),
@@ -335,8 +340,27 @@ def _param_of(query: str, d: Decision) -> str:
     return decision_map(query).get(d.type, d.type)
 
 
-def answer(plan: Plan, store: Any, synthesis: dict[str, Any], groups: Mapping[str, str]) -> dict[str, Any]:
-    """answer.json of a plan run: the lines (each in its own try block), the main answer, labels and reruns."""
+OUTSIDE = "outside the set"
+
+
+def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
+    """The run's builds-on links for the answer: a cited work that is no paper of the corpus says "outside the set"."""
+    from .records import LINK
+    out = []
+    for doc in sorted(items):
+        for it in items[doc]:
+            if it.evidence_type == LINK:
+                f = it.fields
+                out.append({"paper": f["subject_doc"], "relation": f["relation"], "ref": f["object_ref"],
+                            "in_set": f.get("object_doc"),
+                            "text": OUTSIDE if f["outside_set"] else f"in the set: {f.get('object_doc')}"})
+    return out
+
+
+def answer(plan: Plan, store: Any, synthesis: dict[str, Any], groups: Mapping[str, str],
+           items: dict[str, list[Item]] | None = None) -> dict[str, Any]:
+    """answer.json of a plan run: the lines (each in its own try block), the main answer, labels and reruns, the claim
+    groups and the builds-on links."""
     from .claims import grouped_line
     from .kg.query import run_query
     from .planner.lines import run_lines
@@ -348,6 +372,7 @@ def answer(plan: Plan, store: Any, synthesis: dict[str, Any], groups: Mapping[st
     labels, rows = reruns(plan, store)
     return {"system": "plan", "question": plan.question, "plan_sha256": plan.sha256, **result, "labels": labels,
             "reruns": rows, "claim_groups": {"mapping": dict(groups), "line": grouped_line(groups) if groups else None},
+            "links": links_of(items or {}),
             "synthesis": synthesis}
 
 
@@ -364,7 +389,7 @@ def finish(plan: Plan, papers: list[Any], items: dict[str, list[Item]], roles: A
     from .kg.build import serialize
     items, groups = group_claims(items, ctx)
     store = records(papers, items, roles, plan.field)
-    return items, serialize(store), answer(plan, store, synthesis, groups)
+    return items, serialize(store), answer(plan, store, synthesis, groups, items)
 
 
 # --- the command ------------------------------------------------------------------------------------------------------

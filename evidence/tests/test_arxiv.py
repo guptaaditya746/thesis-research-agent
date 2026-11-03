@@ -244,3 +244,21 @@ def test_a_429_a_503_or_a_timeout_is_asked_again_after_the_longer_of_retry_after
     always = arxiv.Client(transport=httpx.MockTransport(lambda r: httpx.Response(429)), delay=0, sleep=sleeps.append)
     with pytest.raises(httpx.HTTPStatusError):
         always.get("https://export.arxiv.org/api/query")
+
+
+def test_a_pmc_id_given_with_an_arxiv_id_reaches_the_pmc_rung(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    rec = Recorded()
+    real = arxiv.Client
+    monkeypatch.setattr(arxiv, "Client", lambda **_: real(transport=httpx.MockTransport(rec.handler), delay=0))
+    seen: list[str] = []
+
+    def fake_ladder(entry, client, convert):
+        seen.append(entry.pmcid)
+        return "# body", "pdf", "0" * 64, None
+
+    monkeypatch.setattr(arxiv, "ladder", fake_ladder)
+    ids = tmp_path / "ids.txt"
+    ids.write_text("2507.23334v2 PMC1234567\n2411.18583v1\n", encoding="utf-8")
+    assert cli.main(["fetch", "--ids", str(ids), "--out", str(tmp_path / "c")]) == 0
+    assert "PMC1234567" in seen and seen.count("") == len(seen) - 1   # only the paper given a PMC id gets one
+    assert rec.requests[0].url.params["id_list"] == "2507.23334v2,2411.18583v1"
