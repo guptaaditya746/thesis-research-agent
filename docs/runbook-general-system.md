@@ -1,6 +1,6 @@
 # Runbook: the general evidence system on Slurm (Codex)
 
-This is the hand-off for the general system built on `gen/integrate` (word list written by the model, papers and
+This is the hand-off for the general system merged on `main` (word list written by the model, papers and
 claims, ontology reasoning, the plan page, DSPy tuning, the whole-run commands). Claude built it; Codex tests it on
 Slurm and copies every run folder back. **This file is a differences document.** The stack (profile `orch-3x40` with
 GLiNER), `in-job.env`, `in-job.sh`, `launch.sh`, the failed-call and retry rules and `$EV/failures.md` are as in
@@ -26,7 +26,7 @@ Success lines below say what "good" looks like. Exit codes: read them, not print
 ## 0. Setup (login node)
 
 ```bash
-git fetch origin && git checkout gen/integrate && git log -1 --oneline        # expect: the docs: general-system runbook commit
+git fetch origin && git checkout main && git pull --ff-only && git log -1 --oneline   # expect: the handoff docs commit or later
 uv sync --locked                                                              # no --all-groups: Docling (torch) comes in 3.5 only
 export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general           # new session dir; older ones are never written
 mkdir -p "$EV"/{logs,corpora,runs,scores,cache,real,ontology,plans,proposals}
