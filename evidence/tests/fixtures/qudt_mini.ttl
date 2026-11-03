@@ -1,0 +1,5 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+unit:PERCENT a qudt:Unit ; rdfs:label "percent" ; qudt:symbol "%" .
+unit:SEC a qudt:Unit ; rdfs:label "second" ; qudt:symbol "s" .

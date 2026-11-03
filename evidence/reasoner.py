@@ -23,6 +23,7 @@ from .pack import DOMAINS, Pack, PackError, Role, RoleMap
 from .protocol import Protocol
 
 CSKG = "https://w3id.org/cskg/ontology#"
+NO_TREE = "reasoning off: no tree"   # what a run says when its field has no ontology tree (ontology.fill)
 # The classes every ontology is rooted in: never reported as a broader name ("metric" is no answer to "what is
 # broader than accuracy").
 TOP_CLASSES = frozenset(
