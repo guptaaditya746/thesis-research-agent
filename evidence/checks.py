@@ -16,9 +16,16 @@ otherwise the item is rejected.
 Item ids are recomputed from the checked fields and spans. Two different items with one id (same fields
 and spans, different links) are both rejected as ambiguous; an exact duplicate is kept once. The result is
 put in canonical order (R7). Nothing is dropped silently.
+R8 (value check): a measured value (a numeric field `value`, a span of role `value`) must be written in its
+source: the number, or the same number as a percentage (74 for 0.74), occurs in the span text or, for a span inside
+a Markdown table, in its table cell; otherwise the item is rejected with reason not_found. A value whose span
+lies in a cell the two PDF table readers disagreed on (`<!-- table unsure: r,c -->`, evidence/tables.py) is kept
+and gets `fields["table_unsure"] = True` (the item id is recomputed from the fields as always).
 """
 from __future__ import annotations
 
+import math
+import re
 from typing import Any
 
 from jsonschema import Draft202012Validator
@@ -27,6 +34,7 @@ from agent.anchor import DASHES, AnchorError, Index, find, selector_at
 
 from .contract import ExtractionResult, ExtractionTask, Item, Rejected, Span
 from .protocol import Bound, EvidenceTypeSpec
+from .tables import unsure_spans
 
 
 def _reject(item: Item, reason: str, detail: str, spans: tuple[Span, ...] | None = None) -> Rejected:
@@ -69,6 +77,54 @@ def anchor_span(span: Span, task: ExtractionTask, index: Index) -> Span:
     return Span.of(span.role, found)
 
 
+NUMBER = re.compile(r"(?<![\w.])[-−–]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)")
+
+
+def _numbers(text: str) -> list[float]:
+    out = []
+    for m in NUMBER.finditer(text):
+        try:
+            out.append(float(re.sub(r"[,−–]", lambda c: "-" if c.group() != "," else "", m.group())))
+        except ValueError:
+            continue
+    return out
+
+
+def _cell_text(text: str, start: int, end: int) -> str | None:
+    """The Markdown table cell that holds [start, end), or None when the span is not inside a table row."""
+    line_start = text.rfind("\n", 0, start) + 1
+    line_end = text.find("\n", end)
+    line = text[line_start:len(text) if line_end < 0 else line_end]
+    if not line.startswith("|") or end > line_start + len(line):
+        return None
+    bars = [line_start + m.start() for m in re.finditer(r"(?<!\\)\|", line)]
+    left = max((b for b in bars if b < start), default=None)
+    right = min((b for b in bars if b >= end), default=None)
+    return None if left is None or right is None else text[left + 1:right]
+
+
+def value_problem(item: Item, text: str) -> str:
+    """Why the item's number is not written in its source ("" when it is, or when the rule does not apply)."""
+    value = item.fields.get("value")
+    span = next((s for s in item.spans if s.role == "value"), None)
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or span is None:
+        return ""
+    start, end = span.selector["start"], span.selector["end"]
+    haystacks = [text[start:end]]
+    if (cell := _cell_text(text, start, end)) is not None:
+        haystacks.append(cell)
+    for hay in haystacks:
+        for n in _numbers(hay):
+            if any(math.isclose(value, c, rel_tol=1e-6, abs_tol=1e-9) for c in (n, n / 100)):
+                return ""
+    return f"value {value:g} is not written in its span {text[start:end]!r}"
+
+
+def in_unsure_cell(item: Item, spans: list[tuple[int, int]]) -> bool:
+    span = next((s for s in item.spans if s.role == "value"), None)
+    return span is not None and any(a <= span.selector["start"] and span.selector["end"] <= b for a, b in spans)
+
+
 def _bound_problem(item: Item, bound: Bound, known: dict[str, Item]) -> str:
     if bound.when is not None:
         linked = known.get(item.links.get(bound.when.link, ""))
@@ -86,7 +142,7 @@ def _bound_problem(item: Item, bound: Bound, known: dict[str, Item]) -> str:
 
 
 def _one(item: Item, task: ExtractionTask, index: Index, spec: EvidenceTypeSpec, validator: Draft202012Validator,
-         notes: list[Rejected]) -> Item | Rejected:
+         notes: list[Rejected], unsure: list[tuple[int, int]] | None = None) -> Item | Rejected:
     """The checked item (notes get dropped optional spans), or its rejection."""
     if item.evidence_type != task.evidence_type:
         return _reject(item, "schema", f"evidence type {item.evidence_type}, task asks for {task.evidence_type}")
@@ -110,18 +166,26 @@ def _one(item: Item, task: ExtractionTask, index: Index, spec: EvidenceTypeSpec,
             return _reject(item, "out_of_scope", f"span {where} outside the task's scope")
         notes.append(_reject(item, "out_of_scope", f"optional span {where} outside the scope dropped; item kept",
                              outside))
-    return Item.build(item.evidence_type, dict(item.fields), inside, links=dict(item.links), confidence=item.confidence)
+    fields = dict(item.fields)
+    checked = Item.build(item.evidence_type, fields, inside, links=dict(item.links), confidence=item.confidence)
+    if problem := value_problem(checked, index.text):
+        return _reject(item, "not_found", problem)
+    if unsure and in_unsure_cell(checked, unsure):
+        return Item.build(item.evidence_type, {**fields, "table_unsure": True}, inside, links=dict(item.links),
+                          confidence=item.confidence)
+    return checked
 
 
 def check(result: ExtractionResult, task: ExtractionTask, index: Index, spec: EvidenceTypeSpec,
           context: dict[str, Item]) -> ExtractionResult:
     """The result with every item checked; failing items moved to `rejected` with their reason."""
     validator = Draft202012Validator(spec.fields)
+    unsure = unsure_spans(index.text) if "table unsure" in index.text else None
     kept: list[Item] = []
     rejected = list(result.rejected)
     for item in result.items:
         notes: list[Rejected] = []
-        checked = _one(item, task, index, spec, validator, notes)
+        checked = _one(item, task, index, spec, validator, notes, unsure)
         if isinstance(checked, Rejected):
             rejected.append(checked)
         else:
