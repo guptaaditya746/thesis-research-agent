@@ -53,6 +53,7 @@ from evidence.pack import DOMAINS, Role, RoleMap, load_pack
 from evidence.protocol import load as load_protocol
 from evidence.rundir import PROTOCOL_FILE
 
+from ..wholerun import RealQuestion
 from .common import items_of, name_groups as _groups, same_name as _same
 
 SOURCES = ("https://aclanthology.org/attachments/2024.emnlp-main.453.data.zip",
@@ -391,3 +392,20 @@ def report(run_dir: Path, corpus: Path, data: Path, metrics: Path = METRICS) -> 
     """The real.json of the check: `score`, the run, the sources and the notes (real.md lists them)."""
     return {"run": Path(run_dir).name, "sources": list(SOURCES), **score(run_dir, corpus, data, metrics),
             "notes": list(NOTES)}
+
+
+def questions(src: Path, corpus_dir: Path | None = None, metrics: Path = METRICS) -> list[RealQuestion]:
+    """The whole-run questions of the release in `src`: one per leaderboard (27 in the release), "Which method is
+    best on <dataset> by <metric>?"; gold = the board's order in the metric's direction (domains/ml/metrics.yaml),
+    papers named by their release keys (the board's papers; the release scores papers, not named methods).
+    Field `cs`; the corpus is `corpus_dir` (default `src/corpus`, where the fetched papers go)."""
+    release = _release(src)
+    corpus = Path(corpus_dir) if corpus_dir is not None else Path(src) / "corpus"
+    out = []
+    for n, board in enumerate(_boards(release, load_metrics(metrics)), 1):
+        out.append(RealQuestion(
+            id=f"scilead-{n:02d}", question=f"Which method is best on {board['dataset']} by {board['metric']}?",
+            field="cs", corpus_dir=corpus, kind="rank",
+            gold={"ranking": board["ranking"], "papers": list(board["ranking"]), "task": board["task"],
+                  "higher_is_better": board["rule"].higher}))
+    return out
