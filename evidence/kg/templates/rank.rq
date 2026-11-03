@@ -1,16 +1,31 @@
 # params: context, metric
 # Leaderboard: things ordered by their best value on (context $context, metric $metric), across papers, in the
 # metric's direction (higher is better unless the metric says otherwise). Params: context, metric; include.
-SELECT (MIN(?name) AS ?thing) (IF(SAMPLE(?higher), MAX(?key), -MAX(?key)) AS ?score) WHERE {
-  ?v a ev:Value ; ev:of ?t ; ev:onMetric ?m ; ev:number ?number ; ev:inExperiment ?e ; kg:context $context .
+# The context is matched on its cleaned form (names.clean: "SQuAD" and "squad" are one). Columns: thing, score, and
+# paper = the paper of the thing's best value (the smallest paper name on a tie), for a question that asks which paper.
+SELECT (MIN(?name) AS ?thing) (IF(SAMPLE(?higher), SAMPLE(?best), -SAMPLE(?best)) AS ?score) (MIN(?pname) AS ?paper) WHERE {
+  {
+    SELECT ?t (MAX(?bkey) AS ?best) WHERE {
+      ?bv a ev:Value ; ev:of ?t ; ev:onMetric ?bm ; ev:number ?bnumber ; ev:inExperiment ?be ; kg:contextKey $context_key .
+      ?bm ev:name $metric .
+      ?be ev:inPaper ?bp .
+      ?bp ev:name ?bpaper .
+      OPTIONAL { ?bm kg:higherIsBetter ?bh }
+      BIND(IF(COALESCE(?bh, true), ?bnumber, -?bnumber) AS ?bkey)
+      $include[?bpaper]
+    }
+    GROUP BY ?t
+  }
+  ?v a ev:Value ; ev:of ?t ; ev:onMetric ?m ; ev:number ?number ; ev:inExperiment ?e ; kg:contextKey $context_key .
   ?m ev:name $metric .
   ?t ev:name ?name .
   ?e ev:inPaper ?p .
-  ?p ev:name ?paper .
+  ?p ev:name ?pname .
   OPTIONAL { ?m kg:higherIsBetter ?h }
   BIND(COALESCE(?h, true) AS ?higher)
   BIND(IF(?higher, ?number, -?number) AS ?key)
-  $include[?paper]
+  FILTER(?key = ?best)
+  $include[?pname]
 }
 GROUP BY ?t
-ORDER BY DESC(MAX(?key)) ?thing
+ORDER BY DESC(SAMPLE(?best)) ?thing

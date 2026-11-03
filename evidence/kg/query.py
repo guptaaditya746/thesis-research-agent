@@ -4,6 +4,8 @@
 filled in (a string becomes a quoted literal, a number or boolean itself, a list its items separated by spaces, so
 `VALUES ?x { $counts_as }` works). Two more forms:
 - a param whose name ends in `_field` (a setting key such as "dataset") is the property `ev:setting_<key>`;
+- `$<name>_key` is the cleaned form (`names.clean`) of the param `<name>`, to match the graph's cleaned copies
+  (`kg:contextKey`, `kg:key_<field>`); `$<name>_field_key` is the cleaned-copy property of the setting key `<name>_field`;
 - `$must_match[?e1, ?e2]` expands to the patterns saying the two experiments have equal settings for each field of the
   `must_match` param (no param or an empty list: no constraint); `$include[?paper]` to a filter keeping the papers
   named in the `include` param (no param: no filter).
@@ -24,7 +26,9 @@ import pyoxigraph as ox
 from evidence.vocab import EV
 
 from . import after
-from .build import KG, setting_property
+from evidence.names import clean
+
+from .build import KG, setting_key_property, setting_property
 
 NO_EVIDENCE = "No evidence found"
 PREFIXES = {"ev": EV, "kg": KG, "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -112,6 +116,10 @@ def render(sparql: str, params: dict[str, Any]) -> str:
         if name == "include" and args is not None:
             return _include(args, params["include"]) if params.get("include") is not None else ""
         if name not in params:
+            if name.endswith("_field_key") and name[:-4] in params:
+                return f"<{setting_key_property(str(params[name[:-4]])).value}>"
+            if name.endswith("_key") and name[:-4] in params:
+                return term(clean(str(params[name[:-4]])))
             return m.group(0)
         if name.endswith("_field"):
             return f"<{setting_property(str(params[name])).value}>"

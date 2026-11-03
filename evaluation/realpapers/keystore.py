@@ -46,6 +46,7 @@ def store(records: list[dict[str, Any]]) -> Any:
             add(exp, b.ev("name"), b.lit(label))
             for k, v in sorted(settings.items()):
                 add(exp, b.setting_property(k), b.lit(v))
+                add(exp, b.setting_key_property(k), b.lit(clean(v)))
         tnode = b.iri("thing", clean(str(r["thing"])))
         add(tnode, b.RDF_TYPE, b.ev("Thing"))
         add(tnode, b.ev("name"), b.lit(str(r["thing"])))
@@ -63,6 +64,7 @@ def store(records: list[dict[str, Any]]) -> Any:
         add(vnode, b.ev("inExperiment"), exp)
         if r.get("context") is not None:
             add(vnode, b.kg("context"), b.lit(str(r["context"])))
+            add(vnode, b.kg("contextKey"), b.lit(clean(str(r["context"]))))
         exps.setdefault(exp, []).append((vnode, tnode, mnode, float(r["number"]), None))
     for mnode, higher in directions.items():
         add(mnode, b.kg("higherIsBetter"), b.flag(higher))

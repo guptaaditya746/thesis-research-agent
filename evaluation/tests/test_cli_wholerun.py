@@ -32,7 +32,7 @@ def make_run(runs: Path, conf: str, reasoning: str, q: RealQuestion, ranking: li
              model: str = "orch-model", plan: bool = True) -> None:
     root = runs / conf / reasoning / q.id
     root.mkdir(parents=True)
-    rows = [{"thing": f"t{i}", "paper": p} for i, p in enumerate(ranking)]
+    rows = [{"thing": p, "paper": f"P{i}"} for i, p in enumerate(ranking)]
     line = {"id": "l1", "question": q.question, "status": "done", "rows": rows, "text": f"{len(rows)} found"}
     (root / "answer.json").write_text(json.dumps({"system": "plan", "lines": [line]}), encoding="utf-8")
     (root / "run.json").write_text(json.dumps({"settings": {"corpus": str(q.corpus_dir), "model": model}}), encoding="utf-8")

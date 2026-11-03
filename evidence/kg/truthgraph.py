@@ -11,7 +11,8 @@ A `RealQuestion` (Task 6.1) carries its answer key in `gold`: `truth_store(quest
 
 `matches(answer, expected)` says when an answer is the expected one: `expected` is a list of rows (dicts: every key given
 must be equal, order ignored), a list of values (the first column of each row, in order), or one value; an empty
-list or None is an empty answer ("No evidence found")."""
+list or None is an empty answer ("No evidence found"). With `column`, a list of values is read from that column of each
+row (a row without it counts as no value) instead of the first."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -77,7 +78,7 @@ def truth_store(truth: Any, ontology: Graph | None = None, *, domains: Path = DO
     return build(papers, items, RoleMap(pack), ontology)
 
 
-def matches(answer: Answer, expected: Any) -> bool:
+def matches(answer: Answer, expected: Any, column: str | None = None) -> bool:
     rows = answer.rows
     if expected is None or expected == []:
         return answer.empty
@@ -93,10 +94,13 @@ def matches(answer: Answer, expected: Any) -> bool:
                 return False
             free.remove(hit)
         return True
+    if column is not None:
+        return [r.get(column) for r in rows] == expected
     return [next(iter(r.values())) for r in rows] == expected
 
 
-def split(ours: Answer, gold_on_truth: Answer, expected: Any) -> Literal["right", "synthesis error", "extraction error"]:
-    if matches(ours, expected):
+def split(ours: Answer, gold_on_truth: Answer, expected: Any,
+          column: str | None = None) -> Literal["right", "synthesis error", "extraction error"]:
+    if matches(ours, expected, column):
         return "right"
-    return "extraction error" if matches(gold_on_truth, expected) else "synthesis error"
+    return "extraction error" if matches(gold_on_truth, expected, column) else "synthesis error"

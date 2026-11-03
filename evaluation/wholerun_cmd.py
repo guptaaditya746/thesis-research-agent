@@ -45,7 +45,7 @@ from evidence.rundir import PLAN_FILE, RUN_FILE
 
 from . import report as rep
 from . import stats
-from .wholerun import (Answer, RealQuestion, from_run, key_store, question_papers, sample, score, tune_papers)
+from .wholerun import (Answer, RealQuestion, answer_column, from_run, key_store, question_papers, sample, score, tune_papers)
 
 CONFIRMATIONS = ("auto-confirmed", "hand-confirmed")
 SYSTEM = "system"                  # who confirm_all(plan, who="system") stamps on an auto-confirmed plan
@@ -115,7 +115,7 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
         line = next((x for x in doc.get("lines") or [] if x.get("id") == spec.id), None)
         rows = list(line["rows"]) if line and line.get("status") == "done" else []
         gold = kq.run_query(key_store(q), spec.query, line_params(plan, spec.query))
-        return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected))
+        return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected), answer_column(q))
     except Exception as exc:   # noqa: BLE001 - a diagnosis only; says what failed, never stops a report
         return f"key split failed: {type(exc).__name__}: {exc}"
 
