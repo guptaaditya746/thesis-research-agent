@@ -28,7 +28,7 @@
     evaluate tune-split --set S --src DIR [--corpus DIR] [--fraction 0.2] [--seed 0]
     evaluate leak --run R --corpus C [--tuned-dir DIR] [--corpora DIR ...] --out D
     evaluate offtemplate --runs DIR --out D
-    evaluate links --run R [--corpus C --question-id ID] [--references F.json] --out D
+    evaluate links --run R [--corpus C --question-id ID] [--references F.json | --build-references] --out D
 
 `wholerun` (evaluation/wholerun_cmd.py) scores the plan runs of one real set under `--runs`
 (<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<question id>/): two confirmation rows, both reasoning settings, a
@@ -475,10 +475,12 @@ def cmd_links(args: argparse.Namespace) -> int:
     from . import wholerun_cmd as wc
 
     try:
-        wc.links(args.run, args.out, corpus=args.corpus, question_id=args.question_id, references=args.references)
+        result = wc.links(args.run, args.out, corpus=args.corpus, question_id=args.question_id,
+                          references=args.references, build=args.build_references)
     except ValueError as exc:
         raise SystemExit(f"evaluate links: {exc}") from None
-    print(f"wrote {args.out / 'links.json'}")
+    status = (result.get("builds_on") or {}).get("status")
+    print(f"wrote {args.out / 'links.json'}" + (f": {status}" if status else ""))
     return 0
 
 
@@ -690,6 +692,9 @@ def parser() -> argparse.ArgumentParser:
     ln.add_argument("--corpus", type=Path, help="the synthetic corpus (chaining)")
     ln.add_argument("--question-id", help="the chaining question's id (chaining)")
     ln.add_argument("--references", type=Path, help="JSON {paper id: [OpenAlex work ids]} (builds-on)")
+    ln.add_argument("--build-references", action="store_true",
+                    help="build <out>/openalex-references.json from the run's recorded openalex.jsonl (offline; needs "
+                    "--corpus) and score builds-on with it")
     ln.add_argument("--out", type=Path, required=True)
     ln.set_defaults(func=cmd_links)
     return p
