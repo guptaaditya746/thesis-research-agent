@@ -74,15 +74,54 @@ def test_stage_items_are_idempotent(tmp_path, monkeypatch) -> None:
     lm(tmp_path, monkeypatch, [NQ, TQ])
     doc = SimpleNamespace(doc=SimpleNamespace(id="p", file="p.md"), text=TEXT, index=Index(TEXT))
     ctx = SimpleNamespace(dspy_lm=lambda purpose: steps._LM)
-    experiments._MAPPED.clear()
     experiments.before_extract(doc, ctx)
     a = experiments.after_document(doc, ctx)
     b = experiments.after_document(doc, ctx)
     assert a == b and {i.evidence_type for i in a} == {"experiment"} and len(a) == 2
-    experiments._MAPPED.clear()
 
 
-@pytest.fixture(autouse=True)
-def _reset() -> None:
-    yield
-    experiments._MAPPED.clear()
+def _doc():
+    from types import SimpleNamespace
+    return SimpleNamespace(doc=SimpleNamespace(id="p", file="p.md"), text=TEXT, index=Index(TEXT))
+
+
+def test_every_run_records_its_own_map_call(tmp_path, monkeypatch) -> None:
+    """Nothing is kept between runs: a second run (own call cache) makes and records its own call."""
+    from types import SimpleNamespace
+
+    seen: list[str] = []
+    for run in ("a", "b"):
+        cache = JsonlCache(tmp_path / f"{run}.jsonl")
+        lm_ = RecordedLM("alias", lambda prompt, run=run: seen.append(run) or json.dumps({"experiments": [NQ]}),
+                         cache=cache)
+        ctx = SimpleNamespace(dspy_lm=lambda purpose, lm_=lm_: lm_)
+        experiments.before_extract(_doc(), ctx)
+        experiments.after_document(_doc(), ctx)   # the same run again: answered from its cache
+    assert seen == ["a", "b"]
+    assert all((tmp_path / f"{r}.jsonl").read_text(encoding="utf-8").strip() for r in ("a", "b"))
+
+
+def test_concurrent_documents_use_their_own_model(tmp_path, monkeypatch) -> None:
+    import threading
+    import time
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    answered: dict[str, list[str]] = {"x": [], "y": []}
+
+    def make(name: str):
+        def ask(prompt: str) -> str:
+            time.sleep(0.05)      # a slow call: the other thread would configure its model meanwhile
+            answered[name].append(name)
+            return json.dumps({"experiments": [NQ]})
+        return RecordedLM(name, ask, cache=JsonlCache(tmp_path / f"{name}.jsonl"))
+
+    def work(name: str) -> None:
+        ctx = SimpleNamespace(dspy_lm=lambda purpose, m=make(name): m)
+        for _ in range(3):
+            experiments.before_extract(_doc(), ctx)
+
+    threads = [threading.Thread(target=work, args=(n,)) for n in ("x", "y")]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    assert answered == {"x": ["x"], "y": ["y"]}   # each model was asked once, by its own thread, and cached the rest

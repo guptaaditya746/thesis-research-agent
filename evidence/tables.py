@@ -20,6 +20,7 @@ from pathlib import Path
 
 UNSURE = "table unsure"
 COMMENT = re.compile(r"<!-- table unsure: (\d+),(\d+) -->")
+SEPARATOR = re.compile(r"\|(\s*:?-+:?\s*\|)+")
 
 Raw = list[tuple[int, list[list[str]]]]   # (page number from 1, rows of cell text)
 Reader = Callable[[Path], Raw]
@@ -70,10 +71,14 @@ def _agree(a: list[list[str]], b: list[list[str]]) -> int:
 
 def read_tables(pdf: Path, *, docling: Reader = docling_tables, plumber: Reader = plumber_tables) -> list[Table]:
     """Docling's tables of `pdf`, each with the cells pdfplumber reads differently marked unsure."""
-    mine = plumber(pdf)
+    return compare(docling(pdf), plumber(pdf))
+
+
+def compare(docling_raw: Raw, mine: Raw) -> list[Table]:
+    """Docling's tables with the cells the pdfplumber tables `mine` do not confirm marked unsure."""
     free = list(range(len(mine)))
     out: list[Table] = []
-    for page, cells in docling(pdf):
+    for page, cells in docling_raw:
         cells = [[_norm(c) for c in row] for row in cells]
         best = max((i for i in free if mine[i][0] == page), key=lambda i: _agree(cells, mine[i][1]), default=None)
         if best is None or _agree(cells, mine[best][1]) == 0:
@@ -125,3 +130,35 @@ def unsure_spans(markdown: str) -> list[tuple[int, int]]:
             if c + 1 < len(bars):
                 spans.append((starts[at] + bars[c] + 1, starts[at] + bars[c + 1]))
     return spans
+
+
+def annotate(markdown: str, docling_raw: Raw, plumber_raw: Raw) -> str:
+    """`markdown` (Docling's export) with the `<!-- table unsure: r,c -->` lines of each table written right after
+    its Markdown block. Docling's tables are matched to the blocks in export order; when the counts differ nothing
+    can be matched, so every cell of every block is marked unsure (never silently sure)."""
+    tables = compare(docling_raw, plumber_raw)
+    lines = markdown.split(chr(10))
+    blocks: list[tuple[int, int]] = []     # (first line, last line + 1) of each run of `|` lines
+    i = 0
+    while i < len(lines):
+        if lines[i].startswith("|"):
+            j = i
+            while j < len(lines) and lines[j].startswith("|"):
+                j += 1
+            blocks.append((i, j))
+            i = j
+        else:
+            i += 1
+    out: list[str] = []
+    last = 0
+    for k, (a, b) in enumerate(blocks):
+        out += lines[last:b]
+        last = b
+        if len(blocks) == len(tables):
+            unsure = tables[k].unsure
+        else:
+            rows = [x for x in lines[a:b] if not SEPARATOR.fullmatch(x)]
+            unsure = {(r, c) for r, row in enumerate(rows) for c in range(max(row.count("|") - 1, 0))}
+        out += [f"<!-- {UNSURE}: {r},{c} -->" for r, c in sorted(unsure)]
+    out += lines[last:]
+    return chr(10).join(out)

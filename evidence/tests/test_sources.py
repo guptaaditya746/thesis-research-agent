@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import gzip
 import io
+import json
 import tarfile
 from pathlib import Path
 
@@ -103,3 +104,104 @@ def test_ladder_pdf_last_with_every_reason() -> None:
 
     (body, source, reason), _ = run_ladder(handler)
     assert source == "pdf" and body == "pdf text" and reason.startswith("latex: 404; html 404")
+
+
+# --- fetch(structured=True): the composed path (manifest fields) ---------------------------------------------------
+
+def test_fetch_structured_manifest(tmp_path) -> None:
+    from evidence.tests.test_arxiv import FEED, Recorded
+    from jsonio import sha256_hex
+
+    blob = eprint()
+
+    class WithEprint(Recorded):
+        def handler(self, request):
+            if request.url.path.startswith("/e-print/"):
+                self.requests.append(request)
+                return httpx.Response(200, content=blob)
+            return super().handler(request)
+
+    rec = WithEprint(broken=(), feed=FEED)
+    source = arxiv.fetch("retrieval augmented", tmp_path / "c", max_papers=1, client=rec.client(), log=lambda _: None,
+                         convert=lambda data, kind: "x", structured=True)
+    paper = json.loads((tmp_path / "c" / "manifest.json").read_text(encoding="utf-8"))["papers"][0]
+    assert paper["source"] == "latex" and paper["latex_sha256"] == sha256_hex(blob) and "html_sha256" not in paper
+    assert source["fallbacks"] == [] and source["latex"] == 1 and source["html"] == 0
+
+
+def test_fetch_structured_fallback_reason_is_text_not_hash(tmp_path) -> None:
+    from evidence.tests.test_arxiv import FEED, LTX_PAGE, Recorded
+
+    class NoEprint(Recorded):
+        def handler(self, request):
+            if request.url.path.startswith("/e-print/"):
+                return httpx.Response(404)
+            return super().handler(request)
+
+    rec = NoEprint(broken=(), feed=FEED, html=LTX_PAGE)
+    source = arxiv.fetch("retrieval augmented", tmp_path / "c", max_papers=1, client=rec.client(),
+                         log=lambda _: None, convert=lambda data, kind: data.decode(), structured=True)
+    assert source["fallbacks"][0]["reason"] == "latex: 404" and source["html"] == 1
+
+
+# --- the PDF path: Docling's cells that pdfplumber cannot confirm carry "table unsure" --------------------------------
+
+PDF_MD = "Results.\n\n| System | EM |\n|---|---|\n| Baseline | 61.2 |\n| RAG | 74.5 |\n\nEnd.\n"
+PDF_RAW = [(1, [["System", "EM"], ["Baseline", "61.2"], ["RAG", "74.5"]])]
+
+
+def _pdf_ladder(monkeypatch, plumber):
+    monkeypatch.setattr(arxiv, "_docling_convert", lambda data, kind: (PDF_MD, PDF_RAW))
+    monkeypatch.setattr(arxiv, "plumber_bytes", lambda data: plumber)
+    client = arxiv.Client(transport=httpx.MockTransport(
+        lambda r: httpx.Response(200, content=b"%PDF-1.4 fake") if "/pdf/" in r.url.path else httpx.Response(404)), delay=0)
+    body, source, _, _ = arxiv.ladder(ENTRY, client)
+    assert source == "pdf"
+    return body
+
+
+def _checked(markdown: str, quote: str, number: float):
+    from agent.anchor import Index, selector_at, text_sha256
+    from evidence import checks, protocol
+    from evidence.contract import DocumentRef, ExtractionResult, ExtractionTask, Item, ProtocolRef, Scope, Span
+    from evidence.tests.conftest import PROTOCOL
+
+    proto = protocol.load(PROTOCOL)
+    doc = DocumentRef(id="P", file="papers/P.md", sha256=text_sha256(markdown))
+
+    def span(q, role):
+        at = markdown.index(q)
+        return Span.of(role, selector_at(markdown, at, at + len(q), file=doc.file, sha256=doc.sha256))
+
+    cond = Item.build("condition", {"label": "Baseline", "role": "baseline"}, [span("Baseline", "condition_label")])
+    metric = Item.build("metric", {"name": "EM", "canonical": "factual_accuracy", "higher_is_better": True},
+                        [span("EM", "metric_label")])
+    value = Item.build("measurement", {"value": number, "dataset": None}, [span(quote, "value")],
+                       links={"condition": cond.item_id, "metric": metric.item_id})
+    spec = proto.evidence_types["measurement"]
+    t = ExtractionTask(protocol=ProtocolRef(id=proto.id, sha256=proto.sha256), evidence_type="measurement",  # type: ignore[arg-type]
+                       field_schema_sha256=spec.schema_sha256, document=doc, scope=Scope(), context=(cond.item_id, metric.item_id))
+    result = ExtractionResult(extractor_id="x@1#0", task_sha256=t.task_sha256, status="ok", items=(value,))
+    return checks.check(result, t, Index(markdown), spec, {cond.item_id: cond, metric.item_id: metric})
+
+
+def test_pdf_disagreeing_cell_is_marked_end_to_end(monkeypatch) -> None:
+    md = _pdf_ladder(monkeypatch, [(1, [["System", "EM"], ["Baseline", "61.2"], ["RAG", "74.6"]])])
+    assert md.count("<!-- table unsure:") == 1 and "<!-- table unsure: 2,1 -->" in md
+    [kept] = _checked(md, "74.5", 0.745).items
+    assert kept.fields["table_unsure"] is True
+    [sure] = _checked(md, "61.2", 0.612).items
+    assert "table_unsure" not in sure.fields
+
+
+def test_pdf_page_without_pdfplumber_table_keeps_docling_all_unsure(monkeypatch) -> None:
+    md = _pdf_ladder(monkeypatch, [])
+    assert md.count("<!-- table unsure:") == 6 and "| RAG | 74.5 |" in md
+    [kept] = _checked(md, "74.5", 0.745).items          # kept, not dropped
+    assert kept.fields["table_unsure"] is True
+
+
+def test_pdf_block_count_mismatch_marks_everything_unsure() -> None:
+    from evidence.tables import annotate
+    out = annotate(PDF_MD + "\n| a | b |\n|---|---|\n| 1 | 2 |\n", PDF_RAW, PDF_RAW)
+    assert out.count("<!-- table unsure:") == 6 + 4

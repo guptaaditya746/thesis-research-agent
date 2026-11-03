@@ -13,6 +13,8 @@ id is a hash of the document, the label and the quote's position, so the same ma
 """
 from __future__ import annotations
 
+import threading
+
 import dspy
 from pydantic import BaseModel
 
@@ -55,7 +57,7 @@ def _step() -> steps.Step:
 def map_experiments(doc_text: str, document: str, file: str | None = None) -> list[Experiment]:
     """The experiments of one paper, each anchored. `document` is the paper id; `file` (default `document`) names
     the file in the spans. Unanchored experiments (the quote is not in the text) and repeats of one quote are
-    dropped. The step must be configured (`evidence.steps.configure`), as every DSPy step."""
+    dropped. The step must be configured (`evidence.steps.configure`) by the caller, under `LOCK`."""
     proposed = _step()(paper=doc_text).experiments
     index = Index(doc_text)
     out: list[Experiment] = []
@@ -107,15 +109,15 @@ def attach(value_item: Item, experiments: list[Experiment], items: dict[str, Ite
     return nearest.exp_id if nearest else None
 
 
-_MAPPED: dict[tuple[str, str], list[Experiment]] = {}   # (document id, text hash) -> the map; a stage may run twice
+LOCK = threading.RLock()   # `steps.configure` sets a process-wide model: hold this from configure through the call
 
 
 def _map(doc: object, ctx: stages.StageContext) -> list[Experiment]:
-    key = (doc.doc.id, doc.index.sha256)   # type: ignore[attr-defined]
-    if key not in _MAPPED:
+    """The document's map, one recorded call per run (a repeat is answered by the run's call cache). Nothing is kept
+    between calls: a second run, or a replay, makes and records its own `map_experiments` call."""
+    with LOCK:
         steps.configure(ctx.dspy_lm("map_experiments"))
-        _MAPPED[key] = map_experiments(doc.text, doc.doc.id, doc.doc.file)   # type: ignore[attr-defined]
-    return _MAPPED[key]
+        return map_experiments(doc.text, doc.doc.id, doc.doc.file)   # type: ignore[attr-defined]
 
 
 def before_extract(doc: object, ctx: stages.StageContext) -> None:

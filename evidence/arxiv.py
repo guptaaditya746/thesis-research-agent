@@ -166,9 +166,20 @@ class Client:
         self.http.close()
 
 
-def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
-    """The page or PDF as Markdown (Docling), NUL characters dropped. FetchError when Docling is not installed;
-    ValueError for a file Docling cannot read."""
+def plumber_bytes(data: bytes) -> list[tuple[int, list[list[str]]]]:
+    """Every table pdfplumber reads in the PDF bytes, with its page (the second reader of evidence/tables.py)."""
+    import pdfplumber
+
+    out: list[tuple[int, list[list[str]]]] = []
+    with pdfplumber.open(BytesIO(data)) as doc:
+        for n, page in enumerate(doc.pages, start=1):
+            out += [(n, [[c or "" for c in row] for row in rows]) for rows in page.extract_tables()]
+    return out
+
+
+def _docling_convert(data: bytes, kind: Literal["html", "pdf"]) -> tuple[str, list[tuple[int, list[list[str]]]]]:
+    """(Markdown, Docling's tables as (page, rows of cell text) in export order). FetchError when Docling is not
+    installed; ValueError for a file Docling cannot read."""
     try:
         from docling.datamodel.base_models import DocumentStream, InputFormat
         from docling.datamodel.pipeline_options import PdfPipelineOptions
@@ -180,8 +191,26 @@ def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
     try:
         result = converter.convert(DocumentStream(name=f"paper.{kind}", stream=BytesIO(data)))
         text = result.document.export_to_markdown()
+        raw = [(t.prov[0].page_no if t.prov else 0, [[c.text for c in row] for row in t.data.grid])
+               for t in result.document.tables]
     except Exception as exc:   # Docling raises its own ConversionError and format errors
         raise ValueError(f"Docling could not read the {kind} ({type(exc).__name__}: {exc})") from exc
+    return text, raw
+
+
+def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
+    """The page or PDF as Markdown (Docling), NUL characters dropped. For a PDF every table is also read by
+    pdfplumber (evidence/tables.py): a Docling cell it does not confirm is followed by `<!-- table unsure: r,c -->`,
+    and a page where pdfplumber finds no table keeps Docling's cells, all unsure. FetchError when Docling is not
+    installed; ValueError for a file Docling cannot read."""
+    text, raw = _docling_convert(data, kind)
+    if kind == "pdf" and raw:
+        from evidence.tables import annotate
+        try:
+            other = plumber_bytes(data)
+        except Exception:   # pdfplumber cannot read it: nothing confirms Docling's cells
+            other = []
+        text = annotate(text, raw, other)
     return text.replace("\x00", "").encode("utf-8", "replace").decode("utf-8")
 
 
@@ -232,8 +261,9 @@ def _why(exc: Exception) -> str:
 
 
 def ladder(entry: Entry, client: Client, convert: Convert = docling_markdown
-           ) -> tuple[str, Source, str, str]:
-    """(Markdown, source, why the earlier rungs were not used ("" when the first worked), sha256 of the source).
+           ) -> tuple[str, Source, str, str | None]:
+    """(Markdown, source, sha256 of the source, why the earlier rungs were not used or None when the first worked):
+    the order of `paper_body`.
 
     The rungs in order: arXiv LaTeX source (`/e-print/<id>`), PMC XML (only when `entry.pmcid` is set), the arXiv
     HTML page, the PDF through Docling. Each failure is kept as "<rung>: <why>", joined with "; ". ValueError
@@ -250,14 +280,14 @@ def ladder(entry: Entry, client: Client, convert: Convert = docling_markdown
         try:
             blob = client.get(url)
             body = to_markdown(blob)
-            return body, name, "; ".join(reasons), sha256_hex(blob)   # type: ignore[return-value]
+            return body, name, sha256_hex(blob), "; ".join(reasons) or None   # type: ignore[return-value]
         except (httpx.HTTPError, ValueError) as exc:
             reasons.append(f"{name}: {_why(exc)}")
     try:
         body, kind, sha, why = paper_body(entry, client, convert)
     except ValueError as exc:
         raise ValueError("; ".join([*reasons, str(exc)])) from exc
-    return body, kind, "; ".join([*reasons, *([why] if why else [])]), sha
+    return body, kind, sha, "; ".join([*reasons, *([why] if why else [])]) or None
 
 
 def fetch_paper(ref: Entry, client: Client | None = None, convert: Convert = docling_markdown
@@ -266,8 +296,8 @@ def fetch_paper(ref: Entry, client: Client | None = None, convert: Convert = doc
     own = client is None
     client = client or Client()
     try:
-        body, source, reason, _ = ladder(ref, client, convert)
-        return body, source, reason
+        body, source, _, reason = ladder(ref, client, convert)
+        return body, source, reason or ""
     finally:
         if own:
             client.close()
