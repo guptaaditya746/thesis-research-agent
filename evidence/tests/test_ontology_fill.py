@@ -29,6 +29,7 @@ def fake_model(parents: dict[str, str]):
 @pytest.fixture(autouse=True)
 def tuned_off(tmp_path, monkeypatch):
     monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "tuned")
+    monkeypatch.setattr(steps, "_LM", None)
 
 
 @pytest.fixture
@@ -93,3 +94,24 @@ def test_review_writes_links_review_json(tmp_path):
     fill.review(RunDir(tmp_path), ["a -> b"], ["c -> d"])
     assert json.loads((tmp_path / "links_review.json").read_text(encoding="utf-8")) == {
         "accepted": ["a -> b"], "rejected": ["c -> d"]}
+
+
+def test_stage_through_the_seam_on_a_field_with_no_tree(tmp_path, monkeypatch):
+    """Review Focus: no ontology for the field -> "reasoning off: no tree", and the run goes on."""
+    from evidence import stages
+    from evidence.plan import Plan, WordList
+    from evidence.rundir import RunDir
+    monkeypatch.setenv("EV_ONTOLOGY_DIR", str(tmp_path))
+    plan = Plan(question="q?", field="other", lines=[], main_rule="m", decisions=[], clarifications=[],
+                words=WordList(things={}, cues=[], written_by="t", ontology_names={}))
+
+    def ask(*a, **k):
+        from evidence.stages import Reply
+        return Reply(text='{"parent": ""}')
+
+    ctx = stages.StageContext(plan, None, "run", None, tmp_path, ask, "alias")
+    with stages.registered():
+        stages.register("ontology", "after_run", fill.ontology_stage)
+        out = stages.after_run(RunDir(tmp_path), ctx)
+    assert out["ontology"]["tree"] == "reasoning off: no tree"
+    (tmp_path / "ontology.json").write_text(json.dumps(out["ontology"]), encoding="utf-8")

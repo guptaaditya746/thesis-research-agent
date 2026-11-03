@@ -45,8 +45,12 @@ def ontology_dir() -> Path | None:
     return Path(value) if value else None
 
 
-def _download(url: str) -> bytes:
-    with urllib.request.urlopen(url, timeout=600) as response:   # noqa: S310 - pinned https URLs
+ACCEPT = {"mesh": "application/xml", "qudt": "text/turtle", "cskg": "text/turtle"}
+
+
+def _download(url: str, accept: str = "*/*") -> bytes:
+    request = urllib.request.Request(url, headers={"Accept": accept})
+    with urllib.request.urlopen(request, timeout=600) as response:   # noqa: S310 - pinned https URLs
         return response.read()
 
 
@@ -62,11 +66,15 @@ def fetch(name: str, dest: Path | None = None, *, url: str | None = None, sha256
     source = url or spec["url"]
     if not source:
         raise OntologyError(f"no URL for {name!r}: pass url (CS-KG: set $EV_CSKG_URL)")
-    data = _download(source)
+    data = _download(source, ACCEPT[name])
     want = sha256 or spec["sha256"]
     got = hashlib.sha256(data).hexdigest()
     if want is not None and got != want:
         raise OntologyError(f"{name}: sha256 {got} is not the pinned {want}")
+    try:   # refuse to write a file that does not parse (a server may answer an HTML page)
+        _parse(name, data)
+    except Exception as e:
+        raise OntologyError(f"{name}: the download from {source} does not parse: {type(e).__name__}: {e}") from e
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / spec["file"]
     path.write_bytes(data)
@@ -81,17 +89,43 @@ def _path(name: str) -> Path | None:
     return DATA / "qudt_units.ttl" if name == "qudt" else None
 
 
-def ontology_hashes() -> dict[str, str]:
-    """{name: sha256 of the file in use} for every ontology file present, for the lockfile's `ontology_sha256`."""
-    out: dict[str, str] = {}
-    for name in PINNED:
-        path = _path(name)
-        if path is not None:
-            out[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+def files_for(field: str) -> dict[str, Path]:
+    """{name: file} of exactly the files `load(field)` reads (the CS fallback is "cs_fallback")."""
+    out: dict[str, Path] = {}
+    if field == "cs":
+        if (path := _path("cskg")) is not None:
+            out["cskg"] = path
+        elif CS_FALLBACK.is_file():
+            out["cs_fallback"] = CS_FALLBACK
+    elif field == "medicine" and (path := _path("mesh")) is not None:
+        out["mesh"] = path
+    if (units := _path("qudt")) is not None:
+        out["qudt"] = units
     return out
 
 
-def _mesh_graph(path: Path) -> rdflib.Graph:
+def ontology_hashes(field: str | None = None) -> dict[str, str]:
+    """{name: sha256} of the files `load` reads (`files_for`), for the lockfile's `ontology_sha256`; with no field,
+    of every field's files."""
+    files: dict[str, Path] = {}
+    for f in ([field] if field else ["cs", "medicine", "other"]):
+        files.update(files_for(f))
+    return {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in sorted(files.items())}
+
+
+def _parse(name: str, data: bytes) -> rdflib.Graph:
+    """The graph of one file's bytes; raises when it does not parse."""
+    graph = rdflib.Graph()
+    if name == "mesh":
+        import io
+        return _mesh_graph(io.BytesIO(data))
+    graph.parse(data=data.replace(b"\r\n", b"\n").decode("utf-8"), format="turtle")
+    if name in ("cskg", "cs_fallback"):
+        owlrl.DeductiveClosure(owlrl.RDFS_Semantics).expand(graph)
+    return graph
+
+
+def _mesh_graph(path: Any) -> rdflib.Graph:
     """MeSH descriptors as classes: rdfs:label (preferred name), skos:altLabel (entry terms), rdfs:subClassOf by
     tree numbers (C14.280.647 sits under C14.280). Read as a stream; the real file is large."""
     graph = rdflib.Graph()
@@ -121,23 +155,18 @@ def _mesh_graph(path: Path) -> rdflib.Graph:
 
 def load(field: str, *, with_units: bool = True) -> rdflib.Graph | None:
     """The ontology graph of a field: `cs` the CS-KG (from the folder, else the repo's ontology.ttl), `medicine` MeSH,
-    and QUDT units for every field. None when the field has nothing to read. Never raises for a missing file."""
+    and QUDT units for every field. None when the field has nothing to read. A missing or unparseable file is left
+    out (no tree), never a crash."""
     graph = rdflib.Graph()
     found = False
-    if field == "cs":
-        path = _path("cskg") or (CS_FALLBACK if CS_FALLBACK.is_file() else None)
-        if path is not None:
-            graph.parse(data=path.read_bytes().replace(b"\r\n", b"\n").decode("utf-8"), format="turtle")
-            owlrl.DeductiveClosure(owlrl.RDFS_Semantics).expand(graph)
+    for name, path in files_for(field).items():
+        if name == "qudt" and not with_units:
+            continue
+        try:
+            graph += _parse(name, path.read_bytes())
             found = True
-    elif field == "medicine":
-        path = _path("mesh")
-        if path is not None:
-            graph += _mesh_graph(path)
-            found = True
-    if with_units and (units := _path("qudt")) is not None:
-        graph.parse(units, format="turtle")
-        found = True
+        except Exception:   # noqa: BLE001 - a bad file means "reasoning off: no tree"
+            continue
     return graph if found else None
 
 

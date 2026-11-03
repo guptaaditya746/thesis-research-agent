@@ -42,14 +42,35 @@ def test_missing_mesh_file_is_no_tree_not_a_crash(monkeypatch, tmp_path):
 
 
 def test_fetch_refuses_wrong_sha(tmp_path, monkeypatch):
-    monkeypatch.setattr(sources, "_download", lambda url: b"data")
+    monkeypatch.setattr(sources, "_download", lambda url, accept="*/*": b"data")
     with pytest.raises(sources.OntologyError, match="sha256"):
         fetch("qudt", tmp_path, sha256="0" * 64)
     assert not list(tmp_path.iterdir())
 
 
 def test_fetch_writes_when_sha_matches_and_hashes_are_reported(tmp_path, monkeypatch, folder):
-    monkeypatch.setattr(sources, "_download", lambda url: b"<x/>")
+    monkeypatch.setattr(sources, "_download", lambda url, accept="*/*": b"<x/>")
     path = fetch("mesh", tmp_path, sha256=hashlib.sha256(b"<x/>").hexdigest())
     assert path.read_bytes() == b"<x/>"
-    assert set(ontology_hashes()) == {"mesh", "qudt"}
+    assert set(ontology_hashes()) == {"mesh", "qudt", "cs_fallback"}
+
+
+def test_unparseable_file_is_no_tree_not_a_crash(tmp_path, monkeypatch):
+    (tmp_path / "qudt_units.ttl").write_text("<html><body>Not turtle</body></html>", encoding="utf-8")
+    monkeypatch.setenv("EV_ONTOLOGY_DIR", str(tmp_path))
+    assert load("other") is None
+    assert load("cs") is not None   # the CS-KG fallback still loads
+
+
+def test_fetch_refuses_html_and_asks_for_turtle(tmp_path, monkeypatch):
+    seen = []
+    monkeypatch.setattr(sources, "_download", lambda url, accept="*/*": seen.append(accept) or b"<html>hi</html>")
+    with pytest.raises(sources.OntologyError, match="does not parse"):
+        fetch("qudt", tmp_path)
+    assert seen == ["text/turtle"] and not list(tmp_path.iterdir())
+
+
+def test_hashes_cover_the_cs_fallback(monkeypatch, tmp_path):
+    monkeypatch.setenv("EV_ONTOLOGY_DIR", str(tmp_path))
+    assert set(ontology_hashes("cs")) == {"cs_fallback", "qudt"}
+    assert set(sources.files_for("cs")) == set(ontology_hashes("cs"))
