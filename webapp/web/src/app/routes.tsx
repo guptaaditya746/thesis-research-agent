@@ -29,6 +29,7 @@ const ReportPage = lazy(() => import("@/pages/ev/ReportPage"))
 const EvComparePage = lazy(() => import("@/pages/ev/ComparePage"))
 const ShiftPage = lazy(() => import("@/pages/ev/ShiftPage"))
 const BenchmarkPage = lazy(() => import("@/pages/ev/BenchmarkPage"))
+const PlanPage = lazy(() => import("@/routes/plan/PlanPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 
 /** /scores/<rest> (the old Scores page's addresses) → /report/<rest>, keeping the query. */
@@ -46,6 +47,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: "flow/:qid", element: <FlowPage /> },
       { path: "flow/:qid/:step", element: <FlowPage /> },
+      { path: "plan", element: <PlanPage /> },
       { path: "jobs", element: <JobsPage /> },
       { path: "jobs/:jobId", element: <JobsPage /> },
       { path: "corpora", element: <CorporaPage /> },
