@@ -6,12 +6,18 @@
                                                       every paper id under DIR (its manifest.json, or one per
                                                       sub-folder) -> DIR/tune_split.json (evaluation.wholerun.tune_split)
 
+    real-set-prep.py tune-examples --set DIR [--out DIR/corpus]
+                                                      the labels of DIR (sofc.json or release.json) -> OUT/tune_examples.json
+                                                      (format in evidence/steps/tune.py); a step the labels give nothing for
+                                                      prints "no examples for <step>" and is skipped
+
 Offline; no model. tune_split.json is written once (it is refused when it exists): `evaluate wholerun` drops the
 questions on held-out papers and `evidence tune` trains only on them."""
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -42,6 +48,75 @@ def paper_ids(corpus: Path) -> list[str]:
     return ids
 
 
+def _number_in(paragraph: str, value: float) -> str | None:
+    for form in dict.fromkeys((repr(float(value)), f"{value:g}")):
+        if re.search(rf"(?<![\w.]){re.escape(form)}(?![\w]|\.\d)", paragraph):
+            return form
+    return None
+
+
+def sofc_examples(src: Path) -> dict[str, list[dict]]:
+    """From the SOFC labels only. map_experiments: the paper and its number of labelled experiments. recheck: a
+    paragraph holding a labelled value (its number and its material) is a find to keep; a number of a paragraph with
+    no labelled value, offered with the paper's material, is a find to drop (at most as many as the keeps)."""
+    rows: dict[str, list[dict]] = {"map_experiments": [], "recheck": [], "claims.read_claim": []}
+    keep, drop = [], []
+    for paper in sofc._open(src):
+        text, pid = str(paper["text"]), str(paper["id"])
+        n = len(paper.get("experiments", []))
+        if n:
+            rows["map_experiments"].append({"step": "map_experiments", "paper": pid, "inputs": {"paper": text},
+                                            "gold": {"n": n, "text": text}})
+        values = [v for v in paper.get("values", []) if v.get("material") and v.get("value") is not None]
+        if not values:
+            continue
+        for para in (q for q in text.split("\n\n") if q.strip()):
+            hit = next(((v, num) for v in values if str(v["material"]).casefold() in para.casefold()
+                        and (num := _number_in(para, float(v["value"])))), None)
+            if hit:
+                v, num = hit
+                keep.append({"step": "recheck", "paper": pid, "inputs": {"paragraph": para, "items": [
+                    f'1. value | {json.dumps({"material": str(v["material"]), "number": num}, sort_keys=True)} | {num}']},
+                    "gold": {"keep": [True]}})
+            elif not any(_number_in(para, float(v["value"])) for v in values):
+                tok = re.search(r"(?<![\w.])\d+(?:\.\d+)?(?![\w])", para)
+                if tok:
+                    drop.append({"step": "recheck", "paper": pid, "inputs": {"paragraph": para, "items": [
+                        f'1. value | {json.dumps({"material": str(values[0]["material"]), "number": tok.group()}, sort_keys=True)} | {tok.group()}']},
+                        "gold": {"keep": [False]}})
+    rows["recheck"] = keep + drop[:len(keep)]
+    return rows
+
+
+def tune_examples(set_dir: Path, out_dir: Path | None = None) -> Path | None:
+    """Write `<out_dir>/tune_examples.json` (default `<set_dir>/corpus`, next to tune_split.json) from the labels of a
+    set folder; None (nothing written) when no real step has examples. Cochrane gives a direction per study and per
+    review, no sentence, so it gives no claims.read_claim example (a sentence would have to be invented)."""
+    from evidence.steps.tune import EXAMPLES_FILE, REAL_STEPS
+    set_dir = Path(set_dir)
+    if (set_dir / sofc.SOURCE_FILE).is_file():
+        by_step = sofc_examples(set_dir)
+    elif (set_dir / "release.json").is_file():
+        by_step = {}
+    else:
+        raise SystemExit(f"real-set-prep: no {sofc.SOURCE_FILE} or release.json in {set_dir}")
+    rows = []
+    for step in REAL_STEPS:
+        got = by_step.get(step, [])
+        if got:
+            print(f"{step}: {len(got)} examples")
+        else:
+            print(f"no examples for {step}")
+        rows += got
+    if not rows:
+        return None
+    out = Path(out_dir) if out_dir is not None else set_dir / "corpus"
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / EXAMPLES_FILE
+    path.write_text(json.dumps({"examples": rows}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="real-set-prep.py", description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -53,7 +128,14 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--corpus", type=Path, required=True)
     t.add_argument("--seed", type=int, default=0)
     t.add_argument("--fraction", type=float, default=0.2)
+    e = sub.add_parser("tune-examples")
+    e.add_argument("--set", type=Path, required=True, dest="set_dir")
+    e.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
+    if args.cmd == "tune-examples":
+        path = tune_examples(args.set_dir, args.out)
+        print(f"wrote {path}" if path else "wrote nothing: no real step has examples from these labels")
+        return 0
     if args.cmd == "sofc-corpus":
         print(f"wrote {sofc_corpus(args.src)}")
         return 0
