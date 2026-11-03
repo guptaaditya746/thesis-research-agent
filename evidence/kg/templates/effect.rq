@@ -1,0 +1,15 @@
+# after: effect
+# One treatment/control study per paper: all values on the question metrics, paired in evidence/kg/after.py.
+# Params: sides [treatment side, control side], metrics (priority order), higher_is_better {metric: bool}, min_effect.
+SELECT ?paper ?metric ?side ?context ?number ?position ?inTable ?value WHERE {
+  ?value a ev:Value ; ev:of ?t ; ev:onMetric ?m ; ev:number ?number ; ev:inExperiment ?e ;
+         kg:position ?position ; kg:inTable ?inTable ; kg:side ?side .
+  ?e ev:inPaper ?p .
+  ?m ev:name ?metric .
+  ?p ev:name ?paper .
+  OPTIONAL { ?value kg:context ?context }
+  VALUES ?side { $sides }
+  VALUES ?metric { $metrics }
+  $include[?paper]
+}
+ORDER BY ?paper ?position ?value

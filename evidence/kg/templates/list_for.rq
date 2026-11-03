@@ -1,0 +1,9 @@
+# One kind of thing linked to another: the settings $list_field used in experiments whose $for_field is $for_value
+# (datasets used for task T: list_field "dataset", for_field "task", for_value T), with the papers they appear in.
+SELECT ?item (COUNT(DISTINCT ?paper) AS ?papers) WHERE {
+  ?e a ev:Experiment ; ev:inPaper ?p ; $list_field ?item ; $for_field $for_value .
+  ?p ev:name ?paper .
+  $include[?paper]
+}
+GROUP BY ?item
+ORDER BY DESC(?papers) ?item

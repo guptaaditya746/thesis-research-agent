@@ -1,0 +1,18 @@
+# after: chaining_path
+# A over B in one experiment, C over B in another whose settings equal the first's on $must_match: A over C by the
+# difference of differences (A - B) - (C - B). Params: a, c (names), metric, must_match, threshold.
+SELECT ?via ?experiment_ab ?experiment_cb ?estimate WHERE {
+  ?ta ev:name $a . ?tc ev:name $c .
+  ?va ev:of ?ta ; ev:onMetric ?m ; ev:number ?na ; ev:inExperiment ?e1 .
+  ?vb1 ev:of ?tb ; ev:onMetric ?m ; ev:number ?nb1 ; ev:inExperiment ?e1 .
+  ?vc ev:of ?tc ; ev:onMetric ?m ; ev:number ?nc ; ev:inExperiment ?e2 .
+  ?vb2 ev:of ?tb ; ev:onMetric ?m ; ev:number ?nb2 ; ev:inExperiment ?e2 .
+  ?m ev:name $metric .
+  ?tb ev:name ?via .
+  FILTER(?tb != ?ta && ?tb != ?tc && ?ta != ?tc)
+  $must_match[?e1, ?e2]
+  BIND(STR(?e1) AS ?experiment_ab)
+  BIND(STR(?e2) AS ?experiment_cb)
+  BIND((?na - ?nb1) - (?nc - ?nb2) AS ?estimate)
+}
+ORDER BY ?via ?experiment_ab ?experiment_cb

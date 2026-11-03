@@ -1,0 +1,10 @@
+# How many times a thing was measured: units of $counts_as ("paper" and/or "result"). Params: thing, counts_as.
+SELECT (COUNT(DISTINCT ?unit) AS ?count) WHERE {
+  ?v a ev:Value ; ev:of ?t ; ev:inExperiment ?e .
+  ?t ev:name $thing .
+  ?e ev:inPaper ?p .
+  ?p ev:name ?paper .
+  VALUES ?kind { $counts_as }
+  BIND(IF(?kind = "paper", STR(?p), STR(?v)) AS ?unit)
+  $include[?paper]
+}
