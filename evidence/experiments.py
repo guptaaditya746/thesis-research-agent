@@ -35,14 +35,14 @@ class MapExperiments(dspy.Signature):
 
     An experiment is one evaluation run under its own setting: a dataset, a model, a population or a configuration.
     Results of the same experiment reported in the abstract, a table and the text are ONE experiment.
-    For each experiment return `label` (a short name such as "NQ open-domain"), `quote` (a short passage copied
+    For each experiment return `label` (a short name such as "dataset A"), `quote` (a short passage copied
     word for word from the paper where the experiment is described; no more than 25 words) and `setting` (field
     names such as dataset, model, population mapped to the paper's own words).
     Return an empty list when the paper reports no experiment. Do not invent experiments the text does not describe.
 
-    Example: a paper that tests retrieval on Natural Questions and on TriviaQA returns two experiments:
-    {"label": "Natural Questions", "quote": "On Natural Questions we compare", "setting": {"dataset": "Natural Questions"}}
-    {"label": "TriviaQA", "quote": "On TriviaQA the same comparison", "setting": {"dataset": "TriviaQA"}}
+    Example: a paper that tests a method on dataset A and on dataset B returns two experiments:
+    {"label": "dataset A", "quote": "On dataset A we compare", "setting": {"dataset": "A"}}
+    {"label": "dataset B", "quote": "On dataset B the same comparison", "setting": {"dataset": "B"}}
     """
     paper: str = dspy.InputField(desc="the full text of one paper")
     experiments: list[Mapped] = dspy.OutputField(desc="the experiments, each with label, a verbatim quote and setting")

@@ -80,6 +80,9 @@ def anchor_span(span: Span, task: ExtractionTask, index: Index) -> Span:
 NUMBER = re.compile(r"(?<![\w.])[-−–]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)")
 
 
+COUNT = re.compile(r"(\d[\d,]*)\s+(?:out of|of)\s+(\d[\d,]*)")
+
+
 def _numbers(text: str) -> list[float]:
     out = []
     for m in NUMBER.finditer(text):
@@ -111,11 +114,20 @@ def value_problem(item: Item, text: str) -> str:
         return ""
     start, end = span.selector["start"], span.selector["end"]
     haystacks = [text[start:end]]
+    total = next((s for s in item.spans if s.role == "value_total"), None)   # a count k of n: two spans
+    if total is not None:
+        for k in _numbers(text[start:end]):
+            for n in _numbers(text[total.selector["start"]:total.selector["end"]]):
+                if n and math.isclose(value, k / n, rel_tol=1e-3, abs_tol=1e-6):
+                    return ""
     if (cell := _cell_text(text, start, end)) is not None:
         haystacks.append(cell)
     for hay in haystacks:
+        for k, n in COUNT.findall(hay):   # "662 out of 1,000": the fraction
+            if float(n.replace(',', '')) and math.isclose(value, float(k.replace(',', '')) / float(n.replace(',', '')), rel_tol=1e-3, abs_tol=1e-6):
+                return ""
         for n in _numbers(hay):
-            if any(math.isclose(value, c, rel_tol=1e-6, abs_tol=1e-9) for c in (n, n / 100)):
+            if any(math.isclose(value, c, rel_tol=1e-6, abs_tol=1e-9) for c in (n, n / 100, n / 1000)):
                 return ""
     return f"value {value:g} is not written in its span {text[start:end]!r}"
 
