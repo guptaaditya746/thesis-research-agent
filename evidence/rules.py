@@ -79,14 +79,20 @@ def duplicate_key(canonical: str, treatment: float, control: float) -> tuple[str
     return canonical, round(float(treatment), VALUE_DECIMALS), round(float(control), VALUE_DECIMALS)
 
 
-def duplicates(studies: Iterable[tuple[str, str, float, float]]) -> dict[str, str]:
-    """`(id, canonical metric, treatment value, control value)` of the determined studies in document
-    order -> {later id: the first id with the same key}. The dataset is not part of the key (an extractor
-    may miss it); the generator keeps the pairs of distinct studies apart, so equal pairs mean one study."""
-    first: dict[tuple[str, float, float], str] = {}
+def duplicates(studies: Iterable[tuple[str, str, float, float] | tuple[str, str, float, float, str | None]]
+               ) -> dict[str, str]:
+    """`(id, canonical metric, treatment value, control value[, experiment id])` of the determined studies in
+    document order -> {later id: the first id with the same key}. With an experiment id (the paper's experiment
+    map, evidence/experiments.py) the key is (experiment id, metric, treatment, control): the same numbers in
+    two experiments are two findings. Without one (None, or a 4-tuple: a run with no experiment map) the key is
+    today's: the dataset is not part of it (an extractor may miss it); the generator keeps the pairs of distinct
+    studies apart, so equal pairs mean one study."""
+    first: dict[tuple, str] = {}
     out: dict[str, str] = {}
-    for sid, canonical, treatment, control in studies:
-        key = duplicate_key(canonical, treatment, control)
+    for sid, canonical, treatment, control, *rest in studies:
+        key: tuple = duplicate_key(canonical, treatment, control)
+        if rest and rest[0] is not None:
+            key = (rest[0], *key)
         if key in first:
             out[sid] = first[key]
         else:
