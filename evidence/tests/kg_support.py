@@ -74,6 +74,10 @@ class Doc:
         self.items.append(it)
         return it
 
+    def limitation(self, thing: str | None, category: str) -> Item:
+        links = {"thing": self.arms[(thing, "drug")].item_id} if thing else None
+        return self._add("limitation", {"category": category}, "limitation", links)
+
     def link(self, relation: str, ref: str, object_doc: str | None = None) -> Item:
         it = item(LinkRecord(subject_doc=self.id, relation=relation, object_ref=ref, object_doc=object_doc,
                              outside_set=object_doc is None, span=span(self.id, self.at + 1, "link")))

@@ -1,3 +1,4 @@
+# params: context, metric
 # Leaderboard: things ordered by their best value on (context $context, metric $metric), across papers, in the
 # metric's direction (higher is better unless the metric says otherwise). Params: context, metric; include.
 SELECT (MIN(?name) AS ?thing) (IF(SAMPLE(?higher), MAX(?key), -MAX(?key)) AS ?score) WHERE {

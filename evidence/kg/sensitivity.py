@@ -25,7 +25,7 @@ import pyoxigraph as ox
 from evidence.plan import Decision, EvidenceLine
 
 from .build import KG
-from .query import Answer, run_query, template
+from .query import Answer, decision_params, run_query, template
 
 Strictness = Literal["strict", "main", "loose"]
 TOO_FEW, SOLID, SAME_DIRECTION = "too few to tell", "solid", "same direction"
@@ -79,6 +79,8 @@ def alternatives(decision: Decision, fields: list[Any]) -> list[tuple[Strictness
         have = list(value)
         more = [[*have, f] for f in sorted(set(fields) - set(have), key=str)]
         less = [[x for x in have if x != f] for f in have]
+        if decision.type == "counts_as":
+            less = [v for v in less if v]   # counting nothing is not a way of counting
         strict, loose = (more, less) if decision.type == "must_match" else (less, more)
         return [*(("strict", v) for v in strict), ("main", have), *(("loose", v) for v in loose)]
     return [("main", value)]
@@ -101,23 +103,49 @@ def _same(a: Verdict, b: Verdict) -> bool:
     return a.label == b.label
 
 
+def winners_verdict(answer: Answer) -> Verdict:
+    """For rows `kind, thing, count` (the `best` template): the winner in each counting unit, e.g. "paper: Rossi;
+    result: Chen"; `n` is the first unit's top count."""
+    top: dict[str, dict[str, Any]] = {}
+    for r in answer.rows:
+        top.setdefault(r["kind"], r)
+    if not top:
+        return Verdict("none", 0)
+    return Verdict("; ".join(f"{k}: {r['thing']}" for k, r in sorted(top.items())), next(iter(top.values()))["count"])
+
+
+def param_names(sparql: str, decisions: list[Decision], param_of: dict[str, str] | None) -> dict[str, str]:
+    """Decision id -> the query parameter it fills: `param_of` first, else the template's `# decisions:` header, else
+    the decision's type. Two decisions filling one parameter would overwrite each other: ValueError."""
+    header = decision_params(sparql)
+    names = {d.id: (param_of or {}).get(d.id) or header.get(d.type, d.type) for d in decisions}
+    seen: dict[str, str] = {}
+    for ident, name in names.items():
+        if name in seen:
+            raise ValueError(f"decisions {seen[name]!r} and {ident!r} both fill parameter {name!r}; "
+                             "name a parameter for each with param_of")
+        seen[name] = ident
+    return names
+
+
 def rerun(store: ox.Store, line: EvidenceLine, decisions: list[Decision], *, params: dict[str, Any] | None = None,
           verdict: Callable[[Answer], Verdict] = default_verdict,
-          candidates: dict[str, list[Any]] | None = None) -> Sensitivity:
+          candidates: dict[str, list[Any]] | None = None, param_of: dict[str, str] | None = None) -> Sensitivity:
     """Run `line` with the decisions as they are, then once per alternative of each decision (the others unchanged).
     `params` are the line's own params (a metric, a thing), `candidates` the pool per decision type."""
     sparql = template(line.template) if line.template else line.query
-    base = {**(params or {}), **{d.type: d.value for d in decisions}}
+    names = param_names(sparql, decisions, param_of)
+    base = {**(params or {}), **{names[d.id]: d.value for d in decisions}}
     pool = {"must_match": setting_fields(store), **(candidates or {})}
     main_answer = run_query(store, sparql, base)
     main = verdict(main_answer)
     out = Sensitivity(line=line.id, main=main)
     main_rows = {json.dumps(r, sort_keys=True, default=str) for r in main_answer.rows}
     for d in decisions:
-        for setting, value in alternatives(d, pool.get(d.type, [])):
+        for setting, value in alternatives(d, pool.get(d.id, pool.get(d.type, []))):
             if setting == "main":
                 continue
-            answer = run_query(store, sparql, {**base, d.type: value})
+            answer = run_query(store, sparql, {**base, names[d.id]: value})
             v = verdict(answer)
             changed = _changed(d, d.value, value) if d.type == "must_match" else d.type
             out.runs.append(Run(d.id, changed, setting, value, v, flips=not _same(main, v)))

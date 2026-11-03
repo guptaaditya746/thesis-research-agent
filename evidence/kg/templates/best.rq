@@ -1,6 +1,9 @@
-# Which thing wins most comparisons on a metric. A win is counted per unit in $counts_as: "paper" (one per paper that
-# has a win) and/or "result" (one per winning value). Params: metric, counts_as; include (optional papers).
-SELECT (MIN(?name) AS ?thing) (COUNT(DISTINCT ?unit) AS ?count) WHERE {
+# params: metric, counts_as
+# decisions: counts_as=counts_as
+# Which thing wins most comparisons on a metric, counted in each unit of $counts_as separately (one set of rows per
+# unit, never a sum): "result" counts winning values, "paper" counts the papers that have a win. The counts-as
+# decision is the set of units; the main one is ["result"], and adding "paper" shows who wins when papers are counted.
+SELECT ?kind (MIN(?name) AS ?thing) (COUNT(DISTINCT ?unit) AS ?count) WHERE {
   ?c a ev:Comparison ; ev:better ?v ; ev:inExperiment ?e .
   ?v ev:of ?t ; ev:onMetric ?m .
   ?m ev:name $metric .
@@ -11,5 +14,5 @@ SELECT (MIN(?name) AS ?thing) (COUNT(DISTINCT ?unit) AS ?count) WHERE {
   BIND(IF(?kind = "paper", STR(?p), STR(?v)) AS ?unit)
   $include[?paper]
 }
-GROUP BY ?t
-ORDER BY DESC(?count) ?thing
+GROUP BY ?kind ?t
+ORDER BY ?kind DESC(?count) ?thing

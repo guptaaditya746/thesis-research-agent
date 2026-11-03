@@ -5,7 +5,7 @@ and the query runner calls `<name>(rows, params)` on the rows it got.
   control values are paired on the same context (`synthesis._pair`'s rule, over rows), `rules.effect` gives the
   direction, and `rules.duplicates` flags a later paper that repeats an earlier one's numbers.
 - `chaining_path`: labels the paths from A over B to C "indirect" (they agree) or "conflicting" (they differ by more
-  than `$threshold`, or point different ways)."""
+  than `$threshold`)."""
 from __future__ import annotations
 
 from typing import Any
@@ -53,10 +53,17 @@ def effect(rows: list[dict[str, Any]], params: dict[str, Any]) -> list[dict[str,
         mine = [r for r in rows if r["paper"] == paper]
         entry: dict[str, Any] = {"paper": paper, "direction": "undetermined", "delta": None, "metric": None,
                                  "treatment_value": None, "control_value": None, "duplicate_of": None}
+        fields = list(params.get("must_match") or [])
         for wanted in params["metrics"]:
             on = [r for r in mine if r["metric"] == wanted]
-            pair = _pair([r for r in on if r["side"] == treatment_side], [r for r in on if r["side"] == control_side],
-                         prefer)
+            keys = list(dict.fromkeys(tuple(r.get(f"mm{n}") for n in range(len(fields))) for r in on))
+            pair = None
+            for key in keys:   # the values of a pair come from experiments with equal must-match settings
+                same = [r for r in on if tuple(r.get(f"mm{n}") for n in range(len(fields))) == key]
+                pair = _pair([r for r in same if r["side"] == treatment_side],
+                             [r for r in same if r["side"] == control_side], prefer)
+                if pair is not None:
+                    break
             if pair is not None:
                 t, c = pair
                 direction, delta = rules.effect(t["number"], c["number"], higher[wanted], params["min_effect"])
@@ -84,10 +91,9 @@ def counts(rows: list[dict[str, Any]]) -> dict[str, int]:
 
 def chaining_path(rows: list[dict[str, Any]], params: dict[str, Any]) -> list[dict[str, Any]]:
     """Each row is a path A - B - C with `estimate`, A over C by the difference of differences. All paths get one
-    label: conflicting when two estimates differ by more than `threshold` or have opposite signs, else indirect."""
+    label: conflicting when two estimates differ by more than `threshold`, else indirect."""
     estimates = [r["estimate"] for r in rows]
     threshold = float(params.get("threshold", 0))
     spread = max(estimates) - min(estimates) if estimates else 0
-    opposite = any(e > 0 for e in estimates) and any(e < 0 for e in estimates)
-    label = CONFLICTING if (spread > threshold or opposite) and len(estimates) > 1 else INDIRECT
+    label = CONFLICTING if spread > threshold and len(estimates) > 1 else INDIRECT
     return [{**r, "label": label} for r in rows]

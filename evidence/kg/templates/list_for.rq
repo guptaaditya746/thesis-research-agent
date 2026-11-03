@@ -1,3 +1,4 @@
+# params: list_field, for_field, for_value
 # One kind of thing linked to another: the settings $list_field used in experiments whose $for_field is $for_value
 # (datasets used for task T: list_field "dataset", for_field "task", for_value T), with the papers they appear in.
 SELECT ?item (COUNT(DISTINCT ?paper) AS ?papers) WHERE {

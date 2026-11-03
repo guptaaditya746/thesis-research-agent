@@ -1,3 +1,5 @@
+# params: threshold
+# decisions: threshold=threshold
 # Firm claims the paper's own numbers do not back: a firm claim that a thing improves, where the thing is not better by
 # at least $threshold in any comparison of the paper. Params: threshold; include (optional papers).
 SELECT ?paper ?subject ?direction ?strength WHERE {

@@ -1,3 +1,4 @@
+# params:
 # What the papers measured: each thing with the number of papers it is in. Params: include (optional papers).
 SELECT (MIN(?name) AS ?thing) (COUNT(DISTINCT ?paper) AS ?papers) WHERE {
   ?v a ev:Value ; ev:of ?t ; ev:inExperiment ?e .

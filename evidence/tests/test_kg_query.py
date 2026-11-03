@@ -70,31 +70,26 @@ def test_list_for_task():
     assert [(r["item"], r["papers"]) for r in answer.rows] == [("SciERC", 2), ("CoNLL", 1)]
 
 
-def chain_doc(pid: str, setting: dict[str, str], a: float | None, b: float, c: float | None) -> Doc:
+def chain_doc(pid: str, setting: dict[str, str], a: float | None, b: float, c: float | None, mid: str = "B") -> Doc:
     d = Doc(pid)
     d.experiment("e1", setting)
     if a is not None:
         d.value("A", a, population=None)
-    d.value("B", b, population=None)
+    d.value(mid, b, population=None)
     if c is not None:
         d.value("C", c, population=None)
     return d
 
 
 def test_chaining_conflicting():
-    # p1: A beats B by 0.3; p2: C is under B by 0.1 -> A over C by 0.2 ... path 1 via B1
-    # via B2: A beats B2 by 0.0, C beats B2 by 0.2 -> A under C by 0.2: the two paths point different ways
+    # via B1: A over B1 by 0.3, C under B1 by 0.1 -> A over C by 0.4; via B2: A level with B2, C over B2 by 0.2 -> -0.2
     docs = []
-    for pid, mid, a, c in (("p1", "B1", 0.8, 0.4), ("p2", "B2", 0.5, 0.7)):
-        d = Doc(pid)
-        d.experiment("e1", {"model": "7B"})
-        d.value("A", a, population=None)
-        d.value(mid, 0.5, population=None)
-        d.value("C", c, population=None)
-        docs.append(d)
+    for mid, a, c in (("B1", 0.8, 0.4), ("B2", 0.5, 0.7)):
+        docs.append(chain_doc(f"{mid}a", {"model": "7B"}, a, 0.5, None, mid))
+        docs.append(chain_doc(f"{mid}c", {"model": "7B"}, None, 0.5, c, mid))
     answer = run_template(graph(*docs), "chaining_path",
                           {"a": "A", "c": "C", "metric": "acc", "must_match": ["model"], "threshold": 0.05})
-    assert {r["via"] for r in answer.rows} >= {"B1", "B2"}
+    assert sorted((r["via"], round(r["estimate"], 3)) for r in answer.rows) == [("B1", 0.4), ("B2", -0.2)]
     assert {r["label"] for r in answer.rows} == {"conflicting"}
 
 
@@ -135,20 +130,55 @@ def test_builds_on_says_outside_the_set():
     assert {r["target"] for r in answer.rows} == {"outside the set", "p2"}
 
 
-def test_best_counts_as_papers_or_results():
+def test_best_counts_each_unit_separately():
     docs = []
-    for pid, wins in (("p1", ("Chen", "Chen", "Chen")), ("p2", ("Rossi",)), ("p3", ("Rossi",))):
-        d = Doc(pid)
-        for n, name in enumerate(wins):
-            d.experiment(f"e{n}", {"run": str(n)})
-            d.value(name, 0.9, population=None)
-            d.value(f"loser{n}", 0.1, population=None)
-        docs.append(d)
-    # one experiment per paper holds all values here, so Chen wins 3 results in p1
+    for author, per_paper in (("Chen", [3, 3, 2, 2, 2]), ("Rossi", [3, 1, 1, 1, 1, 1, 1])):
+        for n, wins in enumerate(per_paper):
+            d = Doc(f"{author}{n}")
+            for _ in range(wins):
+                d.value(author, 0.9)
+            d.value("Low", 0.1, side="base")
+            docs.append(d)
     store = graph(*docs)
-    by_result = run_template(store, "best", {"metric": "acc", "counts_as": ["result"]}).rows[0]
-    by_paper = run_template(store, "best", {"metric": "acc", "counts_as": ["paper"]}).rows
-    assert by_result["thing"] in ("Chen", "Rossi") and by_paper[0]["count"] >= 1
+    rows = run_template(store, "best", {"metric": "acc", "counts_as": ["result", "paper"]}).rows
+    got = {(r["kind"], r["thing"]): r["count"] for r in rows}
+    assert got == {("result", "Chen"): 12, ("result", "Rossi"): 9, ("paper", "Rossi"): 7, ("paper", "Chen"): 5}
+    only = run_template(store, "best", {"metric": "acc", "counts_as": ["result"]}).rows
+    assert [(r["thing"], r["count"]) for r in only] == [("Chen", 12), ("Rossi", 9)]
+    assert run_template(store, "count", {"thing": "Chen", "counts_as": ["result", "paper"]}).rows == [
+        {"kind": "paper", "count": 5}, {"kind": "result", "count": 12}]
+
+
+def test_a_missing_parameter_raises_not_a_free_variable():
+    d = Doc("p1")
+    d.value("RAG", 0.5)
+    d.claim("RAG", "boosts", direction="improves", strength="firm")
+    store = graph(d)
+    with pytest.raises(ValueError, match="threshold"):
+        run_template(store, "oversell", {})
+    with pytest.raises(ValueError, match="free variables"):
+        run_query(store, "SELECT ?v WHERE { ?v ev:number ?n . FILTER(?n > $cut) }", {})
+
+
+def test_limitations_template():
+    d, e = Doc("p1"), Doc("p2")
+    d.value("Zelvora", 0.5)
+    d.limitation("Zelvora", "small_sample")
+    d.limitation(None, "cost")
+    e.value("Zelvora", 0.4)
+    e.limitation("Zelvora", "small_sample")
+    rows = run_template(graph(d, e), "limitations", {}).rows
+    assert [(r["thing"], r["category"], r["papers"]) for r in rows] == [("unlinked", "cost", 1),
+                                                                      ("Zelvora", "small_sample", 2)]
+
+
+def test_all_undetermined_effect_is_no_evidence():
+    d = Doc("p1")
+    d.value("RAG", 0.5, side="rag")   # no control value
+    params = {"sides": ["rag", "baseline"], "metrics": ["acc"], "higher_is_better": {"acc": True},
+              "min_effect": 0.01, "order": ["p1"]}
+    answer = run_template(graph(d), "effect", params)
+    assert answer.empty and answer.message == NO_EVIDENCE and answer.reasons[0]["record"] == "p1"
 
 
 def test_oversell_firm_claim_without_a_win():

@@ -31,7 +31,11 @@ PREFIXES = {"ev": EV, "kg": KG, "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-
             "rdfs": "http://www.w3.org/2000/01/rdf-schema#", "xsd": "http://www.w3.org/2001/XMLSchema#"}
 TEMPLATES = "templates"
 _PLACEHOLDER = re.compile(r"\$(\w+)(?:\[([^\]]*)\])?")
-_AFTER = re.compile(r"^#\s*after:\s*(\w+)\s*$", re.MULTILINE)
+_AFTER = re.compile(r"^#[ \t]*after:[ \t]*(\w+)[ \t]*$", re.MULTILINE)
+_PARAMS = re.compile(r"^#[ \t]*params:[ \t]*(.*)$", re.MULTILINE)
+_DECISIONS = re.compile(r"^#[ \t]*decisions:[ \t]*(.*)$", re.MULTILINE)
+_COMMENT = re.compile(r"^[ 	]*#.*$", re.MULTILINE)
+_FREE = re.compile(r"\$\w+")
 
 
 @dataclass
@@ -77,11 +81,34 @@ def _include(args: str, papers: list[str]) -> str:
     return f"FILTER({args.strip()} IN ({term(list(papers))}))"
 
 
+def declared(sparql: str) -> list[str]:
+    """The parameters a template's header declares (`# params: a, b`); `$include[..]` and `$must_match[..]` are optional
+    and not listed."""
+    m = _PARAMS.search(sparql)
+    return [x.strip() for x in m.group(1).split(",") if x.strip()] if m else []
+
+
+def decision_params(sparql: str) -> dict[str, str]:
+    """Which parameter each decision type fills in this template (`# decisions: threshold=min_effect, ...`); a type not
+    listed fills the parameter of its own name."""
+    m = _DECISIONS.search(sparql)
+    pairs = [x.split("=") for x in m.group(1).split(",") if "=" in x] if m else []
+    return {a.strip(): b.strip() for a, b in pairs}
+
+
 def render(sparql: str, params: dict[str, Any]) -> str:
+    """The query with its parameters filled in. A declared parameter that is missing, or any `$name` left over (in SPARQL
+    that would be a free variable matching everything), raises ValueError."""
+    missing = [n for n in declared(sparql) if n not in params]
+    if missing:
+        raise ValueError(f"missing parameter(s) {missing} for the query (declared in its header)")
     def fill(m: re.Match[str]) -> str:
         name, args = m.group(1), m.group(2)
         if name == "must_match" and args is not None:
             return _must_match(args, list(params.get("must_match") or []))
+        if name == "must_match_values" and args is not None:
+            return " ".join(f"{args.strip()} <{setting_property(f).value}> ?mm{n} ."
+                            for n, f in enumerate(params.get("must_match") or []))
         if name == "include" and args is not None:
             return _include(args, params["include"]) if params.get("include") is not None else ""
         if name not in params:
@@ -89,7 +116,10 @@ def render(sparql: str, params: dict[str, Any]) -> str:
         if name.endswith("_field"):
             return f"<{setting_property(str(params[name])).value}>"
         return term(params[name])
-    body = _PLACEHOLDER.sub(fill, sparql)
+    body = _PLACEHOLDER.sub(fill, _COMMENT.sub("", sparql))
+    left = sorted(set(_FREE.findall(body)))
+    if left:
+        raise ValueError(f"no value for parameter(s) {left}: they would be free variables in the query")
     head = "".join(f"PREFIX {p}: <{u}>\n" for p, u in PREFIXES.items() if f"PREFIX {p}:" not in body)
     return head + body
 
@@ -122,9 +152,12 @@ def run_query(store: ox.Store, sparql: str, params: dict[str, Any] | None = None
     step = _AFTER.search(sparql)
     if step is not None:
         rows = getattr(after, step.group(1))(rows, params)
-    if rows:
+    undetermined = [r for r in rows if r.get("direction") == "undetermined"]
+    if rows and len(undetermined) < len(rows):
         return Answer(rows=rows, empty=False, reasons=[])
-    return Answer(rows=[], empty=True, reasons=unused(store))
+    reasons = [{"record": r.get("paper"), "kind": "paper", "reason": "no treatment and control value on a question metric"}
+               for r in undetermined]
+    return Answer(rows=[], empty=True, reasons=reasons + unused(store))
 
 
 def run_template(store: ox.Store, name: str, params: dict[str, Any] | None = None) -> Answer:

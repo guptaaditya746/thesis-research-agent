@@ -133,6 +133,8 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
     value_types = set(roles.types_of(Role.VALUE))
     thing_types = set(roles.types_of(Role.COMPARED_THING))
     metric_types = set(roles.types_of(Role.METRIC))
+    limitation_types = set(roles.types_of(Role.LIMITATION))
+    directions: dict[ox.NamedNode, bool] = {}   # one direction per metric: the first a paper gives
     values_by_exp: dict[ox.NamedNode, list[tuple[ox.NamedNode, ox.NamedNode, ox.NamedNode, float, bool | None]]] = {}
     for paper in sorted(papers, key=lambda p: p.id):
         pnode = iri("paper", paper.id)
@@ -185,7 +187,8 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
             mnode = thing_like("metric", str(mname), str(mname), "Metric")
             better = metric.fields.get("higher_is_better") if metric is not None else None
             if isinstance(better, bool):
-                add(mnode, kg("higherIsBetter"), flag(better))
+                directions.setdefault(mnode, better)
+                better = directions[mnode]
             vnode = iri("value", it.item_id)
             add(vnode, RDF_TYPE, ev("Value"))
             add(vnode, ev("of"), tnode)
@@ -203,6 +206,18 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
                 add(vnode, kg("context"), lit(context))
             values_by_exp.setdefault(exp, []).append(
                 (vnode, tnode, mnode, float(number), better if isinstance(better, bool) else None))
+        for it in (i for i in mine if i.evidence_type in limitation_types):   # a limitation is a claim of relation "limitation"
+            node = iri("claim", it.item_id)
+            target = by_id.get(next((t for t in it.links.values() if t in by_id), ""))
+            about = name_of(target, roles) if target is not None and target.evidence_type in thing_types else None
+            add(node, RDF_TYPE, ev("Claim"))
+            add(node, ev("inPaper"), pnode)
+            add(node, ev("relation"), lit("limitation"))
+            if about is not None:
+                add(node, ev("subject"), lit(about))
+            if it.fields.get("category") is not None:
+                add(node, ev("object"), lit(it.fields["category"]))
+            add(node, ev("source"), _source(it))
         for it in (i for i in mine if i.evidence_type == records.CLAIM):
             node = iri("claim", it.item_id)
             f = it.fields
@@ -228,6 +243,8 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
             if f.get("object_doc"):
                 add(node, ev("cites"), iri("paper", str(f["object_doc"])))
             add(node, ev("source"), _source(it))
+    for mnode, higher in directions.items():
+        add(mnode, kg("higherIsBetter"), flag(higher))
     for exp, vals in values_by_exp.items():
         ordered = sorted(vals, key=lambda v: (v[1].value, v[0].value))
         for (va, ta, ma, xa, da), (vb, tb, mb, xb, db) in combinations(ordered, 2):
@@ -239,7 +256,7 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
             add(node, ev("b"), vb)
             add(node, ev("inExperiment"), exp)
             add(node, ev("delta"), num(round(xa - xb, 6)))
-            higher = da if da is not None else db
+            higher = directions.get(ma)
             if higher is not None and xa != xb:
                 add(node, ev("better"), va if (xa > xb) == higher else vb)
     return store

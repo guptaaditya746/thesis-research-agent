@@ -2,7 +2,7 @@ import pytest
 
 from evidence.kg.build import build
 from evidence.kg.query import Answer
-from evidence.kg.sensitivity import Run, Sensitivity, Verdict, alternatives, label, rerun
+from evidence.kg.sensitivity import Run, Sensitivity, Verdict, alternatives, label, rerun, winners_verdict
 from evidence.plan import Decision, EvidenceLine
 
 from .kg_support import ROLES, Doc, paper, register, restore
@@ -36,6 +36,7 @@ def test_must_match_and_counts_as_alternatives_change_one_item():
     assert got == [("strict", ["dataset", "model"]), ("main", ["dataset"]), ("loose", [])]
     got = alternatives(decision("counts_as", ["a", "b"]), ["a", "b", "c"])
     assert got == [("strict", ["b"]), ("strict", ["a"]), ("main", ["a", "b"]), ("loose", ["a", "b", "c"])]
+    assert alternatives(decision("counts_as", ["a"]), ["a", "b"]) == [("main", ["a"]), ("loose", ["a", "b"])]
 
 
 RAG = """SELECT ?e1 ?e2 ?win WHERE {
@@ -86,24 +87,80 @@ BEST = """SELECT (MIN(?name) AS ?thing) (COUNT(DISTINCT ?unit) AS ?count) WHERE 
 } GROUP BY ?t ORDER BY DESC(?count) ?thing"""
 
 
-def test_best_author_example():
+def author_graph():
     docs = []
-    for author, per_paper in (("Chen", [3, 3, 2, 2, 2]), ("Rossi", [3, 1, 1, 1, 1, 1, 1])):   # 12 results / 5 papers; 9 / 7
+    for author, per_paper in (("Chen", [3, 3, 2, 2, 2]), ("Rossi", [3, 1, 1, 1, 1, 1, 1])):   # 12 results/5 papers; 9/7
         for n, wins in enumerate(per_paper):
             d = Doc(f"{author}{n}")
             for _ in range(wins):
                 d.value(author, 0.9)
             d.value("Low", 0.1, side="base")
             docs.append(d)
-    def top(answer: Answer) -> Verdict:   # the winner and how many it has: the records behind the verdict
-        return Verdict(answer.rows[0]["thing"], answer.rows[0]["count"])
+    return graph(*docs)
 
-    result = rerun(graph(*docs), line(BEST), [decision("counts_as", ["result", "paper"])], verdict=top,
-                   candidates={"counts_as": []})
-    assert result.main.label == "Chen"
-    assert [(r.field, r.setting, r.verdict.label) for r in result.flipping] == [("counts_as", "strict", "Rossi")] * 2 \
-        or {(r.field, r.verdict.label) for r in result.flipping} == {("counts_as", "Rossi")}
+
+def test_best_author_example():
+    best = EvidenceLine(id="best", question="q", query="", template="best")
+    result = rerun(author_graph(), best, [decision("counts_as", ["result"])], params={"metric": "acc"},
+                   verdict=winners_verdict, candidates={"counts_as": ["result", "paper"]})
+    assert result.main == Verdict("result: Chen", 12)   # Chen 12 results against Rossi 9
+    [flip] = result.flipping                             # the one change: also count papers (Rossi 7 against Chen 5)
+    assert (flip.field, flip.setting, flip.value) == ("counts_as", "loose", ["result", "paper"])
+    assert flip.verdict.label == "paper: Rossi; result: Chen"
     assert label(result) == "depends on counts_as"
+
+
+def effect_graph():
+    docs = []
+    for pid, (t, c) in zip(("p1", "p2", "p3"), ((0.515, 0.5), (0.616, 0.6), (0.717, 0.7))):
+        d = Doc(pid)
+        d.value("RAG", t, side="rag")
+        d.value("Closed", c, side="baseline")
+        docs.append(d)
+    return graph(*docs)
+
+
+def supported(answer: Answer) -> Verdict:
+    from evidence.kg import after
+    counts = after.counts(answer.rows) if answer.rows else {"supporting": 0}
+    return Verdict("supported" if counts["supporting"] == 3 else "not supported", 3)
+
+
+def test_effect_template_follows_the_threshold_decision():
+    """Each gap is 0.015: a study at the main threshold 0.01, neutral at twice that (0.02)."""
+    line_ = EvidenceLine(id="eff", question="q", query="", template="effect")
+    params = {"sides": ["rag", "baseline"], "metrics": ["acc"], "higher_is_better": {"acc": True}}
+    result = rerun(effect_graph(), line_, [decision("threshold", 0.01)], params=params, verdict=supported)
+    assert result.main.label == "supported"
+    assert [(r.field, r.setting, r.verdict.label) for r in result.flipping] == [("threshold", "loose", "not supported")]
+    assert label(result) == "depends on threshold"
+
+
+def test_effect_template_follows_counts_as_and_must_match():
+    d = Doc("p1")
+    d.experiment("a", {"population": "x", "size": "3B"})
+    d.value("RAG", 0.6, side="rag", population="x")
+    d.value("Closed", 0.5, side="baseline", population="x")
+    params = {"sides": ["rag", "baseline"], "metrics": ["acc"], "higher_is_better": {"acc": True}, "min_effect": 0.01}
+    store = graph(d)
+    from evidence.kg.query import run_template
+    assert run_template(store, "effect", {**params, "must_match": []}).rows[0]["direction"] == "supports"
+    assert run_template(store, "effect", {**params, "must_match": ["size"]}).rows[0]["direction"] == "supports"
+    assert run_template(store, "effect", {**params, "must_match": ["model"]}).empty   # no such setting: nothing matches
+    assert run_template(store, "effect", {**params, "metrics": ["other"]}).empty
+
+
+def test_two_decisions_of_one_type_need_their_own_parameters():
+    line_ = EvidenceLine(id="b", question="q", query="", template="best")
+    two = [decision("counts_as", ["result"], "d1"), decision("counts_as", ["paper"], "d2")]
+    with pytest.raises(ValueError, match="both fill parameter"):
+        rerun(author_graph(), line_, two, params={"metric": "acc"}, verdict=winners_verdict)
+    with pytest.raises(ValueError, match="both fill parameter"):
+        rerun(author_graph(), line_, two, params={"metric": "acc"}, param_of={"d1": "x", "d2": "x"})
+    q = "SELECT ?k WHERE { VALUES ?k { $units $others } }"
+    result = rerun(author_graph(), EvidenceLine(id="q", question="q", query=q, template=None), two,
+                   param_of={"d1": "units", "d2": "others"}, candidates={"d1": ["result", "paper"]})
+    assert result.main.n == 2 and [r.decision for r in result.runs].count("d1") == 1   # d1's pool is its own
 
 
 def test_too_few():

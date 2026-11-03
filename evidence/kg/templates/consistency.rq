@@ -1,3 +1,4 @@
+# params: threshold
 # Does a paper's claim about a thing (ev:direction) agree with its own numbers? One row per claim and comparison
 # that involves the thing the claim is about (matched on the name, case ignored); a difference under $threshold is
 # "no_effect". Params: threshold; include (optional papers).
