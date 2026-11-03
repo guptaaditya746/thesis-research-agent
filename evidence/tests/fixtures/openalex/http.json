@@ -1,0 +1,48 @@
+{
+ "https://api.openalex.org/works/doi:10.1234/rag.2020": {
+  "id": "https://openalex.org/W111",
+  "doi": "https://doi.org/10.1234/rag.2020",
+  "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP",
+  "referenced_works": [
+   "https://openalex.org/W5",
+   "https://openalex.org/W6"
+  ]
+ },
+ "https://api.openalex.org/works/doi:10.9999/outside.2019": {
+  "id": "https://openalex.org/W222",
+  "doi": "https://doi.org/10.9999/outside.2019",
+  "title": "A Paper Nobody In The Run Wrote",
+  "referenced_works": []
+ },
+ "https://api.openalex.org/works/doi:10.48550/arxiv.2005.11401": {
+  "id": "https://openalex.org/W111",
+  "doi": "https://doi.org/10.1234/rag.2020",
+  "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP",
+  "referenced_works": [
+   "https://openalex.org/W5"
+  ]
+ },
+ "https://api.openalex.org/works?search=Dense+Passage+Retrieval+for+Open-Domain+QA&per-page=1": {
+  "results": [
+   {
+    "id": "https://openalex.org/W333",
+    "doi": null,
+    "title": "Dense Passage Retrieval for Open-Domain QA",
+    "referenced_works": []
+   }
+  ]
+ },
+ "https://api.openalex.org/works?search=Totally+Unknown+Work&per-page=1": {
+  "results": []
+ },
+ "https://api.openalex.org/works?search=Retrieval+Study+Quoted+Wrongly&per-page=1": {
+  "results": [
+   {
+    "id": "https://openalex.org/W444",
+    "doi": "https://doi.org/10.7777/unrelated",
+    "title": "Quantum Chromodynamics On A Lattice",
+    "referenced_works": []
+   }
+  ]
+ }
+}
