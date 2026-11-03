@@ -427,7 +427,7 @@ def cmd_wholerun(args: argparse.Namespace) -> int:
     try:
         report = wc.wholerun(questions, args.runs, args.out, set_name=args.set, n=args.sample, seed=args.seed,
                              left_out=left_out_of(args.set, args.src, args.corpus, questions), reasoning=reasoning,
-                             confirm=confirm, systems=systems, rag_answer=rag)
+                             confirm=confirm, systems=systems, rag_answer=rag, rag_model=args.model)
     except ValueError as exc:
         raise SystemExit(f"evaluate wholerun: {exc}") from None
     print(f"wrote {args.out / 'wholerun.json'}: {len(report['sample']['ids'])} questions; {report['left_out']}")
@@ -632,7 +632,7 @@ def parser() -> argparse.ArgumentParser:
     w = sub.add_parser("wholerun", help="score the plan runs of one real set, with the RAG baseline beside them")
     w.add_argument("--set", choices=REAL_SETS, required=True)
     w.add_argument("--src", type=Path, required=True, help="the set's source (release) folder")
-    w.add_argument("--runs", type=Path, required=True, help="<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<qid>/")
+    w.add_argument("--runs", type=Path, required=True, help="<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<qid>/; the hand row is the first 5 questions of sample.json")
     w.add_argument("--corpus", type=Path, help="the set's corpus folder (default <src>/corpus)")
     w.add_argument("--confirm", choices=("auto", "hand", "both"), default="both")
     w.add_argument("--reasoning", choices=("on", "off", "both"), default="both")
