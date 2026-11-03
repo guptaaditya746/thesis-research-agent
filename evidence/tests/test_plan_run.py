@@ -238,3 +238,14 @@ def test_a_plan_run_scores_through_the_wholerun_adapter(tmp_path: Path) -> None:
     claims = from_run(root, RealQuestion("c", "?", "cs", tmp_path, {"conclusions": [{"id": "R1", "direction": "improves"}]},
                                          "claims"))
     assert claims.claims == [{"about": "R1", "direction": "improves"}]
+
+
+def test_rerun_verdict_of_an_effect_line_is_its_majority_direction() -> None:
+    from evidence.kg.query import Answer
+    rows = [{"paper": "a", "direction": "supports"}, {"paper": "b", "direction": "supports"},
+            {"paper": "c", "direction": "contradicts"}, {"paper": "d", "direction": "undetermined"}]
+    v = planrun.verdict(Answer(rows=rows, empty=False))
+    assert (v.label, v.n) == ("supports", 3) and v.size == pytest.approx(2 / 3)
+    tie = planrun.verdict(Answer(rows=rows[1:3], empty=False))
+    assert tie.label == "mixed"
+    assert planrun.verdict(Answer(rows=[{"thing": "x", "score": 1}], empty=False)).label == "x"

@@ -15,8 +15,8 @@
     POST   /run/{rid}/links               {accepted, rejected} -> W2's review, then W4's rerun
 
 The model steps are the planner's (evidence/planner), run on the backend's `lm` (a RecordedLM, or a factory of one
-per request) behind one lock (`planner.using`: the steps read a process-global model); without an `lm` the
-endpoints that need a model answer 501. The word writer (W1; it takes `lm=`), the SPARQL templates, the run (W4)
+per request) given to this request's thread only (`planner.using`, no lock: two requests never share a model);
+without an `lm` the endpoints that need a model answer 501. create_app wires the real parts (webapp/planwire.py). The word writer (W1; it takes `lm=`), the SPARQL templates, the run (W4)
 and the links review (W2) are wired by the integration; a missing one answers 501. A request that plans (clarify,
 propose, critic, word writer) runs inside one HTTP request and can take minutes: put a long proxy timeout in front.
 
@@ -177,6 +177,8 @@ class PlanResult(BaseModel):
     lines: list[LineResult]
     answer: AnswerResult
     reruns: list[dict[str, Any]] = []
+    labels: dict[str, str] = {}          # line id -> "solid" | "same direction" | "depends on <field>" | "too few to tell"
+    links: list[dict[str, Any]] = []     # builds-on links; a cited work not in the corpus says "outside the set"
 
 
 @dataclass

@@ -14,6 +14,7 @@ const LABELS: Record<PlanDecision["type"], string> = {
   counts_as: "Counts as",
   threshold: "Threshold",
   include: "Include",
+  main_rule: "Main answer rule",
 }
 
 const show = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value))

@@ -6,7 +6,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
 
-import { usePutKind, useEvConfig, type ProposalDetail, type QuestionKind } from "@/api/ev"
+import { usePutKind, useEvConfig, type KindRequest, type ProposalDetail, type QuestionKind } from "@/api/ev"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -51,7 +51,7 @@ export function KindConfirm({ proposal }: { proposal: ProposalDetail }) {
             </Select>
           </div>
           <Button size="sm" variant="outline" disabled={next === kind || put.isPending}
-            onClick={() => put.mutate({ kind: next, model: config.data?.default_model ?? "orch-model" }, {
+            onClick={() => put.mutate({ kind: next as KindRequest["kind"], model: config.data?.default_model ?? "orch-model" }, {
               onSuccess: (job) => { setChosen(null); announceJob(job, navigate) },
               onError: (e) => announceError("The kind was not changed", e),
             })}>

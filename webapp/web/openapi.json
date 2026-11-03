@@ -1821,6 +1821,443 @@
           }
         }
       }
+    },
+    "/api/ev/plan": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Start",
+        "operationId": "start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/clarify": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Answer",
+        "operationId": "answer",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClarifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/decision/{did}": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Decide",
+        "operationId": "decide",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "did",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Did"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/confirm-all": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Confirm",
+        "operationId": "confirm",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/main-rule": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Main Rule",
+        "operationId": "main_rule",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/line/{lid}": {
+      "delete": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Drop Line",
+        "operationId": "drop_line",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          },
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/run": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Run",
+        "operationId": "run",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStarted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/result": {
+      "get": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Result",
+        "operationId": "result",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/run/{rid}/links": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Links",
+        "operationId": "links",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinksRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Links"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2027,6 +2464,75 @@
           "end"
         ],
         "title": "Anchor"
+      },
+      "Answer": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "answer"
+        ],
+        "title": "Answer"
+      },
+      "AnswerResult": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "main_rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Main Rule"
+          },
+          "rule_met": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Met"
+          },
+          "found": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Found",
+            "default": []
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "AnswerResult"
       },
       "BenchmarkView": {
         "properties": {
@@ -2704,7 +3210,7 @@
           "decision": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Decision"
+                "$ref": "#/components/schemas/webapp__evmodels__Decision"
               },
               {
                 "type": "null"
@@ -3328,6 +3834,22 @@
           "status"
         ],
         "title": "ClaimRef"
+      },
+      "ClarifyRequest": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "type": "array",
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answers"
+        ],
+        "title": "ClarifyRequest"
       },
       "Compare": {
         "properties": {
@@ -4352,72 +4874,6 @@
         ],
         "title": "Coverage"
       },
-      "Decision": {
-        "properties": {
-          "card": {
-            "type": "string",
-            "title": "Card"
-          },
-          "choice": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Choice"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "By"
-          },
-          "value": {
-            "title": "Value"
-          },
-          "default": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Default"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "card",
-          "choice",
-          "reason",
-          "by",
-          "value",
-          "default"
-        ],
-        "title": "Decision"
-      },
       "DecisionEntry": {
         "properties": {
           "card": {
@@ -4457,6 +4913,20 @@
           "by"
         ],
         "title": "DecisionEntry"
+      },
+      "DecisionRequest": {
+        "properties": {
+          "confirm": {
+            "type": "boolean",
+            "title": "Confirm",
+            "default": false
+          },
+          "change": {
+            "title": "Change"
+          }
+        },
+        "type": "object",
+        "title": "DecisionRequest"
       },
       "DecisionsRequest": {
         "properties": {
@@ -5502,6 +5972,55 @@
           "error_calls"
         ],
         "title": "EvRunSummary"
+      },
+      "EvidenceLine": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
+          },
+          "removable": {
+            "type": "boolean",
+            "title": "Removable",
+            "default": true
+          },
+          "how": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "How"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "query",
+          "template"
+        ],
+        "title": "EvidenceLine",
+        "description": "One line of evidence to look for; the oversell line has `removable=False`. `how`: the plain sentences shown\nunder \"how?\" (never code), kept with the line so a reloaded plan still has them."
       },
       "EvidenceTypeSpec": {
         "properties": {
@@ -6700,6 +7219,69 @@
         "title": "LimitationsQ",
         "description": "A limitations question (spec section 6.18): the limitations papers report, for one compared thing (`thing`)\nor for every one (None)."
       },
+      "LineResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "status",
+          "rows",
+          "text"
+        ],
+        "title": "LineResult"
+      },
+      "LinksRequest": {
+        "properties": {
+          "accepted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Accepted",
+            "default": []
+          },
+          "rejected": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rejected",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "LinksRequest"
+      },
       "Locate": {
         "properties": {
           "strategy": {
@@ -7108,6 +7690,222 @@
           "exact"
         ],
         "title": "Placement"
+      },
+      "Plan": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "field": {
+            "type": "string",
+            "enum": [
+              "cs",
+              "medicine",
+              "materials",
+              "other"
+            ],
+            "title": "Field"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "main_rule": {
+            "type": "string",
+            "title": "Main Rule"
+          },
+          "words": {
+            "$ref": "#/components/schemas/WordList"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/evidence__plan__Decision"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "clarifications": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Clarifications"
+          },
+          "measures": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Measures"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question",
+          "field",
+          "lines",
+          "main_rule",
+          "words",
+          "decisions",
+          "clarifications"
+        ],
+        "title": "Plan",
+        "description": "`measures`: the thing ids (keys of `words.things`) that are measures (a score, a rate); the other things are\ncompared things, the first of them the one the question asks about (the treatment side of a plan run)."
+      },
+      "PlanResult": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done"
+            ],
+            "title": "Status",
+            "default": "done"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineResult"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/AnswerResult"
+          },
+          "reruns": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Reruns",
+            "default": []
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Labels",
+            "default": {}
+          },
+          "links": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Links",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines",
+          "answer"
+        ],
+        "title": "PlanResult",
+        "description": "The run's result: W4's after_run output (evidence.planner.lines.run_lines) with the reruns."
+      },
+      "PlanStart": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "PlanStart"
+      },
+      "PlanView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "clarifications": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Clarifications"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Plan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "how": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "How",
+            "default": {}
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Problems",
+            "default": []
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "default": false
+          },
+          "frozen": {
+            "type": "boolean",
+            "title": "Frozen",
+            "default": false
+          },
+          "run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "clarifications",
+          "plan"
+        ],
+        "title": "PlanView"
       },
       "PreviewHit": {
         "properties": {
@@ -8258,6 +9056,19 @@
         ],
         "title": "Root"
       },
+      "RuleRequest": {
+        "properties": {
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule"
+        ],
+        "title": "RuleRequest"
+      },
       "RunGroup": {
         "properties": {
           "group": {
@@ -8427,6 +9238,19 @@
         ],
         "title": "RunRequest",
         "description": "`evidence run` over one corpus into `$EV/runs/<group>/<name>` (the runbook's layout)."
+      },
+      "RunStarted": {
+        "properties": {
+          "run": {
+            "type": "string",
+            "title": "Run"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run"
+        ],
+        "title": "RunStarted"
       },
       "ScoreRef": {
         "properties": {
@@ -9833,6 +10657,191 @@
           "reason"
         ],
         "title": "WaiverEntry"
+      },
+      "WordList": {
+        "properties": {
+          "things": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Things"
+          },
+          "cues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Cues"
+          },
+          "written_by": {
+            "type": "string",
+            "title": "Written By"
+          },
+          "ontology_names": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Ontology Names"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "things",
+          "cues",
+          "written_by",
+          "ontology_names"
+        ],
+        "title": "WordList",
+        "description": "Names per thing id (20-50 written by the LLM, `written_by`), the cue words, and the ontology's names kept\napart in `ontology_names`."
+      },
+      "evidence__plan__Decision": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "must_match",
+              "counts_as",
+              "threshold",
+              "include",
+              "main_rule"
+            ],
+            "title": "Type"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "flagged": {
+            "type": "boolean",
+            "title": "Flagged",
+            "default": false
+          },
+          "flag_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flag Reason"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "value",
+          "reason"
+        ],
+        "title": "Decision",
+        "description": "One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the\nmain-answer rule (its value one of evidence.planner.RULES); it fills no query parameter and is never rerun."
+      },
+      "webapp__evmodels__Decision": {
+        "properties": {
+          "card": {
+            "type": "string",
+            "title": "Card"
+          },
+          "choice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choice"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "card",
+          "choice",
+          "reason",
+          "by",
+          "value",
+          "default"
+        ],
+        "title": "Decision"
       }
     }
   }

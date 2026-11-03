@@ -770,6 +770,159 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start */
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/clarify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer */
+        post: operations["answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/decision/{did}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide */
+        post: operations["decide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/confirm-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm */
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/main-rule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Main Rule */
+        post: operations["main_rule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/line/{lid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Drop Line */
+        delete: operations["drop_line"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run */
+        post: operations["run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Result */
+        get: operations["result"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/run/{rid}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Links */
+        post: operations["links"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -854,6 +1007,32 @@ export interface components {
             start: number;
             /** End */
             end: number;
+        };
+        /** Answer */
+        Answer: {
+            /** Question */
+            question: string;
+            /** Answer */
+            answer: string;
+        };
+        /** AnswerResult */
+        AnswerResult: {
+            /** Text */
+            text: string;
+            /** Main Rule */
+            main_rule?: string | null;
+            /** Rule Met */
+            rule_met?: boolean | null;
+            /**
+             * Found
+             * @default []
+             */
+            found?: string[];
+            /**
+             * Missing
+             * @default []
+             */
+            missing?: string[];
         };
         /** BenchmarkView */
         BenchmarkView: {
@@ -968,6 +1147,13 @@ export interface components {
             /** Values */
             values: unknown[];
         };
+        /** Budget */
+        Budget: {
+            /** Steps */
+            steps?: number | null;
+            /** Tokens */
+            tokens?: number | null;
+        };
         /**
          * BuildsOnAnswer
          * @description evidence/kinds/builds_on.py: which papers build on which, and how influential each compared thing is.
@@ -1021,12 +1207,14 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** Budget */
-        Budget: {
-            /** Steps */
-            steps?: number | null;
-            /** Tokens */
-            tokens?: number | null;
+        /**
+         * BuildsOnQ
+         * @description A builds-on question (spec section 6.18): which studies build on which, for one compared thing (`thing`) or
+         *     for every one (None).
+         */
+        BuildsOnQ: {
+            /** Thing */
+            thing?: string | null;
         };
         /** CallDetail */
         CallDetail: {
@@ -1142,7 +1330,7 @@ export interface components {
             /** Rationale */
             rationale: string | null;
             /** @description the decision of decisions.yaml (or, once frozen, of proposal.json, which records the default beside it) */
-            decision: components["schemas"]["Decision"] | null;
+            decision: components["schemas"]["webapp__evmodels__Decision"] | null;
             /**
              * Raw Decision
              * @description the card's entry in decisions.yaml as written, when it is not a decision's shape (a hand edit gone wrong)
@@ -1197,6 +1385,25 @@ export interface components {
             context: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * Chaining
+         * @description A chaining question (spec section 6.10): is `source` better than `target` on `metric`, through compared
+         *     things each was tested against (at most `max_hops` steps)? `min_effect` is the neutral band of every step.
+         */
+        Chaining: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+            metric: components["schemas"]["QuestionMetric"];
+            /** Min Effect */
+            min_effect: number;
+            /**
+             * Max Hops
+             * @default 2
+             */
+            max_hops?: number;
         };
         /**
          * ChainingAnswer
@@ -1361,6 +1568,11 @@ export interface components {
             p?: unknown;
             /** O */
             o?: unknown;
+        };
+        /** ClarifyRequest */
+        ClarifyRequest: {
+            /** Answers */
+            answers: components["schemas"]["Answer"][];
         };
         /**
          * Compare
@@ -1750,23 +1962,6 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
-        /** Decision */
-        Decision: {
-            /** Card */
-            card: string;
-            /** Choice */
-            choice: string | null;
-            /** Reason */
-            reason: string | null;
-            /** By */
-            by: string | null;
-            /** Value */
-            value: unknown;
-            /** Default */
-            default: string | null;
-        } & {
-            [key: string]: unknown;
-        };
         /** DecisionEntry */
         DecisionEntry: {
             /** Card */
@@ -1788,6 +1983,16 @@ export interface components {
              * @description who decided: `model` (the model's default, kept), the server's $WEBAPP_USER (decided in the app), or the name decisions.yaml already has for this card (kept as it is)
              */
             by: string;
+        };
+        /** DecisionRequest */
+        DecisionRequest: {
+            /**
+             * Confirm
+             * @default false
+             */
+            confirm?: boolean;
+            /** Change */
+            change?: unknown;
         };
         /** DecisionsRequest */
         DecisionsRequest: {
@@ -1943,7 +2148,7 @@ export interface components {
             /** @description the agentic extractor's agent run directories */
             agent_work: components["schemas"]["Root"];
             protocols: components["schemas"]["Root"];
-            /** @description the questions file (evidence/questions.yaml; `exists`: the file is there) */
+            /** @description the questions file (domains/rag/questions.yaml; `exists`: the file is there) */
             questions: components["schemas"]["Root"];
             /** @description $EV/.jobs: the state and logs of the jobs the app starts (none without $EV) */
             jobs: components["schemas"]["Root"];
@@ -2210,6 +2415,28 @@ export interface components {
              */
             error_calls: number;
         };
+        /**
+         * EvidenceLine
+         * @description One line of evidence to look for; the oversell line has `removable=False`. `how`: the plain sentences shown
+         *     under "how?" (never code), kept with the line so a reloaded plan still has them.
+         */
+        EvidenceLine: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Query */
+            query: string;
+            /** Template */
+            template: string | null;
+            /**
+             * Removable
+             * @default true
+             */
+            removable?: boolean;
+            /** How */
+            how?: string[];
+        };
         /** EvidenceTypeSpec */
         EvidenceTypeSpec: {
             /**
@@ -2223,13 +2450,18 @@ export interface components {
             };
             /** Links */
             links?: {
-                [key: string]: "condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen";
+                [key: string]: string;
             };
+            /**
+             * Optional Links
+             * @default []
+             */
+            optional_links?: string[];
             /**
              * Context
              * @default []
              */
-            context?: ("condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen")[];
+            context?: string[];
             /** Roles */
             roles: string[];
             /** Merge Key */
@@ -2332,7 +2564,7 @@ export interface components {
              */
             kind: "regex" | "model" | "llm" | "agent";
             /** Evidence Types */
-            evidence_types: ("condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen")[];
+            evidence_types: string[];
             /** Code Sha256 */
             code_sha256: string;
             /** Config */
@@ -2464,15 +2696,13 @@ export interface components {
         };
         /**
          * Inventory
-         * @description An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to
-         *     the other names it goes by.
+         * @description An inventory question: list every distinct item of one evidence type. `target` is any evidence type the
+         *     protocol declares whose pack type has a name field (Protocol checks both); `same` maps a canonical name to the
+         *     other names it goes by.
          */
         Inventory: {
-            /**
-             * Target
-             * @enum {string}
-             */
-            target: "metric" | "condition" | "dataset";
+            /** Target */
+            target: string;
             /** Same */
             same?: {
                 [key: string]: string[];
@@ -2529,11 +2759,8 @@ export interface components {
         Item: {
             /** Item Id */
             item_id: string;
-            /**
-             * Evidence Type
-             * @enum {string}
-             */
-            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen";
+            /** Evidence Type */
+            evidence_type: string;
             /** Fields */
             fields: {
                 [key: string]: unknown;
@@ -2769,6 +2996,46 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * LimitationsQ
+         * @description A limitations question (spec section 6.18): the limitations papers report, for one compared thing (`thing`)
+         *     or for every one (None).
+         */
+        LimitationsQ: {
+            /** Thing */
+            thing?: string | null;
+        };
+        /** LineResult */
+        LineResult: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "done" | "failed";
+            /** Rows */
+            rows: {
+                [key: string]: unknown;
+            }[];
+            /** Text */
+            text: string;
+        };
+        /** LinksRequest */
+        LinksRequest: {
+            /**
+             * Accepted
+             * @default []
+             */
+            accepted?: string[];
+            /**
+             * Rejected
+             * @default []
+             */
+            rejected?: string[];
+        };
         /** Locate */
         Locate: {
             /**
@@ -2938,6 +3205,110 @@ export interface components {
             exact: string;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * Plan
+         * @description `measures`: the thing ids (keys of `words.things`) that are measures (a score, a rate); the other things are
+         *     compared things, the first of them the one the question asks about (the treatment side of a plan run).
+         */
+        Plan: {
+            /** Question */
+            question: string;
+            /**
+             * Field
+             * @enum {string}
+             */
+            field: "cs" | "medicine" | "materials" | "other";
+            /** Lines */
+            lines: components["schemas"]["EvidenceLine"][];
+            /** Main Rule */
+            main_rule: string;
+            words: components["schemas"]["WordList"];
+            /** Decisions */
+            decisions: components["schemas"]["evidence__plan__Decision"][];
+            /** Clarifications */
+            clarifications: {
+                [key: string]: string;
+            }[];
+            /** Measures */
+            measures?: string[];
+        };
+        /**
+         * PlanResult
+         * @description The run's result: W4's after_run output (evidence.planner.lines.run_lines) with the reruns.
+         */
+        PlanResult: {
+            /**
+             * Status
+             * @default done
+             * @enum {string}
+             */
+            status?: "running" | "done";
+            /** Lines */
+            lines: components["schemas"]["LineResult"][];
+            answer: components["schemas"]["AnswerResult"];
+            /**
+             * Reruns
+             * @default []
+             */
+            reruns?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Labels
+             * @default {}
+             */
+            labels?: {
+                [key: string]: string;
+            };
+            /**
+             * Links
+             * @default []
+             */
+            links?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** PlanStart */
+        PlanStart: {
+            /** Question */
+            question: string;
+        };
+        /** PlanView */
+        PlanView: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Clarifications */
+            clarifications: {
+                [key: string]: unknown;
+            }[];
+            plan: components["schemas"]["Plan"] | null;
+            /**
+             * How
+             * @default {}
+             */
+            how?: {
+                [key: string]: string[];
+            };
+            /**
+             * Problems
+             * @default []
+             */
+            problems?: string[];
+            /**
+             * Ready
+             * @default false
+             */
+            ready?: boolean;
+            /**
+             * Frozen
+             * @default false
+             */
+            frozen?: boolean;
+            /** Run */
+            run?: string | null;
         };
         /** PreviewHit */
         PreviewHit: {
@@ -3138,11 +3509,19 @@ export interface components {
              * @default effect
              * @enum {string}
              */
-            kind?: "effect" | "inventory" | "consistency" | "best";
+            kind?: "effect" | "inventory" | "consistency" | "best" | "chaining" | "limitations" | "builds_on";
             synthesis?: components["schemas"]["Synthesis"] | null;
             inventory?: components["schemas"]["Inventory"] | null;
             best?: components["schemas"]["Best"] | null;
             consistency?: components["schemas"]["Consistency"] | null;
+            chaining?: components["schemas"]["Chaining"] | null;
+            limitations?: components["schemas"]["LimitationsQ"] | null;
+            builds_on?: components["schemas"]["BuildsOnQ"] | null;
+            /**
+             * Domain
+             * @default rag
+             */
+            domain?: string;
         };
         /** ProtocolEntry */
         ProtocolEntry: {
@@ -3206,7 +3585,7 @@ export interface components {
              * @default effect
              * @enum {string}
              */
-            kind: "effect" | "inventory" | "consistency" | "best";
+            kind: "effect" | "inventory" | "consistency" | "best" | "chaining" | "limitations" | "builds_on";
             /**
              * Protocol
              * @description the hand-written protocol's name under the protocols directory (`/api/ev/protocols/{name}`), or null: the question needs a proposal
@@ -3263,11 +3642,8 @@ export interface components {
         };
         /** Rejected */
         Rejected: {
-            /**
-             * Evidence Type
-             * @enum {string}
-             */
-            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen";
+            /** Evidence Type */
+            evidence_type: string;
             /** Fields */
             fields: {
                 [key: string]: unknown;
@@ -3369,6 +3745,11 @@ export interface components {
              */
             exists: boolean;
         };
+        /** RuleRequest */
+        RuleRequest: {
+            /** Rule */
+            rule: string;
+        };
         /**
          * RunGroup
          * @description The group `evidence run` writes under for a protocol and selection (`runs/<group>/<name>`).
@@ -3447,6 +3828,11 @@ export interface components {
              * @default false
              */
             retry_errors?: boolean;
+        };
+        /** RunStarted */
+        RunStarted: {
+            /** Run */
+            run: string;
         };
         /** ScoreRef */
         ScoreRef: {
@@ -4028,6 +4414,71 @@ export interface components {
              * @description why it is safe: at least 10 characters (cards.waivers)
              */
             reason: string;
+        };
+        /**
+         * WordList
+         * @description Names per thing id (20-50 written by the LLM, `written_by`), the cue words, and the ontology's names kept
+         *     apart in `ontology_names`.
+         */
+        WordList: {
+            /** Things */
+            things: {
+                [key: string]: string[];
+            };
+            /** Cues */
+            cues: string[];
+            /** Written By */
+            written_by: string;
+            /** Ontology Names */
+            ontology_names: {
+                [key: string]: string[];
+            };
+        };
+        /**
+         * Decision
+         * @description One choice the planner made; `confirmed_by` stays None until a human confirms it. Type `main_rule` is the
+         *     main-answer rule (its value one of evidence.planner.RULES); it fills no query parameter and is never rerun.
+         */
+        evidence__plan__Decision: {
+            /** Id */
+            id: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "must_match" | "counts_as" | "threshold" | "include" | "main_rule";
+            /** Value */
+            value: unknown;
+            /** Reason */
+            reason: string;
+            /**
+             * Flagged
+             * @default false
+             */
+            flagged?: boolean;
+            /** Flag Reason */
+            flag_reason?: string | null;
+            /** Confirmed By */
+            confirmed_by?: string | null;
+            /** Confirmed At */
+            confirmed_at?: string | null;
+        };
+        /** Decision */
+        webapp__evmodels__Decision: {
+            /** Card */
+            card: string;
+            /** Choice */
+            choice: string | null;
+            /** Reason */
+            reason: string | null;
+            /** By */
+            by: string | null;
+            /** Value */
+            value: unknown;
+            /** Default */
+            default: string | null;
+        } & {
+            [key: string]: unknown;
         };
     };
     responses: never;
@@ -5324,6 +5775,307 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionsResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClarifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+                did: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    main_rule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    drop_line: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+                lid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunStarted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    result: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    links: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinksRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

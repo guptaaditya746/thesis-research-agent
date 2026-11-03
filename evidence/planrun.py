@@ -236,8 +236,6 @@ def links_stage(doc: Any, ctx: Any) -> list[Item]:
     return out
 
 
-
-
 def stage_entries(plan: Plan) -> list[tuple[str, Any, Callable[..., Any]]]:
     """The plan run's own stages, in order (name, seam, fn)."""
     from . import experiments
@@ -312,6 +310,26 @@ def _rerun_decisions(plan: Plan, query: str) -> list[Decision]:
     return out
 
 
+def verdict(answer: Any) -> Any:
+    """What a line's answer says, for its reruns (W4 `Verdict`): rows with a `direction` (the effect template) by the
+    majority direction of the determined papers (n = those papers, size = the majority's share); `kind, thing, count`
+    rows (the best template) by each unit's winner; any other line by its top row (W4's default)."""
+    from collections import Counter
+
+    from .kg import sensitivity
+    rows = answer.rows
+    if rows and all("direction" in r for r in rows):
+        found = [r["direction"] for r in rows if r["direction"] != "undetermined"]
+        if not found:
+            return sensitivity.Verdict("none", 0)
+        top = Counter(found).most_common()
+        label = top[0][0] if len(top) == 1 or top[0][1] > top[1][1] else "mixed"
+        return sensitivity.Verdict(label, len(found), top[0][1] / len(found))
+    if rows and all({"kind", "thing", "count"} <= set(r) for r in rows):
+        return sensitivity.winners_verdict(answer)
+    return sensitivity.default_verdict(answer)
+
+
 def reruns(plan: Plan, store: Any) -> tuple[dict[str, str], list[dict[str, Any]]]:
     """({line id: label}, every rerun row) of the lines that ran: each decision the line uses changed one at a time
     (W4 sensitivity). A line whose rerun fails gets the label "failed: <reason>"."""
@@ -325,7 +343,8 @@ def reruns(plan: Plan, store: Any) -> tuple[dict[str, str], list[dict[str, Any]]
             plain = line.model_copy(update={"template": None})   # the plan's own query, its decisions as $params
             decisions = _rerun_decisions(plan, line.query)
             names = {d.id: _param_of(line.query, d) for d in decisions}
-            result = sensitivity.rerun(store, plain, decisions, params=line_params(plan, line.query), param_of=names)
+            result = sensitivity.rerun(store, plain, decisions, params=line_params(plan, line.query), param_of=names,
+                                       verdict=verdict)
             labels[line.id] = sensitivity.label(result)
             rows += [{"line": line.id, "decision": r.decision, "field": r.field, "setting": f"{r.decision} {r.setting}",
                       "strictness": r.setting, "value": r.value, "verdict": r.verdict.label, "n": r.verdict.n,
@@ -402,3 +421,39 @@ def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, **kw: An
     if not plan.ready():
         raise ValueError("the plan is not confirmed: confirm every decision before the run")
     return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, **kw)
+
+
+# --- after a human reviews the LLM's ontology links -----------------------------------------------------------------
+
+def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dict[str, Any]:
+    """The links review of a finished plan run (W2 `review`, written as links_review.json beside the sealed outputs),
+    then the lines again on the records graph with the accepted LLM links ("child -> parent") added to the field's
+    ontology (W4: the same lines, decisions and reruns). Nothing the run sealed changes; the new answer is returned."""
+    from .kg.build import build
+    from .ontology.fill import add_links, review
+    from .ontology.sources import load
+    from .rundir import RUN_FILE, Corpus, RunDir, read_json
+    run = RunDir(run_dir)
+    review(run, accepted, rejected)
+    plan = load_plan(run.file("plan.json"))
+    before = read_json(run.file("answer.json"))
+    corpus = Corpus(read_json(run.file(RUN_FILE))["settings"]["corpus"])
+    by_file = {p.file: p.id for p in corpus.papers}
+    items: dict[str, list[Item]] = {p.id: [] for p in corpus.papers}
+    for it in run.items():
+        doc = by_file.get(str(it.spans[0].selector.get("file")))
+        if doc is not None:
+            items[doc].append(it)
+    pairs = [tuple(x.strip() for x in a.split("->", 1)) for a in accepted if "->" in a]
+    graph = load(plan.field)
+    if pairs:
+        import rdflib
+        graph = add_links(graph if graph is not None else rdflib.Graph(), pairs)  # type: ignore[arg-type]
+    store = build(corpus.papers, items, run.register_pack() and _roles(run), graph)
+    out = answer(plan, store, before.get("synthesis") or {}, (before.get("claim_groups") or {}).get("mapping") or {}, items)
+    return {"review": {"accepted": sorted(accepted), "rejected": sorted(rejected)}, **out}
+
+
+def _roles(run: Any) -> Any:
+    from .pack import RoleMap
+    return RoleMap(run.register_pack())

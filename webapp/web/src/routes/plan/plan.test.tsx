@@ -62,7 +62,7 @@ describe("decisions panel changes", () => {
   it("sends a number as a number and offers only the fixed rules for the main rule", async () => {
     const changes: [string, unknown][] = []
     const user = userEvent.setup()
-    renderWithProviders(<DecisionsPanel decisions={[decision("d1"), decision("main_rule", { type: "counts_as", value: "any_line" })]}
+    renderWithProviders(<DecisionsPanel decisions={[decision("d1"), decision("main_rule", { type: "main_rule", value: "any_line" })]}
       onConfirm={() => {}} onChange={(id, v) => changes.push([id, v])} onConfirmAll={() => {}} />)
     const [first, second] = screen.getAllByRole("button", { name: "Change" })
     await user.click(first)
@@ -99,6 +99,8 @@ describe("plan page", () => {
       ],
       answer: { text: "No evidence found", missing: ["missing: Does it help?"] },
       reruns: [{ setting: "threshold 0.05", flips: true }, { setting: "include all", flips: false }],
+      labels: { oversell: "too few to tell" },
+      links: [{ paper: "S001", relation: "builds on", ref: "Lewis et al. (2020)", in_set: null, text: "outside the set" }],
     }
     server.use(
       http.post("/api/ev/plan", () => HttpResponse.json(view(decisions))),
@@ -123,6 +125,8 @@ describe("plan page", () => {
     expect(screen.getByText("missing: Does it help?")).toBeInTheDocument()
     expect(screen.getByText("threshold 0.05")).toBeInTheDocument()
     expect(screen.queryByText("include all")).toBeNull() // only the settings that flip the answer
+    expect(screen.getByText("too few to tell")).toBeInTheDocument()
+    expect(screen.getByText("outside the set")).toBeInTheDocument()
     expect(run).toBe("r1")
   })
 })

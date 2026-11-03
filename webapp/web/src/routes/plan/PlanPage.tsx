@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-import { confirmAll, decide, deleteLine, RULES, sendAnswers, setMainRule, startPlan, startRun, useAction, usePlanResult, type PlanView, type Rerun } from "./api"
+import { confirmAll, decide, deleteLine, RULES, sendAnswers, setMainRule, startPlan, startRun, useAction, usePlanResult, type PlanResult, type PlanView, type Rerun } from "./api"
 import { DecisionsPanel } from "./DecisionsPanel"
 import { LineCard } from "./LineCard"
 
@@ -59,6 +59,25 @@ function MainRule({ rule, busy, onChange }: { rule: string; busy: boolean; onCha
         </>
       )}
     </div>
+  )
+}
+
+function Labels({ labels, lines }: { labels: Record<string, string>; lines: { id: string; question: string }[] }) {
+  const shown = lines.filter((l) => labels[l.id])
+  if (shown.length === 0) return null
+  return (
+    <ul aria-label="How solid each line is" className="text-sm">
+      {shown.map((l) => <li key={l.id}>{l.question}: <span className="font-medium">{labels[l.id]}</span></li>)}
+    </ul>
+  )
+}
+
+function Links({ links }: { links: NonNullable<PlanResult["links"]> }) {
+  if (links.length === 0) return null
+  return (
+    <ul aria-label="Builds on" className="text-sm">
+      {links.map((l, i) => <li key={`${l.paper}:${i}`}>{l.paper} {l.relation} {l.ref}: <span className="text-muted-foreground">{l.text}</span></li>)}
+    </ul>
   )
 }
 
@@ -137,7 +156,9 @@ export default function PlanPage() {
                   <>
                     <p className="text-sm">{result.data.answer.text}</p>
                     {(result.data.answer.missing ?? []).map((m) => <p key={m} className="text-sm font-medium text-destructive">{m}</p>)}
+                    <Labels labels={result.data.labels ?? {}} lines={plan.lines} />
                     <Reruns reruns={result.data.reruns ?? []} />
+                    <Links links={result.data.links ?? []} />
                   </>
                 )}
               </section>

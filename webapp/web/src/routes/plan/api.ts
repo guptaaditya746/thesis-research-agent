@@ -8,7 +8,7 @@ import { ApiError, apiUrl, getJson, postJson } from "@/api/client"
 
 export interface PlanDecision {
   id: string
-  type: "must_match" | "counts_as" | "threshold" | "include"
+  type: "must_match" | "counts_as" | "threshold" | "include" | "main_rule"
   value: unknown
   reason: string
   flagged: boolean
@@ -23,6 +23,7 @@ export interface PlanLine {
   query: string
   template: string | null
   removable: boolean
+  how?: string[]
 }
 
 export interface PlanData {
@@ -32,6 +33,7 @@ export interface PlanData {
   main_rule: string
   decisions: PlanDecision[]
   clarifications: Record<string, string>[]
+  measures?: string[]
 }
 
 export interface Clarification {
@@ -90,6 +92,10 @@ export interface PlanResult {
   lines: LineResult[]
   answer: { text: string; missing?: string[]; main_rule?: string | null; rule_met?: boolean | null; found?: string[] }
   reruns?: Rerun[]
+  /** line id -> "solid" | "same direction" | "depends on <field>" | "too few to tell" */
+  labels?: Record<string, string>
+  /** builds-on links; a cited work not in the corpus says "outside the set" */
+  links?: { paper: string; relation: string; ref: string; in_set: string | null; text: string }[]
 }
 
 const base = (id: string) => `/api/ev/plan/${encodeURIComponent(id)}`

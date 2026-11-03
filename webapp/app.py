@@ -96,6 +96,9 @@ def create_app(settings: Settings | None = None, plan_backend: PlanBackend | Non
     app.include_router(health_router(), prefix="/api")
     app.include_router(evidence_router(services.evidence), prefix="/api/ev")
     app.include_router(evjobs_router(s, services.evidence, services.jobs, services.questions), prefix="/api/ev")
+    if plan_backend is None:   # the real planner model, templates, plan runs and links review (webapp/planwire.py)
+        from .planwire import default_backend
+        plan_backend = default_backend(s)
     app.include_router(evplan_router(s, plan_backend), prefix="/api/ev")  # the plan page (webapp/evplan.py)
     if s.web_dist.is_dir():
         add_frontend(app, s)
