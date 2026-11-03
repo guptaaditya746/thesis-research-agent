@@ -18,6 +18,16 @@
 - "Read numbers: the model labels each number" is replaced by "D40 narrowed": the funnel stays, the LLM re-checks regex/code finds one paragraph per call.
 - Open question 2 ("build now or after EV4") is taken as: build now (Aditya said "plan it", 3 Nov).
 
+## Decisions before build (Aditya, 3 Nov)
+
+- Plan confirmation in scoring (Tasks 8.1, 8.3): two rows per set: "auto-confirmed" (`confirm_all(plan, who="system")`) for every question, and "hand-confirmed" for 5 questions per set that Aditya confirms in the planning page. `evaluate wholerun` takes `--confirm auto|hand` and the report shows both rows.
+- Real-paper sources (Tasks 6.2–6.4): open-access full text only (arXiv, PMC). Papers without open full text are left out and counted; the report states "left out: N of M (no open full text)".
+- Run size (Task 8.3): a fixed sample of 10 questions per set first (`--sample 10 --seed 0`, sample list saved with the run); the rest only if time allows.
+- DSPy tuning data (Task 8.2): real-paper steps (tables, value check, claims) tune on a held-out slice of each real set, written to `tune_split.json` and excluded from every score; all other steps tune on the Claude-written synthetic corpora. `wholerun.score` refuses a question whose papers appear in `tune_split.json`.
+- Ontology files (Tasks 2.1, 8.4): MeSH XML and CS-KG are fetched once on Slurm into a shared folder (`$EV_ONTOLOGY_DIR`), never committed; each file's SHA-256 goes into the run lockfile (`ontology_sha256`); a missing file means "reasoning off: no tree", not a crash. QUDT (small) may stay in the repo.
+- If time runs short, cut in this order: first the materials sets (Task 6.4, SOFC-Exp and MeasEval), then links and builds-on (W5, Tasks 5.2 and the link scoring in 8.3). Words, papers, graph, planner, the SciLead / SciREX / CochraneForest scoring, the RAG baseline (6.5) and the off-template check (6.6) are never cut.
+- DSPy tuning budget (Task 8.2): every step uses GEPA's light setting, capped at 500 model calls per step (`max_metric_calls=500`), the same for all steps; the call count goes into `tuned/<name>.json`.
+
 ## Global Constraints
 
 - No hand-typed topic words for a run: screen, regex and claim cue words come from the locked word list (`WordList`), never from `domains/<name>/words.yaml`. Existing packs keep working for old protocols (replay must stay byte-identical).
@@ -33,6 +43,8 @@
 - Decision alternatives: must-match drops or adds one field; counts-as removes or adds one value; threshold uses 0, main, 2× main; order strict → main → loose.
 - Scoring: rankings by top-1 and Kendall tau; lists by precision and recall; every query also runs on the answer key's records (synthesis vs extraction split).
 - The synthetic generator stays RAG comparisons only. No 10k-paper target.
+- Every real-set score has a RAG baseline row on the same questions, papers and model (Task 6.5).
+- The generality claim is reported as two numbers: share of questions answered with a fresh query, and the off-template match rate (Task 6.6).
 - Replies/docs follow CLAUDE.md; prompt and workflow work follows `docs/prompt-writing.md`.
 
 ## Review Focus
@@ -57,7 +69,7 @@ Each workstream runs in its own worktree (`superpowers:using-git-worktrees`) on 
 | W3 papers in | `gen/w3-papers` | `evidence/arxiv.py`, `evidence/sources/` (new), `evidence/tables.py` (new), `evidence/experiments.py` (new), `evidence/rules.py` (`duplicates` only), `synth/levels.py`, `synth/render_template.py` |
 | W4 graph + answers | `gen/w4-graph` | `evidence/kg/` (new: graph, query, templates/, sensitivity) |
 | W5 claims + links | `gen/w5-claims` | `evidence/claims.py` (new), `evidence/openalex.py` (new) |
-| W6 real sets | `gen/w6-real` | `evaluation/realpapers/` (new files + `scilead.py`, `scirex.py`), `evaluation/wholerun.py` (new) |
+| W6 real sets | `gen/w6-real` | `evaluation/realpapers/` (new files + `scilead.py`, `scirex.py`), `evaluation/wholerun.py` (new), `evaluation/baselines/real.py` (new), `evaluation/offtemplate/` (new) |
 | W7 planner + UI | `gen/w7-plan` | `evidence/planner/` (new), `webapp/evplan.py` (new), `webapp/web/src/routes/plan/` (new) |
 | Wave 2 | `gen/integrate` | `evidence/engine.py` wiring, `evidence/cli.py`, `evaluation/cli.py`, `scripts/`, DSPy tuning `evidence/steps/tune.py` |
 
@@ -79,7 +91,7 @@ Test command everywhere: `uv run pytest <path> -v`. Commit after each task with 
 **Interfaces:**
 - Produces (pydantic, `Frozen` from `evidence/contract.py`):
   - `Experiment(exp_id: str, document: str, label: str, setting: dict[str, str], span: Span)`; `setting` keys are field names such as `dataset`, `model`, `population`.
-  - `ClaimRecord(subject: str, relation: str, object: str | None, setting: dict[str, str], strength: Literal["firm", "hedged"], direction: Literal["improves", "worsens", "no_effect"] | None, span: Span)`
+  - `ClaimRecord(subject: str, relation: str, object: str | None, setting: dict[str, str], strength: Literal["firm", "hedged"], direction: Literal["improves", "worsens", "no_effect"] | None, span: Span, relation_group: str | None = None)`; `relation` keeps the paper's own verb, `relation_group` is filled after the run by W5's grouping (Task 5.1) and is what queries match.
   - `LinkRecord(subject_doc: str, relation: str, object_ref: str, object_doc: str | None, outside_set: bool, span: Span)`; `object_ref` is a DOI, an arXiv id or the cited text.
   - Evidence types registered: `experiment` (prefix `x`), `claim` (prefix `cl`), `link` (prefix `ln`). Existing prefixes `c k m a s d mt tk` stay untouched.
 
@@ -362,8 +374,8 @@ def test_records_hash_stable():
 
 **Interfaces:**
 - Consumes: compiled `claim_subject` + cue patterns (W1 interface `compile_words`; tests pass a dict), `ClaimRecord`, `after_document` seam, `Step`.
-- Produces: `find_claims(doc_text, document, config) -> list[ClaimRecord]`: regex finds candidate sentences (subject word + cue word in one sentence); DSPy `ReadClaim(sentence -> subject, relation, object, setting, strength, direction?)` confirms each; `direction` is set only for comparison claims and is one of improves / worsens / no_effect.
-- [ ] **Step 1: Failing tests**: `test_non_comparison_claim_kept` ("our dataset is the largest" → relation `is the largest`, direction None); `test_hedged` ("suggests" → hedged); `test_comparison_maps_direction` ("RAG reduces hallucination" → improves for a lower-is-better metric); `test_old_rag_claims_same_labels` (on a committed EV2 corpus, labels equal the old `claims` patterns' labels for ≥ 95% of old claims; the rest listed).
+- Produces: `find_claims(doc_text, document, config) -> list[ClaimRecord]`: regex finds candidate sentences (subject word + cue word in one sentence); DSPy `ReadClaim(sentence -> subject, relation, object, setting, strength, direction?)` confirms each; `direction` is set only for comparison claims and is one of improves / worsens / no_effect. `group_relations(verbs: list[str]) -> dict[str, str]`: after all papers are read, one DSPy call `GroupRelations(verbs -> groups)` puts the run's distinct verbs into groups (e.g. raises, boosts, improves → `increases`), recorded like every call; a verb it cannot place gets its own group `other: <verb>` and is shown in the answer, never dropped. The grouping is a counts-as decision: the answer shows "grouped: raises, boosts → increases", and the reruns (Task 4.3) also run with groups off (raw verbs only).
+- [ ] **Step 1: Failing tests**: `test_non_comparison_claim_kept` ("our dataset is the largest" → relation `is the largest`, direction None); `test_hedged` ("suggests" → hedged); `test_comparison_maps_direction` ("RAG reduces hallucination" → improves for a lower-is-better metric); `test_old_rag_claims_same_labels` (on a committed EV2 corpus, labels equal the old `claims` patterns' labels for ≥ 95% of old claims; the rest listed); `test_raises_and_boosts_grouped` ("RAG raises accuracy" and "RAG boosts accuracy" → same `relation_group`, the oversell query counts 2); `test_unplaced_verb_shown_as_other`.
 - [ ] **Step 2–5:** FAIL → implement → PASS → commit `feat(claims): open claim records`
 
 ### Task 5.2: Builds-on through OpenAlex
@@ -410,6 +422,26 @@ def test_records_hash_stable():
 **Interfaces:**
 - Produces: `sofc.label_check(src) -> {"complete": bool, "why": str}` (step 1: are values linked to a material and a measure for ranking? if not, only the experiment-frame check below); `sofc.questions(src)` ("Which material gives the highest <Z>?", field `materials`) when complete; `sofc.experiment_frames(src)` → gold experiments for scoring W3's experiment map (`evaluation/realpapers/sofc.py score_experiments(run, src)`); `measeval.values_check(run, src)` scores values, units and measured entity (QUDT units); `measeval.fields(src)` reports which fields its papers come from (the spec marks this unverified).
 - [ ] **Step 1–5:** tests on fixtures: `test_sofc_label_check`, `test_experiment_frames_score`, `test_measeval_units` → implement → commit `feat(real): SOFC-Exp and MeasEval checks`
+
+### Task 6.5: RAG baseline on the real questions
+
+**Files:** Create `evaluation/baselines/real.py`; Test `evaluation/tests/test_baseline_real.py`
+
+**Interfaces:**
+- Consumes: `RealQuestion`, `wholerun.score` (Task 6.1); `passages`, `retrieve`, `CitedAnswer`, `keep_citations` from `evaluation/baselines/rag.py` (unchanged).
+- Produces: `rag_real(q: RealQuestion, *, model, mode: Literal["global", "per_paper"] = "global") -> Answer`: the existing BM25 retrieve-then-answer on `q.corpus_dir`, then one mapping call per kind into the shape `wholerun.score` reads (rank → ordered names; list → names; compare → direction per study; claims → claim list). Same pinned model, same papers, same question text as the engine; cached and recorded like `rag_baseline`; an empty answer is a valid answer.
+- [ ] **Step 1: Failing tests**: `test_rank_answer_scored_like_engine` (fake model reply → same `score` keys as an engine answer); `test_same_papers_as_engine` (the baseline refuses a corpus dir that differs from the engine run's); `test_empty_answer_valid`.
+- [ ] **Step 2–5:** FAIL → implement → PASS → commit `feat(eval): RAG baseline on real questions`
+
+### Task 6.6: Off-template questions (generality check)
+
+**Files:** Create `evaluation/offtemplate/questions.yaml`, `evaluation/offtemplate/reference/*.rq`, `evaluation/offtemplate/check.py`; Test `evaluation/tests/test_offtemplate.py`
+
+**Interfaces:**
+- Consumes: `run_query` (W4 Task 4.2), `truth_store` (Task 4.4), `EvidenceLine.template` (None = fresh query).
+- Produces: 12 questions over the Claude-written synthetic corpora whose shape fits none of the saved templates (e.g. "Which papers report a dataset no other paper uses?", "Does the gap between methods shrink on larger datasets?"), each with a hand-written reference query; gold = the reference query run on the answer key's records (`truth_store`). The questions and reference queries are committed before any planner output is seen (commit date checked). `check(run, q) -> {"fresh": bool, "match": bool}`: the plan's answer equals the gold answer.
+- [ ] **Step 1: Failing tests**: `test_reference_queries_parse_and_run` (all 12 on a fixture truth store); `test_no_question_fits_a_template` (each reference query differs from every saved template); `test_match_when_rows_equal`.
+- [ ] **Step 2–5:** FAIL → implement → PASS → commit `feat(eval): off-template generality check`
 
 ---
 
@@ -468,7 +500,7 @@ def test_records_hash_stable():
 **Files:** Modify `evaluation/cli.py`; Test `evaluation/tests/test_cli_wholerun.py`
 
 **Interfaces:**
-- Produces: `evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src <dir> --runs <dir>` (W6 questions → plan runs → `wholerun.score` + `truthgraph.split` per question) and `evaluate leak --run <dir> --corpus <dir>` (W1 split). Links: chaining answers scored against the synthetic truth network (as `evaluation/score.py` does for `chaining` today); builds-on scored by recall of OpenAlex `references` (W5). Reasoning on/off: every whole-run question is scored twice (`--reasoning on|off`), both rows in the report.
+- Produces: `evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src <dir> --runs <dir>` (W6 questions → plan runs → `wholerun.score` + `truthgraph.split` per question) and `evaluate leak --run <dir> --corpus <dir>` (W1 split). Links: chaining answers scored against the synthetic truth network (as `evaluation/score.py` does for `chaining` today); builds-on scored by recall of OpenAlex `references` (W5). Reasoning on/off: every whole-run question is scored twice (`--reasoning on|off`), both rows in the report. Baseline: `--system engine|rag|both` (default both); the report puts the engine and RAG (Task 6.5, global and per_paper) side by side per question with wins, losses and ties, and the paired test from `evaluation/stats.py`; no row assumes the engine wins. Generality: `evaluate offtemplate --runs <dir>` (Task 6.6) reports fresh-query match rate, and `evaluate wholerun` reports how many real questions the planner answered with a saved template vs a fresh query.
 - [ ] **Step 1–5:** tests on fixtures → implement → commit `feat(eval): wholerun and leak commands`
 
 ### Task 8.4: Runbook for the cluster run
