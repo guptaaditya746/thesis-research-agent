@@ -23,7 +23,8 @@ from typing import Any
 from . import stages
 from .calls import cache_key
 from .contract import digest
-from .engine import Settings, default_provider, execute_run
+from .engine import Settings, default_provider, execute_run, plan_stages
+from .plan import load_plan
 from .locate import Locator
 from .recording import Provider
 from jsonio import write_json
@@ -51,7 +52,7 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
                     names=s.get("names", "off"),        # a run made before the names step grouped no names
                     reason=s.get("reason", "off"),      # a run made before the reasoner had no inferences
-                    plan=plan)
+                    plan=plan, stage_set=s.get("stage_set"))   # a plan run: its own stages again
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
@@ -63,7 +64,8 @@ def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path
     settings = _settings(record, cache, corpus, run_dir)
     for module in settings.imports:   # modules that register stages must be in before the registered set is compared
         importlib.import_module(module)
-    stages.check_recorded(record.get("stages"))
+    stages.check_recorded(record.get("stages"),
+                          plan_stages(settings, load_plan(settings.plan) if settings.plan is not None else None))
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), settings,
                       out_dir or run_dir.parent, mode="replay", provider=None, locator=locator,
                       source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}",

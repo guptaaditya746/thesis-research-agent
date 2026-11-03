@@ -1,7 +1,7 @@
 """`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain and
 its file hashes.
 
-    evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
+    evidence run (--protocol P | --plan PLAN) --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--relink on|off]
                  [--names off|on] [--reason on|off] [--workers N] [--import MODULE] [--run-id ID]
                  [--retry-errors] [--allow-failed-calls]
@@ -21,6 +21,10 @@ its file hashes.
     evidence propose amend DIR --reason R [--before-main-run]
     evidence fetch --query TEXT --out DIR [--max N] [--category CAT]
 
+`run --plan` is a plan run (evidence/planrun.py): the confirmed plan file (every decision confirmed, else exit 2)
+replaces the protocol, which is written from it by code; the run adds the plan's stages and answers the plan's
+evidence lines (answer.json: lines, main answer, labels, reruns; records.nq; ontology.json). `--names`, `--confirm`,
+`--relink` and `--reason` are fixed for a plan run (off, llm, on, on).
 `estimate` prints the extractor and screen calls (low, high) and the tokens a run would need, from a regex-only
 pass over the corpus (no model; nothing is written): `--from-run` takes the tokens per call of a finished run
 instead of chars/4. `--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
@@ -77,7 +81,8 @@ def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evidence", description=__doc__.split("\n", 1)[0])
     sub = p.add_subparsers(dest="command", required=True)
     r = sub.add_parser("run", help="run a protocol over a corpus")
-    r.add_argument("--protocol", required=True, type=Path)
+    r.add_argument("--protocol", type=Path, help="the protocol file (or --plan)")
+    r.add_argument("--plan", type=Path, help="a confirmed plan file: a plan run (instead of --protocol)")
     r.add_argument("--corpus", required=True, type=Path)
     r.add_argument("--out", default=Path("runs/evidence"), type=Path)
     r.add_argument("--cache", type=Path, help="record cache directory (default OUT/cache)")
@@ -207,18 +212,35 @@ def main(argv: list[str] | None = None) -> int:
 def _dispatch(args: argparse.Namespace) -> int:
     if args.command == "run":
         from .engine import run
+        if (args.protocol is None) == (args.plan is None):
+            print("error: give --protocol or --plan (one of them)", file=sys.stderr)
+            return 2
         try:
-            root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
-                       model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
-                       strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink,
-                       names=args.names, reason=args.reason)
+            if args.plan is not None:
+                from . import planrun
+                root = planrun.run(args.plan, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+                                   model=args.model, imports=args.imports, run_id=args.run_id,
+                                   retry_errors=args.retry_errors, strategy=args.strategy, workers=args.workers)
+            else:
+                root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+                           model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+                           strategy=args.strategy, workers=args.workers, confirm=args.confirm, relink=args.relink,
+                           names=args.names, reason=args.reason)
         except RunDirExists as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        except ValueError as exc:   # an unconfirmed or unreadable plan
+            if args.plan is None:
+                raise
             print(f"error: {exc}", file=sys.stderr)
             return 2
         record = read_json(root / RUN_FILE)
         answer = read_json(root / "answer.json")
-        summary = ({"label": answer["label"], "counts": answer["counts"]} if "kind" not in answer
-                   else {"kind": answer["kind"]})   # effect answers carry no kind; the others no label
+        if args.plan is not None:
+            summary = {"answer": answer["answer"]["text"], "labels": answer["labels"]}
+        else:
+            summary = ({"label": answer["label"], "counts": answer["counts"]} if "kind" not in answer
+                       else {"kind": answer["kind"]})   # effect answers carry no kind; the others no label
         print(json.dumps({"run": str(root), **summary, "cost": record["cost"]}, indent=1))
         failed = RunDir(root).failed_calls()
         if failed and args.allow_failed_calls:

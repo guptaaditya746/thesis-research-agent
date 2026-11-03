@@ -8,6 +8,7 @@ asked about once per document; later rounds reuse the verdict. Not registered he
 stages.register("recheck_report", "after_run", recheck_report))."""
 from __future__ import annotations
 
+import json
 from typing import Any, Literal
 
 import dspy
@@ -79,7 +80,9 @@ def rejected_of(doc: Any) -> list[Rejected]:
 
 def _describe(number: int, item: Item, text: str) -> str:
     span = min(item.spans, key=lambda s: s.selector["start"]).selector
-    return f"{number}. {item.evidence_type} | {item.fields} | {text[span['start']:span['end']]}"
+    # fields as sorted JSON: a fresh extraction and a cached one (replay) give the same prompt, whatever the key order
+    fields = json.dumps(item.fields, sort_keys=True, ensure_ascii=False)
+    return f"{number}. {item.evidence_type} | {fields} | {text[span['start']:span['end']]}"
 
 
 def recheck(doc: Any, etype: str, merged: list[Item], ctx: Any, *, step: Step | None = None) -> list[Item]:

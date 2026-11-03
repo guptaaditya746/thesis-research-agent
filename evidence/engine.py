@@ -86,6 +86,13 @@ A `run` (not replay or reexec) also keeps its own calls.jsonl (rundir.RunCalls):
 or screen call with its full model-call records, written as each call completes, by the warm pass (phase `warm`)
 or, for calls it did not write, by the sequential loop (phase `run`). It is not an output and not in the hash
 chain, so it changes no hash; its row order may vary with workers.
+
+Plan runs (`Settings.stage_set == "plan"`, `run_plan`, evidence/planrun.py): the protocol is written from the confirmed
+plan, the run carries the plan's own stage set (in `ctx.extra`, recorded in run.json `stages`; the registry is not
+touched), and before answer.json the run groups its claim verbs, builds the records graph (records.nq) and runs the
+plan's evidence lines with their reruns: answer.json is the plan's answer, the kind's answer kept under `synthesis`
+(graph.json and the synthesis event's counts are built from it as in a protocol run). A run without the stage set is
+unchanged.
 """
 from __future__ import annotations
 
@@ -137,7 +144,7 @@ Reason = Literal["off", "on"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
-__all__ = ["NotRecorded", "Settings", "build_extractors", "execute_run", "focus_for", "run"]
+__all__ = ["NotRecorded", "Settings", "build_extractors", "execute_run", "focus_for", "plan_stages", "run", "run_plan"]
 
 
 @dataclass
@@ -160,6 +167,7 @@ class Settings:
     names: Names = "off"                           # on: corpus-wide name groups, names.json (D38); off: as before
     reason: Reason = "on"                          # on: the reasoner's inferences, reason.json (spec 6.3); off: as before
     plan: Path | None = None                       # the confirmed plan file; None: a run without a plan, as before
+    stage_set: str | None = None                   # "plan": a plan run (its own stages, the plan's answer); None: as before
 
     def json(self) -> dict[str, Any]:
         # `confirm` only when it is llm, `relink`, `names` and `reason` only when on: the settings of a run made before
@@ -171,7 +179,8 @@ class Settings:
                 **({"domains": self.domains} if self.domains is not None else {}),
                 **({"names": self.names} if self.names == "on" else {}),
                 **({"reason": self.reason} if self.reason == "on" else {}),
-                **({"plan": str(self.plan)} if self.plan is not None else {})}
+                **({"plan": str(self.plan)} if self.plan is not None else {}),
+                **({"stage_set": self.stage_set} if self.stage_set is not None else {})}
 
 
 # --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
@@ -327,8 +336,11 @@ class Execution:
                  phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
                  names: Names = "off", names_model: str | None = None, names_ask: bool = True,
                  reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None,
-                 plan: Plan | None = None, mode: Mode = "run") -> None:
+                 plan: Plan | None = None, mode: Mode = "run", extra_stages: stages.StageSet | None = None,
+                 source_dir: Path | None = None, plan_run: bool = False) -> None:
         self.plan = plan                                 # the confirmed plan, handed to the stage seams
+        self.plan_run = plan_run                         # a plan run: finish() writes the plan's answer
+        self._texts: dict[str, str] | None = None
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
         # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
         self.reason, self.domains, self.recorded_reason = reason, domains or DOMAINS, recorded_reason
@@ -343,7 +355,9 @@ class Execution:
         self.events = Events(root / EVENTS_FILE, run_id)
         self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
         self.ctx = stages.StageContext(plan, calls, mode, provider, root, self.stage_ask,   # what the stage seams get
-                                       names_model or names_alias(cascades, None))
+                                       names_model or names_alias(cascades, None), source_dir=source_dir,
+                                       extra=extra_stages or {}, _texts=self.corpus_texts)
+        self.records_nq: bytes | None = None
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []
         self.items: dict[str, list[Item]] = {}
@@ -351,6 +365,12 @@ class Execution:
         self.funnel: dict[str, dict[str, Any]] = {}       # document -> funnel.json entry
         self.cost = {"calls": 0, "cached_calls": 0, "model_calls": 0, "made_model_calls": 0, "input_tokens": 0,
                      "output_tokens": 0}
+
+    def corpus_texts(self) -> dict[str, str]:
+        """{paper id: text} of the corpus, read once (the stages' `ctx.texts()`)."""
+        if self._texts is None:
+            self._texts = {p.id: self.corpus.text(p) for p in self.corpus.papers}
+        return self._texts
 
     # --- per document ---------------------------------------------------------------------------------
 
@@ -775,9 +795,17 @@ class Execution:
         groups = self.names_step()
         inferred = self.reason_step()
         built = self.comparisons_step(groups)
-        answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
-                                                      funnel, roles=self.roles, groups=groups, comparisons=built,
-                                                      reason=inferred)
+        synthesis, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
+                                                         funnel, roles=self.roles, groups=groups, comparisons=built,
+                                                         reason=inferred)
+        answer = synthesis
+        if self.plan_run and self.plan is not None:   # claim groups, the records graph, the lines and their reruns
+            from . import planrun
+            self.items, self.records_nq, answer = planrun.finish(self.plan, papers, self.items, self.roles, self.ctx,
+                                                                 synthesis)
+            path = self.root / planrun.RECORDS_FILE
+            path.write_bytes(self.records_nq)
+            self.outputs[planrun.RECORDS_FILE] = sha256_hex(self.records_nq)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
@@ -787,10 +815,10 @@ class Execution:
                                                                                "documents": self.funnel, **dangling,
                                                                                **unresolved})
         self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
-        self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
+        self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, synthesis))
         if self.protocol.kind == "effect":
-            custom = {"label": answer["label"], "counts": answer["counts"],
-                      "flags": {name: len(docs) for name, docs in answer["flags"].items()},   # Part F1
+            custom = {"label": synthesis["label"], "counts": synthesis["counts"],
+                      "flags": {name: len(docs) for name, docs in synthesis["flags"].items()},   # Part F1
                       "answer_sha256": self.outputs[ANSWER_FILE], "rule": "label_table"}
         else:   # no label table: the record names the kind whose rules made the answer
             custom = {"kind": self.protocol.kind, "answer_sha256": self.outputs[ANSWER_FILE],
@@ -804,7 +832,7 @@ class Execution:
 def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
           provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
           run_calls: RunCalls | None = None, confirm: Confirm = "none", relink: Relink = "off",
-          plan: Plan | None = None, names_model: str | None = None) -> None:
+          plan: Plan | None = None, names_model: str | None = None, extra_stages: stages.StageSet | None = None) -> None:
     """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
     except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
@@ -812,7 +840,8 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
             root = Path(tmp) / str(i)
             root.mkdir()
             Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
-                      run_calls, "warm", confirm, relink, plan=plan, names_model=names_model).document(paper)
+                      run_calls, "warm", confirm, relink, plan=plan, names_model=names_model,
+                      extra_stages=extra_stages).document(paper)
         futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
         try:
             for future in futures:
@@ -843,6 +872,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     domains = Path(settings.domains) if settings.domains is not None else None
     plan = load_plan(settings.plan) if settings.plan is not None else None
+    extra = plan_stages(settings, plan)
     lock = lockfile.lock(protocol, cascades, domains, plan=plan)
     try:
         root.mkdir(parents=True, exist_ok=False)
@@ -855,7 +885,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
                    confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
                    names_ask=settings.selection != "regex-only", reason=settings.reason,
                    domains=Path(settings.domains) if settings.domains is not None else None, plan=plan,
-                   mode=mode, recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
+                   mode=mode, recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None,
+                   extra_stages=extra, source_dir=source_dir, plan_run=settings.stage_set is not None)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
     if settings.plan is not None:   # the run's own copy: a replay reads it, not the original path
@@ -867,7 +898,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     try:
         if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
             _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
-                  settings.confirm, settings.relink, plan, names_alias(cascades, settings.model))
+                  settings.confirm, settings.relink, plan, names_alias(cascades, settings.model), extra)
         for paper in corpus.papers:
             ex.document(paper)
         ex.finish()
@@ -896,11 +927,23 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
         **({"dangling_links": ex.dangling} if settings.relink == "on" else {}),
         **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {}),
-        **({"stages": stages.names()} if stages.names() else {})})
+        **({"stages": stages.names(extra)} if stages.names(extra) else {})})
     if before_seal is not None:
         before_seal(root)
     sealing.seal(root, corpus.manifest_sha256, status="complete")   # last: after run.json and the final lock
     return root
+
+
+def plan_stages(settings: Settings, plan: Plan | None) -> stages.StageSet:
+    """The run's own stage set: a plan run's (evidence/planrun.py), else none. A plan run needs its plan."""
+    if settings.stage_set is None:
+        return {}
+    if settings.stage_set != "plan":
+        raise ValueError(f"unknown stage set {settings.stage_set!r}: the only one is 'plan'")
+    if plan is None:
+        raise ValueError("a plan run needs its plan (Settings.plan)")
+    from . import planrun
+    return stages.stage_set(planrun.stage_entries(plan))
 
 
 def _uses_gliner(protocol: Protocol) -> bool:
@@ -911,6 +954,22 @@ def _uses_gliner(protocol: Protocol) -> bool:
 
 def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
     return {**spec.model_dump(mode="json"), "config_sha256": spec.config_sha256, "extractor_id": spec.extractor_id}
+
+
+def run_plan(plan_path: Path | str, protocol_bytes: bytes, corpus: Path | str, out_dir: Path | str, *,
+             cache: Path | str | None = None, selection: Selection = "cascade", model: str | None = None,
+             provider: Provider | None = None, run_id: str | None = None, retry_errors: bool = False,
+             strategy: Strategy = "gaps", workers: int = 3, imports: list[str] | None = None) -> Path:
+    """A plan run (evidence/planrun.py writes `protocol_bytes` from the plan): the plan's stage set, the plan's
+    answer. Names step off and reasoner on, as a protocol run's defaults."""
+    settings = Settings(corpus=str(Path(corpus).resolve()),
+                        cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
+                        selection=selection, model=model, imports=list(imports or []), strategy=strategy,
+                        confirm="llm", relink="on", names="off", reason="on", plan=Path(plan_path).resolve(),
+                        stage_set="plan")
+    return execute_run(protocol_bytes, settings, out_dir, run_id=run_id,
+                       provider=provider if provider is not None else default_provider,
+                       retry_errors=retry_errors, workers=workers)
 
 
 def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, cache: Path | str | None = None,

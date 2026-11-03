@@ -111,8 +111,10 @@ class OpenAlex:
 
     @classmethod
     def for_ctx(cls, ctx: Any, *, fetch: Fetch | None = None) -> OpenAlex:
-        """The client of a run: record in `ctx.run_dir/openalex.jsonl`, offline when `ctx.mode == "replay"`."""
-        return cls(JsonlCache(Path(ctx.run_dir) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay")
+        """The client of a run: record in `<run folder>/openalex.jsonl`, offline when `ctx.mode == "replay"`; a replay reads
+        the RECORDED run's file (`ctx.record_dir`: its source folder), not the folder it writes."""
+        folder = getattr(ctx, "record_dir", None) or ctx.run_dir
+        return cls(JsonlCache(Path(folder) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay")
 
     def get(self, url: str) -> dict[str, Any] | None:
         key = cache_key({"openalex": url})
