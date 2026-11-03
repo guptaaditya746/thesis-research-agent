@@ -198,3 +198,21 @@ def test_a_resolved_link_item_has_no_failure_field(tmp_path):
     from evidence.records import item
     rec = client(tmp_path).resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
     assert "resolve_failed" not in item(rec).fields
+
+
+# --- final review I2: the link carries the resolved OpenAlex work id ---------------------------------------------
+
+def test_a_resolved_link_carries_the_openalex_work_id(tmp_path):
+    from evidence.records import item
+    rec = client(tmp_path).resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    assert rec.work == "W222" and item(rec).fields["work"] == "W222"
+    arxiv = client(tmp_path).resolve("Lewis et al.", None, "2005.11401", RUN_DOCS, subject_doc="S002", span=span())
+    assert (arxiv.work, arxiv.object_doc) == ("W111", "S001")
+
+
+def test_an_unresolved_link_has_work_null(tmp_path):
+    from evidence.records import item
+    lost = client(tmp_path).resolve("Totally Unknown Work", None, None, RUN_DOCS, subject_doc="S002", span=span())
+    assert lost.work is None and item(lost).fields["work"] is None
+    assert openalex.work_id({"id": "https://openalex.org/W2741809807"}) == "W2741809807"
+    assert openalex.work_id(None) is None and openalex.work_id({"id": ""}) is None

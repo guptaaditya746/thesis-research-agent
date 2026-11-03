@@ -99,6 +99,13 @@ def _urlopen(url: str) -> dict[str, Any] | None:
         raise
 
 
+def work_id(work: Mapping[str, Any] | None) -> str | None:
+    """The last path segment of an OpenAlex work's `id` ("https://openalex.org/W2741809807" -> "W2741809807"); None
+    without a work or an id."""
+    ident = str((work or {}).get("id") or "").strip().rstrip("/")
+    return ident.rsplit("/", 1)[-1] or None if ident else None
+
+
 def _norm(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
 
@@ -194,7 +201,7 @@ class OpenAlex:
         work_doi = _bare_doi(work["doi"]) if work and work.get("doi") else None
         ref = doi.strip() if doi else arxiv_id.strip() if arxiv_id else work_doi or cited_text
         return LinkRecord(subject_doc=subject_doc, relation=relation, object_ref=ref, object_doc=object_doc,
-                          outside_set=object_doc is None, span=span,
+                          outside_set=object_doc is None, span=span, work=work_id(work),
                           **({"resolve_failed": failed} if failed is not None else {}))
 
     @staticmethod

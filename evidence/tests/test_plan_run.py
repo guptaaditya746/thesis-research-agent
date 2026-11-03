@@ -224,8 +224,8 @@ def test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex
     root = planrun.run(path, tmp_path / "corpus", tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
                        provider=provider_of(FunctionModel(reply, model_name="fake")), workers=1)
     links = read(root, "answer.json")["links"]
-    assert links == [{"paper": "S001", "relation": "builds on", "ref": "Lewis et al. (2020)", "in_set": None,
-                      "text": "outside the set"}]
+    assert links == [{"paper": "S001", "relation": "builds on", "ref": "Lewis et al. (2020)", "work": None,
+                      "in_set": None, "text": "outside the set"}]
     assert (root / "openalex.jsonl").is_file() and fetched
     n = len(fetched)
     new, report = replay(root)

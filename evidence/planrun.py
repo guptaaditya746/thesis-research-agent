@@ -416,7 +416,8 @@ OUTSIDE = "outside the set"
 
 
 def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
-    """The run's builds-on links for the answer: a cited work that is no paper of the corpus says "outside the set"."""
+    """The run's builds-on links for the answer: a cited work that is no paper of the corpus says "outside the set".
+    `work` is the resolved OpenAlex work id ("W2741809807"), null when the link was not resolved through OpenAlex."""
     from .records import LINK
     out = []
     for doc in sorted(items):
@@ -424,7 +425,7 @@ def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
             if it.evidence_type == LINK:
                 f = it.fields
                 out.append({"paper": f["subject_doc"], "relation": f["relation"], "ref": f["object_ref"],
-                            "in_set": f.get("object_doc"),
+                            "work": f.get("work"), "in_set": f.get("object_doc"),
                             "text": OUTSIDE if f["outside_set"] else f"in the set: {f.get('object_doc')}",
                             **({"resolve_failed": f["resolve_failed"]} if f.get("resolve_failed") else {})})
     return out

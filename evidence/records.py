@@ -43,6 +43,7 @@ class LinkRecord(Frozen):
     outside_set: bool
     span: Span
     resolve_failed: str | None = None      # OpenAlex could not be asked (network, timeout, 429/5xx): the reason
+    work: str | None = None                # the resolved OpenAlex work id's last segment ("W2741809807"); None: unresolved
 
 
 _TYPE = {Experiment: EXPERIMENT, ClaimRecord: CLAIM, LinkRecord: LINK}

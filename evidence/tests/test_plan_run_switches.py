@@ -84,3 +84,16 @@ def test_reasoning_off_builds_the_graph_without_the_field_ontology(tmp_path: Pat
 def test_a_bad_switch_value_is_refused(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="reasoning"):
         planrun.run(tmp_path / "p.json", tmp_path, tmp_path, reasoning="maybe")
+
+
+def test_the_answer_links_carry_the_openalex_work_id(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Final review I2: `work` is the resolved work's id (what `evaluate wholerun` compares), null when unresolved."""
+    from evidence import openalex
+    path = tmp_path / "plan.json"
+    write_plan(make_plan(), path)
+    monkeypatch.setattr(openalex, "_urlopen", lambda url: {"results": [{"id": "https://openalex.org/W2741809807",
+                                                                       "title": "Lewis et al. (2020)"}]})
+    root = planrun.run(path, corpus(tmp_path), tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
+                       provider=provider_of(failing_model(lambda p: False)), workers=1)
+    links = read(root, "answer.json")["links"]
+    assert links and {x["work"] for x in links} == {"W2741809807"}
