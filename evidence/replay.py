@@ -14,11 +14,13 @@ not its id, so an upstream span change does not count as a downstream difference
 """
 from __future__ import annotations
 
+import importlib
 import os
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from . import stages
 from .calls import cache_key
 from .contract import digest
 from .engine import Settings, default_provider, execute_run
@@ -27,7 +29,7 @@ from .recording import Provider
 from jsonio import write_json
 
 from .rundir import (CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, LOCK_FILE, PROTOCOL_FILE, REEXEC_FILE,
-                     RUN_FILE, RunDir, read_json, read_lines)
+                     PLAN_FILE, RUN_FILE, RunDir, read_json, read_lines)
 
 OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_missing", "fields_differ")
 # Outputs the engine writes since a later change (the lock since EV4, comparisons.json since plan 2): a replay of a run
@@ -35,8 +37,11 @@ OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_mis
 ADDED_OUTPUTS = (LOCK_FILE, COMPARISONS_FILE)
 
 
-def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | str | None) -> Settings:
+def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | str | None,
+              run_dir: Path | None = None) -> Settings:
     s = record["settings"]
+    # a planned run: the run folder's own copy of the plan, so a replay elsewhere needs no original path
+    plan = run_dir / PLAN_FILE if run_dir is not None and (run_dir / PLAN_FILE).is_file() else (Path(s["plan"]) if s.get("plan") else None)
     return Settings(corpus=str(corpus or s["corpus"]), cache=str(cache or s["cache"]), selection=s["selection"],
                     model=s.get("model"), imports=list(s.get("imports") or []), strategy=s.get("strategy") or "all",
                     # $GLINER_URL wins: the service may have moved; the recorded model keeps the ids
@@ -45,8 +50,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     relink=s.get("relink", "off"),      # a run made before relinking left those links dangling
                     domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
                     names=s.get("names", "off"),        # a run made before the names step grouped no names
-                    reason=s.get("reason", "off"),
-                    plan=Path(s["plan"]) if s.get("plan") else None)      # a run made before the reasoner had no inferences
+                    reason=s.get("reason", "off"),      # a run made before the reasoner had no inferences
+                    plan=plan)
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
@@ -55,7 +60,11 @@ def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path
     any); raises NotRecorded on a cache miss."""
     run_dir = Path(run_dir)
     record = read_json(run_dir / RUN_FILE)
-    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
+    settings = _settings(record, cache, corpus, run_dir)
+    for module in settings.imports:   # modules that register stages must be in before the registered set is compared
+        importlib.import_module(module)
+    stages.check_recorded(record.get("stages"))
+    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), settings,
                       out_dir or run_dir.parent, mode="replay", provider=None, locator=locator,
                       source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}",
                       source_dir=run_dir)   # the recorded reason.json: a replay never reasons again
@@ -77,7 +86,7 @@ def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | s
     def bypass(spec: Any) -> bool:
         return extractor is None or extractor in (spec.name, spec.extractor_id)
 
-    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
+    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus, run_dir),
                       out_dir or run_dir.parent, mode="reexec", bypass=bypass, locator=locator,
                       provider=provider if provider is not None else default_provider,
                       source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}",

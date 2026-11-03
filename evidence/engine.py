@@ -125,7 +125,7 @@ from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef,
 from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE,
-                     GRAPH_FILE, LOCATE_FILE, LOCK_FILE, NAMES_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE,
+                     GRAPH_FILE, LOCATE_FILE, LOCK_FILE, NAMES_FILE, PLAN_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE,
                      RUN_FILE, Corpus, Events, RunCalls, RunDir, RunDirExists, new_run_id, read_json, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
@@ -327,7 +327,7 @@ class Execution:
                  phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
                  names: Names = "off", names_model: str | None = None, names_ask: bool = True,
                  reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None,
-                 plan: Plan | None = None) -> None:
+                 plan: Plan | None = None, mode: Mode = "run") -> None:
         self.plan = plan                                 # the confirmed plan, handed to the stage seams
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
         # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
@@ -342,6 +342,7 @@ class Execution:
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
         self.events = Events(root / EVENTS_FILE, run_id)
         self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
+        self.ctx = stages.StageContext(plan, calls, mode, provider, root)   # what the stage seams get
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []
         self.items: dict[str, list[Item]] = {}
@@ -357,7 +358,7 @@ class Execution:
         if self.names == "on":
             self.texts[paper.id] = text
         state = DocState(paper.ref, text, Index(text))
-        stages.before_extract(state, self.plan)
+        stages.before_extract(state, self.ctx)
         self.screen(state)
         screen = self.protocol.screen
         if self.strategy == "gaps" and state.relevant is False and screen is not None and screen.on_fail == "skip":
@@ -368,7 +369,7 @@ class Execution:
             self.funnel_loop(state)
         else:
             self.run_position(state, self.protocol.phases(), None, round_no=0)
-        self.items[paper.id] = state.items() + stages.after_document(state)
+        self.items[paper.id] = state.items() + stages.after_document(state, self.ctx)
         self.funnel[paper.id] = {"screen": state.screen, "skipped": state.skipped, "steps": state.steps,
                                  "decisions": state.decisions, "stopped_after": state.stopped_after}
         if self.relink == "on":   # the final check: a link to no item is listed, never silent (off: runs before it)
@@ -500,7 +501,7 @@ class Execution:
             dropped = (self._unconfirmed(etype, items)
                        if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
             items = [i for i in items if i.item_id not in dropped]
-            items = stages.after_type(state, etype, items)
+            items = stages.after_type(state, etype, items, self.ctx)
             relinked = self._relink(state, etype, remap, items) if self.relink == "on" else []
             state.merged[etype] = items
             # only a merge that dropped or relinked items carries the key: a record without them is unchanged
@@ -771,14 +772,15 @@ class Execution:
             custom = {"kind": self.protocol.kind, "answer_sha256": self.outputs[ANSWER_FILE],
                       "rule": f"kind:{self.protocol.kind}"}
         self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id=ENGINE, custom=custom)
-        for name, result in stages.after_run(RunDir(self.root), self.plan).items():
+        for name, result in stages.after_run(RunDir(self.root), self.ctx).items():
             self.outputs[f"{name}.json"] = write_json(self.root / f"{name}.json", result)
         return answer
 
 
 def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
           provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
-          run_calls: RunCalls | None = None, confirm: Confirm = "none", relink: Relink = "off") -> None:
+          run_calls: RunCalls | None = None, confirm: Confirm = "none", relink: Relink = "off",
+          plan: Plan | None = None) -> None:
     """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
     except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
@@ -786,7 +788,7 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
             root = Path(tmp) / str(i)
             root.mkdir()
             Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
-                      run_calls, "warm", confirm, relink).document(paper)
+                      run_calls, "warm", confirm, relink, plan=plan).document(paper)
         futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
         try:
             for future in futures:
@@ -829,15 +831,19 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
                    confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
                    names_ask=settings.selection != "regex-only", reason=settings.reason,
                    domains=Path(settings.domains) if settings.domains is not None else None, plan=plan,
-                   recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
+                   mode=mode, recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
+    if settings.plan is not None:   # the run's own copy: a replay reads it, not the original path
+        plan_bytes = Path(settings.plan).read_bytes()
+        (root / PLAN_FILE).write_bytes(plan_bytes)
+        ex.outputs[PLAN_FILE] = sha256_hex(plan_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
     try:
         if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
             _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
-                  settings.confirm, settings.relink)
+                  settings.confirm, settings.relink, plan)
         for paper in corpus.papers:
             ex.document(paper)
         ex.finish()
@@ -865,7 +871,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "extractor_specs": {k: _spec_json(s) for k, s in specs.items()}, "outputs": dict(sorted(ex.outputs.items())),
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
         **({"dangling_links": ex.dangling} if settings.relink == "on" else {}),
-        **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {})})
+        **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {}),
+        **({"stages": stages.names()} if stages.names() else {})})
     if before_seal is not None:
         before_seal(root)
     sealing.seal(root, corpus.manifest_sha256, status="complete")   # last: after run.json and the final lock
