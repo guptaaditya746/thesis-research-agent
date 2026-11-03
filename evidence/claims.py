@@ -41,13 +41,13 @@ class ReadClaim(dspy.Signature):
     sentence softens it with words like suggests, may, appears; else "firm") and direction. Set direction only
     when the claim compares the subject with something else, and say whether the comparison turns out better
     for the subject (improves), worse (worsens) or the same (no_effect), judged by what is good for the measure:
-    "reduces errors" is improves, "increases errors" is worsens. For any claim that is not a comparison direction
+    "shortens delays" is improves, "lengthens delays" is worsens. For any claim that is not a comparison direction
     is null.
 
-    Example: "RAG reduces hallucination." -> subject "RAG", relation "reduces", object "hallucination", strength
+    Example: "Method A shortens the delay." -> subject "Method A", relation "shortens", object "the delay", strength
     "firm", direction "improves".
     Example: "Our dataset is the largest of its kind." -> relation "is the largest", object "of its kind", direction null.
-    Example: "The results suggest RAG may help." -> strength "hedged", direction "improves"."""
+    Example: "The results suggest Method A may help." -> strength "hedged", direction "improves"."""
     sentence: str = dspy.InputField(desc="one sentence of the paper, verbatim")
     is_claim: bool = dspy.OutputField(desc="true when the sentence states a claim of the authors")
     subject: str = dspy.OutputField(desc="what the claim is about, as written; empty when not a claim")
@@ -66,7 +66,7 @@ class GroupRelations(dspy.Signature):
     group's name). Verbs that mean the same thing go together, verbs that mean the opposite never do. Use only verbs
     from the list, copied exactly. Leave a verb out when you cannot place it.
 
-    Example: ["raises", "boosts", "lowers"] -> {"increases": ["raises", "boosts"], "decreases": ["lowers"]}."""
+    Example: ["speeds up", "accelerates", "slows"] -> {"faster": ["speeds up", "accelerates"], "slower": ["slows"]}."""
     verbs: list[str] = dspy.InputField(desc="the distinct verbs the papers use")
     groups: dict[str, list[str]] = dspy.OutputField(desc="group name -> the verbs placed in it")
 
@@ -173,7 +173,7 @@ def count_by_group(records: list[ClaimRecord]) -> dict[str, int]:
 
 
 def grouped_line(mapping: Mapping[str, str]) -> str:
-    """The counts-as line of the answer: "grouped: raises, boosts → increases", one clause per group; unplaced verbs
+    """The counts-as line of the answer: "grouped: accelerates, speeds up → faster", one clause per group; unplaced verbs
     ("other: <verb>") are listed too."""
     by_group: dict[str, list[str]] = {}
     for verb, group in mapping.items():
