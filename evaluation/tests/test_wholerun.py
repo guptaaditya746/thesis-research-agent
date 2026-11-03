@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from evaluation.wholerun import (Answer, RealQuestion, key_status, left_out_line, sample, score, score_set,
-                                 tune_split)
+                                 tune_split, tune_split_questions)
 
 
 def rq(kind: str, gold: dict, tmp: Path | None = None) -> RealQuestion:
@@ -86,3 +86,32 @@ def test_score_set_writes_both_rows_and_the_sample(tmp_path: Path) -> None:
     assert {r["confirmation"] for r in rows["hand-confirmed"]} == {"hand-confirmed"}
     assert (tmp_path / "out" / "sample.json").is_file() and (tmp_path / "out" / "real_set.json").is_file()
     assert key_status(qs[0]) == "key-records run: not available"
+
+
+def test_tune_split_holds_out_questions_not_papers(tmp_path: Path) -> None:
+    """I3: a big board does not drop out with probability 0.8^k; whole questions are picked, and only papers that no
+    kept question uses form the tuning slice."""
+    big = [f"b{i}" for i in range(20)]
+    qs = [RealQuestion("big", "?", "cs", tmp_path, {"papers": big}, "rank")]
+    qs += [RealQuestion(f"s{i}", "?", "cs", tmp_path, {"papers": [f"s{i}", "shared"]}, "list") for i in range(9)]
+    split = tune_split_questions(qs, 0.2, 0, tmp_path / "tune_split.json")
+    assert len(split["questions"]) == 2 and len(split["kept_questions"]) == 8
+    kept = {p for q in qs if q.id in split["kept_questions"] for p in q.gold["papers"]}
+    assert not set(split["papers"]) & kept and "shared" not in split["papers"]
+    assert set(split["papers"]) | set(split["rest"]) == {p for q in qs for p in q.gold["papers"]}
+    assert json.loads((tmp_path / "tune_split.json").read_text())["papers"] == split["papers"]
+    # every kept question survives the wholerun guard, every held one does not
+    from evaluation.wholerun import question_papers, tune_papers
+    held = tune_papers(qs[0])
+    assert all(not set(question_papers(q)) & held for q in qs if q.id in split["kept_questions"])
+
+
+def test_tune_split_command_prints_kept_and_held(tmp_path: Path, monkeypatch, capsys) -> None:
+    from evaluation import cli
+    qs = [RealQuestion(f"q{i}", "?", "cs", tmp_path, {"papers": [f"p{i}"]}, "list") for i in range(10)]
+    monkeypatch.setattr(cli, "_real_questions", lambda name, src, corpus: qs)
+    assert cli.main(["tune-split", "--set", "sofc", "--src", str(tmp_path), "--corpus", str(tmp_path)]) == 0
+    assert "kept 8 questions, held 2" in capsys.readouterr().out
+    assert (tmp_path / "tune_split.json").is_file()
+    with pytest.raises(SystemExit):     # written once
+        cli.main(["tune-split", "--set", "sofc", "--src", str(tmp_path), "--corpus", str(tmp_path)])

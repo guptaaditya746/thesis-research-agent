@@ -275,6 +275,26 @@ def tune_split(papers: list[str], fraction: float = 0.2, seed: int = 0, out: Pat
     return split
 
 
+def tune_split_questions(questions: list[RealQuestion], fraction: float = 0.2, seed: int = 0,
+                         out: Path | None = None) -> dict[str, Any]:
+    """Hold out at QUESTION level: pick round(fraction * n) questions (at least 1 when there are two or more); the
+    tuning slice ("papers") is the papers of those questions that no kept question uses, so every kept question stays
+    scorable (`score` refuses a question that has a held-out paper). Written to `out` in `tune_split`'s format plus
+    "questions" (held) and "kept_questions"."""
+    ids = [q.id for q in questions]
+    k = min(len(ids) - 1, max(1, round(len(ids) * fraction))) if len(ids) > 1 else 0
+    held_ids = set(random.Random(seed).sample(sorted(ids), k))
+    used = {p for q in questions if q.id not in held_ids for p in question_papers(q)}
+    every = {p for q in questions for p in question_papers(q)}
+    held = sorted(every - used)
+    split = {"seed": seed, "fraction": fraction, "level": "question", "papers": held,
+             "rest": sorted(every - set(held)), "questions": sorted(held_ids),
+             "kept_questions": [i for i in ids if i not in held_ids]}
+    if out is not None:
+        Path(out).write_text(json.dumps(split, indent=1) + chr(10), encoding="utf-8", newline=chr(10))
+    return split
+
+
 def left_out_line(left_out: int, total: int) -> str:
     return f"left out: {left_out} of {total} (no open full text)"
 

@@ -25,6 +25,7 @@
     evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src DIR --runs DIR --out DIR [--corpus DIR]
                       [--confirm auto|hand|both] [--reasoning on|off|both] [--system engine|rag|both]
                       [--sample 10] [--seed 0] [--model ALIAS] [--cache F]
+    evaluate tune-split --set S --src DIR [--corpus DIR] [--fraction 0.2] [--seed 0]
     evaluate leak --run R --corpus C --out D
     evaluate offtemplate --runs DIR --out D
     evaluate links --run R [--corpus C --question-id ID] [--references F.json] --out D
@@ -407,6 +408,21 @@ def left_out_of(name: str, src: Path, corpus: Path | None, questions: list[Any])
     return left_out_line(0, sum(len(q.gold.get("papers", [])) for q in questions))   # scirex: arXiv, all open
 
 
+def cmd_tune_split(args: argparse.Namespace) -> int:
+    """Hold out questions of one real set for tuning (written once to <corpus>/tune_split.json)."""
+    from .wholerun import TUNE_FILE, tune_split_questions
+
+    corpus = args.corpus if args.corpus is not None else Path(args.src) / "corpus"
+    path = corpus / TUNE_FILE
+    if path.exists():
+        raise SystemExit(f"evaluate tune-split: {path} exists; it is written once (move it aside to redo)")
+    questions = _real_questions(args.set, args.src, args.corpus)
+    split = tune_split_questions(questions, args.fraction, args.seed, path)
+    print(f"wrote {path}: kept {len(split['kept_questions'])} questions, held {len(split['questions'])} for tuning "
+          f"({len(split['papers'])} papers held out, {len(split['rest'])} rest)")
+    return 0
+
+
 def cmd_wholerun(args: argparse.Namespace) -> int:
     from . import wholerun_cmd as wc
 
@@ -645,6 +661,14 @@ def parser() -> argparse.ArgumentParser:
     w.add_argument("--cache", type=Path, help="JsonlCache file of the RAG calls (default <out>/rag-real-calls.jsonl)")
     w.add_argument("--out", type=Path, required=True)
     w.set_defaults(func=cmd_wholerun)
+
+    ts = sub.add_parser("tune-split", help="hold out whole questions of a real set for tuning (tune_split.json)")
+    ts.add_argument("--set", choices=REAL_SETS, required=True)
+    ts.add_argument("--src", type=Path, required=True, help="the set's source (release) folder")
+    ts.add_argument("--corpus", type=Path, help="the set's corpus folder (default <src>/corpus); gets tune_split.json")
+    ts.add_argument("--fraction", type=float, default=0.2)
+    ts.add_argument("--seed", type=int, default=0)
+    ts.set_defaults(func=cmd_tune_split)
 
     lk = sub.add_parser("leak", help="extraction recall split: names on the word list vs unseen")
     lk.add_argument("--run", type=Path, required=True, help="a plan run (its plan.json holds the word list)")
