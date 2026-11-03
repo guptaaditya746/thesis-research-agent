@@ -7,11 +7,15 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
+from pydantic_ai.models.function import FunctionModel
 
 from evidence import engine, stages
 from evidence.contract import Item
 from evidence.plan import Plan, WordList, write_plan
 from evidence.replay import replay
+from evidence.rundir import RunDir
+from evidence.tests.conftest import provider_of, respond
 from jsonio import sha256_hex
 from evidence.tests.conftest import PROTOCOL, make_corpus
 
@@ -25,8 +29,9 @@ def clean_registry() -> Iterator[None]:
 
 
 def _run(tmp_path: Path, strategy: str = "all", **kw) -> Path:
+    kw = {"provider": None, **kw}
     corpus = make_corpus(tmp_path / "corpus")
-    return engine.run(PROTOCOL, corpus, tmp_path / "runs", selection="regex-only", provider=None, strategy=strategy,
+    return engine.run(PROTOCOL, corpus, tmp_path / "runs", selection="regex-only", strategy=strategy,
                       cache=tmp_path / "cache", **kw)
 
 
@@ -176,4 +181,69 @@ def test_replay_with_a_different_stage_set_is_refused(tmp_path: Path) -> None:
         replay(root)
     stages.register("demo", "after_run", lambda run, ctx: {"x": 1})
     new, report = replay(root)
+    assert report["ok"]
+
+
+# --- a stage's model calls are logged like the engine's own ---------------------------------------------------------
+
+class Echo(BaseModel):
+    answer: str
+
+
+def _provider(fail: bool = False, text: str = "hi there"):
+    def reply(messages, info):
+        if fail:
+            raise RuntimeError("provider down")
+        return respond(info, {"answer": text, "text": text})
+    return provider_of(FunctionModel(reply, model_name="echo"))
+
+
+def _ask_stage(ctx_seen: list | None = None):
+    def stage(run, ctx):
+        out = ctx.ask("Echo the word.", "say hi", output_type=Echo, purpose="demo-echo")
+        return {"answer": out.answer}
+    return stage
+
+
+def _lines(path: Path) -> list[dict]:
+    return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def test_a_stage_model_call_is_logged_counted_and_replays_without_a_model(tmp_path: Path) -> None:
+    base = _run(tmp_path / "base", provider=None)
+    stages.register("echo", "after_run", _ask_stage())
+    root = _run(tmp_path / "with", provider=_provider())
+    assert json.loads((root / "echo.json").read_text(encoding="utf-8")) == {"answer": "hi there"}
+    rows = _lines(root / "calls.jsonl")
+    assert len(rows) == 1 and rows[0]["extractor_id"] == "stage:demo-echo" and rows[0]["evidence_type"] == "stage"
+    assert rows[0]["status"] == "ok" and len(rows[0]["model_calls"]) == 1
+    calls = {n for n in _outputs(root) if n.startswith("calls/")}
+    assert len(calls) == len({n for n in _outputs(base) if n.startswith("calls/")}) + 1
+    cost, base_cost = (json.loads((r / "run.json").read_text(encoding="utf-8"))["cost"] for r in (root, base))
+    assert cost["calls"] == base_cost["calls"] + 1 and cost["model_calls"] == 1 and cost["made_model_calls"] == 1
+    assert any(e["subtype"] == "stage_call" and e["custom_metadata"]["purpose"] == "demo-echo"
+               for e in _lines(root / "events.jsonl"))
+    new, report = replay(root)
+    assert report["ok"] and _outputs(new) == _outputs(root)
+    replay_cost = json.loads((new / "run.json").read_text(encoding="utf-8"))["cost"]
+    assert replay_cost["made_model_calls"] == 0 and replay_cost["cached_calls"] == replay_cost["calls"]
+
+
+def test_a_failed_stage_model_call_is_a_failed_call(tmp_path: Path) -> None:
+    stages.register("echo", "after_run", _ask_stage())
+    root = _run(tmp_path, provider=_provider(fail=True))
+    assert "StageCallError" in json.loads((root / "echo.json").read_text(encoding="utf-8"))["failed"]
+    assert RunDir(root).failed_calls() == 1
+
+
+def test_a_stage_gets_a_recorded_dspy_lm(tmp_path: Path) -> None:
+    def stage(run, ctx):
+        lm = ctx.dspy_lm("demo-dspy")
+        return {"out": list(lm("hello"))}
+
+    stages.register("dsp", "after_run", stage)
+    root = _run(tmp_path, provider=_provider())
+    assert json.loads((root / "dsp.json").read_text(encoding="utf-8")) == {"out": ["hi there"]}
+    assert len(_lines(root / "calls.jsonl")) == 1
+    _, report = replay(root)
     assert report["ok"]

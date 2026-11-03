@@ -342,7 +342,8 @@ class Execution:
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
         self.events = Events(root / EVENTS_FILE, run_id)
         self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
-        self.ctx = stages.StageContext(plan, calls, mode, provider, root)   # what the stage seams get
+        self.ctx = stages.StageContext(plan, calls, mode, provider, root, self.stage_ask,   # what the stage seams get
+                                       names_model or names_alias(cascades, None))
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []
         self.items: dict[str, list[Item]] = {}
@@ -674,18 +675,30 @@ class Execution:
         """One question of the names check through the record cache: the reply as JSON, or {"error": ...}. Counted in
         the run's cost like an extractor call; one row of calls.jsonl when it made model calls."""
         def make() -> tuple[dict[str, Any], list[dict[str, Any]]]:
-            recorder = Recorder(self.provider)
-            try:
-                out, _ = recorder.structured(alias, instructions, prompt, NamesVerdict, **NAMES_SETTINGS)
-                return {"status": "ok", "output": out.model_dump(mode="json")}, recorder.records
-            except ModelCallError as exc:
-                return {"status": "error", "error": exc.reason}, recorder.records
-        request = {"user_prompt": prompt}
+            return self._structured(alias, instructions, prompt, NamesVerdict, NAMES_SETTINGS)
+        asked, check = self._asked(owner, {"user_prompt": prompt}, make, evidence_type="names", event="names_check")
+        asks.append(check)
+        return json.dumps(asked.value.get("output") or {"error": asked.value.get("error")})
+
+    def _structured(self, alias: str, instructions: str, prompt: str, output_type: type[BaseModel],
+                    settings: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        """One schema-constrained call as a record-cache value: ({"status": "ok", "output"} or {"status": "error",
+        "error"}, the model-call records)."""
+        recorder = Recorder(self.provider)
+        try:
+            out, _ = recorder.structured(alias, instructions, prompt, output_type, **settings)
+            return {"status": "ok", "output": out.model_dump(mode="json")}, recorder.records
+        except ModelCallError as exc:
+            return {"status": "error", "error": exc.reason}, recorder.records
+
+    def _asked(self, owner: str, request: dict[str, Any], make: Callable[[], tuple[dict[str, Any], list[dict[str, Any]]]],
+               *, evidence_type: str, event: str, extra: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
+        """The bookkeeping of one model call that is not an extractor call (the names check, a stage's `ctx.ask`):
+        the record cache, calls/<id>.json (error reason `model_call` on a failure, so it is a failed call wherever
+        failed calls are counted and `--retry-errors` asks it again), one `event`, one row of calls.jsonl when it made
+        model calls, and the run's cost. Returns (the cache's Asked, the check dict)."""
         started = utc_now()
         asked = self.calls.recorded(owner, request, make)
-        # the check's result as an extraction result in calls/ (error reason `model_call`, as an LLM extractor's), so a
-        # failed check is a failed call wherever failed calls are counted (RunDir.failed_calls: the CLI's exit 2, the
-        # web app) and `--retry-errors` asks it again
         failed = asked.value.get("status") == "error"
         call_id = self.events.next_id()
         result = ExtractionResult(
@@ -696,12 +709,11 @@ class Execution:
                                                                result.model_dump(mode="json"))
         check = {"call_id": call_id, "key": cache_key(owner, digest(request)), "attempt": asked.attempt,
                  "source": asked.source, "status": result.status, "model_calls": list(result.model_calls)}
-        self.events.add("names_check", used=[], generated=[], agent_id=owner, status=result.status, started_at=started,
-                        custom={k: v for k, v in check.items() if k != "call_id"})
-        asks.append(check)
+        self.events.add(event, used=[], generated=[], agent_id=owner, status=result.status, started_at=started,
+                        custom={**{k: v for k, v in check.items() if k != "call_id"}, **(extra or {})})
         if self.run_calls is not None and asked.model_calls:
             self.run_calls.add({"key": cache_key(owner, digest(request), asked.attempt), "phase": self.phase,
-                                "document": "", "evidence_type": "names", "extractor_id": owner,
+                                "document": "", "evidence_type": evidence_type, "extractor_id": owner,
                                 "attempt": asked.attempt, "status": result.status, "source": asked.source,
                                 "started_at": started, "ended_at": utc_now(), "task": request,
                                 "result": result.model_dump(mode="json"), "model_calls": asked.model_calls})
@@ -712,7 +724,19 @@ class Execution:
         self.cost["made_model_calls"] += len(asked.model_calls) if asked.source == "fresh" else 0
         self.cost["input_tokens"] += tokens_in
         self.cost["output_tokens"] += tokens_out
-        return json.dumps(asked.value.get("output") or {"error": asked.value.get("error")})
+        return asked, check
+
+    def stage_ask(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
+                  settings: dict[str, Any]) -> BaseModel:
+        """`StageContext.ask`: one recorded model call for a stage, through exactly the engine's own path (`_asked`)."""
+        owner = f"stage:{purpose}"
+        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
+                   "user_prompt": user_prompt, "settings": settings}
+        asked, _ = self._asked(owner, request, lambda: self._structured(alias, instructions, user_prompt, output_type, settings),
+                               evidence_type="stage", event="stage_call", extra={"purpose": purpose})
+        if asked.value.get("status") == "error":
+            raise stages.StageCallError(f"{purpose}: {asked.value.get('error')}")
+        return output_type.model_validate(asked.value["output"])
 
     def reason_step(self) -> reasoner.Inferences | None:
         """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a

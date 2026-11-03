@@ -10,7 +10,11 @@
 
 `StageContext` (frozen): `plan` (the confirmed Plan or None), `calls` (the run's recorded CallCache: ask models through
 it so calls are cached and replayable), `mode` (run / replay / reexec), `provider` (the model provider or None) and
-`run_dir` (the folder being written).
+`run_dir` (the folder being written), `model` (the run's default model alias), and two helpers for models:
+`ctx.ask(instructions, user_prompt, *, output_type, purpose)` is one recorded structured call through exactly the
+engine's own path (cache, calls.jsonl row, calls/<id>.json, `stage_call` event, cost and failed-call counts; raises
+StageCallError on a failure) and `ctx.dspy_lm(purpose)` returns a RecordedLM whose calls go through `ask`. Never call
+the provider or `calls` directly from a stage.
 
 Rules. Stages run in registration order. With none registered every call below is a no-op and a run is byte-identical
 to one made before the seams existed. `after_type` runs after EVERY merge of a type (each funnel round), so it must be
@@ -31,6 +35,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
+import modelcall
+from pydantic import BaseModel
+
 if TYPE_CHECKING:
     from .calls import CallCache
     from .contract import Item
@@ -39,13 +46,21 @@ if TYPE_CHECKING:
     from .recording import Provider
     from .rundir import RunDir
 
-__all__ = ["After", "StageContext", "StagesMismatch", "after_document", "after_run", "after_type", "before_extract",
+__all__ = ["After", "Reply", "StageCallError", "StageContext", "StagesMismatch", "after_document", "after_run", "after_type", "before_extract",
            "check_recorded", "clear", "names", "register", "registered"]
 
 After = Literal["before_extract", "after_type", "after_document", "after_run"]
 _AT: tuple[str, ...] = ("before_extract", "after_type", "after_document", "after_run")
 _registry: dict[str, list[tuple[str, Callable[..., Any]]]] = {at: [] for at in _AT}
 _NAME = re.compile(r"[a-z0-9_-]+")
+
+
+class Reply(BaseModel):
+    text: str
+
+
+class StageCallError(RuntimeError):
+    """A model call a stage made failed (it is recorded as a failed call)."""
 
 
 class StagesMismatch(RuntimeError):
@@ -59,6 +74,23 @@ class StageContext:
     mode: str
     provider: Provider | None
     run_dir: Path
+    _ask: Callable[..., Any]       # the engine's stage_ask (Execution.stage_ask)
+    model: str                     # the run's default model alias for `ask`
+
+    def ask(self, instructions: str, user_prompt: str, *, output_type: type[BaseModel], purpose: str,
+            model: str | None = None, temperature: float = 0.0, seed: int = 0, max_tokens: int = 2048) -> Any:
+        """One recorded model call: the cache, the calls.jsonl row, calls/<id>.json, a `stage_call` event, the cost and
+        failed-call counts, exactly as the engine's own calls. Returns an `output_type`; raises StageCallError when the
+        model call failed (the failure is recorded). `purpose` names the stage's question (part of the cache key)."""
+        return self._ask(instructions, user_prompt, output_type, purpose, model or self.model,
+                         {"temperature": temperature, "seed": seed, "max_tokens": max_tokens})
+
+    def dspy_lm(self, purpose: str, model: str | None = None) -> Any:
+        """A `modelcall.dspy_lm.RecordedLM` whose every call goes through `ask` (so DSPy steps in a stage are recorded
+        and replayable too). DSPy's own text reply travels as the one field of a `Reply` model."""
+        from modelcall.dspy_lm import RecordedLM
+        alias = model or self.model
+        return RecordedLM(alias, lambda text: self.ask("", text, output_type=Reply, purpose=purpose, model=alias).text)
 
 
 def _reserved() -> frozenset[str]:
@@ -66,7 +98,7 @@ def _reserved() -> frozenset[str]:
     stage must never overwrite."""
     from . import rundir, seal
     files = [v for k, v in vars(rundir).items() if k.endswith(("_FILE", "_DIR")) and isinstance(v, str)]
-    files += [seal.MANIFEST_FILE, "plan.json"]
+    files.append(seal.MANIFEST_FILE)
     return frozenset(f.split(".")[0] for f in files)
 
 
@@ -142,5 +174,5 @@ def after_run(run: RunDir, ctx: StageContext) -> dict[str, Any]:
         try:
             out[name] = fn(run, ctx)
         except Exception as exc:
-            out[name] = {"failed": f"{type(exc).__name__}: {str(exc)[:300]}"}
+            out[name] = {"failed": modelcall.redact(f"{type(exc).__name__}: {exc}")[:300]}
     return out
