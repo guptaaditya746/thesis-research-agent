@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<OAI-PMH><GetRecord><record><metadata>
+<article><front><article-meta><title-group><article-title>Retrieval helps</article-title></title-group>
+<abstract><p>Accuracy rose.</p></abstract></article-meta></front>
+<body><sec><title>Results</title><p>Accuracy rose from <italic>0.61</italic> to 0.74.</p>
+<table-wrap id="t1"><label>Table 1</label><caption><title>Exact match by system.</title></caption>
+<table><thead><tr><th>System</th><th>EM (%)</th><th>F1</th></tr></thead>
+<tbody><tr><td>Baseline</td><td>61.2</td><td>70.4</td></tr>
+<tr><td>RAG-Seq</td><td>74.5</td><td>80.1<sup>*</sup></td></tr>
+<tr><td colspan="3">Ablations</td></tr></tbody></table></table-wrap></sec></body></article>
+</metadata></record></GetRecord></OAI-PMH>

@@ -76,6 +76,7 @@ class Entry:
     published: str
     url: str
     pdf_url: str
+    pmcid: str = ""   # PMC id (PMC1234567) when the paper is also in PubMed Central: the PMC XML rung needs it
 
 
 def search_query(query: str, category: str | None = None) -> str:
@@ -185,6 +186,9 @@ def docling_markdown(data: bytes, kind: Literal["html", "pdf"]) -> str:
 
 
 Convert = Callable[[bytes, Literal["html", "pdf"]], str]
+Source = Literal["latex", "pmc_xml", "html", "pdf"]
+PMC_OAI = ("https://pmc.ncbi.nlm.nih.gov/api/oai/v1/mh/?verb=GetRecord"
+           "&identifier=oai:pubmedcentral.nih.gov:{num}&metadataPrefix=pmc")
 
 
 def paper_body(entry: Entry, client: Client, convert: Convert = docling_markdown
@@ -221,6 +225,54 @@ def paper_body(entry: Entry, client: Client, convert: Convert = docling_markdown
     return body, "pdf", sha256_hex(pdf), reason
 
 
+def _why(exc: Exception) -> str:
+    if isinstance(exc, httpx.HTTPStatusError):
+        return str(exc.response.status_code)
+    return f"{type(exc).__name__}: {exc}" if isinstance(exc, ValueError) else type(exc).__name__
+
+
+def ladder(entry: Entry, client: Client, convert: Convert = docling_markdown
+           ) -> tuple[str, Source, str, str]:
+    """(Markdown, source, why the earlier rungs were not used ("" when the first worked), sha256 of the source).
+
+    The rungs in order: arXiv LaTeX source (`/e-print/<id>`), PMC XML (only when `entry.pmcid` is set), the arXiv
+    HTML page, the PDF through Docling. Each failure is kept as "<rung>: <why>", joined with "; ". ValueError
+    when every rung fails."""
+    from evidence.sources.latex import latex_markdown
+    from evidence.sources.pmc import jats_markdown
+
+    reasons: list[str] = []
+    rungs: list[tuple[str, str, Callable[[bytes], str]]] = [
+        ("latex", entry.url.replace("/abs/", "/e-print/", 1), latex_markdown)]
+    if entry.pmcid:
+        rungs.append(("pmc_xml", PMC_OAI.format(num=entry.pmcid.removeprefix("PMC")), jats_markdown))
+    for name, url, to_markdown in rungs:
+        try:
+            blob = client.get(url)
+            body = to_markdown(blob)
+            return body, name, "; ".join(reasons), sha256_hex(blob)   # type: ignore[return-value]
+        except (httpx.HTTPError, ValueError) as exc:
+            reasons.append(f"{name}: {_why(exc)}")
+    try:
+        body, kind, sha, why = paper_body(entry, client, convert)
+    except ValueError as exc:
+        raise ValueError("; ".join([*reasons, str(exc)])) from exc
+    return body, kind, "; ".join([*reasons, *([why] if why else [])]), sha
+
+
+def fetch_paper(ref: Entry, client: Client | None = None, convert: Convert = docling_markdown
+                ) -> tuple[str, Source, str]:
+    """(Markdown, source, reason): `ladder` without the source hash."""
+    own = client is None
+    client = client or Client()
+    try:
+        body, source, reason, _ = ladder(ref, client, convert)
+        return body, source, reason
+    finally:
+        if own:
+            client.close()
+
+
 def paper_text(entry: Entry, body: str) -> str:
     header = (f"# {entry.title}\n\n{', '.join(entry.authors)}. arXiv:{entry.id}, {entry.published[:10]}. "
               f"{entry.url}\n\n---\n\n")
@@ -230,9 +282,10 @@ def paper_text(entry: Entry, body: str) -> str:
 def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | None = None,
           client: Client | None = None, log: Callable[[str], None] = print,
           now: Callable[[], datetime] = lambda: datetime.now(timezone.utc), ids: list[str] | None = None,
-          convert: Convert | None = None) -> dict[str, Any]:
+          convert: Convert | None = None, structured: bool = False) -> dict[str, Any]:
     """Look the papers up (a search for `query`, or exactly `ids`; one of the two), download, convert, write the
-    corpus into `out` (which must not exist). `convert` defaults to docling_markdown. Returns source.json."""
+    corpus into `out` (which must not exist). `convert` defaults to docling_markdown. `structured` tries LaTeX and PMC XML
+    before the HTML and the PDF (`ladder`); off, as before. Returns source.json."""
     if (query is None) == (ids is None):
         raise ValueError("give a query or a list of ids, not both and not neither")
     if ids is not None:
@@ -274,7 +327,8 @@ def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | No
         fallbacks: list[dict[str, str]] = []
         for n, entry in enumerate(entries, start=1):
             try:
-                body, kind, source_sha, fallback = paper_body(entry, client, convert)
+                body, kind, source_sha, fallback = (
+                    ladder(entry, client, convert) if structured else paper_body(entry, client, convert))
             except ValueError as exc:
                 reason = f"{type(exc).__name__}: {exc}"
                 skipped.append({"id": entry.id, "url": entry.pdf_url, "reason": reason})
@@ -298,6 +352,8 @@ def fetch(query: str | None, out: Path, max_papers: int = 30, category: str | No
                   "fetched": now().isoformat(timespec="seconds"), "ground_truth": False, "api": API_URL,
                   "converter": f"docling {_version('docling')}", "papers": len(papers),
                   "html": sum(p["source"] == "html" for p in papers), "pdf": sum(p["source"] == "pdf" for p in papers),
+                  **({"latex": sum(p["source"] == "latex" for p in papers),
+                      "pmc_xml": sum(p["source"] == "pmc_xml" for p in papers)} if structured else {}),
                   "fallbacks": fallbacks, "skipped": skipped,
                   "note": "real papers from arXiv: a demonstration corpus with no ground truth; runs on it are not scored"}
         (tmp / "source.json").write_text(json.dumps(source, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -339,7 +395,7 @@ def run(args: argparse.Namespace) -> int:
         ids = None
         if args.ids is not None:
             ids = [line.strip() for line in args.ids.read_text(encoding="utf-8").splitlines() if line.strip()]
-        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids)
+        source = fetch(args.query, args.out, args.max, args.category, log=log, ids=ids, structured=True)
     except (ValueError, FileExistsError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
