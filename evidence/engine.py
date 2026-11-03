@@ -110,7 +110,9 @@ from agent.rundir import utc_now
 import modelcall
 from modelcall import JsonlCache
 
-from . import checks, comparisons, extractors, graph, lockfile, kinds, merge, names, reasoner
+from . import checks, comparisons, extractors, graph, lockfile, kinds, merge, names, reasoner, stages
+from . import records as _records  # noqa: F401  registers the evidence types x, cl, ln: items of a general run always load
+from .plan import Plan, load_plan
 from . import seal as sealing
 from .extractors import base as extractor_base
 from .extractors import gliner
@@ -124,7 +126,7 @@ from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE,
                      GRAPH_FILE, LOCATE_FILE, LOCK_FILE, NAMES_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE,
-                     RUN_FILE, Corpus, Events, RunCalls, RunDirExists, new_run_id, read_json, write_lines)
+                     RUN_FILE, Corpus, Events, RunCalls, RunDir, RunDirExists, new_run_id, read_json, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
@@ -157,6 +159,7 @@ class Settings:
     domains: str | None = None                     # the folder of the protocol's pack (None: domains/; a test pack)
     names: Names = "off"                           # on: corpus-wide name groups, names.json (D38); off: as before
     reason: Reason = "on"                          # on: the reasoner's inferences, reason.json (spec 6.3); off: as before
+    plan: Path | None = None                       # the confirmed plan file; None: a run without a plan, as before
 
     def json(self) -> dict[str, Any]:
         # `confirm` only when it is llm, `relink`, `names` and `reason` only when on: the settings of a run made before
@@ -167,7 +170,8 @@ class Settings:
                 **({"relink": self.relink} if self.relink == "on" else {}),
                 **({"domains": self.domains} if self.domains is not None else {}),
                 **({"names": self.names} if self.names == "on" else {}),
-                **({"reason": self.reason} if self.reason == "on" else {})}
+                **({"reason": self.reason} if self.reason == "on" else {}),
+                **({"plan": str(self.plan)} if self.plan is not None else {})}
 
 
 # --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
@@ -322,7 +326,9 @@ class Execution:
                  locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
                  phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
                  names: Names = "off", names_model: str | None = None, names_ask: bool = True,
-                 reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None) -> None:
+                 reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None,
+                 plan: Plan | None = None) -> None:
+        self.plan = plan                                 # the confirmed plan, handed to the stage seams
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
         # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
         self.reason, self.domains, self.recorded_reason = reason, domains or DOMAINS, recorded_reason
@@ -351,6 +357,7 @@ class Execution:
         if self.names == "on":
             self.texts[paper.id] = text
         state = DocState(paper.ref, text, Index(text))
+        stages.before_extract(state, self.plan)
         self.screen(state)
         screen = self.protocol.screen
         if self.strategy == "gaps" and state.relevant is False and screen is not None and screen.on_fail == "skip":
@@ -361,7 +368,7 @@ class Execution:
             self.funnel_loop(state)
         else:
             self.run_position(state, self.protocol.phases(), None, round_no=0)
-        self.items[paper.id] = state.items()
+        self.items[paper.id] = state.items() + stages.after_document(state)
         self.funnel[paper.id] = {"screen": state.screen, "skipped": state.skipped, "steps": state.steps,
                                  "decisions": state.decisions, "stopped_after": state.stopped_after}
         if self.relink == "on":   # the final check: a link to no item is listed, never silent (off: runs before it)
@@ -493,6 +500,7 @@ class Execution:
             dropped = (self._unconfirmed(etype, items)
                        if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
             items = [i for i in items if i.item_id not in dropped]
+            items = stages.after_type(state, etype, items)
             relinked = self._relink(state, etype, remap, items) if self.relink == "on" else []
             state.merged[etype] = items
             # only a merge that dropped or relinked items carries the key: a record without them is unchanged
@@ -763,6 +771,8 @@ class Execution:
             custom = {"kind": self.protocol.kind, "answer_sha256": self.outputs[ANSWER_FILE],
                       "rule": f"kind:{self.protocol.kind}"}
         self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id=ENGINE, custom=custom)
+        for name, result in stages.after_run(RunDir(self.root), self.plan).items():
+            self.outputs[f"{name}.json"] = write_json(self.root / f"{name}.json", result)
         return answer
 
 
@@ -806,7 +816,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         settings = replace(settings, gliner_model=served["model"] if served else None)
     cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     domains = Path(settings.domains) if settings.domains is not None else None
-    lock = lockfile.lock(protocol, cascades, domains)
+    plan = load_plan(settings.plan) if settings.plan is not None else None
+    lock = lockfile.lock(protocol, cascades, domains, plan=plan)
     try:
         root.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
@@ -817,7 +828,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
                    confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
                    names_ask=settings.selection != "regex-only", reason=settings.reason,
-                   domains=Path(settings.domains) if settings.domains is not None else None,
+                   domains=Path(settings.domains) if settings.domains is not None else None, plan=plan,
                    recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
@@ -845,7 +856,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         if served:
             settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
-    final = lockfile.lock(protocol, cascades, domains)
+    final = lockfile.lock(protocol, cascades, domains, plan=plan)
     if final["extractors"] != lock["extractors"]:   # a GLiNER extractor learned its model during the run: the lock names the ids it used
         ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, final)
     write_json(root / RUN_FILE, {
@@ -875,14 +886,16 @@ def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, c
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
         retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
-        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off", reason: Reason = "on") -> Path:
+        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off", reason: Reason = "on",
+        plan: Path | str | None = None) -> Path:
     """A normal run: cached calls are reused, new ones are made and stored. `domains`: the folder of the protocol's
     pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
                         confirm=confirm, relink=relink, names=names, reason=reason,
-                        domains=str(Path(domains).resolve()) if domains is not None else None)
+                        domains=str(Path(domains).resolve()) if domains is not None else None,
+                        plan=Path(plan).resolve() if plan is not None else None)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
                        retry_errors=retry_errors, workers=workers)

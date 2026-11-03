@@ -45,7 +45,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     relink=s.get("relink", "off"),      # a run made before relinking left those links dangling
                     domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
                     names=s.get("names", "off"),        # a run made before the names step grouped no names
-                    reason=s.get("reason", "off"))      # a run made before the reasoner had no inferences
+                    reason=s.get("reason", "off"),
+                    plan=Path(s["plan"]) if s.get("plan") else None)      # a run made before the reasoner had no inferences
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
