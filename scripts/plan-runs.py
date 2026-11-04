@@ -3,8 +3,8 @@
     plan-runs.py plan    --set S --src DIR --sample FILE --plans DIR --cache DIR [--corpus DIR]
     plan-runs.py confirm --set S --src DIR --sample FILE --plans DIR --by NAME [--corpus DIR]
     plan-runs.py run     --set S --src DIR --sample FILE --plans DIR --cache DIR --runs DIR --confirm auto|hand
-                         --reasoning on|off [--links on|off] [--confirm-by NAME] [--model ALIAS] [--workers N]
-                         [--corpus DIR]
+                         --reasoning on|off [--links on|off] [--redo-unchecked] [--confirm-by NAME] [--model ALIAS]
+                         [--workers N] [--corpus DIR]
 
 `plan` writes <plans>/<question id>.json for every question of FILE (sample.json, written by `evaluate wholerun`):
 the planner (orch-model) and its critic, nothing confirmed; the word list holds the field ontology's other names.
@@ -19,7 +19,8 @@ never overwritten. --reasoning off: a real switch (no reasoner, no field ontolog
 it when the job has no network).
 A question whose run folder is sealed `complete` is skipped. A folder that failed, or was never sealed, is moved to
 <question id>.failed-<n> and the question runs again, asking failed model calls again (the record cache makes the
-rest free).
+rest free). --redo-unchecked (default off): a complete folder whose stage_report.json or recheck_report.json lists
+items left unchecked by a failed call is moved to <question id>.redo-<n> and run again the same way.
 --set offtemplate: the 12 off-template questions (no --src, no --sample, --confirm auto --reasoning on); runs go to
 <runs>/<question id>/ for `evaluate offtemplate`. --set synthetic --corpus DIR --question TEXT: one question on a
 Claude-written corpus, run to <runs>/effect-<corpus name>/ (for `evaluate leak`)."""
@@ -101,6 +102,10 @@ def confirm_hand(args: argparse.Namespace, qs: list) -> int:
         raise SystemExit("plan-runs: confirm needs --by NAME, a person (not system)")
     folder = args.plans / HAND
     folder.mkdir(parents=True, exist_ok=True)
+    missing = [q.id for q in qs[:HAND_N] if not (folder / f"{q.id}.json").is_file()
+               and not (args.plans / f"{q.id}.json").is_file()]
+    if missing:   # before any file is written
+        raise SystemExit(f"plan-runs: no plan for {', '.join(missing)} in {args.plans}: run `plan-runs.py plan` first")
     for q in qs[:HAND_N]:
         path = folder / f"{q.id}.json"
         if path.is_file():
@@ -122,10 +127,27 @@ def sealed_complete(folder: Path) -> bool:
         return False
 
 
-def set_aside(folder: Path) -> Path:
-    """Move a failed or unsealed run folder to <name>.failed-<n> (n = 1, 2, ...); returns the new path."""
+def has_unchecked(folder: Path) -> bool:
+    """The run left items unchecked by a failed model call: any note in stage_report.json, or a recheck find whose
+    call failed or whose reply did not parse (recheck_report.json)."""
+    def read(name: str) -> dict:
+        try:
+            data = json.loads((folder / name).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        return data if isinstance(data, dict) else {}
+    if any(notes for docs in read("stage_report.json").values() if isinstance(docs, dict) for notes in docs.values()):
+        return True
+    return any(str(u.get("why", "")).startswith(("failed call:", "unparseable reply:"))
+               for doc in read("recheck_report.json").values() if isinstance(doc, dict)
+               for u in doc.get("unchecked") or [])
+
+
+def set_aside(folder: Path, tag: str = "failed") -> Path:
+    """Move a run folder to <name>.<tag>-<n> (n = 1, 2, ...): `failed` for a failed or unsealed run, `redo` for a
+    complete one run again for its unchecked items; returns the new path."""
     n = 1
-    while (target := folder.with_name(f"{folder.name}.failed-{n}")).exists():
+    while (target := folder.with_name(f"{folder.name}.{tag}-{n}")).exists():
         n += 1
     folder.rename(target)
     return target
@@ -136,10 +158,12 @@ def run_all(args: argparse.Namespace, qs: list) -> int:
     from evidence.plan import load_plan, write_plan
     from evidence.planner import confirm_all
     who = "system" if args.confirm == "auto" else args.confirm_by
-    if args.confirm == "hand" and (not who or who == "system"):
-        raise SystemExit("plan-runs: --confirm hand needs --confirm-by NAME, a person (not system)")
     conf = AUTO if args.confirm == "auto" else HAND
     pool = qs if args.confirm == "auto" else qs[:HAND_N]
+    written = all((args.plans / HAND / f"{q.id}.json").is_file() for q in pool)   # `confirm` wrote them all
+    if args.confirm == "hand" and (who == "system" or (not who and not written)):
+        raise SystemExit("plan-runs: --confirm hand needs --confirm-by NAME, a person (not system), or the hand "
+                         "plans written by `plan-runs.py confirm`")
     out = args.runs if args.set in ("offtemplate", "synthetic") else args.runs / conf / args.reasoning   # offtemplate: <runs>/<qid>/
     out.mkdir(parents=True, exist_ok=True)
     bad = 0
@@ -147,10 +171,13 @@ def run_all(args: argparse.Namespace, qs: list) -> int:
         folder = out / q.id
         retry = False
         if folder.exists():
-            if sealed_complete(folder):
+            if sealed_complete(folder) and not (args.redo_unchecked and has_unchecked(folder)):
                 print(f"skip {q.id}: {folder} is complete")
                 continue
-            print(f"moved {folder} (failed or unsealed) to {set_aside(folder).name}; running {q.id} again")
+            if sealed_complete(folder):
+                print(f"moved {folder} (complete, items unchecked) to {set_aside(folder, 'redo').name}; running {q.id} again")
+            else:
+                print(f"moved {folder} (failed or unsealed) to {set_aside(folder).name}; running {q.id} again")
             retry = True
         confirmed = args.plans / conf / f"{q.id}.json"
         if not confirmed.is_file():   # one confirmed plan per question and row, shared by the on and off runs
@@ -187,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--confirm", choices=("auto", "hand"), required=True)
             p.add_argument("--reasoning", choices=("on", "off"), required=True)
             p.add_argument("--links", choices=("on", "off"), default="on")
+            p.add_argument("--redo-unchecked", action="store_true",
+                           help="also rerun a complete run whose reports list items a failed call left unchecked")
             p.add_argument("--confirm-by")
             p.add_argument("--model")
             p.add_argument("--workers", type=int, default=3)

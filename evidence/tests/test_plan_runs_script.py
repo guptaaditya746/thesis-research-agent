@@ -109,3 +109,38 @@ def test_confirm_writes_and_prints_then_keeps_a_hand_edited_plan(tmp_path: Path,
     fake_run(monkeypatch, calls)
     assert mod.main(argv(plans, corpus, tmp_path, "--reasoning", "on", "--confirm-by", "aditya", confirm="hand")) == 0
     assert hand.read_bytes() == before and calls[0]["plan"] == hand   # the run uses the edited file as it is
+
+
+def test_redo_unchecked_reruns_a_complete_run_with_unchecked_items(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    plans, corpus = unconfirmed(tmp_path)
+    calls: list[dict[str, Any]] = []
+    fake_run(monkeypatch, calls)
+    mod = script()
+    assert mod.main(argv(plans, corpus, tmp_path, "--reasoning", "on")) == 0
+    folder = tmp_path / "runs" / "effect-corpus-x"
+    (folder / "stage_report.json").write_text(json.dumps({"claims": {"S1": ["unchecked: sentence 0-9: x"]}}),
+                                              encoding="utf-8")
+    assert mod.main(argv(plans, corpus, tmp_path, "--reasoning", "on")) == 0 and len(calls) == 1   # default off
+    assert mod.main(argv(plans, corpus, tmp_path, "--reasoning", "on", "--redo-unchecked")) == 0
+    assert (tmp_path / "runs" / "effect-corpus-x.redo-1").is_dir() and calls[1]["retry_errors"] is True
+    assert mod.main(argv(plans, corpus, tmp_path, "--reasoning", "on", "--redo-unchecked")) == 0
+    assert len(calls) == 2                                   # the new run has nothing unchecked: skipped
+
+
+def test_redo_unchecked_reads_failed_recheck_calls(tmp_path: Path) -> None:
+    mod = script()
+    (tmp_path / "recheck_report.json").write_text(json.dumps({"S1": {"unchecked": [
+        {"item_id": "a", "why": "the model gave no verdict for this find"}]}}), encoding="utf-8")
+    assert not mod.has_unchecked(tmp_path)
+    (tmp_path / "recheck_report.json").write_text(json.dumps({"S1": {"unchecked": [
+        {"item_id": "a", "why": "failed call: StageCallError: recheck: down"}]}}), encoding="utf-8")
+    assert mod.has_unchecked(tmp_path)
+
+
+def test_confirm_refuses_before_writing_when_a_plan_is_missing(tmp_path: Path) -> None:
+    plans, corpus = unconfirmed(tmp_path)
+    (plans / "effect-corpus-x.json").unlink()
+    with pytest.raises(SystemExit, match="plan-runs.py plan"):
+        script().main(["confirm", "--set", "synthetic", "--corpus", str(corpus), "--question", "Q?", "--plans",
+                       str(plans), "--by", "aditya"])
+    assert not list((plans / "hand-confirmed").glob("*.json"))
