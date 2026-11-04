@@ -495,10 +495,19 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
         if query_problem(query) is None:
             lines.append(EvidenceLine(id=OVERSELL_ID, question=OVERSELL_QUESTION, query=query,
                                       template=OVERSELL_ID if text else None, removable=False))
-    words = write_words(question, things) if things else empty
+    words = with_ontology_names(write_words(question, things), field) if things else empty
     plan = Plan(question=question, field=field, lines=lines, main_rule=rule, words=words, decisions=decisions,
                 clarifications=clar, measures=measures)
     return plan, how
+
+
+def with_ontology_names(words: WordList, field: str) -> WordList:
+    """The word list with the field ontology's other names of each thing (MeSH entry terms, CS-KG labels) in
+    `ontology_names` (final review I6), so they are part of the locked list the run compiles. No ontology file on
+    disk: the list comes back unchanged (nothing is fetched)."""
+    from ..ontology.names import add_ontology_names
+    from ..planrun import load_cached
+    return add_ontology_names(words, load_cached(field))
 
 
 def critic(plan: Plan, *, record: Callable[[dict[str, str]], None] | None = None) -> Plan:

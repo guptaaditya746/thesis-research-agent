@@ -25,7 +25,8 @@ its file hashes.
 `run --plan` is a plan run (evidence/planrun.py): the confirmed plan file (every decision confirmed, else exit 2)
 replaces the protocol, which is written from it by code; the run adds the plan's stages and answers the plan's
 evidence lines (answer.json: lines, main answer, labels, reruns; records.nq; ontology.json). `--names`, `--confirm`,
-`--relink` and `--reason` are fixed for a plan run (off, llm, on, on).
+`--relink` are fixed for a plan run (off, llm, on); `--reason on|off` and `--links on|off` (plan runs only) switch its
+reasoning and its builds-on links.
 `estimate` prints the extractor and screen calls (low, high) and the tokens a run would need, from a regex-only
 pass over the corpus (no model; nothing is written): `--from-run` takes the tokens per call of a finished run
 instead of chars/4. `--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
@@ -105,6 +106,8 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--reason", default="on", choices=["on", "off"],
                    help="on: the reasoner reads the pack's ontology, so a narrower metric answers a broader question "
                         "metric, and flags links to an item of the wrong kind (reason.json; default); off: as before")
+    r.add_argument("--links", default="on", choices=["on", "off"],
+                   help="plan runs: off leaves out the builds-on links (no OpenAlex request; default on)")
     r.add_argument("--workers", type=_workers, default=3,
                    help="papers whose model calls run at once; outputs do not depend on it")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
@@ -246,11 +249,10 @@ def _dispatch(args: argparse.Namespace) -> int:
             print("error: give --protocol or --plan (one of them)", file=sys.stderr)
             return 2
         if args.plan is not None:
-            fixed = {"--names": (args.names, "off"), "--confirm": (args.confirm, "llm"), "--relink": (args.relink, "on"),
-                     "--reason": (args.reason, "on")}
+            fixed = {"--names": (args.names, "off"), "--confirm": (args.confirm, "llm"), "--relink": (args.relink, "on")}
             bad = [f"{k} {v}" for k, (v, want) in fixed.items() if v != want]
             if bad:
-                print(f"error: a plan run fixes {', '.join(bad)} (names off, confirm llm, relink on, reason on)",
+                print(f"error: a plan run fixes {', '.join(bad)} (names off, confirm llm, relink on)",
                       file=sys.stderr)
                 return 2
             from .plan import load_plan
@@ -265,7 +267,8 @@ def _dispatch(args: argparse.Namespace) -> int:
                 from . import planrun
                 root = planrun.run(args.plan, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                                    model=args.model, imports=args.imports, run_id=args.run_id,
-                                   retry_errors=args.retry_errors, strategy=args.strategy, workers=args.workers)
+                                   retry_errors=args.retry_errors, strategy=args.strategy, workers=args.workers,
+                                   reasoning=args.reason, links=args.links)
             else:
                 root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                            model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,

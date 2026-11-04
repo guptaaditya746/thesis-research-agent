@@ -258,33 +258,62 @@ def links_stage(doc: Any, ctx: Any) -> list[Item]:
     from . import openalex
     from .contract import Span
     from .records import item
+    from .unchecked import ITEM_ERRORS, note, reason
     out: list[Item] = []
+    skipped: list[str] = []
     texts = {k: v for k, v in ctx.texts().items() if k != doc.doc.id}
     for s, e, doi, arxiv in link_sentences(doc.text):
-        relation, cited = openalex.read_link(doc.text[s:e], ctx)
+        try:
+            relation, cited = openalex.read_link(doc.text[s:e], ctx)
+        except ITEM_ERRORS as exc:   # one failed sentence is skipped, listed in stage_report.json
+            skipped.append(f"unchecked: sentence {s}-{e}: {reason(exc)}")
+            continue
         if not relation:
             continue
         span = Span.of("link", selector_at(doc.text, s, e, file=doc.doc.file, sha256=doc.doc.sha256))
         record = openalex.resolve(cited or doc.text[s:e], doi, arxiv, texts, ctx, subject_doc=doc.doc.id, span=span,
                                   relation=relation)
         out.append(item(record))
+    note(ctx, "links", doc.doc.id, skipped)
     return out
 
 
-def stage_entries(plan: Plan) -> list[tuple[str, Any, Callable[..., Any]]]:
-    """The plan run's own stages, in order (name, seam, fn)."""
+def run_steps(*, reason: str = "on", links: str = "on") -> tuple[Any, ...]:
+    """The DSPy steps a plan run calls (each may run on tuned instructions; the lock records those): the module-level
+    Step instances, and the names of the steps made per call."""
+    from . import claims, experiments, openalex
+    from .extractors import recheck
+    from .ontology import fill
+    out: list[Any] = [experiments.NAME_STEP, recheck.STEP, claims._READ, claims._GROUP]
+    if links == "on":
+        out.append(openalex._READ)
+    if reason == "on":
+        out.append(fill.STEP)
+    return tuple(out)
+
+
+def no_tree(run: Any, ctx: Any) -> dict[str, Any]:
+    """The `ontology` stage of a run with reasoning off: no tree, no model call."""
+    return {"tree": "reasoning off: no tree"}
+
+
+def stage_entries(plan: Plan, *, reason: str = "on", links: str = "on") -> list[tuple[str, Any, Callable[..., Any]]]:
+    """The plan run's own stages, in order (name, seam, fn). `links` off leaves out the builds-on links stage (no
+    ReadLink call, no OpenAlex request); `reason` off gives the ontology stage `no_tree`."""
     from . import experiments
     from .claims import claim_stage
     from .extractors.recheck import recheck, recheck_report
     from .ontology.fill import ontology_stage
+    from . import unchecked
     return [
         ("map-experiments", "before_extract", experiments.before_extract),
         ("recheck", "after_type", recheck),
         ("experiment-items", "after_document", experiments.after_document),
         ("claims", "after_document", claim_stage()),   # subject and cues from the plan's word list
-        ("links", "after_document", links_stage),
+        *([("links", "after_document", links_stage)] if links == "on" else []),
         ("recheck_report", "after_run", recheck_report),
-        ("ontology", "after_run", ontology_stage),
+        (unchecked.NAME, "after_run", unchecked.report),   # the items the per-item stages could not read
+        ("ontology", "after_run", ontology_stage if reason == "on" else no_tree),
     ]
 
 
@@ -297,10 +326,17 @@ def group_claims(items: dict[str, list[Item]], ctx: Any) -> tuple[dict[str, list
     from .contract import Span
     from .records import CLAIM, ClaimRecord, item
 
+    from .unchecked import GROUPS, ITEM_ERRORS, RUN, note, reason
+
     claims = [i for its in items.values() for i in its if i.evidence_type == CLAIM]
     if not claims:
         return items, {}
-    mapping = group_relations([str(i.fields["relation"]) for i in claims], ctx)
+    verbs = [str(i.fields["relation"]) for i in claims]
+    try:
+        mapping = group_relations(verbs, ctx)
+    except ITEM_ERRORS as exc:   # the claims are kept ungrouped ("other: <verb>"), listed in stage_report.json
+        mapping = {v: f"other: {v}" for v in sorted({v.strip() for v in verbs if v.strip()}, key=str.casefold)}
+        note(ctx, GROUPS, RUN, [f"unchecked: claim groups: {reason(exc)}"])
 
     def regroup(it: Item) -> Item:
         if it.evidence_type != CLAIM:
@@ -401,7 +437,8 @@ OUTSIDE = "outside the set"
 
 
 def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
-    """The run's builds-on links for the answer: a cited work that is no paper of the corpus says "outside the set"."""
+    """The run's builds-on links for the answer: a cited work that is no paper of the corpus says "outside the set".
+    `work` is the resolved OpenAlex work id ("W2741809807"), null when the link was not resolved through OpenAlex."""
     from .records import LINK
     out = []
     for doc in sorted(items):
@@ -409,8 +446,9 @@ def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
             if it.evidence_type == LINK:
                 f = it.fields
                 out.append({"paper": f["subject_doc"], "relation": f["relation"], "ref": f["object_ref"],
-                            "in_set": f.get("object_doc"),
-                            "text": OUTSIDE if f["outside_set"] else f"in the set: {f.get('object_doc')}"})
+                            "work": f.get("work"), "in_set": f.get("object_doc"),
+                            "text": OUTSIDE if f["outside_set"] else f"in the set: {f.get('object_doc')}",
+                            **({"resolve_failed": f["resolve_failed"]} if f.get("resolve_failed") else {})})
     return out
 
 
@@ -433,19 +471,20 @@ def answer(plan: Plan, store: Any, synthesis: dict[str, Any], groups: Mapping[st
             "synthesis": synthesis}
 
 
-def records(papers: list[Any], items: dict[str, list[Item]], roles: Any, field: str) -> Any:
-    """The records graph (W4 build) with the field's ontology (W2 sources.load; None: no tree)."""
+def records(papers: list[Any], items: dict[str, list[Item]], roles: Any, field: str, *, reason: str = "on") -> Any:
+    """The records graph (W4 build) with the field's ontology (W2 sources.load; None: no tree, and always None when
+    `reason` is off)."""
     from .kg.build import build
-    from .ontology.sources import load
-    return build(papers, items, roles, load_cached(field))
+    return build(papers, items, roles, load_cached(field) if reason == "on" else None)
 
 
 def finish(plan: Plan, papers: list[Any], items: dict[str, list[Item]], roles: Any, ctx: Any,
-           synthesis: dict[str, Any]) -> tuple[dict[str, list[Item]], bytes, dict[str, Any]]:
-    """(the items with claim groups, records.nq bytes, answer.json) of a plan run, after its extraction."""
+           synthesis: dict[str, Any], *, reason: str = "on") -> tuple[dict[str, list[Item]], bytes, dict[str, Any]]:
+    """(the items with claim groups, records.nq bytes, answer.json) of a plan run, after its extraction. `reason`
+    off: the records graph has no field ontology."""
     from .kg.build import serialize
     items, groups = group_claims(items, ctx)
-    store = records(papers, items, roles, plan.field)
+    store = records(papers, items, roles, plan.field, reason=reason)
     return items, serialize(store), answer(plan, store, synthesis, groups, items, directions(plan, items))
 
 
@@ -478,13 +517,19 @@ def _load(field: str, _hashes: str) -> Any:
     return load(field)
 
 
-def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, **kw: Any) -> Path:
+def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, *, reasoning: str = "on", links: str = "on",
+        **kw: Any) -> Path:
     """A plan run (`evidence run --plan`): the protocol from the plan, the plan's stages, then `engine.execute_run`.
-    `kw` as `engine.run` takes them (cache, model, provider, workers, run_id, retry_errors, strategy, selection)."""
+    `kw` as `engine.run` takes them (cache, model, provider, workers, run_id, retry_errors, strategy, selection).
+    `reasoning` off (Settings.reason "off", recorded in run.json): no reasoner, no field ontology in the records graph
+    or the lock, and the ontology stage writes "reasoning off: no tree" with no model call. `links` off (recorded as
+    settings "links": "off"): no builds-on links stage, so no ReadLink call and no OpenAlex request."""
     from . import engine
+    if reasoning not in ("on", "off") or links not in ("on", "off"):
+        raise ValueError(f"reasoning and links are 'on' or 'off', not {reasoning!r} / {links!r}")
     plan = load_plan(plan_path)
     check_runnable(plan)
-    return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, **kw)
+    return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, reason=reasoning, links=links, **kw)
 
 
 # --- after a human reviews the LLM's ontology links -----------------------------------------------------------------
@@ -501,7 +546,8 @@ def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dic
     review(run, accepted, rejected)
     plan = load_plan(run.file("plan.json"))
     before = read_json(run.file("answer.json"))
-    corpus = Corpus(read_json(run.file(RUN_FILE))["settings"]["corpus"])
+    settings = read_json(run.file(RUN_FILE))["settings"]
+    corpus = Corpus(settings["corpus"])
     by_file = {p.file: p.id for p in corpus.papers}
     items: dict[str, list[Item]] = {p.id: [] for p in corpus.papers}
     for it in run.items():
@@ -509,7 +555,7 @@ def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dic
         if doc is not None:
             items[doc].append(it)
     pairs = [tuple(x.strip() for x in a.split("->", 1)) for a in accepted if "->" in a]
-    graph = load_cached(plan.field)
+    graph = load_cached(plan.field) if settings.get("reason") == "on" else None   # reasoning off: no field ontology
     if pairs:
         import rdflib
         graph = add_links(graph if graph is not None else rdflib.Graph(), pairs)  # type: ignore[arg-type]

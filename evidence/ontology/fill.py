@@ -21,6 +21,7 @@ from evidence.rundir import RunDir
 from evidence.vocab import EV as EV_IRI
 
 EV = Namespace(EV_IRI)
+STEP = "propose_parent"   # the DSPy step name of the LLM mini-tree
 LLM_TREE = "made by LLM"
 ONTOLOGY_TREE = "ontology tree"
 LINKS_REVIEW_FILE = "links_review.json"
@@ -100,7 +101,7 @@ def _creates_cycle(child: str, parent: str, chosen: dict[str, str]) -> bool:
 def propose_parents(unplaced: list[str], graph: rdflib.Graph, question: str) -> list[tuple[str, str]]:
     """(name, parent) for each unplaced name the model could place. The parent must be an existing class label of
     `graph` or another name of `unplaced`, and never closes a loop; anything else is dropped. Needs `steps.configure`."""
-    step = steps.Step(ProposeParent, "propose_parent")
+    step = steps.Step(ProposeParent, STEP)
     labelled = _labels(graph)
     chosen: dict[str, str] = {}
     for name in unplaced:

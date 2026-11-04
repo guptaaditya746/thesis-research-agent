@@ -52,7 +52,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
                     names=s.get("names", "off"),        # a run made before the names step grouped no names
                     reason=s.get("reason", "off"),      # a run made before the reasoner had no inferences
-                    plan=plan, stage_set=s.get("stage_set"))   # a plan run: its own stages again
+                    plan=plan, stage_set=s.get("stage_set"),   # a plan run: its own stages again
+                    links=s.get("links", "on"))         # a plan run made before the switch had its links stage
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
@@ -102,12 +103,14 @@ def _stamp() -> str:
 
 
 def _attempts(run: Path) -> dict[str, int]:
-    """cache key -> the attempt of the record each call of the run used (calls.py), the names checks too."""
+    """cache key -> the attempt of the record each call of the run used (calls.py), the names checks and the stages'
+    own calls (`stage_call` events) too."""
     run_dir = RunDir(run)
     used = {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
             for e in run_dir.events_of("extractor_call") or [] if e["status"] != "skipped"}
-    return used | {c["key"]: c["attempt"] for e in run_dir.events_of("names") or []
-                   for c in e["custom_metadata"].get("checks", [])}
+    names = {c["key"]: c["attempt"] for e in run_dir.events_of("names") or [] for c in e["custom_metadata"].get("checks", [])}
+    stage = {e["custom_metadata"]["key"]: e["custom_metadata"]["attempt"] for e in run_dir.events_of("stage_call") or []}
+    return used | names | stage
 
 
 def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:

@@ -19,6 +19,9 @@ class WordList(Frozen):
     cues: list[str]
     written_by: str
     ontology_names: dict[str, list[str]]
+    # {step name: sha256} of the tuned word-writer instructions that wrote the list (evidence.steps.tuned_sha256 at
+    # plan time); left out of the file and the hashes when none was tuned, so older plans are unchanged
+    tuned_sha256: dict[str, str] = Field(default_factory=dict, exclude_if=lambda v: not v)
 
     @property
     def sha256(self) -> str:

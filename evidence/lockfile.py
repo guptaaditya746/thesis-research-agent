@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from . import reasoner
+from . import reasoner, steps
 from .contract import Extractor
 from .plan import Plan
 from .protocol import ExtractorRef, Protocol
@@ -21,12 +21,17 @@ __all__ = ["diff", "lock"]
 
 
 def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
-         domains: Path | None = None, *, plan: Plan | None = None) -> dict[str, Any]:
+         domains: Path | None = None, *, plan: Plan | None = None, reason: str = "on",
+         step_names: tuple[Any, ...] = ()) -> dict[str, Any]:
     """The lock of a run of `protocol` with `cascades` (engine.build_extractors); `domains`: the pack's folder
     when it is not domains/; `plan`: the confirmed plan of a planned run, which adds `plan_sha256` and
     `words_sha256` and `field_ontology_sha256` ({file name: sha256} of the plan field's ontology files the plan run's
     graph and ontology report read, evidence/ontology `ontology_hashes`; the pack's own ontology stays under
-    `ontology_sha256`). A run without a plan locks exactly as before, without those keys."""
+    `ontology_sha256`; {} when `reason` is off: the run reads no field ontology) and `tuned_steps_sha256` ({step name:
+    sha256} of the tuned instructions the run's own DSPy steps `step_names` run on, as each Step loaded them; {} when
+    none is tuned; final review C4). Which tuned instructions wrote the word list is in the plan
+    (`words.tuned_sha256`, at plan time). A tuned file for a step the run does not call never enters the lock, so it
+    does not change a replay. A run without a plan locks exactly as before, without those keys."""
     pack = protocol.pack()
     onto = reasoner.ontology_sha256(pack) if domains is None else reasoner.ontology_sha256(pack, domains)
     out: dict[str, Any] = {
@@ -38,7 +43,8 @@ def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extrac
         out["plan_sha256"] = plan.sha256
         out["words_sha256"] = plan.words.sha256
         from .ontology.sources import ontology_hashes
-        out["field_ontology_sha256"] = ontology_hashes(plan.field)
+        out["field_ontology_sha256"] = ontology_hashes(plan.field) if reason == "on" else {}
+        out["tuned_steps_sha256"] = steps.tuned_sha256(step_names)
     return out
 
 
@@ -104,6 +110,10 @@ def _lock_lines(a: dict[str, Any], b: dict[str, Any]) -> list[str]:
     for name in sorted(set(fa) | set(fb)):
         if fa.get(name) != fb.get(name):
             lines.append(f"field ontology {name}: {(fa.get(name) or 'none')[:12]} -> {(fb.get(name) or 'none')[:12]}")
+    ta, tb = a.get("tuned_steps_sha256") or {}, b.get("tuned_steps_sha256") or {}
+    for name in sorted(set(ta) | set(tb)):
+        if ta.get(name) != tb.get(name):
+            lines.append(f"tuned step {name}: {(ta.get(name) or 'none')[:12]} -> {(tb.get(name) or 'none')[:12]}")
     return lines
 
 

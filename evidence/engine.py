@@ -141,6 +141,7 @@ Confirm = Literal["none", "llm"]
 Relink = Literal["off", "on"]
 Names = Literal["off", "on"]
 Reason = Literal["off", "on"]
+Links = Literal["off", "on"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -168,6 +169,7 @@ class Settings:
     reason: Reason = "on"                          # on: the reasoner's inferences, reason.json (spec 6.3); off: as before
     plan: Path | None = None                       # the confirmed plan file; None: a run without a plan, as before
     stage_set: str | None = None                   # "plan": a plan run (its own stages, the plan's answer); None: as before
+    links: Links = "on"                            # plan runs: off leaves out the builds-on links stage (no OpenAlex)
 
     def json(self) -> dict[str, Any]:
         # `confirm` only when it is llm, `relink`, `names` and `reason` only when on: the settings of a run made before
@@ -178,9 +180,10 @@ class Settings:
                 **({"relink": self.relink} if self.relink == "on" else {}),
                 **({"domains": self.domains} if self.domains is not None else {}),
                 **({"names": self.names} if self.names == "on" else {}),
-                **({"reason": self.reason} if self.reason == "on" else {}),
+                **({"reason": self.reason} if self.reason == "on" or self.stage_set is not None else {}),   # a plan run: on or off
                 **({"plan": str(self.plan)} if self.plan is not None else {}),
-                **({"stage_set": self.stage_set} if self.stage_set is not None else {})}
+                **({"stage_set": self.stage_set} if self.stage_set is not None else {}),
+                **({"links": self.links} if self.links == "off" else {})}   # only when off: older runs unchanged
 
 
 # --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
@@ -356,7 +359,7 @@ class Execution:
         self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
         self.ctx = stages.StageContext(plan, calls, mode, provider, root, self.stage_ask,   # what the stage seams get
                                        names_model or names_alias(cascades, None), source_dir=source_dir,
-                                       extra=extra_stages or {}, _texts=self.corpus_texts)
+                                       extra=extra_stages or {}, _texts=self.corpus_texts, _bad_reply=self.stage_bad_reply)
         self.records_nq: bytes | None = None
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []
@@ -758,6 +761,14 @@ class Execution:
             raise stages.StageCallError(f"{purpose}: {asked.value.get('error')}")
         return output_type.model_validate(asked.value["output"])
 
+    def stage_bad_reply(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
+                        settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> None:
+        """A stage's recorded reply (the request `stage_ask` made) did not parse: mark that record so a rerun with
+        `retry_errors` asks it again (CallCache.mark_bad). The record itself is kept: this run and its replay read it."""
+        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
+                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}
+        self.calls.mark_bad(f"stage:{purpose}", request)
+
     def reason_step(self) -> reasoner.Inferences | None:
         """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a
         replay, the recorded ones (`recorded_reason`), never reasoned again; reason.json and a `reason` event. None
@@ -802,7 +813,7 @@ class Execution:
         if self.plan_run and self.plan is not None:   # claim groups, the records graph, the lines and their reruns
             from . import planrun
             self.items, self.records_nq, answer = planrun.finish(self.plan, papers, self.items, self.roles, self.ctx,
-                                                                 synthesis)
+                                                                 synthesis, reason=self.reason)
             path = self.root / planrun.RECORDS_FILE
             path.write_bytes(self.records_nq)
             self.outputs[planrun.RECORDS_FILE] = sha256_hex(self.records_nq)
@@ -873,7 +884,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     domains = Path(settings.domains) if settings.domains is not None else None
     plan = load_plan(settings.plan) if settings.plan is not None else None
     extra = plan_stages(settings, plan)
-    lock = lockfile.lock(protocol, cascades, domains, plan=plan)
+    used_steps = plan_step_names(settings)
+    lock = lockfile.lock(protocol, cascades, domains, plan=plan, reason=settings.reason, step_names=used_steps)
     try:
         root.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
@@ -917,7 +929,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         if served:
             settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
-    final = lockfile.lock(protocol, cascades, domains, plan=plan)
+    final = lockfile.lock(protocol, cascades, domains, plan=plan, reason=settings.reason, step_names=used_steps)
     if final["extractors"] != lock["extractors"]:   # a GLiNER extractor learned its model during the run: the lock names the ids it used
         ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, final)
     write_json(root / RUN_FILE, {
@@ -934,6 +946,14 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     return root
 
 
+def plan_step_names(settings: Settings) -> tuple[Any, ...]:
+    """The DSPy steps a plan run calls (planrun.run_steps), () for any other run."""
+    if settings.stage_set != "plan":
+        return ()
+    from . import planrun
+    return planrun.run_steps(reason=settings.reason, links=settings.links)
+
+
 def plan_stages(settings: Settings, plan: Plan | None) -> stages.StageSet:
     """The run's own stage set: a plan run's (evidence/planrun.py), else none. A plan run needs its plan."""
     if settings.stage_set is None:
@@ -943,7 +963,7 @@ def plan_stages(settings: Settings, plan: Plan | None) -> stages.StageSet:
     if plan is None:
         raise ValueError("a plan run needs its plan (Settings.plan)")
     from . import planrun
-    return stages.stage_set(planrun.stage_entries(plan))
+    return stages.stage_set(planrun.stage_entries(plan, reason=settings.reason, links=settings.links))
 
 
 def _uses_gliner(protocol: Protocol) -> bool:
@@ -959,14 +979,16 @@ def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
 def run_plan(plan_path: Path | str, protocol_bytes: bytes, corpus: Path | str, out_dir: Path | str, *,
              cache: Path | str | None = None, selection: Selection = "cascade", model: str | None = None,
              provider: Provider | None = None, run_id: str | None = None, retry_errors: bool = False,
-             strategy: Strategy = "gaps", workers: int = 3, imports: list[str] | None = None) -> Path:
+             strategy: Strategy = "gaps", workers: int = 3, imports: list[str] | None = None, reason: Reason = "on",
+             links: Links = "on") -> Path:
     """A plan run (evidence/planrun.py writes `protocol_bytes` from the plan): the plan's stage set, the plan's
-    answer. Names step off and reasoner on, as a protocol run's defaults."""
+    answer. Names step off, as a protocol run's default. `reason` off: no reasoner, no field ontology in the records
+    graph, no ontology tree (final review I1); `links` off: no builds-on links stage (final review C3)."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm="llm", relink="on", names="off", reason="on", plan=Path(plan_path).resolve(),
-                        stage_set="plan")
+                        confirm="llm", relink="on", names="off", reason=reason, plan=Path(plan_path).resolve(),
+                        stage_set="plan", links=links)
     return execute_run(protocol_bytes, settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider,
                        retry_errors=retry_errors, workers=workers)

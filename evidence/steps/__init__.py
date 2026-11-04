@@ -7,6 +7,7 @@ A step runs the signature with the JSON adapter (typed outputs). Instructions co
 written by the DSPy tuning step) when that file exists, else from the signature's docstring."""
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 from collections.abc import Iterator
@@ -46,15 +47,37 @@ def current() -> RecordedLM | None:
     return stack[-1] if stack else _LM
 
 
+def tuned(name: str) -> tuple[str, str] | None:
+    """(instructions, sha256 of the file's bytes) of the tuned step `name` as `TUNED_DIR` holds it now; None when it
+    has no file for it."""
+    path = Path(TUNED_DIR) / f"{name}.json"
+    if not path.is_file():
+        return None
+    data = path.read_bytes()
+    return json.loads(data.decode("utf-8"))["instructions"], hashlib.sha256(data).hexdigest()
+
+
+def tuned_sha256(steps: list[Step | str]) -> dict[str, str]:
+    """{name: sha256} of the tuned instructions each of `steps` runs on: a `Step` instance by what it loaded when it
+    was made (a module-level step keeps what it read at import), a name by the file now (a step made per call reads
+    it then); {} when none is tuned."""
+    out: dict[str, str] = {}
+    for s in steps:
+        sha = s.tuned_sha256 if isinstance(s, Step) else (t[1] if (t := tuned(s)) is not None else None)
+        if sha:
+            out[s.name if isinstance(s, Step) else s] = sha
+    return dict(sorted(out.items()))
+
+
 class Step:
     ATTEMPTS = 3
 
     def __init__(self, signature: type[dspy.Signature], name: str) -> None:
         self.signature = signature
         self.name = name
-        path = TUNED_DIR / f"{name}.json"
-        self._instructions = (json.loads(path.read_text(encoding="utf-8"))["instructions"] if path.exists()
-                              else signature.instructions)
+        loaded = tuned(name)
+        self._instructions = loaded[0] if loaded is not None else signature.instructions
+        self.tuned_sha256 = loaded[1] if loaded is not None else None   # the tuned file this step runs on
 
     def instructions(self) -> str:
         return self._instructions
@@ -71,6 +94,9 @@ class Step:
                 with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
                     return predict(config={"attempt": attempt}, **inputs)
             except AdapterParseError:
+                mark = getattr(lm, "bad_reply", None)
+                if callable(mark):   # the recorded reply did not parse: a rerun with retry_errors asks it again
+                    mark()
                 if attempt == self.ATTEMPTS - 1:
                     raise
         raise AssertionError("unreachable")

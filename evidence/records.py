@@ -42,6 +42,8 @@ class LinkRecord(Frozen):
     object_doc: str | None
     outside_set: bool
     span: Span
+    resolve_failed: str | None = None      # OpenAlex could not be asked (network, timeout, 429/5xx): the reason
+    work: str | None = None                # the resolved OpenAlex work id's last segment ("W2741809807"); None: unresolved
 
 
 _TYPE = {Experiment: EXPERIMENT, ClaimRecord: CLAIM, LinkRecord: LINK}
@@ -50,4 +52,6 @@ _TYPE = {Experiment: EXPERIMENT, ClaimRecord: CLAIM, LinkRecord: LINK}
 def item(record: Experiment | ClaimRecord | LinkRecord) -> Item:
     """The record as an Item of its evidence type, with the record's span (the span is not repeated in fields)."""
     fields = record.model_dump(mode="json", exclude={"span"})
+    if isinstance(record, LinkRecord) and record.resolve_failed is None:
+        del fields["resolve_failed"]       # a resolved link's fields are as before
     return Item.build(_TYPE[type(record)], fields, [record.span])

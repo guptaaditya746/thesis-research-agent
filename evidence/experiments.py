@@ -22,6 +22,7 @@ from evidence.contract import Item, Span, digest
 from evidence.records import EXPERIMENT, Experiment, item
 
 NAME = "experiments"
+NAME_STEP = "map_experiments"   # the DSPy step name
 
 
 class Mapped(BaseModel):
@@ -49,7 +50,7 @@ class MapExperiments(dspy.Signature):
 
 
 def _step() -> steps.Step:
-    return steps.Step(MapExperiments, "map_experiments")
+    return steps.Step(MapExperiments, NAME_STEP)
 
 
 def map_experiments(doc_text: str, document: str, file: str | None = None, *, lm=None) -> list[Experiment]:
@@ -113,13 +114,27 @@ def _map(doc: object, ctx: stages.StageContext) -> list[Experiment]:
     return map_experiments(doc.text, doc.doc.id, doc.doc.file, lm=ctx.dspy_lm("map_experiments"))   # type: ignore[attr-defined]
 
 
+def _safe_map(doc: object, ctx: stages.StageContext) -> tuple[list[Experiment], list[str]]:
+    """(the map, the notes): a failed map call (evidence.unchecked ITEM_ERRORS) gives no experiments and the note
+    "unchecked: experiment map: <reason>"; the paper's other evidence is kept."""
+    from evidence.unchecked import ITEM_ERRORS, reason
+    try:
+        return _map(doc, ctx), []
+    except ITEM_ERRORS as exc:
+        return [], [f"unchecked: experiment map: {reason(exc)}"]
+
+
 def before_extract(doc: object, ctx: stages.StageContext) -> None:
-    _map(doc, ctx)
+    _safe_map(doc, ctx)
 
 
 def after_document(doc: object, ctx: stages.StageContext) -> list[Item]:
-    """The experiments as Items of type `experiment` (the same ones however often it runs)."""
-    return [item(e) for e in _map(doc, ctx)]
+    """The experiments as Items of type `experiment` (the same ones however often it runs); a failed map is noted in
+    stage_report.json (evidence.unchecked) and gives none."""
+    from evidence.unchecked import note
+    found, notes = _safe_map(doc, ctx)
+    note(ctx, "experiments", doc.doc.id, notes)   # type: ignore[attr-defined]
+    return [item(e) for e in found]
 
 
 def install() -> None:

@@ -11,6 +11,7 @@ key, so a retry after an unparseable reply is a new recorded call and the bad re
 from __future__ import annotations
 
 import json
+import threading
 import warnings
 from collections.abc import Callable
 from types import SimpleNamespace
@@ -32,12 +33,23 @@ class RecordedLM(dspy.BaseLM):
     then keys on the retry number and the call settings too, so a retry is a new recorded call."""
 
     def __init__(self, alias: str, ask: Callable[..., str], cache: JsonlCache | None = None, *, with_call: bool = False,
-                 **kwargs: Any) -> None:
+                 on_bad: Callable[..., None] | None = None, **kwargs: Any) -> None:
         super().__init__(model=alias, model_type="chat", cache=False, **kwargs)
         self.alias = alias
         self._ask = ask
         self._with_call = with_call   # True: ask(text, attempt=..., settings=...) also gets the retry number and settings
         self._recorder = cache
+        # on_bad(text, attempt=..., settings=...): told when the reply of the last call did not parse (`bad_reply`)
+        self._on_bad = on_bad
+        self._last = threading.local()
+
+    def bad_reply(self) -> None:
+        """The reply of this thread's last call did not parse: tell `on_bad` (the engine marks the recorded call, so
+        `--retry-errors` asks it again). No-op without `on_bad` or before any call."""
+        last = getattr(self._last, "call", None)
+        if self._on_bad is not None and last is not None:
+            text, attempt, settings = last
+            self._on_bad(text, attempt=attempt, settings=settings)
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         # DSPy 3.4 warns that a BaseLM.forward subclass is deprecated; it is removed in 3.5. Migration then: an engine
@@ -54,6 +66,7 @@ class RecordedLM(dspy.BaseLM):
         key = cache_key({"alias": self.alias, "messages": msgs, "attempt": attempt,
                          "settings": json.loads(json.dumps(settings, default=repr))})
         hit = self._recorder.get(key) if self._recorder is not None else None
+        self._last.call = (render(msgs), attempt, json.loads(json.dumps(settings, default=repr)))
         if hit is not None:
             text = hit["output"]
         else:

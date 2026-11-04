@@ -7,9 +7,18 @@ the paper's head (`run_docs` maps doc id -> the paper's text). A work that is no
 open relation of a citing sentence with the DSPy step `ReadLink`.
 
 Every HTTP answer is recorded in a `JsonlCache` keyed by its URL, like a model call: a replay (`offline=True`) answers
-from the record and never touches the network; a request missing from the record raises `NotRecorded`."""
+from the record and never touches the network; a request missing from the record raises `NotRecorded`.
+
+A request that fails (no network, a timeout, HTTP 429 or 5xx, any HTTP error but 404, a body that is not JSON) is never
+put in the record: a later run asks again. `resolve` keeps the link, `object_doc` None, `outside_set` True and
+`resolve_failed` the reason. The failure is written to the run folder's `openalex-failed.jsonl`: within the run the
+URL stays failed (a later request for it fails at once, so the run and its replay agree), and an offline replay
+fails it the same way; a new run folder asks again. Requests time out after TIMEOUT seconds, and after BREAK_AFTER
+network failures in a row the run stops asking: every later request fails at once with "openalex unreachable"
+(recorded the same way). Final review C3, fix round 1 C2/I3."""
 from __future__ import annotations
 
+import http.client
 import json
 import re
 import urllib.error
@@ -27,15 +36,39 @@ from .contract import Span
 from .records import LinkRecord
 from .steps import Step
 
-__all__ = ["NotRecorded", "OpenAlex", "ReadLink", "read_link", "references", "resolve"]
+__all__ = ["NotRecorded", "OpenAlex", "ReadLink", "ResolveFailed", "read_link", "references", "resolve"]
 
 BASE = "https://api.openalex.org/"
 RECORD_FILE = "openalex.jsonl"
+FAILED_FILE = "openalex-failed.jsonl"   # this run's failed requests (sticky for the run; an offline replay reads it)
+TIMEOUT = 10                            # seconds per request
+BREAK_AFTER = 3                         # network failures in a row before the run stops asking OpenAlex
+UNREACHABLE = "openalex unreachable"
+_STREAK = cache_key({"openalex": "consecutive failures"})   # the breaker's count, in the failed file
 Fetch = Callable[[str], "dict[str, Any] | None"]   # url -> parsed JSON, or None for a 404
 
 
 class NotRecorded(RuntimeError):
     """A replay needs an OpenAlex answer the record does not hold."""
+
+
+class ResolveFailed(RuntimeError):
+    """An OpenAlex request failed (network, timeout, HTTP 429/5xx); `reason` is short and stable."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+def _failure(exc: BaseException) -> str:
+    """The short reason of a failed request (the same failure gives the same words)."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return f"HTTP {exc.code}"
+    if isinstance(exc, TimeoutError) or "timed out" in str(exc):
+        return "timeout"
+    if isinstance(exc, urllib.error.URLError):
+        return f"URLError: {str(exc.reason)[:100]}"
+    return f"{type(exc).__name__}: {str(exc)[:100]}"
 
 
 class ReadLink(dspy.Signature):
@@ -53,7 +86,8 @@ class ReadLink(dspy.Signature):
     object: str | None = dspy.OutputField(desc="the cited work as the sentence names it, or null")
 
 
-_READ = Step(ReadLink, "openalex.read_link")
+READ_STEP = "openalex.read_link"   # the DSPy step name
+_READ = Step(ReadLink, READ_STEP)
 
 
 def read_link(sentence: str, ctx: Any | None = None) -> tuple[str, str | None]:
@@ -65,12 +99,19 @@ def read_link(sentence: str, ctx: Any | None = None) -> tuple[str, str | None]:
 def _urlopen(url: str) -> dict[str, Any] | None:
     req = urllib.request.Request(url, headers={"User-Agent": "thesis-research-agent (mailto:a.gupta@firmway.eu)"})
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
             return None
         raise
+
+
+def work_id(work: Mapping[str, Any] | None) -> str | None:
+    """The last path segment of an OpenAlex work's `id` ("https://openalex.org/W2741809807" -> "W2741809807"); None
+    without a work or an id."""
+    ident = str((work or {}).get("id") or "").strip().rstrip("/")
+    return ident.rsplit("/", 1)[-1] or None if ident else None
 
 
 def _norm(text: str) -> str:
@@ -104,17 +145,19 @@ def _bare_doi(doi: str) -> str:
 class OpenAlex:
     """An OpenAlex client whose every answer goes through `cache` (required: the run's record of HTTP calls)."""
 
-    def __init__(self, cache: JsonlCache, *, fetch: Fetch | None = None, offline: bool = False) -> None:
+    def __init__(self, cache: JsonlCache, *, fetch: Fetch | None = None, offline: bool = False,
+                 failed: JsonlCache | None = None) -> None:
         if cache is None:
             raise ValueError("OpenAlex needs the run's cache: an unrecorded call would break replay")
-        self.cache, self._fetch, self.offline = cache, fetch or _urlopen, offline
+        self.cache, self._fetch, self.offline, self.failed = cache, fetch or _urlopen, offline, failed
 
     @classmethod
     def for_ctx(cls, ctx: Any, *, fetch: Fetch | None = None) -> OpenAlex:
         """The client of a run: record in `<run folder>/openalex.jsonl`, offline when `ctx.mode == "replay"`; a replay reads
         the RECORDED run's file (`ctx.record_dir`: its source folder), not the folder it writes."""
         folder = getattr(ctx, "record_dir", None) or ctx.run_dir
-        return cls(JsonlCache(Path(folder) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay")
+        return cls(JsonlCache(Path(folder) / RECORD_FILE), fetch=fetch, offline=ctx.mode == "replay",
+                   failed=JsonlCache(Path(folder) / FAILED_FILE))
 
     def get(self, url: str) -> dict[str, Any] | None:
         key = cache_key({"openalex": url})
@@ -122,10 +165,33 @@ class OpenAlex:
         if hit is not None:
             return json.loads(hit["output"])
         if self.offline:
+            failed = self.failed.get(key) if self.failed is not None else None
+            if failed is not None:   # the recorded run's request failed: fail it the same way
+                raise ResolveFailed(failed["reason"])
             raise NotRecorded(f"offline replay: no recorded OpenAlex answer for {url}")
-        body = self._fetch(url)
+        failed = self.failed.get(key) if self.failed is not None else None
+        if failed is not None:   # failed earlier in this run: it stays failed for the run (a replay then matches)
+            raise ResolveFailed(failed["reason"])
+        streak = int((self.failed.get(_STREAK) or {}).get("n", 0)) if self.failed is not None else 0
+        if streak >= BREAK_AFTER:   # the breaker: OpenAlex did not answer BREAK_AFTER times in a row; stop asking
+            self._fail(key, url, UNREACHABLE, streak)
+        try:
+            body = self._fetch(url)
+            if body is not None and not isinstance(body, dict):
+                raise ValueError(f"not a JSON object: {type(body).__name__}")
+        except (OSError, ValueError, http.client.HTTPException) as exc:   # never recorded as an answer
+            self._fail(key, url, _failure(exc), streak + 1)
+        if streak and self.failed is not None:
+            self.failed.put(_STREAK, {"n": 0})
         self.cache.put(key, {"output": json.dumps(body), "url": url})
         return body
+
+    def _fail(self, key: str, url: str, reason: str, streak: int) -> None:
+        """Record the failure of `url` for this run (and the breaker's count), then raise ResolveFailed."""
+        if self.failed is not None:
+            self.failed.put(key, {"reason": reason, "url": url})
+            self.failed.put(_STREAK, {"n": streak})
+        raise ResolveFailed(reason)
 
     def work(self, cited_text: str, doi: str | None, arxiv_id: str | None) -> dict[str, Any] | None:
         """The OpenAlex work for a DOI, else an arXiv id (its DataCite DOI), else a title search; None when unknown."""
@@ -147,13 +213,18 @@ class OpenAlex:
         `outside_set` is True (the work is kept either way)."""
         # a paper of the run is found locally first (the synthetic papers and many preprints are unknown to OpenAlex)
         object_doc = self._local_doc(cited_text, doi, run_docs)
-        work = None if object_doc else self.work(cited_text, doi, arxiv_id)
+        failed = None
+        try:
+            work = None if object_doc else self.work(cited_text, doi, arxiv_id)
+        except ResolveFailed as exc:   # the link is kept, outside the set, with the reason
+            work, failed = None, exc.reason
         if work and object_doc is None:
             object_doc = self._run_doc(work, run_docs)
         work_doi = _bare_doi(work["doi"]) if work and work.get("doi") else None
         ref = doi.strip() if doi else arxiv_id.strip() if arxiv_id else work_doi or cited_text
         return LinkRecord(subject_doc=subject_doc, relation=relation, object_ref=ref, object_doc=object_doc,
-                          outside_set=object_doc is None, span=span)
+                          outside_set=object_doc is None, span=span, work=work_id(work),
+                          **({"resolve_failed": failed} if failed is not None else {}))
 
     @staticmethod
     def _local_doc(cited_text: str, doi: str | None, run_docs: Mapping[str, str]) -> str | None:

@@ -155,3 +155,112 @@ def test_read_link_calls_stay_under_their_own_ctx(tmp_path, monkeypatch):
     [t.join() for t in ts]
     assert len(seen["a"]) == 6 and len(seen["b"]) == 6
     assert all("work A" in p for p in seen["a"]) and all("work B" in p for p in seen["b"])
+
+
+# --- final review C3: a failed request keeps the link and is never recorded as an answer --------------------------
+
+def _raise(exc: BaseException):
+    def f(url: str):
+        raise exc
+    return f
+
+
+@pytest.mark.parametrize("exc, why", [
+    (__import__("urllib.error").error.URLError("no route to host"), "URLError: no route to host"),
+    (TimeoutError("timed out"), "timeout"),
+    (__import__("urllib.error").error.HTTPError("u", 429, "Too Many Requests", {}, None), "HTTP 429"),
+    (__import__("urllib.error").error.HTTPError("u", 503, "Service Unavailable", {}, None), "HTTP 503"),
+])
+def test_a_failed_request_keeps_the_link_outside_the_set_with_its_reason(tmp_path, exc, why):
+    failed = JsonlCache(tmp_path / openalex.FAILED_FILE)
+    c = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=_raise(exc), failed=failed)
+    rec = c.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    assert (rec.object_doc, rec.outside_set, rec.resolve_failed) == (None, True, why)
+    assert rec.object_ref == "10.9999/outside.2019"
+    assert list(JsonlCache(tmp_path / "http.jsonl").items()) == []   # never recorded as an answer
+    asked: list[str] = []
+    again = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=lambda u: asked.append(u) or None, failed=JsonlCache(tmp_path / "next-run-failed.jsonl"))
+    assert again.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002",
+                         span=span()).resolve_failed is None and asked   # a later run (its own folder) asks again
+    replay = openalex.OpenAlex(JsonlCache(tmp_path / "none.jsonl"), offline=True, failed=failed)
+    assert replay.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002",
+                          span=span()).resolve_failed == why   # a replay fails it the same way, without the network
+
+
+def test_a_replay_without_the_failure_on_record_still_refuses(tmp_path):
+    replay = openalex.OpenAlex(JsonlCache(tmp_path / "none.jsonl"), offline=True,
+                               failed=JsonlCache(tmp_path / openalex.FAILED_FILE))
+    with pytest.raises(openalex.NotRecorded):
+        replay.resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+
+
+def test_a_resolved_link_item_has_no_failure_field(tmp_path):
+    from evidence.records import item
+    rec = client(tmp_path).resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    assert "resolve_failed" not in item(rec).fields
+
+
+# --- final review I2: the link carries the resolved OpenAlex work id ---------------------------------------------
+
+def test_a_resolved_link_carries_the_openalex_work_id(tmp_path):
+    from evidence.records import item
+    rec = client(tmp_path).resolve("Somebody 2019", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    assert rec.work == "W222" and item(rec).fields["work"] == "W222"
+    arxiv = client(tmp_path).resolve("Lewis et al.", None, "2005.11401", RUN_DOCS, subject_doc="S002", span=span())
+    assert (arxiv.work, arxiv.object_doc) == ("W111", "S001")
+
+
+def test_an_unresolved_link_has_work_null(tmp_path):
+    from evidence.records import item
+    lost = client(tmp_path).resolve("Totally Unknown Work", None, None, RUN_DOCS, subject_doc="S002", span=span())
+    assert lost.work is None and item(lost).fields["work"] is None
+    assert openalex.work_id({"id": "https://openalex.org/W2741809807"}) == "W2741809807"
+    assert openalex.work_id(None) is None and openalex.work_id({"id": ""}) is None
+
+
+# --- fix round 1: a failure is sticky within one run; the breaker stops asking after 3 failures in a row ------------
+
+def test_a_url_that_failed_stays_failed_for_the_rest_of_the_run(tmp_path):
+    answers = iter([OSError("reset"), {"id": "https://openalex.org/W222", "doi": None}])
+
+    def flaky(url):
+        a = next(answers)
+        if isinstance(a, BaseException):
+            raise a
+        return a
+    failed = JsonlCache(tmp_path / openalex.FAILED_FILE)
+    c = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=flaky, failed=failed)
+    first = c.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S002", span=span())
+    second = c.resolve("x", "10.9999/outside.2019", None, RUN_DOCS, subject_doc="S001", span=span())
+    assert first.resolve_failed == second.resolve_failed == "OSError: reset" and second.work is None
+
+
+def test_the_breaker_stops_asking_after_three_network_failures(tmp_path):
+    asked: list[str] = []
+
+    def down(url):
+        asked.append(url)
+        raise TimeoutError("timed out")
+    failed = JsonlCache(tmp_path / openalex.FAILED_FILE)
+    c = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=down, failed=failed)
+    reasons = [c.resolve("x", f"10.9999/w{i}", None, RUN_DOCS, subject_doc="S002", span=span()).resolve_failed
+               for i in range(6)]
+    assert reasons == ["timeout"] * 3 + [openalex.UNREACHABLE] * 3 and len(asked) == 3
+    replay = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), offline=True,
+                               failed=JsonlCache(tmp_path / openalex.FAILED_FILE))
+    assert [replay.resolve("x", f"10.9999/w{i}", None, RUN_DOCS, subject_doc="S002", span=span()).resolve_failed
+            for i in range(6)] == reasons
+
+
+def test_a_success_resets_the_breaker_and_a_non_object_body_fails(tmp_path):
+    seq = iter([TimeoutError("timed out"), TimeoutError("timed out"), None, TimeoutError("timed out"), [1, 2]])
+
+    def f(url):
+        a = next(seq)
+        if isinstance(a, BaseException):
+            raise a
+        return a
+    c = openalex.OpenAlex(JsonlCache(tmp_path / "http.jsonl"), fetch=f, failed=JsonlCache(tmp_path / openalex.FAILED_FILE))
+    got = [c.resolve("x", f"10.9999/v{i}", None, RUN_DOCS, subject_doc="S002", span=span()).resolve_failed for i in range(5)]
+    assert got[:4] == ["timeout", "timeout", None, "timeout"] and got[4].startswith("ValueError: not a JSON object")
+    assert openalex.TIMEOUT == 10
