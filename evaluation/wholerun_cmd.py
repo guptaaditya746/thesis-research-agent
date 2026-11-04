@@ -287,8 +287,13 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
         try:
             found = ot.check(SimpleNamespace(plan=load_plan(path), store=_records_store(Path(runs) / q.id)), q)
         except Exception as exc:   # noqa: BLE001 - one bad question is a "no match", never a dead report
-            found = {"fresh": False, "match_on_key": False, "match_on_run": None, "extra_columns": [],
-                     "failed": f"failed: {type(exc).__name__}: {exc}"}
+            try:
+                fresh = ot.plan_line(load_plan(path), q).template is None    # known without running the query
+            except Exception:   # noqa: BLE001 - an unreadable plan has no line to look at
+                fresh = False
+            has_records = (Path(runs) / q.id / "records.nq").is_file()      # a run with records: no match end to end
+            found = {"fresh": fresh, "match_on_key": False, "match_on_run": False if has_records else None,
+                     "extra_columns": [], "failed": f"failed: {type(exc).__name__}: {exc}"}
         results.append(found)
         per[q.id] = found
     committed = ot.committed_at([ot.QUESTIONS, *sorted(ot.REFERENCE.glob("*.rq"))])
@@ -312,15 +317,30 @@ CORPORA_ROOT = Path(__file__).resolve().parents[1] / "tests" / "EV2" / "corpora"
 
 
 def _condition_names(truth: Any, *, aliases: bool) -> set[str]:
-    """The cleaned names of a truth's conditions that the tuning gold holds (`tune._names_by_role`: every role but
-    `other`, label and aliases); with `aliases=False` the labels only (what the leak split marks)."""
+    """The cleaned names of a truth's conditions. With `aliases=True` what the tuning gold holds (`tune._names_by_role`:
+    every role but `other`, label and aliases); with `aliases=False` what the leak split marks (every condition's
+    label)."""
     from evidence.names import clean
     names = set()
     for fact in truth.facts.values():
-        if fact.type == "condition" and fact.data.get("role") != "other":
+        if fact.type == "condition" and (not aliases or fact.data.get("role") != "other"):
             names |= {clean(n) for n in [fact.data.get("label"), *(fact.data.get("aliases") or [] if aliases else [])]
                       if isinstance(n, str)}
     return names - {""}
+
+
+def _corpus_index(roots: Iterable[Path]) -> dict[str, Path]:
+    """{corpus id: folder} for every folder under `roots` that holds a ground_truth.json. The id is the manifest's
+    `corpus_id` (what tune.py writes into a tuned file, `tune._corpus_id`), else the folder name; the folder name
+    also finds it."""
+    index: dict[str, Path] = {}
+    for root in roots:
+        for folder in sorted(p for p in Path(root).iterdir() if (p / "ground_truth.json").is_file()) if Path(root).is_dir() else []:
+            manifest = folder / "manifest.json"
+            ident = str(json.loads(manifest.read_text(encoding="utf-8")).get("corpus_id") or folder.name)                 if manifest.is_file() else folder.name
+            index.setdefault(ident, folder)
+            index.setdefault(folder.name, folder)
+    return index
 
 
 def check_tuned_words(truth: Any, tuned_dir: Path | None = None, corpora: Iterable[Path] = ()) -> None:
@@ -333,6 +353,7 @@ def check_tuned_words(truth: Any, tuned_dir: Path | None = None, corpora: Iterab
         from evidence.steps import TUNED_DIR
         tuned_dir = TUNED_DIR
     roots = [Path(c) for c in corpora] or [CORPORA_ROOT]
+    index = _corpus_index(roots)
     mine = _condition_names(truth, aliases=False)
     for step in TUNED_WORD_STEPS:
         path = Path(tuned_dir) / f"{step}.json"
@@ -341,7 +362,7 @@ def check_tuned_words(truth: Any, tuned_dir: Path | None = None, corpora: Iterab
         tuned = json.loads(path.read_text(encoding="utf-8"))
         for side in ("train_corpora", "test_corpora"):
             for corpus_id in tuned.get(side) or []:
-                found = next((r / corpus_id for r in roots if (r / corpus_id / "ground_truth.json").is_file()), None)
+                found = index.get(corpus_id)
                 if found is None:
                     raise ValueError(f"tuned {step} ({path}) lists {side[:-8]} corpus {corpus_id!r}, which cannot be "
                                      f"read from {[str(r) for r in roots]}: cannot tell whether its names overlap; "
@@ -369,7 +390,9 @@ def leak(run: Path, corpus: Path, out: Path, *, tuned_dir: Path | None = None,
     marks = lk.mark(truth, plan.words, result["extraction"].get("scored_types"))
     split = lk.split_scores(result, marks)
     nl = chr(10)
-    lines = ["# Leak split (extraction recall)", "", "| names | facts | matched | recall |", "|---|---|---|---|"]
+    lines = ["# Leak split (extraction recall)", "",
+             "Named facts are matched by name (conditions without their role, metrics without the plan's measure id), "
+             "so these recalls are not comparable with the extraction scores of `evaluate score`.", "", "| names | facts | matched | recall |", "|---|---|---|---|"]
     lines += [f"| {k} | {v['facts']} | {v['matched']} | {_cell(v['recall'])} |" for k, v in split.items()]
     rep.write_pair(split, nl.join(lines) + nl, out, "leak")
     return split
@@ -406,10 +429,13 @@ def builds_on_recall(links: list[dict[str, Any]], references: dict[str, list[Any
     OpenAlex id the run resolved, "W..." or its URL); a DOI equal to the link's `ref` counts too (the fallback for a
     link with no `work`). None when a side is empty."""
     found: dict[str, dict[tuple[str | None, str | None], None]] = {}
-    unresolved = 0
+    unresolved = in_set = 0
     for link in links:
         if link.get("resolve_failed") or "resolve_failed" in str(link.get("text", "")):
             unresolved += 1          # OpenAlex did not answer: neither a hit nor a miss, left out
+            continue
+        if link.get("in_set") and not link.get("work") and not _doi_of(link.get("ref")):
+            in_set += 1              # a corpus paper found without OpenAlex: no work id or DOI to compare, left out
             continue
         if link.get("paper") in references:
             key = (_work(link["work"]) if link.get("work") else None, _doi_of(link.get("ref")))
@@ -422,7 +448,8 @@ def builds_on_recall(links: list[dict[str, Any]], references: dict[str, list[Any
     total_want, total_links = sum(p["expected"] for p in per.values()), sum(p["links"] for p in per.values())
     return {"recall": sum(p["found"] for p in per.values()) / total_want if total_want else None,
             "precision": sum(p["links_right"] for p in per.values()) / total_links if total_links else None,
-            "n_expected": total_want, "n_links": total_links, "n_unresolved": unresolved, "per_paper": per}
+            "n_expected": total_want, "n_links": total_links, "n_unresolved": unresolved,
+            "n_in_set": in_set, "per_paper": per}
 
 
 def build_references(run: Path, corpus: Path) -> dict[str, list[dict[str, Any]]]:

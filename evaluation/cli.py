@@ -418,8 +418,11 @@ def cmd_tune_split(args: argparse.Namespace) -> int:
         raise SystemExit(f"evaluate tune-split: {path} exists; it is written once (move it aside to redo)")
     questions = _real_questions(args.set, args.src, args.corpus)
     split = tune_split_questions(questions, args.fraction, args.seed, path)
+    from .wholerun import question_papers
+    gave = sum(1 for q in questions if q.id in split["questions"] and set(question_papers(q)) & set(split["papers"]))
     print(f"wrote {path}: kept {len(split['kept_questions'])} questions, held {len(split['questions'])} for tuning "
-          f"({len(split['papers'])} papers held out, {len(split['rest'])} rest)")
+          f"({gave} of them give papers to the slice; {len(split['papers'])} papers held out, {len(split['rest'])} rest). "
+          "A held question whose papers all belong to kept questions is still scored by `evaluate wholerun`.")
     return 0
 
 

@@ -132,3 +132,24 @@ def test_offtemplate_command_loads_records_and_reports_a_failed_question(tmp_pat
     assert report["questions"][first.id]["match_on_run"] is True
     assert report["questions"][second.id]["failed"].startswith("failed: ")
     assert report["summary"]["questions"] == 2 and report["summary"]["match_rate"] == 0.5
+    assert report["questions"][second.id]["fresh"] is True              # known from the plan, whatever the query does
+
+
+def test_a_failed_question_stays_in_the_end_to_end_rate(tmp_path) -> None:
+    pytest.importorskip("evidence.kg.query")
+    from evaluation import wholerun_cmd
+    from evidence.kg.build import serialize
+    from evidence.kg.truthgraph import truth_store
+    from evidence.plan import write_plan
+    first, second = ot.load_questions()[:2]
+    runs = tmp_path / "runs"
+    for q, query in ((first, first.sparql), (second, "SELECT ?x WHERE { ?x $nope ?y }")):
+        (runs / q.id).mkdir(parents=True)
+        write_plan(_plan_of(_line(q, query)), runs / q.id / "plan.json")
+        (runs / q.id / "records.nq").write_bytes(serialize(truth_store(q)))
+    report = wholerun_cmd.offtemplate(runs, tmp_path / "o")
+    assert report["summary"]["match_on_run_rate"] == 0.5               # 1 of 2, the failed one counts as no match
+    from evaluation.offtemplate.check import summary
+    ok = [{"fresh": True, "match_on_key": True, "match_on_run": i < 6} for i in range(9)]
+    bad = [{"fresh": True, "match_on_key": False, "match_on_run": False}] * 3
+    assert summary(ok + bad)["match_on_run_rate"] == 0.5               # 12 questions, 3 failed, 6 matched

@@ -429,3 +429,9 @@ def test_cli_missing_corpus_manifest_is_a_clean_error(tmp_path: Path, capsys: py
     code = cli.main(["wholerun", "--set", "sofc", "--src", str(DATA / "sofc_tiny"), "--runs", str(runs),
                      "--out", str(tmp_path / "o"), "--confirm", "auto", "--reasoning", "on"])
     assert code == 2 and "evaluate wholerun:" in capsys.readouterr().err
+
+
+def test_in_set_links_are_left_out_and_counted() -> None:
+    inset = link("p1", None, "Lewis et al. (2020)", "p3")            # a corpus paper found without OpenAlex
+    got = wholerun_cmd.builds_on_recall([link("p1", "W1", "r"), inset], {"p1": ["W1", "W77"]})
+    assert got["n_links"] == 1 and got["n_in_set"] == 1 and got["precision"] == 1.0 and got["recall"] == 0.5

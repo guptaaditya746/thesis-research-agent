@@ -72,3 +72,26 @@ def test_leak_refuses_when_a_listed_corpus_cannot_be_read(tmp_path: Path) -> Non
     with pytest.raises(SystemExit, match="rag-claude-nowhere"):
         cli.main(["leak", "--run", str(_run(tmp_path)), "--corpus", str(REAL / "rag-claude-s1-complex"),
                   "--out", str(tmp_path / "o"), "--tuned-dir", str(tuned), "--corpora", str(REAL)])
+
+
+def _manifest_id(folder: Path) -> str:
+    return json.loads((folder / "manifest.json").read_text(encoding="utf-8"))["corpus_id"]
+
+
+def test_leak_resolves_the_manifest_ids_tune_py_writes(tmp_path: Path, monkeypatch) -> None:
+    """tune.py records each corpus by its manifest `corpus_id` (rag-claude-k1-<hash>), not by its folder name."""
+    train, test = REAL / "rag-claude-k1-mixed", REAL / "rag-claude-small-mixed"
+    assert _manifest_id(train) != train.name                                 # the ids differ from the folder names
+    run = _run(tmp_path)
+    tuned = _tuned(tmp_path / "tuned", [_manifest_id(train)], [_manifest_id(test)])
+    with pytest.raises(SystemExit, match="share"):                           # same names: refused, not "cannot be read"
+        cli.main(["leak", "--run", str(run), "--corpus", str(REAL / "rag-claude-s1-complex"),
+                  "--out", str(tmp_path / "o"), "--tuned-dir", str(tuned), "--corpora", str(REAL)])
+    other = _renamed(REAL / "rag-claude-small-mixed", tmp_path / "corpora" / "folder-zzz", "zzz")
+    data = json.loads((other / "manifest.json").read_text(encoding="utf-8"))
+    data["corpus_id"] = "rag-claude-zzz-0123abcd"
+    (other / "manifest.json").write_text(json.dumps(data), encoding="utf-8")
+    monkeypatch.setattr("evaluation.score.score_extraction_only", lambda *a, **k: {"missed": []})
+    disjoint = _tuned(tmp_path / "tuned2", [data["corpus_id"]], [data["corpus_id"]])
+    assert cli.main(["leak", "--run", str(run), "--corpus", str(REAL / "rag-claude-s1-complex"),
+                     "--out", str(tmp_path / "o"), "--tuned-dir", str(disjoint), "--corpora", str(other.parent)]) == 0
