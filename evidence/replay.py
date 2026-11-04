@@ -103,12 +103,14 @@ def _stamp() -> str:
 
 
 def _attempts(run: Path) -> dict[str, int]:
-    """cache key -> the attempt of the record each call of the run used (calls.py), the names checks too."""
+    """cache key -> the attempt of the record each call of the run used (calls.py), the names checks and the stages'
+    own calls (`stage_call` events) too."""
     run_dir = RunDir(run)
     used = {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
             for e in run_dir.events_of("extractor_call") or [] if e["status"] != "skipped"}
-    return used | {c["key"]: c["attempt"] for e in run_dir.events_of("names") or []
-                   for c in e["custom_metadata"].get("checks", [])}
+    names = {c["key"]: c["attempt"] for e in run_dir.events_of("names") or [] for c in e["custom_metadata"].get("checks", [])}
+    stage = {e["custom_metadata"]["key"]: e["custom_metadata"]["attempt"] for e in run_dir.events_of("stage_call") or []}
+    return used | names | stage
 
 
 def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:
