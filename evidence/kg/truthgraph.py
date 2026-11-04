@@ -12,7 +12,7 @@ A `RealQuestion` (Task 6.1) carries its answer key in `gold`: `truth_store(quest
 `matches(answer, expected)` says when an answer is the expected one: `expected` is a list of rows (dicts: every key given
 must be equal, order ignored), a list of values (the first column of each row, in order), or one value; an empty
 list or None is an empty answer ("No evidence found"). With `column`, a list of values is read from that column of each
-row (each value once, in order, values outside the expected list left out) instead of the first."""
+row (each value once, in order) instead of the first."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -95,7 +95,7 @@ def matches(answer: Answer, expected: Any, column: str | None = None) -> bool:
             free.remove(hit)
         return True
     if column is not None:
-        got = list(dict.fromkeys(r.get(column) for r in rows if r.get(column) in expected))   # once each, as scored
+        got = list(dict.fromkeys(r.get(column) for r in rows))   # once each, in order; an extra or misordered value still differs
         return got == expected
     return [next(iter(r.values())) for r in rows] == expected
 

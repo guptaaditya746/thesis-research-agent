@@ -180,3 +180,12 @@ def test_split_counts_a_paper_once_however_many_things_it_ranks() -> None:
     rows = [{"thing": t, "paper": p} for t, p in (("G", "B2"), ("A", "A1"), ("B", "A1"), ("D", "C3"))]
     ours = KgAnswer(rows=rows, empty=False)
     assert split(ours, ours, ["B2", "A1", "C3"], "paper") == "right"
+
+
+def test_split_does_not_hide_an_extra_first_paper() -> None:
+    from evidence.kg.query import Answer as KgAnswer
+    from evidence.kg.truthgraph import matches
+    extra = KgAnswer(rows=[{"paper": p} for p in ("X9", "B2", "A1", "C3")], empty=False)
+    dup = KgAnswer(rows=[{"paper": p} for p in ("B2", "A1", "A1", "C3")], empty=False)
+    assert not matches(extra, ["B2", "A1", "C3"], "paper")
+    assert matches(dup, ["B2", "A1", "C3"], "paper")
