@@ -55,8 +55,8 @@ describe("names and formats", () => {
     expect(["all", "mixed", "explicit", "complex"].sort(levelOrder)).toEqual(["explicit", "complex", "mixed", "all"])
   })
 
-  it("labels the RAG baseline under its old and its new id", () => {
-    expect([systemLabel("rag-baseline"), systemLabel("bm25-answer-baseline")]).toEqual(["RAG baseline", "RAG baseline"])
+  it("labels the BM25 answer baseline under its old id (rag-baseline) and its new id", () => {
+    expect([systemLabel("rag-baseline"), systemLabel("bm25-answer-baseline")]).toEqual(["RAG baseline", "BM25 answer baseline"])
     expect(["agent-baseline", "bm25-answer-baseline", "evidence-engine"].sort(systemOrder)).toEqual(["evidence-engine", "bm25-answer-baseline", "agent-baseline"])
   })
 

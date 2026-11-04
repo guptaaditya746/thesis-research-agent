@@ -256,18 +256,21 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
     names, cleaned of the file's underscores), `papers` = the documents holding such a relation. Field `cs`;
     the corpus is `corpus_dir` (default: the file's folder, where `to_corpus` writes it)."""
     tasks: dict[str, dict[str, set[str]]] = {}
+    corpus = Path(corpus_dir) if corpus_dir is not None else Path(src).parent
+    in_corpus = _manifest_ids(corpus)
     for line in Path(src).read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         doc = json.loads(line)
+        if in_corpus is not None and str(doc["doc_id"]) not in in_corpus:
+            continue        # a dataset used only in a paper outside the corpus cannot be found: not in the gold
         for relation in doc.get("n_ary_relations", []):
             dataset = relation.get("Material") or relation.get("Dataset")
             task = relation.get("Task")
             if task and dataset:
                 tasks.setdefault(str(task).replace("_", " "), {}).setdefault(str(dataset).replace("_", " "),
                                                                              set()).add(str(doc["doc_id"]))
-    corpus = Path(corpus_dir) if corpus_dir is not None else Path(src).parent
-    keys = truth_items(src)
+    keys = truth_items(src, corpus)
     out = []
     for task in sorted(tasks):
         datasets = tasks[task]
@@ -281,14 +284,39 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
     return out
 
 
-def truth_items(src: Path) -> list[dict[str, Any]]:
+def _manifest_ids(corpus: Path | None) -> set[str] | None:
+    """The document ids of `corpus/manifest.json`; None when there is no manifest (then every document counts)."""
+    path = Path(corpus) / "manifest.json" if corpus is not None else None
+    if path is None or not path.is_file():
+        return None
+    return {str(p["id"]) for p in json.loads(path.read_text(encoding="utf-8"))["papers"]}
+
+
+def left_out(src: Path, corpus_dir: Path | None = None) -> str:
+    """The report line of the gold filter: relations of documents that are not in the corpus (with no manifest: 0)."""
+    in_corpus = _manifest_ids(Path(corpus_dir) if corpus_dir is not None else Path(src).parent)
+    total = gone = 0
+    for line in Path(src).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            doc = json.loads(line)
+            n = len(doc.get("n_ary_relations", []))
+            total += n
+            gone += n if in_corpus is not None and str(doc["doc_id"]) not in in_corpus else 0
+    return f"left out: {gone} of {total} relations (document not in the corpus)"
+
+
+def truth_items(src: Path, corpus_dir: Path | None = None) -> list[dict[str, Any]]:
     """The answer-key records of a SciREX file (one per relation with a method, a dataset and a score): thing = the
-    method, metric, number = the score, context = the dataset, settings task and dataset (keystore.py)."""
+    method, metric, number = the score, context = the dataset, settings task and dataset (keystore.py). With a
+    `corpus_dir` holding manifest.json, only documents in the manifest."""
     out = []
+    in_corpus = _manifest_ids(corpus_dir)
     for line in Path(src).read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         doc = json.loads(line)
+        if in_corpus is not None and str(doc["doc_id"]) not in in_corpus:
+            continue
         for rel in doc.get("n_ary_relations", []):
             dataset = rel.get("Material") or rel.get("Dataset")
             try:

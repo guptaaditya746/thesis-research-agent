@@ -404,7 +404,8 @@ def left_out_of(name: str, src: Path, corpus: Path | None, questions: list[Any])
     if name == "scilead":
         gone = sum(q.gold.get("left_out", 0) for q in questions)
         return left_out_line(gone, gone + sum(len(q.gold.get("ranking", [])) for q in questions))
-    return left_out_line(0, sum(len(q.gold.get("papers", [])) for q in questions))   # scirex: arXiv, all open
+    from .realpapers import scirex     # arXiv, all open: only the gold of documents outside the corpus is left out
+    return scirex.left_out(src, corpus)
 
 
 def cmd_wholerun(args: argparse.Namespace) -> int:
