@@ -125,3 +125,58 @@ def test_the_key_store_and_the_run_are_split_on_the_paper_column() -> None:
     wrong = KgAnswer(rows=[{"thing": "MethodY", "score": 0.7, "paper": "P1"}, {"thing": "MethodX", "score": 0.9, "paper": "P2"}],
                      empty=False)
     assert split(wrong, key, ["P2", "P1"], column) == "extraction error"   # the key answers right; the run's order is wrong
+
+
+def _squad_store():
+    from evidence.kg.build import build
+    from evidence.tests.kg_support import ROLES, Doc, paper, register, restore
+    before = register()
+    try:
+        docs = []
+        for pid, spelling, rows in (("A1", "squad", {"Alpha": 0.71, "Beta": 0.64}), ("B2", "SQuAD", {"Gamma": 0.80}),
+                                    ("C3", "SQuAD2", {"Delta": 0.99})):
+            d = Doc(pid)
+            for name, x in rows.items():
+                d.value(name, x, metric="F1", population=spelling)
+            d.experiment("e1", {"task": "NER" if pid != "C3" else "QA", "dataset": spelling})
+            docs.append(d)
+        return build([paper(d.id) for d in docs], {d.id: d.items for d in docs}, ROLES, None)
+    finally:
+        restore(before)
+
+
+def _no_header(text: str) -> str:
+    """The planner writes no comment lines (the run adds the header)."""
+    return chr(10).join(x for x in text.splitlines() if not x.startswith("#"))
+
+
+def test_a_planner_written_literal_is_cleaned_in_code_rank(tmp_path: Path) -> None:
+    """The planner fills the placeholder with the paper's wording, not through params; code cleans it before the run."""
+    from evidence.kg.query import run_query, template
+    sparql = _no_header(template("rank")).replace("$context_key", '"SQuAD"').replace("$metric", '"F1"')
+    rows = run_query(_squad_store(), sparql, {}).rows
+    gold = {"ranking": ["B2", "A1"], "papers": ["A1", "B2"]}
+    answer = from_run(run_dir(tmp_path, [done(rows)]), q("rank", gold))
+    assert answer.ranking == ["B2", "A1"] and score(answer, q("rank", gold))["top1"] == 1
+
+
+def test_a_planner_written_literal_is_cleaned_in_code_list_for() -> None:
+    from evidence.kg.query import run_query, template
+    sparql = (_no_header(template("list_for")).replace("$list_field", "ev:setting_dataset").replace("$for_field_key", "kg:key_task")
+              .replace("$for_value_key", '"Ner"'))
+    rows = run_query(_squad_store(), sparql, {}).rows
+    assert sorted(r["item"] for r in rows) == ["SQuAD", "squad"]
+
+
+def test_include_of_several_papers_is_valid_sparql() -> None:
+    from evidence.kg.query import run_query, template
+    rows = run_query(_squad_store(), template("rank"), {"context": "SQuAD", "metric": "F1", "include": ["A1", "B2"]}).rows
+    assert [r["paper"] for r in rows] == ["B2", "A1", "A1"]
+
+
+def test_split_counts_a_paper_once_however_many_things_it_ranks() -> None:
+    from evidence.kg.query import Answer as KgAnswer
+    from evidence.kg.truthgraph import split
+    rows = [{"thing": t, "paper": p} for t, p in (("G", "B2"), ("A", "A1"), ("B", "A1"), ("D", "C3"))]
+    ours = KgAnswer(rows=rows, empty=False)
+    assert split(ours, ours, ["B2", "A1", "C3"], "paper") == "right"

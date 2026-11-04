@@ -189,7 +189,9 @@ class QuerySig(dspy.Signature):
     The graph names things and measures by ids, not paper wording: a value's side (kg:side) is one of the thing ids in
     `things`, a metric's name (ev:name) one of the ids in `measures`. Match them with $sides (the compared thing ids,
     the one asked about first) and $metrics (the measure ids), which the run fills; never write a paper's wording for
-    them. Do not write comment lines. Return only the query.
+    them. The graph also keeps a cleaned copy of each experiment setting: kg:contextKey on a value (its dataset or
+    context) and kg:key_<setting> on an experiment (for example kg:key_task); match these with the paper's wording
+    in quotes (the run cleans the literal itself). Do not write comment lines. Return only the query.
 
     Example: things ["a", "b"], measures ["m"], line "Which papers measure a against b on m?" -> SELECT DISTINCT ?paper
     WHERE { ?v a ev:Value ; kg:side ?s ; ev:onMetric ?m ; ev:inExperiment ?e . ?m ev:name ?metric . ?e ev:inPaper ?p .
