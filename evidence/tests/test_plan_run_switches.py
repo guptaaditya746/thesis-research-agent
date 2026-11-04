@@ -133,3 +133,17 @@ def test_a_module_level_step_reports_what_it_loaded(tmp_path: Path, monkeypatch:
     assert lockfile._lock_lines({"extractors": {}, "pack": 1, "ontology_sha256": None, "tuned_steps_sha256": {}},
                                 {"extractors": {}, "pack": 1, "ontology_sha256": None,
                                  "tuned_steps_sha256": {"g": want}}) == [f"tuned step g: none -> {want[:12]}"]
+
+
+def test_the_cli_switches_a_plan_runs_reasoning_and_links(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from evidence import cli, engine
+    from evidence.tests.conftest import make_corpus
+    from evidence.tests.test_plan_run import fake_model
+    path = tmp_path / "plan.json"
+    write_plan(make_plan(), path)
+    monkeypatch.setattr(engine, "default_provider", provider_of(fake_model([])))
+    assert cli.main(["run", "--plan", str(path), "--corpus", str(make_corpus(tmp_path / "c")), "--out",
+                     str(tmp_path / "r"), "--extractors", "regex-only", "--workers", "1", "--reason", "off",
+                     "--links", "off", "--run-id", "x"]) == 0
+    settings = read(tmp_path / "r" / "x", "run.json")["settings"]
+    assert settings["reason"] == "off" and settings["links"] == "off"
