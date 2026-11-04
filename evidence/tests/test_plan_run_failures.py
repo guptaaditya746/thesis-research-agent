@@ -72,7 +72,7 @@ def test_a_failed_claim_call_skips_that_sentence_and_the_run_completes(tmp_path:
     root = run(tmp_path, fail, monkeypatch)
     assert RunDir(root).complete
     report = read(root, "stage_report.json")
-    assert set(report) == {"claims", "experiments", "links"}
+    assert set(report) == {"claims", "experiments", "links", "groups"}
     notes = [n for doc in report["claims"].values() for n in doc]
     assert len(notes) == 1 and notes[0].startswith("unchecked: sentence ") and "StageCallError" in notes[0]
     assert any(i.evidence_type == "claim" for i in RunDir(root).items())   # the other sentences were read

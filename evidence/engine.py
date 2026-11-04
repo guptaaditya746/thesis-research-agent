@@ -359,7 +359,7 @@ class Execution:
         self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
         self.ctx = stages.StageContext(plan, calls, mode, provider, root, self.stage_ask,   # what the stage seams get
                                        names_model or names_alias(cascades, None), source_dir=source_dir,
-                                       extra=extra_stages or {}, _texts=self.corpus_texts)
+                                       extra=extra_stages or {}, _texts=self.corpus_texts, _bad_reply=self.stage_bad_reply)
         self.records_nq: bytes | None = None
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []
@@ -760,6 +760,14 @@ class Execution:
         if asked.value.get("status") == "error":
             raise stages.StageCallError(f"{purpose}: {asked.value.get('error')}")
         return output_type.model_validate(asked.value["output"])
+
+    def stage_bad_reply(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
+                        settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> None:
+        """A stage's recorded reply (the request `stage_ask` made) did not parse: mark that record so a rerun with
+        `retry_errors` asks it again (CallCache.mark_bad). The record itself is kept: this run and its replay read it."""
+        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
+                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}
+        self.calls.mark_bad(f"stage:{purpose}", request)
 
     def reason_step(self) -> reasoner.Inferences | None:
         """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a

@@ -87,6 +87,7 @@ class StageContext:
     source_dir: Path | None = None                 # replay / reexec: the recorded run's folder
     extra: StageSet = field(default_factory=dict)  # the run's own stages (a plan run's), after the registered ones
     _texts: Callable[[], Mapping[str, str]] | None = None   # the corpus texts (lazy)
+    _bad_reply: Callable[..., None] | None = None   # the engine's stage_bad_reply: a recorded reply did not parse
 
     def texts(self) -> Mapping[str, str]:
         """{paper id: text} of every paper of the run's corpus (empty when the engine gave none)."""
@@ -111,11 +112,17 @@ class StageContext:
         and replayable too). DSPy's own text reply travels as the one field of a `Reply` model."""
         from modelcall.dspy_lm import RecordedLM
         alias = model or self.model
+        bad = self._bad_reply
+
+        def on_bad(text: str, *, attempt: int, settings: Any) -> None:   # the same request `ask` recorded
+            if bad is not None:
+                bad("", text, Reply, purpose, alias, {"temperature": 0.0, "seed": 0, "max_tokens": 2048},
+                    {"attempt": attempt, "settings": settings})
         # the retry number and DSPy's call settings are part of the request, so a retry (same messages, attempt 1) is a
         # new recorded call and never gets the bad reply of attempt 0 back
         return RecordedLM(alias, lambda text, *, attempt, settings: self.ask(
             "", text, output_type=Reply, purpose=purpose, model=alias,
-            request_extra={"attempt": attempt, "settings": settings}).text, with_call=True)
+            request_extra={"attempt": attempt, "settings": settings}).text, with_call=True, on_bad=on_bad)
 
 
 def _reserved() -> frozenset[str]:

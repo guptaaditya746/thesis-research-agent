@@ -86,6 +86,11 @@ class Asked:
     attempt: int = 0
 
 
+def _bad_key(key: str) -> str:
+    """Where `mark_bad` notes that the record under `key` holds an unparseable reply."""
+    return digest(["bad_reply", key])
+
+
 def cache_key(extractor_id: str, task_sha256: str, attempt: int = 0) -> str:
     base = digest([extractor_id, task_sha256])
     return base if attempt == 0 else digest([base, attempt])
@@ -176,7 +181,9 @@ class CallCache:
         n, hit = self._latest(owner_id, request_sha256)
         if hit is not None and cache_key(owner_id, request_sha256, n) in self.made:
             return Asked(hit["result"], list(hit.get("model_calls") or []), "fresh", n)
-        if hit is not None and not (self.retry_errors and hit["result"].get("status") == "error"):
+        bad = hit is not None and (hit["result"].get("status") == "error"
+                                   or self.cache.get(_bad_key(cache_key(owner_id, request_sha256, n))) is not None)
+        if hit is not None and not (self.retry_errors and bad):
             return Asked(hit["result"], list(hit.get("model_calls") or []), "cache", n)
         n = n + 1 if hit is not None else 0
         value, records = make()
@@ -185,6 +192,16 @@ class CallCache:
                              "result": value, "model_calls": records})
         self.made.add(key)
         return Asked(value, records, "fresh", n)
+
+    def mark_bad(self, owner_id: str, request: dict[str, Any]) -> None:
+        """Mode `run` only: the latest record of this call holds a reply that did not parse; `recorded` with
+        `retry_errors` then asks it again as a new attempt (the record itself stays, so replays are unchanged)."""
+        if self.mode != "run":
+            return
+        sha = digest(request)
+        n, hit = self._latest(owner_id, sha)
+        if hit is not None:
+            self.cache.put(_bad_key(cache_key(owner_id, sha, n)), {"bad_reply": True})
 
     @staticmethod
     def _from(hit: dict[str, Any], attempt: int) -> Outcome:

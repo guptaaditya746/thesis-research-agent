@@ -312,10 +312,17 @@ def group_claims(items: dict[str, list[Item]], ctx: Any) -> tuple[dict[str, list
     from .contract import Span
     from .records import CLAIM, ClaimRecord, item
 
+    from .unchecked import GROUPS, ITEM_ERRORS, RUN, note, reason
+
     claims = [i for its in items.values() for i in its if i.evidence_type == CLAIM]
     if not claims:
         return items, {}
-    mapping = group_relations([str(i.fields["relation"]) for i in claims], ctx)
+    verbs = [str(i.fields["relation"]) for i in claims]
+    try:
+        mapping = group_relations(verbs, ctx)
+    except ITEM_ERRORS as exc:   # the claims are kept ungrouped ("other: <verb>"), listed in stage_report.json
+        mapping = {v: f"other: {v}" for v in sorted({v.strip() for v in verbs if v.strip()}, key=str.casefold)}
+        note(ctx, GROUPS, RUN, [f"unchecked: claim groups: {reason(exc)}"])
 
     def regroup(it: Item) -> Item:
         if it.evidence_type != CLAIM:

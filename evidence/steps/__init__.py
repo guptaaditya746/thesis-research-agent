@@ -71,6 +71,9 @@ class Step:
                 with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
                     return predict(config={"attempt": attempt}, **inputs)
             except AdapterParseError:
+                mark = getattr(lm, "bad_reply", None)
+                if callable(mark):   # the recorded reply did not parse: a rerun with retry_errors asks it again
+                    mark()
                 if attempt == self.ATTEMPTS - 1:
                     raise
         raise AssertionError("unreachable")
