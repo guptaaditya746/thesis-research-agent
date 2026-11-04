@@ -177,56 +177,65 @@ for S in 1 2; do uv run synth build --name rag-tpl-gen-s$S --seed $S --studies 2
 `ground_truth.json`, `papers/`. These are **template-written**: they tune `map_experiments`, but they never feed `leak`.
 The Claude-written corpora (`tests/EV2/corpora/rag-claude-*`) are in git: do not rebuild them (no `synth` LLM renderer on Slurm).
 
-5.2 **Held-out slice of each real set** (written once; `evaluate wholerun` drops questions on these papers, tuning trains
-on them). Do this **before** `evaluate wholerun` draws its sample:
+5.2 **Held-out slice of each real set** (written once, by whole questions; `evaluate wholerun` drops the held questions,
+tuning trains on their papers). Do this **before** `evaluate wholerun` draws its sample:
 
 ```bash
-uv run python scripts/real-set-prep.py tune-split --corpus "$REAL/sofc/corpus"
-uv run python scripts/real-set-prep.py tune-split --corpus "$REAL/cochraneforest/corpus"
-uv run python scripts/real-set-prep.py tune-split --corpus "$REAL/scilead/corpus"
-uv run python scripts/real-set-prep.py tune-split --corpus "$REAL/scirex/corpus"
+uv run evaluate tune-split --set sofc --src "$REAL/sofc" --corpus "$REAL/sofc/corpus"
+uv run evaluate tune-split --set cochraneforest --src "$REAL/cochraneforest" --corpus "$REAL/cochraneforest/corpus"
+uv run evaluate tune-split --set scilead --src "$SCILEAD_DATA" --corpus "$REAL/scilead/corpus"
+uv run evaluate tune-split --set scirex --src "$REAL/scirex/test.jsonl" --corpus "$REAL/scirex/corpus"
 ```
 
-**Success:** each prints `wrote .../tune_split.json: <k> held out for tuning, <n> rest`.
+**Success:** each prints `wrote .../tune_split.json: kept N questions, held K for tuning (...)`. The file is written once
+(a second run refuses). The old `real-set-prep.py tune-split` (paper level) is not used any more.
 
-5.3 **`tune_examples.json`** (**USER**). The three real-paper steps `recheck`, `map_experiments`, `claims.read_claim` refuse
-to tune on synthetic corpora only (`TuneError`); they need `<corpus>/tune_examples.json` next to `tune_split.json`, in
-exactly the format of the docstring of `evidence/steps/tune.py`:
-`{"examples": [{"step", "paper", "inputs", "gold"}]}` with gold `{"keep": [bool per item]}` (recheck), `{"n": count}`
-(map_experiments), `{"is_claim": bool, "direction": str | None}` (claims.read_claim); every `paper` is a held-out paper.
-**No command builds this file**: the gold must be labelled from each set's own answer key or by hand, and the choice is
-Aditya's. Stop here for the three real steps; run 5.4 for the others. When Aditya hands the files over, check them:
+5.3 **`tune_examples.json`**. The real-paper steps `recheck`, `map_experiments`, `claims.read_claim` refuse to tune on
+synthetic corpora only (`TuneError`); they need `<corpus>/tune_examples.json` next to `tune_split.json`, in the format of
+the docstring of `evidence/steps/tune.py`. A script builds it from the set's own labels (run it after 5.2):
 
 ```bash
-uv run python -c "import sys; from pathlib import Path; from evidence.steps import tune; d=Path(sys.argv[1]); [print(s, len(tune.examples_of(tune.SPECS[s], tune.sources(s,[d],'train'))), len(tune.examples_of(tune.SPECS[s], tune.sources(s,[d],'test')))) for s in tune.REAL_STEPS]" "$REAL/sofc/corpus"
+uv run python scripts/real-set-prep.py tune-examples --set "$REAL/sofc"          # writes $REAL/sofc/corpus/tune_examples.json
+uv run python scripts/real-set-prep.py tune-examples --set "$REAL/cochraneforest"
+```
+
+**Success:** SOFC prints example counts for `recheck` and `map_experiments` and `no examples for claims.read_claim`; the
+other sets print `no examples for ...` (Cochrane has no sentences) and may write nothing. So only SOFC gives real examples,
+and `claims.read_claim` stays **untuned**. **USER** may add or fix examples by hand (same format); Codex does not edit them.
+Check the SOFC file:
+
+```bash
+uv run python -c "import sys; from pathlib import Path; from evidence.steps import tune; d=Path(sys.argv[1]); [print(s, len(tune.examples_of(tune.SPECS[s], tune.sources(s,[d],'train'))), len(tune.examples_of(tune.SPECS[s], tune.sources(s,[d],'test')))) for s in ('recheck','map_experiments')]" "$REAL/sofc/corpus"
 ```
 
 **Success:** one line per step with train and test counts above 0 (a `TuneError` says what is wrong).
 
 5.4 **Tuning** (GEPA light, capped at 500 model calls per step; `--optimizer gepa` is the default). One step at a time,
-model `orch-model` (the default), each with its own cache file:
+model `orch-model` (the default), each with its own cache **folder** (`--cache` is a directory, not a `.jsonl` file).
+
+`write_words` and `write_more_words` are **not tuned**: every Claude corpus shares condition names with the leak corpora,
+so a tuned word writer could not be measured honestly by the leak split (`evaluate leak` refuses such files). Do not tune them.
 
 ```bash
-for STEP in write_words write_more_words; do "$EV/launch.sh" tune-$STEP uv run evidence tune $STEP \
-  --train tests/EV2/corpora/rag-claude-s1-mixed --test tests/EV2/corpora/rag-claude-small-mixed \
-  --optimizer gepa --cache "$CACHE/tune-$STEP.jsonl"; done
-# the three real-paper steps (REAL_STEPS) need at least one real set on the train side (refused on synthetic only, exit 2);
-# add the synthetic corpora beside it. Per real set S that has tune_examples.json (5.3), here SOFC; repeat for the others:
-RS="$REAL/sofc/corpus"
-"$EV/launch.sh" tune-map_experiments-sofc uv run evidence tune map_experiments \
+# the real-paper steps need at least one real set on the train side (refused on synthetic only, exit 2); only SOFC has examples (5.3).
+RS="$REAL/sofc/corpus"; STEP=map_experiments
+"$EV/launch.sh" tune-$STEP-sofc uv run evidence tune $STEP \
   --train "$EV/corpora/rag-tpl-gen-s1-multi_experiment" "$RS" --test "$EV/corpora/rag-tpl-gen-s2-multi_experiment" "$RS" \
-  --optimizer gepa --cache "$CACHE/tune-map_experiments-sofc.jsonl"
-for STEP in recheck claims.read_claim; do "$EV/launch.sh" tune-$STEP-sofc uv run evidence tune $STEP \
-  --train tests/EV2/corpora/rag-claude-s1-mixed "$RS" --test tests/EV2/corpora/rag-claude-small-mixed "$RS" \
-  --optimizer gepa --cache "$CACHE/tune-$STEP-sofc.jsonl"; done
+  --optimizer gepa --cache "$CACHE/tune-$STEP-sofc"
+# recheck: synthetic side only from corpora never scored (k1 or pilot), NEVER a rag-claude-s1-* corpus
+STEP=recheck
+"$EV/launch.sh" tune-$STEP-sofc uv run evidence tune $STEP \
+  --train tests/EV2/corpora/rag-claude-k1-mixed "$RS" --test tests/EV2/corpora/rag-claude-pilot-mixed "$RS" \
+  --optimizer gepa --cache "$CACHE/tune-$STEP-sofc"
 ```
 
 Train and test share a real set's folder: the train side reads only the held-out slice, the test side only the rest
 (disjoint by paper). Train and test never share paper text or ground truth (a `TuneError` says which). A step tuned on
 two sets writes one `tuned/<step>.json`: tune it once, with every set that has examples on both sides.
 
-`planner_query` is **not tunable yet** (known gap: its metric would be the whole-run score on synthetic questions, which is
-not wired): the planner stays untuned; say so in the report. **Success:** each step writes
+`planner_query` is **not tunable yet** (its metric would be the whole-run score on synthetic questions, which is not
+wired): the planner stays untuned. **Untuned steps, listed in the report:** `write_words`, `write_more_words`,
+`claims.read_claim`, `planner_query`. **Success:** each step writes
 `evidence/steps/tuned/<step>.json` with `instructions`, `light_budget`, `max_metric_calls` (at most 500), the calls really
 made and train/test scores before and after. A `TuneError` (overlap, refused synthetic-only, failed parse share) is a
 result, not a crash: record its text. Tuned files change the steps' instructions, so **run section 6 after tuning**;
@@ -237,6 +246,16 @@ copy `evidence/steps/tuned/` back (Aditya decides which go into git).
 A "plan run" is the question planned by the planner, every choice confirmed, then run on the set's papers. `evaluate
 wholerun` only **scores** runs; `scripts/plan-runs.py` makes them in the layout it reads:
 `<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<question id>/` (the hand row is the **first 5 questions** of `sample.json`).
+
+**Network check first** (inside a job; plan runs ask OpenAlex for links):
+
+```bash
+"$EV/in-job.sh" curl -sI --max-time 10 https://api.openalex.org/works/W2741809807
+```
+
+If it fails, set `LINKS=off` and pass `--links off` to every `plan-runs.py run`, and report "links not run"; else `LINKS=on`.
+(With links on and OpenAlex gone mid-run, a run stops asking after 3 failures: links say "openalex unreachable".)
+Every `plan-runs.py run` below carries `--links $LINKS --reasoning on|off`.
 
 For each set `S` in `scilead scirex cochraneforest sofc` (`SRC` = `$REAL/<S>`; for scirex `SRC=$REAL/scirex/test.jsonl`; the
 corpus is `$REAL/<S>/corpus`; MeasEval is only a values check, no whole-run questions), with `RUNS_S=$RUNS/real/<S>`:
@@ -250,17 +269,28 @@ uv run evaluate wholerun --set $S --src "$SRC" --corpus "$COR" --runs "$RUNS_S" 
   --sample "$OUT/sample.json" --plans "$PLANS/$S" --cache "$CACHE/real-$S"
 ```
 
-**USER stop (hand row).** A person must read and confirm the first 5 plans: Aditya opens `$PLANS/$S/<id>.json` (or the plan
-page) and gives a name for `--confirm-by`. Codex never confirms as a person and never uses the name `system` for the hand
-row (`evaluate wholerun` refuses it). Without that name, skip the hand row and say so.
+**USER stop (hand row).** A person must read and confirm the first 5 plans: Aditya gives a name for `--by` / `--confirm-by`.
+Codex never confirms as a person and never uses the name `system` for the hand row (`evaluate wholerun` refuses it).
+Without that name, skip the hand row and say so. With the name, write the hand files and print every decision and word list:
+
+```bash
+uv run python scripts/plan-runs.py confirm --set $S --src "$SRC" --corpus "$COR" --sample "$OUT/sample.json" \
+  --plans "$PLANS/$S" --by "<NAME>"
+```
+
+**USER:** Aditya reads the printout and may edit the decisions or words in `$PLANS/$S/hand-confirmed/<id>.json` before 6.4;
+`run` never overwrites an existing hand file (`--confirm-by` is then optional). Never edit them yourself.
 
 ```bash
 # 6.3 auto row: all 10 questions, decisions confirmed by "system"; reasoning on, then off
 for R in on off; do "$EV/launch.sh" runs-$S-auto-$R uv run python scripts/plan-runs.py run --set $S --src "$SRC" --corpus "$COR" \
-  --sample "$OUT/sample.json" --plans "$PLANS/$S" --cache "$CACHE/real-$S" --runs "$RUNS_S" --confirm auto --reasoning $R; done
+  --sample "$OUT/sample.json" --plans "$PLANS/$S" --cache "$CACHE/real-$S" --runs "$RUNS_S" --confirm auto --reasoning $R --links $LINKS; done
+# after each row, once (not in a loop): redo runs a failed call left unchecked
+#   (same command again with --redo-unchecked added; the old folder stays as <qid>.redo-<n>)
 # 6.4 hand row: first 5, confirmed by the named person
 for R in on off; do "$EV/launch.sh" runs-$S-hand-$R uv run python scripts/plan-runs.py run --set $S --src "$SRC" --corpus "$COR" \
-  --sample "$OUT/sample.json" --plans "$PLANS/$S" --cache "$CACHE/real-$S" --runs "$RUNS_S" --confirm hand --confirm-by "<NAME>" --reasoning $R; done
+  --sample "$OUT/sample.json" --plans "$PLANS/$S" --cache "$CACHE/real-$S" --runs "$RUNS_S" --confirm hand --confirm-by "<NAME>" --reasoning $R --links $LINKS; done
+# once after the row, not in a loop: the same two lines with --redo-unchecked added
 # 6.5 score: engine rows and the RAG baseline (global and per_paper), same questions, papers and model
 "$EV/launch.sh" score-$S uv run evaluate wholerun --set $S --src "$SRC" --corpus "$COR" --runs "$RUNS_S" --out "$OUT" \
   --confirm both --reasoning both --system both --sample 10 --seed 0 --cache "$CACHE/rag-real-$S.jsonl"
@@ -273,10 +303,18 @@ open full text)" line, and how many questions got a fresh query. A missing run i
 `plan-runs.py run` exits 1 when a question failed (it names it, others still run). `evaluate wholerun` exit 2 = refused
 (different model or papers between engine and RAG, wrong confirmation, or no manifest): read the message, fix the cause.
 
-**Reasoning off (a stand-in; USER decides).** The code has no "reasoning off" switch for plan runs: `--reason` is fixed to
-on. `plan-runs.py --reasoning off` points `$EV_ONTOLOGY_DIR` at an empty folder for that run, so MeSH and CS-KG are not read.
-It is not a clean off: the committed CS fallback ontology (`domains/rag/ontology.ttl`) and the small QUDT subset are still
-read. Report the on/off difference with that caveat and ask Aditya whether a real switch is needed.
+**Reruns.** `plan-runs.py run` skips only runs sealed complete. A failed or unsealed folder is moved to
+`<qid>.failed-<n>` and the question runs again with failed calls asked again: just rerun the same command. After each row,
+run it once more with `--redo-unchecked` (not in a loop): a complete run whose `stage_report.json` or `recheck_report.json`
+lists items a failed call left unchecked moves to `<qid>.redo-<n>` and runs again. **Never start two jobs on the same row**
+(the second would move the first one's unfinished folder). The sibling `.failed-<n>` and `.redo-<n>` folders are handed back too.
+
+**Reasoning off is a real switch** (`--reasoning off`): no reasoner, no field ontology in the graph, `ontology.json` says
+`reasoning off: no tree`, lock `field_ontology_sha256` is `{}`. The saved templates do **not** use the ontology tree, so
+on and off differ only on fresh queries (and the unscored synthesis): the report must say so. The word list (with its
+ontology names) is the same plan for both rows. A run's new files: `stage_report.json` (items skipped as `unchecked: ...`,
+keys claims, experiments, links, groups) and, when OpenAlex failed, `openalex-failed.jsonl`; links with `resolve_failed` count
+as outside the set.
 
 **Fresh query returns rows?** For each set the report lists the share of fresh queries; for each fresh question open its
 `answer.json` and say whether its line has rows ("done" with rows, or "done" with none, or "failed: ..."). Generality
@@ -288,12 +326,12 @@ Cochrane note: its questions have one corpus per plot, so `--corpus` is the root
 ## 7. Synthetic checks
 
 7.1 **Off-template (the generality check)**: 12 questions on `rag-claude-s1-mixed`, each planned, confirmed by "system",
-run, then compared with its reference query:
+run, then compared with its reference query (each plan run writes `records.nq` beside `plan.json`; the report lists `failed: ...` per question):
 
 ```bash
 "$EV/launch.sh" plan-offtemplate uv run python scripts/plan-runs.py plan --set offtemplate --plans "$PLANS/offtemplate" --cache "$CACHE/offtemplate"
 "$EV/launch.sh" runs-offtemplate uv run python scripts/plan-runs.py run --set offtemplate --plans "$PLANS/offtemplate" \
-  --cache "$CACHE/offtemplate" --runs "$RUNS/offtemplate" --confirm auto --reasoning on
+  --cache "$CACHE/offtemplate" --runs "$RUNS/offtemplate" --confirm auto --reasoning on --links $LINKS
 uv run evaluate offtemplate --runs "$RUNS/offtemplate" --out "$SCORES/offtemplate"
 ```
 
@@ -306,13 +344,15 @@ Never edit `evaluation/offtemplate/questions.yaml` or the reference queries.
 for C in rag-claude-s1-mixed rag-claude-s1-distributed rag-claude-s1-complex; do
   "$EV/launch.sh" plan-leak-$C uv run python scripts/plan-runs.py plan --set synthetic --corpus tests/EV2/corpora/$C --question "$Q" --plans "$PLANS/leak" --cache "$CACHE/leak"
   "$EV/launch.sh" run-leak-$C uv run python scripts/plan-runs.py run --set synthetic --corpus tests/EV2/corpora/$C --question "$Q" \
-    --plans "$PLANS/leak" --cache "$CACHE/leak" --runs "$RUNS/leak" --confirm auto --reasoning on
+    --plans "$PLANS/leak" --cache "$CACHE/leak" --runs "$RUNS/leak" --confirm auto --reasoning on --links $LINKS
   uv run evaluate leak --run "$RUNS/leak/effect-$C" --corpus tests/EV2/corpora/$C --out "$SCORES/leak/$C"
 done
 ```
 
 (one at a time: wait for each `launch.sh` step to finish.) **Success:** `leak.json` has recall for "on the list" and
-"unseen". A corpus that is not Claude-written is refused (`evaluate leak: ...`, exit 1).
+"unseen". A corpus that is not Claude-written is refused (`evaluate leak: ...`, exit 1), and so is a run when a tuned
+`write_words` / `write_more_words` / `recheck` file saw corpora with the same condition names (none should exist: 5.4). If a
+tuned file lists corpora elsewhere, add `--corpora "$EV/corpora" --corpora tests/EV2/corpora`. Never tune on a `rag-claude-s1-*` corpus.
 
 7.3 **The Claude-written corpora at every level, engine and RAG baseline** (`--protocol` runs, as EV3/EV4; the model is
 `orch-model`; each its own run folder). Levels: `explicit paraphrased distributed complex contradictory mixed`
@@ -335,15 +375,17 @@ tpl-written levels apart from the Claude-written ones.
 chaining question id and a corpus with a truth network (built with `synth build --preset builds_on`); the `rag` pack's
 `questions.yaml` has **no chaining question** (its ids: `rag-factuality`, the `cons-*`, `best-*`, `inv-*` ones), so chaining is
 not run unless Aditya names a corpus and a question (**USER**; do not invent one). Builds-on needs a references file
-`{paper id: [OpenAlex work ids]}` (the run's OpenAlex client saves `openalex.jsonl` beside a plan run; the command itself does
-no network). When both exist:
+`{paper id: [OpenAlex work ids]}` (the run's OpenAlex client saves `openalex.jsonl` beside a plan run; `--build-references` builds the file from it, offline). When both exist:
 
 ```bash
 uv run evaluate links --run "$RUNS/synthetic/<N>" --corpus <corpus with a truth network> --question-id <chaining id> --out "$SCORES/links/chaining"
-uv run evaluate links --run "$RUNS/<plan run>" --references "$EV/openalex-references.json" --out "$SCORES/links/builds-on"
+uv run evaluate links --run "$RUNS/<plan run>" --corpus <its corpus> --build-references --out "$SCORES/links/builds-on"   # writes <out>/openalex-references.json
+uv run evaluate links --run "$RUNS/<plan run>" --references "$EV/openalex-references.json" --out "$SCORES/links/builds-on"   # or your own file
 ```
 
-**Success:** `links.json` with recall numbers. Not run: write "links not run: no chaining question / no references" and why.
+**Success:** `links.json` with recall numbers. "links not run: <why>" is a valid outcome (`builds_on.status`; recall is `None`,
+never 0): copy the reason (links off, no chaining question, no references, no OpenAlex work ids). When some cited works are in
+the set (`n_in_set` > 0) they cannot be scored, so links recall is a **lower bound**.
 
 ## 8. Hand-back
 
@@ -351,16 +393,22 @@ uv run evaluate links --run "$RUNS/<plan run>" --references "$EV/openalex-refere
 2. Copy every run folder back: `rsync -a "$RUNS/" <laptop or results branch>/runs/` (all of `real/`, `offtemplate/`,
    `leak/`, `synthetic/`, `synthetic-rag/`), plus `$SCORES`, `$PLANS`, `$CACHE/*.jsonl` of the baselines, `$EV/ontology-hashes.json`,
    `$EV/sofc-directions.tsv`, `$EV/estimate-*.json`, `evidence/steps/tuned/`, and every `tune_split.json` (and
-   `tune_examples.json`) of the real sets. Branch `results-general` from `origin/results`; tag `general`; never push to `main`
+   `tune_examples.json`) of the real sets; in every run folder `stage_report.json` and, when present, `openalex-failed.jsonl`
+   (also the `<qid>.failed-<n>` / `<qid>.redo-<n>` folders). Branch `results-general` from `origin/results`; tag `general`; never push to `main`
    or `results`.
 3. Write `reports/general/summary.md`, losses first: per real set the engine rows against RAG (wins, losses, ties, paired
    interval); the fresh-query share and off-template match rate; the leak split; the left-out lines; the ReadClaim numbers;
-   what stayed untuned (`planner_query`, and any real step without examples); every **USER** stop and its answer; every
-   layout difference found in 3.2.
+   what stayed untuned (`write_words`, `write_more_words`, `claims.read_claim`, `planner_query`, and any real step without examples); every **USER** stop and its answer; every
+   layout difference found in 3.2; whether links were on or off and why; that on/off reasoning differ only on fresh queries.
+   **Replay:** replaying a plan run needs the same ontology files (it reads `$EV_ONTOLOGY_DIR` again): hand back
+   `ontology-hashes.json` and fetch the same files before replaying, else `lock.json` / `records.nq` mismatch. Plan runs
+   recorded before this merge do not replay (none exist on the cluster yet).
 4. No "pending" text; a final status in the report.
 
 ## Limits (say them in the report)
 
-Reasoning off is a stand-in (section 6). Layouts of CochraneForest, SOFC-Exp and MeasEval stay `layout_verified: false`
-until Aditya clears 3.2. Real-paper steps tune only on held-out slices with `tune_examples.json`. `planner_query` is
-untuned. The sample is 10 questions per set, a hand row of 5. Leak uses Claude-written corpora only.
+Saved templates do not use the ontology tree: reasoning on/off differ only on fresh queries (section 6). Layouts of
+CochraneForest, SOFC-Exp and MeasEval stay `layout_verified: false` until Aditya clears 3.2. Real-paper steps tune only on
+held-out slices with `tune_examples.json`, and only SOFC has them (`recheck`, `map_experiments`). Untuned: `write_words`,
+`write_more_words`, `claims.read_claim`, `planner_query`. Links recall is a lower bound when `n_in_set` > 0, and "links not
+run" is a valid outcome. The sample is 10 questions per set, a hand row of 5. Leak uses Claude-written corpora only.
