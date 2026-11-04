@@ -15,7 +15,7 @@ What becomes what:
 
 Beyond the vocabulary, a few helper properties in the `kg:` namespace carry what a query needs from a value:
 `kg:side` (its thing's side field, e.g. rag / baseline), `kg:position` (where its number sits in the paper),
-`kg:inTable` (the number is in a table cell), `kg:context`, and on a metric `kg:higherIsBetter`.
+`kg:inTable` (the number is in a table cell), `kg:context` (with `kg:contextKey`, its `names.clean` form; an experiment setting has `kg:key_<field>` likewise), and on a metric `kg:higherIsBetter`.
 
 Everything is in the default graph and `serialize` sorts the N-Quads, so the same records give the same bytes."""
 from __future__ import annotations
@@ -72,6 +72,11 @@ def flag(x: bool) -> ox.Literal:
 
 def setting_property(field: str) -> ox.NamedNode:
     return ev("setting_" + "".join(c if c.isalnum() else "_" for c in field))
+
+
+def setting_key_property(field: str) -> ox.NamedNode:
+    """The property holding the cleaned copy (`names.clean`) of an experiment setting: `kg:key_<field>`."""
+    return kg("key_" + "".join(c if c.isalnum() else "_" for c in field))
 
 
 def _classes(ontology: Graph | None) -> tuple[dict[str, list[str]], list[tuple[str, str, str]]]:
@@ -152,6 +157,7 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
             add(node, ev("source"), _source(it))
             for k, v in sorted(setting.items()):
                 add(node, setting_property(k), lit(v))
+                add(node, setting_key_property(k), lit(names.clean(v)))
             experiments.append((node, setting))
         implicit: set[ox.NamedNode] = set()
         for it in (i for i in mine if i.evidence_type in value_types):
@@ -183,6 +189,7 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
                     add(exp, ev("name"), lit(context if context is not None else "none"))
                     if context is not None:
                         add(exp, setting_property(context_field), lit(context))
+                        add(exp, setting_key_property(context_field), lit(names.clean(context)))
             tnode = thing_like("thing", names.clean(tname), tname, "Thing")
             mnode = thing_like("metric", str(mname), str(mname), "Metric")
             better = metric.fields.get("higher_is_better") if metric is not None else None
@@ -204,6 +211,7 @@ def build(papers: list[Paper], items: dict[str, list[Item]], roles: RoleMap, ont
                 add(vnode, kg("side"), lit(thing.fields[side_field]))
             if context is not None:
                 add(vnode, kg("context"), lit(context))
+                add(vnode, kg("contextKey"), lit(names.clean(context)))
             values_by_exp.setdefault(exp, []).append(
                 (vnode, tnode, mnode, float(number), better if isinstance(better, bool) else None))
         for it in (i for i in mine if i.evidence_type in limitation_types):   # a limitation is a claim of relation "limitation"

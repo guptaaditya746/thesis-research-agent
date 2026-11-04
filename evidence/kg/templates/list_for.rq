@@ -1,8 +1,9 @@
 # params: list_field, for_field, for_value
 # One kind of thing linked to another: the settings $list_field used in experiments whose $for_field is $for_value
 # (datasets used for task T: list_field "dataset", for_field "task", for_value T), with the papers they appear in.
+# $for_field is matched on its cleaned form (names.clean: "NER" and "ner" are one); the listed item keeps the paper's spelling.
 SELECT ?item (COUNT(DISTINCT ?paper) AS ?papers) WHERE {
-  ?e a ev:Experiment ; ev:inPaper ?p ; $list_field ?item ; $for_field $for_value .
+  ?e a ev:Experiment ; ev:inPaper ?p ; $list_field ?item ; $for_field_key $for_value_key .
   ?p ev:name ?paper .
   $include[?paper]
 }

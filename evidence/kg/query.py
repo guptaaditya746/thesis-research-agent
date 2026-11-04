@@ -4,6 +4,8 @@
 filled in (a string becomes a quoted literal, a number or boolean itself, a list its items separated by spaces, so
 `VALUES ?x { $counts_as }` works). Two more forms:
 - a param whose name ends in `_field` (a setting key such as "dataset") is the property `ev:setting_<key>`;
+- `$<name>_key` is the param `<name>` as a literal for the graph's cleaned copies (`kg:contextKey`, `kg:key_<field>`); any
+  literal after those two properties, bound or written inline, is cleaned (`names.clean`) before the query runs; `$<name>_field_key` is the cleaned-copy property of the setting key `<name>_field`;
 - `$must_match[?e1, ?e2]` expands to the patterns saying the two experiments have equal settings for each field of the
   `must_match` param (no param or an empty list: no constraint); `$include[?paper]` to a filter keeping the papers
   named in the `include` param (no param: no filter).
@@ -24,7 +26,9 @@ import pyoxigraph as ox
 from evidence.vocab import EV
 
 from . import after
-from .build import KG, setting_property
+from evidence.names import clean
+
+from .build import KG, setting_key_property, setting_property
 
 NO_EVIDENCE = "No evidence found"
 PREFIXES = {"ev": EV, "kg": KG, "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -78,7 +82,19 @@ def _must_match(args: str, fields: list[str]) -> str:
 
 
 def _include(args: str, papers: list[str]) -> str:
-    return f"FILTER({args.strip()} IN ({term(list(papers))}))"
+    return f"FILTER({args.strip()} IN ({', '.join(term(p) for p in papers)}))"
+
+
+_KEY_LITERAL = re.compile(r'((?:kg:contextKey|kg:key_\w+|<[^<>\s]*[#/](?:contextKey|key_\w+)>)\s+)"((?:[^"\x5c]|\x5c.)*)"')
+
+
+def _clean_keys(body: str) -> str:
+    """Every literal that is the object of `kg:contextKey` or `kg:key_<field>` (written by the planner or bound from a
+    param) becomes its `names.clean` form, as the graph stores it. Runs once, on the filled query."""
+    def fix(m: re.Match[str]) -> str:
+        raw = re.sub(r"\x5c(.)", r"\1", m.group(2))   # the SPARQL escapes of the literal undone
+        return m.group(1) + term(clean(raw))
+    return _KEY_LITERAL.sub(fix, body)
 
 
 def declared(sparql: str) -> list[str]:
@@ -112,11 +128,15 @@ def render(sparql: str, params: dict[str, Any]) -> str:
         if name == "include" and args is not None:
             return _include(args, params["include"]) if params.get("include") is not None else ""
         if name not in params:
+            if name.endswith("_field_key") and name[:-4] in params:
+                return f"<{setting_key_property(str(params[name[:-4]])).value}>"
+            if name.endswith("_key") and name[:-4] in params:
+                return term(params[name[:-4]])   # raw: `_clean_keys` cleans it with every inline literal
             return m.group(0)
         if name.endswith("_field"):
             return f"<{setting_property(str(params[name])).value}>"
         return term(params[name])
-    body = _PLACEHOLDER.sub(fill, _COMMENT.sub("", sparql))
+    body = _clean_keys(_PLACEHOLDER.sub(fill, _COMMENT.sub("", sparql)))
     left = sorted(set(_FREE.findall(body)))
     if left:
         raise ValueError(f"no value for parameter(s) {left}: they would be free variables in the query")

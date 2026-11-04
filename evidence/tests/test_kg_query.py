@@ -223,3 +223,42 @@ def test_effect_template_equals_old_effect_answer():
     for s in answer_json["studies"]:
         r = by_paper[s["document"]]
         assert (r["direction"], r["delta"]) == (s["direction"], s["delta"])
+
+
+def test_rank_matches_the_cleaned_context_not_the_exact_string():
+    docs = []
+    for pid, spelling, name, x in (("p1", "SQuAD", "Alpha", 0.71), ("p2", "squad", "Beta", 0.80),
+                                   ("p3", "SQuAD2", "Gamma", 0.99)):
+        d = Doc(pid)
+        d.value(name, x, metric="F1", population=spelling)
+        docs.append(d)
+    answer = run_template(graph(*docs), "rank", {"context": "SQuAD", "metric": "F1"})
+    assert [(r["thing"], r["paper"]) for r in answer.rows] == [("Beta", "p2"), ("Alpha", "p1")]   # "SQuAD2" is another set
+
+
+def test_rank_does_not_merge_dataset_versions():
+    d = Doc("p1")
+    d.value("Alpha", 0.7, metric="F1", population="SQuAD v1.1 dev")
+    answer = run_template(graph(d), "rank", {"context": "SQuAD", "metric": "F1"})
+    assert answer.empty   # a version is a different literal: cleaning does not merge it (a known gap)
+
+
+def test_rank_returns_the_paper_of_each_things_best_value():
+    docs = []
+    for pid, x in (("p1", 0.60), ("p2", 0.75), ("p3", 0.70)):
+        d = Doc(pid)
+        d.value("Alpha", x, metric="F1", population="X")
+        docs.append(d)
+    answer = run_template(graph(*docs), "rank", {"context": "X", "metric": "F1"})
+    assert [(r["thing"], r["score"], r["paper"]) for r in answer.rows] == [("Alpha", 0.75, "p2")]
+    assert list(answer.rows[0]) == ["thing", "score", "paper"]
+
+
+def test_list_for_matches_the_cleaned_setting_value():
+    docs = []
+    for pid, task, data in (("p1", "NER", "SciERC"), ("p2", "ner", "CoNLL"), ("p3", "Named-Entity", "WNUT")):
+        d = Doc(pid)
+        d.experiment("e1", {"task": task, "dataset": data})
+        docs.append(d)
+    answer = run_template(graph(*docs), "list_for", {"list_field": "dataset", "for_field": "task", "for_value": "NER"})
+    assert [r["item"] for r in answer.rows] == ["CoNLL", "SciERC"]   # "Named-Entity" is not the same key

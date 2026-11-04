@@ -25,8 +25,8 @@ side is Wave 2 Task 8.1, the adapter "engine run -> Answer"):
                             `gold["conclusions"][i]["id"]`, the ids the question gives
 An unused part stays empty: an empty answer is valid and scores 0 (recall) or None (precision).
 `from_run(run, q)` is that adapter for an engine run folder: a plan run's answer.json (its lines' rows: rank and list
-read the first answered line other than the oversell caveat, a ranking by its `paper` column when it has one, else
-its first column; compare reads `paper` + `direction` rows, else the kind's answer kept under `synthesis`), and for
+read the first answered line other than the oversell caveat; a ranking whose gold is paper ids reads the `paper`
+column only (none: an empty answer), any other ranking and a list read the first column; compare reads `paper` + `direction` rows, else the kind's answer kept under `synthesis`), and for
 claims the run's claim records (evidence.jsonl): one claim per gold conclusion, the majority direction of the run's
 directed claims (a question gives one conclusion id per review; with several, a claim is about the conclusion whose
 id or text its subject or object names, else it is left out).
@@ -97,6 +97,19 @@ def _column(rows: list[dict[str, Any]], prefer: str | None = None) -> list[str]:
     return out
 
 
+def paper_gold(q: RealQuestion) -> bool:
+    """True for a ranking whose gold is paper ids (SciLead: "which paper reports the best result"): every id of the gold
+    ranking is one of the question's papers. A ranking of names (SOFC materials) is not."""
+    want = [str(x) for x in q.gold.get("ranking") or []]
+    return q.kind == "rank" and bool(want) and set(want) <= set(question_papers(q))
+
+
+def answer_column(q: RealQuestion) -> str | None:
+    """The column of a rank line's rows that holds the answer: `paper` for a paper-id gold, else the first column
+    (None). Shared with the error split, so the key store and the run are compared on the same column."""
+    return "paper" if paper_gold(q) else None
+
+
 def _majority(directions: list[str]) -> str | None:
     counts = Counter(d for d in directions if d)
     if not counts:
@@ -120,7 +133,11 @@ def from_run(run: Path | str, q: RealQuestion) -> Answer:
     answer = json.loads((root / "answer.json").read_text(encoding="utf-8"))
     lines = _lines(answer)
     if q.kind == "rank":
-        return Answer(ranking=_column(lines[0]["rows"], "paper") if lines else [])
+        column = answer_column(q)
+        rows = lines[0]["rows"] if lines else []
+        if column is not None:   # paper ids in the gold: the `paper` column only; no such column is an empty answer
+            rows = [r for r in rows if column in r]
+        return Answer(ranking=_column(rows, column))
     if q.kind == "list":
         return Answer(names=_column(lines[0]["rows"]) if lines else [])
     if q.kind == "compare":
