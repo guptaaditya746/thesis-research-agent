@@ -11,8 +11,11 @@ from the record and never touches the network; a request missing from the record
 
 A request that fails (no network, a timeout, HTTP 429 or 5xx, any HTTP error but 404, a body that is not JSON) is never
 put in the record: a later run asks again. `resolve` keeps the link, `object_doc` None, `outside_set` True and
-`resolve_failed` the reason. So that a replay fails it the same way, the failure is written to the run folder's
-`openalex-failed.jsonl`, which only an offline replay reads (final review C3)."""
+`resolve_failed` the reason. The failure is written to the run folder's `openalex-failed.jsonl`: within the run the
+URL stays failed (a later request for it fails at once, so the run and its replay agree), and an offline replay
+fails it the same way; a new run folder asks again. Requests time out after TIMEOUT seconds, and after BREAK_AFTER
+network failures in a row the run stops asking: every later request fails at once with "openalex unreachable"
+(recorded the same way). Final review C3, fix round 1 C2/I3."""
 from __future__ import annotations
 
 import http.client
@@ -37,7 +40,11 @@ __all__ = ["NotRecorded", "OpenAlex", "ReadLink", "ResolveFailed", "read_link", 
 
 BASE = "https://api.openalex.org/"
 RECORD_FILE = "openalex.jsonl"
-FAILED_FILE = "openalex-failed.jsonl"   # failed requests, read by an offline replay only
+FAILED_FILE = "openalex-failed.jsonl"   # this run's failed requests (sticky for the run; an offline replay reads it)
+TIMEOUT = 10                            # seconds per request
+BREAK_AFTER = 3                         # network failures in a row before the run stops asking OpenAlex
+UNREACHABLE = "openalex unreachable"
+_STREAK = cache_key({"openalex": "consecutive failures"})   # the breaker's count, in the failed file
 Fetch = Callable[[str], "dict[str, Any] | None"]   # url -> parsed JSON, or None for a 404
 
 
@@ -91,7 +98,7 @@ def read_link(sentence: str, ctx: Any | None = None) -> tuple[str, str | None]:
 def _urlopen(url: str) -> dict[str, Any] | None:
     req = urllib.request.Request(url, headers={"User-Agent": "thesis-research-agent (mailto:a.gupta@firmway.eu)"})
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
@@ -161,15 +168,29 @@ class OpenAlex:
             if failed is not None:   # the recorded run's request failed: fail it the same way
                 raise ResolveFailed(failed["reason"])
             raise NotRecorded(f"offline replay: no recorded OpenAlex answer for {url}")
+        failed = self.failed.get(key) if self.failed is not None else None
+        if failed is not None:   # failed earlier in this run: it stays failed for the run (a replay then matches)
+            raise ResolveFailed(failed["reason"])
+        streak = int((self.failed.get(_STREAK) or {}).get("n", 0)) if self.failed is not None else 0
+        if streak >= BREAK_AFTER:   # the breaker: OpenAlex did not answer BREAK_AFTER times in a row; stop asking
+            self._fail(key, url, UNREACHABLE, streak)
         try:
             body = self._fetch(url)
-        except (OSError, ValueError, http.client.HTTPException) as exc:   # never recorded as an answer: asked again
-            reason = _failure(exc)
-            if self.failed is not None:
-                self.failed.put(key, {"reason": reason, "url": url})
-            raise ResolveFailed(reason) from None
+            if body is not None and not isinstance(body, dict):
+                raise ValueError(f"not a JSON object: {type(body).__name__}")
+        except (OSError, ValueError, http.client.HTTPException) as exc:   # never recorded as an answer
+            self._fail(key, url, _failure(exc), streak + 1)
+        if streak and self.failed is not None:
+            self.failed.put(_STREAK, {"n": 0})
         self.cache.put(key, {"output": json.dumps(body), "url": url})
         return body
+
+    def _fail(self, key: str, url: str, reason: str, streak: int) -> None:
+        """Record the failure of `url` for this run (and the breaker's count), then raise ResolveFailed."""
+        if self.failed is not None:
+            self.failed.put(key, {"reason": reason, "url": url})
+            self.failed.put(_STREAK, {"n": streak})
+        raise ResolveFailed(reason)
 
     def work(self, cited_text: str, doi: str | None, arxiv_id: str | None) -> dict[str, Any] | None:
         """The OpenAlex work for a DOI, else an arXiv id (its DataCite DOI), else a title search; None when unknown."""
