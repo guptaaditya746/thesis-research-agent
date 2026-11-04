@@ -263,6 +263,18 @@ def render(report: dict[str, Any]) -> str:
 
 # --- off-template -------------------------------------------------------------------------------------------------
 
+def _records_store(root: Path) -> Any:
+    """The run's records graph (records.nq) as a pyoxigraph Store; None when the run wrote none."""
+    from evidence.planrun import RECORDS_FILE
+    path = root / RECORDS_FILE
+    if not path.is_file():
+        return None
+    import pyoxigraph as ox
+    store = ox.Store()
+    store.load(path.read_bytes(), format=ox.RdfFormat.N_QUADS)
+    return store
+
+
 def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
     """Check every off-template question that has `<runs>/<question id>/plan.json`: the two generality numbers."""
     from .offtemplate import check as ot
@@ -272,7 +284,16 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
         path = Path(runs) / q.id / PLAN_FILE
         if not path.is_file():
             continue
-        found = ot.check(SimpleNamespace(plan=load_plan(path)), q)
+        try:
+            found = ot.check(SimpleNamespace(plan=load_plan(path), store=_records_store(Path(runs) / q.id)), q)
+        except Exception as exc:   # noqa: BLE001 - one bad question is a "no match", never a dead report
+            try:
+                fresh = ot.plan_line(load_plan(path), q).template is None    # known without running the query
+            except Exception:   # noqa: BLE001 - an unreadable plan has no line to look at
+                fresh = False
+            has_records = (Path(runs) / q.id / "records.nq").is_file()      # a run with records: no match end to end
+            found = {"fresh": fresh, "match_on_key": False, "match_on_run": False if has_records else None,
+                     "extra_columns": [], "failed": f"failed: {type(exc).__name__}: {exc}"}
         results.append(found)
         per[q.id] = found
     committed = ot.committed_at([ot.QUESTIONS, *sorted(ot.REFERENCE.glob("*.rq"))])
@@ -283,6 +304,7 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
             f"Answered with a fresh query: {_cell(report['summary']['fresh_share'])}.",
             f"Off-template match rate (answer key): {_cell(report['summary']['match_rate'])}.",
             f"Match rate on the run's own records: {_cell(report['summary']['match_on_run_rate'])}.",
+            *[f"- {i}: {r['failed']}" for i, r in per.items() if r.get("failed")],
             f"Questions first committed: {report['committed_at'] or 'not in git'}.", ""]
     rep.write_pair(report, chr(10).join(text), out, "offtemplate")
     return report
@@ -290,19 +312,87 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
 
 # --- leak ---------------------------------------------------------------------------------------------------------
 
-def leak(run: Path, corpus: Path, out: Path) -> dict[str, Any]:
+TUNED_WORD_STEPS = ("write_words", "write_more_words")     # the tuned steps that write the word list
+CORPORA_ROOT = Path(__file__).resolve().parents[1] / "tests" / "EV2" / "corpora"
+
+
+def _condition_names(truth: Any, *, aliases: bool) -> set[str]:
+    """The cleaned names of a truth's conditions. With `aliases=True` what the tuning gold holds (`tune._names_by_role`:
+    every role but `other`, label and aliases); with `aliases=False` what the leak split marks (every condition's
+    label)."""
+    from evidence.names import clean
+    names = set()
+    for fact in truth.facts.values():
+        if fact.type == "condition" and (not aliases or fact.data.get("role") != "other"):
+            names |= {clean(n) for n in [fact.data.get("label"), *(fact.data.get("aliases") or [] if aliases else [])]
+                      if isinstance(n, str)}
+    return names - {""}
+
+
+def _corpus_index(roots: Iterable[Path]) -> dict[str, Path]:
+    """{corpus id: folder} for every folder under `roots` that holds a ground_truth.json. The id is the manifest's
+    `corpus_id` (what tune.py writes into a tuned file, `tune._corpus_id`), else the folder name; the folder name
+    also finds it."""
+    index: dict[str, Path] = {}
+    for root in roots:
+        for folder in sorted(p for p in Path(root).iterdir() if (p / "ground_truth.json").is_file()) if Path(root).is_dir() else []:
+            manifest = folder / "manifest.json"
+            ident = str(json.loads(manifest.read_text(encoding="utf-8")).get("corpus_id") or folder.name)                 if manifest.is_file() else folder.name
+            index.setdefault(ident, folder)
+            index.setdefault(folder.name, folder)
+    return index
+
+
+def check_tuned_words(truth: Any, tuned_dir: Path | None = None, corpora: Iterable[Path] = ()) -> None:
+    """Refuse (ValueError) when a tuned word-writing step was tuned on corpora whose condition names (cleaned, not
+    hashed) overlap the leak corpus's: the tuned instructions may then hold the names the split calls "unseen".
+    `tuned_dir` holds the tuned files (default evidence/steps/tuned); no file, no refusal. The corpora a file lists
+    are looked up by id in `corpora` (default tests/EV2/corpora); one that cannot be read is refused too."""
+    from .truth import GroundTruth
+    if tuned_dir is None:
+        from evidence.steps import TUNED_DIR
+        tuned_dir = TUNED_DIR
+    roots = [Path(c) for c in corpora] or [CORPORA_ROOT]
+    index = _corpus_index(roots)
+    mine = _condition_names(truth, aliases=False)
+    for step in TUNED_WORD_STEPS:
+        path = Path(tuned_dir) / f"{step}.json"
+        if not path.is_file():
+            continue
+        tuned = json.loads(path.read_text(encoding="utf-8"))
+        for side in ("train_corpora", "test_corpora"):
+            for corpus_id in tuned.get(side) or []:
+                found = index.get(corpus_id)
+                if found is None:
+                    raise ValueError(f"tuned {step} ({path}) lists {side[:-8]} corpus {corpus_id!r}, which cannot be "
+                                     f"read from {[str(r) for r in roots]}: cannot tell whether its names overlap; "
+                                     "pass --corpora")
+                shared = mine & _condition_names(GroundTruth.load(found / "ground_truth.json"), aliases=True)
+                if shared:
+                    raise ValueError(f"tuned {step} ({path}) was tuned with {side[:-8]} corpus {corpus_id!r}, which "
+                                     f"share {len(shared)} condition names with {truth.corpus_id!r} (for example "
+                                     f"{sorted(shared)[:3]}): the leak split would measure names the writer was tuned "
+                                     "on; tune on other corpora or move the tuned file aside")
+
+
+def leak(run: Path, corpus: Path, out: Path, *, tuned_dir: Path | None = None,
+         corpora: Iterable[Path] = ()) -> dict[str, Any]:
     """The leak split of a run's extraction recall: facts whose name is "on the list" vs "unseen". The word list is
-    the one in the run's plan.json; ValueError for a corpus that is not Claude-written."""
+    the one in the run's plan.json; ValueError for a corpus that is not Claude-written, or when the tuned word writer
+    was tuned on corpora sharing the corpus's condition names (`check_tuned_words`)."""
     from . import leak as lk
-    from .score import score as score_run
+    from .score import score_extraction_only
     from .truth import GroundTruth
     plan = load_plan(Path(run) / PLAN_FILE)
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
-    result = score_run(Path(run), Path(corpus), [], None, None, None)
+    check_tuned_words(truth, tuned_dir, corpora)
+    result = {"extraction": score_extraction_only(Path(run), Path(corpus))}
     marks = lk.mark(truth, plan.words, result["extraction"].get("scored_types"))
     split = lk.split_scores(result, marks)
     nl = chr(10)
-    lines = ["# Leak split (extraction recall)", "", "| names | facts | matched | recall |", "|---|---|---|---|"]
+    lines = ["# Leak split (extraction recall)", "",
+             "Named facts are matched by name (conditions without their role, metrics without the plan's measure id), "
+             "so these recalls are not comparable with the extraction scores of `evaluate score`.", "", "| names | facts | matched | recall |", "|---|---|---|---|"]
     lines += [f"| {k} | {v['facts']} | {v['matched']} | {_cell(v['recall'])} |" for k, v in split.items()]
     rep.write_pair(split, nl.join(lines) + nl, out, "leak")
     return split
@@ -310,51 +400,139 @@ def leak(run: Path, corpus: Path, out: Path) -> dict[str, Any]:
 
 # --- links --------------------------------------------------------------------------------------------------------
 
-def _work(ref: str) -> str:
-    return re.sub(r".*/", "", str(ref).strip())
+def _work(ref: Any) -> str:
+    """An OpenAlex work id by its last path segment, upper case ("https://openalex.org/w1" is "W1")."""
+    return re.sub(r".*/", "", str(ref).strip()).upper()
 
 
-def builds_on_recall(links: list[dict[str, Any]], references: dict[str, list[str]]) -> dict[str, Any]:
-    """Builds-on links against OpenAlex `references` (evidence.openalex.references, saved per paper as
-    {paper id: [work id, ...]}): recall of each paper's referenced works among the run's links, and precision of the
-    links. Work ids compare by their last path segment ("https://openalex.org/W1" is "W1"). None when a side is empty."""
-    found: dict[str, set[str]] = {}
+def _doi_of(text: Any) -> str | None:
+    """The bare lower-case DOI in `text` (a DOI, its doi.org URL or "doi:..."), else None (a cited title, an arXiv id)."""
+    found = re.search(r"10[.][0-9]+/[^ ]+", str(text or ""))
+    return found.group(0).rstrip(".,;)").lower() if found else None
+
+
+def _reference(entry: Any) -> tuple[str | None, str | None]:
+    """(work id, DOI) of one reference: {"work": ..., "doi": ...} (what `build_references` writes) or a bare string, a
+    work id or a DOI."""
+    if isinstance(entry, dict):
+        return (_work(entry["work"]) if entry.get("work") else None), _doi_of(entry.get("doi"))
+    return (None, _doi_of(entry)) if _doi_of(entry) else (_work(entry), None)
+
+
+def _same_work(a: tuple[str | None, str | None], b: tuple[str | None, str | None]) -> bool:
+    return (a[0] is not None and a[0] == b[0]) or (a[1] is not None and a[1] == b[1])
+
+
+def builds_on_recall(links: list[dict[str, Any]], references: dict[str, list[Any]]) -> dict[str, Any]:
+    """Builds-on links against OpenAlex `references` ({paper id: [reference, ...]}, `build_references`): recall of each
+    paper's referenced works among the run's links, and precision of the links. A link names a work by its `work` (the
+    OpenAlex id the run resolved, "W..." or its URL); a DOI equal to the link's `ref` counts too (the fallback for a
+    link with no `work`). None when a side is empty."""
+    found: dict[str, dict[tuple[str | None, str | None], None]] = {}
+    unresolved = in_set = 0
     for link in links:
+        if link.get("resolve_failed") or "resolve_failed" in str(link.get("text", "")):
+            unresolved += 1          # OpenAlex did not answer: neither a hit nor a miss, left out
+            continue
+        if link.get("in_set") and not link.get("work") and not _doi_of(link.get("ref")):
+            in_set += 1              # a corpus paper found without OpenAlex: no work id or DOI to compare, left out
+            continue
         if link.get("paper") in references:
-            found.setdefault(link["paper"], set()).add(_work(link["ref"]))
-    per, right, total_found, total_want = {}, 0, 0, 0
+            key = (_work(link["work"]) if link.get("work") else None, _doi_of(link.get("ref")))
+            found.setdefault(link["paper"], {})[key] = None
+    per: dict[str, dict[str, int]] = {}
     for paper, refs in references.items():
-        want, got = {_work(r) for r in refs}, found.get(paper, set())
-        per[paper] = {"expected": len(want), "found": len(want & got)}
-        right += len(want & got)
-        total_found += len(got)
-        total_want += len(want)
-    return {"recall": right / total_want if total_want else None, "precision": right / total_found if total_found else None,
-            "n_expected": total_want, "n_links": total_found, "per_paper": per}
+        want, got = [_reference(r) for r in refs], list(found.get(paper, {}))
+        per[paper] = {"expected": len(want), "found": sum(any(_same_work(w, g) for g in got) for w in want),
+                      "links": len(got), "links_right": sum(any(_same_work(w, g) for w in want) for g in got)}
+    total_want, total_links = sum(p["expected"] for p in per.values()), sum(p["links"] for p in per.values())
+    return {"recall": sum(p["found"] for p in per.values()) / total_want if total_want else None,
+            "precision": sum(p["links_right"] for p in per.values()) / total_links if total_links else None,
+            "n_expected": total_want, "n_links": total_links, "n_unresolved": unresolved,
+            "n_in_set": in_set, "per_paper": per}
+
+
+def build_references(run: Path, corpus: Path) -> dict[str, list[dict[str, Any]]]:
+    """{paper id: [{"work": "W...", "doi": bare DOI or None}, ...]}: the `referenced_works` of every work the run
+    recorded in openalex.jsonl (evidence.openalex), for the papers of `corpus` those works are (by DOI or title, as the
+    run's links find them). Offline: it reads the record only. A paper whose own work the run never asked OpenAlex
+    for (a paper no other paper cites) has no entry, and is not scored."""
+    from evidence.openalex import RECORD_FILE, OpenAlex
+    from modelcall.cache import JsonlCache
+    path = Path(run) / RECORD_FILE
+    if not path.is_file():
+        raise ValueError(f"{path}: no recorded OpenAlex answers (the run made no builds-on links)")
+    works: list[dict[str, Any]] = []
+    for _key, value in JsonlCache(path).items():
+        body = json.loads(value["output"])
+        if isinstance(body, dict):
+            works += [w for w in ([body] if "id" in body else body.get("results") or []) if isinstance(w, dict)]
+    doi = {_work(w["id"]): _doi_of(w.get("doi")) for w in works if w.get("id")}
+    manifest = json.loads((Path(corpus) / "manifest.json").read_text(encoding="utf-8"))
+    texts = {p["id"]: (Path(corpus) / (p.get("file") or f"papers/{p['id']}.md")).read_text(encoding="utf-8")
+             for p in manifest["papers"]}
+    out: dict[str, dict[str, str | None]] = {}
+    for work in works:
+        referenced = work.get("referenced_works") or []
+        paper = OpenAlex._run_doc(work, texts) if referenced else None
+        if paper is not None:
+            for ref in referenced:
+                out.setdefault(paper, {}).setdefault(_work(ref), doi.get(_work(ref)))
+    return {p: [{"work": w, "doi": d} for w, d in sorted(refs.items())] for p, refs in sorted(out.items())}
+
+
+def builds_on_status(answer: dict[str, Any], references: dict[str, list[Any]]) -> str | None:
+    """Why builds-on cannot be scored ("links not run: ..."), else None. A number is never made up: a run without the
+    links list, without references to compare with, or whose links cannot be told from the references is not scored."""
+    links = answer.get("links")
+    if links is None:
+        return "links not run: the run's answer.json has no links"
+    if not any(references.values()):
+        return "links not run: no paper has OpenAlex references to compare with"
+    refs_have_doi = any(_reference(r)[1] for rs in references.values() for r in rs)
+    if links and not any("work" in link for link in links) and not (
+            refs_have_doi and any(_doi_of(link.get("ref")) for link in links)):
+        return "links not run: the links carry no OpenAlex work id (rerun the plan run)"
+    return None
 
 
 def links(run: Path, out: Path, *, corpus: Path | None = None, question_id: str | None = None,
-          references: Path | None = None) -> dict[str, Any]:
+          references: Path | None = None, build: bool = False) -> dict[str, Any]:
     """Chaining (with `question_id`): the existing scorer's result against the synthetic truth network
-    (evaluation/score.py); builds-on (with `references`): `builds_on_recall` of the run's links."""
+    (evaluation/score.py); builds-on (with `references`, or `build` to make the references from the run's recorded
+    OpenAlex answers into <out>/openalex-references.json): `builds_on_recall` of the run's links, or "links not run"."""
     result: dict[str, Any] = {}
+    refs: dict[str, list[Any]] | None = None
+    if build and references is not None:
+        raise ValueError("--build-references and --references are two ways to get the references: give one")
     if question_id is not None:
         from .score import score as score_run
         if corpus is None:
             raise ValueError("chaining needs --corpus")
         result["chaining"] = score_run(Path(run), Path(corpus), [], None, None, question_id)
-    if references is not None:
+    if build:
+        if corpus is None:
+            raise ValueError("--build-references needs --corpus (the papers the recorded works are matched to)")
+        refs = build_references(run, corpus)
+        Path(out).mkdir(parents=True, exist_ok=True)
+        Path(out, "openalex-references.json").write_text(json.dumps(refs, indent=1) + chr(10), encoding="utf-8",
+                                                         newline=chr(10))
+    elif references is not None:
+        refs = json.loads(Path(references).read_text(encoding="utf-8"))
+    if refs is not None:
         answer = json.loads((Path(run) / "answer.json").read_text(encoding="utf-8"))
-        result["builds_on"] = builds_on_recall(answer.get("links") or [],
-                                               json.loads(Path(references).read_text(encoding="utf-8")))
+        status = builds_on_status(answer, refs)
+        scored = builds_on_recall(answer.get("links") or [], refs)
+        result["builds_on"] = {**scored, "recall": None, "precision": None, "status": status} if status else scored
     if not result:
-        raise ValueError("give --question-id (chaining) and/or --references (builds-on)")
+        raise ValueError("give --question-id (chaining) and/or --references or --build-references (builds-on)")
     nl = chr(10)
     text = ["# Links", ""]
     if "chaining" in result:
         text += [f"Chaining ({result['chaining'].get('question_id')}): see links.json."]
     if "builds_on" in result:
         b = result["builds_on"]
-        text += [f"Builds-on recall of OpenAlex references: {_cell(b['recall'])} (precision {_cell(b['precision'])})."]
+        text += [b["status"] if b.get("status") else
+                 f"Builds-on recall of OpenAlex references: {_cell(b['recall'])} (precision {_cell(b['precision'])})."]
     rep.write_pair(result, nl.join(text) + nl, out, "links")
     return result

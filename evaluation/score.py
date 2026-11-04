@@ -1672,6 +1672,40 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
     }
 
 
+def _named(items: list[Item], truth: GroundTruth, canon: Canon) -> list[Item]:
+    """The run's items with the plan's own labels taken out of the matching: a plan run labels a condition with a
+    thing id of the plan ("cond", "rag") and a metric with the plan's measure id ("accuracy"), never the truth's roles
+    (baseline, rag) or canonicals. A condition item loses its `role` (so it matches by name) and a
+    metric item takes the canonical of the truth metric it is named like."""
+    metrics = [f for f in truth.facts.values() if f.type == "metric"]
+    out = []
+    for item in items:
+        fields = dict(item.fields)
+        if item.evidence_type == "condition":
+            fields.pop("role", None)
+        elif item.evidence_type == "metric":
+            hit = next((f for f in metrics if _same_name(item, f, "metric", canon)), None)
+            if hit is not None:
+                fields["canonical"] = hit.data.get("canonical")
+        out.append(item.model_copy(update={"fields": fields}))
+    return out
+
+
+def score_extraction_only(run_dir: Path, corpus: Path) -> dict[str, Any]:
+    """A alone (`score_extraction`) for a run whose question is in no questions.yaml (a plan run), matching named facts
+    by their names (`_named`): did the run find the fact, not did its plan use the pack's labels. The scored types are
+    those of the run's own protocol.yaml. Used by `evaluate leak`."""
+    corpus = Path(corpus)
+    truth = GroundTruth.load(corpus / "ground_truth.json")
+    files = paper_ids(read_json(corpus / "manifest.json"))
+    run = Run.load(run_dir, None)
+    path = run.root / PROTOCOL_FILE
+    protocol = load_protocol(path, _run_domains(run)) if path.is_file() else None
+    canon = Canon.from_truth(truth)
+    return score_extraction(Matching(_named(run.items, truth, canon), truth, files, scored_types(protocol, run.items),
+                                     None, canon))
+
+
 def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = None,
                   question_id: str | None = None) -> dict[str, Any]:
     """C only, for baseline answers without an engine run (the question's hand-written protocol decides the

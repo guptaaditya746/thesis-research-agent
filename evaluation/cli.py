@@ -25,9 +25,10 @@
     evaluate wholerun --set scilead|scirex|cochraneforest|sofc --src DIR --runs DIR --out DIR [--corpus DIR]
                       [--confirm auto|hand|both] [--reasoning on|off|both] [--system engine|rag|both]
                       [--sample 10] [--seed 0] [--model ALIAS] [--cache F]
-    evaluate leak --run R --corpus C --out D
+    evaluate tune-split --set S --src DIR [--corpus DIR] [--fraction 0.2] [--seed 0]
+    evaluate leak --run R --corpus C [--tuned-dir DIR] [--corpora DIR ...] --out D
     evaluate offtemplate --runs DIR --out D
-    evaluate links --run R [--corpus C --question-id ID] [--references F.json] --out D
+    evaluate links --run R [--corpus C --question-id ID] [--references F.json | --build-references] --out D
 
 `wholerun` (evaluation/wholerun_cmd.py) scores the plan runs of one real set under `--runs`
 (<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<question id>/): two confirmation rows, both reasoning settings, a
@@ -408,6 +409,24 @@ def left_out_of(name: str, src: Path, corpus: Path | None, questions: list[Any])
     return scirex.left_out(src, corpus)
 
 
+def cmd_tune_split(args: argparse.Namespace) -> int:
+    """Hold out questions of one real set for tuning (written once to <corpus>/tune_split.json)."""
+    from .wholerun import TUNE_FILE, tune_split_questions
+
+    corpus = args.corpus if args.corpus is not None else Path(args.src) / "corpus"
+    path = corpus / TUNE_FILE
+    if path.exists():
+        raise SystemExit(f"evaluate tune-split: {path} exists; it is written once (move it aside to redo)")
+    questions = _real_questions(args.set, args.src, args.corpus)
+    split = tune_split_questions(questions, args.fraction, args.seed, path)
+    from .wholerun import question_papers
+    gave = sum(1 for q in questions if q.id in split["questions"] and set(question_papers(q)) & set(split["papers"]))
+    print(f"wrote {path}: kept {len(split['kept_questions'])} questions, held {len(split['questions'])} for tuning "
+          f"({gave} of them give papers to the slice; {len(split['papers'])} papers held out, {len(split['rest'])} rest). "
+          "A held question whose papers all belong to kept questions is still scored by `evaluate wholerun`.")
+    return 0
+
+
 def cmd_wholerun(args: argparse.Namespace) -> int:
     from . import wholerun_cmd as wc
 
@@ -441,7 +460,7 @@ def cmd_leak(args: argparse.Namespace) -> int:
     from . import wholerun_cmd as wc
 
     try:
-        split = wc.leak(args.run, args.corpus, args.out)
+        split = wc.leak(args.run, args.corpus, args.out, tuned_dir=args.tuned_dir, corpora=args.corpora)
     except ValueError as exc:
         raise SystemExit(f"evaluate leak: {exc}") from None
     print(f"wrote {args.out / 'leak.json'}: " + "; ".join(f"{k} recall={v['recall']}" for k, v in split.items()))
@@ -460,10 +479,12 @@ def cmd_links(args: argparse.Namespace) -> int:
     from . import wholerun_cmd as wc
 
     try:
-        wc.links(args.run, args.out, corpus=args.corpus, question_id=args.question_id, references=args.references)
+        result = wc.links(args.run, args.out, corpus=args.corpus, question_id=args.question_id,
+                          references=args.references, build=args.build_references)
     except ValueError as exc:
         raise SystemExit(f"evaluate links: {exc}") from None
-    print(f"wrote {args.out / 'links.json'}")
+    status = (result.get("builds_on") or {}).get("status")
+    print(f"wrote {args.out / 'links.json'}" + (f": {status}" if status else ""))
     return 0
 
 
@@ -647,9 +668,21 @@ def parser() -> argparse.ArgumentParser:
     w.add_argument("--out", type=Path, required=True)
     w.set_defaults(func=cmd_wholerun)
 
+    ts = sub.add_parser("tune-split", help="hold out whole questions of a real set for tuning (tune_split.json)")
+    ts.add_argument("--set", choices=REAL_SETS, required=True)
+    ts.add_argument("--src", type=Path, required=True, help="the set's source (release) folder")
+    ts.add_argument("--corpus", type=Path, help="the set's corpus folder (default <src>/corpus); gets tune_split.json")
+    ts.add_argument("--fraction", type=float, default=0.2)
+    ts.add_argument("--seed", type=int, default=0)
+    ts.set_defaults(func=cmd_tune_split)
+
     lk = sub.add_parser("leak", help="extraction recall split: names on the word list vs unseen")
     lk.add_argument("--run", type=Path, required=True, help="a plan run (its plan.json holds the word list)")
     lk.add_argument("--corpus", type=Path, required=True, help="a Claude-written corpus with ground_truth.json")
+    lk.add_argument("--tuned-dir", type=Path, help="the tuned steps' folder (default evidence/steps/tuned); the run is "
+                    "refused when a tuned word writer saw corpora that share condition names with --corpus")
+    lk.add_argument("--corpora", type=Path, action="append", default=[],
+                    help="a folder holding the corpora the tuned files list (repeatable; default tests/EV2/corpora)")
     lk.add_argument("--out", type=Path, required=True)
     lk.set_defaults(func=cmd_leak)
 
@@ -663,6 +696,9 @@ def parser() -> argparse.ArgumentParser:
     ln.add_argument("--corpus", type=Path, help="the synthetic corpus (chaining)")
     ln.add_argument("--question-id", help="the chaining question's id (chaining)")
     ln.add_argument("--references", type=Path, help="JSON {paper id: [OpenAlex work ids]} (builds-on)")
+    ln.add_argument("--build-references", action="store_true",
+                    help="build <out>/openalex-references.json from the run's recorded openalex.jsonl (offline; needs "
+                    "--corpus) and score builds-on with it")
     ln.add_argument("--out", type=Path, required=True)
     ln.set_defaults(func=cmd_links)
     return p

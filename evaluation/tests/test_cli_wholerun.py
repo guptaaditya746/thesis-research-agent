@@ -158,8 +158,8 @@ def test_leak_command_splits_recall_on_the_list_and_unseen(tmp_path: Path, monke
     truth.facts["S.c0"] = Fact("S.c0", "condition", "S", "explicit", {"label": "closed book"})
     truth.facts["S.c1"] = Fact("S.c1", "condition", "S", "explicit", {"label": "brand new"})
     monkeypatch.setattr(GroundTruth, "load", classmethod(lambda cls, p: truth))
-    monkeypatch.setattr("evaluation.score.score",
-                        lambda *a, **k: {"extraction": {"missed": ["S.c1"], "scored_types": ["condition"]}})
+    monkeypatch.setattr("evaluation.score.score_extraction_only",
+                        lambda *a, **k: {"missed": ["S.c1"], "scored_types": ["condition"]})
     plan = make_plan().model_copy(update={"words": WordList(things={"t": ["Closed-Book"]}, cues=[],
                                                             written_by="orch-model", ontology_names={})})
     write_plan(plan, run / "plan.json")
@@ -172,7 +172,7 @@ def test_leak_command_splits_recall_on_the_list_and_unseen(tmp_path: Path, monke
 def test_leak_refuses_a_corpus_that_is_not_claude_written(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     truth = GroundTruth("rag-other", "q", [], [], {})
     monkeypatch.setattr(GroundTruth, "load", classmethod(lambda cls, p: truth))
-    monkeypatch.setattr("evaluation.score.score", lambda *a, **k: {"extraction": {"missed": []}})
+    monkeypatch.setattr("evaluation.score.score_extraction_only", lambda *a, **k: {"missed": []})
     write_plan(make_plan(), tmp_path / "plan.json")
     with pytest.raises(SystemExit, match="Claude-written"):
         cli.main(["leak", "--run", str(tmp_path), "--corpus", str(tmp_path), "--out", str(tmp_path / "o")])
@@ -197,25 +197,106 @@ def test_offtemplate_reports_the_two_numbers(tmp_path: Path) -> None:
 
 # --- links ----------------------------------------------------------------------------------------------------------
 
-def test_builds_on_recall_of_openalex_references() -> None:
-    links = [{"paper": "p1", "relation": "builds_on", "ref": "W1", "in_set": None, "text": "outside the set"},
-             {"paper": "p1", "relation": "builds_on", "ref": "W9", "in_set": None, "text": "outside the set"},
-             {"paper": "p2", "relation": "builds_on", "ref": "W3", "in_set": "p3", "text": "in the set: p3"}]
-    got = wholerun_cmd.builds_on_recall(links, {"p1": ["W1", "W2"], "p2": ["W3"], "p3": []})
+def link(paper: str, work: str | None, ref: str, in_set: str | None = None) -> dict[str, Any]:
+    """A link as a plan run writes it (planrun.links_of): `ref` is the DOI, arXiv id or cited text, `work` the OpenAlex id
+    of the resolved work (null when the work was not resolved)."""
+    return {"paper": paper, "relation": "builds on", "ref": ref, "work": work, "in_set": in_set,
+            "text": f"in the set: {in_set}" if in_set else "outside the set"}
+
+
+def test_builds_on_recall_compares_on_the_work_id() -> None:
+    links = [link("p1", "https://openalex.org/W1", "10.1/one"), link("p1", "W9", "10.1/nine"),
+             link("p2", "W3", "10.1/three", "p3")]
+    refs = {"p1": ["https://openalex.org/W1", "W2"], "p2": [{"work": "W3", "doi": None}], "p3": []}
+    got = wholerun_cmd.builds_on_recall(links, refs)
     assert got["recall"] == pytest.approx(2 / 3) and got["precision"] == pytest.approx(2 / 3)
-    assert got["per_paper"]["p1"] == {"expected": 2, "found": 1}
+    assert {k: got["per_paper"]["p1"][k] for k in ("expected", "found")} == {"expected": 2, "found": 1}
     assert wholerun_cmd.builds_on_recall([], {"p": []})["recall"] is None
+
+
+def test_builds_on_recall_falls_back_to_doi_equality() -> None:
+    links = [link("p1", None, "https://doi.org/10.1/Two"), link("p1", None, "Lewis et al. (2020)")]   # nothing resolved
+    got = wholerun_cmd.builds_on_recall(links, {"p1": [{"work": "W1", "doi": "10.1/one"}, {"work": "W2", "doi": "10.1/two"}]})
+    assert got["per_paper"]["p1"]["found"] == 1 and got["recall"] == 0.5
+
+
+def test_a_link_whose_openalex_request_failed_is_neither_hit_nor_miss() -> None:
+    failed = {**link("p1", None, "10.1/zzz"), "text": "outside the set (resolve_failed: timeout)"}
+    got = wholerun_cmd.builds_on_recall([link("p1", "W1", "r"), failed], {"p1": ["W1", "W2"]})
+    assert got["n_links"] == 1 and got["n_unresolved"] == 1 and got["precision"] == 1.0
 
 
 def test_links_command_scores_builds_on_from_a_references_file(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
-    (run / "answer.json").write_text(json.dumps({"links": [{"paper": "p1", "ref": "W1"}]}), encoding="utf-8")
+    (run / "answer.json").write_text(json.dumps({"links": [link("p1", "W1", "10.1/one")]}), encoding="utf-8")
     refs = tmp_path / "refs.json"
     refs.write_text(json.dumps({"p1": ["W1", "W2"]}), encoding="utf-8")
     assert cli.main(["links", "--run", str(run), "--references", str(refs), "--out", str(tmp_path / "o")]) == 0
     data = json.loads((tmp_path / "o" / "links.json").read_text(encoding="utf-8"))
     assert data["builds_on"]["recall"] == 0.5 and "chaining" not in data
+
+
+def test_links_not_run_is_said_never_a_zero(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    refs = tmp_path / "refs.json"
+    refs.write_text(json.dumps({"p1": ["W1"]}), encoding="utf-8")
+    old = {"links": [{"paper": "p1", "relation": "builds on", "ref": "10.1/one", "in_set": None, "text": "x"}]}   # no `work`
+    cases = {"no references": ({"links": [link("p1", "W1", "r")]}, {"p1": []}), "no work key": (old, {"p1": ["W1"]}),
+             "no links key": ({}, {"p1": ["W1"]})}
+    for name, (answer, references) in cases.items():
+        (run / "answer.json").write_text(json.dumps(answer), encoding="utf-8")
+        refs.write_text(json.dumps(references), encoding="utf-8")
+        assert cli.main(["links", "--run", str(run), "--references", str(refs), "--out", str(tmp_path / "o")]) == 0, name
+        data = json.loads((tmp_path / "o" / "links.json").read_text(encoding="utf-8"))
+        assert data["builds_on"]["recall"] is None and data["builds_on"]["status"].startswith("links not run"), name
+        assert "links not run" in (tmp_path / "o" / "links.md").read_text(encoding="utf-8")
+    assert "links not run" in capsys.readouterr().out
+
+
+def _record(run: Path, bodies: dict[str, dict[str, Any]]) -> None:
+    """openalex.jsonl as the run records it: every HTTP answer, keyed by URL."""
+    from evidence.openalex import RECORD_FILE, OpenAlex
+    from modelcall.cache import JsonlCache
+    client = OpenAlex(JsonlCache(run / RECORD_FILE), fetch=lambda url: bodies[url])
+    for url in bodies:
+        client.get(url)
+
+
+def test_build_references_reads_the_recorded_openalex_answers(tmp_path: Path) -> None:
+    corpus, run = tmp_path / "corpus", tmp_path / "run"
+    (corpus / "papers").mkdir(parents=True)
+    run.mkdir()
+    (corpus / "papers" / "p1.md").write_text("# A paper\n\ndoi:10.1/paper\n\nText.", encoding="utf-8")
+    (corpus / "papers" / "p2.md").write_text("# Another paper\n\nText.", encoding="utf-8")
+    (corpus / "manifest.json").write_text(json.dumps({"papers": [
+        {"id": "p1", "file": "papers/p1.md"}, {"id": "p2", "file": "papers/p2.md"}]}), encoding="utf-8")
+    base = "https://api.openalex.org/works/"
+    _record(run, {
+        base + "doi:10.1/paper": {"id": "https://openalex.org/W10", "doi": "https://doi.org/10.1/paper",
+                                  "referenced_works": ["https://openalex.org/W1", "https://openalex.org/W2"]},
+        base + "doi:10.1/one": {"id": "https://openalex.org/W1", "doi": "https://doi.org/10.1/one",
+                                "referenced_works": []},
+        base + "doi:10.9/missing": None})        # a 404 is recorded too
+    got = wholerun_cmd.build_references(run, corpus)
+    assert got == {"p1": [{"work": "W1", "doi": "10.1/one"}, {"work": "W2", "doi": None}]}
+
+
+def test_links_command_builds_the_references_file_then_scores(tmp_path: Path) -> None:
+    corpus, run = tmp_path / "corpus", tmp_path / "run"
+    (corpus / "papers").mkdir(parents=True)
+    run.mkdir()
+    (corpus / "papers" / "p1.md").write_text("# A paper\n\ndoi:10.1/paper\n", encoding="utf-8")
+    (corpus / "manifest.json").write_text(json.dumps({"papers": [{"id": "p1", "file": "papers/p1.md"}]}), encoding="utf-8")
+    _record(run, {"https://api.openalex.org/works/doi:10.1/paper": {
+        "id": "https://openalex.org/W10", "doi": "10.1/paper", "referenced_works": ["https://openalex.org/W1", "W2"]}})
+    (run / "answer.json").write_text(json.dumps({"links": [link("p1", "W2", "10.1/two")]}), encoding="utf-8")
+    out = tmp_path / "o"
+    assert cli.main(["links", "--run", str(run), "--corpus", str(corpus), "--build-references", "--out", str(out)]) == 0
+    assert json.loads((out / "openalex-references.json").read_text(encoding="utf-8")) == {
+        "p1": [{"work": "W1", "doi": None}, {"work": "W2", "doi": None}]}
+    assert json.loads((out / "links.json").read_text(encoding="utf-8"))["builds_on"]["recall"] == 0.5
 
 
 def test_links_command_scores_chaining_with_the_existing_scorer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -348,3 +429,9 @@ def test_cli_missing_corpus_manifest_is_a_clean_error(tmp_path: Path, capsys: py
     code = cli.main(["wholerun", "--set", "sofc", "--src", str(DATA / "sofc_tiny"), "--runs", str(runs),
                      "--out", str(tmp_path / "o"), "--confirm", "auto", "--reasoning", "on"])
     assert code == 2 and "evaluate wholerun:" in capsys.readouterr().err
+
+
+def test_in_set_links_are_left_out_and_counted() -> None:
+    inset = link("p1", None, "Lewis et al. (2020)", "p3")            # a corpus paper found without OpenAlex
+    got = wholerun_cmd.builds_on_recall([link("p1", "W1", "r"), inset], {"p1": ["W1", "W77"]})
+    assert got["n_links"] == 1 and got["n_in_set"] == 1 and got["precision"] == 1.0 and got["recall"] == 0.5
