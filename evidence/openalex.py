@@ -86,7 +86,8 @@ class ReadLink(dspy.Signature):
     object: str | None = dspy.OutputField(desc="the cited work as the sentence names it, or null")
 
 
-_READ = Step(ReadLink, "openalex.read_link")
+READ_STEP = "openalex.read_link"   # the DSPy step name
+_READ = Step(ReadLink, READ_STEP)
 
 
 def read_link(sentence: str, ctx: Any | None = None) -> tuple[str, str | None]:

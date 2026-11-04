@@ -278,6 +278,20 @@ def links_stage(doc: Any, ctx: Any) -> list[Item]:
     return out
 
 
+def run_steps(*, reason: str = "on", links: str = "on") -> tuple[Any, ...]:
+    """The DSPy steps a plan run calls (each may run on tuned instructions; the lock records those): the module-level
+    Step instances, and the names of the steps made per call."""
+    from . import claims, experiments, openalex
+    from .extractors import recheck
+    from .ontology import fill
+    out: list[Any] = [experiments.NAME_STEP, recheck.STEP, claims._READ, claims._GROUP]
+    if links == "on":
+        out.append(openalex._READ)
+    if reason == "on":
+        out.append(fill.STEP)
+    return tuple(out)
+
+
 def no_tree(run: Any, ctx: Any) -> dict[str, Any]:
     """The `ontology` stage of a run with reasoning off: no tree, no model call."""
     return {"tree": "reasoning off: no tree"}

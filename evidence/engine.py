@@ -884,7 +884,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     domains = Path(settings.domains) if settings.domains is not None else None
     plan = load_plan(settings.plan) if settings.plan is not None else None
     extra = plan_stages(settings, plan)
-    lock = lockfile.lock(protocol, cascades, domains, plan=plan, reason=settings.reason)
+    used_steps = plan_step_names(settings)
+    lock = lockfile.lock(protocol, cascades, domains, plan=plan, reason=settings.reason, step_names=used_steps)
     try:
         root.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
@@ -928,7 +929,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         if served:
             settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
-    final = lockfile.lock(protocol, cascades, domains, plan=plan, reason=settings.reason)
+    final = lockfile.lock(protocol, cascades, domains, plan=plan, reason=settings.reason, step_names=used_steps)
     if final["extractors"] != lock["extractors"]:   # a GLiNER extractor learned its model during the run: the lock names the ids it used
         ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, final)
     write_json(root / RUN_FILE, {
@@ -943,6 +944,14 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         before_seal(root)
     sealing.seal(root, corpus.manifest_sha256, status="complete")   # last: after run.json and the final lock
     return root
+
+
+def plan_step_names(settings: Settings) -> tuple[Any, ...]:
+    """The DSPy steps a plan run calls (planrun.run_steps), () for any other run."""
+    if settings.stage_set != "plan":
+        return ()
+    from . import planrun
+    return planrun.run_steps(reason=settings.reason, links=settings.links)
 
 
 def plan_stages(settings: Settings, plan: Plan | None) -> stages.StageSet:

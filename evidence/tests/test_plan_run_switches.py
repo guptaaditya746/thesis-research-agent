@@ -99,21 +99,37 @@ def test_the_answer_links_carry_the_openalex_work_id(tmp_path: Path, monkeypatch
     assert links and {x["work"] for x in links} == {"W2741809807"}
 
 
-def test_the_lock_records_the_tuned_step_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Final review C4: {step: sha256} of evidence/steps/tuned/*.json in a plan run's lock; {} when none."""
+def test_the_lock_records_only_the_tuned_steps_the_run_calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Final review C4, runs review I2: {step: sha256} of the tuned instructions the run's own steps run on; a tuned
+    file of a step the run never calls (the word writer) is not in the lock, so adding one later keeps the replay."""
     import hashlib
 
-    from evidence import lockfile, steps
-    monkeypatch.setattr(steps, "TUNED_DIR", tmp_path / "none")
-    assert lockfile.tuned_steps_sha256() == {}
-    root, _ = run(tmp_path / "a", monkeypatch, [])
-    assert read(root, "protocol.lock.json")["tuned_steps_sha256"] == {}
+    from evidence import steps
     tuned = tmp_path / "tuned"
     tuned.mkdir()
-    (tuned / "write_words.json").write_text('{"instructions": "x"}', encoding="utf-8")
     monkeypatch.setattr(steps, "TUNED_DIR", tuned)
-    want = hashlib.sha256((tuned / "write_words.json").read_bytes()).hexdigest()
-    assert lockfile.tuned_steps_sha256() == {"write_words": want}
+    (tuned / "recheck.json").write_text('{"instructions": "Check each find."}', encoding="utf-8")
+    root, _ = run(tmp_path / "a", monkeypatch, [])
+    want = hashlib.sha256((tuned / "recheck.json").read_bytes()).hexdigest()
+    assert read(root, "protocol.lock.json")["tuned_steps_sha256"] == {"recheck": want}
+    (tuned / "write_words.json").write_text('{"instructions": "x"}', encoding="utf-8")   # a re-tune of the word writer
+    _, report = replay(root)
+    assert report["ok"] and report["mismatched"] == [], report
+
+
+def test_a_module_level_step_reports_what_it_loaded(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from evidence import lockfile, steps
+    from evidence.claims import GroupRelations
+    tuned = tmp_path / "tuned"
+    tuned.mkdir()
+    monkeypatch.setattr(steps, "TUNED_DIR", tuned)
+    (tuned / "g.json").write_text('{"instructions": "old"}', encoding="utf-8")
+    step = steps.Step(GroupRelations, "g")
+    old = step.tuned_sha256
+    (tuned / "g.json").write_text('{"instructions": "new"}', encoding="utf-8")   # changed after the step was made
+    assert steps.tuned_sha256([step]) == {"g": old} and steps.tuned_sha256(["g"]) != {"g": old}
+    assert steps.tuned_sha256(["nothing"]) == {}
+    want = old or ""
     assert lockfile._lock_lines({"extractors": {}, "pack": 1, "ontology_sha256": None, "tuned_steps_sha256": {}},
                                 {"extractors": {}, "pack": 1, "ontology_sha256": None,
-                                 "tuned_steps_sha256": {"write_words": want}}) == [f"tuned step write_words: none -> {want[:12]}"]
+                                 "tuned_steps_sha256": {"g": want}}) == [f"tuned step g: none -> {want[:12]}"]

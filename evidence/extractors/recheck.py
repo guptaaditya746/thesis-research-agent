@@ -23,6 +23,7 @@ from ..unchecked import reason
 LLM_KINDS = ("llm", "agent")        # extractor names starting so are the model kinds
 LABEL_FIELDS = ("label", "name", "canonical")
 PURPOSE = "recheck"
+STEP = "recheck"                    # the DSPy step name (its tuned instructions: evidence/steps/tuned/recheck.json)
 STATE_ATTR = "_recheck_state"
 # run folder -> {document id: state}: what `recheck_report` writes at the end of the run
 _STORE: dict[str, dict[str, dict[str, Any]]] = {}
@@ -97,7 +98,7 @@ def recheck(doc: Any, etype: str, merged: list[Item], ctx: Any, *, step: Step | 
     if fresh:
         # the model is this ctx's, given per call: the warm pass's threads never record on each other's model
         lm = ctx.dspy_lm(PURPOSE)
-        step = step or Step(Recheck, "recheck")
+        step = step or Step(Recheck, STEP)
         for (a, b), items in fresh.items():
             try:
                 out = step(lm=lm, paragraph=doc.text[a:b], items=[_describe(n, i, doc.text) for n, i in enumerate(items, 1)])

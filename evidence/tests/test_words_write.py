@@ -71,3 +71,20 @@ def test_refuses_a_model_that_is_not_the_pinned_alias(lm):
     claude = RecordedLM("claude-haiku", lambda prompt: "{}")
     with pytest.raises(ValueError, match="orch-model"):
         write.write_words("q?", lm=claude, things=["zeta"])
+
+
+def test_the_word_list_records_the_tuned_writer_it_was_written_with(lm, tmp_path):
+    """Runs review I2: which tuned instructions wrote the list is in the plan (`words.tuned_sha256`), at plan time."""
+    import hashlib
+
+    from evidence.plan import WordList
+    script, _, model = lm
+    script["zeta"] = [[f"name{i}" for i in range(30)]]
+    assert write.write_words("q?", lm=model, things=["zeta"]).tuned_sha256 == {}
+    assert "tuned_sha256" not in WordList(things={}, cues=[], written_by="x", ontology_names={}).model_dump_json()
+    (tmp_path / "tuned").mkdir()
+    (tmp_path / "tuned" / "write_words.json").write_text('{"instructions": "Write names."}', encoding="utf-8")
+    script["zeta"] = [[f"name{i}" for i in range(30)]]
+    words = write.write_words("q?", lm=model, things=["zeta"])
+    assert words.tuned_sha256 == {"write_words": hashlib.sha256((tmp_path / "tuned" / "write_words.json").read_bytes()).hexdigest()}
+    assert WordList.model_validate_json(words.model_dump_json()) == words

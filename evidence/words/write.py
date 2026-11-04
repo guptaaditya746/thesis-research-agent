@@ -98,7 +98,8 @@ def write_words_report(question: str, things: list[str], *, lm: RecordedLM, step
             written[thing] = names[:MAX_NAMES]
         out = cue_step(question=question)
         cues = [cue_entry(d, c) for d in DIRECTIONS for c in _tidy(list(getattr(out, d)))[:MAX_NAMES]]
-    return WordList(things=written, cues=cues, written_by=lm.alias, ontology_names={}), short
+    tuned = {s.name: s.tuned_sha256 for s in (step, more_step, cue_step) if s.tuned_sha256}   # which instructions wrote it
+    return WordList(things=written, cues=cues, written_by=lm.alias, ontology_names={}, tuned_sha256=tuned), short
 
 
 def write_words(question: str, things: list[str], *, lm: RecordedLM, step: Step | None = None,

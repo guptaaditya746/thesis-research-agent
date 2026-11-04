@@ -22,6 +22,7 @@ from evidence.contract import Item, Span, digest
 from evidence.records import EXPERIMENT, Experiment, item
 
 NAME = "experiments"
+NAME_STEP = "map_experiments"   # the DSPy step name
 
 
 class Mapped(BaseModel):
@@ -49,7 +50,7 @@ class MapExperiments(dspy.Signature):
 
 
 def _step() -> steps.Step:
-    return steps.Step(MapExperiments, "map_experiments")
+    return steps.Step(MapExperiments, NAME_STEP)
 
 
 def map_experiments(doc_text: str, document: str, file: str | None = None, *, lm=None) -> list[Experiment]:

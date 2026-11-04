@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from . import reasoner
+from . import reasoner, steps
 from .contract import Extractor
 from .plan import Plan
 from .protocol import ExtractorRef, Protocol
@@ -21,15 +21,17 @@ __all__ = ["diff", "lock"]
 
 
 def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
-         domains: Path | None = None, *, plan: Plan | None = None, reason: str = "on") -> dict[str, Any]:
+         domains: Path | None = None, *, plan: Plan | None = None, reason: str = "on",
+         step_names: tuple[Any, ...] = ()) -> dict[str, Any]:
     """The lock of a run of `protocol` with `cascades` (engine.build_extractors); `domains`: the pack's folder
     when it is not domains/; `plan`: the confirmed plan of a planned run, which adds `plan_sha256` and
     `words_sha256` and `field_ontology_sha256` ({file name: sha256} of the plan field's ontology files the plan run's
     graph and ontology report read, evidence/ontology `ontology_hashes`; the pack's own ontology stays under
     `ontology_sha256`; {} when `reason` is off: the run reads no field ontology) and `tuned_steps_sha256` ({step name:
-    sha256} of the tuned instruction files `evidence/steps/tuned/*.json` the run's DSPy steps read, {} when none; final
-    review C4: a reader can tell which instructions wrote the list and read the papers). A run without a plan locks
-    exactly as before, without those keys."""
+    sha256} of the tuned instructions the run's own DSPy steps `step_names` run on, as each Step loaded them; {} when
+    none is tuned; final review C4). Which tuned instructions wrote the word list is in the plan
+    (`words.tuned_sha256`, at plan time). A tuned file for a step the run does not call never enters the lock, so it
+    does not change a replay. A run without a plan locks exactly as before, without those keys."""
     pack = protocol.pack()
     onto = reasoner.ontology_sha256(pack) if domains is None else reasoner.ontology_sha256(pack, domains)
     out: dict[str, Any] = {
@@ -42,20 +44,8 @@ def lock(protocol: Protocol, cascades: dict[str, list[tuple[ExtractorRef, Extrac
         out["words_sha256"] = plan.words.sha256
         from .ontology.sources import ontology_hashes
         out["field_ontology_sha256"] = ontology_hashes(plan.field) if reason == "on" else {}
-        out["tuned_steps_sha256"] = tuned_steps_sha256()
+        out["tuned_steps_sha256"] = steps.tuned_sha256(step_names)
     return out
-
-
-def tuned_steps_sha256() -> dict[str, str]:
-    """{step name: sha256 of its bytes} of every tuned step file (`evidence.steps.TUNED_DIR`/<name>.json); {} when
-    there is none."""
-    import hashlib
-
-    from . import steps
-    folder = Path(steps.TUNED_DIR)
-    if not folder.is_dir():
-        return {}
-    return {p.stem: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(folder.glob("*.json")) if p.is_file()}
 
 
 def _read(path: Path) -> tuple[Any, dict[str, Any] | None]:

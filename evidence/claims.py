@@ -68,8 +68,9 @@ class GroupRelations(dspy.Signature):
     groups: dict[str, list[str]] = dspy.OutputField(desc="group name -> the verbs placed in it")
 
 
-_READ = Step(ReadClaim, "claims.read_claim")
-_GROUP = Step(GroupRelations, "claims.group_relations")
+READ_STEP, GROUP_STEP = "claims.read_claim", "claims.group_relations"   # the DSPy step names
+_READ = Step(ReadClaim, READ_STEP)
+_GROUP = Step(GroupRelations, GROUP_STEP)
 
 
 def run_step(step: Step, ctx: Any | None, purpose: str, **inputs: Any) -> dspy.Prediction:
