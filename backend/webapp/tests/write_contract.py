@@ -1,6 +1,6 @@
 """The write contract: what the backend answers to the app's writes (job submission, decisions), recorded from
-the real backend so the frontend's mock (webapp/web/src/mocks/handlers.ts) is checked against it
-(webapp/web/src/mocks/contract.test.ts) and cannot drift from it unnoticed.
+the real backend so the frontend's mock (frontend/src/mocks/handlers.ts) is checked against it
+(frontend/src/mocks/contract.test.ts) and cannot drift from it unnoticed.
 
 A scenario is {name, method, path, body, status, response}: `SCENARIOS` hold the requests, `record` runs them in
 order on one copy of the evidence world (evidence_world.build) with a job manager whose processes are fakes (a
@@ -11,7 +11,7 @@ so scenarios 9, 10 and 12 run on the same state on both sides. The backend's job
 queued behind scenario 3's model job), the mock's `done`: a job's end state is not compared (nor is any `state`).
 
     uv run python -m webapp.tests.write_contract [OUT]   # build a world in a temporary directory and record
-                                                         # (default OUT: webapp/web/src/mocks/write-contract.json)
+                                                         # (default OUT: frontend/src/mocks/write-contract.json)
 `evidence_world OUT --mocks .../ev-fixtures.json` writes it too, beside the fixtures.
 """
 from __future__ import annotations

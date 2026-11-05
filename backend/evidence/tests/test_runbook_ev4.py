@@ -1,11 +1,9 @@
-"""The EV4 Codex runbook (docs/runbook-ev4.md): every command it names exists, and it names the hand-back branch and
-tag and never pushes `main` or `results` (plan 3 Task 15; preflight F18: synth and packbuilder lines are checked too)."""
+"""The EV4 Codex runbook (runbook-ev4.md beside this file; live runbook: docs/runbook-slurm.md): every command it
+names exists, and it names the hand-back branch and tag and never pushes `main` or `results` (plan 3 Task 15; preflight F18: synth and packbuilder lines are checked too)."""
 from __future__ import annotations
 
 import re
 from pathlib import Path
-
-import repo_paths
 
 import pytest
 
@@ -14,8 +12,7 @@ from evidence import cli as evidence_cli
 from packbuilder import cli as packbuilder_cli
 from synth import cli as synth_cli
 
-REPO = repo_paths.REPO
-RUNBOOK = REPO / "docs/runbook-ev4.md"
+RUNBOOK = Path(__file__).resolve().parent / "runbook-ev4.md"   # the EV4 runbook, kept as this test's fixture
 MAINS = {"evidence": evidence_cli.main, "evaluate": evaluation_cli.main, "synth": synth_cli.main,
          "packbuilder": packbuilder_cli.main}
 # a command at the start of a line, bare or after `uv run`, as a shell line or a code span of the runbook

@@ -1,6 +1,6 @@
 """Web app settings from the environment (README, "Web app").
 
-The evidence-level directories (docs/slurm-evidence-runbook.md); `$EV` alone is enough, each may be set apart:
+The evidence-level directories (docs/runbook-slurm.md); `$EV` alone is enough, each may be set apart:
 
 | Variable         | Setting       | Default                              |
 |------------------|---------------|--------------------------------------|

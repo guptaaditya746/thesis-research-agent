@@ -1,7 +1,7 @@
 """The evidence-level files as the viewer shows them (webapp/evapi.py; docs/evidence-system.md Parts A-G).
 
 Read-only: nothing here writes, starts a run or calls a model (the jobs of webapp/evjobs.py do, with the same
-commands as the command line and Slurm, docs/slurm-evidence-runbook.md); the viewer reads what they leave, in the
+commands as the command line and Slurm, docs/runbook-slurm.md); the viewer reads what they leave, in the
 layout the runbook makes:
 
 - corpora: `$CORPORA/<name>/` (`synth build`, `synth variant`, `evidence fetch`): manifest.json, papers/, corpus.json,

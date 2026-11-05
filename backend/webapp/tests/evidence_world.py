@@ -1,6 +1,6 @@
 """A small evidence-level world for the viewer's tests and for frontend work, made by the real tools.
 
-The layout is the one a live run writes (docs/slurm-evidence-runbook.md), under one root `$EV`:
+The layout is the one a live run writes (docs/runbook-slurm.md), under one root `$EV`:
 
     corpora/        `synth build --renderer template` (two studies' worth of knobs) and a `synth variant`
     runs/           `evidence run`: regex-only, cascade (all), cascade-gaps (gaps), agentic-gaps (gaps, the
@@ -16,7 +16,7 @@ nothing reaches a network. The LLM extractors find nothing beyond the regex (an 
 funnel's gaps stay visible. Without bash (Windows) the agentic run and the agent baseline are left out.
 
     uv run python -m webapp.tests.evidence_world OUT     # write the world to OUT (e.g. for `webapp serve`)
-    uv run python -m webapp.tests.evidence_world OUT --mocks webapp/web/src/mocks/ev-fixtures.json
+    uv run python -m webapp.tests.evidence_world OUT --mocks frontend/src/mocks/ev-fixtures.json
                                                          # and the frontend's mock responses from it, with
                                                          # write-contract.json beside them (write_contract.py)
 """
@@ -319,7 +319,7 @@ BASE = "http://127.0.0.1"   # a Host the app answers (webapp/guard.py)
 
 
 def mock_paths(world: EvidenceWorld) -> list[str]:
-    """The /api/ev responses the frontend's mocks hold (webapp/web/src/mocks/ev-fixtures.json): every list,
+    """The /api/ev responses the frontend's mocks hold (frontend/src/mocks/ev-fixtures.json): every list,
     and the details of a few runs, papers, calls and scores, enough for every page and its tests."""
     from fastapi.testclient import TestClient
 

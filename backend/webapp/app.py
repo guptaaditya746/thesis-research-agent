@@ -4,7 +4,7 @@ The evidence-level app under /api/ev, the supervisor's flow (STATE.md §4 "Web a
 read-only GETs over the files the commands write: corpora, protocols and proposals, runs with the funnel,
 evidence graph and answer, scores A/B/C with the baselines beside the engine) and what the app starts and
 writes (webapp/evjobs.py: the questions to select from, jobs that run the same commands as the runbook, a
-proposal's decisions.yaml). `/api/health` says the server is up. The built frontend (webapp/web/dist) is served
+proposal's decisions.yaml). `/api/health` says the server is up. The built frontend (frontend/dist) is served
 at / with every other path falling back to index.html (client-side routes), when that directory exists.
 
 The server writes only job state and logs ($EV/.jobs/) and decisions.yaml of a proposal; the jobs it starts
@@ -134,5 +134,5 @@ def add_frontend(app: FastAPI, settings: Settings) -> None:
             return FileResponse(target)
         index = dist / "index.html"
         if not index.is_file():
-            raise NotFound("the frontend is not built (webapp/web/dist/index.html missing)")
+            raise NotFound("the frontend is not built (frontend/dist/index.html missing)")
         return FileResponse(index)

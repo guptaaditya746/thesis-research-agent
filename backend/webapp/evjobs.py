@@ -2,7 +2,7 @@
 evidence graph -> answer -> scores, the baselines beside the engine; README "Web app").
 
 - questions: the questions file (webapp/evquestions.py), selected, never typed;
-- jobs: each POST builds the argv of one command line of docs/slurm-evidence-runbook.md from a fixed template
+- jobs: each POST builds the argv of one command line of docs/runbook-slurm.md from a fixed template
   and queues it (webapp/jobs.py): `synth build --renderer template` (no model), `evidence run`,
   `evaluate rag-baseline`, `evaluate agent-baseline`, `evaluate score`, `evaluate compare`, the proposal flow's
   `evidence propose frame/draft/critic/cards`, `evidence propose freeze` and `evidence fetch` (real papers from

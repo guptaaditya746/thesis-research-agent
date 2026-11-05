@@ -2,7 +2,7 @@
 
 `serve` binds to 127.0.0.1 by default: the app has no authentication and is reached through an
 SSH tunnel (README, "Web app"). `openapi` prints the schema the frontend's types are generated from
-(`webapp openapi > webapp/web/openapi.json`).
+(`webapp openapi > frontend/openapi.json`).
 """
 from __future__ import annotations
 

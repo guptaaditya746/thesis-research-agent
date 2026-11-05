@@ -1,61 +1,155 @@
 # Runbook: the general evidence system on Slurm (Codex)
 
-This is the hand-off for the general system merged on `main` (word list written by the model, papers and
-claims, ontology reasoning, the plan page, DSPy tuning, the whole-run commands). Claude built it; Codex tests it on
-Slurm and copies every run folder back. **This file is a differences document.** The stack (profile `orch-3x40` with
-GLiNER), `in-job.env`, `in-job.sh`, `launch.sh`, the failed-call and retry rules and `$EV/failures.md` are as in
-`docs/runbook-question-first.md` (section 1) and `docs/slurm-evidence-runbook.md` (section 0.3). Read those first.
+Codex runs this; Claude builds. Stands alone: stack, session env, every run, hand-back. Older runbooks (EV2, question-first, EV3b, EV4): tag `pre-restructure`, `docs/`.
 
-Rules (from Aditya, 3 Nov):
+Rules (Aditya, 3 Nov):
 
-- One model for everything: `orch-model` (Qwen). The paper writer is Claude (laptop); the word list is written by
-  `orch-model`, a different family, so the **leak split uses Claude-written corpora only** (`tests/EV2/corpora/rag-claude-*`).
-- Do not change code, packs, prompts, questions or corpora. A failure goes into `$EV/failures.md` (step, command, exit
-  code, last 30 log lines); then go on with the next independent step. **USER** marks a stop: stop that step, write what
-  you saw, wait for Aditya.
+- One model for everything: `orch-model` (Qwen). Paper writer is Claude (laptop); word list written by `orch-model`, a different family, so the **leak split uses Claude-written corpora only** (`tests/EV2/corpora/rag-claude-*`).
+- Do not change code, packs, prompts, questions or corpora. A failure goes into `$EV/failures.md` (step, command, exit code, last 30 log lines); then the next independent step. **USER** marks a stop: stop that step, write what you saw, wait for Aditya.
 - Never invent a flag: `uv run evidence --help`, `uv run evaluate --help` and each subcommand's `--help` are the truth.
-- No pilot run. An empty answer is a valid answer ("No evidence found"). Every number comes with its run folder.
-- Size: a fixed sample of 10 questions per real set (`--sample 10 --seed 0`); the rest only if time is left.
-- Cut order if time runs short: materials sets (SOFC-Exp, MeasEval) first, then links and builds-on. Words, papers, graph,
-  planner, SciLead, SciREX, CochraneForest, the RAG baseline and the off-template check are never cut.
-- Windows note (for Aditya, not Codex): `evaluation/tests/test_agentic_agent.py` and `test_runner.py` import only on Linux
-  (SIGALRM, SIGKILL). They run in section 1 on the cluster.
+- No pilot run. Empty answer is valid ("No evidence found"). Every number comes with its run folder.
+- Size: fixed sample of 10 questions per real set (`--sample 10 --seed 0`); the rest only if time is left.
+- Cut order if short of time: materials sets (SOFC-Exp, MeasEval) first, then links and builds-on. Never cut: words, papers, graph, planner, SciLead, SciREX, CochraneForest, RAG baseline, off-template check.
+- Windows note (Aditya, not Codex): `backend/evaluation/tests/test_agentic_agent.py` and `test_runner.py` import only on Linux (SIGALRM, SIGKILL); they run in section 1 on the cluster.
+- Paths: Python in `backend/<package>/`, packs in `data/domains/`, EV corpora in `tests/EV*/`, UI in `frontend/`.
 
-Success lines below say what "good" looks like. Exit codes: read them, not printed JSON.
+Success lines say what "good" looks like. Exit codes: read them, not printed JSON.
 
 ## 0. Setup (login node)
 
 ```bash
-git fetch origin && git checkout main && git pull --ff-only && git log -1 --oneline   # expect: the handoff docs commit or later
-uv sync --locked                                                              # no --all-groups: Docling (torch) comes in 3.5 only
-export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general           # new session dir; older ones are never written
-mkdir -p "$EV"/{logs,corpora,runs,scores,cache,real,ontology,plans,proposals}
+git fetch origin && git checkout main && git pull --ff-only && git log -1 --oneline
+git submodule update --init --recursive
+git -C llm-setup log -1 --oneline           # expect b962edd; another commit or "not our ref": USER (never change the submodule)
+uv sync --locked                            # no --all-groups: Docling (torch) comes in 3.5 only
+export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general   # session dir; older ones are never written
+mkdir -p "$EV"/{logs,corpora,runs,scores,cache,real,ontology,plans,proposals,agent-work}
 ```
 
-Start the stack as in `docs/runbook-question-first.md` section 1 (GLiNER included), then write `$EV/in-job.env`,
-`in-job.sh` and `launch.sh` as there, with these extra lines in `in-job.env`:
+### 0.1 Stack with GLiNER
+
+llm-setup side: `llm-setup/docs/OPERATIONS.md`, "GLiNER". If GLiNER fails, record it in `$EV/failures.md` and go on: GLiNER steps are recorded `skipped`, runs still finish; say so in the report.
+
+1. GPU node: `nvidia-smi`; report driver and CUDA version (record only; vLLM pins torch 2.11.0 from PyPI).
+2. Login node: `uv lock --check` in `llm-setup` (if it fails: `uv lock`, record it). Download GLiNER weights + tokenizer (loads offline):
 
 ```bash
-export RUNS=$EV/runs SCORES=$EV/scores CACHE=$EV/cache REAL=$EV/real PLANS=$EV/plans
-export EV_ONTOLOGY_DIR=$EV/ontology            # MeSH / CS-KG / QUDT files (section 2); never committed
-export EV_PLAN_CORPUS=$EV/corpora/rag-claude-s1-mixed   # only for plan runs started from the web page
-export SCILEAD_DATA=$REAL/scilead              # the unpacked SciLead release (section 3)
-export Q="Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
+cd llm-setup
+uv lock --check
+huggingface-cli download urchade/gliner_medium-v2.1 --revision 40ec419335d09393f298636f471328b722c6da9e
+huggingface-cli download microsoft/deberta-v3-base config.json tokenizer_config.json spm.model
+cd ..
 ```
 
-**Success:** `git log` shows the runbook commit; `uv run evidence --help` lists `run estimate tune fetch propose ...`;
-`curl -s $LITELLM_BASE_URL/models` (inside the job) names `orch-model`.
+3. Profile copy with the `gliner:` block on (never edit `orch-3x40.yaml`; the copy is the only llm-setup change allowed, never committed unless the user names a branch):
 
-Every long step below runs as `nohup "$EV/launch.sh" <step> <command> > /dev/null 2>&1 &`, one at a time, as in EV4.
-Short checks run directly with `"$EV/in-job.sh" <command>`.
+```bash
+cd llm-setup
+sed -e 's/^# gliner:$/gliner:/' -e 's/^#   \(enabled\|gpu\|port\|model\|revision\|max_chars\):/  \1:/' \
+  profiles/orch-3x40.yaml > profiles/orch-3x40-gliner.yaml
+diff profiles/orch-3x40.yaml profiles/orch-3x40-gliner.yaml | grep -c '^>'          # 7: the gliner lines only
+uv run llm-setup profile validate --profile profiles/orch-3x40-gliner.yaml          # Profile valid: orch-3x40
+uv run llm-setup profile extras --profile profiles/orch-3x40-gliner.yaml            # gliner
+cd ..
+```
+
+4. Start the stack:
+
+```bash
+cd llm-setup
+JOB=$(LLM_SETUP_PROFILE=profiles/orch-3x40-gliner.yaml sbatch slurm/llm-stack.sbatch); JOB=${JOB##* }; export JOB
+cd ..
+tail -n 20 llm-setup/runtime/slurm-$JOB.out     # repeat until orch, orch-2, orch-3 and gliner say "ready after"
+srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && set -a && source .env && set +a && uv run llm-setup doctor --profile profiles/orch-3x40-gliner.yaml' 2>&1 | tail -n 8
+srun --jobid "$JOB" --overlap curl -s 127.0.0.1:8090/info
+srun --jobid "$JOB" --overlap nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv
+```
+
+Good: `gliner: ready after ...`, no `start failed`; `doctor` shows `gliner health ok`; `/info` names `urchade/gliner_medium-v2.1`. Under ~1 GB free on GPU 0: `scancel $JOB`, set `gpu_memory_utilization: 0.88` for orch in the `-gliner` copy, start again, record it.
+
+### 0.2 Session environment
+
+```bash
+cat > "$EV/in-job.env" <<EOF
+# The evidence session's environment (docs/runbook-slurm.md 0.2). Paths only: the key comes from llm-setup/.env.
+set -a; source $PWD/llm-setup/.env; set +a
+unset UV_PROJECT_ENVIRONMENT VIRTUAL_ENV
+export REPO=$PWD EV=$EV JOB=$JOB
+export AGENT_ROOT=/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final-3
+export CORPORA=$EV/corpora RUNS=$EV/runs SCORES=$EV/scores CACHE=$EV/cache REAL=$EV/real PLANS=$EV/plans
+export EVIDENCE_AGENT_WORK_DIR=$EV/agent-work
+export LITELLM_BASE_URL=http://127.0.0.1:4000/v1 GLINER_URL=http://127.0.0.1:8090
+export EV_ONTOLOGY_DIR=$EV/ontology                     # MeSH / CS-KG / QUDT files (section 2); never committed
+export EV_PLAN_CORPUS=$EV/corpora/rag-claude-s1-mixed   # only for plan runs started from the web page
+export SCILEAD_DATA=$EV/real/scilead                    # the unpacked SciLead release (section 3)
+export Q="Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
+cd $PWD
+EOF
+cat > "$EV/in-job.sh" <<'EOF'
+#!/usr/bin/env bash
+source "$(dirname "$0")/in-job.env"
+exec "$@"
+EOF
+cat > "$EV/launch.sh" <<'EOF'
+#!/usr/bin/env bash
+# launch.sh <step> <command...>: <command> in the stack job (srun --overlap, via in-job.sh), output in
+# $EV/logs/<step>.log. Retries only when srun could not create the step: waits 20-40 s, at most 3 retries.
+set -u
+source "$(dirname "$0")/in-job.env"
+STEP=$1; shift
+LOG="$EV/logs/$STEP.log"
+for try in 1 2 3 4; do
+  srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$@" > "$LOG" 2>&1
+  rc=$?
+  if [ "$rc" -ne 0 ] && head -n 5 "$LOG" | grep -q 'step request socket: Address already in use'; then
+    cp "$LOG" "$LOG.srun-failure-$try"
+    if [ "$try" -lt 4 ]; then
+      wait_s=$((20 + RANDOM % 21))
+      echo "$(date -Is) $STEP: srun could not create the step (try $try, exit $rc); retrying in ${wait_s}s" >> "$EV/logs/$STEP.launch"
+      sleep "$wait_s"
+      continue
+    fi
+    echo "$(date -Is) $STEP: srun could not create the step after 3 retries (exit $rc)" >> "$EV/logs/$STEP.launch"
+    exit 1
+  fi
+  echo "$(date -Is) $STEP: exit $rc (try $try)" >> "$EV/logs/$STEP.launch"
+  exit "$rc"
+done
+EOF
+chmod +x "$EV/in-job.sh" "$EV/launch.sh"
+source "$EV/in-job.env"
+squeue -h -j "$JOB" -o '%i %T'                 # the job id and RUNNING
+```
+
+- Drop `GLINER_URL` only when GLiNER did not start (say so).
+- Every new shell: `export EV=...` and `source "$EV/in-job.env"`. A long step's exit status: last line of `$EV/logs/<step>.launch`.
+- New stack job: update at once, `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env" && source "$EV/in-job.env" && squeue -h -j "$JOB" -o '%i %T'`. Stale `JOB` = every launch fails (srun: invalid job id).
+- Long steps: `nohup "$EV/launch.sh" <step> <command> > /dev/null 2>&1 &`, one at a time. Short checks: `"$EV/in-job.sh" <command>`.
+
+**Failed calls.** Failed LLM call = reason `model_call`; failed GLiNER `/predict` = `service_call`. Result `error` or `partial`, funnel moves on, run finishes with less evidence. Stored in the record cache, so a plain rerun reuses them: `evidence run` prints `FAIL engine-errors <run dir> <count>` and exits 2 (run stays on disk); rerun with `--retry-errors` once the service answers. A skipped GLiNER call (service unreachable) is not cached: move the run dir aside and rerun plainly.
+
+**Success:** `uv run evidence --help` lists `run estimate tune fetch propose ...`; `curl -s $LITELLM_BASE_URL/models` (in the job) names `orch-model`.
+
+### 0.3 Web UI (in the job)
+
+```bash
+srun --jobid "$JOB" --overlap --pty bash -l                       # login node; then on the node:
+source "$EV/in-job.env" && uv run webapp serve --host 127.0.0.1 --port 8080
+ssh -L 8080:<node>:8080 <login node>                              # laptop; open http://127.0.0.1:8080
+```
+
+- Jobs keep state + logs in `$EV/.jobs/`; outputs in the same `$EV` layout as the commands here.
+- Model job refused (409) without `LITELLM_MASTER_KEY` or a gateway answering `GET $LITELLM_BASE_URL/models`.
+- Answers only Host 127.0.0.1, localhost, ::1 (`WEBAPP_ALLOWED_HOSTS`). Check on the node: `curl -s http://127.0.0.1:8080/api/health`.
+- Webis gateway instead of ssh: `scripts/omen-tunnels-external compute start harness-ui` on the node running `webapp serve`, then `omen-tunnels-external laptop start harness-ui`, open http://127.0.0.1:25173 (same tool on both ends).
 
 ## 1. Offline checks (login node, no model)
 
 ```bash
-uv run pytest evidence synth evaluation modelcall webapp -q          # all of it, on Linux
+uv run pytest -q                                                     # all of backend/, on Linux
 uv run evidence pack check rag                                       # exit 0
 uv run evidence pack check ml                                        # exit 0
-uv run evidence estimate --protocol domains/rag/protocols/rag-factuality.yaml \
+uv run evidence estimate --protocol data/domains/rag/protocols/rag-factuality.yaml \
   --corpus tests/EV2/corpora/rag-claude-s1-mixed --strategy gaps > "$EV/estimate-s1-mixed.json"   # exit 0
 ```
 
@@ -65,8 +159,8 @@ estimate prints calls and tokens. If pytest fails: record, and go on with sectio
 ## 2. Ontology files (login node, network)
 
 MeSH (medicine), CS-KG (computer science) and the full QUDT units go into `$EV_ONTOLOGY_DIR`. The MeSH URL in
-`evidence/ontology/sources.py` (`PINNED["mesh"]["url"]`, the current year's `descYYYY.xml`) is **untested**; CS-KG has no
-URL and needs `$EV_CSKG_URL` (**USER** gives it; without it CS stays on `domains/rag/ontology.ttl`, which is fine).
+`backend/evidence/ontology/sources.py` (`PINNED["mesh"]["url"]`, the current year's `descYYYY.xml`) is **untested**; CS-KG has no
+URL and needs `$EV_CSKG_URL` (**USER** gives it; without it CS stays on `data/domains/rag/ontology.ttl`, which is fine).
 
 ```bash
 uv run python -c "from evidence.ontology.sources import fetch; print(fetch('qudt'))"     # a download that does not parse is refused
@@ -77,7 +171,7 @@ uv run python -c "from evidence.ontology.sources import ontology_hashes; import 
 
 **Success:** each `fetch` prints a path under `$EV/ontology/`; the last command prints one sha256 per file. Write the
 hashes into `$EV/ontology-hashes.json` and hand them back: Aditya pastes them into `PINNED[...]["sha256"]` in
-`evidence/ontology/sources.py` (Codex does not edit code). A wrong URL, a 404 or an HTML page: record the error text and
+`backend/evidence/ontology/sources.py` (Codex does not edit code). A wrong URL, a 404 or an HTML page: record the error text and
 the URL that failed. Without the MeSH file medicine runs with "reasoning off: no tree" (not a crash).
 
 ## 3. Real sets (login node, then the job)
@@ -128,7 +222,7 @@ uv run python scripts/real-set-prep.py sofc-corpus --src "$REAL/sofc"           
 split) has only been tried on fixtures:
 
 ```bash
-uv run pytest evaluation/tests/test_real_questions_cs.py -q        # with SCILEAD_DATA set it must count 27 boards, not skip
+uv run pytest backend/evaluation/tests/test_real_questions_cs.py -q        # with SCILEAD_DATA set it must count 27 boards, not skip
 uv run python -c "import sys; from evaluation.realpapers import scilead, scirex; q=scilead.questions(sys.argv[1]); print(len(q), sum(len(x.records or []) for x in q)); q=scirex.questions(sys.argv[2]); print(len(q), sum(len(x.records or []) for x in q))" "$SCILEAD_DATA" "$REAL/scirex/test.jsonl"
 ```
 
@@ -192,7 +286,7 @@ uv run evaluate tune-split --set scirex --src "$REAL/scirex/test.jsonl" --corpus
 
 5.3 **`tune_examples.json`**. The real-paper steps `recheck`, `map_experiments`, `claims.read_claim` refuse to tune on
 synthetic corpora only (`TuneError`); they need `<corpus>/tune_examples.json` next to `tune_split.json`, in the format of
-the docstring of `evidence/steps/tune.py`. A script builds it from the set's own labels (run it after 5.2):
+the docstring of `backend/evidence/steps/tune.py`. A script builds it from the set's own labels (run it after 5.2):
 
 ```bash
 uv run python scripts/real-set-prep.py tune-examples --set "$REAL/sofc"          # writes $REAL/sofc/corpus/tune_examples.json
@@ -236,10 +330,10 @@ two sets writes one `tuned/<step>.json`: tune it once, with every set that has e
 `planner_query` is **not tunable yet** (its metric would be the whole-run score on synthetic questions, which is not
 wired): the planner stays untuned. **Untuned steps, listed in the report:** `write_words`, `write_more_words`,
 `claims.read_claim`, `planner_query`. **Success:** each step writes
-`evidence/steps/tuned/<step>.json` with `instructions`, `light_budget`, `max_metric_calls` (at most 500), the calls really
+`backend/evidence/steps/tuned/<step>.json` with `instructions`, `light_budget`, `max_metric_calls` (at most 500), the calls really
 made and train/test scores before and after. A `TuneError` (overlap, refused synthetic-only, failed parse share) is a
 result, not a crash: record its text. Tuned files change the steps' instructions, so **run section 6 after tuning**;
-copy `evidence/steps/tuned/` back (Aditya decides which go into git).
+copy `backend/evidence/steps/tuned/` back (Aditya decides which go into git).
 
 ## 6. The real sets: plan runs, both confirmation rows, both reasoning settings
 
@@ -336,7 +430,7 @@ uv run evaluate offtemplate --runs "$RUNS/offtemplate" --out "$SCORES/offtemplat
 ```
 
 **Success:** `offtemplate.json` has `summary` with `fresh_share` and `match_rate` (the two generality numbers), `not_run` 0.
-Never edit `evaluation/offtemplate/questions.yaml` or the reference queries.
+Never edit `backend/evaluation/offtemplate/questions.yaml` or the reference queries.
 
 7.2 **Leak split** (Claude-written corpora only; the word list is the run's `plan.json`): one plan run per corpus, then:
 
@@ -361,7 +455,7 @@ tuned file lists corpora elsewhere, add `--corpora "$EV/corpora" --corpora tests
 ```bash
 for C in tests/EV2/corpora/rag-claude-s1-{explicit,paraphrased,distributed,complex,contradictory,mixed} \
          "$EV/corpora"/rag-tpl-gen-s1-{multi_experiment,messy_tables}; do N=$(basename $C)
-  "$EV/launch.sh" run-$N uv run evidence run --protocol domains/rag/protocols/rag-factuality.yaml --corpus $C --out "$RUNS/synthetic" --cache "$CACHE/synthetic" --run-id $N
+  "$EV/launch.sh" run-$N uv run evidence run --protocol data/domains/rag/protocols/rag-factuality.yaml --corpus $C --out "$RUNS/synthetic" --cache "$CACHE/synthetic" --run-id $N
   "$EV/launch.sh" rag-$N uv run evaluate rag-baseline --corpus $C --out "$RUNS/synthetic-rag/$N" --retrieval per_paper --k 2
   uv run evaluate score --run "$RUNS/synthetic/$N" --corpus $C --baseline "$RUNS/synthetic-rag/$N/answer.json" --out "$SCORES/synthetic/$N"
 done
@@ -392,7 +486,7 @@ the set (`n_in_set` > 0) they cannot be scored, so links recall is a **lower bou
 1. `$EV/failures.md` (even if empty: "none").
 2. Copy every run folder back: `rsync -a "$RUNS/" <laptop or results branch>/runs/` (all of `real/`, `offtemplate/`,
    `leak/`, `synthetic/`, `synthetic-rag/`), plus `$SCORES`, `$PLANS`, `$CACHE/*.jsonl` of the baselines, `$EV/ontology-hashes.json`,
-   `$EV/sofc-directions.tsv`, `$EV/estimate-*.json`, `evidence/steps/tuned/`, and every `tune_split.json` (and
+   `$EV/sofc-directions.tsv`, `$EV/estimate-*.json`, `backend/evidence/steps/tuned/`, and every `tune_split.json` (and
    `tune_examples.json`) of the real sets; in every run folder `stage_report.json` and, when present, `openalex-failed.jsonl`
    (also the `<qid>.failed-<n>` / `<qid>.redo-<n>` folders). Branch `results-general` from `origin/results`; tag `general`; never push to `main`
    or `results`.
@@ -412,7 +506,7 @@ line" on). Code is local `main` after the merge of `fix/general-run`; `llm-setup
 first run are on `codex/general-system-run` (`reports/general/runs/`), not on `main`: fetch them from that branch.
 
 9.1 **Offline suite on Linux** (all of it, including the POSIX-only agent and web-app tests Windows cannot run):
-`uv run pytest evidence synth evaluation modelcall webapp agent -q`. The four failures of the first run are fixed
+`uv run pytest -q` (testpaths = backend/). The four failures of the first run are fixed
 (lock fixture now versioned v1/v2, golden test machine-independent, web-app group `...-cascade-gaps`); anything red is
 a finding: stop, **USER**.
 
@@ -469,3 +563,23 @@ CochraneForest, SOFC-Exp and MeasEval stay `layout_verified: false` until Aditya
 held-out slices with `tune_examples.json`, and only SOFC has them (`recheck`, `map_experiments`). Untuned: `write_words`,
 `write_more_words`, `claims.read_claim`, `planner_query`. Links recall is a lower bound when `n_in_set` > 0, and "links not
 run" is a valid outcome. The sample is 10 questions per set, a hand row of 5. Leak uses Claude-written corpora only.
+
+## Codex: tidy the cluster, run from the UI
+
+```text
+Pull main (post-4-Nov fixes, repo now backend/ frontend/ data/ docs/). Read docs/runbook-slurm.md fully; the section-9 work list is yours.
+
+Part 1, tidy /mnt/ceph/storage/data-tmp/2026/xepi3167/:
+- Inventory every dir: what it is, size, last write, which run or session made it. Write it to tidy/inventory.md.
+- Propose one layout: code/ (one clone, main), runs/<date>-<name>/ (each run's reports+calls), caches/ (model call caches, never delete), data/real (gold sets), ontology/, logs/, archive/ (everything unclaimed).
+- Move, never delete. Keep tidy/moves.tsv (old path -> new path). Anything to delete goes in tidy/delete-proposal.md for Aditya; do not delete before he says yes.
+- Replay must still work after the moves: run one recorded replay to prove it.
+
+Part 2, run the UI from Slurm:
+- Slurm job: uv run webapp serve --host 127.0.0.1 --port 8080. Print the ssh -L 8080:<node>:8080 command in tidy/ui.md.
+- From now, start runs from the UI, not ad hoc scripts. If the UI lacks a button for a section-9 run, add it (small, with a test) rather than scripting around it.
+
+Part 3, section 9: rescores (no model calls) first, then reruns, then robustness. Results go to runs/, summary to reports/general/<date>-summary.md, push on branch results.
+
+Report back in under 15 lines: what moved, what is proposed for deletion, UI link, section-9 numbers.
+```

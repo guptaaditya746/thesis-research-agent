@@ -3,7 +3,7 @@
  * real tools (webapp/tests/evidence_world.py: synth, evidence run, evaluate, evidence propose, with scripted
  * models), dumped by path into ev-fixtures.json:
  *
- *     uv run python -m webapp.tests.evidence_world /tmp/ev-world --mocks webapp/web/src/mocks/ev-fixtures.json
+ *     uv run python -m webapp.tests.evidence_world /tmp/ev-world --mocks frontend/src/mocks/ev-fixtures.json
  *
  * Read-only like the backend: a path in the file is answered with its response, any other with the
  * backend's 404 shape. The world's directory reads as /srv/ev.

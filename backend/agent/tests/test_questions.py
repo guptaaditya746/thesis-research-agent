@@ -38,7 +38,7 @@ def test_questions_file_has_the_twelve_slots() -> None:
 
 def test_questions_are_the_ones_the_plan_lists() -> None:
     """Until a question is replaced: the 12 of the plan, with their labelling-repo ids."""
-    plan = (REPO / "docs" / "earlier-work.md").read_text(encoding="utf-8")
+    plan = (Path(__file__).resolve().parent / "earlier-work.md").read_text(encoding="utf-8")   # its question table
     for q in load_questions(QUESTIONS):
         assert f"| {q['id']} | {q['category']} | {q['question']} | {q['source']} |" in plan, q["id"]
 

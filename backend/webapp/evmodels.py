@@ -40,7 +40,7 @@ class Root(Base):
 
 
 class EvConfig(Base):
-    ev: str | None = Field(None, description="$EV, the root the others default to (docs/slurm-evidence-runbook.md)")
+    ev: str | None = Field(None, description="$EV, the root the others default to (docs/runbook-slurm.md)")
     corpora: Root
     runs: Root
     scores: Root

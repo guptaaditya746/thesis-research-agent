@@ -5,7 +5,7 @@
  * mock db, as they ran on one world: scenario 8 proposes `p-new`, whose job is ended with `finishJob` before
  * scenario 9 writes its decisions (a job's end state is not compared: the backend's recorder cancels it).
  *
- *     regenerate: uv run python -m webapp.tests.evidence_world <tmp> --mocks webapp/web/src/mocks/ev-fixtures.json
+ *     regenerate: uv run python -m webapp.tests.evidence_world <tmp> --mocks frontend/src/mocks/ev-fixtures.json
  */
 import { beforeAll, describe, expect, it } from "vitest"
 

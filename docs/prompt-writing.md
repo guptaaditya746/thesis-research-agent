@@ -65,4 +65,4 @@ Keep entire study families together when splitting data: renderings at every lev
 
 Version a behavior-changing prompt and preserve its predecessor. A proposed setting needs an empirical comparison; passing a JSON schema alone establishes output shape. Run deterministic checks and independent model verification on the deployed models before claiming a prompt improves the workflow.
 
-DSPy is a possible development tool for optimizing prompts against fixed metrics and separate validation data. Evaluate it in an isolated experiment after the contracts and metrics are sound; keep the research policy, validators, and held-out evaluation fixed. The intended pilot and its limits are in [the EV1 diagnosis](ev1-review-diagnosis.md).
+DSPy is a possible development tool for optimizing prompts against fixed metrics and separate validation data. Evaluate it in an isolated experiment after the contracts and metrics are sound; keep the research policy, validators, and held-out evaluation fixed. The intended pilot and its limits are in the EV1 diagnosis (`docs/ev1-review-diagnosis.md` at tag `pre-restructure`).

@@ -1,4 +1,4 @@
-"""The write contract the frontend's mock is checked against (webapp/web/src/mocks/contract.test.ts) is what the
+"""The write contract the frontend's mock is checked against (frontend/src/mocks/contract.test.ts) is what the
 backend answers today (write_contract.py)."""
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from .evidence_world import EvidenceWorld
 from .write_contract import CONTRACT, SCENARIOS, record
 
 REGENERATE = ("regenerate: uv run python -m webapp.tests.evidence_world <tmp> --mocks "
-              "webapp/web/src/mocks/ev-fixtures.json")
+              "frontend/src/mocks/ev-fixtures.json")
 
 
 def test_recorded_contract_is_current(ev_world: EvidenceWorld, tmp_path: Path) -> None:

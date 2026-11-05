@@ -18,7 +18,7 @@ So (one ASGI middleware, before any route):
   header can be forged, the peer address of a TCP connection cannot), and unless it is a JSON request
   (Content-Type application/json, which a cross-site page can only send after a CORS preflight the server
   never grants) or names itself with X-Requested-With, and, when the browser sends an Origin, that origin is
-  the server's own host. The frontend's client (webapp/web/src/api/client.ts) sends JSON bodies, so it passes.
+  the server's own host. The frontend's client (frontend/src/api/client.ts) sends JSON bodies, so it passes.
 """
 from __future__ import annotations
 
