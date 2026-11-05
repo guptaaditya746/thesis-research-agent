@@ -57,9 +57,9 @@ requires = ["uv_build>=0.9,<0.14"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = ["agent", "jsonio", "gold", "scoring", "webapp", "evidence", "synth", "evaluation", "modelcall", "packbuilder"]
-module-root = ""
+module-name = ["agent", "jsonio", "gold", "scoring", "webapp", "evidence", "synth", "evaluation", "modelcall", "packbuilder", "repo_paths"]
+module-root = "backend"
 
 [tool.pytest.ini_options]
 addopts = "-n auto --timeout 600"
-testpaths = ["agent/tests", "jsonio/tests", "gold/tests", "scoring/tests", "webapp/tests", "evidence/tests", "synth/tests", "evaluation/tests", "modelcall/tests", "packbuilder/tests"]
+testpaths = ["backend"]

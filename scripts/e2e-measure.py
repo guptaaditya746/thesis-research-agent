@@ -29,8 +29,8 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:  # run as a file: make the repository's packages importable
-    sys.path.insert(0, str(REPO))
+if str(REPO / "backend") not in sys.path:  # run as a file: make the repository's packages importable
+    sys.path.insert(0, str(REPO / "backend"))
 
 from agent.rundir import RunDir  # noqa: E402
 from agent.verify import is_attach, stats  # noqa: E402
