@@ -26,6 +26,7 @@ import json
 import re
 from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Literal
 
 import dspy
@@ -41,8 +42,9 @@ MAIN_RULE_ID = MAIN_RULE   # the rule's decision row: id and type "main_rule" (e
 NOT_PLANNED = "could not plan"
 DECISION_TYPES = ("must_match", "counts_as", "threshold", "include")
 # Parameters a plan run fills itself from the plan (evidence/planrun.py `line_params`): the compared sides (thing ids,
-# treatment first), the measure ids, each measure's direction and the threshold. A query may keep them as $name.
-RUN_PARAMS = ("sides", "metrics", "higher_is_better", "min_effect", "threshold")
+# treatment first), the measure ids, the main (first) measure id, each measure's direction and the threshold. A query
+# may keep them as $name.
+RUN_PARAMS = ("sides", "metrics", "metric", "higher_is_better", "min_effect", "threshold")
 MAX_LINES = 5
 
 # The main-answer rules: name -> what it says. `evidence.planner.lines.apply_rule` applies them.
@@ -83,6 +85,15 @@ _SPECIAL = re.compile(r"\$(?:include|must_match|must_match_values)\[[^\]]*\]")
 _NAME = re.compile(r"\$(\w+)")
 _DIRECTIVE = re.compile(r"^#[ \t]*(params|decisions|after):")
 _COMMENT_LINE = re.compile(r"^[ \t]*#.*$", re.MULTILINE)
+_PARAMS_LINE = re.compile(r"^#[ \t]*params:[ \t]*(.*)$", re.MULTILINE)   # read by the run (evidence.kg.query.declared)
+# The ev:/kg: names the graph emits (evidence/kg/build.py): the terms of evidence/vocab/ev.ttl, the kg: names below,
+# and the per-setting ev:setting_<key> / kg:key_<key>. A query naming another one matches nothing (kg:dataset).
+_EV_TERMS = frozenset(re.findall(r"^ev:(\w+)", (Path(__file__).resolve().parents[1] / "vocab" / "ev.ttl")
+                                 .read_text(encoding="utf-8"), re.MULTILINE))
+_KG_TERMS = frozenset({"context", "contextKey", "side", "position", "inTable", "higherIsBetter"})
+_TERM = re.compile(r"(?<![\w<:/#])(ev|kg):(\w+)")
+_STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"' + r"|'(?:[^'\\\n]|\\.)*'")
+_IRI = re.compile(r"<[^<>\s\"{}|^`]*>")
 
 # ---- signatures ---------------------------------------------------------------------------------------------------
 
@@ -287,15 +298,17 @@ def _directives(template: str) -> list[str]:
 
 def with_header(body: str, template: str | None) -> str:
     """`body` with the template's header directives in front (kept in code, not written by the model): `# params:`
-    lists only the parameters still left in the query, which the run must pass."""
+    lists only the parameters still left in the query, which the run must pass: `p` when `$p` or `$p_key` is in it
+    (`$metrics` is not `$metric`)."""
     if not template:
         return body
     body = _COMMENT_LINE.sub("", body).strip()
+    names = set(_NAME.findall(body))
     head = []
     for line in _directives(template):
-        m = re.match(r"^#[ \t]*params:[ \t]*(.*)$", line)
+        m = _PARAMS_LINE.match(line)
         if m:
-            left = [p.strip() for p in m.group(1).split(",") if p.strip() and f"${p.strip()}" in body]
+            left = [p.strip() for p in m.group(1).split(",") if p.strip() and {p.strip(), f"{p.strip()}_key"} & names]
             if left:
                 head.append(f"# params: {', '.join(left)}")
         else:
@@ -310,14 +323,31 @@ def _unfilled(query: str) -> list[str]:
     return sorted({n for n in _NAME.findall(body) if n not in ok})
 
 
+def unknown_terms(query: str) -> list[str]:
+    """The ev:/kg: names in the query (comments and quoted text left out) that the graph never emits."""
+    body = re.sub(r"#.*$", "", _IRI.sub("<>", _STRING.sub('""', query)), flags=re.MULTILINE)
+    return sorted({f"{p}:{n}" for p, n in _TERM.findall(body)
+                   if not ((n in _EV_TERMS or n.startswith("setting_")) if p == "ev" else
+                           (n in _KG_TERMS or n.startswith("key_")))})
+
+
 def query_problem(query: str) -> str | None:
-    """Why the query is refused, or None: it must parse (pyoxigraph, placeholders replaced) and hold no placeholder
-    that a decision does not fill."""
+    """Why the query is refused, or None: it must parse (pyoxigraph, placeholders replaced), hold no placeholder
+    that a decision does not fill, and name only ev:/kg: terms the graph emits."""
     if not query.strip():
         return "the query is empty"
     left = _unfilled(query)
     if left:
         return f"these $placeholders have no value: {left}; write a literal value for them"
+    m = _PARAMS_LINE.search(query)   # the run refuses a query whose header asks for a parameter it does not pass
+    ok = set(decision_map(query).values()) | set(DECISION_TYPES) | set(RUN_PARAMS)
+    asked = [p.strip() for p in m.group(1).split(",") if p.strip() and p.strip() not in ok] if m else []
+    if asked:
+        return f"the query's header asks for parameters no decision or run fills: {asked}"
+    unknown = unknown_terms(query)
+    if unknown:
+        return (f"the graph has no {unknown}; a setting's value is ev:setting_<key> (e.g. ev:setting_dataset), its "
+                "cleaned key kg:key_<key>")
     body = _SPECIAL.sub("", _COMMENT_LINE.sub("", query))
     body = _NAME.sub('"x"', body)
     head = "".join(f"PREFIX {p}: <{u}>\n" for p, u in _PREFIXES.items())
@@ -343,13 +373,20 @@ def check_plan(plan: Plan, templates: Mapping[str, str] | None = None) -> list[s
                      if x.template and x.template not in templates]
     if not plan.words.things:
         problems.append("the plan names no thing the question is about")
+    elif not set(plan.words.things) - set(plan.measures):
+        problems.append("the plan names no compared thing besides its measures")
     if plan.main_rule not in RULES:
         problems.append(f"the main-answer rule {plan.main_rule!r} is not one of {sorted(RULES)}")
     for x in plan.lines:
-        if x.query:
-            why = query_problem(x.query)
-            if why:
-                problems.append(f"line {x.id}: {why}")
+        if not x.query:
+            problems.append(f"line {x.id}: {NOT_PLANNED} (it has no query)")
+            continue
+        why = query_problem(x.query)
+        if why:
+            problems.append(f"line {x.id}: {why}")
+        needs = {"metric", "metrics"} & set(_NAME.findall(_COMMENT_LINE.sub("", x.query)))
+        if not plan.measures and needs - set(decision_map(x.query).values()):   # no decision fills it either
+            problems.append(f"line {x.id}: its query needs a measure ($metric) but the plan names no measure")
     return problems
 
 

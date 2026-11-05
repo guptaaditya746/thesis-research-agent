@@ -49,15 +49,41 @@ REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes
 SERVICE_REASONS = ("model_call", "service_call")   # error reasons of a call the model gateway / GLiNER did not answer
 
 
+# Words of a model_call error the gateway DID answer, so the same request fails again (squashed: no spaces or
+# underscores, case-folded): the reply did not validate (a whitespace or quote loop to max_tokens), or the prompt is
+# over the context window (gold/calls.py CONTEXT_MARKERS).
+PERMANENT_MARKERS = ("exceededmaximumoutputretries", "contextwindowexceeded", "contextlengthexceeded",
+                     "maximumcontextlength")   # not every UnexpectedModelBehavior: a proxy's bad body is passing
+
+
+def _failed_call(result: Any) -> dict[str, Any] | None:
+    """The error of a result (as JSON) that failed, in whole or in part, with a service reason; else None."""
+    if not isinstance(result, dict) or result.get("status") not in ("error", "partial"):
+        return None
+    error = result.get("error")
+    return error if isinstance(error, dict) and error.get("reason") in SERVICE_REASONS else None
+
+
+def permanent(detail: Any) -> bool:
+    """Every problem in an error text ("; "-separated) is a PERMANENT_MARKERS one."""
+    parts = [p.casefold().replace(" ", "").replace("_", "") for p in str(detail or "").split("; ") if p]
+    return bool(parts) and all(any(m in p for m in PERMANENT_MARKERS) for p in parts)
+
+
+def model_failed(result: Any) -> bool:
+    """A model_call failure the gateway answered (`permanent` detail): the model's reply or the prompt is the
+    problem, not the service, and asking the same request again does not change it."""
+    error = _failed_call(result)
+    return error is not None and permanent(error.get("detail"))
+
+
 def service_failed(result: Any) -> bool:
     """Whether an extraction result (as JSON) failed, in whole or in part, because the model gateway (`model_call`:
     the LLM extractors and the LLM screen) or the GLiNER service (`service_call`) did not answer for some or all of
-    its chunks. An agentic run that ran out of budget (`no_final_answer`) or an extractor's own exception is not
-    one: asking the same service again would not change it."""
-    if not isinstance(result, dict) or result.get("status") not in ("error", "partial"):
-        return False
-    error = result.get("error")
-    return isinstance(error, dict) and error.get("reason") in SERVICE_REASONS
+    its chunks. An agentic run that ran out of budget (`no_final_answer`), an extractor's own exception, or a reply
+    the gateway gave that did not validate (`model_failed`) is not one: asking the same service again would not
+    change it."""
+    return _failed_call(result) is not None and not model_failed(result)
 
 
 class CorpusError(RuntimeError):
@@ -282,8 +308,14 @@ class RunDir:
     def failed_calls(self) -> int:
         """Calls the model gateway or the GLiNER service failed, in whole or in part (`service_failed`: status
         "error" or "partial" with reason `model_call` or `service_call`). `evidence run` exits 2 on a count above 0,
-        the web app shows it, and `--retry-errors` asks them again. An agentic call that ran out of budget is not one."""
+        the web app shows it, and `--retry-errors` asks them again. An agentic call that ran out of budget is not one,
+        nor a reply that did not validate (`model_failed_calls`)."""
         return self._count(service_failed)
+
+    def model_failed_calls(self) -> int:
+        """Calls whose model reply did not validate or whose prompt was over the context window (`model_failed`):
+        `evidence run` warns about them; asking again does not help."""
+        return self._count(model_failed)
 
     def _count(self, test: Any) -> int:
         folder = self.file(CALLS_DIR)

@@ -130,14 +130,16 @@ def param_names(sparql: str, decisions: list[Decision], param_of: dict[str, str]
 
 def rerun(store: ox.Store, line: EvidenceLine, decisions: list[Decision], *, params: dict[str, Any] | None = None,
           verdict: Callable[[Answer], Verdict] = default_verdict,
-          candidates: dict[str, list[Any]] | None = None, param_of: dict[str, str] | None = None) -> Sensitivity:
+          candidates: dict[str, list[Any]] | None = None, param_of: dict[str, str] | None = None,
+          match: Any = None) -> Sensitivity:
     """Run `line` with the decisions as they are, then once per alternative of each decision (the others unchanged).
-    `params` are the line's own params (a metric, a thing), `candidates` the pool per decision type."""
+    `params` are the line's own params (a metric, a thing), `candidates` the pool per decision type; `match` the
+    line's name matcher (`query.render`)."""
     sparql = template(line.template) if line.template else line.query
     names = param_names(sparql, decisions, param_of)
     base = {**(params or {}), **{names[d.id]: d.value for d in decisions}}
     pool = {"must_match": setting_fields(store), **(candidates or {})}
-    main_answer = run_query(store, sparql, base)
+    main_answer = run_query(store, sparql, base, match)
     main = verdict(main_answer)
     out = Sensitivity(line=line.id, main=main)
     main_rows = {json.dumps(r, sort_keys=True, default=str) for r in main_answer.rows}
@@ -145,7 +147,7 @@ def rerun(store: ox.Store, line: EvidenceLine, decisions: list[Decision], *, par
         for setting, value in alternatives(d, pool.get(d.id, pool.get(d.type, []))):
             if setting == "main":
                 continue
-            answer = run_query(store, sparql, {**base, names[d.id]: value})
+            answer = run_query(store, sparql, {**base, names[d.id]: value}, match)
             v = verdict(answer)
             changed = _changed(d, d.value, value) if d.type == "must_match" else d.type
             out.runs.append(Run(d.id, changed, setting, value, v, flips=not _same(main, v)))

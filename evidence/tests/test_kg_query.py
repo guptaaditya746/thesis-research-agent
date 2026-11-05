@@ -6,7 +6,7 @@ from pyoxigraph import Store
 
 from evidence.kg import after
 from evidence.kg.build import build
-from evidence.kg.query import NO_EVIDENCE, run_query, run_template, templates
+from evidence.kg.query import NO_EVIDENCE, render, run_query, run_template, templates
 from evidence.protocol import load
 from evidence.rundir import RunDir
 
@@ -68,6 +68,41 @@ def test_list_for_task():
         docs.append(d)
     answer = run_template(graph(*docs), "list_for", {"list_field": "dataset", "for_field": "task", "for_value": "NER"})
     assert [(r["item"], r["papers"]) for r in answer.rows] == [("SciERC", 2), ("CoNLL", 1)]
+
+
+def test_legacy_dataset_property_list_matches_the_saved_list_for_template():
+    docs = []
+    for pid, task, data in (("p1", "Age Estimation", "Morph"), ("p2", "age estimation", "ChaLearn"),
+                             ("p3", "Pose Estimation", "Other")):
+        d = Doc(pid)
+        d.experiment("e1", {"task": task, "dataset": data})
+        docs.append(d)
+    store = graph(*docs)
+    legacy = '''SELECT ?item (COUNT(DISTINCT ?paper) AS ?papers) WHERE {
+      ?e a ev:Experiment ; ev:inPaper ?p ; kg:dataset ?item ; kg:key_task "Age Estimation" .
+      ?p ev:name ?paper . $include[?paper]
+    } GROUP BY ?item ORDER BY DESC(?papers) ?item'''
+    params = {"include": ["p1", "p2", "p3"]}
+    expected = run_template(store, "list_for", {**params, "list_field": "dataset", "for_field": "task",
+                                               "for_value": "Age Estimation"}).rows
+    assert run_query(store, legacy, params).rows == expected == [
+        {"item": "ChaLearn", "papers": 1}, {"item": "Morph", "papers": 1}]
+
+
+def test_legacy_dataset_compatibility_leaves_unrelated_query_terms_unchanged():
+    body = '''SELECT ?e WHERE {
+      ?e ev:name "; kg:dataset ?literal" ; ev:description '\\'; kg:dataset ?escaped' .
+      ?e ev:name """; kg:dataset ?long_literal""" .
+      ?e ev:source <https://example.org/;kg:dataset> .
+      ?e kg:dataset_version ?version ; otherkg:dataset ?other ; ev:name kg:dataset .
+      ?e ev:name ?name . # ; kg:dataset ?comment
+    }'''
+    assert render(body, {}).endswith(body)
+
+
+def test_legacy_dataset_compatibility_preserves_an_explicitly_different_kg_namespace():
+    body = 'PREFIX kg: <https://example.org/> SELECT ?item WHERE { ?e a ev:Experiment ; kg:dataset ?item }'
+    assert render(body, {}).endswith(body)
 
 
 def chain_doc(pid: str, setting: dict[str, str], a: float | None, b: float, c: float | None, mid: str = "B") -> Doc:

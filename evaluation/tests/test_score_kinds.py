@@ -274,8 +274,12 @@ GOLDEN = {"pilot-complex": ("cascade-gaps/rag-claude-pilot-complex", "rag-claude
 
 
 @pytest.mark.parametrize("name", sorted(GOLDEN))
-def test_effect_scores_unchanged(name: str) -> None:
-    """Captured with the scorer before the per-kind change (evaluation/tests/data/score-golden-*.json)."""
+def test_effect_scores_unchanged(name: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Captured with the scorer before the per-kind change (evaluation/tests/data/score-golden-*.json). The token
+    counts come from the record cache run.json names by its absolute path, present only where the run was made (the
+    cluster); the golden files were captured without it, so the test reads none on every machine."""
+    from evidence.rundir import RunDir
+    monkeypatch.setattr(RunDir, "cache_file", lambda self: None)
     run, corpus, baselines = GOLDEN[name]
     result = score(EV2 / "runs" / run, EV2 / "corpora" / corpus, [EV2 / "runs" / b for b in baselines])
     assert (result.pop("question_id"), result.pop("kind")) == ("rag-factuality", "effect")

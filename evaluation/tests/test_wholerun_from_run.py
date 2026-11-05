@@ -189,3 +189,69 @@ def test_split_does_not_hide_an_extra_first_paper() -> None:
     dup = KgAnswer(rows=[{"paper": p} for p in ("B2", "A1", "A1", "C3")], empty=False)
     assert not matches(extra, ["B2", "A1", "C3"], "paper")
     assert matches(dup, ["B2", "A1", "C3"], "paper")
+
+
+def _rank_plan(measure: str = "f1", names: list[str] | None = None):
+    """A plan whose first line is the saved rank template on `measure`, its second a fresh list line."""
+    from evidence.kg.query import template
+    from evidence.plan import EvidenceLine
+    from evidence.tests.test_plan_run import make_plan
+    plan = make_plan(things={"bert": ["BERT"], measure: names or ["F1"]}, measures=(measure,))
+    rank = chr(10).join(x for x in template("rank").splitlines() if not x.startswith("#")).replace("$context_key", "\"SQuAD\"")
+    lines = [EvidenceLine(id="l1", question="Which paper is best?", query=rank, template="rank"),
+             EvidenceLine(id="l2", question="Which papers report values?", query="SELECT ?paper WHERE {}", template=None)]
+    return plan.model_copy(update={"lines": lines, "decisions": [d for d in plan.decisions if d.type != "counts_as"]})
+
+
+def _with_plan(tmp: Path, lines: list[dict], plan) -> Path:
+    from evidence.plan import write_plan
+    root = run_dir(tmp, lines)
+    write_plan(plan, root / "plan.json")
+    return root
+
+
+def test_rank_reads_the_rank_line_never_a_later_list_line(tmp_path: Path) -> None:
+    """scilead-17: the rank line found nothing, a later list line has rows; the headline is an empty answer."""
+    gold = {"ranking": ["P2", "P1"], "papers": ["P1", "P2"]}
+    root = _with_plan(tmp_path, [done([], "l1"), done([{"paper": "P2"}, {"paper": "P1"}], "l2")], _rank_plan())
+    answer = from_run(root, q("rank", gold))
+    assert answer.ranking == [] and score(answer, q("rank", gold))["top1"] == 0
+
+
+def _split(tmp: Path, ours: list[dict], plan, records: list[dict], lines: list[dict] | None = None) -> str:
+    from evaluation.wholerun_cmd import error_split
+    question = RealQuestion("q1", "Which?", "cs", Path("."), {"ranking": ["P2", "P1"], "papers": ["P1", "P2"]}, "rank",
+                            records=records)
+    root = _with_plan(tmp, lines if lines is not None else [done(ours, "l1")], plan)
+    return error_split(question, root, plan, 0.0)
+
+
+def _records(metric: str) -> list[dict]:
+    return [{"paper": p, "thing": f"m{p}", "metric": metric, "number": n, "higher_is_better": True, "context": "SQuAD",
+             "settings": {}} for p, n in (("P1", 0.9), ("P2", 0.95), ("P3", 0.7))]
+
+
+def test_split_judges_a_ranking_by_top1_as_the_headline_does(tmp_path: Path) -> None:
+    """scilead-24: the top paper is right, the rest of the order is not; that is "right", not a synthesis error."""
+    ours = [{"thing": "x", "score": 0.95, "paper": "P2"}, {"thing": "y", "score": 0.1, "paper": "P3"}]
+    assert _split(tmp_path, ours, _rank_plan(), _records("F1")) == "right"
+
+
+def test_split_key_store_answers_with_the_release_spelling_of_the_metric(tmp_path: Path) -> None:
+    """The key spells "F1", the plan's query asks measure "f1": the key still answers, so a wrong run is an
+    extraction error, not a synthesis error."""
+    ours = [{"thing": "y", "score": 0.9, "paper": "P1"}]
+    assert _split(tmp_path, ours, _rank_plan(), _records("F1")) == "extraction error"
+
+
+def test_key_store_metric_names_follow_plan_measures() -> None:
+    from evaluation.wholerun_cmd import plan_metrics
+    plan = _rank_plan("rogue_1", ["ROUGE-1 score"])
+    got = plan_metrics([{"metric": "ROGUE-1", "number": 1.0}, {"metric": "ROUGE-1 score"}, {"metric": "BLEU"}], plan)
+    assert [r["metric"] for r in got] == ["rogue_1", "rogue_1", "BLEU"] and got[0]["number"] == 1.0
+
+
+def test_a_failed_scored_line_is_a_plan_error(tmp_path: Path) -> None:
+    failed = {"id": "l1", "question": "?", "status": "failed", "rows": [], "text": "failed: missing parameter(s) ['metric']"}
+    label = _split(tmp_path, [], _rank_plan(), _records("F1"), lines=[failed])
+    assert label.startswith("plan error: line l1 failed: failed: missing parameter(s)")

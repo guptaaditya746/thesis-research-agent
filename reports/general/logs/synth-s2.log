@@ -1,0 +1,83 @@
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/corpora/rag-tpl-gen-s2-multi_experiment": "rag-tpl-gen-s2-2da38301",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/corpora/rag-tpl-gen-s2-messy_tables": "rag-tpl-gen-s2-4aea7d7e",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/corpora/rag-tpl-gen-s2-mixed": "rag-tpl-gen-s2-4b192765"
+  },
+  "excluded": {},
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f"
+  },
+  "settings": {
+    "name": "rag-tpl-gen-s2",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "multi_experiment",
+      "messy_tables"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 20,
+    "records": 20,
+    "retained_studies": 20,
+    "per_level": {
+      "messy_tables": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "multi_experiment": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  },
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S004",
+      "S008",
+      "S009",
+      "S010",
+      "S012",
+      "S013",
+      "S016",
+      "S017",
+      "S019",
+      "S020"
+    ],
+    "contradicting": [
+      "S006",
+      "S007",
+      "S011",
+      "S014"
+    ],
+    "neutral": [
+      "S003",
+      "S005",
+      "S015",
+      "S018"
+    ],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

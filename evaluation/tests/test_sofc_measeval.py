@@ -47,7 +47,8 @@ def test_measeval_units() -> None:
     run = [{"document": "m1", "value": 5.0, "unit": "mg/l", "entity": "Lead"},
            {"document": "m1", "value": 300, "unit": "degC", "entity": "sample"}]
     s = measeval.values_check(run, MEAS)
-    assert s == {"layout_verified": False, "quantities": 2, "values_found": 1.0, "unit_correct": 0.5, "entity_correct": 1.0}
+    assert s == {"layout_verified": False, "subset": "as given", "excluded_quantities": 0, "quantities": 2,
+                 "values_found": 1.0, "unit_correct": 0.5, "entity_correct": 1.0}
     assert measeval.values_check([], MEAS)["values_found"] == 0.0
     assert measeval.fields(MEAS) == {"layout_verified": False, "fields": [], "status": "unverified"}
 

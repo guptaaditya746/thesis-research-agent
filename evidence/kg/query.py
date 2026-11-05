@@ -17,6 +17,7 @@ graph that no row used, why (Review Focus 3). A malformed query raises."""
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from importlib import resources
 from typing import Any
@@ -40,6 +41,10 @@ _PARAMS = re.compile(r"^#[ \t]*params:[ \t]*(.*)$", re.MULTILINE)
 _DECISIONS = re.compile(r"^#[ \t]*decisions:[ \t]*(.*)$", re.MULTILINE)
 _COMMENT = re.compile(r"^[ 	]*#.*$", re.MULTILINE)
 _FREE = re.compile(r"\$\w+")
+# Protect SPARQL strings, IRI references and comments while inspecting the legacy property-list spelling.
+_PROTECTED = re.compile(r'''"""(?:\\.|[^\\])*?"""|\'\'\'(?:\\.|[^\\])*?\'\'\'|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|<[^<>\s]*>|\#[^\n]*''', re.DOTALL)
+_LEGACY_DATASET = re.compile(r";\s*(kg:dataset)(?=\s+[?$][A-Za-z_]\w*)")
+_KG_PREFIX = re.compile(r"\bPREFIX\s+kg:\s*<([^>]*)>", re.IGNORECASE)
 
 
 @dataclass
@@ -97,6 +102,54 @@ def _clean_keys(body: str) -> str:
     return _KEY_LITERAL.sub(fix, body)
 
 
+Matcher = Callable[[str], list[str]]   # a cleaned key literal -> every cleaned name it may match (itself first)
+NAME_VAR = "_name"                     # `_match_keys`'s variables, dropped from the rows (a `SELECT *` would show them)
+
+
+def _match_keys(body: str, match: Matcher) -> str:
+    """Each cleaned key literal (as `_clean_keys` left it) with more than one name to match becomes a fresh variable
+    plus `VALUES ?v { names }` at the start of its group; a literal with one name stays as it is."""
+    masked = _PROTECTED.sub(lambda m: " " * len(m.group()), body)
+    edits: list[tuple[int, int, str]] = []   # (start, end, text), applied from the end
+    for n, m in enumerate(_KEY_LITERAL.finditer(body)):
+        if body[m.end():m.end() + 1] in ("^", "@"):   # a typed or language-tagged literal stays exact
+            continue
+        names = match(re.sub(r"\x5c(.)", r"\1", m.group(2)))
+        if len(names) < 2:
+            continue
+        depth, start = 0, m.start()
+        while start > 0:   # the innermost `{` still open before the literal: its group
+            start -= 1
+            if masked[start] == "}":
+                depth += 1
+            elif masked[start] == "{":
+                if depth == 0:
+                    break
+                depth -= 1
+        var = f"?{NAME_VAR}{n}"
+        edits += [(start + 1, start + 1, f" VALUES {var} {{ {term(names)} }} "), (m.start(2) - 1, m.end(2) + 1, var)]
+    for a, b, text in sorted(edits, reverse=True):
+        body = body[:a] + text + body[b:]
+    return body
+
+
+def _legacy_dataset_predicate(body: str) -> str:
+    """Accept old saved list-for plans' `; kg:dataset ?item` as the canonical dataset setting predicate.
+
+    This spelling was never emitted by the records graph. It stays only so plans saved before the planner's check
+    refused unknown terms (`planner.plan.unknown_terms`) still run. Only its predicate position in a property list is
+    compatible; preserve literals, comments, IRIs, other properties and an explicitly rebound `kg` namespace.
+    """
+    prefixes = _KG_PREFIX.findall(body)
+    if prefixes and any(namespace != KG for namespace in prefixes):
+        return body
+    masked = _PROTECTED.sub(lambda m: " " * len(m.group()), body)
+    replacements = [m.span(1) for m in _LEGACY_DATASET.finditer(masked)]
+    for start, end in reversed(replacements):
+        body = body[:start] + f"<{setting_property('dataset').value}>" + body[end:]
+    return body
+
+
 def declared(sparql: str) -> list[str]:
     """The parameters a template's header declares (`# params: a, b`); `$include[..]` and `$must_match[..]` are optional
     and not listed."""
@@ -112,9 +165,10 @@ def decision_params(sparql: str) -> dict[str, str]:
     return {a.strip(): b.strip() for a, b in pairs}
 
 
-def render(sparql: str, params: dict[str, Any]) -> str:
+def render(sparql: str, params: dict[str, Any], match: Matcher | None = None) -> str:
     """The query with its parameters filled in. A declared parameter that is missing, or any `$name` left over (in SPARQL
-    that would be a free variable matching everything), raises ValueError."""
+    that would be a free variable matching everything), raises ValueError. `match`: a key literal also matches the
+    other names it gives (`_match_keys`); None: the cleaned literal only, as before."""
     missing = [n for n in declared(sparql) if n not in params]
     if missing:
         raise ValueError(f"missing parameter(s) {missing} for the query (declared in its header)")
@@ -136,7 +190,9 @@ def render(sparql: str, params: dict[str, Any]) -> str:
         if name.endswith("_field"):
             return f"<{setting_property(str(params[name])).value}>"
         return term(params[name])
-    body = _clean_keys(_PLACEHOLDER.sub(fill, _COMMENT.sub("", sparql)))
+    body = _clean_keys(_legacy_dataset_predicate(_PLACEHOLDER.sub(fill, _COMMENT.sub("", sparql))))
+    if match is not None:
+        body = _match_keys(body, match)
     left = sorted(set(_FREE.findall(body)))
     if left:
         raise ValueError(f"no value for parameter(s) {left}: they would be free variables in the query")
@@ -161,13 +217,14 @@ def _python(term_: Any) -> Any:
     return str(term_)
 
 
-def run_query(store: ox.Store, sparql: str, params: dict[str, Any] | None = None) -> Answer:
+def run_query(store: ox.Store, sparql: str, params: dict[str, Any] | None = None,
+              match: Matcher | None = None) -> Answer:
     params = dict(params or {})
-    result = store.query(render(sparql, params))
+    result = store.query(render(sparql, params, match))
     if isinstance(result, ox.QueryBoolean):
         rows: list[dict[str, Any]] = [{"result": bool(result)}]
     else:
-        names = [v.value for v in result.variables]
+        names = [v.value for v in result.variables if not (match is not None and v.value.startswith(NAME_VAR))]
         rows = [{n: _python(solution[n]) for n in names} for solution in result]
     step = _AFTER.search(sparql)
     if step is not None:

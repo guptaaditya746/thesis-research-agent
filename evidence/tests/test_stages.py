@@ -10,6 +10,7 @@ import dspy
 import pytest
 from pydantic import BaseModel
 from pydantic_ai.models.function import FunctionModel
+from pydantic_ai.messages import ModelResponse, TextPart
 
 from evidence import engine, stages
 from evidence.contract import Item
@@ -194,6 +195,8 @@ def _provider(fail: bool = False, text: str = "hi there"):
     def reply(messages, info):
         if fail:
             raise RuntimeError("provider down")
+        if info.model_request_parameters.output_mode == "text":
+            return ModelResponse(parts=[TextPart(text)])
         return respond(info, {"answer": text, "text": text})
     return provider_of(FunctionModel(reply, model_name="echo"))
 
@@ -274,7 +277,7 @@ def test_a_step_with_a_bad_first_reply_succeeds_on_attempt_1_and_replays_without
 
     def reply(messages, info):
         asked.append("x")
-        return respond(info, {"text": "not json at all" if len(asked) == 1 else '{"echo": "ok"}'})
+        return ModelResponse(parts=[TextPart("not json at all" if len(asked) == 1 else '{"echo": "ok"}')])
 
     def stage(run, ctx):
         steps.configure(ctx.dspy_lm("demo-step"))

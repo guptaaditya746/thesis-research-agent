@@ -1,0 +1,19 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+      / \
+     /   \       agent: agent • model: openai:orch-model • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+planned scilead-02
+planned scilead-09
+planned scilead-10
+planned scilead-13
+planned scilead-15
+planned scilead-17
+planned scilead-18
+planned scilead-21
+planned scilead-26
+planned scilead-27

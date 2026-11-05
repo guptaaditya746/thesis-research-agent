@@ -33,7 +33,8 @@ def make_run(runs: Path, conf: str, reasoning: str, q: RealQuestion, ranking: li
     root = runs / conf / reasoning / q.id
     root.mkdir(parents=True)
     rows = [{"thing": p, "paper": f"P{i}"} for i, p in enumerate(ranking)]
-    line = {"id": "l1", "question": q.question, "status": "done", "rows": rows, "text": f"{len(rows)} found"}
+    lid = "l2" if fresh else "l1"   # the id of plan_for's first line
+    line = {"id": lid, "question": q.question, "status": "done", "rows": rows, "text": f"{len(rows)} found"}
     (root / "answer.json").write_text(json.dumps({"system": "plan", "lines": [line]}), encoding="utf-8")
     (root / "run.json").write_text(json.dumps({"settings": {"corpus": str(q.corpus_dir), "model": model}}), encoding="utf-8")
     if plan:
@@ -191,8 +192,9 @@ def test_offtemplate_reports_the_two_numbers(tmp_path: Path) -> None:
                    runs / q.id / "plan.json")
     assert cli.main(["offtemplate", "--runs", str(runs), "--out", str(tmp_path / "o")]) == 0
     data = json.loads((tmp_path / "o" / "offtemplate.json").read_text(encoding="utf-8"))
-    assert data["summary"]["questions"] == 2 and data["summary"]["fresh_share"] == 1.0
-    assert data["summary"]["match_rate"] == 0.5 and data["not_run"] == 10
+    # every question counts: the 10 without a plan are neither fresh nor a match
+    assert data["summary"]["questions"] == 12 and data["summary"]["fresh_share"] == round(2 / 12, 4)
+    assert data["summary"]["match_rate"] == round(1 / 12, 4) and data["not_run"] == 10
 
 
 # --- links ----------------------------------------------------------------------------------------------------------

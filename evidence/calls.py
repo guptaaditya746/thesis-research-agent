@@ -30,14 +30,16 @@ from modelcall import JsonlCache, redact
 
 from .contract import ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Item, digest
 from .recording import Provider, Recorder
-from .rundir import service_failed
+from .rundir import model_failed, permanent, service_failed
 
 Mode = Literal["run", "replay", "reexec"]
 
 
 def retried(result: dict[str, Any]) -> bool:
-    """What `retry_errors` asks again: any error, and a partial result the model gateway or GLiNER failed."""
-    return result.get("status") == "error" or service_failed(result)
+    """What `retry_errors` asks again: any error, and a partial result the model gateway or GLiNER failed; never a
+    reply the gateway gave that did not validate or a prompt over the context window (`model_failed`: the same
+    request fails the same way)."""
+    return (result.get("status") == "error" or service_failed(result)) and not model_failed(result)
 
 
 class NotRecorded(RuntimeError):
@@ -181,7 +183,7 @@ class CallCache:
         n, hit = self._latest(owner_id, request_sha256)
         if hit is not None and cache_key(owner_id, request_sha256, n) in self.made:
             return Asked(hit["result"], list(hit.get("model_calls") or []), "fresh", n)
-        bad = hit is not None and (hit["result"].get("status") == "error"
+        bad = hit is not None and ((hit["result"].get("status") == "error" and not permanent(hit["result"].get("error")))
                                    or self.cache.get(_bad_key(cache_key(owner_id, request_sha256, n))) is not None)
         if hit is not None and not (self.retry_errors and bad):
             return Asked(hit["result"], list(hit.get("model_calls") or []), "cache", n)

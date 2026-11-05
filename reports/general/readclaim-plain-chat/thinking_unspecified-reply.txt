@@ -1,0 +1,11 @@
+
+
+{
+  "is_claim": true,
+  "subject": "Retrieval augmentation",
+  "relation": "reduces",
+  "object": "hallucinated content in the answers",
+  "setting": {},
+  "strength": "firm",
+  "direction": "improves"
+}

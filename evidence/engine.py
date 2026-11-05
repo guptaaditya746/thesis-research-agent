@@ -142,6 +142,16 @@ Relink = Literal["off", "on"]
 Names = Literal["off", "on"]
 Reason = Literal["off", "on"]
 Links = Literal["off", "on"]
+PlanVersion = Literal["v1", "v2"]
+CHARS_PER_TOKEN = 4   # a rough count (evidence/estimate.py): only a request clearly over the window is held back
+
+
+def context_tokens(alias: str) -> int | None:
+    """The context window of a pinned model alias (modelcall/pins.py), None for an alias that is not pinned."""
+    from modelcall.pins import ORCHESTRATOR, SUBAGENTS
+    return next((int(m["context_tokens"]) for m in (ORCHESTRATOR, *SUBAGENTS) if m["alias"] == alias), None)
+
+
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -170,6 +180,9 @@ class Settings:
     plan: Path | None = None                       # the confirmed plan file; None: a run without a plan, as before
     stage_set: str | None = None                   # "plan": a plan run (its own stages, the plan's answer); None: as before
     links: Links = "on"                            # plan runs: off leaves out the builds-on links stage (no OpenAlex)
+    # plan runs (4 Nov): v2 names a rank line's best thing in the answer text, matches a query's names by the plan's
+    # word-list aliases and bracket forms, and maps a paper's experiments only when the screen kept it; v1 as before
+    plan_version: PlanVersion = "v1"
 
     def json(self) -> dict[str, Any]:
         # `confirm` only when it is llm, `relink`, `names` and `reason` only when on: the settings of a run made before
@@ -183,7 +196,8 @@ class Settings:
                 **({"reason": self.reason} if self.reason == "on" or self.stage_set is not None else {}),   # a plan run: on or off
                 **({"plan": str(self.plan)} if self.plan is not None else {}),
                 **({"stage_set": self.stage_set} if self.stage_set is not None else {}),
-                **({"links": self.links} if self.links == "off" else {})}   # only when off: older runs unchanged
+                **({"links": self.links} if self.links == "off" else {}),   # only when off: older runs unchanged
+                **({"plan_version": self.plan_version} if self.plan_version != "v1" else {})}
 
 
 # --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
@@ -340,9 +354,10 @@ class Execution:
                  names: Names = "off", names_model: str | None = None, names_ask: bool = True,
                  reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None,
                  plan: Plan | None = None, mode: Mode = "run", extra_stages: stages.StageSet | None = None,
-                 source_dir: Path | None = None, plan_run: bool = False) -> None:
+                 source_dir: Path | None = None, plan_run: bool = False, plan_version: PlanVersion = "v1") -> None:
         self.plan = plan                                 # the confirmed plan, handed to the stage seams
         self.plan_run = plan_run                         # a plan run: finish() writes the plan's answer
+        self.plan_version = plan_version                 # Settings.plan_version
         self._texts: dict[str, str] | None = None
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
         # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
@@ -751,7 +766,14 @@ class Execution:
 
     def stage_ask(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
                   settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> BaseModel:
-        """`StageContext.ask`: one recorded model call for a stage, through exactly the engine's own path (`_asked`)."""
+        """`StageContext.ask`: one recorded model call for a stage, through exactly the engine's own path (`_asked`).
+        A v2 plan run never sends a request that clearly does not fit the model's context window (`too_long`)."""
+        if self.plan_version == "v2":
+            tokens = -(-(len(instructions) + len(user_prompt)) // CHARS_PER_TOKEN) + int(settings.get("max_tokens") or 0)
+            window = context_tokens(alias)
+            if window is not None and tokens > window:
+                raise stages.StageCallError(f"{purpose}: too_long: about {tokens} tokens with max_tokens, over the "
+                                            f"{window}-token context window of {alias}; not sent")
         owner = f"stage:{purpose}"
         request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
                    "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}   # plain asks: as before
@@ -813,7 +835,7 @@ class Execution:
         if self.plan_run and self.plan is not None:   # claim groups, the records graph, the lines and their reruns
             from . import planrun
             self.items, self.records_nq, answer = planrun.finish(self.plan, papers, self.items, self.roles, self.ctx,
-                                                                 synthesis, reason=self.reason)
+                                                                 synthesis, reason=self.reason, version=self.plan_version)
             path = self.root / planrun.RECORDS_FILE
             path.write_bytes(self.records_nq)
             self.outputs[planrun.RECORDS_FILE] = sha256_hex(self.records_nq)
@@ -898,7 +920,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
                    names_ask=settings.selection != "regex-only", reason=settings.reason,
                    domains=Path(settings.domains) if settings.domains is not None else None, plan=plan,
                    mode=mode, recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None,
-                   extra_stages=extra, source_dir=source_dir, plan_run=settings.stage_set is not None)
+                   extra_stages=extra, source_dir=source_dir, plan_run=settings.stage_set is not None,
+                   plan_version=settings.plan_version)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
     if settings.plan is not None:   # the run's own copy: a replay reads it, not the original path
@@ -963,7 +986,8 @@ def plan_stages(settings: Settings, plan: Plan | None) -> stages.StageSet:
     if plan is None:
         raise ValueError("a plan run needs its plan (Settings.plan)")
     from . import planrun
-    return stages.stage_set(planrun.stage_entries(plan, reason=settings.reason, links=settings.links))
+    return stages.stage_set(planrun.stage_entries(plan, reason=settings.reason, links=settings.links,
+                                                  version=settings.plan_version))
 
 
 def _uses_gliner(protocol: Protocol) -> bool:
@@ -980,15 +1004,16 @@ def run_plan(plan_path: Path | str, protocol_bytes: bytes, corpus: Path | str, o
              cache: Path | str | None = None, selection: Selection = "cascade", model: str | None = None,
              provider: Provider | None = None, run_id: str | None = None, retry_errors: bool = False,
              strategy: Strategy = "gaps", workers: int = 3, imports: list[str] | None = None, reason: Reason = "on",
-             links: Links = "on") -> Path:
+             links: Links = "on", plan_version: PlanVersion = "v2") -> Path:
     """A plan run (evidence/planrun.py writes `protocol_bytes` from the plan): the plan's stage set, the plan's
     answer. Names step off, as a protocol run's default. `reason` off: no reasoner, no field ontology in the records
-    graph, no ontology tree (final review I1); `links` off: no builds-on links stage (final review C3)."""
+    graph, no ontology tree (final review I1); `links` off: no builds-on links stage (final review C3);
+    `plan_version` (Settings): a new plan run is v2."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy,
                         confirm="llm", relink="on", names="off", reason=reason, plan=Path(plan_path).resolve(),
-                        stage_set="plan", links=links)
+                        stage_set="plan", links=links, plan_version=plan_version)
     return execute_run(protocol_bytes, settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider,
                        retry_errors=retry_errors, workers=workers)

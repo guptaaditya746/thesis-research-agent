@@ -10,7 +10,9 @@ from jsonio import canonical_bytes
 
 from .conftest import PROTOCOL
 
-FIXTURE = Path(__file__).parent / "fixtures" / "locks" / "rag-factuality.lock.json"
+# v1: the lock before modelcall/call.py's plain-text replies (7ca21081) changed the llm_* extractors' code hash; v2: since
+FIXTURE_V1 = Path(__file__).parent / "fixtures" / "locks" / "rag-factuality.v1.lock.json"
+FIXTURE = Path(__file__).parent / "fixtures" / "locks" / "rag-factuality.v2.lock.json"
 
 
 def make_plan(confirmed: bool = True) -> Plan:
@@ -51,6 +53,16 @@ def test_old_protocol_lock_unchanged():
     protocol = load(PROTOCOL)
     cascades = engine.build_extractors(protocol, "cascade", None, None, None)
     assert canonical_bytes(lockfile.lock(protocol, cascades)) == FIXTURE.read_bytes()
+
+
+def test_the_v1_lock_differs_only_in_the_llm_extractor_ids():
+    """The versioned break of 4 Nov: same format and fields; only ids of extractors whose sources include
+    modelcall/call.py changed (a v1 run replays from its own commit: replay.CodeChanged)."""
+    import json
+    v1, v2 = (json.loads(p.read_text(encoding="utf-8")) for p in (FIXTURE_V1, FIXTURE))
+    assert {k: v for k, v in v1.items() if k != "extractors"} == {k: v for k, v in v2.items() if k != "extractors"}
+    changed = {a for t in v1["extractors"] for a, b in zip(v1["extractors"][t], v2["extractors"][t]) if a != b}
+    assert changed and all(x.startswith("llm_") for x in changed)
 
 
 def test_lock_with_plan_has_plan_and_words_sha():

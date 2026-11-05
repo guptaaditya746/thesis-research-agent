@@ -166,8 +166,8 @@ at startup on a vLLM/PyTorch port collision (`torch.distributed` could not bind 
 `EADDRINUSE`; `tests/EV1/failures.md`), and that commit gives every job its own port block. Check it before
 submitting; if `git log -1` does not show `22dae03`, run `git submodule update --init` (step 0.1) and check
 again; if it still differs, **USER** (do not change the submodule yourself).
-(The question-first session, `docs/runbook-question-first.md`, records `llm-setup` at `4c8ccbf`, which adds the
-GLiNER service on top of `22dae03`; there its steps 0 and 1 replace this check and this stack start.)
+(The question-first session, `docs/runbook-question-first.md`, records `llm-setup` at `b962edd`, which adds the
+GLiNER service (`4c8ccbf`) and distinct replica ports on top of `22dae03`; there its steps 0 and 1 replace this check and this stack start.)
 
 ```bash
 git -C llm-setup log -1 --oneline                   # expect 22dae03 Add orch-only profiles …

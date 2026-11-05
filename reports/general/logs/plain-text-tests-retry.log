@@ -1,0 +1,24 @@
+..................................................F....                  [100%]
+=================================== FAILURES ===================================
+____ test_a_stage_model_call_is_logged_counted_and_replays_without_a_model _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-154/test_a_stage_model_call_is_log0')
+
+    def test_a_stage_model_call_is_logged_counted_and_replays_without_a_model(tmp_path: Path) -> None:
+        base = _run(tmp_path / "base", provider=None)
+        stages.register("echo", "after_run", _ask_stage())
+        root = _run(tmp_path / "with", provider=_provider())
+>       assert json.loads((root / "echo.json").read_text(encoding="utf-8")) == {"answer": "hi there"}
+E       AssertionError: assert {'failed': 'S... retries (1)'} == {'answer': 'hi there'}
+E         
+E         Left contains 1 more item:
+E         {'failed': 'StageCallError: demo-echo: UnexpectedModelBehavior: Exceeded '
+E                    'maximum output retries (1)'}
+E         Right contains 1 more item:
+E         {'answer': 'hi there'}
+E         Use -v to get more diff
+
+evidence/tests/test_stages.py:219: AssertionError
+=========================== short test summary info ============================
+FAILED evidence/tests/test_stages.py::test_a_stage_model_call_is_logged_counted_and_replays_without_a_model
+1 failed, 54 passed in 72.63s (0:01:12)

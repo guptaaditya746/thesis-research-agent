@@ -89,3 +89,30 @@ def test_a_killed_run_dir_is_refused_with_what_to_do(protocol_file: Path, corpus
     assert cli.main(args) == 0                            # moved aside: the run goes through
     capsys.readouterr()
     assert cli.main(args) == 2 and "holds a finished run" in capsys.readouterr().err
+
+
+def test_a_reply_that_never_validates_warns_and_is_not_asked_again() -> None:
+    """Synthetic paraphrased/complex: the gateway answered, but the JSON never validated (a whitespace loop to
+    max_tokens) — not an outage (exit 0 with a warning, `failed_calls` 0) and `--retry-errors` would repeat it."""
+    from evidence.calls import retried
+    from evidence.rundir import model_failed, service_failed
+    bad = {"status": "error", "error": {"reason": "model_call",
+                                        "detail": "UnexpectedModelBehavior: Exceeded maximum output retries (1)"}}
+    long = {"status": "partial", "error": {"reason": "model_call", "detail": "ModelHTTPError: status_code: 400, "
+                                           "litellm.ContextWindowExceededError: ..."}}
+    mixed = {"status": "partial", "error": {"reason": "model_call",
+                                            "detail": "ConnectionError: down; UnexpectedModelBehavior: Exceeded maximum output retries (1)"}}
+    for r in (bad, long):
+        assert model_failed(r) and not service_failed(r) and not retried(r)
+    assert service_failed(mixed) and retried(mixed) and not model_failed(mixed)   # one chunk was an outage
+    for name, want in (("rag-claude-s1-paraphrased", 2), ("rag-claude-s1-complex", 1)):   # the recorded runs
+        run_dir = RunDir(Path(__file__).resolve().parents[2] / "reports" / "general" / "runs" / "synthetic" / name)
+        if run_dir.root.is_dir():
+            assert (run_dir.failed_calls(), run_dir.model_failed_calls()) == (0, want)
+
+
+def test_a_bad_body_from_a_proxy_is_still_a_service_failure() -> None:
+    from evidence.rundir import model_failed, service_failed
+    proxy = {"status": "error", "error": {"reason": "model_call",
+                                          "detail": "UnexpectedModelBehavior: Invalid response from openai chat completions endpoint"}}
+    assert service_failed(proxy) and not model_failed(proxy)

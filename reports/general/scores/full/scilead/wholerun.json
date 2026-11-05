@@ -1,0 +1,1113 @@
+{
+  "comparison": [
+    {
+      "engine": "auto-confirmed/on",
+      "engine_mean": 0.1364,
+      "losses": 5,
+      "n": 22,
+      "n_missing_run": 0,
+      "paired": {
+        "high": -0.0909,
+        "low": -0.4545,
+        "method": "BCa",
+        "point": -0.2273,
+        "unit": "row"
+      },
+      "rag": "rag/global",
+      "rag_mean": 0.3636,
+      "ties": 17,
+      "wins": 0
+    },
+    {
+      "engine": "auto-confirmed/on",
+      "engine_mean": 0.1364,
+      "losses": 5,
+      "n": 22,
+      "n_missing_run": 0,
+      "paired": {
+        "high": 0.0,
+        "low": -0.4091,
+        "method": "BCa",
+        "point": -0.1818,
+        "unit": "row"
+      },
+      "rag": "rag/per_paper",
+      "rag_mean": 0.3182,
+      "ties": 16,
+      "wins": 1
+    },
+    {
+      "engine": "auto-confirmed/off",
+      "engine_mean": 0.0455,
+      "losses": 7,
+      "n": 22,
+      "n_missing_run": 0,
+      "paired": {
+        "high": -0.1364,
+        "low": -0.5455,
+        "method": "BCa",
+        "point": -0.3182,
+        "unit": "row"
+      },
+      "rag": "rag/global",
+      "rag_mean": 0.3636,
+      "ties": 15,
+      "wins": 0
+    },
+    {
+      "engine": "auto-confirmed/off",
+      "engine_mean": 0.0455,
+      "losses": 7,
+      "n": 22,
+      "n_missing_run": 0,
+      "paired": {
+        "high": -0.0455,
+        "low": -0.5,
+        "method": "BCa",
+        "point": -0.2727,
+        "unit": "row"
+      },
+      "rag": "rag/per_paper",
+      "rag_mean": 0.3182,
+      "ties": 14,
+      "wins": 1
+    }
+  ],
+  "generality": {
+    "auto-confirmed": {
+      "fresh": 0,
+      "fresh_share": 0.0,
+      "questions": 22,
+      "template": 22
+    }
+  },
+  "held_out_for_tuning": [
+    "scilead-14"
+  ],
+  "left_out": "left out: 28 of 140 (no open full text)",
+  "missing": {},
+  "missing_plan": {},
+  "rows": {
+    "auto-confirmed/off": [
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-03",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-04",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "key split failed: ValueError: missing parameter(s) ['metric'] for the query (declared in its header)",
+        "headline": 0.0,
+        "id": "scilead-05",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "key split failed: ValueError: missing parameter(s) ['metric'] for the query (declared in its header)",
+        "headline": 0.0,
+        "id": "scilead-06",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-07",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-08",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-11",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-12",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-17",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-18",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-19",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-21",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-22",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-23",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-24",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-26",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "extraction error",
+        "headline": 1.0,
+        "id": "scilead-27",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      }
+    ],
+    "auto-confirmed/on": [
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-03",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-04",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "key split failed: ValueError: missing parameter(s) ['metric'] for the query (declared in its header)",
+        "headline": 0.0,
+        "id": "scilead-05",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "key split failed: ValueError: missing parameter(s) ['metric'] for the query (declared in its header)",
+        "headline": 0.0,
+        "id": "scilead-06",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-07",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-08",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-11",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-12",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 1.0,
+        "id": "scilead-17",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-18",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-19",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-21",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-22",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-23",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 1.0,
+        "id": "scilead-24",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "synthesis error",
+        "headline": 0.0,
+        "id": "scilead-26",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "error_split": "extraction error",
+        "headline": 1.0,
+        "id": "scilead-27",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      }
+    ],
+    "rag/global": [
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-03",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-04",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-05",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-06",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-07",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-08",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-11",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-12",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-17",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-18",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-19",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-21",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-22",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-23",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-24",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-26",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-27",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      }
+    ],
+    "rag/per_paper": [
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-02",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-03",
+        "kendall_tau": 0.3333,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-04",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-05",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-06",
+        "kendall_tau": 0.3333,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-07",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-08",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-11",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-12",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-17",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-18",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-19",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-21",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-22",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 1,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-23",
+        "kendall_tau": -0.3333,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 1.0,
+        "id": "scilead-24",
+        "kendall_tau": 1.0,
+        "kind": "rank",
+        "n_common": 3,
+        "top1": 1,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-26",
+        "kendall_tau": -1.0,
+        "kind": "rank",
+        "n_common": 2,
+        "top1": 0,
+        "unscored": false
+      },
+      {
+        "confirmation": null,
+        "headline": 0.0,
+        "id": "scilead-27",
+        "kendall_tau": null,
+        "kind": "rank",
+        "n_common": 0,
+        "top1": 0,
+        "unscored": false
+      }
+    ]
+  },
+  "sample": {
+    "ids": [
+      "scilead-02",
+      "scilead-03",
+      "scilead-04",
+      "scilead-05",
+      "scilead-06",
+      "scilead-07",
+      "scilead-08",
+      "scilead-09",
+      "scilead-10",
+      "scilead-11",
+      "scilead-12",
+      "scilead-13",
+      "scilead-15",
+      "scilead-17",
+      "scilead-18",
+      "scilead-19",
+      "scilead-21",
+      "scilead-22",
+      "scilead-23",
+      "scilead-24",
+      "scilead-26",
+      "scilead-27"
+    ],
+    "n": 22,
+    "seed": 0
+  },
+  "set": "scilead",
+  "summary": {
+    "auto-confirmed/off": {
+      "error_split": {
+        "extraction error": 1,
+        "key split failed": 2,
+        "synthesis error": 19
+      },
+      "high": 0.1844,
+      "low": 0.0,
+      "mean_kendall_tau": -0.2,
+      "method": "BCa",
+      "n": 22,
+      "n_missing_plan": 0,
+      "n_missing_run": 0,
+      "n_unscored": 0,
+      "point": 0.0455,
+      "unit": "row"
+    },
+    "auto-confirmed/on": {
+      "error_split": {
+        "extraction error": 1,
+        "key split failed": 2,
+        "synthesis error": 19
+      },
+      "high": 0.3479,
+      "low": 0.0455,
+      "mean_kendall_tau": 0.2,
+      "method": "BCa",
+      "n": 22,
+      "n_missing_plan": 0,
+      "n_missing_run": 0,
+      "n_unscored": 0,
+      "point": 0.1364,
+      "unit": "row"
+    },
+    "rag/global": {
+      "high": 0.5909,
+      "low": 0.1818,
+      "mean_kendall_tau": 0.4286,
+      "method": "BCa",
+      "n": 22,
+      "n_missing_plan": 0,
+      "n_missing_run": 0,
+      "n_unscored": 0,
+      "point": 0.3636,
+      "unit": "row"
+    },
+    "rag/per_paper": {
+      "high": 0.5455,
+      "low": 0.1364,
+      "mean_kendall_tau": 0.4167,
+      "method": "BCa",
+      "n": 22,
+      "n_missing_plan": 0,
+      "n_missing_run": 0,
+      "n_unscored": 0,
+      "point": 0.3182,
+      "unit": "row"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "prompt_sha256": "1a2cb036e2cf8690cc47430748eddcea147a151467f193b2bcc368b1d693f6fc",
+  "prompt_characters": 3878,
+  "model": "orch-model",
+  "results": [
+    {
+      "variant": "thinking_false",
+      "finish_reason": "stop",
+      "reply_characters": 203,
+      "valid_json_object": true,
+      "reply_present": true,
+      "reasoning_characters": 0,
+      "usage": {
+        "completion_tokens": 71,
+        "prompt_tokens": 981,
+        "total_tokens": 1052
+      },
+      "elapsed_seconds": 1.87
+    },
+    {
+      "variant": "thinking_unspecified",
+      "finish_reason": "stop",
+      "reply_characters": 205,
+      "valid_json_object": true,
+      "reply_present": true,
+      "reasoning_characters": 2563,
+      "usage": {
+        "completion_tokens": 625,
+        "prompt_tokens": 1021,
+        "total_tokens": 1646
+      },
+      "elapsed_seconds": 15.37
+    }
+  ]
+}

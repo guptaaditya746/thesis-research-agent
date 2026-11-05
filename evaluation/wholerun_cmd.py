@@ -25,11 +25,12 @@ difference with its interval, evaluation/stats.py; no row assumes the engine win
 sets are not comparable, only these paired means are), `generality` (per confirmation: questions answered with a
 fresh query vs a saved template), `left_out`, `held_out_for_tuning`, `missing`, `missing_plan`, `sample`.
 Every row with an answer-key (set with key records) carries `error_split`: "right", "synthesis error", "extraction
-error", "not available: <why>" or "key split failed: <reason>"; the markdown lists it per question.
+error", "plan error: <why>", "not available: <why>" or "key split failed: <reason>"; the markdown lists it per question.
 
 Headline per kind: rank top1, list f1, compare direction_agreement, claims recall; a part that is None counts 0.
 A "fresh" question: the plan's line asking the question's text (else its first line) has no saved template; the same
-rule as the off-template check. The answer-key split runs on that same (main) line.
+rule as the off-template check. The headline and the answer-key split read one line, `wholerun.scored_line` (a ranking:
+its first rank/best line), and judge a ranking by top-1 alike; a failed scored line is a "plan error".
 """
 from __future__ import annotations
 
@@ -45,7 +46,8 @@ from evidence.rundir import PLAN_FILE, RUN_FILE
 
 from . import report as rep
 from . import stats
-from .wholerun import (Answer, RealQuestion, answer_column, from_run, key_store, question_papers, sample, score, tune_papers)
+from .wholerun import (Answer, RealQuestion, answer_column, from_run, question_papers, sample, score,
+                       scored_line, tune_papers)
 
 CONFIRMATIONS = ("auto-confirmed", "hand-confirmed")
 SYSTEM = "system"                  # who confirm_all(plan, who="system") stamps on an auto-confirmed plan
@@ -95,12 +97,25 @@ def main_line(plan: Plan, q: RealQuestion) -> Any:
 
 
 def is_fresh(plan: Plan, q: RealQuestion) -> bool:
-    return main_line(plan, q).template is None
+    line = main_line(plan, q)
+    return line.template is None and bool(line.query.strip())   # an unplanned line is not a fresh query
+
+
+def plan_metrics(records: list[dict[str, Any]], plan: Plan) -> list[dict[str, Any]]:
+    """The key records with each metric renamed to the plan measure it names (the measure id, or one of its word-list
+    names, by `names.clean`): the plan's queries filter on measure ids ("f1"), the release spells "F1". A metric no
+    measure names keeps its name. Values, papers and things are untouched."""
+    from evidence.names import clean
+    names = {clean(n): m for m in plan.measures for n in (m, *plan.words.things.get(m, []))}
+    return [{**r, "metric": names.get(clean(str(r["metric"])), r["metric"])} for r in records]
 
 
 def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> str:
-    """truthgraph.split on the main line: "right", "synthesis error" or "extraction error"; "not available: <why>"
-    (no key records, kind not covered); "key split failed: <reason>" when the code raised."""
+    """truthgraph.split on the scored line (`scored_line`, the line the headline reads; a ranking judged by top-1 as
+    the headline is): "right", "synthesis error" or "extraction error"; "plan error: <why>" when that line failed in
+    the run (the plan could not run it, so neither the extraction nor the synthesis was tried); "not available:
+    <why>" (no key records, kind not covered); "key split failed: <reason>" when the code raised. The key records'
+    metrics are named as the plan's measures (`plan_metrics`)."""
     if q.records is None:
         return "not available: no answer-key records for this set"
     expected = q.gold.get("ranking") if q.kind == "rank" else q.gold.get("items") if q.kind == "list" else None
@@ -109,13 +124,21 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
     try:
         from evidence.kg import query as kq
         from evidence.kg.truthgraph import split
-        from evidence.planrun import line_params
-        spec = main_line(plan, q)
+        from evidence.planrun import line_params, name_matcher
+
+        from .realpapers.keystore import store
+        spec = scored_line(plan, q)
         doc = json.loads((root / "answer.json").read_text(encoding="utf-8"))
         line = next((x for x in doc.get("lines") or [] if x.get("id") == spec.id), None)
+        if line is not None and line.get("status") == "failed":
+            return f"plan error: line {spec.id} failed: {str(line.get('text') or '')[:160]}"
         rows = list(line["rows"]) if line and line.get("status") == "done" else []
-        gold = kq.run_query(key_store(q), spec.query, line_params(plan, spec.query))
-        return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected), answer_column(q))
+        key = store(plan_metrics(q.records, plan))
+        settings = json.loads((root / RUN_FILE).read_text(encoding="utf-8")).get("settings", {}) if (root / RUN_FILE).is_file() else {}
+        match = name_matcher(plan, key) if settings.get("plan_version") == "v2" else None   # the names the run matched
+        gold = kq.run_query(key, spec.query, line_params(plan, spec.query), match)
+        return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected), answer_column(q),
+                     top1=q.kind == "rank")
     except Exception as exc:   # noqa: BLE001 - a diagnosis only; says what failed, never stops a report
         return f"key split failed: {type(exc).__name__}: {exc}"
 
@@ -282,13 +305,17 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
     questions = ot.load_questions()
     for q in questions:
         path = Path(runs) / q.id / PLAN_FILE
-        if not path.is_file():
+        if not path.is_file():   # no plan (planning or the run failed): counted, neither fresh nor a match
+            found = {"fresh": False, "match_on_key": False, "match_on_run": None, "extra_columns": [],
+                     "failed": "missing plan"}
+            results.append(found)
+            per[q.id] = found
             continue
         try:
             found = ot.check(SimpleNamespace(plan=load_plan(path), store=_records_store(Path(runs) / q.id)), q)
         except Exception as exc:   # noqa: BLE001 - one bad question is a "no match", never a dead report
             try:
-                fresh = ot.plan_line(load_plan(path), q).template is None    # known without running the query
+                fresh = ot.is_fresh(ot.plan_line(load_plan(path), q))    # known without running the query
             except Exception:   # noqa: BLE001 - an unreadable plan has no line to look at
                 fresh = False
             has_records = (Path(runs) / q.id / "records.nq").is_file()      # a run with records: no match end to end
@@ -297,7 +324,8 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
         results.append(found)
         per[q.id] = found
     committed = ot.committed_at([ot.QUESTIONS, *sorted(ot.REFERENCE.glob("*.rq"))])
-    report = {"summary": ot.summary(results), "questions": per, "not_run": len(questions) - len(results),
+    report = {"summary": ot.summary(results), "questions": per,
+              "not_run": sum(r.get("failed") == "missing plan" for r in results),
               "committed_at": committed.isoformat() if committed else None}
     text = [f"# Off-template check", "",
             f"Questions checked: {report['summary']['questions']} (not run: {report['not_run']}).",

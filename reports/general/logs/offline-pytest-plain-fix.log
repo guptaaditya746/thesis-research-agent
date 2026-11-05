@@ -1,0 +1,426 @@
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+..F....F...F..FF.......FF..FFFFF.F...F.................................. [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+s....................................................................... [ 76%]
+............................................FF.......................... [ 79%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 89%]
+......................................................................F. [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+.....................................                                    [100%]
+=================================== FAILURES ===================================
+_______________________ test_old_protocol_lock_unchanged _______________________
+
+    def test_old_protocol_lock_unchanged():
+        protocol = load(PROTOCOL)
+        cascades = engine.build_extractors(protocol, "cascade", None, None, None)
+>       assert canonical_bytes(lockfile.lock(protocol, cascades)) == FIXTURE.read_bytes()
+E       assert b'{"extractor...2d78f2d11f"}}' == b'{"extractor...2d78f2d11f"}}'
+E         
+E         At index 87 diff: b'3' != b'8'
+E         Use -v to get more diff
+
+evidence/tests/test_plan.py:53: AssertionError
+_______________________ test_plan_run_end_to_end_fake_lm _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_plan_run_end_to_end_fake_0')
+
+    def test_plan_run_end_to_end_fake_lm(tmp_path: Path) -> None:
+        from evidence.planner import check_plan
+        assert check_plan(make_plan()) == []   # a plan the planner's own checks (and the page) accept
+        calls: list[str] = []
+        root = plan_run(tmp_path, calls=calls)
+        run = read(root, "run.json")
+        assert run["settings"]["stage_set"] == "plan"
+        assert run["stages"] == {"before_extract": ["map-experiments"], "after_type": ["recheck"],
+                                 "after_document": ["experiment-items", "claims", "links"],
+                                 "after_run": ["recheck_report", "stage_report", "ontology"]}
+        # the protocol is written from the plan: the screen terms are the compiled word list, a miss goes to the model
+        protocol = (root / "protocol.yaml").read_text(encoding="utf-8")
+        words = compile_words(make_plan().words, metric_things={"accuracy"})
+        assert "lexical_miss: escalate" in protocol and all(t in protocol for t in words["screen_terms"])
+        assert "factual_accuracy" not in protocol and "hallucination" not in protocol   # no pack words
+        lock = read(root, "protocol.lock.json")
+        assert {"plan_sha256", "words_sha256", "field_ontology_sha256"} <= set(lock)
+        # records graph, every output hashed
+        for name in ("records.nq", "answer.json", "ontology.json", "recheck_report.json", "stage_report.json"):
+            assert run["outputs"][name] == sha256_hex((root / name).read_bytes())
+        assert b"https://w3id.org/thesis-ev#Value" in (root / "records.nq").read_bytes()
+        answer = read(root, "answer.json")
+        lines = {x["id"]: x for x in answer["lines"]}
+        assert lines["l1"]["status"] == "done" and {r["direction"] for r in lines["l1"]["rows"]} >= {"supports"}
+        assert lines["l2"]["rows"] and lines["l3"]["status"] == "failed" and lines["l3"]["text"].startswith("failed: ")
+        assert answer["answer"]["missing"] == ["missing: A line whose query breaks?"]
+        assert "missing: A line whose query breaks?" in answer["answer"]["text"] and answer["answer"]["rule_met"]
+        assert set(answer["labels"]) >= {"l1", "l2", "oversell"} and answer["reruns"]
+        assert any(r["line"] == "l1" and r["decision"] == "d1" for r in answer["reruns"])
+        assert answer["synthesis"]["counts"]["supporting"] >= 1     # the kind's answer is kept
+>       assert answer["claim_groups"]["mapping"] == {"improves": "better"}
+E       AssertionError: assert {} == {'improves': 'better'}
+E         
+E         Right contains 1 more item:
+E         {'improves': 'better'}
+E         Use -v to get more diff
+
+evidence/tests/test_plan_run.py:137: AssertionError
+________ test_a_field_without_ontology_says_reasoning_off_and_finishes _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_a_field_without_ontology_0')
+
+    def test_a_field_without_ontology_says_reasoning_off_and_finishes(tmp_path: Path) -> None:
+        root = plan_run(tmp_path, make_plan(field="other"))
+>       assert read(root, "ontology.json")["tree"] == "reasoning off: no tree"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'tree'
+
+evidence/tests/test_plan_run.py:179: KeyError
+_ test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex_answers _
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_builds_on_links_are_recor0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b08fc6f25f0>
+
+    def test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex_answers(
+            tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from evidence import openalex
+        from evidence.tests.conftest import PAPERS, corpus_of
+        fetched: list[str] = []
+        monkeypatch.setattr(openalex, "_urlopen", lambda url: fetched.append(url) or {"results": []})
+        docs = {d: (PAPERS / f"{d}.md").read_text(encoding="utf-8").replace("\r\n", "\n") for d in ("S001", "S002")}
+        docs["S001"] += "\n\nWe build on Lewis et al. (2020) for the retrieval-augmented model.\n"
+        corpus_of(tmp_path / "corpus", docs)
+        calls: list[str] = []
+        model = fake_model(calls)
+        inner = model.function
+    
+        def reply(messages: Any, info: Any) -> Any:
+            prompt = prompt_of(messages)
+            if "Your output fields are:\n1. `relation`" in prompt and "Lewis et al." in prompt:
+                calls.append(prompt)
+                return respond(info, {"text": json.dumps({"relation": "builds on", "object": "Lewis et al. (2020)"})})
+            return inner(messages, info)
+    
+        path = tmp_path / "plan.json"
+        write_plan(make_plan(), path)
+        root = planrun.run(path, tmp_path / "corpus", tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
+                           provider=provider_of(FunctionModel(reply, model_name="fake")), workers=1)
+        links = read(root, "answer.json")["links"]
+>       assert links == [{"paper": "S001", "relation": "builds on", "ref": "Lewis et al. (2020)", "work": None,
+                          "in_set": None, "text": "outside the set"}]
+E       AssertionError: assert [] == [{'in_set': N...lds on', ...}]
+E         
+E         Right contains one more item: {'in_set': None, 'paper': 'S001', 'ref': 'Lewis et al. (2020)', 'relation': 'builds on', ...}
+E         Use -v to get more diff
+
+evidence/tests/test_plan_run.py:227: AssertionError
+_____________ test_a_plan_run_scores_through_the_wholerun_adapter ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_a_plan_run_scores_through0')
+
+    def test_a_plan_run_scores_through_the_wholerun_adapter(tmp_path: Path) -> None:
+        from evaluation.wholerun import RealQuestion, from_run, score
+        root = plan_run(tmp_path)
+        q = RealQuestion("q", "Does it help?", "cs", tmp_path / "corpus", {"directions": {"S001": "improves"},
+                                                                             "conclusion": "improves"}, "compare")
+        answer = from_run(root, q)
+        assert answer.directions.get("S001") == "improves"
+        assert score(answer, q)["per_study"] == {"S001": 1}
+        claims = from_run(root, RealQuestion("c", "?", "cs", tmp_path, {"conclusions": [{"id": "R1", "direction": "improves"}]},
+                                             "claims"))
+>       assert claims.claims == [{"about": "R1", "direction": "improves"}]
+E       AssertionError: assert [] == [{'about': 'R...: 'improves'}]
+E         
+E         Right contains one more item: {'about': 'R1', 'direction': 'improves'}
+E         Use -v to get more diff
+
+evidence/tests/test_plan_run.py:246: AssertionError
+______ test_a_failed_claim_call_skips_that_sentence_and_the_run_completes ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_a_failed_claim_call_skips0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b08ff6ca270>
+
+    def test_a_failed_claim_call_skips_that_sentence_and_the_run_completes(tmp_path: Path,
+                                                                           monkeypatch: pytest.MonkeyPatch) -> None:
+        calls: list[str] = []
+    
+        def fail(prompt: str) -> bool:
+            if is_claim_of(prompt):
+                calls.append(prompt)
+                return len(calls) == 1      # only the first claim sentence fails
+            return False
+        root = run(tmp_path, fail, monkeypatch)
+        assert RunDir(root).complete
+        report = read(root, "stage_report.json")
+        assert set(report) == {"claims", "experiments", "links", "groups"}
+        notes = [n for doc in report["claims"].values() for n in doc]
+>       assert len(notes) == 1 and notes[0].startswith("unchecked: sentence ") and "StageCallError" in notes[0]
+E       AssertionError: assert (4 == 1)
+E        +  where 4 = len(['unchecked: sentence 263-339: StageCallError: claims.read_claim: RuntimeError: gateway down', 'unchecked: sentence 69... LM response.', 'unchecked: sentence 454-533: AdapterParseError: Adapter JSONAdapter failed to parse the LM response.'])
+
+evidence/tests/test_plan_run_failures.py:77: AssertionError
+_______ test_a_failed_experiment_map_and_link_read_are_listed_not_fatal ________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_a_failed_experiment_map_a0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b08fea2be00>
+
+    def test_a_failed_experiment_map_and_link_read_are_listed_not_fatal(tmp_path: Path,
+                                                                         monkeypatch: pytest.MonkeyPatch) -> None:
+        def fail(prompt: str) -> bool:
+            experiments = "Your output fields are:\n1. `experiments`" in prompt
+            link = "Your output fields are:\n1. `relation`" in prompt and "Smith et al." in prompt
+            return experiments or link
+        root = run(tmp_path, fail, monkeypatch)
+        assert RunDir(root).complete
+        report = read(root, "stage_report.json")
+        assert sorted(report["experiments"]) == ["S001", "S002"]
+        assert all(len(notes) == 1 and notes[0].startswith("unchecked: experiment map: ")
+                   for notes in report["experiments"].values())
+>       assert list(report["links"]) == ["S002"] and report["links"]["S002"][0].startswith("unchecked: sentence ")
+E       AssertionError: assert (['S001', 'S002'] == ['S002']
+E         
+E         At index 0 diff: 'S001' != 'S002'
+E         Left contains one more item: 'S002'
+E         Use -v to get more diff)
+
+evidence/tests/test_plan_run_failures.py:94: AssertionError
+________ test_openalex_down_keeps_the_links_and_the_replay_is_identical ________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_openalex_down_keeps_the_l0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b0912796350>
+
+    def test_openalex_down_keeps_the_links_and_the_replay_is_identical(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        import urllib.error
+    
+        from evidence import openalex
+        path = tmp_path / "plan.json"
+        write_plan(make_plan(), path)
+    
+        def down(url: str) -> Any:
+            raise urllib.error.URLError("no network on the compute node")
+        monkeypatch.setattr(openalex, "_urlopen", down)
+        root = planrun.run(path, corpus(tmp_path), tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
+                           provider=provider_of(failing_model(lambda p: False)), workers=1)
+        assert RunDir(root).complete
+        links = read(root, "answer.json")["links"]
+>       assert links and links[0]["paper"] == "S001" and links[0]["text"] == "outside the set"
+E       assert ([])
+
+evidence/tests/test_plan_run_failures.py:127: AssertionError
+_ test_a_failed_grouping_call_keeps_the_claims_ungrouped_and_the_run_completes _
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_a_failed_grouping_call_ke0')
+
+    def test_a_failed_grouping_call_keeps_the_claims_ungrouped_and_the_run_completes(tmp_path: Path) -> None:
+        root = run(tmp_path, model(fail=lambda p: GROUPS in p))
+        assert RunDir(root).complete
+>       assert read(root, "stage_report.json")["groups"]["run"][0].startswith("unchecked: claim groups: StageCallError")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+evidence/tests/test_plan_run_retry.py:66: KeyError
+__ test_an_unparseable_grouping_reply_is_asked_again_by_a_retry_errors_rerun ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_an_unparseable_grouping_r0')
+
+    def test_an_unparseable_grouping_reply_is_asked_again_by_a_retry_errors_rerun(tmp_path: Path) -> None:
+        first = run(tmp_path, model(bad=lambda p: GROUPS in p))
+        assert RunDir(first).complete
+>       assert read(first, "stage_report.json")["groups"]["run"][0].startswith("unchecked: claim groups: AdapterParseError")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'run'
+
+evidence/tests/test_plan_run_retry.py:75: KeyError
+_______________ test_a_retry_errors_rerun_replays_byte_identical _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_a_retry_errors_rerun_repl0')
+
+    def test_a_retry_errors_rerun_replays_byte_identical(tmp_path: Path) -> None:
+        first = run(tmp_path, model(fail=lambda p: CLAIM in p))
+        assert any(read(first, "stage_report.json")["claims"].values())
+        again = run(tmp_path, model(), out="again", retry_errors=True)
+>       assert read(again, "stage_report.json")["claims"] == {} and claims(again)
+E       AssertionError: assert ({'S001': ['un...M response.']} == {}
+E         
+E         Left contains 2 more items:
+E         {'S001': ['unchecked: sentence 263-339: AdapterParseError: Adapter JSONAdapter '
+E                   'failed to parse the LM response.',
+E                   'unchecked: sentence 691-772: AdapterParseError: Adapter JSONAdapter '
+E                   'failed to parse the LM response.'],
+E          'S002': ['unchecked: sentence 90-132: AdapterParseError: Adapter JSONAdapter '...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show)
+
+evidence/tests/test_plan_run_retry.py:90: AssertionError
+_____ test_an_openalex_url_that_fails_then_succeeds_replays_byte_identical _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_an_openalex_url_that_fail0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b08ff1d3d20>
+
+    def test_an_openalex_url_that_fails_then_succeeds_replays_byte_identical(tmp_path: Path,
+                                                                             monkeypatch: pytest.MonkeyPatch) -> None:
+        from evidence import openalex
+        asked: list[str] = []
+    
+        def flaky(url: str) -> Any:
+            asked.append(url)
+            if len(asked) == 1:
+                raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)  # type: ignore[arg-type]
+            return {"results": [{"id": "https://openalex.org/W1", "title": "Lewis et al. (2020)"}]}
+        monkeypatch.setattr(openalex, "_urlopen", flaky)
+        root = run(tmp_path, model())
+        links = read(root, "answer.json")["links"]
+>       assert len(links) >= 2 and len({x["ref"] for x in links}) == 1      # every paper cites the same work
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert (0 >= 2)
+E        +  where 0 = len([])
+
+evidence/tests/test_plan_run_retry.py:110: AssertionError
+____________ test_links_on_is_the_default_and_unchanged_in_settings ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_links_on_is_the_default_a0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b08ff0edd30>
+
+    def test_links_on_is_the_default_and_unchanged_in_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        root, fetched = run(tmp_path, monkeypatch, [])
+        rec = read(root, "run.json")
+>       assert "links" not in rec["settings"] and "links" in rec["stages"]["after_document"] and fetched
+E       AssertionError: assert ('links' not in {'cache': '/tmp/pytest-of-xepi3167/pytest-156/test_links_on_is_the_default_a0/cache', 'confirm': 'llm', 'corpus': '/tmp/pytest-of-xepi3167/pytest-156/test_links_on_is_the_default_a0/corpus', 'gliner_model': None, ...} and 'links' in ['experiment-items', 'claims', 'links'] and [])
+
+evidence/tests/test_plan_run_switches.py:54: AssertionError
+_______________ test_the_answer_links_carry_the_openalex_work_id _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_the_answer_links_carry_th0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b08fed730e0>
+
+    def test_the_answer_links_carry_the_openalex_work_id(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Final review I2: `work` is the resolved work's id (what `evaluate wholerun` compares), null when unresolved."""
+        from evidence import openalex
+        path = tmp_path / "plan.json"
+        write_plan(make_plan(), path)
+        monkeypatch.setattr(openalex, "_urlopen", lambda url: {"results": [{"id": "https://openalex.org/W2741809807",
+                                                                           "title": "Lewis et al. (2020)"}]})
+        root = planrun.run(path, corpus(tmp_path), tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
+                           provider=provider_of(failing_model(lambda p: False)), workers=1)
+        links = read(root, "answer.json")["links"]
+>       assert links and {x["work"] for x in links} == {"W2741809807"}
+E       assert ([])
+
+evidence/tests/test_plan_run_switches.py:99: AssertionError
+_________________ test_effect_scores_unchanged[pilot-complex] __________________
+
+name = 'pilot-complex'
+
+    @pytest.mark.parametrize("name", sorted(GOLDEN))
+    def test_effect_scores_unchanged(name: str) -> None:
+        """Captured with the scorer before the per-kind change (evaluation/tests/data/score-golden-*.json)."""
+        run, corpus, baselines = GOLDEN[name]
+        result = score(EV2 / "runs" / run, EV2 / "corpora" / corpus, [EV2 / "runs" / b for b in baselines])
+        assert (result.pop("question_id"), result.pop("kind")) == ("rag-factuality", "effect")
+        golden = json.loads((DATA / f"score-golden-{name}.json").read_text(encoding="utf-8"))
+>       assert json.loads(rep.dumps(result)) == golden
+E       AssertionError: assert {'attribution...complex', ...} == {'attribution...complex', ...}
+E         
+E         Omitting 17 identical items, use -vv to show
+E         Differing items:
+E         {'extractors': {'cost': [{'calls': 2, 'extractor': 'llm_condition@1#45b3761c700e', 'input_tokens': 2562, 'model_calls'...None, 'association_accuracy': None, 'evidence_type': 'all', 'extractor': 'llm_measurement@1#02bd5a7ab104', ...}, ...]}} != {'extractors': {'cost': [{'calls': 2, 'extractor': 'llm_condition@1#45b3761c700e', 'input_tokens': None, 'model_calls'...None, 'association_accuracy': None, 'evidence_type': 'all', 'extractor': 'llm_measurement@1#02bd5a7ab104', ...}, ...]}}
+E         {'funnel': {'documents': 3, 'per...
+E         
+E         ...Full output truncated (2 lines hidden), use '-vv' to show
+
+evaluation/tests/test_score_kinds.py:283: AssertionError
+__________________ test_effect_scores_unchanged[tpl-s1-mixed] __________________
+
+name = 'tpl-s1-mixed'
+
+    @pytest.mark.parametrize("name", sorted(GOLDEN))
+    def test_effect_scores_unchanged(name: str) -> None:
+        """Captured with the scorer before the per-kind change (evaluation/tests/data/score-golden-*.json)."""
+        run, corpus, baselines = GOLDEN[name]
+        result = score(EV2 / "runs" / run, EV2 / "corpora" / corpus, [EV2 / "runs" / b for b in baselines])
+        assert (result.pop("question_id"), result.pop("kind")) == ("rag-factuality", "effect")
+        golden = json.loads((DATA / f"score-golden-{name}.json").read_text(encoding="utf-8"))
+>       assert json.loads(rep.dumps(result)) == golden
+E       AssertionError: assert {'attribution...1-mixed', ...} == {'attribution...1-mixed', ...}
+E         
+E         Omitting 17 identical items, use -vv to show
+E         Differing items:
+E         {'extractors': {'cost': [{'calls': 12, 'extractor': 'llm_condition@1#45b3761c700e', 'input_tokens': 21363, 'model_call...: None, 'association_accuracy': None, 'evidence_type': 'all', 'extractor': 'llm_condition@1#45b3761c700e', ...}, ...]}} != {'extractors': {'cost': [{'calls': 12, 'extractor': 'llm_condition@1#45b3761c700e', 'input_tokens': None, 'model_calls...: None, 'association_accuracy': None, 'evidence_type': 'all', 'extractor': 'llm_condition@1#45b3761c700e', ...}, ...]}}
+E         {'funnel': {'documents': 20, 'pe...
+E         
+E         ...Full output truncated (2 lines hidden), use '-vv' to show
+
+evaluation/tests/test_score_kinds.py:283: AssertionError
+____________________ test_run_jobs_with_the_runbooks_groups ____________________
+
+client = <starlette.testclient.TestClient object at 0x7b08e5e96690>
+world = EvidenceWorld(root=PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_run_jobs_with_the_runbook0/world'), agent=True)
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-156/test_run_jobs_with_the_runbook0')
+
+    @POSIX_ONLY
+    def test_run_jobs_with_the_runbooks_groups(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
+        corpus = f"{NAME}-paraphrased"
+        regex = start(client, "run", {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality"},
+                                      "extractors": "regex-only"})
+        gaps = start(client, "run", {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality"},
+                                     "extractors": "cascade", "strategy": "gaps"})
+        agentic = start(client, "run", {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality-agentic"},
+                                        "strategy": "gaps", "model": "other-model"})
+        frozen = start(client, "run", {"corpus": corpus, "protocol": {"source": "proposal", "name": "rag-factuality"}})
+        for job in (regex, gaps, agentic, frozen):
+            assert wait(client, job["id"])["state"] == "done"
+        assert (regex["lane"], gaps["lane"]) == ("cpu", "model")
+>       assert [j["refs"]["run"] for j in (regex, gaps, agentic, frozen)] == [
+            f"regex-only~{corpus}", f"cascade-gaps~{corpus}", f"agentic-gaps~{corpus}", f"proposal-rag-factuality-cascade~{corpus}"]
+E       AssertionError: assert ['regex-only~...-paraphrased'] == ['regex-only~...-paraphrased']
+E         
+E         At index 3 diff: 'proposal-rag-factuality-cascade-gaps~rag-tpl-w1-paraphrased' != 'proposal-rag-factuality-cascade~rag-tpl-w1-paraphrased'
+E         Use -v to get more diff
+
+webapp/tests/test_evjobs.py:145: AssertionError
+=============================== warnings summary ===============================
+evaluation/tests/test_wholerun.py::test_refuses_tune_papers
+  /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/wholerun.py:259: UserWarning: q1: none of its paper ids is in /tmp/pytest-of-xepi3167/pytest-156/test_refuses_tune_papers0/tune_split.json; the tune guard cannot check it
+    tuned = sorted(set(question_papers(q)) & tune_papers(q))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED evidence/tests/test_plan.py::test_old_protocol_lock_unchanged - assert...
+FAILED evidence/tests/test_plan_run.py::test_plan_run_end_to_end_fake_lm - As...
+FAILED evidence/tests/test_plan_run.py::test_a_field_without_ontology_says_reasoning_off_and_finishes
+FAILED evidence/tests/test_plan_run.py::test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex_answers
+FAILED evidence/tests/test_plan_run.py::test_a_plan_run_scores_through_the_wholerun_adapter
+FAILED evidence/tests/test_plan_run_failures.py::test_a_failed_claim_call_skips_that_sentence_and_the_run_completes
+FAILED evidence/tests/test_plan_run_failures.py::test_a_failed_experiment_map_and_link_read_are_listed_not_fatal
+FAILED evidence/tests/test_plan_run_failures.py::test_openalex_down_keeps_the_links_and_the_replay_is_identical
+FAILED evidence/tests/test_plan_run_retry.py::test_a_failed_grouping_call_keeps_the_claims_ungrouped_and_the_run_completes
+FAILED evidence/tests/test_plan_run_retry.py::test_an_unparseable_grouping_reply_is_asked_again_by_a_retry_errors_rerun
+FAILED evidence/tests/test_plan_run_retry.py::test_a_retry_errors_rerun_replays_byte_identical
+FAILED evidence/tests/test_plan_run_retry.py::test_an_openalex_url_that_fails_then_succeeds_replays_byte_identical
+FAILED evidence/tests/test_plan_run_switches.py::test_links_on_is_the_default_and_unchanged_in_settings
+FAILED evidence/tests/test_plan_run_switches.py::test_the_answer_links_carry_the_openalex_work_id
+FAILED evaluation/tests/test_score_kinds.py::test_effect_scores_unchanged[pilot-complex]
+FAILED evaluation/tests/test_score_kinds.py::test_effect_scores_unchanged[tpl-s1-mixed]
+FAILED webapp/tests/test_evjobs.py::test_run_jobs_with_the_runbooks_groups - ...
+17 failed, 2323 passed, 1 skipped, 1 warning in 1769.03s (0:29:29)

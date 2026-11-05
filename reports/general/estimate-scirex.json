@@ -1,0 +1,22 @@
+{
+ "papers": 40,
+ "screened_out": 34,
+ "papers_reaching_llm": 6,
+ "reach_basis": "papers the regex screen did not stop",
+ "calls": {
+  "low": 6,
+  "high": 30
+ },
+ "tokens": {
+  "input": {
+   "low": 72058,
+   "high": 360290
+  },
+  "output": {
+   "low": 6144,
+   "high": 30720
+  }
+ },
+ "basis": "chars/4",
+ "note": "calls counts extractor and screen calls; the model calls can be more (a long paper is read in chunks, a rejected quote is retried); under strategy all, low equals high, although a `cascade: until_found` step can stop earlier; names checks are counted only with --names on (names_checks)"
+}

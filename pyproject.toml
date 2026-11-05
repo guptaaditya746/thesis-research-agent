@@ -42,7 +42,11 @@ synth = "synth.cli:main"
 evaluate = "evaluation.cli:main"
 
 [dependency-groups]
-dev = ["pytest==8.4.2"]
+dev = [
+    "pytest==8.4.2",
+    "pytest-timeout>=2.4.0",
+    "pytest-xdist>=3.8.0",
+]
 fetch = [
     "docling==2.110.0",
 ]
@@ -57,4 +61,5 @@ module-name = ["agent", "jsonio", "gold", "scoring", "webapp", "evidence", "synt
 module-root = ""
 
 [tool.pytest.ini_options]
+addopts = "-n auto --timeout 600"
 testpaths = ["agent/tests", "jsonio/tests", "gold/tests", "scoring/tests", "webapp/tests", "evidence/tests", "synth/tests", "evaluation/tests", "modelcall/tests", "packbuilder/tests"]

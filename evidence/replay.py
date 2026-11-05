@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from . import stages
-from .calls import cache_key
+from .calls import NotRecorded, cache_key
 from .contract import digest
 from .engine import Settings, default_provider, execute_run, plan_stages
 from .plan import load_plan
@@ -53,7 +53,30 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
                     names=s.get("names", "off"),        # a run made before the names step grouped no names
                     reason=s.get("reason", "off"),      # a run made before the reasoner had no inferences
                     plan=plan, stage_set=s.get("stage_set"),   # a plan run: its own stages again
-                    links=s.get("links", "on"))         # a plan run made before the switch had its links stage
+                    links=s.get("links", "on"),         # a plan run made before the switch had its links stage
+                    plan_version=s.get("plan_version", "v1"))   # a plan run made before 4 Nov is v1
+
+
+class CodeChanged(NotRecorded):
+    """The recorded run's extractor ids are not the ones this code builds (an extractor's source changed since, e.g.
+    modelcall/call.py on 4 Nov): its calls are cached under the old ids, so replay it from its own commit."""
+
+
+def _check_same_code(run_dir: Path, record: dict[str, Any], new: Path, exc: NotRecorded) -> None:
+    """Raise CodeChanged (naming the ids and the recorded commit) when the replay's lock builds other extractor ids
+    than the recorded run used; else return (a plain cache miss)."""
+    lock = new / LOCK_FILE
+    if not lock.is_file():
+        return
+    built = {i for ids in read_json(lock)["extractors"].values() for i in ids}
+    used = set(record.get("extractors") or [])
+    if used <= built:
+        return
+    manifest = run_dir / "manifest.json"
+    commit = (read_json(manifest).get("code_commit") if manifest.is_file() else None) or "the run's commit"
+    raise CodeChanged(f"{exc}. The run was recorded with extractor ids {sorted(used - built)} that this code does not "
+                      f"build (it builds {sorted(built - used)}): an extractor's source changed since. Replay it from "
+                      f"a checkout of {commit} (git worktree add <dir> {commit}).") from exc
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,
@@ -67,16 +90,34 @@ def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path
         importlib.import_module(module)
     stages.check_recorded(record.get("stages"),
                           plan_stages(settings, load_plan(settings.plan) if settings.plan is not None else None))
-    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), settings,
-                      out_dir or run_dir.parent, mode="replay", provider=None, locator=locator,
-                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-replay-{_stamp()}",
-                      source_dir=run_dir)   # the recorded reason.json: a replay never reasons again
+    run_id = f"{record['run_id']}-replay-{_stamp()}"
+    try:
+        new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), settings,
+                          out_dir or run_dir.parent, mode="replay", provider=None, locator=locator,
+                          source_run=record["run_id"], attempts=_attempts(run_dir), run_id=run_id,
+                          source_dir=run_dir)   # the recorded reason.json: a replay never reasons again
+    except NotRecorded as exc:
+        _check_same_code(run_dir, record, Path(out_dir or run_dir.parent) / run_id, exc)
+        raise
     outputs = read_json(new / RUN_FILE)["outputs"]
     names = sorted(set(outputs) | set(record["outputs"]))
     added = sorted(n for n in names if n in ADDED_OUTPUTS and n not in record["outputs"])
     mismatched = [n for n in names if n not in added and outputs.get(n) != record["outputs"].get(n)]
     return new, {"ok": not mismatched, "mismatched": mismatched, "source_run": record["run_id"], "replay_run": new.name,
-                 **({"added": added} if added else {})}
+                 **({"added": added} if added else {}), **_other_code(run_dir, mismatched)}
+
+
+def _other_code(run_dir: Path, mismatched: list[str]) -> dict[str, str]:
+    """{"note": ...} when a mismatched replay ran other code than the run's own commit (a fix since, such as the 4 Nov
+    `$metric` default or the kg:dataset shim, that runs in v1 too): replay from that commit to compare like with like."""
+    manifest = run_dir / "manifest.json"
+    recorded = read_json(manifest).get("code_commit") if mismatched and manifest.is_file() else None
+    from .seal import code_commit
+    now = code_commit()
+    if recorded is None or recorded == now:
+        return {}
+    return {"note": f"the run was recorded at commit {recorded}, this replay ran {now}; a fix since then can change "
+                    f"{mismatched}: replay it from {recorded} (git worktree add <dir> {recorded}) to check it"}
 
 
 def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | str | None = None,

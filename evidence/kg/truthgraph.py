@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import pyoxigraph as ox
 
 from evidence.contract import Item, Span
+from evidence.names import clean
 from evidence.pack import RoleMap, load_pack, register_pack
 from evidence.protocol import DEFAULT_PACK
 
@@ -78,10 +79,14 @@ def truth_store(truth: Any, ontology: Graph | None = None, *, domains: Path = DO
     return build(papers, items, RoleMap(pack), ontology)
 
 
-def matches(answer: Answer, expected: Any, column: str | None = None) -> bool:
+def matches(answer: Answer, expected: Any, column: str | None = None, top1: bool = False) -> bool:
+    """`top1`: a ranking judged by its first value only (the whole-run headline's top-1), on `column` or the first one."""
     rows = answer.rows
     if expected is None or expected == []:
         return answer.empty
+    if top1 and isinstance(expected, list):
+        first = next((r.get(column) if column is not None else next(iter(r.values()), None) for r in rows), None)
+        return first is not None and clean(str(first)) == clean(str(expected[0]))   # as the headline: "squad" is "SQuAD"
     if not isinstance(expected, list):
         return len(rows) == 1 and next(iter(rows[0].values())) == expected
     if all(isinstance(e, dict) for e in expected):
@@ -100,8 +105,8 @@ def matches(answer: Answer, expected: Any, column: str | None = None) -> bool:
     return [next(iter(r.values())) for r in rows] == expected
 
 
-def split(ours: Answer, gold_on_truth: Answer, expected: Any,
-          column: str | None = None) -> Literal["right", "synthesis error", "extraction error"]:
-    if matches(ours, expected, column):
+def split(ours: Answer, gold_on_truth: Answer, expected: Any, column: str | None = None,
+          top1: bool = False) -> Literal["right", "synthesis error", "extraction error"]:
+    if matches(ours, expected, column, top1):
         return "right"
-    return "extraction error" if matches(gold_on_truth, expected, column) else "synthesis error"
+    return "extraction error" if matches(gold_on_truth, expected, column, top1) else "synthesis error"

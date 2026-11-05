@@ -16,6 +16,7 @@ from modelcall import (Answer, CachedFailure, JsonlCache, ModelCallError, Prompt
                        default_key,
                        run_sync)
 from modelcall.gateway import CallSettings
+from modelcall.call import PlainTextReply
 
 
 class Out(BaseModel):
@@ -23,6 +24,23 @@ class Out(BaseModel):
 
 
 PROMPT = Prompt.inline("Answer.", Out)
+
+
+def test_plain_text_reply_keeps_dspy_json_unwrapped_and_cacheable(tmp_path: Path) -> None:
+    calls = []
+
+    def reply(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        calls.append(info)
+        assert not info.output_tools
+        return ModelResponse(parts=[TextPart('{"is_claim": true}')])
+
+    model = FunctionModel(reply, model_name="plain-model")
+    prompt = Prompt.inline("", PlainTextReply)
+    cache = JsonlCache(tmp_path / "plain.jsonl")
+    first = ask_sync(prompt, "sentence", model=model, cache=cache, key={"test": "plain"})
+    second = ask_sync(prompt, "sentence", model=model, cache=cache, key={"test": "plain"})
+    assert first.output.text == '{"is_claim": true}'
+    assert second.output == first.output and second.cached and len(calls) == 1
 
 
 class Counted:

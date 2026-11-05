@@ -25,7 +25,9 @@ side is Wave 2 Task 8.1, the adapter "engine run -> Answer"):
                             `gold["conclusions"][i]["id"]`, the ids the question gives
 An unused part stays empty: an empty answer is valid and scores 0 (recall) or None (precision).
 `from_run(run, q)` is that adapter for an engine run folder: a plan run's answer.json (its lines' rows: rank and list
-read the first answered line other than the oversell caveat; a ranking whose gold is paper ids reads the `paper`
+read the plan's scored line, `scored_line` — a ranking's first rank/best line, else the line asking the question,
+else the first line, the oversell caveat left out; an empty or failed scored line is an empty answer, never a later
+line; a folder without plan.json reads the first answered line; a ranking whose gold is paper ids reads the `paper`
 column only (none: an empty answer), any other ranking and a list read the first column; compare reads `paper` + `direction` rows, else the kind's answer kept under `synthesis`), and for
 claims the run's claim records (evidence.jsonl): one claim per gold conclusion, the majority direction of the run's
 directed claims (a question gives one conclusion id per review; with several, a claim is about the conclusion whose
@@ -127,11 +129,37 @@ def _about(claim: dict[str, Any], conclusions: list[dict[str, Any]]) -> str | No
     return hits[0] if len(hits) == 1 else None
 
 
+RANK_TEMPLATES = ("rank", "best")
+
+
+def scored_line(plan: Any, q: RealQuestion) -> Any:
+    """The plan line a rank or list question is scored on, by the headline and the answer-key split alike: for a
+    ranking its first rank/best line, else the line asking the question's text, else the first line (oversell left out)."""
+    lines = [x for x in plan.lines if x.id != OVERSELL] or list(plan.lines)
+    if q.kind == "rank":
+        hit = next((x for x in lines if x.template in RANK_TEMPLATES), None)
+        if hit is not None:
+            return hit
+    return next((x for x in lines if x.question == q.question), lines[0])
+
+
+def _scored_lines(root: Path, answer: dict[str, Any], q: RealQuestion) -> list[dict[str, Any]]:
+    """The answered lines `from_run` reads: with the run's plan.json, the scored line only (empty or failed: no line,
+    an empty answer, never a later line); a folder without a plan keeps every answered line, the first one read."""
+    from evidence.plan import load_plan
+    from evidence.rundir import PLAN_FILE
+    lines = _lines(answer)
+    if q.kind not in ("rank", "list") or not (root / PLAN_FILE).is_file():
+        return lines
+    spec = scored_line(load_plan(root / PLAN_FILE), q)
+    return [x for x in lines if x.get("id") == spec.id]
+
+
 def from_run(run: Path | str, q: RealQuestion) -> Answer:
     """The `Answer` of an engine run folder for question `q` (the contract above)."""
     root = Path(run)
     answer = json.loads((root / "answer.json").read_text(encoding="utf-8"))
-    lines = _lines(answer)
+    lines = _scored_lines(root, answer, q)
     if q.kind == "rank":
         column = answer_column(q)
         rows = lines[0]["rows"] if lines else []

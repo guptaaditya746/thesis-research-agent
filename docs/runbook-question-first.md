@@ -45,7 +45,7 @@ git rev-parse --verify -q 'ev3-code^{commit}' || echo 'FAIL step 0: no tag ev3-c
 git checkout --detach ev3-code            # the code: main with the engine, run and score fixes
 git describe --tags                       # ev3-code; record this and `git rev-parse HEAD` in summary.md
 git submodule update --init --recursive
-git -C llm-setup log -1 --oneline         # expect 4c8ccbf GLiNER: start failure keeps the stack, ...
+git -C llm-setup log -1 --oneline         # expect b962edd fix: assign distinct distributed ports to replicas
 uv sync --locked --all-groups
 uv run evidence --help | head -n 3        # the entry points exist
 uv run evaluate score --help | grep question-id
@@ -56,9 +56,9 @@ The **USER** creates the tag `ev3-code` on `main` (after merging the engine, run
 `git checkout` fails), stop: **USER**. Never run from a bare `origin/main`: the tag is the one commit known to
 hold all three fixes.
 
-`main` records `llm-setup` at `4c8ccbf`: `22dae03`'s orch-only profiles plus the GLiNER service (the llm-setup
-branch `gliner`). That commit must be fetchable from the llm-setup remote (the user pushes the branch `gliner`
-there). If `git submodule update` cannot find `4c8ccbf` (`not our ref`, `did not contain`), or `git log -1` shows
+`main` records `llm-setup` at `b962edd`: `22dae03`'s orch-only profiles, the GLiNER service (`4c8ccbf`, the
+llm-setup branch `gliner`) and distinct distributed ports per replica. That commit must be fetchable from the llm-setup
+remote. If `git submodule update` cannot find `b962edd` (`not our ref`, `did not contain`), or `git log -1` shows
 another commit, stop: **USER** (do not change the submodule yourself). This replaces the `22dae03` check of
 `docs/slurm-evidence-runbook.md` 0.2. Do not start the stack as 0.2 does either: step 1 starts it, with GLiNER.
 

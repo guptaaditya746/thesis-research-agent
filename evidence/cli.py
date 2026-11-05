@@ -286,6 +286,11 @@ def _dispatch(args: argparse.Namespace) -> int:
                        else {"kind": answer["kind"]})   # effect answers carry no kind; the others no label
         print(json.dumps({"run": str(root), **summary, "cost": record["cost"]}, indent=1))
         failed = RunDir(root).failed_calls()
+        bad_replies = RunDir(root).model_failed_calls()
+        if bad_replies:
+            print(f"warning: {bad_replies} extractor call(s) got a model reply that did not validate or a prompt over "
+                  f"the context window (in {root / 'calls'}); asking again repeats them, so --retry-errors skips them",
+                  file=sys.stderr)
         if failed and args.allow_failed_calls:
             print(f"warning: {failed} extractor call(s) failed (status error or partial in {root / 'calls'})",
                   file=sys.stderr)

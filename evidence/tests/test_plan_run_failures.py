@@ -15,7 +15,7 @@ from evidence.plan import write_plan
 from evidence.replay import replay
 from evidence.rundir import RunDir
 from evidence.tests.conftest import PAPERS, corpus_of, prompt_of, provider_of, respond
-from evidence.tests.test_plan_run import fake_model, make_plan, read
+from evidence.tests.test_plan_run import fake_model, make_plan, read, stage_reply
 
 CITE = "We build on Lewis et al. (2020) for the retrieval-augmented model."
 
@@ -35,7 +35,7 @@ def failing_model(fail: Any) -> FunctionModel:
         if fail(prompt):
             raise RuntimeError("gateway down")
         if "Your output fields are:\n1. `relation`" in prompt and "Lewis et al." in prompt:
-            return respond(info, {"text": json.dumps({"relation": "builds on", "object": "Lewis et al. (2020)"})})
+            return stage_reply(info, json.dumps({"relation": "builds on", "object": "Lewis et al. (2020)"}))
         return inner(messages, info)
     return FunctionModel(reply, model_name="fake")
 

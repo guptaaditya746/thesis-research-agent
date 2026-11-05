@@ -17,6 +17,27 @@ from evidence.plan import Plan
 from .plan import OVERSELL_ID, RULES, decision_params
 
 NO_EVIDENCE = "No evidence found"
+RANK_TEMPLATES = ("rank", "best")
+
+
+def _number(x: Any) -> str:
+    return f"{x:g}" if isinstance(x, (int, float)) else str(x)
+
+
+def best_text(template: str | None, rows: list[dict[str, Any]]) -> str | None:
+    """What a rank or best line found, named: "Best: <thing> in <paper> (score <s>)" (every thing tied on the top
+    score; rank.rq's score is in the metric's own direction), "Best: <thing> (<n> wins)" for best.rq; else None."""
+    if template not in RANK_TEMPLATES or not rows or "thing" not in rows[0]:
+        return None
+    first = rows[0]
+    if "score" in first:
+        top = [r for r in rows if r.get("score") == first["score"]]
+        names = ", ".join(f"{r['thing']} in {r['paper']}" if r.get("paper") else str(r["thing"]) for r in top)
+        return f"Best: {names} (score {_number(first['score'])})"
+    if "count" in first:
+        top = [r for r in rows if r.get("kind") == first.get("kind") and r.get("count") == first["count"]]
+        return f"Best: {', '.join(str(r['thing']) for r in top)} ({_number(first['count'])} wins)"
+    return None
 
 
 def apply_rule(rule: str, found: list[bool]) -> bool:
@@ -32,7 +53,9 @@ def apply_rule(rule: str, found: list[bool]) -> bool:
     return sum(found) * 2 > len(found)
 
 
-def run_lines(plan: Plan, run_query: Callable[[str, dict[str, Any]], list[dict[str, Any]]]) -> dict[str, Any]:
+def run_lines(plan: Plan, run_query: Callable[[str, dict[str, Any]], list[dict[str, Any]]], *,
+              name_best: bool = False) -> dict[str, Any]:
+    """`name_best` (a v2 plan run): the answer text first names a rank line's best thing (`best_text`)."""
     lines: list[dict[str, Any]] = []
     for line in plan.lines:
         try:
@@ -53,6 +76,10 @@ def run_lines(plan: Plan, run_query: Callable[[str, dict[str, Any]], list[dict[s
         text = NO_EVIDENCE
     else:
         text = f"{'Yes' if met else 'No'}: {RULES[plan.main_rule]} ({sum(flags)} of {len(counted)} lines found evidence)"
+        templates = {x.id: x.template for x in plan.lines}
+        first = next((x for x in counted if x["rows"] and templates.get(x["id"]) in RANK_TEMPLATES), None) if name_best else None
+        named = best_text(templates[first["id"]], first["rows"]) if first is not None else None   # a ranking: who is best
+        text = f"{named}; {text}" if named else text
     if missing:
         text += "; " + "; ".join(missing)
     return {"lines": lines, "answer": {"main_rule": plan.main_rule, "rule_met": met,

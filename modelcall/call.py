@@ -11,7 +11,7 @@ import asyncio
 import os
 import re
 from dataclasses import asdict, dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
 from pydantic import BaseModel
 from pydantic_ai import Agent, NativeOutput, capture_run_messages
@@ -26,6 +26,13 @@ from .loop import on_model_loop, run_sync
 from .prompt import Prompt
 
 T = TypeVar("T", bound=BaseModel)
+
+
+class PlainTextReply(BaseModel):
+    """Record a plain model response in the existing typed cache format."""
+
+    plain_text: ClassVar[bool] = True
+    text: str
 
 _SECRET_PATTERNS = (re.compile(r"sk-[A-Za-z0-9._\-]{4,}"), re.compile(r"\b[0-9a-fA-F]{64}\b"))
 
@@ -96,12 +103,14 @@ async def _reply(instructions: str, user_prompt: str, output_type: type[T], *, m
 
     Schema-constrained decoding (NativeOutput) where the model supports it, as the LiteLLM models do;
     pydantic-ai's test models get their tool-call output mode instead."""
+    plain_text = output_type is PlainTextReply
     native = bool(model.profile.get("supports_json_schema_output"))
-    agent: Agent[None, T] = Agent(model, output_type=NativeOutput(output_type) if native else output_type,
+    agent = Agent(model, output_type=str if plain_text else NativeOutput(output_type) if native else output_type,
                                   instructions=instructions, retries=retries)
     result = await agent.run(user_prompt, model_settings=model_settings or default_settings())
     usage = result.usage() if callable(result.usage) else result.usage
-    return _Reply(result.output, model_name(model), result.response.model_name,
+    output = output_type(text=result.output) if plain_text else result.output
+    return _Reply(output, model_name(model), result.response.model_name,
                  usage.input_tokens or 0, usage.output_tokens or 0)
 
 

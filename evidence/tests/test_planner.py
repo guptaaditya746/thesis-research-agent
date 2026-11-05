@@ -11,7 +11,7 @@ from evidence import steps
 from evidence.plan import WordList
 from evidence.planner import MAIN_RULE_ID, NOT_PLANNED, check_plan, clarify, confirm_all, critic, decision_params
 from evidence.planner import how_sentences, propose, set_rule, using
-from evidence.planner.plan import OVERSELL_QUERY
+from evidence.planner.plan import OVERSELL_QUERY, query_problem, with_header
 from modelcall.cache import JsonlCache
 from modelcall.dspy_lm import RecordedLM
 
@@ -150,7 +150,7 @@ def test_query_must_parse(lm):
 
 def test_placeholder_without_a_decision_is_refused(lm):
     replies, _ = lm
-    q = "SELECT ?c WHERE { ?c ev:name $metric }"
+    q = "SELECT ?c WHERE { ?c ev:name $dataset }"
     fixed = 'SELECT ?c WHERE { ?c ev:name "f1" }'
     script(replies, [line("inventory")], queries=[q])
     replies.insert(replies.index(j(query=q)) + 1, j(query=fixed))
@@ -274,3 +274,58 @@ def test_a_query_keeping_the_run_params_is_accepted_and_the_query_step_sees_the_
     direction = next(d for d in plan.decisions if d.type == "direction")
     assert (direction.id, direction.value) == ("direction:m", "lower") and direction.confirmed_by is None
     assert "direction" not in decision_params(plan, SIDES_QUERY)
+
+
+# --- SciLead run (4 Nov): a template's $metric is the run's main measure; the header lists only what the run passes --
+
+# the l1 query the planner wrote for scilead-09: the rank template's $metric renamed to $metrics, its header kept
+SCILEAD_09 = ('# params: metric\nSELECT ?thing WHERE { ?v ev:of ?t ; ev:onMetric ?m ; kg:contextKey "XSum" . '
+              '?m ev:name $metrics . ?t ev:name ?thing }')
+
+
+def test_the_header_keeps_a_param_only_when_its_placeholder_is_in_the_body():
+    body = SCILEAD_09.split("\n", 1)[1]
+    assert with_header(body, "# params: context, metric\n" + body) == body   # $metrics is not $metric
+    keyed = body.replace('"XSum"', "$context_key")
+    assert with_header(keyed, "# params: context, metric\n" + keyed).splitlines()[0] == "# params: context"
+
+
+def test_a_header_param_the_run_does_not_fill_is_a_query_problem():
+    assert "ghost" in (query_problem("# params: ghost\n" + PLAIN) or "")
+    assert query_problem(SCILEAD_09) is None   # metric is a run parameter
+
+
+def _plan(lines, things=None, measures=()):
+    from evidence.tests.test_plan_run import make_plan
+    plan = make_plan(things=things, measures=tuple(measures) or ("accuracy",))
+    return plan.model_copy(update={"lines": lines, "measures": list(measures)})
+
+
+def _line(lid, query, template=None):
+    from evidence.plan import EvidenceLine
+    return EvidenceLine(id=lid, question="q?", query=query, template=template)
+
+
+def test_check_refuses_a_term_the_graph_never_emits():
+    """scirex: the planner filled $list_field with kg:dataset; the graph writes ev:setting_dataset."""
+    bad = "SELECT ?d WHERE { ?e kg:key_task \"ner\" ; kg:dataset ?d . ?v ev:value ?x }"
+    assert "kg:dataset" in query_problem(bad) and "ev:value" in query_problem(bad)
+    ok = ('SELECT ?d WHERE { ?e a ev:Experiment ; kg:key_task "kg:dataset" ; ev:setting_dataset ?d . '
+          "?v kg:contextKey ?k ; ev:onMetric ?m . ?m rdfs:label ?l }  # kg:dataset in a comment")
+    assert query_problem(ok) is None
+
+
+def test_check_flags_a_metric_line_without_a_measure():
+    """scilead-05/06: the query asks $metric, the plan names no measure, the run fails with missing parameter(s)."""
+    q = "SELECT ?t WHERE { ?v ev:of ?t ; ev:onMetric ?m . ?m ev:name $metric }"
+    things = {"bart": ["BART"], "rogue_2": ["ROUGE-2"]}
+    problems = check_plan(_plan([_line("l1", q)], things=things))
+    assert "line l1: its query needs a measure ($metric) but the plan names no measure" in problems
+    assert check_plan(_plan([_line("l1", q)], things=things, measures=["rogue_2"])) == []
+
+
+def test_check_flags_an_unplanned_line_and_a_plan_of_measures_only():
+    """Off-template q05: the only line could not be planned; q06/q10: every thing is a measure (both sides other)."""
+    problems = check_plan(_plan([_line("l1", "")], things={"acc": ["accuracy"]}, measures=["acc"]))
+    assert f"line l1: {NOT_PLANNED} (it has no query)" in problems
+    assert "the plan names no compared thing besides its measures" in problems

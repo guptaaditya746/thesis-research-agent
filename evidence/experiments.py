@@ -137,6 +137,11 @@ def after_document(doc: object, ctx: stages.StageContext) -> list[Item]:
     return [item(e) for e in found]
 
 
+def after_document_kept(doc: object, ctx: stages.StageContext) -> list[Item]:
+    """`after_document` for a paper the screen kept; none (and no map call) for one it left out (`doc.skipped`)."""
+    return [] if getattr(doc, "skipped", False) else after_document(doc, ctx)
+
+
 def install() -> None:
     """Register the two stages (a run that registers them records them in run.json `stages`)."""
     stages.register("map-experiments", "before_extract", before_extract)

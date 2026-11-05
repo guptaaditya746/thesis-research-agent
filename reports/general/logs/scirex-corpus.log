@@ -1,0 +1,11 @@
+{
+ "jsonl": "test.jsonl",
+ "jsonl_sha256": "c2ddd9334e843c1acfff1845c9917fc3297988c4f01584a1e925b9d461179866",
+ "papers_in_file": 66,
+ "limit": 40,
+ "papers": 40,
+ "coref_clusters": 339,
+ "clusters_in_no_relation": 21,
+ "clusters_untyped": 6,
+ "clusters_without_spans": 101
+}

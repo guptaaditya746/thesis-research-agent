@@ -1,0 +1,1 @@
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scirex/corpus/tune_split.json: kept 15 questions, held 4 for tuning (4 of them give papers to the slice; 8 papers held out, 22 rest). A held question whose papers all belong to kept questions is still scored by `evaluate wholerun`.

@@ -10,9 +10,10 @@ from typing import Any
 
 import pytest
 from pydantic_ai.models.function import FunctionModel
+from pydantic_ai.messages import ModelResponse, TextPart
 
 from evidence import cli, engine, planrun, stages
-from evidence.kg.query import template
+from evidence.kg.query import render, template
 from evidence.plan import Decision, EvidenceLine, Plan, WordList, write_plan
 from evidence.planner.plan import OVERSELL_QUERY
 from evidence.replay import replay
@@ -23,6 +24,11 @@ from jsonio import sha256_hex
 
 GOLDEN = Path(__file__).resolve().parent / "fixtures" / "golden" / "regex_run_outputs.json"
 WHO = {"confirmed_by": "aditya", "confirmed_at": "2026-11-03T10:00:00+00:00"}
+
+def stage_reply(info: Any, text: str) -> Any:
+    if info.model_request_parameters.output_mode == "text":
+        return ModelResponse(parts=[TextPart(text)])
+    return respond(info, {"text": text})
 FRESH = """SELECT ?paper (COUNT(?v) AS ?values) WHERE {
   ?v a ev:Value ; ev:inExperiment ?e . ?e ev:inPaper ?p . ?p ev:name ?paper .
 } GROUP BY ?paper ORDER BY ?paper"""
@@ -85,7 +91,7 @@ def fake_model(calls: list[str]) -> FunctionModel:
             out = {"relation": "", "object": None}
         else:
             out = {}
-        return respond(info, {"text": json.dumps(out)})
+        return stage_reply(info, json.dumps(out))
     return FunctionModel(reply, model_name="fake")
 
 
@@ -111,8 +117,9 @@ def test_plan_run_end_to_end_fake_lm(tmp_path: Path) -> None:
     root = plan_run(tmp_path, calls=calls)
     run = read(root, "run.json")
     assert run["settings"]["stage_set"] == "plan"
-    assert run["stages"] == {"before_extract": ["map-experiments"], "after_type": ["recheck"],
-                             "after_document": ["experiment-items", "claims", "links"],
+    assert run["settings"]["plan_version"] == "v2"   # a new plan run: no map before the screen (stage_entries)
+    assert run["stages"] == {"after_type": ["recheck"],
+                             "after_document": ["experiment-items-kept", "claims", "links"],
                              "after_run": ["recheck_report", "stage_report", "ontology"]}
     # the protocol is written from the plan: the screen terms are the compiled word list, a miss goes to the model
     protocol = (root / "protocol.yaml").read_text(encoding="utf-8")
@@ -153,6 +160,19 @@ def test_plan_run_replay_identical(tmp_path: Path) -> None:
     assert read(new, "run.json")["outputs"] == read(root, "run.json")["outputs"]
     assert len(calls) == made                                    # no model call in the replay
     assert read(new, "run.json")["cost"]["made_model_calls"] == 0
+
+
+def test_a_v1_plan_run_still_runs_and_replays_as_before(tmp_path: Path) -> None:
+    """A plan run recorded before 4 Nov has no `plan_version` in run.json: replay builds its v1 stages and answer."""
+    write_plan(make_plan(), tmp_path / "plan.json")
+    make_corpus(tmp_path / "corpus")
+    root = engine.run_plan(tmp_path / "plan.json", planrun.protocol_for(make_plan()), tmp_path / "corpus",
+                           tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
+                           provider=provider_of(fake_model([])), workers=1, plan_version="v1")
+    run = read(root, "run.json")
+    assert "plan_version" not in run["settings"] and run["stages"]["before_extract"] == ["map-experiments"]
+    _, report = replay(root)
+    assert report["ok"], report
 
 
 def test_protocol_run_unchanged(tmp_path: Path) -> None:
@@ -216,7 +236,7 @@ def test_builds_on_links_are_recorded_and_the_replay_reads_the_recorded_openalex
         prompt = prompt_of(messages)
         if "Your output fields are:\n1. `relation`" in prompt and "Lewis et al." in prompt:
             calls.append(prompt)
-            return respond(info, {"text": json.dumps({"relation": "builds on", "object": "Lewis et al. (2020)"})})
+            return stage_reply(info, json.dumps({"relation": "builds on", "object": "Lewis et al. (2020)"}))
         return inner(messages, info)
 
     path = tmp_path / "plan.json"
@@ -288,6 +308,17 @@ def test_a_one_method_question_compares_with_other_and_its_effect_line_runs(tmp_
     assert lines["l1"]["status"] == "done"
 
 
+def test_a_rank_line_gets_the_main_measure_as_its_metric() -> None:
+    """SciLead run (4 Nov): rank and best lines failed with "missing parameter(s) ['metric']", which no run filled."""
+    plan = make_plan(measures=("accuracy", "f1"))
+    for name in ("rank", "best"):
+        assert planrun.line_params(plan, template(name))["metric"] == "accuracy"
+        render(template(name), {**planrun.line_params(plan, template(name)), "context": "XSum", "counts_as": ["result"]})
+    recorded = ('# params: metric\nSELECT ?thing WHERE { ?v ev:of ?t ; ev:onMetric ?m ; kg:contextKey "XSum" . '
+                '?m ev:name $metrics . ?t ev:name ?thing }')   # scilead-09's l1, as planned
+    render(recorded, planrun.line_params(make_plan(measures=("rouge_l",)), recorded))
+
+
 def test_a_lower_is_better_measure_reads_a_rise_as_worse(tmp_path: Path) -> None:
     """"Does retrieval reduce latency?": S001 has latency 655 ms with retrieval, 410 ms without: that is worse."""
     things = {"rag": ["retrieval-augmented model", "retrieval-augmented generation"],
@@ -329,3 +360,49 @@ def test_cli_refuses_flags_a_plan_run_fixes(tmp_path: Path) -> None:
     write_plan(make_plan(), path)
     assert cli.main(["run", "--plan", str(path), "--corpus", str(make_corpus(tmp_path / "c")), "--out",
                      str(tmp_path / "r"), "--names", "on"]) == 2
+
+
+def test_a_plan_of_measures_only_has_a_valid_protocol():
+    """Off-template q06/q10: every thing of the plan is a measure, so both compared sides were `other` and the
+    protocol was refused; the treatment is `any` now (a role of its own)."""
+    from evidence.protocol import parse
+    plan = make_plan(things={"acc": ["accuracy"]}, measures=("acc",))
+    protocol = parse(planrun.protocol_for(plan).decode("utf-8"))
+    assert (protocol.synthesis.compare.treatment, protocol.synthesis.compare.control) == ("any", "other")
+
+
+def test_a_v2_plan_run_maps_experiments_only_for_papers_the_screen_kept():
+    """scilead-07 mapped 31 papers, 27 then screened out: v2 has no map before the screen and none for a skipped one."""
+    from types import SimpleNamespace
+
+    from evidence import experiments
+    plan = make_plan()
+    v1 = [n for n, _, _ in planrun.stage_entries(plan)]
+    v2 = [n for n, _, _ in planrun.stage_entries(plan, version="v2")]
+    assert "map-experiments" in v1 and "experiment-items" in v1
+    assert "map-experiments" not in v2 and "experiment-items-kept" in v2
+    assert experiments.after_document_kept(SimpleNamespace(skipped=True), None) == []   # no map call at all
+
+
+def test_a_v2_stage_request_over_the_context_window_is_not_sent():
+    from types import SimpleNamespace
+
+    from evidence import engine, stages
+    fake = SimpleNamespace(plan_version="v2")
+    with pytest.raises(stages.StageCallError, match="too_long: about .* over the 65536-token context window"):
+        engine.Execution.stage_ask(fake, "", "x" * 327_338, planrun.Plan, "map", "orch-model", {"max_tokens": 4096})
+    assert engine.context_tokens("sub-model-1") == 32768 and engine.context_tokens("nope") is None
+
+
+def test_an_over_limit_stage_call_is_not_asked_again(tmp_path):
+    """--retry-errors asked the same oversized map request 16 times; a permanent error is kept."""
+    from evidence.calls import CallCache
+    from modelcall.cache import JsonlCache
+    made = []
+
+    def make():
+        made.append(1)
+        return {"status": "error", "error": "ModelHTTPError: status_code: 400, ContextWindowExceededError"}, []
+    for _ in range(2):
+        CallCache(JsonlCache(tmp_path / "c.jsonl"), "run", retry_errors=True).recorded("stage:map", {"p": 1}, make)
+    assert len(made) == 1

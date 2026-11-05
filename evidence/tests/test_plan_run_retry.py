@@ -17,7 +17,7 @@ from evidence.plan import write_plan
 from evidence.replay import replay
 from evidence.rundir import RunDir
 from evidence.tests.conftest import prompt_of, provider_of, respond
-from evidence.tests.test_plan_run import make_plan, read
+from evidence.tests.test_plan_run import make_plan, read, stage_reply
 from evidence.tests.test_plan_run_failures import corpus, failing_model
 
 GROUPS = "Your output fields are:\n1. `groups`"
@@ -36,7 +36,7 @@ def model(fail: Any = lambda p: False, bad: Any = lambda p: False) -> FunctionMo
 
     def reply(messages: Any, info: Any) -> Any:
         if bad(prompt_of(messages)):
-            return respond(info, {"text": "this is not json"})
+            return stage_reply(info, "this is not json")
         return inner(messages, info)
     return FunctionModel(reply, model_name="fake")
 
@@ -102,13 +102,13 @@ def test_an_openalex_url_that_fails_then_succeeds_replays_byte_identical(tmp_pat
     def flaky(url: str) -> Any:
         asked.append(url)
         if len(asked) == 1:
-            raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)  # type: ignore[arg-type]
+            raise urllib.error.HTTPError(url, 500, "Internal Server Error", {}, None)  # type: ignore[arg-type]  # a 503 is retried (with_backoff); a 500 is not
         return {"results": [{"id": "https://openalex.org/W1", "title": "Lewis et al. (2020)"}]}
     monkeypatch.setattr(openalex, "_urlopen", flaky)
     root = run(tmp_path, model())
     links = read(root, "answer.json")["links"]
     assert len(links) >= 2 and len({x["ref"] for x in links}) == 1      # every paper cites the same work
-    assert {x.get("resolve_failed") for x in links} == {"HTTP 503"}     # sticky for the run
+    assert {x.get("resolve_failed") for x in links} == {"HTTP 500"}     # sticky for the run
     _, report = replay(root)
     assert report["ok"] and report["mismatched"] == [], report
     assert json.loads(json.dumps(links))

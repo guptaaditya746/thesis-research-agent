@@ -1,0 +1,79 @@
+{
+  "committed_at": "2026-11-03T18:35:21+01:00",
+  "not_run": 2,
+  "questions": {
+    "q01": {
+      "extra_columns": [
+        "thing",
+        "papers"
+      ],
+      "fresh": false,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q02": {
+      "extra_columns": [
+        "dataset",
+        "count"
+      ],
+      "fresh": false,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q03": {
+      "extra_columns": [],
+      "fresh": false,
+      "match_on_key": true,
+      "match_on_run": false
+    },
+    "q04": {
+      "extra_columns": [],
+      "fresh": false,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q05": {
+      "extra_columns": [],
+      "failed": "failed: SyntaxError: error at 6:1: expected [_]",
+      "fresh": true,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q07": {
+      "extra_columns": [],
+      "fresh": true,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q08": {
+      "extra_columns": [],
+      "fresh": true,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q09": {
+      "extra_columns": [],
+      "fresh": false,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q11": {
+      "extra_columns": [],
+      "fresh": true,
+      "match_on_key": false,
+      "match_on_run": false
+    },
+    "q12": {
+      "extra_columns": [],
+      "fresh": false,
+      "match_on_key": false,
+      "match_on_run": false
+    }
+  },
+  "summary": {
+    "fresh_share": 0.4,
+    "match_on_run_rate": 0.0,
+    "match_rate": 0.1,
+    "questions": 10
+  }
+}

@@ -44,6 +44,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import modelcall
 from pydantic import BaseModel
+from modelcall.call import PlainTextReply as Reply
 
 if TYPE_CHECKING:
     from .calls import CallCache
@@ -61,10 +62,6 @@ _AT: tuple[str, ...] = ("before_extract", "after_type", "after_document", "after
 _registry: dict[str, list[tuple[str, Callable[..., Any]]]] = {at: [] for at in _AT}
 _NAME = re.compile(r"[a-z0-9_-]+")
 StageSet = Mapping[str, list[tuple[str, Callable[..., Any]]]]   # seam -> [(name, fn)], one run's own stages
-
-
-class Reply(BaseModel):
-    text: str
 
 
 class StageCallError(RuntimeError):
@@ -109,7 +106,7 @@ class StageContext:
 
     def dspy_lm(self, purpose: str, model: str | None = None) -> Any:
         """A `modelcall.dspy_lm.RecordedLM` whose every call goes through `ask` (so DSPy steps in a stage are recorded
-        and replayable too). DSPy's own text reply travels as the one field of a `Reply` model."""
+        and replayable too). DSPy's plain-text reply is stored as the text field of a `Reply` model."""
         from modelcall.dspy_lm import RecordedLM
         alias = model or self.model
         bad = self._bad_reply

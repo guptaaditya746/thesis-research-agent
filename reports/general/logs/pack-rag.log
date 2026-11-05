@@ -1,0 +1,19 @@
+{
+ "pack": "rag",
+ "sha256": "022d89482ba5e00b1e654c71b22752dcba2fb1310332acc12b213316544c86aa",
+ "types": {
+  "condition": "compared_thing",
+  "metric": "metric",
+  "measurement": "measured_value",
+  "author_claim": "author_claim",
+  "dataset": "context"
+ },
+ "kinds": [
+  "best",
+  "consistency",
+  "effect",
+  "inventory"
+ ],
+ "protocols": 12,
+ "question_protocols": 11
+}

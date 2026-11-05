@@ -76,10 +76,14 @@ def _same_entity(a: str | None, b: str | None) -> bool:
 
 def values_check(run: Any, src: Path) -> dict[str, Any]:
     """Scores of the run's values against the quantities (see the module docstring): the share found, and among the
-    found the share with the right unit and the right measured entity."""
+    found the share with the right unit and the right measured entity. A converted release (convert_measeval.py)
+    scores its scalar subset only: `subset` names it and `excluded_quantities` counts what was left out, so the
+    numbers are never read as full MeasEval."""
     values = list(getattr(run, "values", run))
     found = unit_ok = entity_ok = total = 0
-    for paper in _read(src)["papers"]:
+    data = _read(src)
+    excluded = sum(len(p.get("excluded_quantities") or []) for p in data["papers"])
+    for paper in data["papers"]:
         mine = [v for v in values if str(v.get("document")) == str(paper["id"])]
         for gold in paper.get("quantities", []):
             total += 1
@@ -90,6 +94,7 @@ def values_check(run: Any, src: Path) -> dict[str, Any]:
             found += 1
             unit_ok += same_unit(hit.get("unit"), gold.get("unit"))
             entity_ok += _same_entity(hit.get("entity"), gold.get("entity"))
-    return {"layout_verified": LAYOUT_VERIFIED, "quantities": total, "values_found": found / total if total else None,
+    return {"layout_verified": LAYOUT_VERIFIED, "subset": data.get("conversion") or "as given",
+            "excluded_quantities": excluded, "quantities": total, "values_found": found / total if total else None,
             "unit_correct": unit_ok / found if found else None,
             "entity_correct": entity_ok / found if found else None}

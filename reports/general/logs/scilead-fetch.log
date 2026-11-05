@@ -1,0 +1,39 @@
+arXiv lookup: 31 ids
+[1/31] 2008.07772v2 Very Deep Transformers for Neural Machine Translation (latex, 16 KB)
+[2/31] 1809.08370v1 Semi-Supervised Sequence Modeling with Cross-View Training (latex, 50 KB)
+[3/31] 2203.16804v1 BRIO: Bringing Order to Abstractive Summarization (latex, 42 KB)
+[4/31] 1905.12598v2 Towards better substitution-based word sense induction (latex, 28 KB)
+[5/31] 1903.07785v1 Cloze-driven Pretraining of Self-attention Networks (latex, 31 KB)
+[6/31] 1912.08777v3 PEGASUS: Pre-training with Extracted Gap-sentences for Abstractive Sum (latex, 317 KB)
+[7/31] 1911.09483v1 MUSE: Parallel Multi-Scale Attention for Sequence to Sequence Learning (latex, 29 KB)
+[8/31] 2002.03184v2 Time-aware Large Kernel Convolutions (latex, 38 KB)
+[9/31] 1703.06345v1 Transfer Learning for Sequence Tagging with Hierarchical Recurrent Net (latex, 27 KB)
+[10/31] 1711.05568v1 Dialogue Act Recognition via CRF-Attentive Structured Network (latex, 46 KB)
+[11/31] 1911.10390v1 Controlling the Amount of Verbatim Copying in Abstractive Summarizatio (latex, 38 KB)
+[12/31] 1811.09242v1 AutoSense Model for Word Sense Induction (latex, 35 KB)
+[13/31] 1812.09471v2 Joint Slot Filling and Intent Detection via Capsule Neural Networks (latex, 32 KB)
+[14/31] 1603.01354v5 End-to-end Sequence Labeling via Bi-directional LSTM-CNNs-CRF (latex, 31 KB)
+[15/31] 1702.02098v3 Fast and Accurate Entity Recognition with Iterated Dilated Convolution (latex, 38 KB)
+[16/31] 1906.05012v1 BiSET: Bi-directional Selective Encoding with Template for Abstractive (latex, 30 KB)
+[17/31] 1908.08345v2 Text Summarization with Pretrained Encoders (latex, 37 KB)
+[18/31] 1910.13461v1 BART: Denoising Sequence-to-Sequence Pre-training for Natural Language (latex, 33 KB)
+[19/31] 1909.02188v1 A Stack-Propagation Framework with Token-Level Intent Detection for Sp (latex, 32 KB)
+[20/31] 1901.10430v2 Pay Less Attention with Lightweight and Dynamic Convolutions (latex, 30 KB)
+[21/31] 1709.04109v4 Empower Sequence Labeling with Task-Aware Neural Language Model (latex, 37 KB)
+[22/31] 1806.03489v1 Robust Lexical Features for Improved Neural Network Named-Entity Recog (latex, 31 KB)
+[23/31] 1905.03197v3 Unified Language Model Pre-training for Natural Language Understanding (latex, 37 KB)
+[24/31] 1907.00390v1 A Novel Bi-directional Interrelated Model for Joint Intent Detection a (latex, 15 KB)
+[25/31] 1808.08745v1 Don't Give Me the Details, Just the Summary! Topic-Aware Convolutional (latex, 47 KB)
+[26/31] 2105.03654v3 Improving Named Entity Recognition by External Context Retrieving and  (latex, 35 KB)
+[27/31] 1511.08308v5 Named Entity Recognition with Bidirectional LSTM-CNNs (latex, 46 KB)
+[28/31] 1804.09849v2 The Best of Both Worlds: Combining Recent Advances in Neural Machine T (latex, 38 KB)
+[29/31] 1811.05021v1 Improved Dynamic Memory Network for Dialogue Act Classification with A (latex, 38 KB)
+[30/31] 1812.10235v1 A Bi-model based RNN Semantic Frame Parsing Model for Intent Detection (latex, 18 KB)
+[31/31] 2001.04063v3 ProphetNet: Predicting Future N-gram for Sequence-to-Sequence Pre-trai (latex, 29 KB)
+Thank you to arXiv for use of its open access interoperability.
+{
+ "corpus": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scilead/corpus",
+ "papers": 31,
+ "skipped": 0,
+ "ground_truth": false
+}

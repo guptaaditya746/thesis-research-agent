@@ -264,3 +264,39 @@ def test_a_success_resets_the_breaker_and_a_non_object_body_fails(tmp_path):
     got = [c.resolve("x", f"10.9999/v{i}", None, RUN_DOCS, subject_doc="S002", span=span()).resolve_failed for i in range(5)]
     assert got[:4] == ["timeout", "timeout", None, "timeout"] and got[4].startswith("ValueError: not a JSON object")
     assert openalex.TIMEOUT == 10
+
+
+def test_a_rate_limit_is_asked_again_with_backoff():
+    """scilead-02: HTTP 429 made links "outside the set"; now a 429 waits (Retry-After) and asks again."""
+    import urllib.error
+    from email.message import Message
+
+    from evidence.openalex import TRIES, with_backoff
+    slept: list[float] = []
+    answers = iter(["429", "429", {"id": "W1"}])
+
+    def fetch(url):
+        a = next(answers)
+        if a == "429":
+            headers = Message()
+            headers["Retry-After"] = "2"
+            raise urllib.error.HTTPError(url, 429, "Too Many Requests", headers, None)
+        return a
+
+    assert with_backoff(fetch, sleep=slept.append, clock=lambda: 1e9)("u") == {"id": "W1"}
+    assert [s for s in slept if s >= 2] and all(s <= 2.5 for s in slept)
+
+    def always(url):
+        raise urllib.error.HTTPError(url, 429, "Too Many Requests", Message(), None)
+    calls = []
+    with pytest.raises(urllib.error.HTTPError):
+        with_backoff(lambda u: calls.append(u) or always(u), sleep=lambda s: None, clock=lambda: 1e9)("u")
+    assert len(calls) == TRIES
+
+    def gone(url):
+        calls.append(url)
+        raise urllib.error.HTTPError(url, 500, "error", Message(), None)
+    calls.clear()
+    with pytest.raises(urllib.error.HTTPError):   # not a rate limit: asked once
+        with_backoff(gone, sleep=lambda s: None, clock=lambda: 1e9)("u")
+    assert len(calls) == 1

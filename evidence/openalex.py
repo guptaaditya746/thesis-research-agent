@@ -15,12 +15,17 @@ put in the record: a later run asks again. `resolve` keeps the link, `object_doc
 URL stays failed (a later request for it fails at once, so the run and its replay agree), and an offline replay
 fails it the same way; a new run folder asks again. Requests time out after TIMEOUT seconds, and after BREAK_AFTER
 network failures in a row the run stops asking: every later request fails at once with "openalex unreachable"
-(recorded the same way). Final review C3, fix round 1 C2/I3."""
+(recorded the same way). Final review C3, fix round 1 C2/I3. A rate limit (HTTP 429, 503) or a timeout is asked again
+first (`with_backoff`, the default fetch): up to TRIES times, honouring Retry-After, at most RATE requests a second
+per process; only the final outcome counts (recorded, or a failure)."""
 from __future__ import annotations
 
 import http.client
 import json
+import random
 import re
+import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -46,6 +51,12 @@ BREAK_AFTER = 3                         # network failures in a row before the r
 UNREACHABLE = "openalex unreachable"
 _STREAK = cache_key({"openalex": "consecutive failures"})   # the breaker's count, in the failed file
 Fetch = Callable[[str], "dict[str, Any] | None"]   # url -> parsed JSON, or None for a 404
+TRIES = 4                               # attempts of one request on a rate limit or a timeout
+WAIT_CAP = 30.0                         # seconds of waiting, in all, for one request
+RATE = 5.0                              # requests a second, per process (OpenAlex's polite pool allows 10)
+RETRY_CODES = (429, 503)
+_pace = threading.Lock()
+_last = [0.0]
 
 
 class NotRecorded(RuntimeError):
@@ -107,6 +118,46 @@ def _urlopen(url: str) -> dict[str, Any] | None:
         raise
 
 
+def _wait_for(exc: BaseException, attempt: int) -> float | None:
+    """Seconds to wait before asking again after `exc` (attempt 0, 1, ...), or None when asking again cannot help."""
+    if isinstance(exc, urllib.error.HTTPError):
+        if exc.code not in RETRY_CODES:
+            return None
+        after = (exc.headers or {}).get("Retry-After") if exc.headers is not None else None
+        try:
+            return float(after) if after is not None else float(2 ** attempt)
+        except ValueError:
+            return float(2 ** attempt)
+    timed_out = isinstance(exc, TimeoutError) or (isinstance(exc, urllib.error.URLError)
+                                                   and isinstance(exc.reason, TimeoutError))
+    return float(2 ** attempt) if timed_out else None
+
+
+def with_backoff(fetch: Fetch, *, sleep: Callable[[float], None] = time.sleep,
+                 clock: Callable[[], float] = time.monotonic) -> Fetch:
+    """`fetch` paced to RATE requests a second, asked again (with jitter) on a rate limit or a timeout: TRIES times
+    at most and WAIT_CAP seconds of waiting in all; the last error is raised."""
+    def paced(url: str) -> dict[str, Any] | None:
+        waited = 0.0
+        for attempt in range(TRIES):
+            with _pace:
+                gap = _last[0] + 1.0 / RATE - clock()
+                if gap > 0:
+                    sleep(gap)
+                _last[0] = clock()
+            try:
+                return fetch(url)
+            except (OSError, http.client.HTTPException) as exc:
+                wait = _wait_for(exc, attempt)
+                if wait is None or attempt == TRIES - 1 or waited + wait > WAIT_CAP:
+                    raise
+                wait += random.uniform(0, 0.25 * wait)
+                sleep(wait)
+                waited += wait
+        raise AssertionError("unreachable")
+    return paced
+
+
 def work_id(work: Mapping[str, Any] | None) -> str | None:
     """The last path segment of an OpenAlex work's `id` ("https://openalex.org/W2741809807" -> "W2741809807"); None
     without a work or an id."""
@@ -149,7 +200,7 @@ class OpenAlex:
                  failed: JsonlCache | None = None) -> None:
         if cache is None:
             raise ValueError("OpenAlex needs the run's cache: an unrecorded call would break replay")
-        self.cache, self._fetch, self.offline, self.failed = cache, fetch or _urlopen, offline, failed
+        self.cache, self._fetch, self.offline, self.failed = cache, fetch or with_backoff(_urlopen), offline, failed
 
     @classmethod
     def for_ctx(cls, ctx: Any, *, fetch: Fetch | None = None) -> OpenAlex:

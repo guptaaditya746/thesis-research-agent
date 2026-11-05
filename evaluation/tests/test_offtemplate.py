@@ -131,7 +131,7 @@ def test_offtemplate_command_loads_records_and_reports_a_failed_question(tmp_pat
     report = wholerun_cmd.offtemplate(runs, tmp_path / "o")
     assert report["questions"][first.id]["match_on_run"] is True
     assert report["questions"][second.id]["failed"].startswith("failed: ")
-    assert report["summary"]["questions"] == 2 and report["summary"]["match_rate"] == 0.5
+    assert report["summary"]["questions"] == 12 and report["summary"]["match_rate"] == 1 / 12   # no plan: no match
     assert report["questions"][second.id]["fresh"] is True              # known from the plan, whatever the query does
 
 
@@ -153,3 +153,21 @@ def test_a_failed_question_stays_in_the_end_to_end_rate(tmp_path) -> None:
     ok = [{"fresh": True, "match_on_key": True, "match_on_run": i < 6} for i in range(9)]
     bad = [{"fresh": True, "match_on_key": False, "match_on_run": False}] * 3
     assert summary(ok + bad)["match_on_run_rate"] == 0.5               # 12 questions, 3 failed, 6 matched
+
+
+def test_names_compare_cleaned_and_a_missing_gold_count_is_no_failure():
+    """q02 returns the graph's cleaned keys ("lawfactqa"); q04 the right papers without the gold's `metrics` count."""
+    assert ot.same_rows([{"d": "lawfactqa"}], [{"dataset": "LawFactQA"}])
+    assert ot.same_rows([{"paper": "S1"}, {"paper": "S2"}], [{"paper": "S1", "metrics": 2}, {"paper": "S2", "metrics": 3}])
+    assert not ot.same_rows([{"paper": "S1"}], [{"paper": "S2", "metrics": 2}])
+    assert not ot.same_rows([{"x": "a"}], [{"metrics": 2}])        # a count alone is never matched by nothing
+
+
+def test_an_unplanned_line_is_not_fresh_and_sides_follow_the_key_roles():
+    from evidence.plan import EvidenceLine
+    from evidence.tests.test_plan_run import make_plan
+    assert not ot.is_fresh(EvidenceLine(id="l1", question="q", query="", template=None))
+    q = ot.load_questions()[0]
+    plan = make_plan(things={"rag": ["retrieval-augmented model"], "closed": ["parametric-only model"], "acc": ["accuracy"]},
+                     measures=("acc",))
+    assert ot.key_sides(plan, q.gold) == ["rag", "baseline"]

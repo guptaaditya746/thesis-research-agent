@@ -143,7 +143,7 @@ def test_run_jobs_with_the_runbooks_groups(client: TestClient, world: EvidenceWo
         assert wait(client, job["id"])["state"] == "done"
     assert (regex["lane"], gaps["lane"]) == ("cpu", "model")
     assert [j["refs"]["run"] for j in (regex, gaps, agentic, frozen)] == [
-        f"regex-only~{corpus}", f"cascade-gaps~{corpus}", f"agentic-gaps~{corpus}", f"proposal-rag-factuality-cascade~{corpus}"]
+        f"regex-only~{corpus}", f"cascade-gaps~{corpus}", f"agentic-gaps~{corpus}", f"proposal-rag-factuality-cascade-gaps~{corpus}"]
     by_out = {a[a.index("--out") + 1]: a for a in calls(tmp_path)}
     assert by_out[str(world.runs / "cascade-gaps")] == [
         *TOOL, "evidence", "run", "--protocol", str(REPO / "domains" / "rag" / "protocols" / "rag-factuality.yaml"),
@@ -153,7 +153,7 @@ def test_run_jobs_with_the_runbooks_groups(client: TestClient, world: EvidenceWo
     assert by_out[str(world.runs / "regex-only")][by_out[str(world.runs / "regex-only")].index("--extractors") + 1] == "regex-only"
     agentic_argv = by_out[str(world.runs / "agentic-gaps")]
     assert agentic_argv[agentic_argv.index("--model") + 1] == "other-model"
-    frozen_argv = by_out[str(world.runs / "proposal-rag-factuality-cascade")]
+    frozen_argv = by_out[str(world.runs / "proposal-rag-factuality-cascade-gaps")]
     assert frozen_argv[frozen_argv.index("--protocol") + 1] == str(world.proposals / "rag-factuality" / "protocol.yaml")
     # an existing run directory is never written over; a name of its own is
     taken = client.post("/api/ev/jobs/run", json={"corpus": MIXED, "protocol": {"source": "repo", "name": "rag-factuality"}})

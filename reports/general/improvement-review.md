@@ -1,0 +1,8 @@
+# Evidence-backed improvement opportunities
+
+1. Screen papers before expensive experiment mapping. The engine currently maps before relevance screening (`evidence/engine.py:385`); scilead-07 recorded mapping for all 31 papers although 27 were later screened out. Preserve provenance and replay semantics if changing order.
+2. Bound map inputs and classify permanent context failures. `evidence/experiments.py:60` sends full paper text; one observed failed request had 327,338 characters. The identical oversized request was freshly attempted across all 22 SciLead reasoning-on questions. Token preflight, anchored section-level mapping, and distinguishing permanent over-limit errors from transient errors could reduce failure and repeated calls.
+3. Bound the complete extraction prompt. `evidence/extractors/llm_schema.py:109` can append prior context items in addition to a text chunk. A chunk character limit therefore does not cap the complete prompt; consider type-relevant context selected within a total token budget while retaining source anchors.
+4. Index or centralize cache access. `modelcall/cache.py:41` parses the JSONL cache on construction and `evidence/engine.py:894` constructs a cache per run. The SciLead caches had reached approximately 133 MB and 93 MB. An indexed durable store or single cache owner could reduce repeated I/O and coordinate writers.
+
+These are review recommendations, not changes or verified performance gains. Prompt or workflow changes require docs/prompt-writing.md and dedicated verification; preserve labels, splits, scoring, and historical replay semantics.

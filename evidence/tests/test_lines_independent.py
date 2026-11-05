@@ -70,3 +70,26 @@ def test_a_changed_decision_reaches_the_query_that_runs():
     for threshold in ("0.01", "0.2"):
         run_lines(plan_of(line("a", Q), threshold=threshold), lambda q, p: seen.append(p) or [])
     assert [p["threshold"] for p in seen] == [0.01, 0.2]
+
+
+def test_a_rank_line_names_the_best_thing_and_its_paper():
+    """scilead-07 said only "Yes: ..."; a ranking question's answer names who is best (ties too), then the rule."""
+    rows = {"RANK": [{"thing": "T-ConvS2S", "score": 31.89, "paper": "1808.08745v1"},
+                     {"thing": "PG", "score": 31.89, "paper": "1704.04368"}, {"thing": "Lead-3", "score": 30.1, "paper": "x"}],
+            "BEST": [{"kind": "result", "thing": "BART", "count": 4}, {"kind": "result", "thing": "T5", "count": 2}]}
+    ranked = EvidenceLine(id="a", question="best?", query="RANK", template="rank")
+    out = run_lines(plan_of(ranked), lambda q, p: rows[q], name_best=True)
+    assert out["answer"]["text"] == ("Best: T-ConvS2S in 1808.08745v1, PG in 1704.04368 (score 31.89); "
+                                     "Yes: the answer is yes when any line found evidence (1 of 1 lines found evidence)")
+    assert out["answer"]["rule_met"] is True
+    best = EvidenceLine(id="b", question="wins?", query="BEST", template="best")
+    assert run_lines(plan_of(best), lambda q, p: rows[q], name_best=True)["answer"]["text"].startswith("Best: BART (4 wins); Yes:")
+    assert run_lines(plan_of(line("c", "C")), runner, name_best=True)["answer"]["text"].startswith("Yes:")   # not a ranking
+    assert run_lines(plan_of(ranked), lambda q, p: rows[q])["answer"]["text"].startswith("Yes:")   # v1: as before
+
+
+def test_the_best_text_comes_from_the_rank_line_even_after_a_list_line():
+    rows = {"LIST": [{"item": "SQuAD"}], "RANK": [{"thing": "BART", "score": 0.9, "paper": "P1"}]}
+    plan = plan_of(EvidenceLine(id="a", question="which?", query="LIST", template=None),
+                   EvidenceLine(id="b", question="best?", query="RANK", template="rank"))
+    assert run_lines(plan, lambda q, p: rows[q], name_best=True)["answer"]["text"].startswith("Best: BART in P1")

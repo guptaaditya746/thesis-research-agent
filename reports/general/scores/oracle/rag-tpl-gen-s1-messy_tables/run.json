@@ -1,0 +1,14 @@
+{
+  "run_id": "rag-tpl-gen-s1-messy_tables",
+  "mode": "oracle",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f"
+  },
+  "corpus_id": "rag-tpl-gen-s1-67aa3bd7",
+  "manifest_sha256": "dd500dd3dbbebd8c676879d9e29ad00ce2c9583509dc1483db752f610dbd6851",
+  "extractors": [
+    "oracle"
+  ],
+  "outputs": {}
+}

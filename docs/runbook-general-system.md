@@ -405,6 +405,63 @@ the set (`n_in_set` > 0) they cannot be scored, so links recall is a **lower bou
    recorded before this merge do not replay (none exist on the cluster yet).
 4. No "pending" text; a final status in the report.
 
+## 9. After the 4 Nov fixes (Codex, next run)
+
+What changed and why: `reports/general/decisions.md` (entries of 4 Nov from "Headline and answer-key split judge one
+line" on). Code is local `main` after the merge of `fix/general-run`; `llm-setup` stays `b962edd`. Run folders of the
+first run are on `codex/general-system-run` (`reports/general/runs/`), not on `main`: fetch them from that branch.
+
+9.1 **Offline suite on Linux** (all of it, including the POSIX-only agent and web-app tests Windows cannot run):
+`uv run pytest evidence synth evaluation modelcall webapp agent -q`. The four failures of the first run are fixed
+(lock fixture now versioned v1/v2, golden test machine-independent, web-app group `...-cascade-gaps`); anything red is
+a finding: stop, **USER**.
+
+9.2 **Rescore what needs no model call** (into new score folders, `*-v2`; keep the old ones):
+
+```bash
+G=<checkout of codex/general-system-run>/reports/general
+uv run evaluate wholerun --set scilead --src "$REAL/scilead" --corpus "$REAL/scilead/corpus" --runs "$G/runs/full/scilead" \
+  --out "$SCORES/full-v2/scilead" --confirm auto --reasoning both --system engine --sample 22 --seed 0
+uv run evaluate wholerun --set scirex --src "$REAL/scirex" --corpus "$REAL/scirex/corpus" --runs "$G/runs/fixed/scirex" \
+  --out "$SCORES/fixed-v2/scirex" --confirm auto --reasoning both --system engine --sample 15 --seed 0
+uv run evaluate offtemplate --runs "$G/runs/offtemplate" --out "$SCORES/offtemplate-v2"
+```
+
+Expect the SciLead engine headline to drop (the headline no longer reads a later line when the rank line is empty;
+about 0.136 to 0.045 reasoning on) and most "synthesis error" labels to become "extraction error" (the key store now
+names metrics as the plan does); scilead-05/06 now say "plan error". Then the RAG rows: the same commands with
+`--system both --cache <the first run's RAG cache>`; the run must make **no** model call (the RAG answers are cached).
+If it would call the model, stop and say so. Report old and new numbers side by side, never only the new.
+
+9.3 **Re-plan the flagged plans.** `plan-runs.py plan` now runs the plan check on every plan, prints `plan problems
+<id>: ...` and exits 1 (it never edits a plan). Known flagged: scilead-05, -06, -19 (no measure for `$metric`), all 15
+SciREX plans (`kg:dataset`, which the graph never emits), off-template q05, q09 (an unplanned line) and q08 (`ev:value`).
+For each: move the plan file aside as `<id>.v1.json` and run `plan` again (the planner's repair loop now sees the refusal);
+keep the new plan only if the check passes, else report the problem text. Never edit a plan by hand.
+
+9.4 **Rerun what the fixes changed** (model calls; new run folders `*-v2`, plan runs are now `plan_version: v2`:
+best thing named, names matched by the word list's aliases and bracket forms, no experiment map for papers the screen
+drops, no request over the context window):
+- SciREX, all 15 (new plans): `plan-runs.py run` both reasoning rows, then 6.5 scoring.
+- SciLead, all 22 kept questions, both rows (names matter for -10, -27; the map now skips screened-out papers, so the
+  context-window failures should mostly go: count `too_long` notes in `stage_report.json`).
+- Off-template: all 12 again (q06, q10 now plan with treatment `any`), then `evaluate offtemplate`.
+- Leak: 7.2 as written (the type error is fixed; `runs/leak` was never handed back). If "unseen" recall stays near 0,
+  report it with the run's item counts by type: the scorer may not read conditions held inside experiment records
+  (open question, not changed).
+- Synthetic `paraphrased` and `complex` (7.3): a reply that never validates is now a warning, not exit 2. Count the
+  `warning: N extractor call(s) got a model reply that did not validate` lines. The cause (Qwen looping whitespace or
+  quotes to max_tokens) is not fixed: check whether the stack's vLLM has a structured-output option that disables free
+  whitespace, and report what you find; do not change the stack yourself (**USER**).
+
+9.5 **Robustness, if time allows** (Aditya's ask): all kept questions per set (not a 10-question sample: `--sample` = the
+kept count); 3 repeats of each engine and RAG row into separate folders (`rep-1..3`, same seed: the spread shows run-to-run
+variance of the served model). A stronger RAG setting needs a retrieval-size flag that `evaluate wholerun` does not have
+yet: skip it and say "not available".
+
+Old runs: a replay of a run recorded before 4 Nov now stops with `CodeChanged` (the llm_* extractor ids changed with the
+plain-text replies) and names the commit to replay it from; that is expected, not a failure.
+
 ## Limits (say them in the report)
 
 Saved templates do not use the ontology tree: reasoning on/off differ only on fresh queries (section 6). Layouts of

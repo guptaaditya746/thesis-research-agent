@@ -1,0 +1,332 @@
+{
+  "comparison": [],
+  "generality": {},
+  "held_out_for_tuning": [
+    "scilead-14"
+  ],
+  "left_out": "left out: 28 of 140 (no open full text)",
+  "missing": {
+    "auto-confirmed/off": [
+      "scilead-02",
+      "scilead-09",
+      "scilead-10",
+      "scilead-13",
+      "scilead-15",
+      "scilead-17",
+      "scilead-18",
+      "scilead-21",
+      "scilead-26",
+      "scilead-27"
+    ],
+    "auto-confirmed/on": [
+      "scilead-02",
+      "scilead-09",
+      "scilead-10",
+      "scilead-13",
+      "scilead-15",
+      "scilead-17",
+      "scilead-18",
+      "scilead-21",
+      "scilead-26",
+      "scilead-27"
+    ],
+    "hand-confirmed/off": [
+      "scilead-02",
+      "scilead-09",
+      "scilead-10",
+      "scilead-13",
+      "scilead-15"
+    ],
+    "hand-confirmed/on": [
+      "scilead-02",
+      "scilead-09",
+      "scilead-10",
+      "scilead-13",
+      "scilead-15"
+    ]
+  },
+  "missing_plan": {},
+  "rows": {
+    "auto-confirmed/off": [
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-17",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-18",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-21",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-26",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-27",
+        "kind": "rank",
+        "missing_run": true
+      }
+    ],
+    "auto-confirmed/on": [
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-17",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-18",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-21",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-26",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "auto-confirmed",
+        "headline": 0.0,
+        "id": "scilead-27",
+        "kind": "rank",
+        "missing_run": true
+      }
+    ],
+    "hand-confirmed/off": [
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kind": "rank",
+        "missing_run": true
+      }
+    ],
+    "hand-confirmed/on": [
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-02",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-09",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-10",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-13",
+        "kind": "rank",
+        "missing_run": true
+      },
+      {
+        "confirmation": "hand-confirmed",
+        "headline": 0.0,
+        "id": "scilead-15",
+        "kind": "rank",
+        "missing_run": true
+      }
+    ]
+  },
+  "sample": {
+    "ids": [
+      "scilead-02",
+      "scilead-09",
+      "scilead-10",
+      "scilead-13",
+      "scilead-15",
+      "scilead-17",
+      "scilead-18",
+      "scilead-21",
+      "scilead-26",
+      "scilead-27"
+    ],
+    "n": 10,
+    "seed": 0
+  },
+  "set": "scilead",
+  "summary": {
+    "auto-confirmed/off": {
+      "high": null,
+      "low": null,
+      "method": null,
+      "n": 10,
+      "n_missing_plan": 0,
+      "n_missing_run": 10,
+      "n_unscored": 0,
+      "point": 0.0,
+      "unit": "row"
+    },
+    "auto-confirmed/on": {
+      "high": null,
+      "low": null,
+      "method": null,
+      "n": 10,
+      "n_missing_plan": 0,
+      "n_missing_run": 10,
+      "n_unscored": 0,
+      "point": 0.0,
+      "unit": "row"
+    },
+    "hand-confirmed/off": {
+      "high": null,
+      "low": null,
+      "method": null,
+      "n": 5,
+      "n_missing_plan": 0,
+      "n_missing_run": 5,
+      "n_unscored": 0,
+      "point": 0.0,
+      "unit": "row"
+    },
+    "hand-confirmed/on": {
+      "high": null,
+      "low": null,
+      "method": null,
+      "n": 5,
+      "n_missing_plan": 0,
+      "n_missing_run": 5,
+      "n_unscored": 0,
+      "point": 0.0,
+      "unit": "row"
+    }
+  }
+}

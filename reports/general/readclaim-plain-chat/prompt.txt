@@ -1,0 +1,52 @@
+[system]
+Your input fields are:
+1. `sentence` (str): one sentence of the paper, verbatim
+Your output fields are:
+1. `is_claim` (bool): true when the sentence states a claim of the authors
+2. `subject` (str): what the claim is about, as written; empty when not a claim
+3. `relation` (str): the paper's own verb or phrase, copied from the sentence
+4. `object` (Union[str, NoneType]): what the relation points at, or null
+5. `setting` (dict[str, str]): named conditions such as dataset or model; {} when none
+6. `strength` (Literal['firm', 'hedged']): hedged when the sentence softens the claim
+7. `direction` (Union[Literal['improves', 'worsens', 'no_effect'], NoneType]): only for a comparison: better, worse or the same for the subject; otherwise null
+All interactions will be structured in the following way, with the appropriate values filled in.
+
+Inputs will have the following structure:
+
+[[ ## sentence ## ]]
+{sentence}
+
+Outputs will be a JSON object with the following fields.
+
+{
+  "is_claim": "{is_claim}        # note: the value you produce must be True or False",
+  "subject": "{subject}",
+  "relation": "{relation}",
+  "object": "{object}        # note: the value you produce must adhere to the JSON schema: {\"anyOf\": [{\"type\": \"string\"}, {\"type\": \"null\"}]}",
+  "setting": "{setting}        # note: the value you produce must adhere to the JSON schema: {\"type\": \"object\", \"additionalProperties\": {\"type\": \"string\"}}",
+  "strength": "{strength}        # note: the value you produce must exactly match (no extra characters) one of: firm; hedged",
+  "direction": "{direction}        # note: the value you produce must adhere to the JSON schema: {\"anyOf\": [{\"type\": \"string\", \"enum\": [\"improves\", \"worsens\", \"no_effect\"]}, {\"type\": \"null\"}]}"
+}
+In adhering to this structure, your objective is: 
+        Read one sentence of a paper as a claim the authors make.
+        
+        Set is_claim to false when the sentence does not state a result or property of its subject (a question, a
+        plan, a citation of other work, a definition). Otherwise fill: subject (the thing the claim is about, as
+        written), relation (the paper's own verb or phrase, copied from the sentence), object (what the relation points
+        at, or null), setting (conditions the sentence names, such as dataset or model, or empty), strength ("hedged" when the
+        sentence softens it with words like suggests, may, appears; else "firm") and direction. Set direction only
+        when the claim compares the subject with something else, and say whether the comparison turns out better
+        for the subject (improves), worse (worsens) or the same (no_effect), judged by what is good for the measure:
+        "shortens delays" is improves, "lengthens delays" is worsens. For any claim that is not a comparison direction
+        is null.
+        
+        Example: "Method A shortens the delay." -> subject "Method A", relation "shortens", object "the delay", strength
+        "firm", direction "improves".
+        Example: "Our dataset is the largest of its kind." -> relation "is the largest", object "of its kind", direction null.
+        Example: "The results suggest Method A may help." -> strength "hedged", direction null (nothing is compared).
+
+[user]
+[[ ## sentence ## ]]
+Retrieval augmentation clearly reduces hallucinated content in the answers.
+
+Respond with a JSON object in the following order of fields: `is_claim` (must be formatted as a valid Python bool), then `subject`, then `relation`, then `object` (must be formatted as a valid Python Union[str, NoneType]), then `setting` (must be formatted as a valid Python dict[str, str]), then `strength` (must be formatted as a valid Python Literal['firm', 'hedged']), then `direction` (must be formatted as a valid Python Union[Literal['improves', 'worsens', 'no_effect'], NoneType]).

@@ -162,3 +162,20 @@ def test_corpus_hash_is_checked(protocol_file: Path, corpus: Path, tmp_path: Pat
     (corpus / "papers" / "S001.md").write_text("tampered", encoding="utf-8")
     with pytest.raises(rundir.CorpusError, match="sha256"):
         run_regex(protocol_file, corpus, tmp_path / "runs")
+
+
+def test_replay_of_a_run_recorded_by_other_extractor_code_says_so(protocol_file: Path, corpus: Path, tmp_path: Path) -> None:
+    """A run recorded before an extractor's source changed (its calls cached under the old ids) is an explicit break:
+    CodeChanged names the old ids and the commit to replay from, not a bare cache miss."""
+    from evidence.replay import CodeChanged
+    root = run_regex(protocol_file, corpus, tmp_path / "runs", cache=tmp_path / "cache")
+    record = json.loads((root / "run.json").read_text())
+    old = "regex_condition@2#000000000000"
+    record["extractors"] = [old if x.startswith("regex_condition@") else x for x in record["extractors"]]
+    (root / "run.json").write_text(json.dumps(record), encoding="utf-8")
+    with pytest.raises(CodeChanged, match=f"{old}.*Replay it from a checkout of"):
+        replay(root, cache=tmp_path / "empty-cache")
+    fresh = run_regex(protocol_file, corpus, tmp_path / "runs2", cache=tmp_path / "cache2")
+    with pytest.raises(NotRecorded) as plain:   # same code, empty cache: a plain miss
+        replay(fresh, cache=tmp_path / "empty-cache")
+    assert not isinstance(plain.value, CodeChanged)

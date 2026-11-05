@@ -56,8 +56,9 @@ def questions(args: argparse.Namespace) -> list:
 
 
 def plan_all(args: argparse.Namespace, qs: list) -> int:
-    from evidence.plan import write_plan
+    from evidence.plan import load_plan, write_plan
     from evidence.planner import critic, propose
+    from evidence.planner.plan import check_plan
     from evidence.stages import gateway_ask
     from evidence.steps import using
     from evidence.words.write import write_words
@@ -68,17 +69,25 @@ def plan_all(args: argparse.Namespace, qs: list) -> int:
     args.cache.mkdir(parents=True, exist_ok=True)
     lm = RecordedLM(ORCH_ALIAS, gateway_ask(ORCH_ALIAS), cache=JsonlCache(args.cache / "planner.jsonl"))
     args.plans.mkdir(parents=True, exist_ok=True)
+    flagged = 0
     for q in qs:
         path = args.plans / f"{q.id}.json"
-        if path.is_file():
-            continue
-        with using(lm):
-            # propose puts the field ontology's other names into the word list (planner.with_ontology_names)
-            plan, _how = propose(q.question, [], write_words=lambda text, things: write_words(text, things, lm=lm),
-                                 templates=saved_templates())
-            write_plan(critic(plan), path)
-        print(f"planned {q.id}")
-    return 0
+        if not path.is_file():
+            with using(lm):
+                # propose puts the field ontology's other names into the word list (planner.with_ontology_names)
+                plan, _how = propose(q.question, [], write_words=lambda text, things: write_words(text, things, lm=lm),
+                                     templates=saved_templates())
+                write_plan(critic(plan), path)
+            print(f"planned {q.id}")
+        # the web app refuses such a plan; here it is kept (a saved plan stays replayable) and named, exit 1
+        problems = check_plan(load_plan(path), saved_templates())
+        if problems:
+            flagged += 1
+            print(f"plan problems {q.id}: " + "; ".join(problems), file=sys.stderr)
+    if flagged:
+        print(f"FAIL plan check: {flagged} of {len(qs)} plans have problems (above); their lines will fail or find "
+              "nothing", file=sys.stderr)
+    return 1 if flagged else 0
 
 
 def _show(plan, path: Path) -> None:
