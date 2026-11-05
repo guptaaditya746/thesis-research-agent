@@ -61,7 +61,7 @@ def test_manifests_name_the_questions_and_validate() -> None:
         manifest = Manifest.load(path)  # the batch schema, plus unique ids
         for entry in manifest.data["questions"]:
             assert entry["id"] in questions, (path.name, entry["id"])
-            assert Path(entry["concept"]).as_posix() == f"concepts/{entry['id']}/concept.json"
+            assert Path(entry["concept"]).as_posix() == f"data/concepts/{entry['id']}/concept.json"
     full = Manifest.load(MANIFESTS / "m4-72.json")
     assert [q["id"] for q in full.data["questions"]] == list(questions)
     assert len(full.plan()) == 72

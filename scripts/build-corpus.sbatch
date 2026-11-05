@@ -17,6 +17,6 @@ status=0
   --anthology-manifest ../final-final-frontend/corpus_acl_emnlp_2025_input/manifest.tsv \
   --samples-manifest ../final-final-frontend/samples/manifest.tsv \
   --corpus "$corpus" \
-  --manifest-copy corpus/manifest.json || status=$?
+  --manifest-copy data/corpus/manifest.json || status=$?
 chmod -R a-w "$corpus"
 exit "$status"

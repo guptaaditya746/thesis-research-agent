@@ -47,7 +47,7 @@ def test_sample_manifest_is_72_paired_runs() -> None:
     assert all(len(s) == 1 for s in seeds.values())  # both conditions share the seed
     assert len({next(iter(s)) for s in seeds.values()}) == 36
     assert plan[0].seed == 1101 and plan[-1].seed == 2203
-    assert {e.concept.as_posix() for e in plan} =={f"concepts/q{n:02d}/concept.json" for n in range(1, 13)}
+    assert {e.concept.as_posix() for e in plan} =={f"data/concepts/q{n:02d}/concept.json" for n in range(1, 13)}
 
 
 def test_sample_manifest_budget_and_prompt(tmp_path: Path) -> None:

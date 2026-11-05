@@ -249,8 +249,8 @@ def test_cards_offer_exhaustive_without_params(tmp_path: Path) -> None:
 # sha256 of each protocol, computed with the code of main before this change
 EV1_SHA256 = {
     # D35/D36: the rag protocols' measurement gained form and value_total (Task 6); the EV1 ones are unchanged
-    "domains/rag/protocols/rag-factuality.yaml": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",
-    "domains/rag/protocols/rag-factuality-agentic.yaml": "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2",
+    "data/domains/rag/protocols/rag-factuality.yaml": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f",
+    "data/domains/rag/protocols/rag-factuality-agentic.yaml": "faea17f58c363246e1040ea93c127e8b1222c6c33386c89369712968814f0ff2",
     "tests/EV1/diagnostics/proposal/protocol.yaml": "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
     "tests/EV1/live-rerun/proposals/rag-factuality/protocol.yaml":
         "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
@@ -260,7 +260,7 @@ EV1_SHA256 = {
 
 def test_ev1_protocols_still_parse_with_the_same_sha256() -> None:
     root = repo_paths.REPO
-    found = {p.relative_to(root).as_posix() for pattern in ("domains/rag/protocols/*.yaml", "tests/EV1/**/protocol.yaml")
+    found = {p.relative_to(root).as_posix() for pattern in ("data/domains/rag/protocols/*.yaml", "tests/EV1/**/protocol.yaml")
              for p in root.glob(pattern)}
     assert set(EV1_SHA256) <= found   # protocols added later (the ten questions) are checked in test_ten_protocols.py
     for rel, sha in EV1_SHA256.items():

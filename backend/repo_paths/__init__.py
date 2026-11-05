@@ -8,7 +8,7 @@ from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1]     # every Python package
 REPO = BACKEND.parent
-DATA = REPO                                     # checked-in inputs
+DATA = REPO / "data"                            # checked-in inputs
 DOMAINS = DATA / "domains"                      # domain packs
 QUESTIONS_FILE = DATA / "questions" / "questions.json"   # the 12 questions of the earlier work
 CONCEPTS = DATA / "concepts"                    # concept sessions of the earlier work

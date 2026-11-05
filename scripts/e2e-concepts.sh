@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Concepts for all 12 questions (row 2.3), in the stack job (srun --jobid <stack job> --overlap):
 #   scripts/e2e-concepts.sh
-# 1. propose: orch-model proposes 1-5 briefs for every question in questions/questions.json whose session in
+# 1. propose: orch-model proposes 1-5 briefs for every question in data/questions/questions.json whose session in
 #    $CONCEPTS has no proposal yet (a question that fails is reported and the script stops after the others);
 # 2. pick: brief 1 wherever nothing is picked yet, recorded as picked_by provisional-first (the user may change
 #    a pick in the web app before gold is built);
@@ -18,7 +18,7 @@ source scripts/e2e-env.sh
 
 temperature=${E2E_CONCEPT_TEMPERATURE:-0.7}
 seed=${E2E_CONCEPT_SEED:-1}
-questions=questions/questions.json
+questions=data/questions/questions.json
 
 echo "== propose: every question without a proposal ($questions, temperature $temperature, seed $seed) -> $CONCEPTS"
 if ! uv run agent concepts propose-all "$questions" --root "$CONCEPTS" --temperature "$temperature" --seed "$seed" \

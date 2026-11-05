@@ -6,7 +6,7 @@
 #
 # Run it in the stack job (docs/earlier-work.md, "Runbooks"): srun --jobid <stack job> --overlap --pty bash -l,
 # after `set -a; source llm-setup/.env; set +a` for the key. It checks, prints and exports:
-#   CORPUS            the frozen Markdown corpus; its manifest.json must hash to the repo's corpus/manifest.json
+#   CORPUS            the frozen Markdown corpus; its manifest.json must hash to the repo's data/corpus/manifest.json
 #                     (or to $E2E_CORPUS_MANIFEST_SHA256 when set)
 #   RUNS GOLD CONCEPTS  runs root, gold directory, concept sessions (defaults: runs, gold-data, concepts in the
 #                     repo); created if missing, must be writable
@@ -32,7 +32,7 @@ _e2e_env() {
 
   [[ -n "${CORPUS:-}" ]] || { _e2e_fail "CORPUS is not set (the frozen Markdown corpus with manifest.json)"; return 1; }
   [[ -f "$CORPUS/manifest.json" ]] || { _e2e_fail "no $CORPUS/manifest.json"; return 1; }
-  want=${E2E_CORPUS_MANIFEST_SHA256:-$(sha256sum "$repo/corpus/manifest.json" | cut -d' ' -f1)}
+  want=${E2E_CORPUS_MANIFEST_SHA256:-$(sha256sum "$repo/data/corpus/manifest.json" | cut -d' ' -f1)}
   got=$(sha256sum "$CORPUS/manifest.json" | cut -d' ' -f1)
   [[ "$got" == "$want" ]] || { _e2e_fail "$CORPUS/manifest.json has sha256 $got, expected $want (the frozen corpus)"; return 1; }
   export CORPUS CORPUS_MANIFEST_SHA256=$got
@@ -44,8 +44,8 @@ _e2e_env() {
     [[ -w "${!m}" ]] || { _e2e_fail "$m=${!m} is not writable"; return 1; }
     echo "PASS $m=${!m}"
   done
-  [[ -f "$repo/questions/questions.json" ]] || { _e2e_fail "no questions/questions.json"; return 1; }
-  echo "PASS questions/questions.json sha256=$(sha256sum "$repo/questions/questions.json" | cut -d' ' -f1)"
+  [[ -f "$repo/data/questions/questions.json" ]] || { _e2e_fail "no data/questions/questions.json"; return 1; }
+  echo "PASS data/questions/questions.json sha256=$(sha256sum "$repo/data/questions/questions.json" | cut -d' ' -f1)"
 
   [[ -n "${AGENT_ROOT:-}" ]] || { _e2e_fail "AGENT_ROOT is not set (build it with scripts/build-agent-root.sh)"; return 1; }
   "$repo/scripts/verify-agent-root.sh" "$AGENT_ROOT" >/dev/null || { _e2e_fail "AGENT_ROOT=$AGENT_ROOT does not verify"; return 1; }

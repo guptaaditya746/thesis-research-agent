@@ -563,7 +563,7 @@ def main(argv: list[str] | None = None) -> int:
 
     def questions_arg(p: argparse.ArgumentParser, required: bool) -> None:
         p.add_argument("questions", type=Path, **({} if required else {"nargs": "?"}),
-                       default=QUESTIONS_FILE, help="questions file (default: questions/questions.json)")
+                       default=QUESTIONS_FILE, help="questions file (default: data/questions/questions.json)")
         p.add_argument("--root", type=Path, default=concepts_root, help="concept sessions directory (default: $CONCEPTS)")
 
     propose = csub.add_parser("propose", help="ask orch-model for 1-5 concept briefs (corpus-blind)")
@@ -579,7 +579,7 @@ def main(argv: list[str] | None = None) -> int:
     model_args(propose_all)
     propose_all.set_defaults(func=cmd_concepts_propose_all)
     pick = csub.add_parser("pick", help="pick one proposed brief; writes concept.json and concept.sha256")
-    pick.add_argument("session_dir", type=Path, help="e.g. concepts/q01")
+    pick.add_argument("session_dir", type=Path, help="e.g. data/concepts/q01")
     pick.add_argument("--choice", type=int, help="brief number (asked on the terminal when left out)")
     pick.add_argument("--picked-by", choices=PICKED_BY, default="user", help="who picked (recorded as the agent)")
     pick.add_argument("--reason", default="", help="why this brief (recorded)")
