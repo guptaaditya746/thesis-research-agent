@@ -171,3 +171,26 @@ def test_an_unplanned_line_is_not_fresh_and_sides_follow_the_key_roles():
     plan = make_plan(things={"rag": ["retrieval-augmented model"], "closed": ["parametric-only model"], "acc": ["accuracy"]},
                      measures=("acc",))
     assert ot.key_sides(plan, q.gold) == ["rag", "baseline"]
+
+
+def test_the_end_to_end_check_matches_names_as_the_run_did(tmp_path) -> None:
+    """Review: the check ran a v2 run's line without the run's name matching. The key holds "geofact"; the line
+    names it only by a bracketed short form, which a v2 run (run.json plan_version) matches and a v1 run does not."""
+    import json
+
+    from evaluation import wholerun_cmd
+    from evidence.kg.build import serialize
+    from evidence.kg.truthgraph import truth_store
+    from evidence.plan import write_plan
+    first = ot.load_questions()[0]
+    named = first.sparql.replace("WHERE {", 'WHERE {\n  FILTER EXISTS { ?k kg:contextKey '
+                                             '"Geo Exam Of Facts And Claims Test (GeoFact)" }', 1)
+    found = {}
+    for version in ("v1", "v2"):
+        root = tmp_path / version / first.id
+        root.mkdir(parents=True)
+        write_plan(_plan_of(_line(first, named)), root / "plan.json")
+        (root / "records.nq").write_bytes(serialize(truth_store(first)))
+        (root / "run.json").write_text(json.dumps({"settings": {"plan_version": version}}), encoding="utf-8")
+        found[version] = wholerun_cmd.offtemplate(tmp_path / version, tmp_path / f"o-{version}")["questions"][first.id]
+    assert found["v2"]["match_on_run"] is True and found["v1"]["match_on_run"] is False

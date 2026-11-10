@@ -40,7 +40,6 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 
 import repo_paths
-from types import SimpleNamespace
 from typing import Any
 
 from evidence.plan import Plan, load_plan
@@ -117,7 +116,8 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
     the headline is): "right", "synthesis error" or "extraction error"; "plan error: <why>" when that line failed in
     the run (the plan could not run it, so neither the extraction nor the synthesis was tried); "not available:
     <why>" (no key records, kind not covered); "key split failed: <reason>" when the code raised. The key records'
-    metrics are named as the plan's measures (`plan_metrics`)."""
+    metrics are named as the plan's measures (`plan_metrics`); the line runs on them as the run answered its lines
+    (`PlanLines.of_run`: the run's plan version)."""
     if q.records is None:
         return "not available: no answer-key records for this set"
     expected = q.gold.get("ranking") if q.kind == "rank" else q.gold.get("items") if q.kind == "list" else None
@@ -126,7 +126,7 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
     try:
         from evidence.kg import query as kq
         from evidence.kg.truthgraph import split
-        from evidence.planrun import line_params, name_matcher
+        from evidence.planlines import PlanLines
 
         from .realpapers.keystore import store
         spec = scored_line(plan, q)
@@ -135,10 +135,7 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
         if line is not None and line.get("status") == "failed":
             return f"plan error: line {spec.id} failed: {str(line.get('text') or '')[:160]}"
         rows = list(line["rows"]) if line and line.get("status") == "done" else []
-        key = store(plan_metrics(q.records, plan))
-        settings = json.loads((root / RUN_FILE).read_text(encoding="utf-8")).get("settings", {}) if (root / RUN_FILE).is_file() else {}
-        match = name_matcher(plan, key) if settings.get("plan_version") == "v2" else None   # the names the run matched
-        gold = kq.run_query(key, spec.query, line_params(plan, spec.query), match)
+        gold = PlanLines.of_run(root, store(plan_metrics(q.records, plan)), plan=plan).query(spec.query)
         return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected), answer_column(q),
                      top1=q.kind == "rank")
     except Exception as exc:   # noqa: BLE001 - a diagnosis only; says what failed, never stops a report
@@ -288,20 +285,10 @@ def render(report: dict[str, Any]) -> str:
 
 # --- off-template -------------------------------------------------------------------------------------------------
 
-def _records_store(root: Path) -> Any:
-    """The run's records graph (records.nq) as a pyoxigraph Store; None when the run wrote none."""
-    from evidence.planrun import RECORDS_FILE
-    path = root / RECORDS_FILE
-    if not path.is_file():
-        return None
-    import pyoxigraph as ox
-    store = ox.Store()
-    store.load(path.read_bytes(), format=ox.RdfFormat.N_QUADS)
-    return store
-
-
 def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
     """Check every off-template question that has `<runs>/<question id>/plan.json`: the two generality numbers."""
+    from evidence.planlines import PlanLines, load_records
+
     from .offtemplate import check as ot
     results, per = [], {}
     questions = ot.load_questions()
@@ -314,7 +301,7 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
             per[q.id] = found
             continue
         try:
-            found = ot.check(SimpleNamespace(plan=load_plan(path), store=_records_store(Path(runs) / q.id)), q)
+            found = ot.check(PlanLines.of_run(path.parent, load_records(path.parent)), q)   # as the run answered
         except Exception as exc:   # noqa: BLE001 - one bad question is a "no match", never a dead report
             try:
                 fresh = ot.is_fresh(ot.plan_line(load_plan(path), q))    # known without running the query

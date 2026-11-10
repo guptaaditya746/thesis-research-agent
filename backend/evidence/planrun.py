@@ -14,10 +14,10 @@ What a plan run is, beside a protocol run:
   builds-on links through OpenAlex (W5) after each paper; the ontology report (W2) after the run.
 - After the names, reasoner and comparisons steps, the engine calls `finish` (below) before it writes answer.json:
   claim verbs are grouped (W5 `group_relations` + `apply_groups`, one recorded call), the records graph is built
-  (W4 `build`, the field's ontology files, written as records.nq), every evidence line runs in its own try block
-  (W7 `run_lines` over W4 `run_query`, its `$params` from the plan's decisions), each line's decisions are rerun
-  (W4 `sensitivity.rerun`) and labelled. answer.json is then {lines, answer (main answer, "missing: <line>"), labels,
-  reruns, claim_groups, synthesis (the kind's answer, as a protocol run writes it)}.
+  (W4 `build`, the field's ontology files, written as records.nq), every evidence line runs in its own try block and
+  each line's decisions are rerun and labelled, as evidence/planlines.py `PlanLines` answers a plan's lines (the run's
+  plan version and directions). answer.json is then {lines, answer (main answer, "missing: <line>"), labels, reruns,
+  claim_groups, synthesis (the kind's answer, as a protocol run writes it)}. `relink` answers them again the same way.
 Every model call of these steps goes through the run's recorder (`ctx.ask` / `ctx.dspy_lm`), so a replay is
 byte-identical and asks no model; OpenAlex answers are recorded in the run folder (openalex.jsonl) and a replay reads
 the recorded run's file only.
@@ -39,20 +39,15 @@ from typing import Any
 import yaml
 
 from .contract import Item
-from .names import clean
-from .plan import MAIN_RULE, Decision, Plan, load_plan
+from .plan import Plan, load_plan
+from .planlines import OTHER, PlanLines, compare_sides, directions, sides, threshold
 from .words.compile import compile_words
 
-__all__ = ["DEFAULT_THRESHOLD", "OTHER", "RECORDS_FILE", "STAGE_SET", "finish", "line_params", "protocol_for", "run",
-           "sides", "stage_entries"]
+__all__ = ["STAGE_SET", "finish", "protocol_for", "relink", "run", "stage_entries"]
 
 STAGE_SET = "plan"            # Settings.stage_set of a plan run
-RECORDS_FILE = "records.nq"   # the records graph, sorted N-Quads (W4 serialize)
-OTHER = "other"
 ANY = "any"   # the treatment role of a plan that names no compared thing (its things are all measures)
-DEFAULT_THRESHOLD = 0.01      # min_effect when the plan has no threshold decision
 MAX_LINK_SENTENCES = 20       # builds-on candidates read per paper (one model call each)
-LIST_DECISIONS = ("must_match", "counts_as")
 
 
 # --- the plan's things ----------------------------------------------------------------------------------------------
@@ -64,61 +59,9 @@ def compiled(plan: Plan) -> dict[str, Any]:
     return compile_words(plan.words, metric_things=set(plan.measures), lower_is_better=lower)
 
 
-def compare_sides(plan: Plan) -> list[str]:
-    """[treatment, control]: the first two compared things of the plan, `other` for a side the plan does not name (a
-    one-method question compares the method with anything else the papers report)."""
-    things = sides(plan)
-    return [things[0] if things else OTHER, things[1] if len(things) > 1 else OTHER]
-
-
-def directions(plan: Plan, items: dict[str, list[Item]] | None = None) -> dict[str, bool | None]:
-    """{measure id: higher is better} from the plan's confirmed `direction` decisions; a measure without one takes the
-    majority `higher_is_better` of the run's extracted metric items of that canonical name (`items`), else None (not
-    known yet; the caller's default is higher)."""
-    from collections import Counter
-
-    from .plan import DIRECTION
-    out: dict[str, bool | None] = {}
-    seen: dict[str, Counter[bool]] = {}
-    for its in (items or {}).values():
-        for it in its:
-            if it.evidence_type == "metric" and isinstance(it.fields.get("higher_is_better"), bool):
-                seen.setdefault(str(it.fields.get("canonical")), Counter())[it.fields["higher_is_better"]] += 1
-    for m in plan.measures:
-        d = next((x for x in plan.decisions if x.type == DIRECTION and x.id == f"{DIRECTION}:{m}" and x.confirmed_by), None)
-        if d is not None and str(d.value).strip().lower() in ("higher", "lower"):
-            out[m] = str(d.value).strip().lower() == "higher"
-        elif m in seen:
-            top = seen[m].most_common()
-            out[m] = top[0][0] if len(top) == 1 or top[0][1] > top[1][1] else None
-        else:
-            out[m] = None
-    return out
-
-
-def sides(plan: Plan) -> list[str]:
-    """The compared things in plan order (treatment first); [] when the plan names none."""
-    return [t for t in plan.words.things if t not in plan.measures]
-
-
 def _names(plan: Plan, thing: str, n: int = 6) -> str:
     names = [*plan.words.things.get(thing, []), *plan.words.ontology_names.get(thing, [])][:n]
     return ", ".join(names) or thing
-
-
-def _value(raw: Any) -> Any:
-    if not isinstance(raw, str):
-        return raw
-    try:
-        return json.loads(raw)
-    except ValueError:
-        return raw
-
-
-def threshold(plan: Plan) -> float:
-    d = next((x for x in plan.decisions if x.type == "threshold"), None)
-    value = _value(d.value) if d is not None else None
-    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0 else DEFAULT_THRESHOLD
 
 
 # --- the protocol -----------------------------------------------------------------------------------------------------
@@ -355,95 +298,6 @@ def group_claims(items: dict[str, list[Item]], ctx: Any) -> tuple[dict[str, list
     return {doc: [regroup(i) for i in its] for doc, its in items.items()}, mapping
 
 
-def line_params(plan: Plan, query: str, better: dict[str, bool | None] | None = None) -> dict[str, Any]:
-    """The parameters a line runs with: the plan's defaults for the saved templates' structural params (the compared
-    sides, the measures and their direction, the first measure as `metric`, the threshold), then the decisions' values
-    (W7 `decision_params`, which win). A must-match or counts-as value given as text is one list entry. `better`: each
-    measure's direction (`directions`; default the plan's, a measure with none counts as higher-is-better)."""
-    from .planner import decision_params
-    measures = list(plan.measures)
-    better = better if better is not None else directions(plan)
-    base: dict[str, Any] = {"sides": compare_sides(plan), "metrics": measures,
-                            "higher_is_better": {m: better.get(m) is not False for m in measures},
-                            "min_effect": threshold(plan), "threshold": threshold(plan)}
-    if measures:
-        base["metric"] = measures[0]   # the main measure: a saved template on one metric (rank, best) asks for it
-    given = decision_params(plan, query)
-    for name, value in list(given.items()):
-        if name in ("must_match", "counts_as", "metrics") and isinstance(value, str):
-            given[name] = [v.strip() for v in value.split(",") if v.strip()]
-    return {**base, **given}
-
-
-def _rerun_decisions(plan: Plan, query: str) -> list[Decision]:
-    """The decisions this line uses (their parameter is in its query), the main-answer rule and include left out,
-    each value parsed (a number, or a list for must-match / counts-as)."""
-    from .planner import decision_params
-    used = decision_params(plan, query)
-    out = []
-    for d in plan.decisions:
-        if d.type in (MAIN_RULE, "include", "direction") or d.id == MAIN_RULE:
-            continue
-        value = _value(d.value)
-        if d.type in LIST_DECISIONS:
-            value = value if isinstance(value, list) else [v.strip() for v in str(value).split(",") if v.strip()]
-        elif d.type == "threshold" and not isinstance(value, (int, float)):
-            continue
-        if _param_of(query, d) in used:
-            out.append(d.model_copy(update={"value": value}))
-    return out
-
-
-def verdict(answer: Any) -> Any:
-    """What a line's answer says, for its reruns (W4 `Verdict`): rows with a `direction` (the effect template) by the
-    majority direction of the determined papers (n = those papers, size = the majority's share); `kind, thing, count`
-    rows (the best template) by each unit's winner; any other line by its top row (W4's default)."""
-    from collections import Counter
-
-    from .kg import sensitivity
-    rows = answer.rows
-    if rows and all("direction" in r for r in rows):
-        found = [r["direction"] for r in rows if r["direction"] != "undetermined"]
-        if not found:
-            return sensitivity.Verdict("none", 0)
-        top = Counter(found).most_common()
-        label = top[0][0] if len(top) == 1 or top[0][1] > top[1][1] else "mixed"
-        return sensitivity.Verdict(label, len(found), top[0][1] / len(found))
-    if rows and all({"kind", "thing", "count"} <= set(r) for r in rows):
-        return sensitivity.winners_verdict(answer)
-    return sensitivity.default_verdict(answer)
-
-
-def reruns(plan: Plan, store: Any, better: dict[str, bool | None] | None = None,
-           match: Any = None) -> tuple[dict[str, str], list[dict[str, Any]]]:
-    """({line id: label}, every rerun row) of the lines that ran: each decision the line uses changed one at a time
-    (W4 sensitivity). A line whose rerun fails gets the label "failed: <reason>"."""
-    from .kg import sensitivity
-    labels: dict[str, str] = {}
-    rows: list[dict[str, Any]] = []
-    for line in plan.lines:
-        if not line.query.strip():
-            continue
-        try:
-            plain = line.model_copy(update={"template": None})   # the plan's own query, its decisions as $params
-            decisions = _rerun_decisions(plan, line.query)
-            names = {d.id: _param_of(line.query, d) for d in decisions}
-            result = sensitivity.rerun(store, plain, decisions, params=line_params(plan, line.query, better), param_of=names,
-                                       verdict=verdict, match=match)
-            labels[line.id] = sensitivity.label(result)
-            rows += [{"line": line.id, "decision": r.decision, "field": r.field, "setting": f"{r.decision} {r.setting}",
-                      "strictness": r.setting, "value": r.value, "verdict": r.verdict.label, "n": r.verdict.n,
-                      "flips": r.flips} for r in result.runs]
-        except Exception as exc:   # noqa: BLE001 - one line's rerun failing stays with that line
-            labels[line.id] = f"failed: {str(exc)[:200] or type(exc).__name__}"
-    return labels, rows
-
-
-def _param_of(query: str, d: Decision) -> str:
-    from .planner.plan import decision_map
-    return decision_map(query).get(d.type, d.type)
-
-
 OUTSIDE = "outside the set"
 
 
@@ -463,68 +317,14 @@ def links_of(items: dict[str, list[Item]]) -> list[dict[str, Any]]:
     return out
 
 
-_BRACKET = re.compile(r"^(.*?)\s*\(\s*(.*?)\s*\)\s*$")
-_KEYS = ("SELECT DISTINCT ?k WHERE { ?s ?p ?k FILTER(isLiteral(?k) && (?p = kg:contextKey || "
-         "STRSTARTS(STR(?p), STR(kg:key_))))}")
-
-
-def _acronym(outer: str, inner: str) -> bool:
-    """`inner` is a short form of `outer`: one word whose letters are initials of outer's words, in order ("mrda" of
-    "icsi meeting recorder dialog act corpu", "ner" of "named entity recognition"; not "large" of "bert")."""
-    letters = [w[0] for w in outer.split() if w]
-    if " " in inner or len(inner) < 2 or not inner.isalnum():
-        return False
-    it = iter(letters)
-    return all(c in it for c in inner)
-
-
-def _forms(name: str) -> set[str]:
-    """A cleaned name and, for "a (b)" where b is a's short form, "a" and "b" (a bracket modifier such as
-    "bert (large)" stays one name)."""
-    m = _BRACKET.match(name)
-    return {name, *m.groups()} if m and all(m.groups()) and _acronym(*m.groups()) else {name}
-
-
-def name_matcher(plan: Plan, store: Any) -> Any:
-    """`kg.query.Matcher` of a v2 plan run: a key literal also matches its short-form parts, the names the word list
-    gives the one thing it names (a name two things share is left out; two things named: no widening), and every key
-    in the graph whose own form or short-form part is one of them ("ICSI ... Corpus (MRDA)" matches "mrda"; "named
-    entity recognition" matches "named entity recognition ( ner )"). No partial-word matching, no chaining."""
-    from collections import Counter
-
-    from .kg.query import run_query
-    groups = [{clean(n) for n in (t, *names)} for t, names in plan.words.things.items()]
-    shared = {n for n, c in Counter(n for g in groups for n in g).items() if c > 1}
-    keys = [str(r["k"]) for r in run_query(store, _KEYS).rows]
-
-    def match(literal: str) -> list[str]:
-        want = _forms(literal)
-        named = [g for g in groups if g & want]
-        if len(named) == 1:
-            want |= named[0] - shared
-        want |= {k for k in keys if _forms(k) & want}
-        return [literal, *sorted(want - {literal})]
-    return match
-
-
-def answer(plan: Plan, store: Any, synthesis: dict[str, Any], groups: Mapping[str, str],
-           items: dict[str, list[Item]] | None = None, better: dict[str, bool | None] | None = None,
-           version: str = "v1") -> dict[str, Any]:
-    """answer.json of a plan run: the lines (each in its own try block), the main answer, labels and reruns, the claim
-    groups and the builds-on links. `version` (Settings.plan_version) v2: names matched by `name_matcher`, a rank line's
-    best thing named in the answer text."""
+def answer(lines: PlanLines, synthesis: dict[str, Any], groups: Mapping[str, str],
+           items: dict[str, list[Item]] | None = None) -> dict[str, Any]:
+    """answer.json of a plan run: the plan's lines as `lines` answers them (each in its own try block, the main
+    answer, labels and reruns), the claim groups and the builds-on links."""
     from .claims import grouped_line
-    from .kg.query import run_query
-    from .planner.lines import run_lines
-    match = name_matcher(plan, store) if version == "v2" else None
-
-    def run_one(query: str, _params: dict[str, Any]) -> list[dict[str, Any]]:
-        return run_query(store, query, line_params(plan, query, better), match).rows   # the decisions' params, lists normalised
-
-    result = run_lines(plan, run_one, name_best=version == "v2")
-    labels, rows = reruns(plan, store, better, match)
-    return {"system": "plan", "question": plan.question, "plan_sha256": plan.sha256, **result, "labels": labels,
-            "reruns": rows, "claim_groups": {"mapping": dict(groups), "line": grouped_line(groups) if groups else None},
+    plan = lines.plan
+    return {"system": "plan", "question": plan.question, "plan_sha256": plan.sha256, **lines.answer(),
+            "claim_groups": {"mapping": dict(groups), "line": grouped_line(groups) if groups else None},
             "links": links_of(items or {}),
             "synthesis": synthesis}
 
@@ -540,11 +340,11 @@ def finish(plan: Plan, papers: list[Any], items: dict[str, list[Item]], roles: A
            synthesis: dict[str, Any], *, reason: str = "on",
            version: str = "v1") -> tuple[dict[str, list[Item]], bytes, dict[str, Any]]:
     """(the items with claim groups, records.nq bytes, answer.json) of a plan run, after its extraction. `reason`
-    off: the records graph has no field ontology; `version`: `answer`'s."""
+    off: the records graph has no field ontology; `version`: Settings.plan_version, how the lines are answered."""
     from .kg.build import serialize
     items, groups = group_claims(items, ctx)
     store = records(papers, items, roles, plan.field, reason=reason)
-    return items, serialize(store), answer(plan, store, synthesis, groups, items, directions(plan, items), version)
+    return items, serialize(store), answer(PlanLines(plan, store, version=version, items=items), synthesis, groups, items)
 
 
 # --- the command ------------------------------------------------------------------------------------------------------
@@ -596,7 +396,8 @@ def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, *, reaso
 def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dict[str, Any]:
     """The links review of a finished plan run (W2 `review`, written as links_review.json beside the sealed outputs),
     then the lines again on the records graph with the accepted LLM links ("child -> parent") added to the field's
-    ontology (W4: the same lines, decisions and reruns). Nothing the run sealed changes; the new answer is returned."""
+    ontology (W4: the same lines, decisions and reruns), answered as the run answered them (its plan version, the
+    directions of its extracted items). Nothing the run sealed changes; the new answer is returned."""
     from .kg.build import build
     from .ontology.fill import add_links, review
     from .ontology.sources import load
@@ -619,7 +420,8 @@ def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dic
         import rdflib
         graph = add_links(graph if graph is not None else rdflib.Graph(), pairs)  # type: ignore[arg-type]
     store = build(corpus.papers, items, run.register_pack() and _roles(run), graph)
-    out = answer(plan, store, before.get("synthesis") or {}, (before.get("claim_groups") or {}).get("mapping") or {}, items)
+    out = answer(PlanLines.of_run(run_dir, store, plan=plan, items=items), before.get("synthesis") or {},
+                 (before.get("claim_groups") or {}).get("mapping") or {}, items)
     return {"review": {"accepted": sorted(accepted), "rejected": sorted(rejected)}, **out}
 
 

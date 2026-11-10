@@ -833,12 +833,10 @@ class Execution:
                                                          reason=inferred)
         answer = synthesis
         if self.plan_run and self.plan is not None:   # claim groups, the records graph, the lines and their reruns
-            from . import planrun
+            from . import planlines, planrun
             self.items, self.records_nq, answer = planrun.finish(self.plan, papers, self.items, self.roles, self.ctx,
                                                                  synthesis, reason=self.reason, version=self.plan_version)
-            path = self.root / planrun.RECORDS_FILE
-            path.write_bytes(self.records_nq)
-            self.outputs[planrun.RECORDS_FILE] = sha256_hex(self.records_nq)
+            self.outputs[planlines.RECORDS_FILE] = planlines.write_records(self.root, self.records_nq)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)

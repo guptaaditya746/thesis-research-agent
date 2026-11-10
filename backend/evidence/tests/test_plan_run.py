@@ -12,7 +12,7 @@ import pytest
 from pydantic_ai.models.function import FunctionModel
 from pydantic_ai.messages import ModelResponse, TextPart
 
-from evidence import cli, engine, planrun, stages
+from evidence import cli, engine, planlines, planrun, stages
 from evidence.kg.query import render, template
 from evidence.plan import Decision, EvidenceLine, Plan, WordList, write_plan
 from evidence.planner.plan import OVERSELL_QUERY
@@ -270,11 +270,11 @@ def test_rerun_verdict_of_an_effect_line_is_its_majority_direction() -> None:
     from evidence.kg.query import Answer
     rows = [{"paper": "a", "direction": "supports"}, {"paper": "b", "direction": "supports"},
             {"paper": "c", "direction": "contradicts"}, {"paper": "d", "direction": "undetermined"}]
-    v = planrun.verdict(Answer(rows=rows, empty=False))
+    v = planlines.verdict(Answer(rows=rows, empty=False))
     assert (v.label, v.n) == ("supports", 3) and v.size == pytest.approx(2 / 3)
-    tie = planrun.verdict(Answer(rows=rows[1:3], empty=False))
+    tie = planlines.verdict(Answer(rows=rows[1:3], empty=False))
     assert tie.label == "mixed"
-    assert planrun.verdict(Answer(rows=[{"thing": "x", "score": 1}], empty=False)).label == "x"
+    assert planlines.verdict(Answer(rows=[{"thing": "x", "score": 1}], empty=False)).label == "x"
 
 
 def test_a_fresh_query_the_planner_writes_runs_to_a_non_empty_answer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -301,8 +301,8 @@ def test_a_fresh_query_the_planner_writes_runs_to_a_non_empty_answer(tmp_path: P
 def test_a_one_method_question_compares_with_other_and_its_effect_line_runs(tmp_path: Path) -> None:
     plan = make_plan(things={"rag": ["retrieval-augmented model", "retrieval-augmented generation"],
                              "accuracy": ["answer accuracy", "accuracy"]})
-    assert planrun.compare_sides(plan) == ["rag", "other"]
-    assert planrun.line_params(plan, plan.lines[0].query)["sides"] == ["rag", "other"]
+    assert planlines.compare_sides(plan) == ["rag", "other"]
+    assert planlines.PlanLines(plan, None).params(plan.lines[0].query)["sides"] == ["rag", "other"]
     root = plan_run(tmp_path, plan)
     lines = {x["id"]: x for x in read(root, "answer.json")["lines"]}
     assert lines["l1"]["status"] == "done"
@@ -312,11 +312,11 @@ def test_a_rank_line_gets_the_main_measure_as_its_metric() -> None:
     """SciLead run (4 Nov): rank and best lines failed with "missing parameter(s) ['metric']", which no run filled."""
     plan = make_plan(measures=("accuracy", "f1"))
     for name in ("rank", "best"):
-        assert planrun.line_params(plan, template(name))["metric"] == "accuracy"
-        render(template(name), {**planrun.line_params(plan, template(name)), "context": "XSum", "counts_as": ["result"]})
+        assert planlines.PlanLines(plan, None).params(template(name))["metric"] == "accuracy"
+        render(template(name), {**planlines.PlanLines(plan, None).params(template(name)), "context": "XSum", "counts_as": ["result"]})
     recorded = ('# params: metric\nSELECT ?thing WHERE { ?v ev:of ?t ; ev:onMetric ?m ; kg:contextKey "XSum" . '
                 '?m ev:name $metrics . ?t ev:name ?thing }')   # scilead-09's l1, as planned
-    render(recorded, planrun.line_params(make_plan(measures=("rouge_l",)), recorded))
+    render(recorded, planlines.PlanLines(make_plan(measures=("rouge_l",)), None).params(recorded))
 
 
 def test_a_lower_is_better_measure_reads_a_rise_as_worse(tmp_path: Path) -> None:
@@ -326,7 +326,7 @@ def test_a_lower_is_better_measure_reads_a_rise_as_worse(tmp_path: Path) -> None
     plan = make_plan(things=things, measures=("latency",), direction="lower")
     plan = plan.model_copy(update={"question": "Does retrieval-augmented generation reduce latency?", "decisions": [
         d.model_copy(update={"value": "latency"}) if d.type == "counts_as" else d for d in plan.decisions]})
-    assert planrun.directions(plan) == {"latency": False}
+    assert planlines.directions(plan) == {"latency": False}
     assert "higher_is_better: false" in planrun.protocol_for(plan).decode()
     root = plan_run(tmp_path, plan)
     rows = {r["paper"]: r for r in {x["id"]: x for x in read(root, "answer.json")["lines"]}["l1"]["rows"]}
@@ -344,8 +344,8 @@ def test_a_measure_without_a_direction_decision_takes_the_extracted_metrics_dire
     plan = plan.model_copy(update={"decisions": [d for d in plan.decisions if d.type != "direction"]})
     span = Span(role="metric_label", selector={"file": "p.md", "start": 0, "end": 3, "exact": "x", "sha256": "0" * 64})
     lower = Item.build("metric", {"name": "err", "canonical": "accuracy", "higher_is_better": False}, [span])
-    assert planrun.directions(plan) == {"accuracy": None}
-    assert planrun.directions(plan, {"S1": [lower]}) == {"accuracy": False}
+    assert planlines.PlanLines(plan, None).better == {"accuracy": None}
+    assert planlines.PlanLines(plan, None, items={"S1": [lower]}).better == {"accuracy": False}
 
 
 def test_a_word_list_from_another_model_is_refused(tmp_path: Path) -> None:
@@ -406,3 +406,16 @@ def test_an_over_limit_stage_call_is_not_asked_again(tmp_path):
     for _ in range(2):
         CallCache(JsonlCache(tmp_path / "c.jsonl"), "run", retry_errors=True).recorded("stage:map", {"p": 1}, make)
     assert len(made) == 1
+
+
+def test_relink_answers_the_lines_as_the_run_did(tmp_path: Path) -> None:
+    """Review: relink re-answered a v2 run with v1 names. A key the graph holds only by its short form ("7b") is found
+    by a v2 run, and the links review (nothing accepted) gives the run's own lines back."""
+    short = EvidenceLine(id="l5", question="Which experiments use a 7B model?", template=None,
+                         query='SELECT ?e WHERE { ?e a ev:Experiment ; kg:key_model "7 billion parameters (7B)" }')
+    plan = make_plan()
+    root = plan_run(tmp_path, plan.model_copy(update={"lines": [*plan.lines, short]}))
+    ran = read(root, "answer.json")
+    assert {x["id"]: x for x in ran["lines"]}["l5"]["rows"]
+    again = planrun.relink(root, [], [])
+    assert (again["lines"], again["answer"], again["labels"]) == (ran["lines"], ran["answer"], ran["labels"])
