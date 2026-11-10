@@ -8,7 +8,6 @@ text is a valid, empty `Answer` with no mapping call.
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any, Literal
 
@@ -17,6 +16,7 @@ from pydantic_ai.models import Model
 
 from modelcall import JsonlCache
 
+from ..realpapers.common import read_manifest
 from ..wholerun import Answer, RealQuestion
 from . import rag
 from .common import SystemCorpus, cached_reply, model_name, paper_id
@@ -74,8 +74,7 @@ REPLY = {"rank": RankReply, "list": ListReply, "compare": CompareReply, "claims"
 
 
 def _papers(corpus_dir: Path) -> dict[str, str | None]:
-    manifest = json.loads((Path(corpus_dir) / "manifest.json").read_text(encoding="utf-8"))
-    return {p["id"]: p.get("sha256") for p in manifest["papers"]}
+    return {p["id"]: p.get("sha256") for p in read_manifest(corpus_dir)["papers"]}
 
 
 def check_same_papers(corpus_dir: Path, engine_corpus: Path) -> None:

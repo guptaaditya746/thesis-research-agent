@@ -33,7 +33,8 @@ from evidence.pack import RoleMap, load_pack
 from jsonio import sha256_hex
 
 from ..wholerun import RealQuestion
-from .common import items_of
+from .common import (add_paper, items_of, manifest_ids, ratio, read_json, read_manifest, write_json,
+                     write_manifest)
 
 GOLD_FILE = "scirex_gold.json"
 SOURCE_FILE = "scirex_corpus.json"
@@ -143,12 +144,10 @@ def to_corpus(jsonl: Path, out: Path, *, limit: int | None = None) -> Path:
             text, gold[doc_id] = paper_gold(doc)
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError(f"SciREX paper {doc_id}: {type(exc).__name__}: {exc}") from exc
-        data = text.encode("utf-8")
-        (out / "papers" / f"{doc_id}.md").write_bytes(data)
-        papers.append({"id": doc_id, "file": f"papers/{doc_id}.md", "sha256": sha256_hex(data)})
-    _write(out / "manifest.json", {"corpus_id": f"scirex-{Path(jsonl).stem}", "papers": papers})
-    _write(out / GOLD_FILE, gold)
-    _write(out / SOURCE_FILE, {"jsonl": Path(jsonl).name, "jsonl_sha256": sha256_hex(raw),
+        papers.append(add_paper(out, doc_id, text.encode("utf-8")))
+    write_manifest(out, f"scirex-{Path(jsonl).stem}", papers)
+    write_json(out / GOLD_FILE, gold)
+    write_json(out / SOURCE_FILE, {"jsonl": Path(jsonl).name, "jsonl_sha256": sha256_hex(raw),
                                "papers_in_file": len(lines), "limit": limit, "papers": len(papers),
                                "coref_clusters": sum(len(g["clusters"]) for g in gold.values()),
                                "clusters_in_no_relation": sum(len(g["in_no_relation"]) for g in gold.values()),
@@ -158,14 +157,6 @@ def to_corpus(jsonl: Path, out: Path, *, limit: int | None = None) -> Path:
     return out
 
 
-def _write(path: Path, data: Any) -> None:
-    path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
-
-
-def _ratio(num: int, den: int) -> float | None:
-    return num / den if den else None
-
-
 def _overlaps(s: int, e: int, gs: int, ge: int) -> bool:
     return s < ge and gs < e
 
@@ -173,9 +164,8 @@ def _overlaps(s: int, e: int, gs: int, ge: int) -> bool:
 def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
     """Mention-level and salient-cluster-level precision and recall per name type (module docstring), and the
     number of papers."""
-    gold: dict[str, Any] = json.loads((Path(corpus) / GOLD_FILE).read_text(encoding="utf-8"))
-    manifest = json.loads((Path(corpus) / "manifest.json").read_text(encoding="utf-8"))
-    doc_of = {p["file"]: p["id"] for p in manifest["papers"]}
+    gold: dict[str, Any] = read_json(Path(corpus) / GOLD_FILE)
+    doc_of = {p["file"]: p["id"] for p in read_manifest(corpus)["papers"]}
     roles = RoleMap(load_pack(PACK))
     # per (doc, type): the items' spans and names
     spans: dict[tuple[str, str], list[list[tuple[int, int]]]] = {}
@@ -213,7 +203,7 @@ def _mention_level(etype: str, gold: dict[str, Any], spans: dict[tuple[str, str]
         mentions += len(theirs)
         matched += sum(any(_overlaps(s, e, gs, ge) for item in ours for s, e in item) for gs, ge in theirs)
     return {"items": items, "right_items": right, "mentions": mentions, "matched_mentions": matched,
-            "precision": _ratio(right, items), "recall": _ratio(matched, mentions)}
+            "precision": ratio(right, items), "recall": ratio(matched, mentions)}
 
 
 def _salient_level(etype: str, gold: dict[str, Any], papers: dict[str, str],
@@ -231,14 +221,14 @@ def _salient_level(etype: str, gold: dict[str, Any], papers: dict[str, str],
         clusters += len(texts)
         hit += sum(bool(ours & t) for t in texts.values())
     return {"names": found, "right_names": right, "clusters": clusters, "clusters_hit": hit,
-            "precision": _ratio(right, found), "recall": _ratio(hit, clusters)}
+            "precision": ratio(right, found), "recall": ratio(hit, clusters)}
 
 
 def report(run_dir: Path, corpus: Path, estimate: dict[str, Any] | None = None) -> dict[str, Any]:
     """The real.json of the check: `score`, where the papers came from (scirex_corpus.json: the file, the papers in
     it, the limit), the saved `evidence estimate` output that chose the limit (None when not given) and the notes
     on what the gold holds."""
-    source = json.loads((Path(corpus) / SOURCE_FILE).read_text(encoding="utf-8"))
+    source = read_json(Path(corpus) / SOURCE_FILE)
     result = score(run_dir, corpus)
     chosen = ("--limit chosen with `evidence estimate` (Task 5), whose output is under `estimate`" if estimate is not None
               else "no `evidence estimate` output given: the --limit was not checked against the budget")
@@ -257,7 +247,7 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
     the corpus is `corpus_dir` (default: the file's folder, where `to_corpus` writes it)."""
     tasks: dict[str, dict[str, set[str]]] = {}
     corpus = Path(corpus_dir) if corpus_dir is not None else Path(src).parent
-    in_corpus = _manifest_ids(corpus)
+    in_corpus = _in_corpus(corpus)
     for line in Path(src).read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -284,17 +274,16 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
     return out
 
 
-def _manifest_ids(corpus: Path | None) -> set[str] | None:
+def _in_corpus(corpus: Path | None) -> set[str] | None:
     """The document ids of `corpus/manifest.json`; None when there is no manifest (then every document counts)."""
-    path = Path(corpus) / "manifest.json" if corpus is not None else None
-    if path is None or not path.is_file():
-        return None
-    return {str(p["id"]) for p in json.loads(path.read_text(encoding="utf-8"))["papers"]}
+    ids = manifest_ids(corpus)
+    return set(ids) if ids is not None else None
 
 
-def left_out(src: Path, corpus_dir: Path | None = None) -> str:
-    """The report line of the gold filter: relations of documents that are not in the corpus (with no manifest: 0)."""
-    in_corpus = _manifest_ids(Path(corpus_dir) if corpus_dir is not None else Path(src).parent)
+def left_out(src: Path, corpus_dir: Path | None = None, qs: list[RealQuestion] | None = None) -> str:
+    """The report line of the gold filter: relations of documents that are not in the corpus (with no manifest: 0).
+    arXiv papers are all open, so only the gold of documents outside the corpus is left out."""
+    in_corpus = _in_corpus(Path(corpus_dir) if corpus_dir is not None else Path(src).parent)
     total = gone = 0
     for line in Path(src).read_text(encoding="utf-8").splitlines():
         if line.strip():
@@ -310,7 +299,7 @@ def truth_items(src: Path, corpus_dir: Path | None = None) -> list[dict[str, Any
     method, metric, number = the score, context = the dataset, settings task and dataset (keystore.py). With a
     `corpus_dir` holding manifest.json, only documents in the manifest."""
     out = []
-    in_corpus = _manifest_ids(corpus_dir)
+    in_corpus = _in_corpus(corpus_dir)
     for line in Path(src).read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
@@ -331,3 +320,13 @@ def truth_items(src: Path, corpus_dir: Path | None = None) -> list[dict[str, Any
                         "settings": {"task": str(rel.get("Task", "")).replace("_", " "),
                                      "dataset": str(dataset).replace("_", " ")}})
     return out
+
+
+def prepare_step(jsonl: Path, out: Path, limit: int | None = None) -> str:
+    """`evaluate scirex corpus`: write the corpus; its SOURCE_FILE is printed."""
+    return json.dumps(read_json(to_corpus(jsonl, out, limit=limit) / SOURCE_FILE), indent=1)
+
+
+def check_step(run: Path, corpus: Path, estimate: Path | None = None) -> dict[str, Any]:
+    """`evaluate scirex score`: the real.json result."""
+    return report(run, corpus, read_json(estimate) if estimate else None)

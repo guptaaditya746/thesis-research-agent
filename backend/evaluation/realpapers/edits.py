@@ -34,7 +34,7 @@ from evidence.protocol import DEFAULT_PACK, Strict
 from evidence.rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 from jsonio import sha256_hex
 
-from .common import items_of
+from .common import MANIFEST_FILE, items_of, read_manifest, write_json
 
 EDIT_FILE = "edit.json"     # the edit an edited corpus was made with (the engine reads manifest.json and papers/ only)
 PARTS = ("item", "link", "answer")
@@ -100,7 +100,7 @@ def apply(corpus: Path, edit: Edit, out: Path) -> Path:
     paper is not in the corpus or `find` does not occur exactly once in it. edit.json also records `at`, the offset
     of `find` in the original paper (the same offset as `replace` in the edited one), which `check` reads."""
     corpus, target = Path(corpus), Path(out) / edit.id
-    manifest = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
+    manifest = read_manifest(corpus)
     entry = next((p for p in manifest["papers"] if str(p["id"]) == edit.paper), None)
     if entry is None:
         raise EditError(f"edit {edit.id}: no paper {edit.paper!r} in {corpus}")
@@ -115,11 +115,8 @@ def apply(corpus: Path, edit: Edit, out: Path) -> Path:
     data = text.replace(edit.find, edit.replace).encode("utf-8")
     (target / entry["file"]).write_bytes(data)
     entry["sha256"] = sha256_hex(data)
-    (target / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n",
-                                          encoding="utf-8", newline="\n")
-    record = {**edit.model_dump(), "at": text.index(edit.find)}
-    (target / EDIT_FILE).write_text(json.dumps(record, indent=1, ensure_ascii=False) + "\n",
-                                    encoding="utf-8", newline="\n")
+    write_json(target / MANIFEST_FILE, manifest)
+    write_json(target / EDIT_FILE, {**edit.model_dump(), "at": text.index(edit.find)})
     return target
 
 
@@ -389,3 +386,13 @@ def report(original: Path, runs: Path, edits: list[Edit], corpora: Path | None =
                       "the edited spot, or nothing linked to the old name; such parts are left out of the shares.",
                       "Two runs with a live model may differ by chance, so the number answer part also needs the "
                       "edited entry to use the new item or value."]}
+
+
+def prepare_step(corpus: Path, edits: Path, out: Path) -> str:
+    """`evaluate edits apply`: one edited corpus per edit; their folders are printed."""
+    return json.dumps({"corpora": [str(apply(corpus, e, out)) for e in load_edits(edits)]})
+
+
+def check_step(original: Path, runs: Path, edits: Path, corpora: Path | None = None) -> dict[str, Any]:
+    """`evaluate edits check`: the real.json result."""
+    return report(original, runs, load_edits(edits), corpora)

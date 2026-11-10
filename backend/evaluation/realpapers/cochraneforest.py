@@ -14,13 +14,11 @@ ALLOWED_LICENCES, stops `to_corpus` with a clear message (nothing is written).
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
-from jsonio import sha256_hex
-
 from ..wholerun import RealQuestion, left_out_line
+from .common import add_paper, read_json, write_json, write_manifest
 
 RELEASE_FILE = "release.json"
 SOURCE_FILE = "cochraneforest_corpus.json"
@@ -34,7 +32,7 @@ class NotReleased(RuntimeError):
 
 
 def _read(src: Path) -> dict[str, Any]:
-    return json.loads((Path(src) / RELEASE_FILE).read_text(encoding="utf-8"))
+    return read_json(Path(src) / RELEASE_FILE)
 
 
 def check_release(src: Path) -> dict[str, Any]:
@@ -71,17 +69,11 @@ def to_corpus(src: Path, out: Path) -> Path:
         left, total = left + len(missing), total + len(plot["studies"])
         folder = out / str(plot["id"])
         (folder / "papers").mkdir(parents=True, exist_ok=True)
-        papers = []
-        for s in have:
-            blob = str(s["text"]).encode("utf-8")
-            (folder / "papers" / f"{s['id']}.md").write_bytes(blob)
-            papers.append({"id": str(s["id"]), "file": f"papers/{s['id']}.md", "sha256": sha256_hex(blob)})
-        (folder / "manifest.json").write_text(
-            json.dumps({"corpus_id": f"cochraneforest-{plot['id']}", "papers": papers}, indent=1) + "\n",
-            encoding="utf-8", newline="\n")
-    (out / SOURCE_FILE).write_text(json.dumps(
-        {"layout_verified": LAYOUT_VERIFIED, "key_records": KEY_RECORDS, "licence": data.get("licence"), "plots": len(data["plots"]), "studies": total, "left_out": left,
-         "left_out_line": left_out_line(left, total)}, indent=1) + "\n", encoding="utf-8", newline="\n")
+        papers = [add_paper(folder, str(s["id"]), str(s["text"]).encode("utf-8")) for s in have]
+        write_manifest(folder, f"cochraneforest-{plot['id']}", papers, ascii_only=True)
+    write_json(out / SOURCE_FILE, {"layout_verified": LAYOUT_VERIFIED, "key_records": KEY_RECORDS,
+                                   "licence": data.get("licence"), "plots": len(data["plots"]), "studies": total,
+                                   "left_out": left, "left_out_line": left_out_line(left, total)}, ascii_only=True)
     return out
 
 
@@ -106,3 +98,11 @@ def questions(src: Path, corpus_dir: Path | None = None) -> list[RealQuestion]:
             corpus_dir=folder, kind="claims",
             gold={"conclusions": [{"id": str(plot["id"]), "direction": plot["conclusion"]}], "papers": papers}))
     return out
+
+
+def left_out(src: Path, corpus_dir: Path | None = None, qs: list[RealQuestion] | None = None) -> str:
+    """The open-access line `to_corpus` recorded (studies with no open full text, of all studies)."""
+    path = (Path(corpus_dir) if corpus_dir is not None else Path(src) / "corpus") / SOURCE_FILE
+    if path.is_file():
+        return read_json(path)["left_out_line"]
+    return "left out: not recorded (run the cochraneforest corpus step)"

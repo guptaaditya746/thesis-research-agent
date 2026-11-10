@@ -1,5 +1,5 @@
-"""What every real-paper check shares: one reader of a run's items (F52), the run's name groups and name matching,
-and the real.json / real.md writer."""
+"""What every real-paper set shares: one reader of a run's items (F52), the run's name groups and name matching, the
+corpus manifest reader and writer, the JSON file writer, `ratio`, and the real.json / real.md writer."""
 from __future__ import annotations
 
 import json
@@ -9,9 +9,51 @@ from typing import Any
 from evidence.contract import Item
 from evidence.names import NameGroups, clean
 from evidence.rundir import NAMES_FILE, RunDir
+from jsonio import sha256_hex
 
 JSON_FILE = "real.json"
 MD_FILE = "real.md"
+MANIFEST_FILE = "manifest.json"
+PAPERS_DIR = "papers"
+
+
+def ratio(num: float, den: float) -> float | None:
+    """num / den; None when den is 0 (a share of nothing)."""
+    return num / den if den else None
+
+
+def read_json(path: Path | str) -> Any:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def write_json(path: Path | str, data: Any, *, ascii_only: bool = False) -> None:
+    """`data` as JSON (indent 1, one trailing newline, LF). `ascii_only` escapes non-ASCII characters (the files
+    some writers made so before; kept so their bytes stay the same)."""
+    Path(path).write_text(json.dumps(data, indent=1, ensure_ascii=ascii_only) + "\n", encoding="utf-8", newline="\n")
+
+
+def read_manifest(corpus: Path | str) -> dict[str, Any]:
+    """The corpus's manifest.json: {"corpus_id", "papers": [{"id", "file", "sha256"}]}."""
+    return read_json(Path(corpus) / MANIFEST_FILE)
+
+
+def manifest_ids(corpus: Path | str | None) -> list[str] | None:
+    """The paper ids of the corpus's manifest, in manifest order; None when there is no corpus or no manifest."""
+    if corpus is None or not (Path(corpus) / MANIFEST_FILE).is_file():
+        return None
+    return [str(p["id"]) for p in read_manifest(corpus)["papers"]]
+
+
+def add_paper(corpus: Path, paper_id: str, data: bytes) -> dict[str, str]:
+    """Write `papers/<paper_id>.md` of a corpus being built; returns its manifest entry (id, file, sha256)."""
+    file = f"{PAPERS_DIR}/{paper_id}.md"
+    (Path(corpus) / PAPERS_DIR).mkdir(parents=True, exist_ok=True)
+    (Path(corpus) / file).write_bytes(data)
+    return {"id": paper_id, "file": file, "sha256": sha256_hex(data)}
+
+
+def write_manifest(corpus: Path, corpus_id: str, papers: list[dict[str, Any]], *, ascii_only: bool = False) -> None:
+    write_json(Path(corpus) / MANIFEST_FILE, {"corpus_id": corpus_id, "papers": papers}, ascii_only=ascii_only)
 
 
 def items_of(run_dir: Path | str) -> list[Item]:
@@ -82,6 +124,6 @@ def write_real(result: dict[str, Any], out: Path, title: str) -> tuple[Path, Pat
     `# real-paper check: <title> (not a synthetic score)`; returns both paths."""
     out.mkdir(parents=True, exist_ok=True)
     js, md = out / JSON_FILE, out / MD_FILE
-    js.write_text(json.dumps(result, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    write_json(js, result)
     md.write_text(render(result, title), encoding="utf-8", newline="\n")
     return js, md

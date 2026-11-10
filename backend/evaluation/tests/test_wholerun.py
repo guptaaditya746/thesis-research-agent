@@ -108,8 +108,9 @@ def test_tune_split_holds_out_questions_not_papers(tmp_path: Path) -> None:
 
 def test_tune_split_command_prints_kept_and_held(tmp_path: Path, monkeypatch, capsys) -> None:
     from evaluation import cli
+    from evaluation.realpapers import RealSet
     qs = [RealQuestion(f"q{i}", "?", "cs", tmp_path, {"papers": [f"p{i}"]}, "list") for i in range(10)]
-    monkeypatch.setattr(cli, "_real_questions", lambda name, src, corpus: qs)
+    monkeypatch.setattr(RealSet, "questions", lambda self, src, corpus=None: qs)
     assert cli.main(["tune-split", "--set", "sofc", "--src", str(tmp_path), "--corpus", str(tmp_path)]) == 0
     assert "kept 8 questions, held 2" in capsys.readouterr().out
     assert (tmp_path / "tune_split.json").is_file()

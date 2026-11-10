@@ -19,13 +19,13 @@ as higher-is-better, which the question text states).
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 from evidence.names import clean
 
 from ..wholerun import RealQuestion, left_out_line
+from .common import add_paper, read_json, write_manifest
 
 SOURCE_FILE = "sofc.json"
 LAYOUT_VERIFIED = False   # the release layout is assumed (module docstring): quote no number before this is True
@@ -45,16 +45,27 @@ def _unit_key(unit: Any) -> str:
 
 
 def _read(src: Path) -> list[dict[str, Any]]:
-    return json.loads((Path(src) / SOURCE_FILE).read_text(encoding="utf-8"))["papers"]
+    return read_json(Path(src) / SOURCE_FILE)["papers"]
 
 
 def _open(src: Path) -> list[dict[str, Any]]:
     return [p for p in _read(src) if str(p.get("text") or "").strip()]
 
 
-def left_out(src: Path) -> str:
+def left_out(src: Path, corpus_dir: Path | None = None, qs: list[RealQuestion] | None = None) -> str:
+    """The open-access line: papers with no open full text, of all papers."""
     papers = _read(src)
     return left_out_line(len(papers) - len(_open(src)), len(papers))
+
+
+def to_corpus(src: Path, out: Path | None = None) -> Path:
+    """The corpus of the papers with open text: `out` (default `src/corpus`) with manifest.json and
+    papers/<id>.md. Returns `out`."""
+    out = Path(out) if out is not None else Path(src) / "corpus"
+    (out / "papers").mkdir(parents=True, exist_ok=True)
+    papers = [add_paper(out, str(p["id"]), str(p["text"]).encode("utf-8")) for p in _open(src)]
+    write_manifest(out, "sofc", papers, ascii_only=True)
+    return out
 
 
 def label_check(src: Path) -> dict[str, Any]:

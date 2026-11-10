@@ -49,7 +49,7 @@ from scipy.stats import kendalltau
 
 from evidence.names import NameGroups
 
-from .realpapers.common import same_name
+from .realpapers.common import manifest_ids, ratio, same_name
 
 Kind = Literal["rank", "list", "compare", "claims"]
 KINDS = ("rank", "list", "compare", "claims")
@@ -186,10 +186,6 @@ def from_run(run: Path | str, q: RealQuestion) -> Answer:
     return Answer(claims=[{"about": a, "direction": d} for a, ds in by_about.items() if (d := _majority(ds))])
 
 
-def _ratio(num: float, den: float) -> float | None:
-    return num / den if den else None
-
-
 def _find(name: str, pool: list[str], groups: NameGroups | None) -> str | None:
     return next((p for p in pool if same_name(name, p, groups)), None)
 
@@ -213,7 +209,7 @@ def _list(answer: Answer, gold: dict[str, Any], groups: NameGroups | None) -> di
             got.append(name)
     right = [n for n in got if _find(n, want, groups) is not None]
     found = [w for w in want if _find(w, got, groups) is not None]
-    precision, recall = _ratio(len(right), len(got)), _ratio(len(found), len(want))
+    precision, recall = ratio(len(right), len(got)), ratio(len(found), len(want))
     f1 = None
     if precision is not None and recall is not None:
         f1 = 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
@@ -222,7 +218,7 @@ def _list(answer: Answer, gold: dict[str, Any], groups: NameGroups | None) -> di
 
 def _compare(answer: Answer, gold: dict[str, Any]) -> dict[str, Any]:
     per = {study: int(answer.directions.get(study) == d) for study, d in gold["directions"].items()}
-    out: dict[str, Any] = {"per_study": per, "direction_agreement": _ratio(sum(per.values()), len(per))}
+    out: dict[str, Any] = {"per_study": per, "direction_agreement": ratio(sum(per.values()), len(per))}
     if gold.get("conclusion") is not None:
         out["conclusion_agrees"] = int(answer.conclusion == gold["conclusion"])
     return out
@@ -232,7 +228,7 @@ def _claims(answer: Answer, gold: dict[str, Any]) -> dict[str, Any]:
     want = {c["id"]: c["direction"] for c in gold["conclusions"]}
     right = [c for c in answer.claims if want.get(c.get("about")) == c.get("direction")]
     agreed = {c["about"] for c in right}
-    return {"precision": _ratio(len(right), len(answer.claims)), "recall": _ratio(len(agreed), len(want)),
+    return {"precision": ratio(len(right), len(answer.claims)), "recall": ratio(len(agreed), len(want)),
             "n_claims": len(answer.claims), "n_conclusions": len(want)}
 
 
@@ -240,10 +236,7 @@ def question_papers(q: RealQuestion) -> list[str]:
     """The paper ids a question rests on: its gold's `papers`, else the corpus manifest's."""
     if "papers" in q.gold:
         return [str(p) for p in q.gold["papers"]]
-    manifest = Path(q.corpus_dir) / "manifest.json"
-    if manifest.is_file():
-        return [p["id"] for p in json.loads(manifest.read_text(encoding="utf-8"))["papers"]]
-    return []
+    return manifest_ids(q.corpus_dir) or []
 
 
 def tune_papers(q: RealQuestion) -> set[str]:
