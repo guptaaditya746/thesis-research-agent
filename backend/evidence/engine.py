@@ -124,7 +124,7 @@ from . import seal as sealing
 from .extractors import base as extractor_base
 from .extractors import gliner
 from .extractors import llm as llm_extractor
-from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
+from .calls import Asked, CallCache, EngineContext, Mode, NotRecorded, Outcome, cache_key
 from .contract import DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
 from .pack import DOMAINS, Role, RoleMap, load_pack
@@ -725,37 +725,48 @@ class Execution:
 
     def _call(self, extractor: Extractor, task: ExtractionTask, text: str, index: Index, spec: EvidenceTypeSpec,
               context: list[Item], position: int = 0) -> tuple[str, Any]:
+        """One extractor call through the record cache, its result checked centrally (evidence/checks.py), recorded
+        as every call is (`_record`): an `extractor_call` event."""
         started = utc_now()
         outcome = self.calls.call(extractor, task, lambda: EngineContext(text, index, context, spec.fields, self.provider))
         result = checks.check(outcome.raw, task, index, spec, {i.item_id: i for i in context})
-        call_id = self.events.next_id()
-        result = result.model_copy(update={"call_id": call_id})
-        if self.run_calls is not None and outcome.model_calls:
-            self.run_calls.add({
-                "key": cache_key(extractor.spec.extractor_id, task.task_sha256, outcome.attempt), "phase": self.phase,
-                "document": task.document.id, "evidence_type": task.evidence_type,
-                "extractor_id": extractor.spec.extractor_id, "attempt": outcome.attempt, "status": result.status,
-                "source": outcome.source, "started_at": started, "ended_at": utc_now(),
-                "task": task.model_dump(mode="json"), "result": outcome.raw.model_dump(mode="json"),
-                "model_calls": outcome.model_calls})
-        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
-                                                                       result.model_dump(mode="json"))
-        tokens_in, tokens_out = usage(outcome.model_calls)
+        result = result.model_copy(update={"call_id": self.events.next_id()})
+        self._record(extractor.spec.extractor_id, task.task_sha256, outcome, result, started,
+                     row={"document": task.document.id, "evidence_type": task.evidence_type,
+                          "task": task.model_dump(mode="json"), "result": outcome.raw.model_dump(mode="json")},
+                     event="extractor_call", used=[task.document.sha256, task.protocol.sha256, *task.context],
+                     generated=[i.item_id for i in result.items], group_id=task.document.id,
+                     custom={"task_sha256": task.task_sha256, "output_sha256": result.output_sha256,
+                             "model_calls": list(result.model_calls), "document": task.document.id,
+                             "evidence_type": task.evidence_type, "source": outcome.source,
+                             "attempt": outcome.attempt, "position": position,
+                             "rejected": len(result.rejected), "focus": task.focus.gap if task.focus else None})
+        return result.call_id, result
+
+    def _record(self, owner: str, request_sha256: str, made: Outcome | Asked, result: ExtractionResult, started: str, *,
+                row: dict[str, Any], event: str, custom: dict[str, Any], used: list[str] | None = None,
+                generated: list[str] | None = None, group_id: str | None = None) -> None:
+        """What every recorded call leaves (an extractor's, the names check's, a stage's): calls/<call id>.json (the
+        checked `result`, whose call id is the id of its `event`), the event, one calls.jsonl row when it made model
+        calls (`row`: its document, evidence type, task and result as the row shows them) and the run's cost. `made`
+        is what the record cache gave (Outcome or Asked: source, attempt, model-call records)."""
+        self.outputs[f"{CALLS_DIR}/{result.call_id}.json"] = write_json(self.root / CALLS_DIR / f"{result.call_id}.json",
+                                                                        result.model_dump(mode="json"))
+        self.events.add(event, used=used or [], generated=generated or [], agent_id=owner, status=result.status,
+                        group_id=group_id, started_at=started, custom=custom)
+        if self.run_calls is not None and made.model_calls:
+            self.run_calls.add({"key": cache_key(owner, request_sha256, made.attempt), "phase": self.phase,
+                                "document": row["document"], "evidence_type": row["evidence_type"],
+                                "extractor_id": owner, "attempt": made.attempt, "status": result.status,
+                                "source": made.source, "started_at": started, "ended_at": utc_now(),
+                                "task": row["task"], "result": row["result"], "model_calls": made.model_calls})
+        tokens_in, tokens_out = usage(made.model_calls)
         self.cost["calls"] += 1
-        self.cost["cached_calls"] += outcome.source == "cache"
-        self.cost["model_calls"] += len(outcome.model_calls)
-        self.cost["made_model_calls"] += len(outcome.model_calls) if outcome.source == "fresh" else 0
+        self.cost["cached_calls"] += made.source == "cache"
+        self.cost["model_calls"] += len(made.model_calls)
+        self.cost["made_model_calls"] += len(made.model_calls) if made.source == "fresh" else 0
         self.cost["input_tokens"] += tokens_in
         self.cost["output_tokens"] += tokens_out
-        self.events.add("extractor_call", used=[task.document.sha256, task.protocol.sha256, *task.context],
-                        generated=[i.item_id for i in result.items], agent_id=extractor.spec.extractor_id,
-                        status=result.status, group_id=task.document.id, started_at=started,
-                        custom={"task_sha256": task.task_sha256, "output_sha256": result.output_sha256,
-                                "model_calls": list(result.model_calls), "document": task.document.id,
-                                "evidence_type": task.evidence_type, "source": outcome.source,
-                                "attempt": outcome.attempt, "position": position,
-                                "rejected": len(result.rejected), "focus": task.focus.gap if task.focus else None})
-        return call_id, result
 
     # --- the names step -------------------------------------------------------------------------------
 
@@ -812,37 +823,25 @@ class Execution:
 
     def _asked(self, owner: str, request: dict[str, Any], make: Callable[[], tuple[dict[str, Any], list[dict[str, Any]]]],
                *, evidence_type: str, event: str, extra: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
-        """The bookkeeping of one model call that is not an extractor call (the names check, a stage's `ctx.ask`):
-        the record cache, calls/<id>.json (error reason `model_call` on a failure, so it is a failed call wherever
-        failed calls are counted and `--retry-errors` asks it again), one `event`, one row of calls.jsonl when it made
-        model calls, and the run's cost. Returns (the cache's Asked, the check dict)."""
+        """One model call that is not an extractor call (the names check, a stage's `ctx.ask`) through the record
+        cache, recorded as every call is (`_record`): its calls/<id>.json has error reason `model_call` on a failure,
+        so it is a failed call wherever failed calls are counted and `--retry-errors` asks it again. Returns (the
+        cache's Asked, the check dict)."""
         started = utc_now()
         asked = self.calls.recorded(owner, request, make)
         failed = asked.value.get("status") == "error"
-        call_id = self.events.next_id()
+        request_sha256 = digest(request)
         result = ExtractionResult(
-            call_id=call_id, extractor_id=owner, task_sha256=digest(request), status="error" if failed else "ok",
+            call_id=self.events.next_id(), extractor_id=owner, task_sha256=request_sha256,
+            status="error" if failed else "ok",
             error=ExtractionError(reason="model_call", detail=str(asked.value.get("error") or "")[:300]) if failed else None,
             model_calls=tuple(r["id"] for r in asked.model_calls))
-        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
-                                                               result.model_dump(mode="json"))
-        check = {"call_id": call_id, "key": cache_key(owner, digest(request)), "attempt": asked.attempt,
+        check = {"call_id": result.call_id, "key": cache_key(owner, request_sha256), "attempt": asked.attempt,
                  "source": asked.source, "status": result.status, "model_calls": list(result.model_calls)}
-        self.events.add(event, used=[], generated=[], agent_id=owner, status=result.status, started_at=started,
-                        custom={**{k: v for k, v in check.items() if k != "call_id"}, **(extra or {})})
-        if self.run_calls is not None and asked.model_calls:
-            self.run_calls.add({"key": cache_key(owner, digest(request), asked.attempt), "phase": self.phase,
-                                "document": "", "evidence_type": evidence_type, "extractor_id": owner,
-                                "attempt": asked.attempt, "status": result.status, "source": asked.source,
-                                "started_at": started, "ended_at": utc_now(), "task": request,
-                                "result": result.model_dump(mode="json"), "model_calls": asked.model_calls})
-        tokens_in, tokens_out = usage(asked.model_calls)
-        self.cost["calls"] += 1
-        self.cost["cached_calls"] += asked.source == "cache"
-        self.cost["model_calls"] += len(asked.model_calls)
-        self.cost["made_model_calls"] += len(asked.model_calls) if asked.source == "fresh" else 0
-        self.cost["input_tokens"] += tokens_in
-        self.cost["output_tokens"] += tokens_out
+        self._record(owner, request_sha256, asked, result, started, event=event,
+                     row={"document": "", "evidence_type": evidence_type, "task": request,
+                          "result": result.model_dump(mode="json")},
+                     custom={**{k: v for k, v in check.items() if k != "call_id"}, **(extra or {})})
         return asked, check
 
     def stage_ask(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
@@ -855,9 +854,7 @@ class Execution:
             if window is not None and tokens > window:
                 raise stages.StageCallError(f"{purpose}: too_long: about {tokens} tokens with max_tokens, over the "
                                             f"{window}-token context window of {alias}; not sent")
-        owner = f"stage:{purpose}"
-        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
-                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}   # plain asks: as before
+        owner, request = _stage_request(instructions, user_prompt, output_type, purpose, alias, settings, request_extra)
         asked, _ = self._asked(owner, request, lambda: self._structured(alias, instructions, user_prompt, output_type, settings),
                                evidence_type="stage", event="stage_call", extra={"purpose": purpose})
         if asked.value.get("status") == "error":
@@ -868,9 +865,8 @@ class Execution:
                         settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> None:
         """A stage's recorded reply (the request `stage_ask` made) did not parse: mark that record so a rerun with
         `retry_errors` asks it again (CallCache.mark_bad). The record itself is kept: this run and its replay read it."""
-        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
-                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}
-        self.calls.mark_bad(f"stage:{purpose}", request)
+        self.calls.mark_bad(*_stage_request(instructions, user_prompt, output_type, purpose, alias, settings,
+                                            request_extra))
 
     def reason_step(self) -> reasoner.Inferences | None:
         """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a
@@ -940,6 +936,14 @@ class Execution:
         for name, result in stages.after_run(RunDir(self.root), self.ctx).items():
             self.outputs[f"{name}.json"] = write_json(self.root / f"{name}.json", result)
         return answer
+
+
+def _stage_request(instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
+                   settings: dict[str, Any], request_extra: dict[str, Any] | None) -> tuple[str, dict[str, Any]]:
+    """(owner id, request) of a stage's model call, its cache key: `stage_ask` asks it and `stage_bad_reply` marks it,
+    so a retry finds the record the bad reply came from."""
+    return f"stage:{purpose}", {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
+                                "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}
 
 
 def _warm(setup: Setup, workers: int, run_calls: RunCalls | None = None) -> None:
