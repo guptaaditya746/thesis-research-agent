@@ -49,11 +49,12 @@ from scipy.stats import kendalltau
 
 from evidence.names import NameGroups
 
+from . import planbatch as pb
+from .planbatch import CONFIRMATIONS
 from .realpapers.common import manifest_ids, ratio, same_name
 
 Kind = Literal["rank", "list", "compare", "claims"]
 KINDS = ("rank", "list", "compare", "claims")
-CONFIRMATIONS = ("auto-confirmed", "hand-confirmed")
 TUNE_FILE = "tune_split.json"
 SAMPLE_FILE = "sample.json"
 
@@ -345,9 +346,7 @@ def score_set(questions: list[RealQuestion], answers_auto: dict[str, Answer], an
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     chosen = sample(questions, n, seed, out / SAMPLE_FILE)
-    rows = {"auto-confirmed": [score(answers_auto.get(q.id, Answer()), q, confirmation="auto-confirmed", groups=groups)
-                               for q in chosen],
-            "hand-confirmed": [score(answers_hand.get(q.id, Answer()), q, confirmation="hand-confirmed",
-                                     groups=groups) for q in chosen[:5]]}
+    rows = {conf: [score(answers.get(q.id, Answer()), q, confirmation=conf, groups=groups) for q in pb.pool(chosen, conf)]
+            for conf, answers in ((pb.AUTO, answers_auto), (pb.HAND, answers_hand))}
     (out / "real_set.json").write_text(json.dumps(rows, indent=1) + chr(10), encoding="utf-8", newline=chr(10))
     return rows

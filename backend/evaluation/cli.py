@@ -353,12 +353,13 @@ def cmd_tune_split(args: argparse.Namespace) -> int:
 
 
 def cmd_wholerun(args: argparse.Namespace) -> int:
+    from . import planbatch as pb
     from . import wholerun_cmd as wc
 
     rs = real_set(args.set)
     questions = rs.questions(args.src, args.corpus)
-    confirm = {"auto": ("auto-confirmed",), "hand": ("hand-confirmed",)}.get(args.confirm, wc.CONFIRMATIONS)
-    reasoning = ("on", "off") if args.reasoning == "both" else (args.reasoning,)
+    confirm = {"auto": (pb.AUTO,), "hand": (pb.HAND,)}.get(args.confirm, pb.CONFIRMATIONS)
+    reasoning = pb.REASONING if args.reasoning == "both" else (args.reasoning,)
     systems = ("engine", "rag") if args.system == "both" else (args.system,)
     rag = None
     if "rag" in systems:

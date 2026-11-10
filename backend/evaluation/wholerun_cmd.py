@@ -50,10 +50,8 @@ from . import report as rep
 from . import stats
 from .wholerun import (Answer, RealQuestion, answer_column, from_run, question_papers, sample, score,
                        scored_line, tune_papers)
+from .planbatch import CONFIRMATIONS, REASONING, SYSTEM, pool, run_dir   # the layout scripts/plan-runs.py writes
 
-CONFIRMATIONS = ("auto-confirmed", "hand-confirmed")
-SYSTEM = "system"                  # who confirm_all(plan, who="system") stamps on an auto-confirmed plan
-HAND_N = 5                         # hand-confirmed questions per set
 RAG_MODES = ("global", "per_paper")
 HEADLINE = {"rank": "top1", "list": "f1", "compare": "direction_agreement", "claims": "recall"}
 DEFAULT_MODEL = "orch-model"       # what a run without an explicit model uses (extractors.llm.DEFAULTS)
@@ -179,7 +177,7 @@ def _compare(engine: list[dict[str, Any]], rag: list[dict[str, Any]], seed: int)
 
 
 def wholerun(questions: list[RealQuestion], runs: Path, out: Path, *, set_name: str, n: int = 10, seed: int = 0,
-             left_out: str, reasoning: Iterable[str] = ("on", "off"), confirm: Iterable[str] = CONFIRMATIONS,
+             left_out: str, reasoning: Iterable[str] = REASONING, confirm: Iterable[str] = CONFIRMATIONS,
              systems: Iterable[str] = ("engine",), rag_answer: RagAnswer | None = None,
              rag_model: str | None = None, groups: Any = None) -> dict[str, Any]:
     """Score one real set (see the module docstring). Writes sample.json, wholerun.json and wholerun.md in `out`."""
@@ -195,14 +193,13 @@ def wholerun(questions: list[RealQuestion], runs: Path, out: Path, *, set_name: 
     missing_plan: dict[str, list[str]] = {}
     fresh: dict[str, dict[str, bool]] = {c: {} for c in confirm}
     for conf in confirm:
-        pool = chosen if conf == "auto-confirmed" else chosen[:HAND_N]
         for how in reasoning:
             key = f"{conf}/{how}"
             if "engine" not in systems:
                 continue
             rows[key], missing[key], missing_plan[key] = [], [], []
-            for q in pool:
-                root = runs / conf / how / q.id
+            for q in pool(chosen, conf):
+                root = run_dir(runs, conf, how, q.id)
                 if not (root / "answer.json").is_file():
                     missing[key].append(q.id)
                     rows[key].append({"id": q.id, "kind": q.kind, "confirmation": conf, "missing_run": True,

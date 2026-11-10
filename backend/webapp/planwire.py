@@ -16,6 +16,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from evaluation.planbatch import PLANNER_CACHE, orch_lm, saved_templates
 from evidence.plan import Plan, write_plan
 
 from .evplan import NotWired, PlanBackend
@@ -23,29 +24,17 @@ from .files import NotFound
 from .settings import Settings
 
 PLAN_CORPUS = "EV_PLAN_CORPUS"
-PLANNER_CACHE = "planner.jsonl"
-
-
-from evidence.stages import gateway_ask  # noqa: E402,F401  (moved to evidence.stages; kept importable here)
 
 
 def lm_factory(settings: Settings):
-    from modelcall.cache import JsonlCache
-    from modelcall.dspy_lm import RecordedLM
-    from modelcall.pins import ORCH_ALIAS
     folder = (settings.ev_cache_dir or (Path(settings.ev) / "cache" if settings.ev else None))
 
-    def make() -> RecordedLM:
+    def make() -> Any:
         if folder is None:
             raise NotWired("no record cache for the planner's model: set EV")
         folder.mkdir(parents=True, exist_ok=True)
-        return RecordedLM(ORCH_ALIAS, gateway_ask(ORCH_ALIAS), cache=JsonlCache(folder / PLANNER_CACHE))
+        return orch_lm(folder / PLANNER_CACHE)
     return make
-
-
-def saved_templates() -> dict[str, str]:
-    from evidence.kg.query import template, templates
-    return {name: template(name) for name in templates()}
 
 
 class PlanRuns:
