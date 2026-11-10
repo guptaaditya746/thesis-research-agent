@@ -47,7 +47,8 @@ from evidence.protocol import load as load_protocol
 from evidence.rundir import COMPARISONS_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 from jsonio import sha256_hex
 
-from .common import items_of, name_groups, same_name
+from .common import (add_paper, items_of, name_groups, ratio, read_json, read_manifest, same_name, write_json,
+                     write_manifest)
 
 GOLD_FILE = "yun_gold.json"
 SOURCE_FILE = "yun_corpus.json"
@@ -181,15 +182,11 @@ def to_corpus(repo: Path, ei: Path, out: Path) -> Path:
             continue
         gold.setdefault(doc, []).append(record)
     (out / "papers").mkdir(parents=True, exist_ok=True)
-    papers = []
-    for doc in gold:
-        data = (repo / PAPERS / f"{doc}.md").read_bytes()
-        (out / "papers" / f"{doc}.md").write_bytes(data)
-        papers.append({"id": doc, "file": f"papers/{doc}.md", "sha256": sha256_hex(data)})
+    papers = [add_paper(out, doc, (repo / PAPERS / f"{doc}.md").read_bytes()) for doc in gold]
     records = [r for rs in gold.values() for r in rs]
-    _write(out / "manifest.json", {"corpus_id": "yun-llm-meta-analysis", "papers": papers})
-    _write(out / GOLD_FILE, gold)
-    _write(out / SOURCE_FILE, {
+    write_manifest(out, "yun-llm-meta-analysis", papers)
+    write_json(out / GOLD_FILE, gold)
+    write_json(out / SOURCE_FILE, {
         "records_file": RECORDS.as_posix(), "records_sha256": sha256_hex(raw),
         "prompts_sha256": sha256_hex((ei / PROMPTS).read_bytes()),
         "annotations_sha256": sha256_hex((ei / ANNOTATIONS).read_bytes()),
@@ -199,10 +196,6 @@ def to_corpus(repo: Path, ei: Path, out: Path) -> Path:
         "records_without_paper": no_paper, "prompt_ids_not_in_ei": no_prompt,
         "unreadable_number_cells": unreadable, "rows_with_extra_cells": extra_cells})
     return out
-
-
-def _write(path: Path, data: Any) -> None:
-    path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
 # --- the score --------------------------------------------------------------------------------------------------
@@ -232,10 +225,6 @@ def _roles(run_dir: Path) -> RoleMap:
     """The run's pack by role: its protocol.yaml's pack, from the domains folder run.json's settings name."""
     settings = (RunDir(run_dir).try_json(RUN_FILE) or {}).get("settings") or {}
     return RoleMap(load_protocol(Path(run_dir) / PROTOCOL_FILE, settings.get("domains")).pack())
-
-
-def _ratio(num: int, den: int) -> float | None:
-    return num / den if den else None
 
 
 class _Paper:
@@ -274,15 +263,14 @@ def _same_thing(shown: str, wanted: str, groups: NameGroups | None) -> bool:
 def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
     """A_names, A_values, B and C (module docstring) over the corpus's records."""
     run_dir, corpus = Path(run_dir), Path(corpus)
-    gold: dict[str, list[dict[str, Any]]] = json.loads((corpus / GOLD_FILE).read_text(encoding="utf-8"))
+    gold: dict[str, list[dict[str, Any]]] = read_json(corpus / GOLD_FILE)
     built = RunDir(run_dir).try_json(COMPARISONS_FILE)
     if not isinstance(built, dict):
         raise ValueError(f"run {run_dir} has no readable {COMPARISONS_FILE} (a run made before plan 2's comparisons)")
     min_effect = built.get("min_effect")
     if min_effect is None:
         raise ValueError(f"{COMPARISONS_FILE} of run {run_dir} records no min_effect")
-    manifest = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
-    doc_of = {p["file"]: str(p["id"]) for p in manifest["papers"]}
+    doc_of = {p["file"]: str(p["id"]) for p in read_manifest(corpus)["papers"]}
     roles, groups = _roles(run_dir), name_groups(run_dir)
     items = items_of(run_dir)
     by_id = {i.item_id: i for i in items}
@@ -325,13 +313,13 @@ def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
 
     complete = sum(r["complete"] for _, r in records)
     return {
-        "records": len(records), "complete": complete, "complete_share": _ratio(complete, len(records)),
+        "records": len(records), "complete": complete, "complete_share": ratio(complete, len(records)),
         "A_names": {"records": len(records), "intervention": names["intervention"], "comparator": names["comparator"],
-                    "outcome": names["outcome"], "all": names["all"], "all_share": _ratio(names["all"], len(records))},
-        "A_values": {"records": complete, "arms": arms, "matched": matched, "share": _ratio(matched, arms)},
-        "B": {"records": complete, "arms": arms, "linked": linked, "share": _ratio(linked, arms),
-              "linked_of_matched": _ratio(linked, matched)},
-        "C": {"records": c_records, "compared": c_compared, "agree": agree, "share": _ratio(agree, c_records),
+                    "outcome": names["outcome"], "all": names["all"], "all_share": ratio(names["all"], len(records))},
+        "A_values": {"records": complete, "arms": arms, "matched": matched, "share": ratio(matched, arms)},
+        "B": {"records": complete, "arms": arms, "linked": linked, "share": ratio(linked, arms),
+              "linked_of_matched": ratio(linked, matched)},
+        "C": {"records": c_records, "compared": c_compared, "agree": agree, "share": ratio(agree, c_records),
               "min_effect": min_effect, "by_label": {k: dict(v) for k, v in by_label.items()}},
     }
 
@@ -358,6 +346,16 @@ def _engine_label(comparisons: list[dict[str, Any]], record: dict[str, Any], by_
 def report(run_dir: Path, corpus: Path) -> dict[str, Any]:
     """The real.json of the check: `score`, the run, the sources with their pinned commits, what the corpus was made
     from (SOURCE_FILE) and the notes (real.md lists them)."""
-    source = json.loads((Path(corpus) / SOURCE_FILE).read_text(encoding="utf-8"))
+    source = read_json(Path(corpus) / SOURCE_FILE)
     return {"run": Path(run_dir).name, **score(run_dir, corpus), "sources": SOURCES, "corpus_source": source,
             "notes": list(NOTES)}
+
+
+def prepare_step(repo: Path, ei: Path, out: Path) -> str:
+    """`evaluate yun corpus`: write the corpus; its SOURCE_FILE is printed."""
+    return json.dumps(read_json(to_corpus(repo, ei, out) / SOURCE_FILE), indent=1)
+
+
+def check_step(run: Path, corpus: Path) -> dict[str, Any]:
+    """`evaluate yun score`: the real.json result."""
+    return report(run, corpus)

@@ -21,28 +21,14 @@ import re
 import sys
 from pathlib import Path
 
-from evaluation.realpapers import sofc
+from evaluation.realpapers import cochraneforest, sofc
+from evaluation.realpapers.common import MANIFEST_FILE, read_manifest, write_json
 from evaluation.wholerun import TUNE_FILE, tune_split
-from jsonio import sha256_hex
-
-
-def sofc_corpus(src: Path) -> Path:
-    out = src / "corpus"
-    (out / "papers").mkdir(parents=True, exist_ok=True)
-    papers = []
-    for p in sofc._open(src):
-        blob = str(p["text"]).encode("utf-8")
-        (out / "papers" / f"{p['id']}.md").write_bytes(blob)
-        papers.append({"id": str(p["id"]), "file": f"papers/{p['id']}.md", "sha256": sha256_hex(blob)})
-    (out / "manifest.json").write_text(json.dumps({"corpus_id": "sofc", "papers": papers}, indent=1) + "\n",
-                                       encoding="utf-8", newline="\n")
-    print(sofc.left_out(src))
-    return out
 
 
 def paper_ids(corpus: Path) -> list[str]:
-    manifests = [corpus / "manifest.json"] if (corpus / "manifest.json").is_file() else sorted(corpus.glob("*/manifest.json"))
-    ids = sorted({p["id"] for m in manifests for p in json.loads(m.read_text(encoding="utf-8"))["papers"]})
+    folders = [corpus] if (corpus / MANIFEST_FILE).is_file() else sorted(m.parent for m in corpus.glob(f"*/{MANIFEST_FILE}"))
+    ids = sorted({p["id"] for f in folders for p in read_manifest(f)["papers"]})
     if not ids:
         raise SystemExit(f"real-set-prep: no manifest.json with papers under {corpus}")
     return ids
@@ -116,7 +102,7 @@ def tune_examples(set_dir: Path, out_dir: Path | None = None) -> Path | None:
     if (set_dir / sofc.SOURCE_FILE).is_file():
         by_step, note = sofc_examples(set_dir)
         print(note)
-    elif (set_dir / "release.json").is_file():
+    elif (set_dir / cochraneforest.RELEASE_FILE).is_file():
         by_step = {}
     else:       # SciLead, SciREX: no labels this script can use
         print(f"real-set-prep: no {sofc.SOURCE_FILE} or release.json in {set_dir}: no labels to build examples from", file=sys.stderr)
@@ -134,7 +120,7 @@ def tune_examples(set_dir: Path, out_dir: Path | None = None) -> Path | None:
     out = Path(out_dir) if out_dir is not None else set_dir / "corpus"
     out.mkdir(parents=True, exist_ok=True)
     path = out / EXAMPLES_FILE
-    path.write_text(json.dumps({"examples": rows}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    write_json(path, {"examples": rows})
     return path
 
 
@@ -158,12 +144,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"wrote {path}" if path else "wrote nothing: no real step has examples from these labels")
         return 0
     if args.cmd == "sofc-corpus":
-        print(f"wrote {sofc_corpus(args.src)}")
+        out = sofc.to_corpus(args.src)
+        print(sofc.left_out(args.src))
+        print(f"wrote {out}")
         return 0
     if args.cmd == "cochrane-corpus":
-        from evaluation.realpapers import cochraneforest
         out = cochraneforest.to_corpus(args.src, args.src / "corpus")
-        print(f"wrote {out}: " + json.loads((out / cochraneforest.SOURCE_FILE).read_text(encoding="utf-8"))["left_out_line"])
+        print(f"wrote {out}: " + cochraneforest.left_out(args.src, out))
         return 0
     path = args.corpus / TUNE_FILE
     if path.exists():

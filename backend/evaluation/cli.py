@@ -92,6 +92,7 @@ from typing import Any
 from agent.rundir import ORCHESTRATOR
 
 from . import report as rep
+from .realpapers import SETS, WHOLE_RUN_SETS, real_set
 
 DEFAULT_ALIAS = ORCHESTRATOR["alias"]  # the agent's model, so both baselines and the agent share one model
 
@@ -286,75 +287,25 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_scirex(args: argparse.Namespace) -> int:
-    from .realpapers import scirex
+def cmd_real(args: argparse.Namespace) -> int:
+    """`evaluate <set> <step>` of a real-paper set (realpapers.SETS): a prepare step prints what its adapter returns;
+    a check step writes the adapter's result as real.json and real.md into --out."""
     from .realpapers.common import write_real
 
+    rs = real_set(args.cmd)
+    check = rs.check is not None and args.real_step == rs.check.name
+    step = rs.check if check else rs.prepare
+    assert step is not None
+    run = rs.module().check_step if check else rs.module().prepare_step
     try:
-        if args.scirex_cmd == "corpus":
-            corpus = scirex.to_corpus(args.jsonl, args.out, limit=args.limit)
-            print(json.dumps(json.loads((corpus / scirex.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
-            return 0
-        estimate = json.loads(args.estimate.read_text(encoding="utf-8")) if args.estimate else None
-        result = scirex.report(args.run, args.corpus, estimate)
+        result = run(**{d: getattr(args, d) for d in step.dests if not (check and d == "out")})
     except (OSError, ValueError, KeyError) as exc:
-        raise SystemExit(f"evaluate scirex {args.scirex_cmd}: {exc}") from None
-    js, md = write_real(result, args.out, "SciREX")
-    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
-    return 0
-
-
-def cmd_scilead(args: argparse.Namespace) -> int:
-    from .realpapers import scilead
-    from .realpapers.common import write_real
-
-    try:
-        if args.scilead_cmd == "ids":
-            found = scilead.ids(args.data)
-            args.out.write_text("".join(f"{i}\n" for i in found), encoding="utf-8", newline="\n")
-            print(json.dumps({"ids": len(found), "out": str(args.out), "no_arxiv_id": scilead.no_arxiv(args.data)}))
-            return 0
-        result = scilead.report(args.run, args.corpus, args.data)
-    except (OSError, ValueError, KeyError) as exc:
-        raise SystemExit(f"evaluate scilead {args.scilead_cmd}: {exc}") from None
-    js, md = write_real(result, args.out, "SciLead")
-    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
-    return 0
-
-
-def cmd_yun(args: argparse.Namespace) -> int:
-    from .realpapers import yun
-    from .realpapers.common import write_real
-
-    try:
-        if args.yun_cmd == "corpus":
-            corpus = yun.to_corpus(args.repo, args.ei, args.out)
-            print(json.dumps(json.loads((corpus / yun.SOURCE_FILE).read_text(encoding="utf-8")), indent=1))
-            return 0
-        result = yun.report(args.run, args.corpus)
-    except (OSError, ValueError, KeyError) as exc:
-        raise SystemExit(f"evaluate yun {args.yun_cmd}: {exc}") from None
-    js, md = write_real(result, args.out, "Yun et al. 2024 + Evidence Inference")
-    print(json.dumps({"real_json": str(js), "real_md": str(md)}))
-    return 0
-
-
-def cmd_edits(args: argparse.Namespace) -> int:
-    from .realpapers import edits
-    from .realpapers.common import write_real
-
-    try:
-        loaded = edits.load_edits(args.edits)
-        if args.edits_cmd == "apply":
-            made = [str(edits.apply(args.corpus, e, args.out)) for e in loaded]
-            print(json.dumps({"corpora": made}))
-            return 0
-        result = edits.report(args.original, args.runs, loaded, args.corpora)
-    except (OSError, ValueError, KeyError) as exc:
-        raise SystemExit(f"evaluate edits {args.edits_cmd}: {exc}") from None
-    js, md = write_real(result, args.out, "arXiv edit test")
-    print(json.dumps({"real_json": str(js), "real_md": str(md), "carried": result["carried"],
-                      "missing": result["missing"], "not_testable": result["not_testable"]}))
+        raise SystemExit(f"evaluate {args.cmd} {args.real_step}: {exc}") from None
+    if not check:
+        print(result)
+        return 0
+    js, md = write_real(result, args.out, rs.title)
+    print(json.dumps({"real_json": str(js), "real_md": str(md), **{k: result[k] for k in rs.summary}}))
     return 0
 
 
@@ -383,32 +334,6 @@ def cmd_sheet_summary(args: argparse.Namespace) -> int:
     return 0
 
 
-REAL_SETS = ("scilead", "scirex", "cochraneforest", "sofc")
-
-
-def _real_questions(name: str, src: Path, corpus: Path | None) -> list[Any]:
-    from .realpapers import cochraneforest, scilead, scirex, sofc
-    return {"scilead": scilead, "scirex": scirex, "cochraneforest": cochraneforest, "sofc": sofc}[name].questions(src, corpus)
-
-
-def left_out_of(name: str, src: Path, corpus: Path | None, questions: list[Any]) -> str:
-    """The open-access line of a set: how many of its items have no open full text."""
-    from .realpapers import cochraneforest, sofc
-    from .wholerun import left_out_line
-    if name == "sofc":
-        return sofc.left_out(src)
-    if name == "cochraneforest":
-        path = (corpus if corpus is not None else Path(src) / "corpus") / cochraneforest.SOURCE_FILE
-        if path.is_file():
-            return json.loads(path.read_text(encoding="utf-8"))["left_out_line"]
-        return "left out: not recorded (run the cochraneforest corpus step)"
-    if name == "scilead":
-        gone = sum(q.gold.get("left_out", 0) for q in questions)
-        return left_out_line(gone, gone + sum(len(q.gold.get("ranking", [])) for q in questions))
-    from .realpapers import scirex     # arXiv, all open: only the gold of documents outside the corpus is left out
-    return scirex.left_out(src, corpus)
-
-
 def cmd_tune_split(args: argparse.Namespace) -> int:
     """Hold out questions of one real set for tuning (written once to <corpus>/tune_split.json)."""
     from .wholerun import TUNE_FILE, tune_split_questions
@@ -417,7 +342,7 @@ def cmd_tune_split(args: argparse.Namespace) -> int:
     path = corpus / TUNE_FILE
     if path.exists():
         raise SystemExit(f"evaluate tune-split: {path} exists; it is written once (move it aside to redo)")
-    questions = _real_questions(args.set, args.src, args.corpus)
+    questions = real_set(args.set).questions(args.src, args.corpus)
     split = tune_split_questions(questions, args.fraction, args.seed, path)
     from .wholerun import question_papers
     gave = sum(1 for q in questions if q.id in split["questions"] and set(question_papers(q)) & set(split["papers"]))
@@ -428,11 +353,13 @@ def cmd_tune_split(args: argparse.Namespace) -> int:
 
 
 def cmd_wholerun(args: argparse.Namespace) -> int:
+    from . import planbatch as pb
     from . import wholerun_cmd as wc
 
-    questions = _real_questions(args.set, args.src, args.corpus)
-    confirm = {"auto": ("auto-confirmed",), "hand": ("hand-confirmed",)}.get(args.confirm, wc.CONFIRMATIONS)
-    reasoning = ("on", "off") if args.reasoning == "both" else (args.reasoning,)
+    rs = real_set(args.set)
+    questions = rs.questions(args.src, args.corpus)
+    confirm = {"auto": (pb.AUTO,), "hand": (pb.HAND,)}.get(args.confirm, pb.CONFIRMATIONS)
+    reasoning = pb.REASONING if args.reasoning == "both" else (args.reasoning,)
     systems = ("engine", "rag") if args.system == "both" else (args.system,)
     rag = None
     if "rag" in systems:
@@ -447,7 +374,7 @@ def cmd_wholerun(args: argparse.Namespace) -> int:
                             engine_model_id=model_id, cache=cache, seed=args.seed)
     try:
         report = wc.wholerun(questions, args.runs, args.out, set_name=args.set, n=args.sample, seed=args.seed,
-                             left_out=left_out_of(args.set, args.src, args.corpus, questions), reasoning=reasoning,
+                             left_out=rs.left_out(args.src, args.corpus, questions), reasoning=reasoning,
                              confirm=confirm, systems=systems, rag_answer=rag, rag_model=args.model)
     except (ValueError, FileNotFoundError) as exc:   # a refused run, or a corpus manifest that is not there
         print(f"evaluate wholerun: {exc}", file=sys.stderr)
@@ -582,48 +509,16 @@ def parser() -> argparse.ArgumentParser:
     rv.add_argument("--csv", type=Path, required=True, help="review-s<seed>.csv with the three checks ticked yes/no")
     rv.set_defaults(func=cmd_review)
 
-    sx = sub.add_parser("scirex", help="real-paper check: SciREX names at mention and salient-cluster level (D21)")
-    sxs = sx.add_subparsers(dest="scirex_cmd", required=True)
-    sc = sxs.add_parser("corpus", help="SciREX JSON lines -> manifest.json, papers/ and the gold (read by score only)")
-    sc.add_argument("--jsonl", type=Path, required=True, help="a SciREX split file (e.g. test.jsonl)")
-    sc.add_argument("--out", type=Path, required=True, help="the corpus directory to write")
-    sc.add_argument("--limit", type=int, help="keep the first N papers (chosen with `evidence estimate`)")
-    sc.set_defaults(func=cmd_scirex)
-    ss = sxs.add_parser("score", help="score a run of domains/ml/protocols/names.yaml -> real.json and real.md")
-    ss.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
-    ss.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `scirex corpus`")
-    ss.add_argument("--out", type=Path, required=True)
-    ss.add_argument("--estimate", type=Path, help="the saved output of `evidence estimate` that chose --limit")
-    ss.set_defaults(func=cmd_scirex)
-
-    sl = sub.add_parser("scilead", help="real-paper check: SciLead values, best per leaderboard, pairwise order (D42)")
-    sls = sl.add_subparsers(dest="scilead_cmd", required=True)
-    li = sls.add_parser("ids", help="the papers' arXiv ids, one per line, for `evidence fetch --ids`")
-    li.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release")
-    li.add_argument("--out", type=Path, required=True, help="the ids file to write")
-    li.set_defaults(func=cmd_scilead)
-    ls = sls.add_parser("score", help="score a run of domains/ml/protocols/values.yaml -> real.json and real.md")
-    ls.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
-    ls.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `evidence fetch --ids`")
-    ls.add_argument("--data", type=Path, required=True, help="the unpacked SciLead release (the gold)")
-    ls.add_argument("--out", type=Path, required=True)
-    ls.set_defaults(func=cmd_scilead)
-
-    ed = sub.add_parser("edits", help="real-paper check: the arXiv edit test (a number, a name, a limitation changed)")
-    eds = ed.add_subparsers(dest="edits_cmd", required=True)
-    ea = eds.add_parser("apply", help="one edited corpus per edit -> <out>/<edit id>")
-    ea.add_argument("--corpus", type=Path, required=True, help="the original corpus (e.g. from `evidence fetch --ids`)")
-    ea.add_argument("--edits", type=Path, required=True, help="the frozen edits file (evaluation/realpapers/data/)")
-    ea.add_argument("--out", type=Path, required=True, help="the folder of the edited corpora")
-    ea.set_defaults(func=cmd_edits)
-    ec = eds.add_parser("check", help="item, link and answer per edit -> real.json and real.md")
-    ec.add_argument("--original", type=Path, required=True, help="the run directory on the original corpus")
-    ec.add_argument("--runs", type=Path, required=True, help="the folder holding one run per edit, named by edit id")
-    ec.add_argument("--edits", type=Path, required=True)
-    ec.add_argument("--corpora", type=Path, help="the folder `edits apply` wrote: each edit is placed by its "
-                    "edit.json (default: the edited run's corpus, else the original run's spans)")
-    ec.add_argument("--out", type=Path, required=True)
-    ec.set_defaults(func=cmd_edits)
+    for rs in SETS.values():   # the real-paper sets with steps: `evaluate <set> <step>` (realpapers.SETS)
+        steps = [st for st in (rs.prepare, rs.check) if st is not None]
+        if not steps:
+            continue
+        rsub = sub.add_parser(rs.name, help=rs.help).add_subparsers(dest="real_step", required=True)
+        for st in steps:
+            sp = rsub.add_parser(st.name, help=st.help)
+            for flag, kw in st.args:
+                sp.add_argument(flag, **kw)
+            sp.set_defaults(func=cmd_real)
 
     sh2 = sub.add_parser("sheet", help="a hand-check CSV: items with their source sentences, to mark right or wrong")
     sh2.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
@@ -640,21 +535,8 @@ def parser() -> argparse.ArgumentParser:
     ssum.add_argument("--out", type=Path, help="also write real.json and real.md (demonstration, not an evaluation)")
     ssum.set_defaults(func=cmd_sheet_summary)
 
-    yn = sub.add_parser("yun", help="real-paper check: Yun et al. 2024 + Evidence Inference, A/B/C separately (D42)")
-    yns = yn.add_subparsers(dest="yun_cmd", required=True)
-    yc = yns.add_parser("corpus", help="the records' markdown papers -> manifest.json, papers/ and the gold")
-    yc.add_argument("--repo", type=Path, required=True, help="a checkout of hyesunyun/llm-meta-analysis")
-    yc.add_argument("--ei", type=Path, required=True, help="Evidence Inference 2.0's annotations/ folder")
-    yc.add_argument("--out", type=Path, required=True, help="the corpus directory to write")
-    yc.set_defaults(func=cmd_yun)
-    ys = yns.add_parser("score", help="score a drug-trials run (its comparisons.json) -> real.json and real.md")
-    ys.add_argument("--run", type=Path, required=True, help="run directory written by `evidence run`")
-    ys.add_argument("--corpus", type=Path, required=True, help="corpus directory written by `yun corpus`")
-    ys.add_argument("--out", type=Path, required=True)
-    ys.set_defaults(func=cmd_yun)
-
     w = sub.add_parser("wholerun", help="score the plan runs of one real set, with the RAG baseline beside them")
-    w.add_argument("--set", choices=REAL_SETS, required=True)
+    w.add_argument("--set", choices=WHOLE_RUN_SETS, required=True)
     w.add_argument("--src", type=Path, required=True, help="the set's source (release) folder")
     w.add_argument("--runs", type=Path, required=True, help="<runs>/<auto-confirmed|hand-confirmed>/<on|off>/<qid>/; the hand row is the first 5 questions of sample.json")
     w.add_argument("--corpus", type=Path, help="the set's corpus folder (default <src>/corpus)")
@@ -669,7 +551,7 @@ def parser() -> argparse.ArgumentParser:
     w.set_defaults(func=cmd_wholerun)
 
     ts = sub.add_parser("tune-split", help="hold out whole questions of a real set for tuning (tune_split.json)")
-    ts.add_argument("--set", choices=REAL_SETS, required=True)
+    ts.add_argument("--set", choices=WHOLE_RUN_SETS, required=True)
     ts.add_argument("--src", type=Path, required=True, help="the set's source (release) folder")
     ts.add_argument("--corpus", type=Path, help="the set's corpus folder (default <src>/corpus); gets tune_split.json")
     ts.add_argument("--fraction", type=float, default=0.2)

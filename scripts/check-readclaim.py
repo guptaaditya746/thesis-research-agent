@@ -27,13 +27,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(examples)} labelled sentences ({pos} claims, {len(examples) - pos} not claims)")
     if args.list:
         return 0
+    from evaluation.planbatch import orch_lm
     from evidence.claims import ReadClaim
-    from evidence.stages import gateway_ask
     from evidence.steps import Step
-    from modelcall.cache import JsonlCache
-    from modelcall.dspy_lm import RecordedLM
-    from modelcall.pins import ORCH_ALIAS
-    lm = RecordedLM(ORCH_ALIAS, gateway_ask(ORCH_ALIAS), cache=JsonlCache(args.cache))
+    lm = orch_lm(args.cache)
     step = Step(ReadClaim, "claims.read_claim")
     scores, said_claim, right_dir, n_pos = [], 0, 0, 0
     for e in examples[:args.limit]:

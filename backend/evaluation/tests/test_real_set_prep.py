@@ -11,6 +11,7 @@ import repo_paths
 import pytest
 
 from evidence.steps import tune as T
+from evaluation.realpapers import sofc
 from evaluation.wholerun import tune_split
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,7 +31,7 @@ def sofc_set(tmp_path: Path) -> Path:
                "experiments": [{"id": "e1", "slots": {"material": "YSZ"}}, {"id": "e2", "slots": {"material": "GDC"}}]}
               for i in range(1, 6)]
     (s / "sofc.json").write_text(json.dumps({"papers": papers}), encoding="utf-8")
-    prep.sofc_corpus(s)
+    sofc.to_corpus(s)
     tune_split([f"p{i}" for i in range(1, 6)], 0.4, 0, s / "corpus" / "tune_split.json")
     return s
 

@@ -50,6 +50,8 @@ from evidence.pack import Pack, Role, questions_path
 from evidence.protocol import DEFAULT_PACK, Kind, Protocol
 from modelcall import CallSettings, JsonlCache, Prompt, ask_sync, cache_key, load_prompt, model_name, prompt_sha256
 
+from ..realpapers.common import read_manifest
+
 DEFAULT_QUESTIONS = questions_path(DEFAULT_PACK)
 PROMPTS = Path(__file__).resolve().parent / "prompts"
 
@@ -79,7 +81,7 @@ class SystemCorpus:
 
     def __init__(self, root: Path) -> None:
         self.root = Path(root).resolve()
-        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        manifest = read_manifest(self.root)
         self.corpus_id: str = manifest.get("corpus_id", self.root.name)
         self.papers: list[Paper] = []
         for entry in manifest["papers"]:

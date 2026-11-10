@@ -53,8 +53,8 @@ from evidence.pack import DOMAINS, Role, RoleMap, load_pack
 from evidence.protocol import load as load_protocol
 from evidence.rundir import PROTOCOL_FILE
 
-from ..wholerun import RealQuestion
-from .common import items_of, name_groups as _groups, same_name as _same
+from ..wholerun import RealQuestion, left_out_line
+from .common import items_of, manifest_ids, name_groups as _groups, ratio, read_manifest, same_name as _same
 
 SOURCES = ("https://aclanthology.org/attachments/2024.emnlp-main.453.data.zip",
            "https://tudatalib.ulb.tu-darmstadt.de/handle/tudatalib/4345")
@@ -272,8 +272,7 @@ def _dataset_type(run_dir: Path, roles: RoleMap, value_type: str) -> str:
 
 def _values(run_dir: Path, corpus: Path, paper_of: dict[str, str]) -> dict[str, list[Value]]:
     """The run's measured values per gold paper. An item in a file the corpus does not have is refused."""
-    manifest = json.loads((Path(corpus) / "manifest.json").read_text(encoding="utf-8"))
-    doc_of = {p["file"]: str(p["id"]) for p in manifest["papers"]}
+    doc_of = {p["file"]: str(p["id"]) for p in read_manifest(corpus)["papers"]}
     roles = RoleMap(load_pack(PACK))
     value_type, metric_type = roles.type_of(Role.VALUE), roles.type_of(Role.METRIC)
     items = items_of(run_dir)
@@ -304,10 +303,6 @@ def _values(run_dir: Path, corpus: Path, paper_of: dict[str, str]) -> dict[str, 
     return out
 
 
-def _ratio(num: int, den: int) -> float | None:
-    return num / den if den else None
-
-
 def _best(values: list[float], higher: bool) -> float:
     return max(values) if higher else min(values)
 
@@ -316,8 +311,7 @@ def score(run_dir: Path, corpus: Path, data: Path, metrics: Path = METRICS) -> d
     """Values found and linked, "best" per leaderboard and pairwise order (module docstring)."""
     release, rules = _release(data), load_metrics(metrics)
     boards = _boards(release, rules)
-    manifest = json.loads((Path(corpus) / "manifest.json").read_text(encoding="utf-8"))
-    in_corpus = {_arxiv_key(str(p["id"])) for p in manifest["papers"]}
+    in_corpus = {_arxiv_key(str(p["id"])) for p in read_manifest(corpus)["papers"]}
     paper_of = {_arxiv_key(a): p for p, a in release.arxiv.items() if a is not None}
     fetched = {paper for key, paper in paper_of.items() if key in in_corpus}
     groups = _groups(run_dir)
@@ -379,10 +373,10 @@ def score(run_dir: Path, corpus: Path, data: Path, metrics: Path = METRICS) -> d
         "not_fetched": {"no_arxiv_id": [p for p, a in release.arxiv.items() if a is None],
                         "not_in_corpus": [p for p, a in release.arxiv.items() if a is not None and p not in fetched]},
         "values": {"tuples": tuples, "in_corpus": in_scope, "found": found, "linked": linked,
-                   "found_share": _ratio(found, in_scope), "linked_share": _ratio(linked, in_scope)},
+                   "found_share": ratio(found, in_scope), "linked_share": ratio(linked, in_scope)},
         "best": {"leaderboards": len(boards), "with_values": with_values, "with_metric_values": with_metric,
                  "matched": matched, "gold_top_not_fetched": top_not_fetched, "report": f"{matched} of {len(boards)}"},
-        "chains": {"pairs": pairs, "agree": agree, "agree_share": _ratio(agree, pairs)},
+        "chains": {"pairs": pairs, "agree": agree, "agree_share": ratio(agree, pairs)},
         "metrics_by_default": {"count": len(unknown), "metrics": unknown},
         "leaderboards": per_board,
     }
@@ -397,10 +391,10 @@ def report(run_dir: Path, corpus: Path, data: Path, metrics: Path = METRICS) -> 
 def _manifest_ids(corpus: Path, release: Release) -> dict[str, str] | None:
     """Release paper key -> the corpus manifest id of its paper (by arXiv id without version); None without a
     manifest (the corpus is not built yet: papers are then named by their arXiv id, as `evidence fetch` keys them)."""
-    path = Path(corpus) / "manifest.json"
-    if not path.is_file():
+    found = manifest_ids(corpus)
+    if found is None:
         return None
-    ids = {_arxiv_key(str(p["id"])): str(p["id"]) for p in json.loads(path.read_text(encoding="utf-8"))["papers"]}
+    ids = {_arxiv_key(i): i for i in found}
     return {paper: ids[_arxiv_key(a)] for paper, a in release.arxiv.items() if a is not None and _arxiv_key(a) in ids}
 
 
@@ -455,3 +449,22 @@ def questions(src: Path, corpus_dir: Path | None = None, metrics: Path = METRICS
                   "higher_is_better": board["rule"].higher, "left_out": len(board["ranking"]) - len(ranking)},
             records=[r for r in keys if r["paper"] in set(ranking)]))
     return out
+
+
+def left_out(src: Path, corpus_dir: Path | None = None, qs: list[RealQuestion] | None = None) -> str:
+    """The open-access line: board papers with no arXiv id or not in the corpus, of all board papers."""
+    qs = qs if qs is not None else questions(src, corpus_dir)
+    gone = sum(q.gold.get("left_out", 0) for q in qs)
+    return left_out_line(gone, gone + sum(len(q.gold.get("ranking", [])) for q in qs))
+
+
+def prepare_step(data: Path, out: Path) -> str:
+    """`evaluate scilead ids`: write the arXiv ids file; the counts are printed."""
+    found = ids(data)
+    out.write_text("".join(f"{i}\n" for i in found), encoding="utf-8", newline="\n")
+    return json.dumps({"ids": len(found), "out": str(out), "no_arxiv_id": no_arxiv(data)})
+
+
+def check_step(run: Path, corpus: Path, data: Path) -> dict[str, Any]:
+    """`evaluate scilead score`: the real.json result."""
+    return report(run, corpus, data)
