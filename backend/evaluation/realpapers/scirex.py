@@ -148,12 +148,12 @@ def to_corpus(jsonl: Path, out: Path, *, limit: int | None = None) -> Path:
     write_manifest(out, f"scirex-{Path(jsonl).stem}", papers)
     write_json(out / GOLD_FILE, gold)
     write_json(out / SOURCE_FILE, {"jsonl": Path(jsonl).name, "jsonl_sha256": sha256_hex(raw),
-                               "papers_in_file": len(lines), "limit": limit, "papers": len(papers),
-                               "coref_clusters": sum(len(g["clusters"]) for g in gold.values()),
-                               "clusters_in_no_relation": sum(len(g["in_no_relation"]) for g in gold.values()),
-                               "clusters_untyped": sum(len(g["untyped"]) for g in gold.values()),
-                               "clusters_without_spans": sum(not g["clusters"][n] for g in gold.values()
-                                                             for n in g["salient"])})
+                                   "papers_in_file": len(lines), "limit": limit, "papers": len(papers),
+                                   "coref_clusters": sum(len(g["clusters"]) for g in gold.values()),
+                                   "clusters_in_no_relation": sum(len(g["in_no_relation"]) for g in gold.values()),
+                                   "clusters_untyped": sum(len(g["untyped"]) for g in gold.values()),
+                                   "clusters_without_spans": sum(not g["clusters"][n] for g in gold.values()
+                                                                 for n in g["salient"])})
     return out
 
 
