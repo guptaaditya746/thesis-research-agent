@@ -388,7 +388,7 @@ def test_a_v2_stage_request_over_the_context_window_is_not_sent():
     from types import SimpleNamespace
 
     from evidence import engine, stages
-    fake = SimpleNamespace(plan_version="v2")
+    fake = SimpleNamespace(settings=SimpleNamespace(plan_version="v2"))
     with pytest.raises(stages.StageCallError, match="too_long: about .* over the 65536-token context window"):
         engine.Execution.stage_ask(fake, "", "x" * 327_338, planrun.Plan, "map", "orch-model", {"max_tokens": 4096})
     assert engine.context_tokens("sub-model-1") == 32768 and engine.context_tokens("nope") is None

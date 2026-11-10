@@ -56,7 +56,7 @@ def test_links_on_is_the_default_and_unchanged_in_settings(tmp_path: Path, monke
 
 def test_reasoning_off_reads_no_ontology_and_asks_no_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
-    root, _ = run(tmp_path, monkeypatch, calls, field="medicine", reasoning="off")
+    root, _ = run(tmp_path, monkeypatch, calls, field="medicine", reason="off")
     rec = read(root, "run.json")
     assert rec["settings"]["reason"] == "off"
     assert read(root, "ontology.json") == {"tree": "reasoning off: no tree"}
@@ -75,15 +75,15 @@ def test_reasoning_off_builds_the_graph_without_the_field_ontology(tmp_path: Pat
     real = kg_build.build
     monkeypatch.setattr(kg_build, "build", lambda papers, items, roles, graph: seen.append(graph) or real(papers, items, roles, graph))
     run(tmp_path / "on", monkeypatch, [])
-    run(tmp_path / "off", monkeypatch, [], reasoning="off")
+    run(tmp_path / "off", monkeypatch, [], reason="off")
     assert seen[0] is not None and seen[1] is None   # cs on: the fallback ontology; off: none at all
     on_lock = read(next((tmp_path / "on" / "runs").iterdir()), "protocol.lock.json")
     assert on_lock["field_ontology_sha256"]
 
 
 def test_a_bad_switch_value_is_refused(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="reasoning"):
-        planrun.run(tmp_path / "p.json", tmp_path, tmp_path, reasoning="maybe")
+    with pytest.raises(ValueError, match="reason and links"):
+        planrun.run(tmp_path / "p.json", tmp_path, tmp_path, reason="maybe")
 
 
 def test_the_answer_links_carry_the_openalex_work_id(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

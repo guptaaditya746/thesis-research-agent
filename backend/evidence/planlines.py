@@ -213,11 +213,12 @@ class PlanLines:
                items: dict[str, list[Item]] | None = None) -> PlanLines:
         """The lines as the recorded run in `run_dir` answered them, on `store`: its plan (plan.json unless given) and
         its plan version (run.json settings; a run that records none, or has no run.json, is v1)."""
+        from .engine import Settings
         from .plan import load_plan
         from .rundir import PLAN_FILE, RUN_FILE
         run_dir = Path(run_dir)
         record = json.loads((run_dir / RUN_FILE).read_text(encoding="utf-8")) if (run_dir / RUN_FILE).is_file() else {}
-        version = (record.get("settings") or {}).get("plan_version", "v1")
+        version = Settings.recorded(record.get("settings") or {}, "plan_version")
         return cls(plan if plan is not None else load_plan(run_dir / PLAN_FILE), store, version=version, items=items)
 
     @cached_property

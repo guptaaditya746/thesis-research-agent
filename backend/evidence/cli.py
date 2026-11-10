@@ -64,12 +64,13 @@ from typing import Any
 import yaml
 
 from agent.chain import verify
+from modelcall.pins import ORCH_ALIAS
 
 from . import arxiv
 from .calls import NotRecorded
 from .rundir import EVENTS_FILE, RUN_FILE, RunDir, RunDirExists, read_json
 
-DEFAULT_MODEL = "orch-model"  # agent/rundir.ORCHESTRATOR's alias; evidence.engine.Settings.model stays None by default
+DEFAULT_MODEL = ORCH_ALIAS  # orch-model; evidence.engine.Settings.model stays None by default
 
 
 def _workers(text: str) -> int:
@@ -249,17 +250,10 @@ def _dispatch(args: argparse.Namespace) -> int:
             print("error: give --protocol or --plan (one of them)", file=sys.stderr)
             return 2
         if args.plan is not None:
-            fixed = {"--names": (args.names, "off"), "--confirm": (args.confirm, "llm"), "--relink": (args.relink, "on")}
-            bad = [f"{k} {v}" for k, (v, want) in fixed.items() if v != want]
-            if bad:
-                print(f"error: a plan run fixes {', '.join(bad)} (names off, confirm llm, relink on)",
-                      file=sys.stderr)
-                return 2
-            from .plan import load_plan
-            from .planrun import PlanNotRunnable, check_runnable
-            try:
-                check_runnable(load_plan(args.plan))
-            except (OSError, ValueError, PlanNotRunnable) as exc:   # unreadable, invalid or unconfirmed plan
+            from .planrun import check_request
+            try:   # a flag a plan run fixes, an unreadable, invalid or unconfirmed plan
+                check_request(args.plan, names=args.names, confirm=args.confirm, relink=args.relink)
+            except (OSError, ValueError) as exc:
                 print(f"error: {exc}", file=sys.stderr)
                 return 2
         try:
@@ -268,7 +262,7 @@ def _dispatch(args: argparse.Namespace) -> int:
                 root = planrun.run(args.plan, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                                    model=args.model, imports=args.imports, run_id=args.run_id,
                                    retry_errors=args.retry_errors, strategy=args.strategy, workers=args.workers,
-                                   reasoning=args.reason, links=args.links)
+                                   reason=args.reason, links=args.links)
             else:
                 root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                            model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,

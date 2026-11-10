@@ -43,7 +43,7 @@ from .plan import Plan, load_plan
 from .planlines import OTHER, PlanLines, compare_sides, directions, sides, threshold
 from .words.compile import compile_words
 
-__all__ = ["STAGE_SET", "finish", "protocol_for", "relink", "run", "stage_entries"]
+__all__ = ["STAGE_SET", "check_request", "finish", "protocol_for", "relink", "run", "stage_entries"]
 
 STAGE_SET = "plan"            # Settings.stage_set of a plan run
 ANY = "any"   # the treatment role of a plan that names no compared thing (its things are all measures)
@@ -363,6 +363,17 @@ def check_runnable(plan: Plan) -> None:
                               f"by {ORCH_ALIAS!r}")
 
 
+def check_request(plan_path: Path | str, **settings: Any) -> None:
+    """Refuse a plan run before anything is written (`evidence run --plan`): a setting a plan run fixes asked for with
+    another value (engine.PLAN_RUN_FIXED), an unreadable or invalid plan file (OSError, ValueError), an unconfirmed plan
+    or a word list another model wrote (PlanNotRunnable)."""
+    from .engine import plan_run_refusal
+    refused = plan_run_refusal(**settings)
+    if refused is not None:
+        raise PlanNotRunnable(refused)
+    check_runnable(load_plan(plan_path))
+
+
 def load_cached(field: str) -> Any:
     """`ontology.sources.load(field)`, parsed once per set of file contents (`ontology_hashes`): a big MeSH file is
     not parsed again by the graph, the ontology report and a relink. Callers must not change the graph."""
@@ -376,19 +387,20 @@ def _load(field: str, _hashes: str) -> Any:
     return load(field)
 
 
-def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, *, reasoning: str = "on", links: str = "on",
+def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, *, reason: str = "on", links: str = "on",
         **kw: Any) -> Path:
     """A plan run (`evidence run --plan`): the protocol from the plan, the plan's stages, then `engine.execute_run`.
-    `kw` as `engine.run` takes them (cache, model, provider, workers, run_id, retry_errors, strategy, selection).
-    `reasoning` off (Settings.reason "off", recorded in run.json): no reasoner, no field ontology in the records graph
-    or the lock, and the ontology stage writes "reasoning off: no tree" with no model call. `links` off (recorded as
-    settings "links": "off"): no builds-on links stage, so no ReadLink call and no OpenAlex request."""
+    `kw` as `engine.run_plan` takes them (cache, model, provider, workers, run_id, retry_errors, strategy, selection;
+    a setting a plan run fixes, engine.PLAN_RUN_FIXED, only at its fixed value). `reason` off (Settings.reason, recorded
+    in run.json; `--reason` of the CLI): no reasoner, no field ontology in the records graph or the lock, and the
+    ontology stage writes "reasoning off: no tree" with no model call. `links` off (recorded as settings "links":
+    "off"): no builds-on links stage, so no ReadLink call and no OpenAlex request."""
     from . import engine
-    if reasoning not in ("on", "off") or links not in ("on", "off"):
-        raise ValueError(f"reasoning and links are 'on' or 'off', not {reasoning!r} / {links!r}")
+    if reason not in ("on", "off") or links not in ("on", "off"):
+        raise ValueError(f"reason and links are 'on' or 'off', not {reason!r} / {links!r}")
     plan = load_plan(plan_path)
     check_runnable(plan)
-    return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, reason=reasoning, links=links, **kw)
+    return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, reason=reason, links=links, **kw)
 
 
 # --- after a human reviews the LLM's ontology links -----------------------------------------------------------------
@@ -398,16 +410,16 @@ def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dic
     then the lines again on the records graph with the accepted LLM links ("child -> parent") added to the field's
     ontology (W4: the same lines, decisions and reruns), answered as the run answered them (its plan version, the
     directions of its extracted items). Nothing the run sealed changes; the new answer is returned."""
+    from .engine import Settings
     from .kg.build import build
     from .ontology.fill import add_links, review
-    from .ontology.sources import load
     from .rundir import RUN_FILE, Corpus, RunDir, read_json
     run = RunDir(run_dir)
     review(run, accepted, rejected)
     plan = load_plan(run.file("plan.json"))
     before = read_json(run.file("answer.json"))
-    settings = read_json(run.file(RUN_FILE))["settings"]
-    corpus = Corpus(settings["corpus"])
+    settings = Settings.from_record(read_json(run.file(RUN_FILE)))
+    corpus = Corpus(settings.corpus)
     by_file = {p.file: p.id for p in corpus.papers}
     items: dict[str, list[Item]] = {p.id: [] for p in corpus.papers}
     for it in run.items():
@@ -415,7 +427,7 @@ def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dic
         if doc is not None:
             items[doc].append(it)
     pairs = [tuple(x.strip() for x in a.split("->", 1)) for a in accepted if "->" in a]
-    graph = load_cached(plan.field) if settings.get("reason") == "on" else None   # reasoning off: no field ontology
+    graph = load_cached(plan.field) if settings.reason == "on" else None   # reasoning off: no field ontology
     if pairs:
         import rdflib
         graph = add_links(graph if graph is not None else rdflib.Graph(), pairs)  # type: ignore[arg-type]
