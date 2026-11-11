@@ -100,6 +100,8 @@ class GroundTruth:
             for name in dict.fromkeys(m["dataset"] for m in study.get("measurements") or [] if m.get("dataset")):
                 fid = f"{study['paper']}.d:{name}"
                 truth.datasets[fid] = Fact(fid, DATASET, study["paper"], study["level"], {"name": name})
+        if not truth.facts and not truth.datasets:   # nothing to score against: refuse rather than score nothing
+            raise ValueError(f"{path}: no facts: the evaluation cannot score against this ground truth")
         return truth
 
     def of(self, paper: str, kind: EvidenceType) -> list[Fact]:
