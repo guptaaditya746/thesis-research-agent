@@ -38,7 +38,7 @@ from fastapi.responses import PlainTextResponse
 
 from evidence.propose.common import CARDS, CRITIC, DECISIONS, DRAFT, FRAME, PROTOCOL, SOURCES
 from evidence.questions import UnknownQuestion, answered_by
-from evidence.rundir import RunDir
+from evidence.rundir import ANSWER_FILE, RunDir
 from jsonio import file_sha256, write_text_atomic
 
 from .evfiles import EvidenceFiles
@@ -279,7 +279,7 @@ class Commands:
         name = baseline_name(corpus, question)
         check_id(name, "run")
         out = inside(self.runs(), system, name)
-        if (out / "answer.json").exists():
+        if (out / ANSWER_FILE).exists():
             raise Conflict(f"{system}/{name} has an answer.json; move it away to run the baseline again")
         run_id = f"{system}{RUN_SEP}{name}"
         self.free("run", run_id)
@@ -309,7 +309,7 @@ class Commands:
         if summary is None or summary.kind != "engine":
             raise Conflict(f"{r.run} is not an engine run (a baseline is scored beside the engine run of its corpus)")
         self.free("run", r.run)
-        if not summary.complete or not (path / "answer.json").is_file():
+        if not summary.complete or not RunDir(path).file(ANSWER_FILE).is_file():
             raise Conflict(f"{r.run} has not finished (no run.json / answer.json yet)")
         if summary.corpus is None:
             raise Conflict(f"the corpus of {r.run} is not under the corpora root")
@@ -328,7 +328,7 @@ class Commands:
             raise Conflict(f"{r.run} cannot be scored: {exc}") from None
         baselines: list[Any] = []   # the corpus's baseline answers to the same question only
         for system in BASELINE_GROUPS:
-            answer = inside(self.runs(), system, baseline_name(summary.corpus, question.id), "answer.json")
+            answer = inside(self.runs(), system, baseline_name(summary.corpus, question.id), ANSWER_FILE)
             if answer.is_file() and asks(read_json(answer), question):
                 baselines += ["--baseline", answer]
         # the latest re-execution beside the run (`evidence reexec` writes <run>-reexec-<stamp>/reexec.json;

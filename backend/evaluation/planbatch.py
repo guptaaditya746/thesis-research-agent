@@ -164,27 +164,26 @@ def confirm_hand(qs: list[Any], plans: Path, by: str) -> int:
 
 
 def sealed_complete(folder: Path) -> bool:
-    """The run folder is sealed with status `complete` (its manifest.json says so)."""
-    from evidence.seal import MANIFEST_FILE
-    try:
-        return json.loads((folder / MANIFEST_FILE).read_text(encoding="utf-8")).get("status") == "complete"
-    except (OSError, ValueError, AttributeError):
-        return False
+    """The run folder holds a complete run (`RunDir.state`: sealed complete; a plan run is always sealed)."""
+    from evidence.rundir import RunDir
+    return RunDir(folder).state == "complete"
 
 
 def has_unchecked(folder: Path) -> bool:
     """The run left items unchecked by a failed model call: any note in stage_report.json, or a recheck find whose
     call failed or whose reply did not parse (recheck_report.json)."""
+    from evidence import unchecked
+    from evidence.planrun import RECHECK_REPORT
+    from evidence.rundir import RunDir
+    run = RunDir(folder)
+
     def read(name: str) -> dict:
-        try:
-            data = json.loads((folder / name).read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return {}
+        data = run.stage_result(name)
         return data if isinstance(data, dict) else {}
-    if any(notes for docs in read("stage_report.json").values() if isinstance(docs, dict) for notes in docs.values()):
+    if any(notes for docs in read(unchecked.NAME).values() if isinstance(docs, dict) for notes in docs.values()):
         return True
     return any(str(u.get("why", "")).startswith(("failed call:", "unparseable reply:"))
-               for doc in read("recheck_report.json").values() if isinstance(doc, dict)
+               for doc in read(RECHECK_REPORT).values() if isinstance(doc, dict)
                for u in doc.get("unchecked") or [])
 
 

@@ -18,7 +18,7 @@ from typing import Any
 
 from evidence.contract import Item
 from evidence.extractors.base import sentences
-from evidence.rundir import Corpus
+from evidence.rundir import Corpus, PaperIndex
 
 from .common import items_of
 
@@ -54,23 +54,22 @@ def sheet(run: Path, corpus: Path, *, sample: int | None = None, papers: int | N
     if (sample is None) == (papers is None):
         raise ValueError("give sample or papers (one of the two)")
     c = Corpus(corpus)
-    order = {p.file: n for n, p in enumerate(c.papers)}
-    paper_of = {p.file: p for p in c.papers}
+    index = PaperIndex((p.id, p.file) for p in c.papers)
+    order = {p.id: n for n, p in enumerate(c.papers)}
+    paper_of = {p.id: p for p in c.papers}
     items = items_of(run)
     by_id = {i.item_id: i for i in items}
-    for item in items:
-        if item.spans[0].selector["file"] not in order:
-            raise ValueError(f"item {item.item_id}: {item.spans[0].selector['file']} is not in {corpus}/manifest.json")
+    doc = {i.item_id: index.of(i) for i in items}   # an item of a file not in the corpus manifest: UnknownPaper
     if sample is not None:
         chosen = random.Random(seed).sample(items, min(sample, len(items)))
     else:
-        keep = {p.file for p in c.papers[:papers]}
-        chosen = [i for i in items if i.spans[0].selector["file"] in keep]
-    chosen.sort(key=lambda i: (order[i.spans[0].selector["file"]], i.first_start(), i.item_id))
+        keep = {p.id for p in c.papers[:papers]}
+        chosen = [i for i in items if doc[i.item_id] in keep]
+    chosen.sort(key=lambda i: (order[doc[i.item_id]], i.first_start(), i.item_id))
     texts: dict[str, tuple[str, list[tuple[int, int]]]] = {}
     rows = []
     for item in chosen:
-        paper = paper_of[item.spans[0].selector["file"]]
+        paper = paper_of[doc[item.item_id]]
         if paper.file not in texts:
             text = c.text(paper)
             texts[paper.file] = (text, sentences(text))

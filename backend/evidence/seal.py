@@ -19,13 +19,14 @@ from typing import TYPE_CHECKING, Any
 from jsonio import file_sha256, write_json
 
 from .comparisons import Comparisons
+from .rundir import SEAL_FILE
 from .rundir import (ANSWER_FILE, CALLS_DIR, COMPARISONS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, LOCATE_FILE,
                      LOCK_FILE, NAMES_FILE, PROV_FILE, REASON_FILE, read_json)
 
 if TYPE_CHECKING:
     from .engine import Settings
 
-MANIFEST_FILE = "manifest.json"
+MANIFEST_FILE = SEAL_FILE   # rundir.SEAL_FILE
 PRE_EV4 = "no manifest (pre-EV4)"
 REPO = Path(__file__).resolve().parents[1]
 DERIVED = (PROV_FILE,)   # written from the sealed files by our own commands, possibly after the seal

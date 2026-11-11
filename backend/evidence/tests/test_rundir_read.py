@@ -123,3 +123,37 @@ def test_corrupt_call_file_does_not_raise_in_error_calls(tmp_path):
     (tmp_path / "calls" / "a.json").write_text('{"status": "error"}')
     (tmp_path / "calls" / "b.json").write_text('{"status": ')
     assert RunDir(tmp_path).error_calls() == 1
+
+
+def test_state_settings_and_papers_of_a_run(tmp_path):
+    """One reader answer for a run: its state, its settings read back, its items by paper (manifest file, else the
+    same base name; a file of another corpus is refused)."""
+    import json as _json
+
+    from evidence.rundir import UnknownPaper
+
+    from .kg_support import Doc, register, restore
+    from .runfolder import write_run
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "manifest.json").write_text(_json.dumps({"papers": [{"id": "A", "file": "papers/A.md"},
+                                                                  {"id": "B", "file": "papers/B.md"}]}))
+    before = register()
+    try:
+        a = Doc("A")
+        a.value("drug", 0.9)
+        value = Doc("B").value("drug", 0.8)
+        moved = value.model_copy(update={"spans": tuple(s.model_copy(update={"selector": {
+            **s.selector, "file": "elsewhere/B.md"}}) for s in value.spans)})   # the corpus was in another folder
+        run = RunDir(write_run(tmp_path / "run", corpus=corpus, items=[*a.items, moved], plan_version="v2"))
+        assert run.state == "complete" and run.settings.plan_version == "v2" and run.settings.strategy == "gaps"
+        papers = run.papers()
+        assert list(papers) == ["A", "B"] and len(papers["A"]) == 3 and [i.item_id for i in papers["B"]] == [moved.item_id]
+        with pytest.raises(UnknownPaper, match="no paper of"):
+            RunDir(write_run(tmp_path / "other", corpus=corpus, items=[Doc("C").value("drug", 1.0)])).papers()
+    finally:
+        restore(before)
+    assert RunDir(write_run(tmp_path / "crashed", status="failed")).state == "failed"
+    assert RunDir(write_run(tmp_path / "killed", status=None)).state == "complete"   # run.json without a seal: pre-EV4
+    (tmp_path / "running").mkdir()
+    assert RunDir(tmp_path / "running").state == "unsealed" and RunDir(tmp_path / "gone").state == "missing"

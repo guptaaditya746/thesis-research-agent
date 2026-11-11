@@ -47,6 +47,7 @@ __all__ = ["STAGE_SET", "check_request", "finish", "protocol_for", "relink", "ru
 
 STAGE_SET = "plan"            # Settings.stage_set of a plan run
 ANY = "any"   # the treatment role of a plan that names no compared thing (its things are all measures)
+RECHECK_REPORT = "recheck_report"   # the stage that writes the re-check verdicts (recheck_report.json)
 MAX_LINK_SENTENCES = 20       # builds-on candidates read per paper (one model call each)
 
 
@@ -262,7 +263,7 @@ def stage_entries(plan: Plan, *, reason: str = "on", links: str = "on",
          ("experiment-items-kept", "after_document", experiments.after_document_kept)),
         ("claims", "after_document", claim_stage()),   # subject and cues from the plan's word list
         *([("links", "after_document", links_stage)] if links == "on" else []),
-        ("recheck_report", "after_run", recheck_report),
+        (RECHECK_REPORT, "after_run", recheck_report),
         (unchecked.NAME, "after_run", unchecked.report),   # the items the per-item stages could not read
         ("ontology", "after_run", ontology_stage if reason == "on" else no_tree),
     ]
@@ -410,33 +411,24 @@ def relink(run_dir: Path | str, accepted: list[str], rejected: list[str]) -> dic
     then the lines again on the records graph with the accepted LLM links ("child -> parent") added to the field's
     ontology (W4: the same lines, decisions and reruns), answered as the run answered them (its plan version, the
     directions of its extracted items). Nothing the run sealed changes; the new answer is returned."""
-    from .engine import Settings
     from .kg.build import build
     from .ontology.fill import add_links, review
-    from .rundir import RUN_FILE, Corpus, RunDir, read_json
+    from .rundir import ANSWER_FILE, PLAN_FILE, Corpus, RunDir
     run = RunDir(run_dir)
     review(run, accepted, rejected)
-    plan = load_plan(run.file("plan.json"))
-    before = read_json(run.file("answer.json"))
-    settings = Settings.from_record(read_json(run.file(RUN_FILE)))
+    plan = load_plan(run.file(PLAN_FILE))
+    before = run.json(ANSWER_FILE)
+    settings = run.settings
+    assert settings is not None, f"{run_dir} has no run.json settings"
     corpus = Corpus(settings.corpus)
-    by_file = {p.file: p.id for p in corpus.papers}
-    items: dict[str, list[Item]] = {p.id: [] for p in corpus.papers}
-    for it in run.items():
-        doc = by_file.get(str(it.spans[0].selector.get("file")))
-        if doc is not None:
-            items[doc].append(it)
+    items = run.papers(settings.corpus)
     pairs = [tuple(x.strip() for x in a.split("->", 1)) for a in accepted if "->" in a]
     graph = load_cached(plan.field) if settings.reason == "on" else None   # reasoning off: no field ontology
     if pairs:
         import rdflib
         graph = add_links(graph if graph is not None else rdflib.Graph(), pairs)  # type: ignore[arg-type]
-    store = build(corpus.papers, items, run.register_pack() and _roles(run), graph)
+    store = build(corpus.papers, items, run.roles(), graph)
     out = answer(PlanLines.of_run(run_dir, store, plan=plan, items=items), before.get("synthesis") or {},
                  (before.get("claim_groups") or {}).get("mapping") or {}, items)
     return {"review": {"accepted": sorted(accepted), "rejected": sorted(rejected)}, **out}
 
-
-def _roles(run: Any) -> Any:
-    from .pack import RoleMap
-    return RoleMap(run.register_pack())

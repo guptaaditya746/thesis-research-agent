@@ -15,6 +15,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Literal
 
 import yaml
@@ -28,7 +29,10 @@ from modelcall import JsonlCache
 from .contract import DocumentRef, Item
 
 if TYPE_CHECKING:
-    from .pack import Pack
+    from .engine import Settings
+    from .pack import Pack, RoleMap
+
+RunState = Literal["complete", "failed", "unsealed", "missing"]
 
 RUN_FILE, PROTOCOL_FILE, EVENTS_FILE = "run.json", "protocol.yaml", "events.jsonl"
 LOCATE_FILE, EVIDENCE_FILE, GRAPH_FILE, ANSWER_FILE = "locate.json", "evidence.jsonl", "graph.json", "answer.json"
@@ -41,6 +45,9 @@ COMPARISONS_FILE = "comparisons.json"   # the comparisons built from pairs in ea
 CACHE_FILE = "extractor_calls.jsonl"
 PLAN_FILE = "plan.json"   # the run's copy of the confirmed plan (`Settings.plan` set only)
 RUN_CALLS_FILE = "calls.jsonl"   # the run's own copy of every model-backed call (RunCalls); not an output
+RECORDS_FILE = "records.nq"   # a plan run's records graph, sorted N-Quads (kg/build.py serialize; planlines)
+SEAL_FILE = "manifest.json"   # the run's seal: every file's sha256 and the run's status (seal.py)
+CORPUS_MANIFEST = "manifest.json"   # a corpus's paper list (Corpus)
 ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR, NAMES_FILE, REASON_FILE, LOCK_FILE,
                   COMPARISONS_FILE)   # what only the engine writes in a run dir
 REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes next to a run
@@ -123,7 +130,7 @@ class Corpus:
 
     def __init__(self, root: Path | str) -> None:
         self.root = Path(root)
-        manifest = self.root / "manifest.json"
+        manifest = self.root / CORPUS_MANIFEST
         self.manifest_sha256 = file_sha256(manifest)
         data = json.loads(manifest.read_bytes().decode("utf-8"))
         self.corpus_id = str(data.get("corpus_id", ""))
@@ -143,6 +150,54 @@ class Corpus:
         if sha256_hex(data) != paper.sha256:
             raise CorpusError(f"{paper.file}: sha256 differs from manifest.json")
         return data.decode("utf-8")
+
+
+class UnknownPaper(ValueError):
+    """An item comes from a file the corpus does not list: a run of another corpus, never matched to its papers."""
+
+
+class PaperIndex:
+    """Which paper of a corpus an item comes from. An extractor reads one paper, so every span of an item has the
+    same file: the item's paper is that file as the corpus manifest writes it, else the manifest paper with the same
+    base name (a run made with the corpus in another folder); any other file raises UnknownPaper."""
+
+    def __init__(self, papers: Iterable[tuple[str, str]]) -> None:
+        papers = list(papers)
+        self.ids = [pid for pid, _ in papers]   # manifest order
+        self._file = {file: pid for pid, file in papers}
+        names: dict[str, list[str]] = {}
+        for pid, file in papers:
+            names.setdefault(Path(file).name, []).append(pid)
+        self._name = {name: ids[0] for name, ids in names.items() if len(ids) == 1}   # an ambiguous base name: none
+
+    @classmethod
+    def of_corpus(cls, corpus: Path | str) -> PaperIndex:
+        """The papers of the corpus folder's manifest.json (a paper without `file` is `<id>.md`)."""
+        return cls.of_manifest(read_json(Path(corpus) / CORPUS_MANIFEST))
+
+    @classmethod
+    def of_manifest(cls, manifest: dict[str, Any]) -> PaperIndex:
+        return cls((str(p["id"]), str(p.get("file") or f"{p['id']}.md")) for p in manifest.get("papers", []))
+
+    def find(self, item: Item) -> str | None:
+        """The item's paper id, None when the corpus does not list its file."""
+        file = str(item.spans[0].selector.get("file", "")) if item.spans else ""
+        return self._file.get(file) or self._name.get(Path(file).name)
+
+    def of(self, item: Item) -> str:
+        """The item's paper id; UnknownPaper when the corpus does not list its file."""
+        found = self.find(item)
+        if found is None:
+            file = item.spans[0].selector.get("file") if item.spans else None
+            raise UnknownPaper(f"item {item.item_id} is in {file!r}, no paper of the corpus")
+        return found
+
+    def group(self, items: Iterable[Item]) -> dict[str, list[Item]]:
+        """Every paper (manifest order, none left out) -> its items, in the order given."""
+        out: dict[str, list[Item]] = {pid: [] for pid in self.ids}
+        for item in items:
+            out[self.of(item)].append(item)
+        return out
 
 
 def new_run_id(protocol_id: str, suffix: str = "") -> str:
@@ -236,11 +291,60 @@ class RunDir:
         self.root = Path(root)
 
     @property
+    def state(self) -> RunState:
+        """What became of the run: `complete` (run.json parses to a non-empty object, the engine's last write before
+        the seal, and the seal, if any, says complete), `failed` (sealed failed: it crashed
+        and its expected files are there in their empty form), `unsealed` (the folder holds neither: killed, or
+        still running), `missing` (no folder)."""
+        if not self.root.is_dir():
+            return "missing"
+        seal = self.try_json(SEAL_FILE)
+        status = seal.get("status") if isinstance(seal, dict) else None
+        if status == "failed":
+            return "failed"
+        run = self.record   # sealed complete or not sealed (before EV4): run.json decides
+        return "complete" if status in ("complete", None) and run else "unsealed"
+
+    @property
     def complete(self) -> bool:
-        """True when run.json parses to a non-empty object: the engine writes it last, so a directory without
-        one (or with a cut or empty one) crashed or is still running."""
+        return self.state == "complete"
+
+    @property
+    def record(self) -> dict[str, Any] | None:
+        """run.json as an object, None when the folder has none (a baseline, a crashed or running run)."""
         run = self.try_json(RUN_FILE)
-        return isinstance(run, dict) and bool(run)
+        return run if isinstance(run, dict) else None
+
+    @property
+    def settings(self) -> Settings | None:
+        """The run's settings as `engine.Settings.from_record` reads them back (a setting the run did not record
+        has its old-run value; a plan run reads its own plan.json); None without run.json settings."""
+        from .engine import Settings
+        record = self.record
+        if not record or not isinstance(record.get("settings"), dict):
+            return None
+        return Settings.from_record(record, run_dir=self.root)
+
+    def papers(self, corpus: Path | str | None = None) -> dict[str, list[Item]]:
+        """The run's items by paper: every paper of `corpus` (default: the corpus run.json names), manifest order, ->
+        its items (`PaperIndex`; an item of a file the corpus does not list raises UnknownPaper)."""
+        if corpus is None:
+            settings = self.settings
+            if settings is None or not settings.corpus:
+                raise ValueError(f"run {self.root} names no corpus (run.json settings); give the corpus")
+            corpus = settings.corpus
+        return PaperIndex.of_corpus(corpus).group(self.items())
+
+    def roles(self) -> RoleMap | None:
+        """The run's pack by role (`register_pack`: its protocol's pack, from the run's `domains` folder); None for
+        a run without protocol.yaml (a baseline)."""
+        from .pack import RoleMap
+        pack = self.register_pack()
+        return RoleMap(pack) if pack is not None else None
+
+    def stage_result(self, name: str) -> Any | None:
+        """`<name>.json`, what the run's after_run stage `name` wrote (stages.after_run), None when absent."""
+        return self.try_json(f"{name}.json")
 
     @property
     def kind(self) -> Literal["engine", "baseline"] | None:
@@ -286,8 +390,8 @@ class RunDir:
             return None
         data = yaml.safe_load(text.read_bytes().decode("utf-8"))
         domain = data.get("domain", DEFAULT_PACK) if isinstance(data, dict) else DEFAULT_PACK
-        settings = (self.try_json(RUN_FILE) or {}).get("settings") or {}
-        return _pack(domain, settings.get("domains"))
+        settings = self.settings
+        return _pack(domain, settings.domains if settings is not None else None)
 
     def events(self) -> list[dict[str, Any]] | None:
         path = self.file(EVENTS_FILE)
@@ -326,7 +430,8 @@ class RunDir:
 
     def cache_file(self) -> Path | None:
         """The record cache run.json names (`settings.cache`, a directory or the jsonl file), when it exists."""
-        cache = (((self.json(RUN_FILE) or {}).get("settings")) or {}).get("cache")
+        settings = self.settings
+        cache = settings.cache if settings is not None else None
         if not cache:
             return None
         path = Path(cache)

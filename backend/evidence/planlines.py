@@ -26,11 +26,11 @@ from jsonio import sha256_hex
 from .contract import Item
 from .names import clean
 from .plan import MAIN_RULE, Decision, Plan
+from .rundir import RECORDS_FILE
 
 __all__ = ["DEFAULT_THRESHOLD", "OTHER", "RECORDS_FILE", "PlanLines", "compare_sides", "directions", "line_params",
            "load_records", "name_matcher", "sides", "threshold", "verdict", "write_records"]
 
-RECORDS_FILE = "records.nq"   # the records graph, sorted N-Quads (W4 serialize)
 OTHER = "other"
 DEFAULT_THRESHOLD = 0.01      # min_effect when the plan has no threshold decision
 LIST_DECISIONS = ("must_match", "counts_as")
@@ -213,12 +213,11 @@ class PlanLines:
                items: dict[str, list[Item]] | None = None) -> PlanLines:
         """The lines as the recorded run in `run_dir` answered them, on `store`: its plan (plan.json unless given) and
         its plan version (run.json settings; a run that records none, or has no run.json, is v1)."""
-        from .engine import Settings
         from .plan import load_plan
-        from .rundir import PLAN_FILE, RUN_FILE
+        from .rundir import PLAN_FILE, RunDir
         run_dir = Path(run_dir)
-        record = json.loads((run_dir / RUN_FILE).read_text(encoding="utf-8")) if (run_dir / RUN_FILE).is_file() else {}
-        version = Settings.recorded(record.get("settings") or {}, "plan_version")
+        settings = RunDir(run_dir).settings
+        version = settings.plan_version if settings is not None else "v1"
         return cls(plan if plan is not None else load_plan(run_dir / PLAN_FILE), store, version=version, items=items)
 
     @cached_property

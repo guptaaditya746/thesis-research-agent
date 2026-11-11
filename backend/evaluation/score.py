@@ -1095,7 +1095,7 @@ def score_funnel(truth: GroundTruth, run: Run | None) -> dict[str, Any] | None:
                         "precision": share(tp, tp + fp), "recall": share(tp, tp + fn),
                         "screened_out": sorted(d for d, got in decided.items() if not got),
                         "screened_out_wrongly": sorted(d for d, got in decided.items() if not got and expected.get(d, True))}
-    strategy = ((run.run or {}).get("settings") or {}).get("strategy") or run.funnel.get("strategy")
+    strategy = run.settings.strategy if run.settings is not None else run.funnel.get("strategy")
     return {"strategy": strategy, "documents": n, "rows": rows, "per_document": means,
             "stop_positions": dict(sorted(stops.items())), "screen": screen_score}
 
@@ -1614,7 +1614,7 @@ def _question_protocol(entry: QuestionEntry, questions: Path) -> Protocol | None
 
 def _run_domains(run: Run) -> str | None:
     """The folder the run read its protocol's pack from (run.json settings `domains`; None: domains/)."""
-    return ((run.run or {}).get("settings") or {}).get("domains")
+    return run.settings.domains if run.settings is not None else None
 
 
 def _run_protocol(run: Run, entry: QuestionEntry, questions: Path) -> Protocol | None:

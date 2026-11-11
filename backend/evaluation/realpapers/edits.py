@@ -29,9 +29,9 @@ from pydantic import model_validator
 
 from evidence.contract import Item
 from evidence.extractors.numreader import read_numbers
-from evidence.pack import Role, RoleMap, load_pack
-from evidence.protocol import DEFAULT_PACK, Strict
-from evidence.rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
+from evidence.pack import Role, RoleMap
+from evidence.protocol import Strict
+from evidence.rundir import ANSWER_FILE, PROTOCOL_FILE, RunDir
 from jsonio import sha256_hex
 
 from .common import MANIFEST_FILE, items_of, read_manifest, write_json
@@ -162,10 +162,10 @@ def _norm(name: Any) -> str:
 
 def _pack_roles(run: Path) -> RoleMap:
     """The role map of the run's domain pack (protocol.yaml's `domain`, from run.json's `domains` folder)."""
-    data = yaml.safe_load((Path(run) / PROTOCOL_FILE).read_bytes().decode("utf-8")) or {}
-    settings = (RunDir(run).try_json(RUN_FILE) or {}).get("settings") or {}
-    kwargs = {"root": Path(settings["domains"])} if settings.get("domains") else {}
-    return RoleMap(load_pack(data.get("domain", DEFAULT_PACK), **kwargs))
+    roles = RunDir(run).roles()
+    if roles is None:
+        raise ValueError(f"run {run} has no {PROTOCOL_FILE}")
+    return roles
 
 
 def _entries(answer: Any, paper: str) -> Iterator[dict[str, Any]]:
@@ -340,7 +340,8 @@ def check(original: Path, edited: Path, edit: Edit, at: int | None = None) -> di
     span selector of the original run near the edit. A part that cannot be tested is None (see NOT_TESTABLE)."""
     orig, new = _Run(Path(original)), _Run(Path(edited))
     if at is None:
-        corpus = ((RunDir(edited).try_json(RUN_FILE) or {}).get("settings") or {}).get("corpus")
+        settings = RunDir(edited).settings
+        corpus = settings.corpus if settings is not None else None
         at = recorded_at(Path(corpus), edit) if corpus else None
     if at is None:
         at = _edit_at(orig.of(edit.paper), edit.paper, edit.find)

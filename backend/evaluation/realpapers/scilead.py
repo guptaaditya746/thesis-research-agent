@@ -51,7 +51,7 @@ from evidence.extractors.numreader import read_numbers
 from evidence.names import clean
 from evidence.pack import DOMAINS, Role, RoleMap, load_pack
 from evidence.protocol import load as load_protocol
-from evidence.rundir import PROTOCOL_FILE
+from evidence.rundir import PROTOCOL_FILE, PaperIndex
 
 from ..wholerun import RealQuestion, left_out_line
 from .common import items_of, manifest_ids, name_groups as _groups, ratio, read_manifest, same_name as _same
@@ -272,7 +272,7 @@ def _dataset_type(run_dir: Path, roles: RoleMap, value_type: str) -> str:
 
 def _values(run_dir: Path, corpus: Path, paper_of: dict[str, str]) -> dict[str, list[Value]]:
     """The run's measured values per gold paper. An item in a file the corpus does not have is refused."""
-    doc_of = {p["file"]: str(p["id"]) for p in read_manifest(corpus)["papers"]}
+    papers = PaperIndex.of_corpus(corpus)
     roles = RoleMap(load_pack(PACK))
     value_type, metric_type = roles.type_of(Role.VALUE), roles.type_of(Role.METRIC)
     items = items_of(run_dir)
@@ -288,10 +288,7 @@ def _values(run_dir: Path, corpus: Path, paper_of: dict[str, str]) -> dict[str, 
     for item in items:
         if item.evidence_type != value_type:
             continue
-        file = str(item.spans[0].selector.get("file", ""))
-        doc = doc_of.get(file) or doc_of.get(f"papers/{Path(file).name}")
-        if doc is None:   # a run of another corpus: refuse rather than score it against the wrong gold
-            raise ValueError(f"item {item.item_id} is in {file!r}, no paper of {corpus}")
+        doc = papers.of(item)   # a run of another corpus: UnknownPaper rather than scored against the wrong gold
         paper = paper_of.get(_arxiv_key(doc))
         value = _number(item.fields.get(VALUE_FIELD))
         if paper is None or value is None:
