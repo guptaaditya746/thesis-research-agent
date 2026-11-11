@@ -23,6 +23,7 @@ from evidence.evidence_types import EvidenceType   # str: any evidence type name
 from evidence.rundir import (ANSWER_FILE, COMPARISONS_FILE, FUNNEL_FILE, LOCATE_FILE, REEXEC_FILE, RUN_FILE, PaperIndex,
                             RunDir)
 from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in answer.json; baselines differ
+from synth2.evaltruth import eval_truth, is_synth2
 
 # Ground-truth fact lists per evidence type, and the role of the placement that locates each kind of
 # fact's main rendering (span accuracy compares the item's span of that role with it). A ground truth that lists its
@@ -74,6 +75,8 @@ class GroundTruth:
     main_role: dict[EvidenceType, str] = field(default_factory=lambda: dict(MAIN_ROLE))
     # ground_truth.json `network` ({things, comparisons, chains}; synth/network.py) of a recipe with a network, else {}
     network: dict[str, Any] = field(default_factory=dict)
+    # ids of the studies B and C cannot score (a synth2 truth's two-subset studies); None for every old corpus
+    unscored: list[str] | None = None
 
     @property
     def types(self) -> tuple[EvidenceType, ...]:
@@ -83,9 +86,12 @@ class GroundTruth:
     @classmethod
     def load(cls, path: Path) -> GroundTruth:
         data = read_json(path)
+        if is_synth2(data):
+            data = eval_truth(data, Path(path).parent)
         truth = cls(data["corpus_id"], data.get("question", ""), data["studies"], data.get("placements", []),
                     data.get("answer", {}))
         truth.seed = data.get("seed")
+        truth.unscored = data.get("unscored")
         truth.network = data.get("network") or {}
         meta = Path(path).parent / "corpus.json"
         truth.domain = ((read_json(meta).get("recipe") or {}).get("domain") if meta.is_file() else None)

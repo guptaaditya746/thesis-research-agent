@@ -1654,7 +1654,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
                | {"cost": system_cost(a, (run.run or {}) if a is run.answer else None)} for a in answers]
     effect = entry.kind == "effect"
     scored = effect_truth(truth, entry.truth, protocol, canon) if effect else truth
-    return {
+    report = {
         "corpus_id": truth.corpus_id, "corpus_name": corpus.name, "levels": truth.levels,
         "run_id": (run.run or {}).get("run_id", run.root.name), "protocol": score_protocol(run),
         "question_id": entry.id, "kind": entry.kind, "domain": protocol.domain if protocol else DEFAULT_PACK,
@@ -1670,6 +1670,11 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "attribution": (score_attribution(scored, answers, read_json(oracle) if oracle else None) if effect
                         else None),
     }
+    if truth.unscored is not None:   # a synth2 truth: its two-subset studies are scored by A only
+        report["unscored_studies"] = {
+            "count": len(truth.unscored), "studies": list(truth.unscored),
+            "reason": "two subsets: B and C need one result per subset, which the engine does not report yet"}
+    return report
 
 
 def _named(items: list[Item], truth: GroundTruth, canon: Canon) -> list[Item]:
