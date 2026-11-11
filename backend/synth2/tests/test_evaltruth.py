@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from evaluation import oracle
-from evaluation.score import score
+from evaluation.score import score, score_flags
 from evaluation.tests import fixtures
 from evaluation.truth import GroundTruth
 from repo_paths import DATA
@@ -44,13 +44,25 @@ def test_one_cell_studies_carry_the_pooled_direction_and_two_cell_studies_are_un
 
 
 def test_template_placements_cover_every_fact(tiny):
+    from synth2.recipe import load_recipe
+    recipe = load_recipe("rag")
     truth = GroundTruth.load(tiny / "ground_truth.json")
+    cells = {s["id"]: s["cells"] for s in raw(tiny)["studies"]}
     for fact in truth.facts.values():
         main = truth.placements_of(fact.id, truth.main_role[fact.type])
         assert main, fact.id
         text = (tiny / "papers" / f"{fact.paper}.md").read_text(encoding="utf-8")
         for p in main:
             assert text[p["start"]:p["end"]] == p["exact"]
+            if fact.type == "condition":
+                assert p["exact"] == (recipe.treatment.label if fact.data["role"] == "rag" else recipe.control.label)
+            elif fact.type == "metric":
+                assert p["exact"] == recipe.metric
+        if fact.type == "measurement":   # S001.m0t: cell 0, treatment arm
+            cell, arm = cells[fact.paper][int(fact.id.split(".m")[1][:-1])], fact.id[-1]
+            assert [text[p["start"]:p["end"]] for p in truth.placements_of(fact.id, "value")] == [str(cell[f"k_{arm}"])]
+            assert [text[p["start"]:p["end"]] for p in truth.placements_of(fact.id, "value_total")] == [
+                str(cell[f"n_{arm}"])]
 
 
 def test_the_oracle_run_scores_perfectly_on_a_synth2_corpus(tiny, tmp_path):
@@ -72,11 +84,39 @@ def test_an_old_corpus_report_has_no_unscored_key(tmp_path):
     assert "unscored_studies" not in score(run, corpus)
 
 
-def test_a_duplicate_study_keeps_duplicate_of(tiny):
-    make_family(tiny)
-    truth = GroundTruth.load(tiny.parent / "duplicate" / "ground_truth.json")
+def test_a_duplicate_study_keeps_duplicate_of(tmp_path):
+    from synth2.corpus import Settings, build_base
+    for seed in range(50):   # a base whose first study (the one copied) has one cell, so the copy is scored
+        base = tmp_path / f"s{seed}" / "base"
+        build_base(base, Settings("rag", seed, 6, "uniform", "table", exact=True))
+        if len(raw(base)["studies"][0]["cells"]) != 1:
+            continue
+        try:
+            make_family(base)
+        except ValueError:
+            continue
+        break
+    else:
+        raise AssertionError("no seed gives a one-cell first study and a valid family")
+    corpus = base.parent / "duplicate"
+    truth = GroundTruth.load(corpus / "ground_truth.json")
     copies = [s for s in truth.studies if s["duplicate_of"]]
-    assert len(copies) == 1 and copies[0]["duplicate_of"] == "S001"
+    assert len(copies) == 1 and copies[0]["duplicate_of"] == "S001" and "effect" in copies[0]
+    copy = copies[0]["paper"]
+    count = lambda paper: sorted(f.type for f in truth.facts.values() if f.paper == paper)
+    assert count(copy) == count("S001")
+    assert truth.answer["duplicates"] == [copy]
+    # the engine-shaped answer: the copy set aside, everything else grouped by direction
+    groups = {k: truth.answer[k] for k in ("supporting", "contradicting", "neutral")}
+    assert copy not in sum(groups.values(), [])
+    entries = [{"document": s["paper"], "direction": s["effect"]["direction"] if "effect" in s else "undetermined",
+                "duplicate_of": s["duplicate_of"]} for s in truth.studies]
+    answer = {"system": "x", "question": "q", "label": truth.answer["label"], **groups, "undetermined": [],
+              "duplicates": [copy], "counts": {**{k: len(v) for k, v in groups.items()}, "undetermined": 0,
+                                               "duplicates": 1},
+              "studies": entries, "flags": {}}
+    flags = score_flags(truth, answer)
+    assert flags["counts_correct"] is True and flags["duplicates_correct"] is True
 
 
 def test_two_close_cells_get_two_facts_and_both_match(tiny, tmp_path):

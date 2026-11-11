@@ -97,9 +97,10 @@ def eval_truth(data: dict, corpus_dir: Path) -> dict:
                                        (s["conditions"][1]["id"], "condition_label", recipe.control.label),
                                        (s["metrics"][0]["id"], "metric_label", recipe.metric)):
                 place(paper, fact, role, *_first(text(paper), needle, paper))
-    one = [s for s in studies if "effect" in s]
+    one = [s for s in studies if "effect" in s and not s["duplicate_of"]]   # a copy is set aside, not counted
     groups = {name: [s["paper"] for s in one if s["effect"]["direction"] == d] for name, d in GROUPS}
     return {"corpus_id": data["corpus_id"], "question": data.get("question", ""), "seed": settings["seed"],
             "studies": studies, "placements": placements,
-            "answer": {"label": _label([s["effect"]["direction"] for s in one]), **groups},
+            "answer": {"label": _label([s["effect"]["direction"] for s in one]), **groups,
+                       "duplicates": [s["paper"] for s in studies if s["duplicate_of"]]},
             "unscored": unscored}
