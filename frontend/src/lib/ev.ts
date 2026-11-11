@@ -3,7 +3,7 @@
  * their series colours, directions, evidence types, extractor ids, intervals, the funnel's decisions, the
  * scores of report.json arranged per level and system, and item labels.
  *
- * Colours: one series colour per system (the engine and the two baselines), the same on every chart and
+ * Colours: one series colour per system (the engine and the three baselines), the same on every chart and
  * badge; evidence types get their own marks in the paper text. Colour never carries meaning alone: every
  * mark has a label next to it or in its title.
  */
@@ -18,12 +18,14 @@ export const SYSTEM_LABEL: Record<string, string> = {
   "bm25-answer-baseline": "BM25 answer baseline",
   "rag-baseline": "RAG baseline", // the BM25 answer baseline's id before plan 2 (old answers, D36)
   "agent-baseline": "agent baseline",
+  paperqa2: "PaperQA2 baseline",
 }
 export const SYSTEM_COLOR: Record<string, string> = {
   "evidence-engine": "var(--chart-1)",
   "bm25-answer-baseline": "var(--chart-2)",
   "rag-baseline": "var(--chart-2)",
   "agent-baseline": "var(--chart-3)",
+  paperqa2: "var(--chart-4)",
 }
 export const systemLabel = (system: string | null | undefined) => (system ? (SYSTEM_LABEL[system] ?? system) : DASH)
 export const systemColor = (system: string) => SYSTEM_COLOR[system] ?? "var(--muted-foreground)"
