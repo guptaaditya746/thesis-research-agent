@@ -47,6 +47,7 @@ uv run webapp serve --port 8080      # UI at http://127.0.0.1:8080 (serves front
 uv run synth2 build --out DIR --seeds 10                          # hidden-law corpus families: law kind x text level x seed
 uv run synth2 reference --root DIR --rule pooled --out FILE       # answers of a reference rule: pooled (the key) | vote | lumped
 uv run synth2 score --root DIR --answers FILE --out FILE          # score an answers file {corpus id: answer} by code
+uv run synth2 export-scir --root DIR --out FILE                   # the same corpora as one SciR-shaped task file
 ```
 
 ## Test

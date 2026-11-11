@@ -1,4 +1,5 @@
-"""`synth2` command line: build a grid of corpus families, write a reference rule's answers, score answers."""
+"""`synth2` command line: build a grid of corpus families, write a reference rule's answers, score answers,
+export the corpora as a SciR-shaped task file."""
 from __future__ import annotations
 
 import argparse
@@ -11,6 +12,7 @@ from jsonio import write_json_atomic
 from synth2.corpus import Settings, build_base
 from synth2.family import make_family
 from synth2.recipe import load_recipe
+from synth2.scir_export import export
 from synth2.score import RULES, reference_answers, score_family, summarise
 from synth2.world import LAW_KINDS
 from synth2.write import TEXT_LEVELS
@@ -101,6 +103,11 @@ def score(args: argparse.Namespace) -> int:
     return 0
 
 
+def export_scir(args: argparse.Namespace) -> int:
+    print(f"{export(args.root, args.out)} tasks -> {args.out}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth2", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -123,6 +130,10 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--answers", type=Path, required=True)
     s.add_argument("--out", type=Path, required=True)
     s.set_defaults(run=score)
+    e = sub.add_parser("export-scir", help="write every corpus under a folder as one SciR-shaped task file")
+    e.add_argument("--root", type=Path, required=True)
+    e.add_argument("--out", type=Path, required=True)
+    e.set_defaults(run=export_scir)
     return top
 
 
