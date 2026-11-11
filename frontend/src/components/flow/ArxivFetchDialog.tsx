@@ -23,15 +23,17 @@ const CATEGORY = /^[a-z][a-z-]*(\.[A-Za-z][A-Za-z-]*)?$/
 /** "no ground truth, demo" beside a corpus of real papers (source.json `ground_truth: false`). */
 export function DemoBadge({ corpus }: { corpus: Pick<CorpusSummary, "ground_truth"> | undefined }) {
   if (corpus?.ground_truth !== false) return null
-  return <Badge variant="outline" className="ml-1" title="real papers from arXiv: nobody knows the right answer, so runs on it are not scored">no ground truth, demo</Badge>
+  return <Badge variant="outline" className="ml-1" title={REAL_NOTE}>real papers, not scored here</Badge>
 }
 
-/** Why a run on a demonstration corpus has no Score button. */
+const REAL_NOTE = "The web app scores synthetic corpora only. SciLead and SciREX have gold answers, scored with `uv run evaluate wholerun`; an arXiv search has no gold."
+
+/** Why a run on a corpus of real papers has no Score button. */
 export function DemoScoreNote({ corpus }: { corpus: string }) {
   return (
     <p className="text-xs text-muted-foreground" role="note">
-      <strong className="font-medium text-foreground">Demonstration corpus, no ground truth:</strong> <span className="font-mono">{corpus}</span> holds
-      real papers from arXiv, so its runs are not scored. Read the graph, the answer and the trace, and check a few papers by hand.
+      <strong className="font-medium text-foreground">Real papers, not scored here:</strong> <span className="font-mono">{corpus}</span> has no
+      ground_truth.json. {REAL_NOTE} Read the graph, the answer and the trace here.
     </p>
   )
 }

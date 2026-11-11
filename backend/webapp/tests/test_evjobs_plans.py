@@ -262,10 +262,18 @@ def test_a_fetched_corpus_is_listed_without_ground_truth(world: EvidenceWorld, s
 
 def test_score_refuses_a_run_on_a_demonstration_corpus(commands: Commands, world: EvidenceWorld) -> None:
     _demo(world)
-    with pytest.raises(Conflict, match="demonstration corpus, no ground truth") as refused:
+    with pytest.raises(Conflict, match="is not scored here: real papers") as refused:
         commands.score(ScoreRequest(run=f"cascade-gaps~{MIXED}"))
     message = str(refused.value)
     assert MIXED in message and "arxiv" in message and "graph, answer and trace stay open" in message
+
+
+def test_a_real_dataset_without_ground_truth_json_is_not_scored_here(commands: Commands, world: EvidenceWorld,
+                                                                     settings: Settings) -> None:
+    (world.corpora / MIXED / "ground_truth.json").unlink()   # as a SciREX corpus: its gold is scirex_gold.json
+    assert {c.name: c for c in EvidenceFiles(settings).corpora()}[MIXED].ground_truth is False
+    with pytest.raises(Conflict, match="evaluate wholerun"):
+        commands.score(ScoreRequest(run=f"cascade-gaps~{MIXED}"))
 
 
 def test_post_fetch_starts_a_job(settings: Settings) -> None:

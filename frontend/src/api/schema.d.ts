@@ -1731,7 +1731,7 @@ export interface components {
             manifest_sha256: string;
             /**
              * Ground Truth
-             * @description false for a demonstration corpus of real papers (source.json `ground_truth: false`, `evidence fetch`): nothing to score against
+             * @description true when the web app can score runs on it (ground_truth.json); false for real papers: an arXiv fetch (no gold) or a real dataset whose gold is scored by `evaluate wholerun` (SciLead, SciREX)
              * @default true
              */
             ground_truth: boolean;
@@ -1903,7 +1903,7 @@ export interface components {
             manifest_sha256: string;
             /**
              * Ground Truth
-             * @description false for a demonstration corpus of real papers (source.json `ground_truth: false`, `evidence fetch`): nothing to score against
+             * @description true when the web app can score runs on it (ground_truth.json); false for real papers: an arXiv fetch (no gold) or a real dataset whose gold is scored by `evaluate wholerun` (SciLead, SciREX)
              * @default true
              */
             ground_truth: boolean;

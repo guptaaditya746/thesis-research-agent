@@ -86,10 +86,10 @@ def asks(answer: Any, question: Question) -> bool:
         return answer["question_id"] == question.id
     return answer.get("question") == question.question
 GATEWAY_TIMEOUT_S = 3.0
-DEMO_REFUSAL = ("its corpus {corpus} is a demonstration corpus, no ground truth: real papers fetched from {kind}, "
-                "for which nobody knows the right answer. Its graph, answer and trace stay open to read; check them "
-                "by hand (docs/evidence-system.md, \"Demo mode: real papers from arXiv\"). Scores need a synthetic "
-                "corpus.")
+DEMO_REFUSAL = ("its corpus {corpus} is not scored here: real papers from {kind}, with no ground_truth.json. The web "
+                "app scores synthetic corpora only. A real dataset with its own gold (SciLead, SciREX) is scored with "
+                "`uv run evaluate wholerun` (docs/runbook-slurm.md); an arXiv search has no gold. Its graph, answer "
+                "and trace stay open to read.")
 
 
 def fetch_name(query: str, day: datetime) -> str:
@@ -315,9 +315,9 @@ class Commands:
             raise Conflict(f"the corpus of {r.run} is not under the corpora root")
         corpus = self.corpus(summary.corpus)
         source = demo_source(corpus)
-        if source is not None:   # real papers (`evidence fetch`): no ground_truth.json to score against
-            raise Conflict(f"{r.run} cannot be scored: " + DEMO_REFUSAL.format(corpus=summary.corpus,
-                                                                               kind=source.get("kind", "outside")))
+        if source is not None or not (corpus / "ground_truth.json").is_file():   # real papers: no answer key here
+            raise Conflict(f"{r.run} cannot be scored: " + DEMO_REFUSAL.format(
+                corpus=summary.corpus, kind=(source or {}).get("kind", "a real dataset")))
         try:   # the question the run's frozen protocol asks: its kind picks the scores, its truth the expected answer
             question = answered_by(path, self.questions.list())
         except UnknownQuestion as exc:   # a typed question (or a hand-edited one): no ground truth to score against
