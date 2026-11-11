@@ -1,0 +1,24 @@
+question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
+treatment: {label: retrieval-augmented model, description: retrieves passages from a reference collection and answers from them}
+control: {label: closed-book model, description: answers from what it learned in pre-training without any documents}
+metric: factual accuracy
+unit: questions
+conditions:
+  - id: fact_rarity
+    name: how often the asked fact appears in pre-training text
+    levels: [{id: rare, name: rare-fact questions}, {id: common, name: common-fact questions}]
+  - id: model_size
+    name: size of the generator
+    levels: [{id: small, name: compact generator}, {id: large, name: full-scale generator}]
+  - id: question_length
+    name: length of the question
+    levels: [{id: short, name: one-clause questions}, {id: long, name: multi-clause questions}]
+n_range: [200, 1000]
+n_step: 50
+base_rate: [0.45, 0.75]
+effect: [0.08, 0.15]
+min_effect: 0.01
+min_gap: 0.05
+authors: [Okafor, Lindqvist, Tanaka, Moreau, Petrova, Haddad, Castellanos, Nyberg, Iyer, Brandt, Sorensen, Kowalczyk, Achebe, Varga, Oyelaran, Fontaine, Demir, Halvorsen, Mbeki, Rossetti, Yilmaz, Carvalho, Stoica, Lund]
+years: [2021, 2025]
+datasets: [FactProbe, OpenRecall, TriviaShift, EntityQuest, LongTailQA, KnowBench]
