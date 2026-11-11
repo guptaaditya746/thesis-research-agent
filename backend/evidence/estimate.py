@@ -16,7 +16,7 @@ from typing import Any
 from .engine import Names, Selection, Settings, Strategy, build_extractors, execute_run
 from .names import CHECKS_PER_NAME
 from .protocol import SCREEN_TYPE, parse
-from .rundir import Corpus, read_json
+from .rundir import FUNNEL_FILE, NAMES_FILE, RUN_FILE, Corpus, read_json
 
 CHARS_PER_TOKEN = 4
 PROMPT_TOKENS = 1500
@@ -31,7 +31,7 @@ def _per_call(from_run: Path | str | None) -> tuple[tuple[float, float] | None, 
     """(input, output) tokens per model call of a finished run, or None for the chars/4 rule; and the basis."""
     if from_run is None:
         return None, "chars/4"
-    record = read_json(Path(from_run) / "run.json")
+    record = read_json(Path(from_run) / RUN_FILE)
     cost = record["cost"]
     made = cost["made_model_calls"]
     if not made:   # a fully cached or replayed run has no fresh call to average
@@ -55,8 +55,8 @@ def estimate(protocol: Path | str, corpus: Path | str, *, strategy: Strategy = "
                             strategy="gaps", reason="off", names=names,
                             domains=str(Path(domains).resolve()) if domains is not None else None)
         root = execute_run(protocol_bytes, settings, tmp, provider=None)
-        funnel = read_json(root / "funnel.json")["documents"]
-        leftovers = len((read_json(root / "names.json") or {}).get("unresolved") or []) if names == "on" else 0
+        funnel = read_json(root / FUNNEL_FILE)["documents"]
+        leftovers = len((read_json(root / NAMES_FILE) or {}).get("unresolved") or []) if names == "on" else 0
     cascades = build_extractors(parsed, selection)            # the requested cascade: the run above kept only regex
     llm = {t: [i for i, (_, e) in enumerate(c) if e.spec.kind in LLM_KINDS] for t, c in cascades.items()}
     screen_calls = len(llm.get(SCREEN_TYPE, []))

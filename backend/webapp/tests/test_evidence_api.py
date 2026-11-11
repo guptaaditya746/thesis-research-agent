@@ -171,12 +171,44 @@ def test_run_paper_spans_and_calls(ev: TestClient, ev_world: EvidenceWorld) -> N
 
 def test_run_graph_and_protocol(ev: TestClient) -> None:
     graph = ev.get(f"/api/ev/runs/cascade~{EXPLICIT}/graph").json()
+    assert graph["source"] == "evidence"   # no records.nq: the evidence graph of graph.json, as before
     kinds = {n["type"] for n in graph["nodes"]}
     assert "document" in kinds and "condition" in kinds
     assert {e["rel"] for e in graph["edges"]} >= {"in_document"}
     protocol = ev.get(f"/api/ev/runs/cascade~{EXPLICIT}/protocol").json()
     assert protocol["source"] == "run" and protocol["protocol"]["id"] == "rag-factuality"
     assert ev.get(f"/api/ev/runs/rag-baseline~{MIXED}/protocol").status_code == 404
+
+
+def test_a_plan_run_shows_the_records_graph_its_answer_used(tmp_path: Path) -> None:
+    """A run with records.nq: the graph is the records graph (typed nodes, an ontology class among them; property
+    edges; values in their paper), not graph.json."""
+    import rdflib
+    from rdflib.namespace import OWL, RDF, RDFS
+
+    from evidence.kg.build import build, serialize
+    from evidence.tests.kg_support import ROLES, Doc, paper, register, restore
+    from evidence.tests.runfolder import write_run
+    onto = rdflib.Graph()
+    onto.add((rdflib.URIRef("http://x/Drug"), RDF.type, OWL.Class))
+    onto.add((rdflib.URIRef("http://x/Drug"), RDFS.label, rdflib.Literal("aspirin")))
+    before = register()
+    try:
+        doc = Doc("P1")
+        doc.value("aspirin", 0.9)
+        records = serialize(build([paper("P1")], {"P1": doc.items}, ROLES, onto))
+    finally:
+        restore(before)
+    write_run(tmp_path / "runs" / "plan" / "q1", records=records, stage_set="plan")
+    with TestClient(create_app(Settings(EV=tmp_path))) as c:  # type: ignore[call-arg]
+        graph = c.get("/api/ev/runs/plan~q1/graph").json()
+    assert graph["source"] == "records" and graph["omitted"] == {}
+    assert {n["type"] for n in graph["nodes"]} == {"Paper", "Experiment", "Thing", "Metric", "Value", "Class"}
+    thing = next(n for n in graph["nodes"] if n["type"] == "Thing")
+    assert thing["label"] == "aspirin" and thing["types"] == ["Thing", "aspirin"] and thing["document"] is None
+    value = next(n for n in graph["nodes"] if n["type"] == "Value")
+    assert value["document"] == "P1" and value["fields"]["number"] == 0.9 and "source" not in value["fields"]
+    assert {e["rel"] for e in graph["edges"]} == {"of", "onMetric", "inExperiment", "inPaper", "type"}
 
 
 def test_llm_call_with_its_model_records(ev: TestClient) -> None:

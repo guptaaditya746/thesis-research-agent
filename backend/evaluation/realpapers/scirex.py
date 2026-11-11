@@ -27,13 +27,13 @@ import re
 from pathlib import Path
 from typing import Any
 
-from evidence.contract import Item
 from evidence.names import clean
 from evidence.pack import RoleMap, load_pack
+from evidence.rundir import PaperIndex
 from jsonio import sha256_hex
 
 from ..wholerun import RealQuestion
-from .common import (add_paper, items_of, manifest_ids, ratio, read_json, read_manifest, write_json,
+from .common import (add_paper, items_of, manifest_ids, ratio, read_json, write_json,
                      write_manifest)
 
 GOLD_FILE = "scirex_gold.json"
@@ -165,7 +165,7 @@ def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
     """Mention-level and salient-cluster-level precision and recall per name type (module docstring), and the
     number of papers."""
     gold: dict[str, Any] = read_json(Path(corpus) / GOLD_FILE)
-    doc_of = {p["file"]: p["id"] for p in read_manifest(corpus)["papers"]}
+    papers = PaperIndex.of_corpus(corpus)
     roles = RoleMap(load_pack(PACK))
     # per (doc, type): the items' spans and names
     spans: dict[tuple[str, str], list[list[tuple[int, int]]]] = {}
@@ -173,9 +173,9 @@ def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
     for item in items_of(run_dir):
         if item.evidence_type not in NAME_TYPES:
             continue
-        doc = _doc(item, doc_of)
-        if doc not in gold:   # a run of another corpus: refuse rather than score it against the wrong gold
-            raise ValueError(f"item {item.item_id} is in {item.spans[0].selector.get('file')!r}, no paper of {corpus}")
+        doc = papers.of(item)   # a run of another corpus: UnknownPaper rather than scored against the wrong gold
+        if doc not in gold:
+            raise ValueError(f"item {item.item_id} is in paper {doc!r}, no paper of the gold of {corpus}")
         key = (doc, item.evidence_type)
         spans.setdefault(key, []).append([(int(s.selector["start"]), int(s.selector["end"])) for s in item.spans
                                           if s.selector.get("file") == item.spans[0].selector.get("file")])
@@ -186,11 +186,6 @@ def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
     texts = {doc: (Path(corpus) / f"papers/{doc}.md").read_bytes().decode("utf-8") for doc in gold}
     salient = {t: _salient_level(t, gold, texts, names) for t in NAME_TYPES}
     return {"papers": len(gold), "mention": mention, "salient": salient}
-
-
-def _doc(item: Item, doc_of: dict[str, str]) -> str | None:
-    file = str(item.spans[0].selector.get("file", ""))
-    return doc_of.get(file) or doc_of.get(f"papers/{Path(file).name}")
 
 
 def _mention_level(etype: str, gold: dict[str, Any], spans: dict[tuple[str, str], list[list[tuple[int, int]]]]) -> dict[str, Any]:

@@ -29,6 +29,7 @@ from evidence.names import NameGroups
 from evidence.pack import load_pack, register_pack
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionTruth
+from evidence.rundir import PaperIndex
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = Path(__file__).resolve().parent / "data"
@@ -388,7 +389,7 @@ def test_limitation_extraction_precision_recall_of_study_thing_category():
     protocol = load_protocol(PROTOCOLS / "drugtoy-limits.yaml", FIXTURES)
     _, items = truth_items(DRUG)
     flat = [i for doc in items.values() for i in doc]
-    files = {f"papers/{s['paper']}.md": s["paper"] for s in DRUG.studies}
+    files = PaperIndex((s["paper"], f"papers/{s['paper']}.md") for s in DRUG.studies)
     m = protocol_matching(flat, DRUG, files, protocol, CANON)
     assert "limitation" in m.types
     row = next(r for r in score_extraction(m)["rows"] if (r["evidence_type"], r["level"]) == ("limitation", "all"))
@@ -499,7 +500,7 @@ def test_a_limitation_type_of_another_name_is_matched_by_its_role():
     _, items = truth_items(DRUG)
     renamed = [i.model_copy(update={"evidence_type": "caveat"}) if i.evidence_type == "limitation" else i
                for its in items.values() for i in its]
-    files = {f"papers/{s['paper']}.md": s["paper"] for s in DRUG.studies}
+    files = PaperIndex((s["paper"], f"papers/{s['paper']}.md") for s in DRUG.studies)
     m = Matching(renamed, DRUG, files, ("limitation",), None, CANON, {"caveat": "limitation"})
     row = next(r for r in score_extraction(m)["rows"] if (r["evidence_type"], r["level"]) == ("limitation", "all"))
     assert (row["precision"], row["recall"]) == (1.0, 1.0)

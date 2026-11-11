@@ -158,8 +158,9 @@ def _scored_lines(root: Path, answer: dict[str, Any], q: RealQuestion) -> list[d
 
 def from_run(run: Path | str, q: RealQuestion) -> Answer:
     """The `Answer` of an engine run folder for question `q` (the contract above)."""
+    from evidence.rundir import ANSWER_FILE, RunDir
     root = Path(run)
-    answer = json.loads((root / "answer.json").read_text(encoding="utf-8"))
+    answer = RunDir(root).json(ANSWER_FILE)
     lines = _scored_lines(root, answer, q)
     if q.kind == "rank":
         column = answer_column(q)

@@ -13,6 +13,7 @@ import repo_paths
 from evaluation import planbatch as pb
 from evidence import planrun
 from evidence.plan import load_plan, write_plan
+from evidence.tests.runfolder import write_run
 from evidence.tests.test_plan_run import make_plan
 
 
@@ -30,10 +31,7 @@ def batch(tmp: Path) -> tuple[list[Any], Path]:
 def fake_run(monkeypatch: pytest.MonkeyPatch, calls: list[dict[str, Any]], status: str) -> None:
     def run(plan_path: Path, corpus: Path, out_dir: Path, **kw: Any) -> Path:
         calls.append({"plan": Path(plan_path), **kw})
-        root = Path(out_dir) / kw["run_id"]
-        root.mkdir(parents=True)
-        (root / "manifest.json").write_text(json.dumps({"status": status}), encoding="utf-8")
-        return root
+        return write_run(Path(out_dir) / kw["run_id"], status=status)   # sealed as a run that ended so
     monkeypatch.setattr(planrun, "run", run)
 
 

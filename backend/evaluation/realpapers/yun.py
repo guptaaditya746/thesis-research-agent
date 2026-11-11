@@ -43,11 +43,10 @@ from evidence.comparisons import name_of
 from evidence.contract import Item
 from evidence.names import NameGroups
 from evidence.pack import Role, RoleMap
-from evidence.protocol import load as load_protocol
-from evidence.rundir import COMPARISONS_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
+from evidence.rundir import COMPARISONS_FILE, RunDir
 from jsonio import sha256_hex
 
-from .common import (add_paper, items_of, name_groups, ratio, read_json, read_manifest, same_name, write_json,
+from .common import (add_paper, name_groups, ratio, read_json, same_name, write_json,
                      write_manifest)
 
 GOLD_FILE = "yun_gold.json"
@@ -221,12 +220,6 @@ def _arm(record: dict[str, Any], arm: str) -> dict[str, Any]:
     return {"kind": "continuous", "mean": v[f"{arm}_mean"]}
 
 
-def _roles(run_dir: Path) -> RoleMap:
-    """The run's pack by role: its protocol.yaml's pack, from the domains folder run.json's settings name."""
-    settings = (RunDir(run_dir).try_json(RUN_FILE) or {}).get("settings") or {}
-    return RoleMap(load_protocol(Path(run_dir) / PROTOCOL_FILE, settings.get("domains")).pack())
-
-
 class _Paper:
     """One paper's items by role."""
 
@@ -270,17 +263,12 @@ def score(run_dir: Path, corpus: Path) -> dict[str, Any]:
     min_effect = built.get("min_effect")
     if min_effect is None:
         raise ValueError(f"{COMPARISONS_FILE} of run {run_dir} records no min_effect")
-    doc_of = {p["file"]: str(p["id"]) for p in read_manifest(corpus)["papers"]}
-    roles, groups = _roles(run_dir), name_groups(run_dir)
-    items = items_of(run_dir)
-    by_id = {i.item_id: i for i in items}
-    per_doc: dict[str, list[Item]] = {}
-    for item in items:
-        file = str(item.spans[0].selector.get("file", ""))
-        doc = doc_of.get(file) or doc_of.get(f"papers/{Path(file).name}")
-        if doc is None:   # a run of another corpus: refuse rather than score it against the wrong gold
-            raise ValueError(f"item {item.item_id} is in {file!r}, no paper of {corpus}")
-        per_doc.setdefault(doc, []).append(item)
+    run = RunDir(run_dir)
+    roles, groups = run.roles(), name_groups(run_dir)
+    assert roles is not None, f"run {run_dir} has no protocol.yaml"
+    # a run of another corpus is refused (UnknownPaper) rather than scored against the wrong gold
+    per_doc = run.papers(corpus)
+    by_id = {i.item_id: i for its in per_doc.values() for i in its}
     compared: dict[str, list[dict[str, Any]]] = {}
     for c in built.get("comparisons", []):
         compared.setdefault(str(c["document"]), []).append(c)

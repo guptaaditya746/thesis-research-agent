@@ -644,10 +644,13 @@ class AgentTrace(Base):
 
 class EvGraphNode(Open):
     id: str
-    type: str
-    document: str | None = None
+    type: str = Field(description="evidence: the item's evidence type or `document`; records: the node's ev: type "
+                                   "(Paper, Experiment, Thing, Metric, Value, Claim, Link, Comparison) or Class")
+    document: str | None = Field(None, description="the paper the node belongs to; None for what papers share")
     fields: dict[str, Any] | None = None
     found_by: list[str] = []
+    label: str | None = Field(None, description="records: the node's label (rdfs:label, ev:name or its value)")
+    types: list[str] = Field([], description="records: every rdf:type (an ontology class by its label)")
 
 
 class EvGraphEdge(Open):
@@ -657,8 +660,12 @@ class EvGraphEdge(Open):
 
 
 class EvGraph(Base):
+    """The run's graph: `records` for a plan run, the RDF records graph its answer was computed from (records.nq,
+    evidence/kg/view.py); `evidence` for any other run, the evidence graph of graph.json (evidence/graph.py)."""
+    source: Literal["evidence", "records"] = "evidence"
     nodes: list[EvGraphNode]
     edges: list[EvGraphEdge]
+    omitted: dict[str, int] = Field({}, description="records: nodes left out by type, to keep the graph drawable")
 
 
 # --- scores ----------------------------------------------------------------------------------------

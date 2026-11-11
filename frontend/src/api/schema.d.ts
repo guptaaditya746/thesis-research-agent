@@ -2136,7 +2136,7 @@ export interface components {
         EvConfig: {
             /**
              * Ev
-             * @description $EV, the root the others default to (docs/slurm-evidence-runbook.md)
+             * @description $EV, the root the others default to (docs/runbook-slurm.md)
              */
             ev: string | null;
             corpora: components["schemas"]["Root"];
@@ -2188,12 +2188,30 @@ export interface components {
              */
             levels: string[];
         };
-        /** EvGraph */
+        /**
+         * EvGraph
+         * @description The run's graph: `records` for a plan run, the RDF records graph its answer was computed from (records.nq,
+         *     evidence/kg/view.py); `evidence` for any other run, the evidence graph of graph.json (evidence/graph.py).
+         */
         EvGraph: {
+            /**
+             * Source
+             * @default evidence
+             * @enum {string}
+             */
+            source: "evidence" | "records";
             /** Nodes */
             nodes: components["schemas"]["EvGraphNode"][];
             /** Edges */
             edges: components["schemas"]["EvGraphEdge"][];
+            /**
+             * Omitted
+             * @description records: nodes left out by type, to keep the graph drawable
+             * @default {}
+             */
+            omitted: {
+                [key: string]: number;
+            };
         };
         /** EvGraphEdge */
         EvGraphEdge: {
@@ -2210,9 +2228,15 @@ export interface components {
         EvGraphNode: {
             /** Id */
             id: string;
-            /** Type */
+            /**
+             * Type
+             * @description evidence: the item's evidence type or `document`; records: the node's ev: type (Paper, Experiment, Thing, Metric, Value, Claim, Link, Comparison) or Class
+             */
             type: string;
-            /** Document */
+            /**
+             * Document
+             * @description the paper the node belongs to; None for what papers share
+             */
             document: string | null;
             /** Fields */
             fields: {
@@ -2223,6 +2247,17 @@ export interface components {
              * @default []
              */
             found_by: string[];
+            /**
+             * Label
+             * @description records: the node's label (rdfs:label, ev:name or its value)
+             */
+            label: string | null;
+            /**
+             * Types
+             * @description records: every rdf:type (an ontology class by its label)
+             * @default []
+             */
+            types: string[];
         } & {
             [key: string]: unknown;
         };
@@ -4432,6 +4467,10 @@ export interface components {
             /** Ontology Names */
             ontology_names: {
                 [key: string]: string[];
+            };
+            /** Tuned Sha256 */
+            tuned_sha256?: {
+                [key: string]: string;
             };
         };
         /**

@@ -45,7 +45,7 @@ from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.propose.common import CARDS, CRITIC, DRAFT, FRAME, PROPOSAL
 from evidence.protocol import parse
 from evidence.rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, PROTOCOL_FILE,
-                             REASON_FILE, RUN_FILE, RunDir)
+                             REASON_FILE, RECORDS_FILE, RUN_FILE, PaperIndex, RunDir)
 
 from .agenttrace import claim_of, steps_of
 from .evmodels import (
@@ -515,18 +515,18 @@ class EvidenceFiles:
         kind = rd.kind
         if kind is None:
             return None
-        run = rd.try_json(RUN_FILE)
-        run = run if isinstance(run, dict) else {}
+        run = rd.record or {}
         answer = rd.try_json(ANSWER_FILE)
         answer = answer if isinstance(answer, dict) else None
         run_id = f"{path.parent.name}{RUN_SEP}{path.name}"
         counts = answer.get("counts") if answer else None
         if kind == "engine":
-            settings = run.get("settings") or {}
+            settings = rd.settings
             return EvRunSummary(id=run_id, group=path.parent.name, name=path.name, kind="engine", complete=rd.complete,
                                 system=(answer or {}).get("system", "evidence-engine"), mode=run.get("mode"),
-                                strategy=settings.get("strategy"), selection=settings.get("selection"),
-                                model=settings.get("model"), protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
+                                strategy=settings.strategy if settings else None,
+                                selection=settings.selection if settings else None,
+                                model=settings.model if settings else None, protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
                                 label=(answer or {}).get("label") if run else None, counts=counts if run else None,
                                 papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost"),
                                 error_calls=rd.failed_calls()), \
@@ -654,16 +654,18 @@ class EvidenceFiles:
         funnel = rd.try_json(FUNNEL_FILE)
         funnel = (funnel.get("documents") if isinstance(funnel, dict) else None) or {}
         text, file = None, f"papers/{document}.md"
+        papers = PaperIndex([(document, file)])   # without the corpus: the paper's usual file
         if summary and summary.corpus:
             entry, text = self._paper_text(self.corpus_dir(summary.corpus), document)
             file = str(entry["file"])
-        items = [i for i in self._items(path) if any(s.selector.get("file") == file for s in i.spans)]
+            papers = PaperIndex.of_corpus(self.corpus_dir(summary.corpus))
+        items = [i for i in self._items(path) if papers.find(i) == document]
         study = next((s for s in answer.get("studies") or [] if s.get("document") == document), None)
         calls = [c for c in self._calls(path, run) if c.document == document] if summary and summary.kind == "engine" else []
         if text is None and study is None and not items and not calls:
             raise NotFound(f"run {run_id!r} has no document {document!r}")
         marks = [(int(sp.selector["start"]), int(sp.selector["end"]), i.item_id, sp.role)
-                 for i in items for sp in i.spans if sp.selector.get("file") == file]
+                 for i in items for sp in i.spans]   # an item's spans are all in its paper
         if text is not None and answer.get("citations"):   # a baseline's cited passages
             marks += [(c["start"], c["end"], f"cited:{c['start']}-{c['end']}", "citation")
                       for c in answer["citations"] if c.get("document") == document]
@@ -672,8 +674,15 @@ class EvidenceFiles:
                         funnel=FunnelDoc.model_validate(funnel[document]) if document in funnel else None, calls=calls)
 
     def run_graph(self, run_id: str) -> EvGraph:
+        """A plan run's records graph (records.nq: what its answer was computed from), else graph.json."""
         path = self.run_dir(run_id)
-        graph = RunDir(path).try_json(GRAPH_FILE)
+        rd = RunDir(path)
+        if rd.file(RECORDS_FILE).is_file():
+            from evidence.kg.view import view
+            from evidence.planlines import load_records
+            return self._cached(("graph", path), (rd.file(RECORDS_FILE),),
+                                lambda: EvGraph(source="records", **view(load_records(path))))
+        graph = rd.try_json(GRAPH_FILE)
         if not isinstance(graph, dict):
             raise NotFound(f"run {run_id!r} has no graph.json")
         return EvGraph.model_validate(graph)

@@ -43,7 +43,7 @@ import repo_paths
 from typing import Any
 
 from evidence.plan import Plan, load_plan
-from evidence.rundir import PLAN_FILE, RUN_FILE
+from evidence.rundir import ANSWER_FILE, PLAN_FILE, RECORDS_FILE, RUN_FILE, RunDir
 
 from . import report as rep
 from . import stats
@@ -79,12 +79,11 @@ def _check_confirmed(plan: Plan, confirmation: str, where: Path) -> None:
 def _check_engine(root: Path, q: RealQuestion, rag_model: str | None) -> None:
     """The engine run read the baseline's papers and used the baseline's model (run.json settings)."""
     from .baselines.real import check_same_papers
-    path = root / RUN_FILE
-    if not path.is_file():
+    settings = RunDir(root).settings
+    if settings is None:
         raise ValueError(f"{root}: no {RUN_FILE}; cannot tell which papers and model the engine run used")
-    settings = json.loads(path.read_text(encoding="utf-8")).get("settings") or {}
-    check_same_papers(q.corpus_dir, Path(settings.get("corpus") or ""))
-    model = settings.get("model") or DEFAULT_MODEL
+    check_same_papers(q.corpus_dir, Path(settings.corpus))
+    model = settings.model or DEFAULT_MODEL
     if rag_model is not None and model != rag_model:
         raise ValueError(f"{root}: the engine run used model {model!r} but the RAG baseline uses {rag_model!r}; "
                          "both must use one model")
@@ -197,7 +196,7 @@ def wholerun(questions: list[RealQuestion], runs: Path, out: Path, *, set_name: 
             rows[key], missing[key], missing_plan[key] = [], [], []
             for q in pool(chosen, conf):
                 root = run_dir(runs, conf, how, q.id)
-                if not (root / "answer.json").is_file():
+                if not RunDir(root).file(ANSWER_FILE).is_file():   # a failed run's empty answer is scored (0)
                     missing[key].append(q.id)
                     rows[key].append({"id": q.id, "kind": q.kind, "confirmation": conf, "missing_run": True,
                                       "headline": 0.0})
@@ -304,7 +303,7 @@ def offtemplate(runs: Path, out: Path) -> dict[str, Any]:
                 fresh = ot.is_fresh(ot.plan_line(load_plan(path), q))    # known without running the query
             except Exception:   # noqa: BLE001 - an unreadable plan has no line to look at
                 fresh = False
-            has_records = (Path(runs) / q.id / "records.nq").is_file()      # a run with records: no match end to end
+            has_records = RunDir(path.parent).file(RECORDS_FILE).is_file()   # a run with records: no match end to end
             found = {"fresh": fresh, "match_on_key": False, "match_on_run": False if has_records else None,
                      "extra_columns": [], "failed": f"failed: {type(exc).__name__}: {exc}"}
         results.append(found)
@@ -534,7 +533,7 @@ def links(run: Path, out: Path, *, corpus: Path | None = None, question_id: str 
     elif references is not None:
         refs = json.loads(Path(references).read_text(encoding="utf-8"))
     if refs is not None:
-        answer = json.loads((Path(run) / "answer.json").read_text(encoding="utf-8"))
+        answer = RunDir(run).json(ANSWER_FILE)
         status = builds_on_status(answer, refs)
         scored = builds_on_recall(answer.get("links") or [], refs)
         result["builds_on"] = {**scored, "recall": None, "precision": None, "status": status} if status else scored

@@ -90,12 +90,12 @@ class PlanRuns:
         return root
 
     def result(self, rid: str) -> dict[str, Any]:
-        from evidence.rundir import RunDir
+        from evidence.rundir import ANSWER_FILE, RunDir
         root = self.folder(rid)
         if rid in self.errors:
             return {"status": "done", "lines": [], "answer": {"text": f"failed: {self.errors[rid]}"}, "reruns": []}
         run = RunDir(root)
-        answer = run.try_json("answer.json") if run.complete else None
+        answer = run.try_json(ANSWER_FILE) if run.complete else None
         if answer is None:
             thread = self.threads.get(rid)
             if thread is None or not thread.is_alive():   # e.g. the server restarted during the run

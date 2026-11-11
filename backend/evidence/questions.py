@@ -177,8 +177,8 @@ def run_questions(run_dir: Path) -> Path | None:
         return None
     data = yaml.safe_load(rd.file(PROTOCOL_FILE).read_bytes().decode("utf-8"))
     domain = data.get("domain", DEFAULT_PACK) if isinstance(data, dict) else DEFAULT_PACK
-    run = rd.try_json(RUN_FILE)
-    root = ((run.get("settings") or {}).get("domains") if isinstance(run, dict) else None) or pack_module.DOMAINS
+    settings = rd.settings
+    root = (settings.domains if settings is not None else None) or pack_module.DOMAINS
     path = Path(root) / str(domain) / "questions.yaml"
     return path if path.is_file() else None
 
@@ -204,8 +204,8 @@ def answered_by(run_dir: Path, entries: Sequence[Q]) -> Q:
     more than one, matches."""
     rd = RunDir(Path(run_dir))
     if rd.file(PROTOCOL_FILE).is_file():
-        run = rd.try_json(RUN_FILE)
-        domains = ((run.get("settings") or {}).get("domains") if isinstance(run, dict) else None)
+        settings = rd.settings
+        domains = settings.domains if settings is not None else None
         protocol = load_protocol(rd.file(PROTOCOL_FILE), domains)   # its pack from the run's `domains` folder
         found = [q for q in entries if q.question == protocol.question and q.kind == protocol.kind]
         why = f"its protocol {protocol.id!r} asks {protocol.question!r} ({protocol.kind})"

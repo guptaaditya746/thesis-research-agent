@@ -15,12 +15,13 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any
 
 from evidence.contract import Item
 from evidence.evidence_types import EvidenceType   # str: any evidence type name (types are open, EV4)
-from evidence.rundir import ANSWER_FILE, COMPARISONS_FILE, FUNNEL_FILE, LOCATE_FILE, REEXEC_FILE, RUN_FILE, RunDir
+from evidence.rundir import (ANSWER_FILE, COMPARISONS_FILE, FUNNEL_FILE, LOCATE_FILE, REEXEC_FILE, RUN_FILE, PaperIndex,
+                            RunDir)
 from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in answer.json; baselines differ
 
 # Ground-truth fact lists per evidence type, and the role of the placement that locates each kind of
@@ -124,20 +125,14 @@ class GroundTruth:
         return sorted({s["level"] for s in self.studies})
 
 
-def paper_ids(manifest: dict[str, Any]) -> dict[str, str]:
-    """File name (as in the manifest, and its base name) -> paper id, to place an item's spans."""
-    out: dict[str, str] = {}
-    for paper in manifest.get("papers", []):
-        file = paper.get("file") or f"{paper['id']}.md"
-        out[file] = paper["id"]
-        out[PurePosixPath(file).name] = paper["id"]
-    return out
+def paper_ids(manifest: dict[str, Any]) -> PaperIndex:
+    """The corpus manifest's papers, to place an item (`evidence.rundir.PaperIndex`)."""
+    return PaperIndex.of_manifest(manifest)
 
 
-def document_of(item: Item, files: dict[str, str]) -> str:
-    """The paper an item comes from: the file of its first span, mapped through the manifest."""
-    file = min(item.spans, key=lambda s: s.selector["start"]).selector["file"]
-    return files.get(file) or files.get(PurePosixPath(file).name) or PurePosixPath(file).stem
+def document_of(item: Item, files: PaperIndex) -> str:
+    """The paper an item comes from (`PaperIndex.of`: an item of a file the corpus does not list is refused)."""
+    return files.of(item)
 
 
 @dataclass
@@ -160,6 +155,7 @@ class Run:
     funnel: dict[str, Any] | None = None
     screens: list[dict[str, Any]] | None = None
     comparisons: dict[str, Any] | None = None
+    settings: Any = None   # run.json settings read back (evidence.engine.Settings; RunDir.settings), None without
 
     @classmethod
     def load(cls, root: Path, reexec: Path | None = None) -> Run:
@@ -170,4 +166,4 @@ class Run:
                    [e for e in records if e.get("subtype") == "extractor_call"] if records is not None else None,
                    rd.usage(), rd.json(FUNNEL_FILE),
                    [e for e in records if e.get("subtype") == "screen"] if records is not None else None,
-                   rd.json(COMPARISONS_FILE))
+                   rd.json(COMPARISONS_FILE), rd.settings)

@@ -131,6 +131,7 @@ from .pack import DOMAINS, Role, RoleMap, load_pack
 from .protocol import DEFAULT_PACK, SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .contract import digest
 from .recording import ModelCallError, Provider, Recorder, usage
+from .rundir import RECORDS_FILE
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE,
                      GRAPH_FILE, LOCATE_FILE, LOCK_FILE, NAMES_FILE, PLAN_FILE, PROTOCOL_FILE, REASON_FILE, RUN_CALLS_FILE,
                      RUN_FILE, Corpus, Events, RunCalls, RunDir, RunDirExists, new_run_id, read_json, write_lines)
@@ -260,7 +261,8 @@ class Settings:
         s = record["settings"]
         own = run_dir / PLAN_FILE if run_dir is not None else None
         plan = own if own is not None and own.is_file() else (Path(s["plan"]) if s.get("plan") else None)
-        return cls(corpus=str(corpus or s["corpus"]), cache=str(cache or s["cache"]), selection=s["selection"],
+        return cls(corpus=str(corpus or s.get("corpus") or ""), cache=str(cache or s.get("cache") or ""),
+                   selection=s.get("selection") or "cascade",
                    model=s.get("model"), imports=list(s.get("imports") or []),
                    gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"),
                    domains=s.get("domains"), plan=plan, stage_set=s.get("stage_set"),
@@ -914,7 +916,7 @@ class Execution:
             self.items, self.records_nq, answer = planrun.finish(self.plan, papers, self.items, self.roles, self.ctx,
                                                                  synthesis, reason=self.settings.reason,
                                                                  version=self.settings.plan_version)
-            self.outputs[planlines.RECORDS_FILE] = planlines.write_records(self.root, self.records_nq)
+            self.outputs[RECORDS_FILE] = planlines.write_records(self.root, self.records_nq)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)

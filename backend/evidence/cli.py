@@ -68,7 +68,7 @@ from modelcall.pins import ORCH_ALIAS
 
 from . import arxiv
 from .calls import NotRecorded
-from .rundir import EVENTS_FILE, RUN_FILE, RunDir, RunDirExists, read_json
+from .rundir import ANSWER_FILE, EVENTS_FILE, RUN_FILE, RunDir, RunDirExists, read_json
 
 DEFAULT_MODEL = ORCH_ALIAS  # orch-model; evidence.engine.Settings.model stays None by default
 
@@ -272,7 +272,7 @@ def _dispatch(args: argparse.Namespace) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 2
         record = read_json(root / RUN_FILE)
-        answer = read_json(root / "answer.json")
+        answer = read_json(root / ANSWER_FILE)
         if args.plan is not None:
             summary = {"answer": answer["answer"]["text"], "labels": answer["labels"]}
         else:
