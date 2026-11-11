@@ -13,7 +13,6 @@ from evaluation import cli, wholerun_cmd
 from evaluation.truth import Fact, GroundTruth
 from evaluation.wholerun import Answer, RealQuestion
 from evidence.plan import WordList, write_plan
-from evidence.tests.runfolder import write_run
 from evidence.tests.test_plan_run import make_plan
 
 from . import fixtures as fx
@@ -31,11 +30,15 @@ def plan_for(confirmed_by: str, question: str = "Which?", fresh: bool = False) -
 
 def make_run(runs: Path, conf: str, reasoning: str, q: RealQuestion, ranking: list[str], *, fresh: bool = False,
              model: str = "orch-model", plan: bool = True) -> None:
+    root = runs / conf / reasoning / q.id
+    root.mkdir(parents=True)
     rows = [{"thing": p, "paper": f"P{i}"} for i, p in enumerate(ranking)]
     lid = "l2" if fresh else "l1"   # the id of plan_for's first line
     line = {"id": lid, "question": q.question, "status": "done", "rows": rows, "text": f"{len(rows)} found"}
-    write_run(runs / conf / reasoning / q.id, corpus=q.corpus_dir, model=model, answer={"system": "plan", "lines": [line]},
-              plan=plan_for("system" if conf == "auto-confirmed" else "aditya", q.question, fresh) if plan else None)
+    (root / "answer.json").write_text(json.dumps({"system": "plan", "lines": [line]}), encoding="utf-8")
+    (root / "run.json").write_text(json.dumps({"settings": {"corpus": str(q.corpus_dir), "model": model}}), encoding="utf-8")
+    if plan:
+        write_plan(plan_for("system" if conf == "auto-confirmed" else "aditya", q.question, fresh), root / "plan.json")
 
 
 def questions(n: int = 3, corpus: Path = Path(".")) -> list[RealQuestion]:
