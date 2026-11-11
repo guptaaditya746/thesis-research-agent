@@ -17,6 +17,7 @@ from synth2.scir_export import export
 from synth2.score import RULES, reference_answers, score_family, summarise
 from synth2.world import LAW_KINDS
 from synth2.write import TEXT_LEVELS
+from synth2.written import assemble
 
 HEADLINE = ("recovers_law", "follows_evidence", "resists_overclaiming")
 MAX_TRIES = 3   # a grid cell tries at most this many times the asked number of seeds
@@ -133,6 +134,14 @@ def export_scir(args: argparse.Namespace) -> int:
     return 0
 
 
+def written_corpus(args: argparse.Namespace) -> int:
+    try:
+        print(f"{assemble(args.template, args.papers, args.out)} written papers -> {args.out}")
+    except (ValueError, OSError) as err:
+        raise BadArgument(str(err)) from err
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth2", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -159,6 +168,11 @@ def parser() -> argparse.ArgumentParser:
     e.add_argument("--root", type=Path, required=True)
     e.add_argument("--out", type=Path, required=True)
     e.set_defaults(run=export_scir)
+    w = sub.add_parser("written-corpus", help="assemble a corpus from model-written rewrites of a template's papers")
+    w.add_argument("--template", type=Path, required=True)
+    w.add_argument("--papers", type=Path, required=True, help="folder holding one <paper id>.md per template paper")
+    w.add_argument("--out", type=Path, required=True)
+    w.set_defaults(run=written_corpus)
     return top
 
 
