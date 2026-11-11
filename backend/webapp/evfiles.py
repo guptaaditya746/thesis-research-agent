@@ -328,7 +328,9 @@ class EvidenceFiles:
             effect = study.get("effect") or {}
             record = fidelity.get(p["id"])
             out.append(CorpusPaper(id=p["id"], file=p["file"], sha256=p["sha256"], level=levels.get(p["id"]) or study.get("level"),
-                                   relevant=study.get("relevant", True) is not False,
+                                   relevant=(study.get("relevant", True) is not False) if truth else None,
+                                   title=p.get("title"), authors=list(p.get("authors") or []),
+                                   published=p.get("published"), url=p.get("url"), route=p.get("source"),
                                    direction=effect.get("direction") if study.get("relevant", True) is not False else None,
                                    delta=effect.get("delta"), flags=list(study.get("flags") or []),
                                    duplicate_of=study.get("duplicate_of"), missing=study.get("missing"),

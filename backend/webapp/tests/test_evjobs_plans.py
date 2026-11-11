@@ -271,7 +271,14 @@ def test_score_refuses_a_run_on_a_demonstration_corpus(commands: Commands, world
 def test_a_real_dataset_without_ground_truth_json_is_not_scored_here(commands: Commands, world: EvidenceWorld,
                                                                      settings: Settings) -> None:
     (world.corpora / MIXED / "ground_truth.json").unlink()   # as a SciREX corpus: its gold is scirex_gold.json
-    assert {c.name: c for c in EvidenceFiles(settings).corpora()}[MIXED].ground_truth is False
+    manifest = json.loads((world.corpora / MIXED / "manifest.json").read_text(encoding="utf-8"))
+    manifest["papers"][0] |= {"title": "A Paper", "authors": ["A", "B"], "published": "2024-11-01", "source": "latex"}
+    (world.corpora / MIXED / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    files = EvidenceFiles(settings)
+    assert {c.name: c for c in files.corpora()}[MIXED].ground_truth is False
+    papers = files.corpus(MIXED).papers_list   # no made-up truth: no relevance, no direction
+    assert all(p.relevant is None and p.direction is None for p in papers)
+    assert (papers[0].title, papers[0].authors, papers[0].route) == ("A Paper", ["A", "B"], "latex")
     with pytest.raises(Conflict, match="evaluate wholerun"):
         commands.score(ScoreRequest(run=f"cascade-gaps~{MIXED}"))
 

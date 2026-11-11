@@ -4338,8 +4338,16 @@
             "title": "Level"
           },
           "relevant": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Relevant",
+            "description": "None when the corpus has no ground_truth.json (real papers)",
             "default": true
           },
           "direction": {
@@ -4359,6 +4367,60 @@
             ],
             "title": "Direction",
             "description": "the study's true effect direction"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "real papers (manifest.json of `evidence fetch`): the paper's title"
+          },
+          "authors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authors",
+            "default": []
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route",
+            "description": "where the text came from: latex, pmc_xml, html or pdf"
           },
           "delta": {
             "anyOf": [
@@ -4421,6 +4483,11 @@
           "level",
           "relevant",
           "direction",
+          "title",
+          "authors",
+          "published",
+          "url",
+          "route",
           "delta",
           "flags",
           "duplicate_of",
