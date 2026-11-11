@@ -287,6 +287,8 @@ def ladder(entry: Entry, client: Client, convert: Convert = docling_markdown
         body, kind, sha, why = paper_body(entry, client, convert)
     except ValueError as exc:
         raise ValueError("; ".join([*reasons, str(exc)])) from exc
+    except FetchError as exc:   # no Docling (the web app's Python): this paper is skipped, the LaTeX ones are kept
+        raise ValueError("; ".join([*reasons, f"html/pdf: {exc}"])) from exc
     return body, kind, sha, "; ".join([*reasons, *([why] if why else [])]) or None
 
 

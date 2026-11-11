@@ -126,6 +126,27 @@ def test_a_missing_docling_is_a_fetch_error(monkeypatch: pytest.MonkeyPatch):
         arxiv.docling_markdown(b"<html></html>", "html")
 
 
+def test_without_docling_a_paper_lacking_latex_is_skipped_and_the_latex_papers_are_kept(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    from evidence.sources import latex
+
+    def latex_only_for_the_first(blob: bytes) -> str:
+        if not seen:
+            seen.append(1)
+            return "Accuracy rose from 0.61 to 0.74."
+        raise ValueError("no LaTeX source")
+
+    def no_docling(data: bytes, kind: str) -> str:
+        raise arxiv.FetchError("Docling is not installed: uv sync --group fetch")
+
+    seen: list[int] = []
+    monkeypatch.setattr(latex, "latex_markdown", latex_only_for_the_first)
+    source = arxiv.fetch("retrieval", tmp_path / "c", max_papers=2, client=Recorded(broken=()).client(),
+                         log=lambda _: None, convert=no_docling, structured=True, now=lambda: NOW)
+    assert source["papers"] == 1 and source["latex"] == 1
+    assert len(source["skipped"]) == 1 and "Docling is not installed" in source["skipped"][0]["reason"]
+
+
 def test_the_cli_reads_ids_from_a_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     rec = Recorded()
     real = arxiv.Client
