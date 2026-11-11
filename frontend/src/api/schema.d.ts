@@ -1760,14 +1760,34 @@ export interface components {
             level: string | null;
             /**
              * Relevant
+             * @description None when the corpus has no ground_truth.json (real papers)
              * @default true
              */
-            relevant: boolean;
+            relevant: boolean | null;
             /**
              * Direction
              * @description the study's true effect direction
              */
             direction: ("supports" | "contradicts" | "neutral" | "undetermined") | null;
+            /**
+             * Title
+             * @description real papers (manifest.json of `evidence fetch`): the paper's title
+             */
+            title: string | null;
+            /**
+             * Authors
+             * @default []
+             */
+            authors: string[];
+            /** Published */
+            published: string | null;
+            /** Url */
+            url: string | null;
+            /**
+             * Route
+             * @description where the text came from: latex, pmc_xml, html or pdf
+             */
+            route: string | null;
             /** Delta */
             delta: number | null;
             /**

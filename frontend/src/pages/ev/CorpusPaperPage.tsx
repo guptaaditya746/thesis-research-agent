@@ -11,7 +11,7 @@ import { DirectionBadge, JsonBlock, KeyValues, QueryPage, RowsTable } from "@/co
 import { MarkLegend, PaperText } from "@/components/ev/PaperText"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TYPE_COLOR } from "@/lib/ev"
 
 /** A placement role's mark colour: the evidence type it is the ground truth of. */
@@ -40,11 +40,12 @@ export default function CorpusPaperPage() {
         const study = (d.study ?? {}) as Record<string, unknown>
         const effect = (study.effect ?? {}) as Record<string, unknown>
         const checks = ((d.fidelity?.checks as Record<string, unknown>[] | undefined) ?? [])
+        const real = d.paper.relevant === null   // no ground_truth.json: a real paper, no study to show
         return (
           <div className="space-y-6">
-            <PageHeader title={<span className="font-mono">{d.paper.id}</span>} description={<>in <span className="font-mono">{d.corpus}</span>, level {d.paper.level}</>}>
+            <PageHeader title={<span className="font-mono">{d.paper.id}</span>} description={<>in <span className="font-mono">{d.corpus}</span>{d.paper.level && `, level ${d.paper.level}`}</>}>
               <div className="flex flex-wrap items-center gap-2">
-                {d.paper.relevant ? <DirectionBadge direction={d.paper.direction} title="the study's true effect" /> : <Badge variant="outline">irrelevant</Badge>}
+                {real ? null : d.paper.relevant ? <DirectionBadge direction={d.paper.direction} title="the study's true effect" /> : <Badge variant="outline">irrelevant</Badge>}
                 {(d.paper.flags ?? []).map((f) => <Badge key={f} variant="outline">{f.replaceAll("_", " ")}</Badge>)}
               </div>
             </PageHeader>
@@ -55,7 +56,23 @@ export default function CorpusPaperPage() {
                   selected={selected} onSelect={(marks) => setSelected(marks[0] ?? null)} />
               </div>
               <div className="space-y-4">
-                <Card>
+                {real ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Paper</CardTitle>
+                      <CardDescription>A real paper: no ground truth, so no study or truth label.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <KeyValues items={[
+                        ["title", d.paper.title ?? "—"],
+                        ["authors", d.paper.authors?.length ? d.paper.authors.join(", ") : "—"],
+                        ["published", d.paper.published?.slice(0, 10) ?? "—"],
+                        ["link", d.paper.url ? <a key="u" href={d.paper.url} target="_blank" rel="noreferrer" className="underline">{d.paper.url}</a> : "—"],
+                        ["text from", d.paper.route ?? "—"],
+                      ]} />
+                    </CardContent>
+                  </Card>
+                ) : <Card>
                   <CardHeader><CardTitle className="text-base">Study (ground truth)</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                     <KeyValues items={[
@@ -72,13 +89,13 @@ export default function CorpusPaperPage() {
                         render={(c, v) => c === "id" ? <button type="button" className="font-mono underline decoration-dotted underline-offset-2 hover:decoration-solid" onClick={() => setSelected(String(v))}>{String(v)}</button> : String(v ?? "—")} />
                     )}
                   </CardContent>
-                </Card>
-                <Card>
+                </Card>}
+                {!real && <Card>
                   <CardHeader><CardTitle className="text-base">Fidelity checks</CardTitle></CardHeader>
                   <CardContent>
                     {checks.length ? <RowsTable caption="Fidelity checks" rows={checks} columns={["name", "ok", "detail"]} /> : <p className="text-sm text-muted-foreground">None recorded.</p>}
                   </CardContent>
-                </Card>
+                </Card>}
                 <details><summary className="cursor-pointer text-sm">Placements ({d.placements.length})</summary><JsonBlock value={d.placements} className="mt-1" /></details>
               </div>
             </div>

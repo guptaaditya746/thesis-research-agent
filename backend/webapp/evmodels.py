@@ -131,8 +131,13 @@ class CorpusPaper(Base):
     file: str
     sha256: str
     level: str | None = None
-    relevant: bool = True
+    relevant: bool | None = Field(True, description="None when the corpus has no ground_truth.json (real papers)")
     direction: Direction | None = Field(None, description="the study's true effect direction")
+    title: str | None = Field(None, description="real papers (manifest.json of `evidence fetch`): the paper's title")
+    authors: list[str] = []
+    published: str | None = None
+    url: str | None = None
+    route: str | None = Field(None, description="where the text came from: latex, pmc_xml, html or pdf")
     delta: float | None = None
     flags: list[str] = []
     duplicate_of: str | None = None
