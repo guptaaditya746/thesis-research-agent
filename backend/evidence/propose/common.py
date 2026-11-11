@@ -14,6 +14,7 @@ from pydantic_ai.models import Model
 
 from jsonio import file_sha256, sha256_hex
 import modelcall
+from modelcall.pins import ORCH_ALIAS
 
 from ..pack import DEFAULT_PACK, DOMAINS, protocol_path
 
@@ -30,7 +31,7 @@ def pack_propose(pack: str = DEFAULT_PACK) -> dict[str, Any]:
 # The draft starts from the hand-written protocol of the question's kind, in the default pack (its propose.yaml).
 KIND_TEMPLATES = {kind: protocol_path(DEFAULT_PACK, pid) for kind, pid in pack_propose()["templates"].items()}
 EFFECT_TEMPLATE = KIND_TEMPLATES["effect"]
-DEFAULT_MODEL = "orch-model"   # the one model of every extractor and both baselines (Part G.3)
+DEFAULT_MODEL = ORCH_ALIAS   # orch-model: the one model of every extractor and both baselines (Part G.3)
 
 FRAME, DRAFT, SOURCES, CRITIC = "frame.json", "draft.yaml", "draft.sources.json", "critic.json"
 CARDS, DECISIONS, PROTOCOL, PROPOSAL = "cards.json", "decisions.yaml", "protocol.yaml", "proposal.json"

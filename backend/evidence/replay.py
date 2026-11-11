@@ -15,7 +15,6 @@ not its id, so an upstream span change does not count as a downstream difference
 from __future__ import annotations
 
 import importlib
-import os
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -30,31 +29,12 @@ from .recording import Provider
 from jsonio import write_json
 
 from .rundir import (CALLS_DIR, COMPARISONS_FILE, EVENTS_FILE, EVIDENCE_FILE, LOCK_FILE, PROTOCOL_FILE, REEXEC_FILE,
-                     PLAN_FILE, RUN_FILE, RunDir, read_json, read_lines)
+                     RUN_FILE, RunDir, read_json, read_lines)
 
 OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_missing", "fields_differ")
 # Outputs the engine writes since a later change (the lock since EV4, comparisons.json since plan 2): a replay of a run
 # recorded before it lists them as `added`, not as a mismatch (every recorded output must still match).
 ADDED_OUTPUTS = (LOCK_FILE, COMPARISONS_FILE)
-
-
-def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | str | None,
-              run_dir: Path | None = None) -> Settings:
-    s = record["settings"]
-    # a planned run: the run folder's own copy of the plan, so a replay elsewhere needs no original path
-    plan = run_dir / PLAN_FILE if run_dir is not None and (run_dir / PLAN_FILE).is_file() else (Path(s["plan"]) if s.get("plan") else None)
-    return Settings(corpus=str(corpus or s["corpus"]), cache=str(cache or s["cache"]), selection=s["selection"],
-                    model=s.get("model"), imports=list(s.get("imports") or []), strategy=s.get("strategy") or "all",
-                    # $GLINER_URL wins: the service may have moved; the recorded model keeps the ids
-                    gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"),
-                    confirm=s.get("confirm", "none"),   # a run made before confirmation kept every item
-                    relink=s.get("relink", "off"),      # a run made before relinking left those links dangling
-                    domains=s.get("domains"),           # a run of a pack outside domains/ (tests)
-                    names=s.get("names", "off"),        # a run made before the names step grouped no names
-                    reason=s.get("reason", "off"),      # a run made before the reasoner had no inferences
-                    plan=plan, stage_set=s.get("stage_set"),   # a plan run: its own stages again
-                    links=s.get("links", "on"),         # a plan run made before the switch had its links stage
-                    plan_version=s.get("plan_version", "v1"))   # a plan run made before 4 Nov is v1
 
 
 class CodeChanged(NotRecorded):
@@ -85,7 +65,7 @@ def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path
     any); raises NotRecorded on a cache miss."""
     run_dir = Path(run_dir)
     record = read_json(run_dir / RUN_FILE)
-    settings = _settings(record, cache, corpus, run_dir)
+    settings = Settings.from_record(record, cache=cache, corpus=corpus, run_dir=run_dir)
     for module in settings.imports:   # modules that register stages must be in before the registered set is compared
         importlib.import_module(module)
     stages.check_recorded(record.get("stages"),
@@ -130,7 +110,8 @@ def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | s
     def bypass(spec: Any) -> bool:
         return extractor is None or extractor in (spec.name, spec.extractor_id)
 
-    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus, run_dir),
+    new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(),
+                      Settings.from_record(record, cache=cache, corpus=corpus, run_dir=run_dir),
                       out_dir or run_dir.parent, mode="reexec", bypass=bypass, locator=locator,
                       provider=provider if provider is not None else default_provider,
                       source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}",

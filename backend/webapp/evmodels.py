@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapt
 
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.protocol import Kind, Protocol
+from modelcall.pins import ORCH_ALIAS
 
 from .models import Claim, Step
 
@@ -843,7 +844,7 @@ class RunRequest(Request):
     protocol: ProtocolRef
     extractors: Literal["regex-only", "cascade"] = "cascade"
     strategy: Literal["all", "gaps"] = "gaps"
-    model: str = Field("orch-model", pattern=MODEL)
+    model: str = Field(ORCH_ALIAS, pattern=MODEL)
     group: Name | None = Field(None, description="default as the runbook names it: regex-only, cascade, "
                                                  "cascade-gaps, agentic, agentic-gaps, or <protocol>-...")
     name: Name | None = Field(None, description="default: the corpus name")
@@ -856,7 +857,7 @@ class RagBaselineRequest(Request):
     else `$EV/runs/rag-baseline/<corpus>.<question>`."""
     corpus: Name
     question: Name = Field(description="the question's id in the questions file: the question the baseline answers")
-    model: str = Field("orch-model", pattern=MODEL)
+    model: str = Field(ORCH_ALIAS, pattern=MODEL)
     retrieval: Literal["global", "per_paper"] = "global"
     k: int = Field(8, ge=1, le=100)
 
@@ -866,7 +867,7 @@ class AgentBaselineRequest(Request):
     else `$EV/runs/agent-baseline/<corpus>.<question>`."""
     corpus: Name
     question: Name = Field(description="the question's id in the questions file: the question the baseline answers")
-    model: str = Field("orch-model", pattern=MODEL)
+    model: str = Field(ORCH_ALIAS, pattern=MODEL)
 
 
 class ScoreRequest(Request):
@@ -888,7 +889,7 @@ class ProposeRequest(Request):
     question: Name | None = Field(None, description="the question's id in the questions file")
     text: str | None = Field(None, min_length=10, max_length=600,
                              description="a question the person typed, instead of one of the questions file")
-    model: str = Field("orch-model", pattern=MODEL)
+    model: str = Field(ORCH_ALIAS, pattern=MODEL)
 
     @model_validator(mode="after")
     def one_question(self) -> "ProposeRequest":
@@ -905,7 +906,7 @@ class KindRequest(Request):
     """Say which kind of question a proposal asks, instead of the model's guess: the draft, critic and cards
     steps run again from that kind's template (the cards and decisions made so far are dropped)."""
     kind: Literal["effect", "inventory", "consistency", "best"]
-    model: str = Field("orch-model", pattern=MODEL)
+    model: str = Field(ORCH_ALIAS, pattern=MODEL)
 
 
 class DecisionEntry(Request):

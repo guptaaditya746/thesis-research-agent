@@ -179,3 +179,17 @@ def test_replay_of_a_run_recorded_by_other_extractor_code_says_so(protocol_file:
     with pytest.raises(NotRecorded) as plain:   # same code, empty cache: a plain miss
         replay(fresh, cache=tmp_path / "empty-cache")
     assert not isinstance(plain.value, CodeChanged)
+
+
+def test_settings_read_back_from_run_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A run's settings round-trip through run.json; a setting an old run did not record takes its old value; a plan
+    run refuses a setting it fixes."""
+    monkeypatch.delenv("GLINER_URL", raising=False)
+    plan = engine.Settings.for_plan(tmp_path / "plan.json", tmp_path / "c", tmp_path, reason="off", links="off")
+    assert (plan.stage_set, plan.plan_version, plan.names, plan.confirm, plan.relink) == ("plan", "v2", "off", "llm", "on")
+    assert engine.Settings.from_record({"settings": plan.json()}) == plan
+    old = engine.Settings.from_record({"settings": {"corpus": "c", "cache": "k", "selection": "regex-only"}})
+    assert (old.strategy, old.confirm, old.relink, old.names, old.reason, old.links, old.plan_version) == \
+        ("all", "none", "off", "off", "off", "on", "v1")
+    with pytest.raises(ValueError, match="a plan run fixes --names on"):
+        engine.Settings.for_plan(tmp_path / "plan.json", tmp_path / "c", tmp_path, names="on")

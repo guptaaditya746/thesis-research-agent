@@ -6,9 +6,11 @@ query does on the answer key).
 the shape `evidence.kg.truthgraph.truth_store` reads. `gold_rows` runs the reference query on `truth_store`; both it and
 `check` import the query runner (evidence.kg.query, workstream W4) when called, so this module loads without it.
 
-`check(run, q)`: `run` has `.plan` (an evidence.plan.Plan) and optionally `.store` (the run's records graph, a
-pyoxigraph Store). The line is the plan's line asking the question's text, else its first line. The plan's query runs
-on the answer key (planning alone: the generality number) and on the run's records (end to end).
+`check(run, q)`: `run` has `.plan` (an evidence.plan.Plan), optionally `.store` (the run's records graph, a
+pyoxigraph Store) and `.version` (the run's plan version, default v1): an `evidence.planlines.PlanLines`, as
+`PlanLines.of_run` reads a run folder. The line is the plan's line asking the question's text, else its first line.
+The plan's query runs on the answer key (planning alone: the generality number) and on the run's records as the run
+answered its lines (end to end: a v2 run matches names as it did).
 
 Commit-time rule: `committed_at(paths)` gives the time the files were first committed (None when not in git), so a
 report can show the questions were fixed before the planner ran.
@@ -124,7 +126,7 @@ def key_sides(plan: Any, truth: GroundTruth) -> list[str]:
     from collections import Counter
 
     from evidence.names import clean
-    from evidence.planrun import compare_sides
+    from evidence.planlines import compare_sides
     conditions = [f.data for f in truth.facts.values() if f.type == "condition"]
     out = []
     for side in compare_sides(plan):
@@ -139,15 +141,15 @@ def check(run: Any, q: OffTemplateQuestion) -> dict[str, Any]:
     """{"fresh": the plan's line is a fresh query, "match_on_key": its answer on the answer key's records equals the
     gold answer (planning alone: THE generality number), "match_on_run": the same on the run's extracted records
     (end to end; None when the run has no `store`), "extra_columns": plan columns beyond the gold's}."""
-    from evidence.kg.query import run_query
     from evidence.kg.truthgraph import truth_store
-    from evidence.planrun import line_params
+    from evidence.planlines import PlanLines
     line = plan_line(run.plan, q)
     gold = gold_rows(q)
-    params = line_params(run.plan, line.query)      # the planner keeps $choices: fill them as the run does
-    on_key = run_query(truth_store(q), line.query, {**params, "sides": key_sides(run.plan, q.gold)}).rows
+    # the planner keeps $choices: PlanLines fills them as the run does
+    on_key = PlanLines(run.plan, truth_store(q)).query(line.query, sides=key_sides(run.plan, q.gold)).rows
     store = getattr(run, "store", None)
-    on_run = run_query(store, line.query, params).rows if store is not None else None
+    on_run = (PlanLines(run.plan, store, version=getattr(run, "version", "v1")).query(line.query).rows
+              if store is not None else None)
     return {"fresh": is_fresh(line), "match_on_key": same_rows(on_key, gold),
             "match_on_run": None if on_run is None else same_rows(on_run, gold),
             "extra_columns": extra_columns(on_key, gold)}

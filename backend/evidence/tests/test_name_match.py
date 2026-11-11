@@ -1,11 +1,11 @@
-"""A v2 plan run matches a query's names by bracket parts and the plan's word list (planrun.name_matcher): the
+"""A v2 plan run matches a query's names by bracket parts and the plan's word list (planlines.name_matcher): the
 question's "ICSI Meeting Recorder Dialog Act Corpus (MRDA)" finds the graph's "mrda", and a literal with nothing
 else to match renders exactly as before."""
 from __future__ import annotations
 
 from evidence.kg.build import build
 from evidence.kg.query import render, run_query
-from evidence.planrun import name_matcher
+from evidence.planlines import name_matcher
 from evidence.tests.kg_support import ROLES, Doc, paper, register, restore
 from evidence.tests.test_plan_run import make_plan
 

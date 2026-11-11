@@ -124,7 +124,7 @@ from . import seal as sealing
 from .extractors import base as extractor_base
 from .extractors import gliner
 from .extractors import llm as llm_extractor
-from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
+from .calls import Asked, CallCache, EngineContext, Mode, NotRecorded, Outcome, cache_key
 from .contract import DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
 from .pack import DOMAINS, Role, RoleMap, load_pack
@@ -158,9 +158,32 @@ ENGINE = "evidence-engine"
 __all__ = ["NotRecorded", "Settings", "build_extractors", "execute_run", "focus_for", "plan_stages", "run", "run_plan"]
 
 
+# The value a setting had before run.json recorded it (`Settings.json` leaves a default out, so the settings of a run
+# made before a switch are unchanged): reading a run back repeats it.
+OLD_RUN: dict[str, str] = {
+    "strategy": "all",       # a run made before the funnel ran every extractor
+    "confirm": "none",       # a run made before confirmation kept every item
+    "relink": "off",         # a run made before relinking left those links dangling
+    "names": "off",          # a run made before the names step grouped no names
+    "reason": "off",         # a run made before the reasoner had no inferences
+    "links": "on",           # a plan run made before the switch had its links stage
+    "plan_version": "v1",    # a plan run made before 4 Nov is v1
+}
+# What every plan run fixes (`evidence run --plan` refuses another value); a new plan run is v2.
+PLAN_RUN_FIXED: dict[str, str] = {"names": "off", "confirm": "llm", "relink": "on"}
+
+
+def plan_run_refusal(**given: Any) -> str | None:
+    """Why a plan run asked for with `given` settings is refused ("a plan run fixes --names on ..."), None when no
+    setting is against PLAN_RUN_FIXED."""
+    bad = [f"--{k} {v}" for k, v in given.items() if k in PLAN_RUN_FIXED and v != PLAN_RUN_FIXED[k]]
+    return f"a plan run fixes {', '.join(bad)} (names off, confirm llm, relink on)" if bad else None
+
+
 @dataclass
 class Settings:
-    """What a run needs besides the protocol; recorded in run.json so replay and reexec repeat it."""
+    """What a run needs besides the protocol; recorded in run.json so replay and reexec repeat it (`from_record`).
+    `new` and `for_plan` make the settings of a new run, `json` is what run.json records."""
     corpus: str
     cache: str
     selection: Selection = "cascade"
@@ -198,6 +221,50 @@ class Settings:
                 **({"stage_set": self.stage_set} if self.stage_set is not None else {}),
                 **({"links": self.links} if self.links == "off" else {}),   # only when off: older runs unchanged
                 **({"plan_version": self.plan_version} if self.plan_version != "v1" else {})}
+
+    @classmethod
+    def new(cls, corpus: Path | str, out_dir: Path | str, cache: Path | str | None = None, *,
+            imports: list[str] | None = None, domains: Path | str | None = None, plan: Path | str | None = None,
+            **options: Any) -> Settings:
+        """A new run's settings: the corpus, the record cache (default OUT/cache), the pack folder and the plan file as
+        absolute paths; `options` are the other fields (selection, model, strategy, confirm, relink, names, reason)."""
+        return cls(corpus=str(Path(corpus).resolve()),
+                   cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
+                   imports=list(imports or []), domains=str(Path(domains).resolve()) if domains is not None else None,
+                   plan=Path(plan).resolve() if plan is not None else None, **options)
+
+    @classmethod
+    def for_plan(cls, plan: Path | str, corpus: Path | str, out_dir: Path | str, cache: Path | str | None = None,
+                 **options: Any) -> Settings:
+        """A plan run's settings (evidence/planrun.py): its stage set, PLAN_RUN_FIXED (another value of those is
+        refused, ValueError), v2 unless `plan_version` says otherwise; `reason` and `links` switch it."""
+        refused = plan_run_refusal(**options)
+        if refused is not None:
+            raise ValueError(refused)
+        return cls.new(corpus, out_dir, cache, plan=plan,
+                       **{**PLAN_RUN_FIXED, "stage_set": "plan", "plan_version": "v2", **options})
+
+    @staticmethod
+    def recorded(settings: dict[str, Any], name: str) -> Any:
+        """Setting `name` as run.json `settings` recorded it, else the value it had before it was recorded (OLD_RUN)."""
+        value = settings.get(name)
+        return OLD_RUN[name] if value is None else value
+
+    @classmethod
+    def from_record(cls, record: dict[str, Any], *, cache: Path | str | None = None, corpus: Path | str | None = None,
+                    run_dir: Path | None = None) -> Settings:
+        """The settings of a recorded run (its run.json `record`), so a replay or reexec repeats it: a setting it does
+        not record has its OLD_RUN value; `cache` and `corpus` replace the recorded folders; with `run_dir`, a plan run
+        reads the run folder's own copy of the plan (a replay elsewhere needs no original path). $GLINER_URL wins over
+        the recorded service (it may have moved; the recorded model keeps the ids)."""
+        s = record["settings"]
+        own = run_dir / PLAN_FILE if run_dir is not None else None
+        plan = own if own is not None and own.is_file() else (Path(s["plan"]) if s.get("plan") else None)
+        return cls(corpus=str(corpus or s["corpus"]), cache=str(cache or s["cache"]), selection=s["selection"],
+                   model=s.get("model"), imports=list(s.get("imports") or []),
+                   gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"),
+                   domains=s.get("domains"), plan=plan, stage_set=s.get("stage_set"),
+                   **{name: cls.recorded(s, name) for name in OLD_RUN})
 
 
 # --- the names check (D38): one recorded model call per question of names.confirm_leftovers ----------------------
@@ -344,37 +411,51 @@ class DocState:
         return sorted((i for t in self.merged.values() for i in t), key=lambda i: (i.first_start(), i.evidence_type, i.item_id))
 
 
-class Execution:
-    """One pass over the corpus; collects everything the run directory holds."""
+@dataclass(frozen=True)
+class Setup:
+    """What `execute_run` builds once from the protocol and the Settings, shared by the run and its warm pass."""
+    settings: Settings
+    protocol: Protocol
+    corpus: Corpus
+    cascades: dict[str, list[tuple[ExtractorRef, Extractor]]]
+    calls: CallCache                     # the record cache with the policy of the run's mode
+    provider: Provider | None
+    locator: Locator | None
+    plan: Plan | None                    # the confirmed plan, handed to the stage seams
+    stages: stages.StageSet              # the run's own stage set (a plan run's)
+    source_dir: Path | None = None       # replay / reexec: the recorded run's folder
 
-    def __init__(self, protocol: Protocol, corpus: Corpus, root: Path, run_id: str, calls: CallCache,
-                 cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
-                 locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
-                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none", relink: Relink = "off",
-                 names: Names = "off", names_model: str | None = None, names_ask: bool = True,
-                 reason: Reason = "off", domains: Path | None = None, recorded_reason: Path | None = None,
-                 plan: Plan | None = None, mode: Mode = "run", extra_stages: stages.StageSet | None = None,
-                 source_dir: Path | None = None, plan_run: bool = False, plan_version: PlanVersion = "v1") -> None:
-        self.plan = plan                                 # the confirmed plan, handed to the stage seams
-        self.plan_run = plan_run                         # a plan run: finish() writes the plan's answer
-        self.plan_version = plan_version                 # Settings.plan_version
+
+class Execution:
+    """One pass over the corpus; collects everything the run directory holds. `phase` warm: a pass of the warm pool
+    (its outputs are thrown away)."""
+
+    def __init__(self, setup: Setup, root: Path, run_id: str, run_calls: RunCalls | None = None,
+                 phase: Literal["warm", "run"] = "run") -> None:
+        settings = self.settings = setup.settings
+        self.plan = setup.plan
+        self.plan_run = settings.stage_set is not None   # a plan run: finish() writes the plan's answer
         self._texts: dict[str, str] | None = None
-        self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
+        self.protocol, self.corpus, self.root, self.calls = setup.protocol, setup.corpus, root, setup.calls
+        mode = setup.calls.mode
         # the reasoner: `domains` the folder of the protocol's pack; `recorded_reason` the reason.json a replay reads
-        self.reason, self.domains, self.recorded_reason = reason, domains or DOMAINS, recorded_reason
-        self.confirm, self.relink = confirm, relink
-        self.names, self.names_model, self.names_ask = names, names_model, names_ask   # `names_ask`: the model check
+        self.domains = Path(settings.domains) if settings.domains is not None else DOMAINS
+        self.recorded_reason = (setup.source_dir / REASON_FILE if mode == "replay" and setup.source_dir is not None
+                                else None)
+        # the names check asks the model of the protocol's LLM extractors; not under `regex-only`
+        self.names_model = names_alias(setup.cascades, settings.model)
+        self.names_ask = settings.selection != "regex-only"
         self.texts: dict[str, str] = {}                  # document -> text (`names: on` only)
         self.unresolved_names = 0
-        self.roles = protocol.roles()                    # the pack's types by role, for the kind's rules
+        self.roles = setup.protocol.roles()              # the pack's types by role, for the kind's rules
         self.dangling = 0                                 # links to no item, over the run (`relink: on` only)
         self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
-        self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
+        self.cascades, self.provider, self.locator = setup.cascades, setup.provider, setup.locator
         self.events = Events(root / EVENTS_FILE, run_id)
-        self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
-        self.ctx = stages.StageContext(plan, calls, mode, provider, root, self.stage_ask,   # what the stage seams get
-                                       names_model or names_alias(cascades, None), source_dir=source_dir,
-                                       extra=extra_stages or {}, _texts=self.corpus_texts, _bad_reply=self.stage_bad_reply)
+        self.ref = ProtocolRef(id=setup.protocol.id, sha256=setup.protocol.sha256)
+        self.ctx = stages.StageContext(setup.plan, setup.calls, mode, setup.provider, root, self.stage_ask,   # the seams'
+                                       self.names_model, source_dir=setup.source_dir, extra=setup.stages,
+                                       _texts=self.corpus_texts, _bad_reply=self.stage_bad_reply)
         self.records_nq: bytes | None = None
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []
@@ -394,24 +475,24 @@ class Execution:
 
     def document(self, paper: Any) -> None:
         text = self.corpus.text(paper)
-        if self.names == "on":
+        if self.settings.names == "on":
             self.texts[paper.id] = text
         state = DocState(paper.ref, text, Index(text))
         stages.before_extract(state, self.ctx)
         self.screen(state)
         screen = self.protocol.screen
-        if self.strategy == "gaps" and state.relevant is False and screen is not None and screen.on_fail == "skip":
+        if self.settings.strategy == "gaps" and state.relevant is False and screen is not None and screen.on_fail == "skip":
             state.skipped = True
             reason = kinds.screened_out(self.protocol)
             self.reasons[paper.id] = {**reason, "text": f"{reason['text']}: {state.screen['reason']}"}   # type: ignore[index]
-        elif self.strategy == "gaps":
+        elif self.settings.strategy == "gaps":
             self.funnel_loop(state)
         else:
             self.run_position(state, self.protocol.phases(), None, round_no=0)
         self.items[paper.id] = state.items() + stages.after_document(state, self.ctx)
         self.funnel[paper.id] = {"screen": state.screen, "skipped": state.skipped, "steps": state.steps,
                                  "decisions": state.decisions, "stopped_after": state.stopped_after}
-        if self.relink == "on":   # the final check: a link to no item is listed, never silent (off: runs before it)
+        if self.settings.relink == "on":   # the final check: a link to no item is listed, never silent (off: runs before it)
             ids = {i.item_id for i in self.items[paper.id]}
             dangling = [[i.item_id, name, target] for i in self.items[paper.id] for name, target in sorted(i.links.items())
                         if target not in ids]
@@ -541,7 +622,7 @@ class Execution:
                        if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
             items = [i for i in items if i.item_id not in dropped]
             items = stages.after_type(state, etype, items, self.ctx)
-            relinked = self._relink(state, etype, remap, items) if self.relink == "on" else []
+            relinked = self._relink(state, etype, remap, items) if self.settings.relink == "on" else []
             state.merged[etype] = items
             # only a merge that dropped or relinked items carries the key: a record without them is unchanged
             unconfirmed: dict[str, Any] = {"unconfirmed": dropped} if dropped else {}
@@ -580,7 +661,7 @@ class Execution:
     def _llm_position(self, etype: str) -> int | None:
         """The cascade position of the type's first LLM extractor, the one that confirms GLiNER items; None with
         `confirm: none` or without one."""
-        if self.confirm == "none":
+        if self.settings.confirm == "none":
             return None
         return next((p for p, (_, e) in enumerate(self.cascades.get(etype, [])) if e.spec.kind == "llm"), None)
 
@@ -644,37 +725,48 @@ class Execution:
 
     def _call(self, extractor: Extractor, task: ExtractionTask, text: str, index: Index, spec: EvidenceTypeSpec,
               context: list[Item], position: int = 0) -> tuple[str, Any]:
+        """One extractor call through the record cache, its result checked centrally (evidence/checks.py), recorded
+        as every call is (`_record`): an `extractor_call` event."""
         started = utc_now()
         outcome = self.calls.call(extractor, task, lambda: EngineContext(text, index, context, spec.fields, self.provider))
         result = checks.check(outcome.raw, task, index, spec, {i.item_id: i for i in context})
-        call_id = self.events.next_id()
-        result = result.model_copy(update={"call_id": call_id})
-        if self.run_calls is not None and outcome.model_calls:
-            self.run_calls.add({
-                "key": cache_key(extractor.spec.extractor_id, task.task_sha256, outcome.attempt), "phase": self.phase,
-                "document": task.document.id, "evidence_type": task.evidence_type,
-                "extractor_id": extractor.spec.extractor_id, "attempt": outcome.attempt, "status": result.status,
-                "source": outcome.source, "started_at": started, "ended_at": utc_now(),
-                "task": task.model_dump(mode="json"), "result": outcome.raw.model_dump(mode="json"),
-                "model_calls": outcome.model_calls})
-        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
-                                                                       result.model_dump(mode="json"))
-        tokens_in, tokens_out = usage(outcome.model_calls)
+        result = result.model_copy(update={"call_id": self.events.next_id()})
+        self._record(extractor.spec.extractor_id, task.task_sha256, outcome, result, started,
+                     row={"document": task.document.id, "evidence_type": task.evidence_type,
+                          "task": task.model_dump(mode="json"), "result": outcome.raw.model_dump(mode="json")},
+                     event="extractor_call", used=[task.document.sha256, task.protocol.sha256, *task.context],
+                     generated=[i.item_id for i in result.items], group_id=task.document.id,
+                     custom={"task_sha256": task.task_sha256, "output_sha256": result.output_sha256,
+                             "model_calls": list(result.model_calls), "document": task.document.id,
+                             "evidence_type": task.evidence_type, "source": outcome.source,
+                             "attempt": outcome.attempt, "position": position,
+                             "rejected": len(result.rejected), "focus": task.focus.gap if task.focus else None})
+        return result.call_id, result
+
+    def _record(self, owner: str, request_sha256: str, made: Outcome | Asked, result: ExtractionResult, started: str, *,
+                row: dict[str, Any], event: str, custom: dict[str, Any], used: list[str] | None = None,
+                generated: list[str] | None = None, group_id: str | None = None) -> None:
+        """What every recorded call leaves (an extractor's, the names check's, a stage's): calls/<call id>.json (the
+        checked `result`, whose call id is the id of its `event`), the event, one calls.jsonl row when it made model
+        calls (`row`: its document, evidence type, task and result as the row shows them) and the run's cost. `made`
+        is what the record cache gave (Outcome or Asked: source, attempt, model-call records)."""
+        self.outputs[f"{CALLS_DIR}/{result.call_id}.json"] = write_json(self.root / CALLS_DIR / f"{result.call_id}.json",
+                                                                        result.model_dump(mode="json"))
+        self.events.add(event, used=used or [], generated=generated or [], agent_id=owner, status=result.status,
+                        group_id=group_id, started_at=started, custom=custom)
+        if self.run_calls is not None and made.model_calls:
+            self.run_calls.add({"key": cache_key(owner, request_sha256, made.attempt), "phase": self.phase,
+                                "document": row["document"], "evidence_type": row["evidence_type"],
+                                "extractor_id": owner, "attempt": made.attempt, "status": result.status,
+                                "source": made.source, "started_at": started, "ended_at": utc_now(),
+                                "task": row["task"], "result": row["result"], "model_calls": made.model_calls})
+        tokens_in, tokens_out = usage(made.model_calls)
         self.cost["calls"] += 1
-        self.cost["cached_calls"] += outcome.source == "cache"
-        self.cost["model_calls"] += len(outcome.model_calls)
-        self.cost["made_model_calls"] += len(outcome.model_calls) if outcome.source == "fresh" else 0
+        self.cost["cached_calls"] += made.source == "cache"
+        self.cost["model_calls"] += len(made.model_calls)
+        self.cost["made_model_calls"] += len(made.model_calls) if made.source == "fresh" else 0
         self.cost["input_tokens"] += tokens_in
         self.cost["output_tokens"] += tokens_out
-        self.events.add("extractor_call", used=[task.document.sha256, task.protocol.sha256, *task.context],
-                        generated=[i.item_id for i in result.items], agent_id=extractor.spec.extractor_id,
-                        status=result.status, group_id=task.document.id, started_at=started,
-                        custom={"task_sha256": task.task_sha256, "output_sha256": result.output_sha256,
-                                "model_calls": list(result.model_calls), "document": task.document.id,
-                                "evidence_type": task.evidence_type, "source": outcome.source,
-                                "attempt": outcome.attempt, "position": position,
-                                "rejected": len(result.rejected), "focus": task.focus.gap if task.focus else None})
-        return call_id, result
 
     # --- the names step -------------------------------------------------------------------------------
 
@@ -682,7 +774,7 @@ class Execution:
         """`names: on`: group the names of every item whose type has a name field, corpus-wide (seeded by the pack),
         then the model check of what is left (not under `regex-only`); names.json, `unresolved_names` and a `names`
         event with every check's cache key and attempt (replay reads them). None with `off`."""
-        if self.names != "on":
+        if self.settings.names != "on":
             return None
         mentions: list[names.Mention] = []
         used: list[str] = []
@@ -697,7 +789,7 @@ class Execution:
                                               span.selector["end"], item.evidence_type))
                 used.append(item.item_id)
         groups = names.group_names(mentions, self.texts, seed=self.roles.pack.names_seed)
-        owner, alias, instructions = names_check(self.names_model or names_alias(self.cascades, None))
+        owner, alias, instructions = names_check(self.names_model)
         asks: list[dict[str, Any]] = []
         if self.names_ask:
             groups = names.confirm_leftovers(
@@ -731,52 +823,38 @@ class Execution:
 
     def _asked(self, owner: str, request: dict[str, Any], make: Callable[[], tuple[dict[str, Any], list[dict[str, Any]]]],
                *, evidence_type: str, event: str, extra: dict[str, Any] | None = None) -> tuple[Any, dict[str, Any]]:
-        """The bookkeeping of one model call that is not an extractor call (the names check, a stage's `ctx.ask`):
-        the record cache, calls/<id>.json (error reason `model_call` on a failure, so it is a failed call wherever
-        failed calls are counted and `--retry-errors` asks it again), one `event`, one row of calls.jsonl when it made
-        model calls, and the run's cost. Returns (the cache's Asked, the check dict)."""
+        """One model call that is not an extractor call (the names check, a stage's `ctx.ask`) through the record
+        cache, recorded as every call is (`_record`): its calls/<id>.json has error reason `model_call` on a failure,
+        so it is a failed call wherever failed calls are counted and `--retry-errors` asks it again. Returns (the
+        cache's Asked, the check dict)."""
         started = utc_now()
         asked = self.calls.recorded(owner, request, make)
         failed = asked.value.get("status") == "error"
-        call_id = self.events.next_id()
+        request_sha256 = digest(request)
         result = ExtractionResult(
-            call_id=call_id, extractor_id=owner, task_sha256=digest(request), status="error" if failed else "ok",
+            call_id=self.events.next_id(), extractor_id=owner, task_sha256=request_sha256,
+            status="error" if failed else "ok",
             error=ExtractionError(reason="model_call", detail=str(asked.value.get("error") or "")[:300]) if failed else None,
             model_calls=tuple(r["id"] for r in asked.model_calls))
-        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
-                                                               result.model_dump(mode="json"))
-        check = {"call_id": call_id, "key": cache_key(owner, digest(request)), "attempt": asked.attempt,
+        check = {"call_id": result.call_id, "key": cache_key(owner, request_sha256), "attempt": asked.attempt,
                  "source": asked.source, "status": result.status, "model_calls": list(result.model_calls)}
-        self.events.add(event, used=[], generated=[], agent_id=owner, status=result.status, started_at=started,
-                        custom={**{k: v for k, v in check.items() if k != "call_id"}, **(extra or {})})
-        if self.run_calls is not None and asked.model_calls:
-            self.run_calls.add({"key": cache_key(owner, digest(request), asked.attempt), "phase": self.phase,
-                                "document": "", "evidence_type": evidence_type, "extractor_id": owner,
-                                "attempt": asked.attempt, "status": result.status, "source": asked.source,
-                                "started_at": started, "ended_at": utc_now(), "task": request,
-                                "result": result.model_dump(mode="json"), "model_calls": asked.model_calls})
-        tokens_in, tokens_out = usage(asked.model_calls)
-        self.cost["calls"] += 1
-        self.cost["cached_calls"] += asked.source == "cache"
-        self.cost["model_calls"] += len(asked.model_calls)
-        self.cost["made_model_calls"] += len(asked.model_calls) if asked.source == "fresh" else 0
-        self.cost["input_tokens"] += tokens_in
-        self.cost["output_tokens"] += tokens_out
+        self._record(owner, request_sha256, asked, result, started, event=event,
+                     row={"document": "", "evidence_type": evidence_type, "task": request,
+                          "result": result.model_dump(mode="json")},
+                     custom={**{k: v for k, v in check.items() if k != "call_id"}, **(extra or {})})
         return asked, check
 
     def stage_ask(self, instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
                   settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> BaseModel:
         """`StageContext.ask`: one recorded model call for a stage, through exactly the engine's own path (`_asked`).
         A v2 plan run never sends a request that clearly does not fit the model's context window (`too_long`)."""
-        if self.plan_version == "v2":
+        if self.settings.plan_version == "v2":
             tokens = -(-(len(instructions) + len(user_prompt)) // CHARS_PER_TOKEN) + int(settings.get("max_tokens") or 0)
             window = context_tokens(alias)
             if window is not None and tokens > window:
                 raise stages.StageCallError(f"{purpose}: too_long: about {tokens} tokens with max_tokens, over the "
                                             f"{window}-token context window of {alias}; not sent")
-        owner = f"stage:{purpose}"
-        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
-                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}   # plain asks: as before
+        owner, request = _stage_request(instructions, user_prompt, output_type, purpose, alias, settings, request_extra)
         asked, _ = self._asked(owner, request, lambda: self._structured(alias, instructions, user_prompt, output_type, settings),
                                evidence_type="stage", event="stage_call", extra={"purpose": purpose})
         if asked.value.get("status") == "error":
@@ -787,15 +865,14 @@ class Execution:
                         settings: dict[str, Any], request_extra: dict[str, Any] | None = None) -> None:
         """A stage's recorded reply (the request `stage_ask` made) did not parse: mark that record so a rerun with
         `retry_errors` asks it again (CallCache.mark_bad). The record itself is kept: this run and its replay read it."""
-        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
-                   "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}
-        self.calls.mark_bad(f"stage:{purpose}", request)
+        self.calls.mark_bad(*_stage_request(instructions, user_prompt, output_type, purpose, alias, settings,
+                                            request_extra))
 
     def reason_step(self) -> reasoner.Inferences | None:
         """`reason: on`: the run's inferences (reasoner.reason over the merged items of every document), or, in a
         replay, the recorded ones (`recorded_reason`), never reasoned again; reason.json and a `reason` event. None
         with `off`."""
-        if self.reason != "on":
+        if self.settings.reason != "on":
             return None
         if self.recorded_reason is not None:
             if not self.recorded_reason.is_file():
@@ -833,18 +910,17 @@ class Execution:
                                                          reason=inferred)
         answer = synthesis
         if self.plan_run and self.plan is not None:   # claim groups, the records graph, the lines and their reruns
-            from . import planrun
+            from . import planlines, planrun
             self.items, self.records_nq, answer = planrun.finish(self.plan, papers, self.items, self.roles, self.ctx,
-                                                                 synthesis, reason=self.reason, version=self.plan_version)
-            path = self.root / planrun.RECORDS_FILE
-            path.write_bytes(self.records_nq)
-            self.outputs[planrun.RECORDS_FILE] = sha256_hex(self.records_nq)
+                                                                 synthesis, reason=self.settings.reason,
+                                                                 version=self.settings.plan_version)
+            self.outputs[planlines.RECORDS_FILE] = planlines.write_records(self.root, self.records_nq)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
-        dangling = {"dangling_links": self.dangling} if self.relink == "on" else {}
-        unresolved = {"unresolved_names": self.unresolved_names} if self.names == "on" else {}
-        self.outputs[FUNNEL_FILE] = write_json(self.root / FUNNEL_FILE, {"strategy": self.strategy,
+        dangling = {"dangling_links": self.dangling} if self.settings.relink == "on" else {}
+        unresolved = {"unresolved_names": self.unresolved_names} if self.settings.names == "on" else {}
+        self.outputs[FUNNEL_FILE] = write_json(self.root / FUNNEL_FILE, {"strategy": self.settings.strategy,
                                                                                "documents": self.funnel, **dangling,
                                                                                **unresolved})
         self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
@@ -862,20 +938,23 @@ class Execution:
         return answer
 
 
-def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
-          provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
-          run_calls: RunCalls | None = None, confirm: Confirm = "none", relink: Relink = "off",
-          plan: Plan | None = None, names_model: str | None = None, extra_stages: stages.StageSet | None = None) -> None:
+def _stage_request(instructions: str, user_prompt: str, output_type: type[BaseModel], purpose: str, alias: str,
+                   settings: dict[str, Any], request_extra: dict[str, Any] | None) -> tuple[str, dict[str, Any]]:
+    """(owner id, request) of a stage's model call, its cache key: `stage_ask` asks it and `stage_bad_reply` marks it,
+    so a retry finds the record the bad reply came from."""
+    return f"stage:{purpose}", {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
+                                "user_prompt": user_prompt, "settings": settings, **(request_extra or {})}
+
+
+def _warm(setup: Setup, workers: int, run_calls: RunCalls | None = None) -> None:
     """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
     except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
         def one(i: int, paper: Any) -> None:
             root = Path(tmp) / str(i)
             root.mkdir()
-            Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
-                      run_calls, "warm", confirm, relink, plan=plan, names_model=names_model,
-                      extra_stages=extra_stages).document(paper)
-        futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
+            Execution(setup, root, f"warm-{i}", run_calls, "warm").document(paper)
+        futures = [pool.submit(one, i, p) for i, p in enumerate(setup.corpus.papers)]
         try:
             for future in futures:
                 future.result()      # re-raise the first failure
@@ -915,13 +994,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
-    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
-                   confirm=settings.confirm, relink=settings.relink, names=settings.names, names_model=names_alias(cascades, settings.model),
-                   names_ask=settings.selection != "regex-only", reason=settings.reason,
-                   domains=Path(settings.domains) if settings.domains is not None else None, plan=plan,
-                   mode=mode, recorded_reason=source_dir / REASON_FILE if mode == "replay" and source_dir is not None else None,
-                   extra_stages=extra, source_dir=source_dir, plan_run=settings.stage_set is not None,
-                   plan_version=settings.plan_version)
+    setup = Setup(settings, protocol, corpus, cascades, cache, provider, locator, plan, extra, source_dir)
+    ex = Execution(setup, root, run_id, run_calls)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.outputs[LOCK_FILE] = write_json(root / LOCK_FILE, lock)
     if settings.plan is not None:   # the run's own copy: a replay reads it, not the original path
@@ -932,8 +1006,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     t0 = time.monotonic()
     try:
         if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
-            _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
-                  settings.confirm, settings.relink, plan, names_alias(cascades, settings.model), extra)
+            _warm(setup, workers, run_calls)
         for paper in corpus.papers:
             ex.document(paper)
         ex.finish()
@@ -1001,38 +1074,25 @@ def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
 
 
 def run_plan(plan_path: Path | str, protocol_bytes: bytes, corpus: Path | str, out_dir: Path | str, *,
-             cache: Path | str | None = None, selection: Selection = "cascade", model: str | None = None,
-             provider: Provider | None = None, run_id: str | None = None, retry_errors: bool = False,
-             strategy: Strategy = "gaps", workers: int = 3, imports: list[str] | None = None, reason: Reason = "on",
-             links: Links = "on", plan_version: PlanVersion = "v2") -> Path:
+             cache: Path | str | None = None, provider: Provider | None = None, run_id: str | None = None,
+             retry_errors: bool = False, workers: int = 3, **options: Any) -> Path:
     """A plan run (evidence/planrun.py writes `protocol_bytes` from the plan): the plan's stage set, the plan's
-    answer. Names step off, as a protocol run's default. `reason` off: no reasoner, no field ontology in the records
-    graph, no ontology tree (final review I1); `links` off: no builds-on links stage (final review C3);
-    `plan_version` (Settings): a new plan run is v2."""
-    settings = Settings(corpus=str(Path(corpus).resolve()),
-                        cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
-                        selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm="llm", relink="on", names="off", reason=reason, plan=Path(plan_path).resolve(),
-                        stage_set="plan", links=links, plan_version=plan_version)
+    answer, the settings `Settings.for_plan` gives (PLAN_RUN_FIXED; a new plan run is v2). `options` are Settings
+    fields: `reason` off: no reasoner, no field ontology in the records graph, no ontology tree (final review I1);
+    `links` off: no builds-on links stage (final review C3); selection, model, imports, strategy, plan_version."""
+    settings = Settings.for_plan(plan_path, corpus, out_dir, cache, **options)
     return execute_run(protocol_bytes, settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider,
                        retry_errors=retry_errors, workers=workers)
 
 
 def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, cache: Path | str | None = None,
-        selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
-        retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm",
-        relink: Relink = "on", domains: Path | str | None = None, names: Names = "off", reason: Reason = "on",
-        plan: Path | str | None = None) -> Path:
-    """A normal run: cached calls are reused, new ones are made and stored. `domains`: the folder of the protocol's
-    pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
-    settings = Settings(corpus=str(Path(corpus).resolve()),
-                        cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
-                        selection=selection, model=model, imports=list(imports or []), strategy=strategy,
-                        confirm=confirm, relink=relink, names=names, reason=reason,
-                        domains=str(Path(domains).resolve()) if domains is not None else None,
-                        plan=Path(plan).resolve() if plan is not None else None)
+        retry_errors: bool = False, workers: int = 3, **options: Any) -> Path:
+    """A normal run: cached calls are reused, new ones are made and stored. `options` are Settings fields (`new`):
+    selection, model, imports, strategy, confirm, relink, names, reason, plan, and `domains`, the folder of the
+    protocol's pack when it is not domains/ (recorded in run.json's settings, so a replay reads the same pack)."""
+    settings = Settings.new(corpus, out_dir, cache, **options)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
                        retry_errors=retry_errors, workers=workers)
