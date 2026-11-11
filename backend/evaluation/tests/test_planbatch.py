@@ -47,7 +47,7 @@ def test_run_skips_complete_sets_aside_failed_and_redoes_unchecked(tmp_path: Pat
         return pb.run_all(qs, set_name="synthetic", plans=plans, runs=runs, cache=tmp_path / "cache", confirm="auto",
                           reasoning="off", links="off", **kw)
     fake_run(monkeypatch, calls, "failed")
-    assert run() == 0 and calls[0]["reasoning"] == "off" and calls[0]["links"] == "off"
+    assert run() == 0 and calls[0]["reason"] == "off" and calls[0]["links"] == "off"
     assert calls[0]["retry_errors"] is False
     fake_run(monkeypatch, calls, "complete")
     assert run() == 0 and (runs / "effect-corpus-x.failed-1").is_dir() and calls[1]["retry_errors"] is True

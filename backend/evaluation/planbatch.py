@@ -235,7 +235,7 @@ def run_all(qs: list[Any], *, set_name: str, plans: Path, runs: Path, cache: Pat
         try:
             kw = {"model": model} if model else {}
             planrun.run(confirmed, q.corpus_dir, out, cache=cache, run_id=q.id, workers=workers,
-                        reasoning=reasoning, links=links, retry_errors=retry, **kw)
+                        reason=reasoning, links=links, retry_errors=retry, **kw)
             print(f"ran {conf}/{reasoning}/{q.id}")
         except Exception as exc:   # noqa: BLE001 - recorded; the next question still runs
             bad += 1
