@@ -13,6 +13,14 @@ HEADINGS = {"section": "##", "subsection": "###", "subsubsection": "####", "para
 TABULAR = re.compile(r"\\begin\{(tabular\*?|tabularx)\}(.*?)\\end\{\1\}", re.S)
 RULES = re.compile(r"\\(hline|toprule|midrule|bottomrule|cline\{[^}]*\})")
 WRAPPERS = r"\\(?:textbf|textit|emph|textrm|texttt|textsc|underline|mathbf|mathrm|text)\s*\{([^{}]*)\}"
+ARG = r"\{((?:[^{}]|\{[^{}]*\})*)\}"   # one brace group, one level of nesting inside
+DROPPED_ENVS = re.compile(r"\\begin\{(thebibliography|equation\*?|align\*?|eqnarray\*?|gather\*?|multline\*?"
+                          r"|displaymath|comment)\}.*?\\end\{\1\}", re.S)
+DEFINITIONS = re.compile(r"^\s*\\(?:newcommand|renewcommand|providecommand|DeclareMathOperator|def|let|usepackage"
+                         r"|setlength|addtolength|setcounter|definecolor|newtheorem)\b.*$", re.M)
+DROPPED = re.compile(r"\\(?:label|ref|eqref|autoref|cref|Cref|cite[a-z]*|vspace|hspace|includegraphics"
+                     r"|bibliographystyle|bibliography|bibitem|pagestyle|thispagestyle|author|date|thanks|affiliation"
+                     r"|email)\*?(?:\[[^\]]*\])?" + ARG)
 
 
 def read_files(blob: bytes) -> dict[str, str]:
@@ -58,7 +66,11 @@ def _inline(text: str) -> str:
     for _ in range(4):
         text = re.sub(WRAPPERS, r"\1", text)
     text = text.replace("$", "").replace("\\%", "%").replace("\\&", "&").replace("\\_", "_").replace("\\#", "#")
-    text = re.sub(r"\\(?:,|;|!|quad|qquad)", " ", text).replace("~", " ")
+    text = re.sub(r"\\(?:,|;|!|quad|qquad)", " ", text).replace("~", " ").replace("\\\\", " ")
+    text = DROPPED.sub("", text)
+    for _ in range(4):   # any other command with an argument keeps the argument: \url{x} -> x
+        text = re.sub(r"\\[A-Za-z]+\*?(?:\[[^\]]*\])?\{([^{}]*)\}", r"\1", text)
+    text = re.sub(r"\\[A-Za-z]+\*?(?:\[[^\]]*\])?", "", text)   # and one without is dropped: \noindent
     return " ".join(text.replace("{", "").replace("}", "").split())
 
 
@@ -113,7 +125,6 @@ def latex_markdown(blob: bytes) -> str:
     files = read_files(blob)
     text = _expand(files[_main(files)], files)
     text = re.sub(r"(?<!\\)%.*", "", text)
-    title = re.search(r"\\title\{([^{}]*)\}", text)
     body = text.split("\\begin{document}", 1)[1].split("\\end{document}", 1)[0]
     tables: list[str] = []
 
@@ -122,12 +133,17 @@ def latex_markdown(blob: bytes) -> str:
         return f"\n\nTABLE{len(tables) - 1}ENDTABLE\n\n"
 
     body = TABULAR.sub(stash, body)
+    body = DEFINITIONS.sub("", DROPPED_ENVS.sub("\n\n", body))
+    body = re.sub(r"(?<!\\)\\\[.*?\\\]", "\n\n", body, flags=re.S)   # display math \[ .. \]
+    body = re.sub(r"\\href\{[^{}]*\}", "", body)   # \href{url}{text} keeps the text
+    body = re.sub(r"\\footnote" + ARG, lambda m: f" ({m.group(1)})", body)
+    body = re.sub(r"\\item(?:\[([^\]]*)\])?", lambda m: "\n\n- " + (m.group(1) or "") + " ", body)
     body = re.sub(r"\\caption\{((?:[^{}]|\{[^{}]*\})*)\}", lambda m: f"\n\nCAPTION {_inline(m.group(1))}\n\n", body)
     body = re.sub(r"\\(section|subsection|subsubsection|paragraph)\*?\{([^{}]*)\}",
                   lambda m: f"\n\nHEAD{HEADINGS[m.group(1)]} {_inline(m.group(2))}\n\n", body)
-    body = re.sub(r"\\(begin|end)\{(table\*?|figure\*?|center|abstract|document)\}(\[[^\]]*\])?", "\n\n", body)
-    body = re.sub(r"\\(centering|small|footnotesize|maketitle)\b|\\title\{[^{}]*\}", "", body)
-    out = [f"# {_inline(title.group(1))}"] if title else []
+    body = re.sub(r"\\(begin|end)\{[^{}]*\}(\[[^\]]*\])?", "\n\n", body)   # every environment's markers
+    body = re.sub(r"\\(centering|small|footnotesize|maketitle)\b|\\title" + ARG, "", body)
+    out: list[str] = []   # no title line: paper_text writes the arXiv entry's title
     for para in re.split(r"\n\s*\n", body):
         if not para.strip():
             continue

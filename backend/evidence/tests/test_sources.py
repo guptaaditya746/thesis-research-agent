@@ -47,6 +47,38 @@ def test_latex_table_cells_exact() -> None:
     assert "Latency fell by 20% with caching." in md and "\\cite" not in md
 
 
+MESSY = r"""\documentclass{article}
+\title{A Title}
+\begin{document}
+\maketitle
+\newcommand\foobar{\textbf{x}}
+\renewcommand{\arraystretch}{1.2}
+\vspace{-2mm}
+We test three things.\footnote{Code at \url{https://example.org}.} See \href{https://a.b}{our page}.
+\begin{itemize}
+\item Accuracy rose from 0.61 to 0.74.
+\item[(b)] Latency fell by 20\%.
+\end{itemize}
+\begin{equation}
+y = \frac{a}{b} \label{eq:1}
+\end{equation}
+\begin{figure}[t]\includegraphics[width=\linewidth]{fig.pdf}\end{figure}
+\noindent The end of the \textsc{Results} part.
+\bibliographystyle{plain}
+\bibliography{refs}
+\begin{thebibliography}{9}\bibitem{x} Someone. A paper. 2020.\end{thebibliography}
+\end{document}
+"""
+
+
+def test_latex_leaves_no_commands_and_no_second_title() -> None:
+    md = latex_markdown(gzip.compress(MESSY.encode()))
+    assert "\\" not in md and "# A Title" not in md   # the title comes from the arXiv entry (paper_text)
+    assert "- Accuracy rose from 0.61 to 0.74." in md and "- (b) Latency fell by 20%." in md
+    assert "Code at https://example.org." in md and "our page" in md and "The end of the Results part." in md
+    assert "Someone" not in md and "refs" not in md and "frac" not in md and "2mm" not in md
+
+
 def test_pmc_table_cells_exact() -> None:
     got = cells(jats_markdown((FIX / "paper.xml").read_bytes()))
     assert got[:3] == EXPECTED[:3] and got[3] == ["Ablations", "", ""]
