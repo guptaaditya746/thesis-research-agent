@@ -20,11 +20,11 @@ corpus's papers, its answer mapped like the other baselines' (third baseline, be
    A run whose status is `fail` (paper-qa catches a failed model call and still answers "I cannot answer ...") is an
    error, never an answer: no answer.json is written.
 3. The answer's cited contexts are mapped back to paper ids (`citations`; every context paper-qa kept is under
-   `retrieved`, with its relevance score; `start`/`end` when the chunk text is found verbatim in the paper).
+   `contexts`, with its relevance score; `start`/`end` when the chunk text is found verbatim in the paper).
 4. The mapping call shared with the other baselines (common.map_answer, cached in our JsonlCache) turns the answer
    text (paper-qa's document names replaced by paper ids) and the cited paper ids into the question kind's reply; answer.json has the same shape as rag.py's
    (common.answer_json / kind_answer_json), with `system: paperqa2`, `answer_text` (paper-qa's answer), `citations`,
-   `retrieved`, `settings` (paper-qa version, embedding, model and the settings above), `paperqa` (status, its token
+   `contexts`, `settings` (paper-qa version, embedding, model and the settings above), `paperqa` (status, its token
    counts, cost) and `mapping_call`.
 
 NOT replayable call-for-call: paper-qa makes its own LLM calls (through LiteLLM) and they do not go through
@@ -214,7 +214,7 @@ def paperqa_baseline(corpus_dir: Path, *, model: Model, question: str | None = N
         raise RuntimeError(redact(f"paper-qa run failed: {type(exc).__name__}: {exc}")[:1000]) from None
     if result.status == "fail":   # paper-qa swallows a failed model call and answers with a stock sentence
         raise RuntimeError(redact(f"paper-qa run failed (status fail): {result.answer}")[:1000])
-    retrieved = [p | {"score": c.get("score")} for c in result.contexts if (p := _passage(c, corpus)) is not None]
+    kept = [p | {"score": c.get("score")} for c in result.contexts if (p := _passage(c, corpus)) is not None]
     by_id = {c["id"]: c for c in result.contexts}
     citations = [p for i in result.cited if i in by_id and (p := _passage(by_id[i], corpus)) is not None]
     effect = params is None or params.kind == "effect"
@@ -226,7 +226,7 @@ def paperqa_baseline(corpus_dir: Path, *, model: Model, question: str | None = N
         names = {c["docname"]: doc for c in result.contexts if c.get("docname") and (doc := paper_of(c, corpus)[0])}
         reply, mapping = map_answer(cache, question, corpus.ids, mapping_text(result.answer, citations, names),
                                     model=model, model_id=model_id, seed=seed, params=params)
-    extra = {"citations": citations, "retrieved": retrieved, "corpus_id": corpus.corpus_id, "settings": result.settings,
+    extra = {"citations": citations, "contexts": kept, "corpus_id": corpus.corpus_id, "settings": result.settings,
              "paperqa": {"status": result.status, "token_counts": result.token_counts, "cost": result.cost},
              "mapping_call": mapping}
     if params is not None and not effect:

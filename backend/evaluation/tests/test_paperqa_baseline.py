@@ -46,7 +46,7 @@ def test_answer_json_cites_paper_ids_and_reads_manifest_and_papers_only(tmp_path
                                  {"document": "S002", "direction": "contradicts"}]
     start = fx.S001.index(fx.S001[10:60])
     assert answer["citations"] == [{"document": "S001", "start": start, "end": start + 50, "context_id": "pqac-0"}]
-    assert [r["document"] for r in answer["retrieved"]] == ["S001", "S002"] and answer["retrieved"][0]["score"] == 8
+    assert [r["document"] for r in answer["contexts"]] == ["S001", "S002"] and answer["contexts"][0]["score"] == 8
     assert answer["settings"]["embedding"] == "sparse" and answer["settings"]["model"] == "orch-model"
     assert answer["paperqa"]["status"] == "success" and session["answer"] == ANSWER
     [mapping] = model.prompts   # paper-qa's own calls are not ours: only the mapping call is made here
