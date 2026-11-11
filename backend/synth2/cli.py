@@ -1,0 +1,139 @@
+"""`synth2` command line: build a grid of corpus families, write a reference rule's answers, score answers."""
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import sys
+from pathlib import Path
+
+from jsonio import write_json_atomic
+from synth2.corpus import Settings, build_base
+from synth2.family import make_family
+from synth2.recipe import load_recipe
+from synth2.score import RULES, reference_answers, score_family, summarise
+from synth2.world import LAW_KINDS
+from synth2.write import TEXT_LEVELS
+
+HEADLINE = ("recovers_law", "follows_evidence", "resists_overclaiming")
+
+
+class BadArgument(Exception):
+    pass
+
+
+class _Parser(argparse.ArgumentParser):
+    def error(self, message: str):
+        raise BadArgument(message)
+
+
+def _choices(text: str, known, what: str) -> list[str]:
+    picked = [x.strip() for x in text.split(",") if x.strip()]
+    unknown = [x for x in picked if x not in known]
+    if unknown or not picked:
+        raise BadArgument(f"unknown {what} {unknown}; choose from {', '.join(known)}")
+    return list(dict.fromkeys(picked))
+
+
+def families(root: Path) -> list[tuple[str, Path]]:
+    """(grid cell, family folder) for every built family under `root`, in a fixed order."""
+    found = [(p.parent.parent.parent.name, p.parent.parent) for p in root.glob("*/s*/base/manifest.json")]
+    return sorted(found, key=lambda f: (f[0], int(f[1].name[1:])))
+
+
+def build(args: argparse.Namespace) -> int:
+    laws = _choices(args.laws, LAW_KINDS, "law kinds")
+    texts = _choices(args.texts, TEXT_LEVELS, "text levels")
+    try:
+        load_recipe(args.domain)
+    except ValueError as err:
+        raise BadArgument(str(err)) from err
+    if args.seeds < 1 or args.studies < 1:
+        raise BadArgument("--seeds and --studies must be at least 1")
+    skipped = []
+    for law in laws:
+        for text in texts:
+            cell, built = f"{law}-{text}", 0
+            for seed in range(args.seeds):
+                folder = args.out / cell / f"s{seed}"
+                try:
+                    build_base(folder / "base", Settings(args.domain, seed, args.studies, law, text, exact=args.exact))
+                    make_family(folder / "base")
+                    built += 1
+                except ValueError as err:
+                    shutil.rmtree(folder)
+                    skipped.append({"cell": cell, "seed": seed, "reason": str(err)})
+            print(f"{cell}: {built} built, {args.seeds - built} skipped")
+    write_json_atomic(args.out / "skipped.json", skipped)
+    return 0
+
+
+def reference(args: argparse.Namespace) -> int:
+    if args.rule not in RULES:
+        raise BadArgument(f"unknown rule '{args.rule}'; choose from {', '.join(RULES)}")
+    answers: dict[str, dict] = {}
+    for _, folder in families(args.root):
+        answers.update(reference_answers(folder, args.rule))
+    write_json_atomic(args.out, answers)
+    print(f"{len(answers)} answers by the {args.rule} rule -> {args.out}")
+    return 0
+
+
+def score(args: argparse.Namespace) -> int:
+    try:
+        answers = json.loads(args.answers.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as err:
+        raise BadArgument(f"cannot read the answers file {args.answers}: {err}") from err
+    if not isinstance(answers, dict):
+        raise BadArgument("the answers file must be one object: corpus id -> answer")
+    by_cell: dict[str, list[dict]] = {}
+    for cell, folder in families(args.root):
+        by_cell.setdefault(cell, []).append(score_family(folder, answers))
+    skipped_file = args.root / "skipped.json"
+    report = {"cells": {cell: summarise(reports) for cell, reports in by_cell.items()},
+              "all": summarise([r for reports in by_cell.values() for r in reports]),
+              "skipped": json.loads(skipped_file.read_text(encoding="utf-8")) if skipped_file.is_file() else []}
+    write_json_atomic(args.out, report)
+    print(f"{'cell':<20}" + "".join(f"{name:>26}" for name in HEADLINE))
+    for cell, summary in [*report["cells"].items(), ("all", report["all"])]:
+        print(f"{cell:<20}" + "".join(f"{f'{summary[n]['mean']:.2f} +- {summary[n]['stderr']:.2f} (n={summary[n]['n']})':>26}"
+                                      for n in HEADLINE))
+    return 0
+
+
+def parser() -> argparse.ArgumentParser:
+    top = _Parser(prog="synth2", description=__doc__)
+    sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
+    b = sub.add_parser("build", help="build a grid of corpus families: law kind x text level x seed")
+    b.add_argument("--out", type=Path, required=True)
+    b.add_argument("--domain", default="rag")
+    b.add_argument("--seeds", type=int, default=10, help="seeds 0..N-1 per grid cell")
+    b.add_argument("--studies", type=int, default=20)
+    b.add_argument("--laws", default=",".join(LAW_KINDS))
+    b.add_argument("--texts", default=",".join(TEXT_LEVELS))
+    b.add_argument("--exact", action="store_true", help="no sampling noise: counts follow the law exactly")
+    b.set_defaults(run=build)
+    r = sub.add_parser("reference", help="write the answers a reference rule gives for every family")
+    r.add_argument("--root", type=Path, required=True)
+    r.add_argument("--rule", required=True, help=" | ".join(RULES))
+    r.add_argument("--out", type=Path, required=True)
+    r.set_defaults(run=reference)
+    s = sub.add_parser("score", help="score an answers file against every family")
+    s.add_argument("--root", type=Path, required=True)
+    s.add_argument("--answers", type=Path, required=True)
+    s.add_argument("--out", type=Path, required=True)
+    s.set_defaults(run=score)
+    return top
+
+
+def main(argv: list[str] | None = None) -> int:
+    try:
+        args = parser().parse_args(argv)
+        return args.run(args)
+    except BadArgument as err:
+        print(f"synth2: {err}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
