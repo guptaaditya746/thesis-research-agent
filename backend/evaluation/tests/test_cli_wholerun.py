@@ -32,7 +32,9 @@ def make_run(runs: Path, conf: str, reasoning: str, q: RealQuestion, ranking: li
              model: str = "orch-model", plan: bool = True) -> None:
     root = runs / conf / reasoning / q.id
     root.mkdir(parents=True)
-    rows = [{"thing": p, "paper": f"P{i}"} for i, p in enumerate(ranking)]
+    # rows as the line's query selects them: the fresh line (FRESH) selects ?paper first
+    rows = ([{"paper": p, "values": 1} for p in ranking] if fresh else
+            [{"thing": p, "paper": f"P{i}"} for i, p in enumerate(ranking)])
     lid = "l2" if fresh else "l1"   # the id of plan_for's first line
     line = {"id": lid, "question": q.question, "status": "done", "rows": rows, "text": f"{len(rows)} found"}
     (root / "answer.json").write_text(json.dumps({"system": "plan", "lines": [line]}), encoding="utf-8")

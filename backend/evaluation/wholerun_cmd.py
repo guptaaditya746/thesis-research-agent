@@ -133,7 +133,7 @@ def error_split(q: RealQuestion, root: Path, plan: Plan, headline_: float) -> st
             return f"plan error: line {spec.id} failed: {str(line.get('text') or '')[:160]}"
         rows = list(line["rows"]) if line and line.get("status") == "done" else []
         gold = PlanLines.of_run(root, store(plan_metrics(q.records, plan)), plan=plan).query(spec.query)
-        return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected), answer_column(q),
+        return split(kq.Answer(rows=rows, empty=not rows), gold, list(expected), answer_column(q, spec.query),
                      top1=q.kind == "rank")
     except Exception as exc:   # noqa: BLE001 - a diagnosis only; says what failed, never stops a report
         return f"key split failed: {type(exc).__name__}: {exc}"

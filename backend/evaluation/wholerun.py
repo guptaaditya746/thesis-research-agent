@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import warnings
 from collections import Counter
 from dataclasses import dataclass, field
@@ -107,10 +108,27 @@ def paper_gold(q: RealQuestion) -> bool:
     return q.kind == "rank" and bool(want) and set(want) <= set(question_papers(q))
 
 
-def answer_column(q: RealQuestion) -> str | None:
-    """The column of a rank line's rows that holds the answer: `paper` for a paper-id gold, else the first column
-    (None). Shared with the error split, so the key store and the run are compared on the same column."""
-    return "paper" if paper_gold(q) else None
+_SELECT = re.compile(r"^\s*SELECT\s+(?:DISTINCT\s+|REDUCED\s+)?(?:\?(\w+)|\(.*?\bAS\s+\?(\w+)\s*\))", re.I | re.M | re.S)
+_THING = re.compile(r"\bAS\s+\?thing\s*\)", re.I)
+
+
+def first_column(query: str | None) -> str | None:
+    """The first column a line's query selects, or None (`SELECT *`, no query). The run writes answer.json with each
+    row's keys sorted A to Z, so a row's first key is not the query's first column ("paper" before "thing")."""
+    hit = _SELECT.search(query or "")
+    return (hit.group(1) or hit.group(2)) if hit else None
+
+
+def answer_column(q: RealQuestion, query: str | None = None) -> str | None:
+    """The column of a scored line's rows that holds the answer: `paper` for a paper-id gold; `thing` for a ranking
+    whose query names it (best.rq selects `?kind` first); else the first column its `query` selects (None: a row's
+    first key). Shared with the error split, so the key store and the run are
+    compared on the same column."""
+    if paper_gold(q):
+        return "paper"
+    if q.kind == "rank" and _THING.search(query or ""):   # rank.rq and best.rq name their ranked thing `thing`
+        return "thing"
+    return first_column(query)
 
 
 def _majority(directions: list[str]) -> str | None:
@@ -144,16 +162,17 @@ def scored_line(plan: Any, q: RealQuestion) -> Any:
     return next((x for x in lines if x.question == q.question), lines[0])
 
 
-def _scored_lines(root: Path, answer: dict[str, Any], q: RealQuestion) -> list[dict[str, Any]]:
-    """The answered lines `from_run` reads: with the run's plan.json, the scored line only (empty or failed: no line,
-    an empty answer, never a later line); a folder without a plan keeps every answered line, the first one read."""
+def _scored_lines(root: Path, answer: dict[str, Any], q: RealQuestion) -> tuple[list[dict[str, Any]], str | None]:
+    """The answered lines `from_run` reads and the scored line's query: with the run's plan.json, the scored line only
+    (empty or failed: no line, an empty answer, never a later line); a folder without a plan keeps every answered
+    line, the first one read, and has no query."""
     from evidence.plan import load_plan
     from evidence.rundir import PLAN_FILE
     lines = _lines(answer)
     if q.kind not in ("rank", "list") or not (root / PLAN_FILE).is_file():
-        return lines
+        return lines, None
     spec = scored_line(load_plan(root / PLAN_FILE), q)
-    return [x for x in lines if x.get("id") == spec.id]
+    return [x for x in lines if x.get("id") == spec.id], spec.query
 
 
 def from_run(run: Path | str, q: RealQuestion) -> Answer:
@@ -161,15 +180,15 @@ def from_run(run: Path | str, q: RealQuestion) -> Answer:
     from evidence.rundir import ANSWER_FILE, RunDir
     root = Path(run)
     answer = RunDir(root).json(ANSWER_FILE)
-    lines = _scored_lines(root, answer, q)
+    lines, query = _scored_lines(root, answer, q)
     if q.kind == "rank":
-        column = answer_column(q)
+        column = answer_column(q, query)
         rows = lines[0]["rows"] if lines else []
-        if column is not None:   # paper ids in the gold: the `paper` column only; no such column is an empty answer
+        if paper_gold(q):   # paper ids in the gold: the `paper` column only; no such column is an empty answer
             rows = [r for r in rows if column in r]
         return Answer(ranking=_column(rows, column))
     if q.kind == "list":
-        return Answer(names=_column(lines[0]["rows"]) if lines else [])
+        return Answer(names=_column(lines[0]["rows"], first_column(query)) if lines else [])
     if q.kind == "compare":
         rows = next((x["rows"] for x in lines if all("paper" in r and "direction" in r for r in x["rows"])), None)
         pairs = ([(r["paper"], r["direction"]) for r in rows] if rows is not None else

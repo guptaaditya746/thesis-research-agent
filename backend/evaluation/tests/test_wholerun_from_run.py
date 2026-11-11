@@ -218,6 +218,15 @@ def test_rank_reads_the_rank_line_never_a_later_list_line(tmp_path: Path) -> Non
     assert answer.ranking == [] and score(answer, q("rank", gold))["top1"] == 0
 
 
+def test_rank_of_names_reads_the_querys_first_column_not_the_rows_first_key(tmp_path: Path) -> None:
+    """answer.json keeps row keys sorted A to Z ("paper" before "thing"); a ranking of names is read on the column
+    the rank query selects first (`thing`), not on paper ids."""
+    gold = {"ranking": ["GDC", "YSZ"], "papers": ["S1", "S2"]}
+    rows = [{"paper": "S2", "score": 9.0, "thing": "GDC"}, {"paper": "S1", "score": 8.0, "thing": "YSZ"}]
+    root = _with_plan(tmp_path, [done(rows, "l1")], _rank_plan())
+    assert from_run(root, q("rank", gold)).ranking == ["GDC", "YSZ"]
+
+
 def _split(tmp: Path, ours: list[dict], plan, records: list[dict], lines: list[dict] | None = None) -> str:
     from evaluation.wholerun_cmd import error_split
     question = RealQuestion("q1", "Which?", "cs", Path("."), {"ranking": ["P2", "P1"], "papers": ["P1", "P2"]}, "rank",
