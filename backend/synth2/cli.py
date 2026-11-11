@@ -12,6 +12,7 @@ from pathlib import Path
 from jsonio import write_json_atomic
 from synth2.corpus import Settings, build_base, load_truth
 from synth2.family import make_family
+from synth2.engine_answers import collect
 from synth2.recipe import load_recipe
 from synth2.scir_export import export
 from synth2.score import RULES, reference_answers, score_family, summarise
@@ -142,6 +143,16 @@ def written_corpus(args: argparse.Namespace) -> int:
     return 0
 
 
+def engine_answers(args: argparse.Namespace) -> int:
+    try:
+        answers = collect(args.runs)
+    except ValueError as err:
+        raise BadArgument(str(err)) from err
+    write_json_atomic(args.out, answers)
+    print(f"{len(answers)} engine answers -> {args.out}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth2", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -173,6 +184,10 @@ def parser() -> argparse.ArgumentParser:
     w.add_argument("--papers", type=Path, required=True, help="folder holding one <paper id>.md per template paper")
     w.add_argument("--out", type=Path, required=True)
     w.set_defaults(run=written_corpus)
+    a = sub.add_parser("engine-answers", help="the engine's answers (one run folder per corpus) as an answers file")
+    a.add_argument("--runs", type=Path, required=True, help="folder holding one run folder (run.json, answer.json) per corpus")
+    a.add_argument("--out", type=Path, required=True)
+    a.set_defaults(run=engine_answers)
     return top
 
 
