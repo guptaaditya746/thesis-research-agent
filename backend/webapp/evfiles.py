@@ -282,7 +282,8 @@ class EvidenceFiles:
             answer=TruthAnswer.model_validate(truth["answer"]) if isinstance(truth.get("answer"), dict) else None,
             variant=VariantInfo.model_validate(variant) if isinstance(variant, dict) else None, base=base,
             manifest_sha256=file_sha256(path / "manifest.json"),
-            ground_truth=not (source is not None and source.get("ground_truth") is False),
+            ground_truth=(path / "ground_truth.json").is_file() and not (source is not None
+                                                                          and source.get("ground_truth") is False),
             source=CorpusSource.model_validate(source) if source is not None else None)
 
     def corpora(self) -> list[CorpusSummary]:

@@ -55,8 +55,8 @@ describe("fetch from arXiv", () => {
     finishJob(job.id)
     const table = await screen.findByRole("table", { name: "Corpora" }, T)
     const row = (await within(table).findByRole("link", { name: name }, T)).closest("tr") as HTMLElement
-    expect(within(row).getByText("no ground truth, demo")).toBeInTheDocument()
-    expect(within(table).getAllByText("no ground truth, demo")).toHaveLength(1)   // the synthetic corpora have none
+    expect(within(row).getByText("real papers, not scored here")).toBeInTheDocument()
+    expect(within(table).getAllByText("real papers, not scored here")).toHaveLength(1)   // the synthetic corpora have none
   })
 
   it("refuses a bad category in the dialog", async () => {
@@ -82,7 +82,7 @@ describe("fetch from arXiv", () => {
     server.use(http.get("/api/ev/corpora", () => HttpResponse.json(corpora.map((c) => (c.name === MIXED ? { ...c, ground_truth: false } : c)))))
     renderRoutes(routes, `/flow/rag-factuality/run?corpus=${MIXED}`)
     const runs = await screen.findByRole("table", { name: "Runs on the corpus" }, T)
-    expect(await screen.findByText(/Demonstration corpus, no ground truth:/, {}, T)).toBeInTheDocument()
+    expect(await screen.findByText(/Real papers, not scored here:/, {}, T)).toBeInTheDocument()
     expect(within(runs).queryByRole("button", { name: /^Score / })).toBeNull()
     expect(screen.queryByRole("button", { name: "Compare the scored runs" })).toBeNull()
 
@@ -90,6 +90,6 @@ describe("fetch from arXiv", () => {
     finishJob(fetched.id)
     const run = await evApi.startJob("run", { corpus: "arxiv-demo", protocol: { source: "repo", name: "rag-factuality" }, extractors: "regex-only", strategy: "all", model: "orch-model", group: null, name: null, retry_errors: false })
     finishJob(run.id)
-    await expect(evApi.startJob("score", { run: run.refs.run })).rejects.toThrow(/demonstration corpus, no ground truth/)
+    await expect(evApi.startJob("score", { run: run.refs.run })).rejects.toThrow(/is not scored here: real papers/)
   })
 })

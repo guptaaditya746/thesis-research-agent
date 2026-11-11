@@ -104,9 +104,9 @@ export function fetchName(query: string, day: Date): string {
 
 /** The backend's refusal to score a run on a demonstration corpus (webapp/evjobs.py DEMO_REFUSAL). */
 const demoRefusal = (run: string, corpus: string, kind: string) =>
-  `${run} cannot be scored: its corpus ${corpus} is a demonstration corpus, no ground truth: real papers fetched from ${kind}, ` +
-  "for which nobody knows the right answer. Its graph, answer and trace stay open to read; check them by hand " +
-  '(docs/evidence-system.md, "Demo mode: real papers from arXiv"). Scores need a synthetic corpus.'
+  `${run} cannot be scored: its corpus ${corpus} is not scored here: real papers from ${kind}, with no ground_truth.json. ` +
+  "The web app scores synthetic corpora only. A real dataset with its own gold (SciLead, SciREX) is scored with " +
+  "`uv run evaluate wholerun` (docs/runbook-slurm.md); an arXiv search has no gold. Its graph, answer and trace stay open to read."
 
 /** The corpus an `evidence fetch` job leaves, as GET /api/ev/corpora lists it. */
 function fetchedCorpus(name: string, args: Record<string, unknown>): CorpusSummary {

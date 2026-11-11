@@ -120,8 +120,9 @@ class CorpusSummary(Base):
     variant: VariantInfo | None = None
     base: str | None = Field(None, description="the base corpus of a variant, by directory name, when it is here")
     manifest_sha256: str
-    ground_truth: bool = Field(True, description="false for a demonstration corpus of real papers (source.json "
-                                                 "`ground_truth: false`, `evidence fetch`): nothing to score against")
+    ground_truth: bool = Field(True, description="true when the web app can score runs on it (ground_truth.json); "
+                                                 "false for real papers: an arXiv fetch (no gold) or a real dataset "
+                                                 "whose gold is scored by `evaluate wholerun` (SciLead, SciREX)")
     source: CorpusSource | None = Field(None, description="source.json: where the papers came from (arXiv)")
 
 
