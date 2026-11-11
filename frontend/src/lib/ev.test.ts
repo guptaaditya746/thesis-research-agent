@@ -137,6 +137,30 @@ describe("the evidence graph", () => {
   })
 })
 
+describe("the records graph of a plan run", () => {
+  const R = "https://w3id.org/thesis-ev/r/"
+  const node = (id: string, type: string, label: string, document: string | null, types = [type]) =>
+    ({ id: R + id, type, label, document, types, fields: {}, found_by: [] })
+  const graph: EvGraph = {
+    source: "records",
+    omitted: {},
+    nodes: [node("paper/S1", "Paper", "S1", "S1"), node("paper/S2", "Paper", "S2", "S2"), node("value/v1", "Value", "0.9", "S1"),
+      node("value/v2", "Value", "0.7", "S2"), node("thing/rag", "Thing", "rag", null, ["Thing", "retrieval method"]),
+      node("onto/retrieval", "Class", "retrieval method", null)],
+    edges: [{ src: R + "value/v1", dst: R + "thing/rag", rel: "of" }, { src: R + "value/v2", dst: R + "thing/rag", rel: "of" },
+      { src: R + "thing/rag", dst: R + "onto/retrieval", rel: "type" }],
+  }
+
+  it("keeps a paper's records, the shared things they touch and their classes", () => {
+    const one = toEvFlow(graph, { document: "S1" })
+    expect(one.source).toBe("records")
+    expect(one.nodes.map((n) => n.data.label).sort()).toEqual(["0.9", "S1", "rag", "retrieval method"])
+    expect(one.nodes.find((n) => n.data.label === "rag")!.data.types).toContain("retrieval method")
+    expect(one.edges.map((e) => e.data?.rel)).toEqual(["of", "type"])
+    expect(toEvFlow(graph).nodes).toHaveLength(graph.nodes.length)
+  })
+})
+
 describe("a run paper's segments", () => {
   it("cover the text exactly once, in order", () => {
     const paper = evFixture<RunPaper>(`/api/ev/runs/cascade~${EXPLICIT}/papers/S001`)

@@ -5236,7 +5236,7 @@
               }
             ],
             "title": "Ev",
-            "description": "$EV, the root the others default to (docs/slurm-evidence-runbook.md)"
+            "description": "$EV, the root the others default to (docs/runbook-slurm.md)"
           },
           "corpora": {
             "$ref": "#/components/schemas/Root"
@@ -5339,6 +5339,15 @@
       },
       "EvGraph": {
         "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "evidence",
+              "records"
+            ],
+            "title": "Source",
+            "default": "evidence"
+          },
           "nodes": {
             "items": {
               "$ref": "#/components/schemas/EvGraphNode"
@@ -5352,14 +5361,26 @@
             },
             "type": "array",
             "title": "Edges"
+          },
+          "omitted": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Omitted",
+            "description": "records: nodes left out by type, to keep the graph drawable",
+            "default": {}
           }
         },
         "type": "object",
         "required": [
+          "source",
           "nodes",
-          "edges"
+          "edges",
+          "omitted"
         ],
-        "title": "EvGraph"
+        "title": "EvGraph",
+        "description": "The run's graph: `records` for a plan run, the RDF records graph its answer was computed from (records.nq,\nevidence/kg/view.py); `evidence` for any other run, the evidence graph of graph.json (evidence/graph.py)."
       },
       "EvGraphEdge": {
         "properties": {
@@ -5393,7 +5414,8 @@
           },
           "type": {
             "type": "string",
-            "title": "Type"
+            "title": "Type",
+            "description": "evidence: the item's evidence type or `document`; records: the node's ev: type (Paper, Experiment, Thing, Metric, Value, Claim, Link, Comparison) or Class"
           },
           "document": {
             "anyOf": [
@@ -5404,7 +5426,8 @@
                 "type": "null"
               }
             ],
-            "title": "Document"
+            "title": "Document",
+            "description": "the paper the node belongs to; None for what papers share"
           },
           "fields": {
             "anyOf": [
@@ -5425,6 +5448,27 @@
             "type": "array",
             "title": "Found By",
             "default": []
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "records: the node's label (rdfs:label, ev:name or its value)"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Types",
+            "description": "records: every rdf:type (an ontology class by its label)",
+            "default": []
           }
         },
         "additionalProperties": true,
@@ -5434,7 +5478,9 @@
           "type",
           "document",
           "fields",
-          "found_by"
+          "found_by",
+          "label",
+          "types"
         ],
         "title": "EvGraphNode"
       },
@@ -10690,6 +10736,13 @@
             },
             "type": "object",
             "title": "Ontology Names"
+          },
+          "tuned_sha256": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Tuned Sha256"
           }
         },
         "additionalProperties": false,

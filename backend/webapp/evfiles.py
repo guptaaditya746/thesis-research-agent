@@ -45,7 +45,7 @@ from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.propose.common import CARDS, CRITIC, DRAFT, FRAME, PROPOSAL
 from evidence.protocol import parse
 from evidence.rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, PROTOCOL_FILE,
-                             REASON_FILE, RUN_FILE, PaperIndex, RunDir)
+                             REASON_FILE, RECORDS_FILE, RUN_FILE, PaperIndex, RunDir)
 
 from .agenttrace import claim_of, steps_of
 from .evmodels import (
@@ -674,8 +674,15 @@ class EvidenceFiles:
                         funnel=FunnelDoc.model_validate(funnel[document]) if document in funnel else None, calls=calls)
 
     def run_graph(self, run_id: str) -> EvGraph:
+        """A plan run's records graph (records.nq: what its answer was computed from), else graph.json."""
         path = self.run_dir(run_id)
-        graph = RunDir(path).try_json(GRAPH_FILE)
+        rd = RunDir(path)
+        if rd.file(RECORDS_FILE).is_file():
+            from evidence.kg.view import view
+            from evidence.planlines import load_records
+            return self._cached(("graph", path), (rd.file(RECORDS_FILE),),
+                                lambda: EvGraph(source="records", **view(load_records(path))))
+        graph = rd.try_json(GRAPH_FILE)
         if not isinstance(graph, dict):
             raise NotFound(f"run {run_id!r} has no graph.json")
         return EvGraph.model_validate(graph)

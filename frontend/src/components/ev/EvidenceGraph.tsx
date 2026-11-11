@@ -1,6 +1,8 @@
 /**
- * The run's evidence graph (graph.json) in React Flow, laid out by dagre (src/lib/evgraph.ts): papers and
- * the merged items, each with its type as a tag and border colour, with the links between them and the
+ * The run's graph in React Flow, laid out by dagre (src/lib/evgraph.ts). A plan run shows its records graph (the
+ * RDF graph its answer was computed from): papers, experiments, things, metrics, values, claims, links, comparisons
+ * and ontology classes, each with its type as a tag and border colour, edges named by their property. Any other run
+ * shows its evidence graph (graph.json): papers and the merged items, with the links between them and the
  * supports / contradicts edge of every determined study (contradicts dashed, so not told by colour alone).
  * One paper at a time by default (a whole corpus is hundreds of nodes); with `paperHref`, clicking a node
  * opens its paper. Below the canvas the same nodes and edges as lists, for keyboard use and screen readers.
@@ -19,21 +21,25 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { EVIDENCE_TYPES, TYPE_COLOR, typeLabel, typeTag } from "@/lib/ev"
-import { EV_NODE_HEIGHT, evNodeWidth, toEvFlow, type EvFlowNode } from "@/lib/evgraph"
+import { EV_NODE_HEIGHT, evNodeWidth, graphSource, nodeColor, nodeTag, nodeTypeLabel, RECORD_TYPES, toEvFlow, type EvFlowNode } from "@/lib/evgraph"
 
 import { MarkLegend, type LegendEntry } from "./PaperText"
 
+/** The node's type in words, with its other rdf:types (ontology classes) on a records graph. */
+const describe = (d: EvFlowNode["data"]) =>
+  `${nodeTypeLabel(d.source, d.type)}: ${d.label}${d.types.length > 1 ? ` (${d.types.join(", ")})` : ""}`
+
 function EvidenceNode({ data }: NodeProps<EvFlowNode>) {
-  const paper = data.type === "document"
+  const paper = data.source === "records" ? data.type === "Paper" : data.type === "document"
   return (
     <div
       className="flex items-center gap-1.5 rounded-md border-2 bg-card px-2 text-xs shadow-sm"
-      style={{ width: evNodeWidth(data.label, data.type), height: EV_NODE_HEIGHT, borderColor: paper ? "var(--foreground)" : TYPE_COLOR[data.type] }}
-      title={`${typeLabel(data.type)}: ${data.label}${data.foundBy.length ? `\nfound by ${data.foundBy.join(", ")}` : ""}`}
+      style={{ width: evNodeWidth(data.label, data.type, data.source), height: EV_NODE_HEIGHT, borderColor: paper ? "var(--foreground)" : nodeColor(data.source, data.type) }}
+      title={`${describe(data)}${data.foundBy.length ? `\nfound by ${data.foundBy.join(", ")}` : ""}`}
     >
       {paper
         ? <FileTextIcon className="size-3.5 shrink-0" aria-hidden="true" />
-        : <span className="shrink-0 rounded-sm bg-muted px-1 font-medium text-muted-foreground" aria-hidden="true">{typeTag(data.type)}</span>}
+        : <span className="shrink-0 rounded-sm bg-muted px-1 font-medium text-muted-foreground" aria-hidden="true">{nodeTag(data.source, data.type)}</span>}
       <span className="truncate">{data.label}</span>
       <Handle type="target" position={Position.Left} className="!size-1.5 !border-0 !bg-muted-foreground" />
       <Handle type="source" position={Position.Right} className="!size-1.5 !border-0 !bg-muted-foreground" />
@@ -52,6 +58,8 @@ const LEGEND: LegendEntry[] = [
   ...EVIDENCE_TYPES.map((t) => ({ label: `${typeLabel(t)} (${typeTag(t)})`, color: TYPE_COLOR[t] })),
   ...Object.values(EDGE_STYLE).map((e) => ({ label: `${e.label} edge`, color: e.color, line: e.line })),
 ]
+const RECORDS_LEGEND: LegendEntry[] = RECORD_TYPES.filter((t) => t !== "Paper")
+  .map((t) => ({ label: `${nodeTypeLabel("records", t)} (${nodeTag("records", t)})`, color: nodeColor("records", t) }))
 
 export function EvidenceGraph({ graph, documents, paperHref }: {
   graph: EvGraph
@@ -65,12 +73,13 @@ export function EvidenceGraph({ graph, documents, paperHref }: {
   const [withDocs, setWithDocs] = useState(false)
   const flow = useMemo(() => toEvFlow(graph, { document: document === "__all" ? null : document, withDocumentEdges: withDocs }),
     [graph, document, withDocs])
+  const records = graphSource(graph) === "records"
   const byId = useMemo(() => new Map(flow.nodes.map((n) => [n.id, n.data])), [flow])
   // Screen readers announce a node by its aria-label (the tag is aria-hidden: the label says the type in full).
   const nodes = useMemo(() => flow.nodes.map((n) => ({
     ...n,
     className: paperHref && n.data.document ? "cursor-pointer" : undefined,
-    ariaLabel: `${typeLabel(n.data.type)}: ${n.data.label}${n.data.foundBy.length ? `, found by ${n.data.foundBy.join(", ")}` : ""}`,
+    ariaLabel: `${describe(n.data)}${n.data.foundBy.length ? `, found by ${n.data.foundBy.join(", ")}` : ""}`,
   })), [flow, paperHref])
   const edges = useMemo(() => flow.edges.map((e) => {
     const kind = EDGE_STYLE[e.data?.rel ?? ""]
@@ -86,7 +95,7 @@ export function EvidenceGraph({ graph, documents, paperHref }: {
   }, [navigate, paperHref])
   const name = (id: string) => {
     const d = byId.get(id)
-    return d ? `${typeLabel(d.type)} ${d.label}` : id
+    return d ? `${nodeTypeLabel(d.source, d.type)} ${d.label}` : id
   }
   return (
     <div className="space-y-3">
@@ -101,13 +110,21 @@ export function EvidenceGraph({ graph, documents, paperHref }: {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-2">
-          <Switch id="graph-docs" checked={withDocs} onCheckedChange={setWithDocs} />
-          <Label htmlFor="graph-docs" className="text-sm">item → paper edges</Label>
-        </div>
-        <span className="text-xs text-muted-foreground">{flow.nodes.length} nodes, {flow.edges.length} edges{flow.hidden ? `, ${flow.hidden} to other papers not shown` : ""}</span>
+        {!records && (
+          <div className="flex items-center gap-2">
+            <Switch id="graph-docs" checked={withDocs} onCheckedChange={setWithDocs} />
+            <Label htmlFor="graph-docs" className="text-sm">item → paper edges</Label>
+          </div>
+        )}
+        <span className="text-xs text-muted-foreground">
+          {records ? "Records graph (what the answer was computed from): " : ""}
+          {flow.nodes.length} nodes, {flow.edges.length} edges{flow.hidden ? `, ${flow.hidden} to other papers not shown` : ""}
+          {records && Object.keys(graph.omitted ?? {}).length > 0
+            ? `; left out to keep it drawable: ${Object.entries(graph.omitted ?? {}).map(([t, n]) => `${n} ${nodeTypeLabel("records", t)}`).join(", ")}`
+            : ""}
+        </span>
       </div>
-      <MarkLegend entries={LEGEND} overlap={false} label="Legend" />
+      <MarkLegend entries={records ? RECORDS_LEGEND : LEGEND} overlap={false} label="Legend" />
       {flow.nodes.length === 0 ? (
         <EmptyState icon={<NetworkIcon />} title={document === "__all" ? "No evidence items in this run" : "No evidence items in this paper"}
           description={document === "__all" ? undefined : "The engine kept no item from it; choose another paper above."} />
@@ -128,7 +145,7 @@ export function EvidenceGraph({ graph, documents, paperHref }: {
             <ul className="space-y-0.5" aria-label="Nodes">
               {flow.nodes.map((n) => (
                 <li key={n.id}>
-                  <span className="text-muted-foreground">{typeLabel(n.data.type)}:</span>{" "}
+                  <span className="text-muted-foreground">{nodeTypeLabel(n.data.source, n.data.type)}:</span>{" "}
                   {paperHref && n.data.document
                     ? <Link to={paperHref(n.data.document)} className="underline underline-offset-2">{n.data.label}</Link>
                     : n.data.label}
