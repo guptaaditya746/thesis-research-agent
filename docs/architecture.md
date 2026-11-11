@@ -6,6 +6,7 @@ Research question about a paper corpus -> plan (protocol) -> run -> answer from 
 
 - Tim (14 Oct): evidence-level not answer-level; executable protocol; extractor library; synthetic corpus from ground truth; levels + variants; RAG baseline. Verbatim notes: `.claude/skills/tim/`.
 - Ours: agentic extractor, agent baseline, funnel engine, provenance + replay lane, PROV-O, proposal/plan flow, domain packs, LLM word list, ontology reasoning, DSPy tuning.
+- Third baseline: PaperQA2 (paper-qa, optional group `paperqa`; `evaluate paperqa-baseline`, `evaluation/baselines/paperqa.py`), a state-of-the-art answer-level system: its agent over a local full-text index of `papers/` only, no online search or metadata lookups, `orch-model` for every call, then the shared mapping call. No embedding model is deployed, so it runs with `embedding="sparse"` (keyword-only), never a dense embedding. Its own calls bypass our call cache: not replayable call-for-call (its session is kept beside `answer.json`).
 
 ## Services (one process; modules, no HTTP between them)
 
@@ -46,7 +47,7 @@ corpus/ manifest.json + papers/  ------------------> evidence run
 | corpus dir: `manifest.json`, `papers/`, `ground_truth.json`, `corpus.json` | `synth`, `evidence fetch`, real-set prep | engine (manifest + papers), evaluation (truth) |
 | protocol / `plan.json` | pack, planner, `evidence propose` | engine |
 | run dir | `evidence run` | `evaluate`, `webapp`, `evidence replay/verify` |
-| `answer.json` (baselines) | `evaluate rag-baseline`, `agent-baseline` | `evaluate score` |
+| `answer.json` (baselines) | `evaluate rag-baseline`, `agent-baseline`, `paperqa-baseline` | `evaluate score` |
 | `report.json`, `wholerun.json` | `evaluate` | `webapp`, reports/ |
 
 ## Repo layout
