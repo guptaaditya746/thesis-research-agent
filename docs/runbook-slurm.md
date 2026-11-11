@@ -481,6 +481,30 @@ uv run evaluate links --run "$RUNS/<plan run>" --references "$EV/openalex-refere
 never 0): copy the reason (links off, no chaining question, no references, no OpenAlex work ids). When some cited works are in
 the set (`n_in_set` > 0) they cannot be scored, so links recall is a **lower bound**.
 
+7.5 **PaperQA2 baseline** (the third baseline; optional dependency group, not in the default install). Install once on the
+login node (network), together with the default groups, and cache tiktoken's `cl100k_base` (paper-qa chunks text with it;
+the job has no network):
+
+```bash
+uv sync --locked --group paperqa             # a later plain `uv sync --locked` removes it again
+export TIKTOKEN_CACHE_DIR="$EV/tiktoken"     # also in the session environment (0.2), so the job finds it
+uv run --group paperqa python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')"
+```
+
+In the job: the same gateway variables as every model call (`LITELLM_BASE_URL`, `LITELLM_MASTER_KEY`); paper-qa uses
+`--model` (default `orch-model`) for its llm, summary llm and agent, `embedding="sparse"` (no embedding model), no online
+search, no metadata lookups. One corpus per launch:
+
+```bash
+"$EV/launch.sh" paperqa-$N uv run --group paperqa evaluate paperqa-baseline --corpus $C --out "$RUNS/synthetic-paperqa/$N" --cache "$CACHE/paperqa-$N.jsonl"
+uv run evaluate score --run "$RUNS/synthetic/$N" --corpus $C --baseline "$RUNS/synthetic-paperqa/$N/answer.json" --out "$SCORES/synthetic-paperqa/$N"
+```
+
+**Success:** `answer.json` with `system: paperqa2` and `paperqa_session.json` beside it. `FAIL paper-qa run failed ...`
+(exit 1, no answer.json) when a paper-qa model call failed. If its agent cannot call tools on our vLLM (the log shows a tool-call
+error), rerun with `--agent-type fake` (search, gather evidence, answer in a fixed order) and report which agent type ran
+(`settings.agent_type`). Not replayable: paper-qa's own calls are not cached; only the mapping call is.
+
 ## 8. Hand-back
 
 1. `$EV/failures.md` (even if empty: "none").

@@ -51,6 +51,12 @@ fetch = [
     "docling==2.110.0",
 ]
 frontend = ["nodejs-wheel==22.20.0"]
+paperqa = ["paper-qa==2026.8.12"]   # the PaperQA2 baseline (evaluation/baselines/paperqa.py); not installed by default
+
+[tool.uv]
+# paper-qa (group paperqa) pulls coredis<6 (via limits), which caps packaging below 26; override that cap so the
+# locked packaging stays (coredis is only used for a Redis rate-limit store, which the baseline does not use)
+override-dependencies = ["packaging==26.3"]
 
 [build-system]
 requires = ["uv_build>=0.9,<0.14"]
