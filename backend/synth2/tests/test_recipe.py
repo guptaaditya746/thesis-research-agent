@@ -39,3 +39,18 @@ def test_refuses_too_few_authors(tmp_path):
 def test_missing_recipe_names_the_path(tmp_path):
     with pytest.raises(ValueError, match="nope.yaml"):
         load_recipe("nope", tmp_path)
+
+
+@pytest.mark.parametrize("changes, word", [
+    ({"datasets": ["HotpotQA 2018"]}, "digit"),
+    ({"metric": "accuracy | recall"}, r"\|"),
+    ({"unit": ""}, "unit"),
+    ({"metric": "accuracy on rare items"}, "rare"),
+    ({"n_range": [210, 1000]}, "n_range"),
+    ({"min_effect": -1.0}, "min_effect"),
+    ({"base_rate": [0.9, 1.5]}, "base_rate"),
+    ({"effect": [0.0, 0.0]}, "effect"),
+])
+def test_refuses_text_and_numbers_that_would_spoil_the_papers(tmp_path, changes, word):
+    with pytest.raises(ValueError, match=word):
+        load_recipe("rag", _copy(tmp_path, **changes))

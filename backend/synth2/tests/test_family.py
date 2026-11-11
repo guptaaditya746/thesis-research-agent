@@ -43,7 +43,7 @@ def test_spun_keeps_every_count_and_base_is_honest(family):
 def test_duplicate_adds_one_marked_paper(family):
     root, _ = family
     studies = load_studies(root / "duplicate")
-    assert len(studies) == 21 and studies[-1].id == "S001D" and studies[-1].duplicate_of == "S001"
+    assert len(studies) == 21 and studies[-1].id == "S021" and studies[-1].duplicate_of == "S001"
     assert studies[-1].cells == studies[0].cells
 
 

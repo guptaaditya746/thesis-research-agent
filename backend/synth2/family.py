@@ -41,8 +41,9 @@ def make_family(base_dir: Path) -> list[dict]:
         "spun": (law, tuple(replace(s, claim="helps",
                                     overclaims=direction(study_delta(s), recipe.min_effect) != "helps")
                             for s in base)),
-        "duplicate": (law, (*base, replace(base[0], id=f"{base[0].id}D", label=f"{base[0].label}, extended version",
-                                           duplicate_of=base[0].id))),
+        # the copy gets the next free study number: its id must not say that it is a copy
+        "duplicate": (law, (*base, replace(base[0], id=f"S{len(base) + 1:03d}",
+                                           label=f"{base[0].label}, extended version", duplicate_of=base[0].id))),
     }
     key_before = pooled(base, recipe)
     keys: dict[str, Answer] = {}

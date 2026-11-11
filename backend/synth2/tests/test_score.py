@@ -52,3 +52,14 @@ def test_summarise_mean_and_spread():
     assert got["recovers_law"] == {"mean": 0.75, "stderr": pytest.approx(0.25), "n": 2}
     assert got["follows_evidence"] == {"mean": 1.0, "stderr": 0.0, "n": 2}
     assert got["fell_for_lumping"] == {"mean": 0.0, "stderr": 0.0, "n": 0}
+
+
+def test_a_spun_copy_with_nothing_spun_is_not_counted(tmp_path):
+    from synth2.recipe import load_recipe
+    from synth2.world import draw_law
+    seed = next(s for s in range(50) if not draw_law(load_recipe("rag"), s, "uniform").mirrored)
+    build_base(tmp_path / "base", Settings("rag", seed, 20, "uniform", "table", exact=True))
+    make_family(tmp_path / "base")
+    got = score_family(tmp_path, reference_answers(tmp_path, "pooled"))
+    assert got["resists_overclaiming"] == {"hits": 0, "of": 0}
+    assert got["stays_steady"] == {"hits": 2, "of": 2}

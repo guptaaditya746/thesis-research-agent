@@ -22,3 +22,9 @@ def test_build_reference_score_end_to_end(tmp_path, capsys):
 def test_bad_arguments_exit_2(tmp_path):
     assert main(["build", "--out", str(tmp_path / "g"), "--laws", "sideways"]) == 2
     assert main(["reference", "--root", str(tmp_path), "--rule", "guess", "--out", str(tmp_path / "a.json")]) == 2
+
+
+def test_more_studies_than_authors_is_a_bad_argument(tmp_path, capsys):
+    assert main(["build", "--out", str(tmp_path / "g"), "--studies", "25", "--seeds", "1"]) == 2
+    assert "authors" in capsys.readouterr().err
+    assert not (tmp_path / "g").exists()

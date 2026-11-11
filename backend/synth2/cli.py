@@ -47,11 +47,13 @@ def build(args: argparse.Namespace) -> int:
     laws = _choices(args.laws, LAW_KINDS, "law kinds")
     texts = _choices(args.texts, TEXT_LEVELS, "text levels")
     try:
-        load_recipe(args.domain)
+        recipe = load_recipe(args.domain)
     except ValueError as err:
         raise BadArgument(str(err)) from err
     if args.seeds < 1 or args.studies < 1:
         raise BadArgument("--seeds and --studies must be at least 1")
+    if args.studies > len(recipe.authors):
+        raise BadArgument(f"--studies {args.studies} needs as many authors; the recipe has {len(recipe.authors)}")
     skipped = []
     for law in laws:
         for text in texts:
@@ -63,7 +65,7 @@ def build(args: argparse.Namespace) -> int:
                     make_family(folder / "base")
                     built += 1
                 except ValueError as err:
-                    shutil.rmtree(folder)
+                    shutil.rmtree(folder, ignore_errors=True)
                     skipped.append({"cell": cell, "seed": seed, "reason": str(err)})
             print(f"{cell}: {built} built, {args.seeds - built} skipped")
     write_json_atomic(args.out / "skipped.json", skipped)

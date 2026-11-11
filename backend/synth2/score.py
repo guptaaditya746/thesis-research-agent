@@ -59,11 +59,13 @@ def score_family(family_root: Path, answers: dict[str, Any]) -> dict:
     def count(kinds: Sequence[str]) -> dict:
         return {"hits": sum(by_kind[k] for k in kinds), "of": len(kinds)}
 
+    # a spun copy in which no author overclaims is the base again: there is nothing to resist, so it is not counted
+    spun = ["spun"] if any(s.overclaims for s in load_studies(family_root / "spun")) else []
     dependent = [m for m in MEMBERS if keys[m].verdict == "depends"]
     return {
         "recovers_law": {"hits": sum(given[m] == keys[m] for m in MEMBERS), "of": len(MEMBERS)},
         "follows_evidence": count([k for k in KINDS if RELATION[k] == "must_change"]),
-        "resists_overclaiming": count(["spun"]),
+        "resists_overclaiming": count(spun),
         "stays_steady": count([k for k in KINDS if RELATION[k] == "must_stay" and k != "spun"]),
         "fell_for_lumping": {"hits": sum(given[m] == Answer.parse(truths[m]["lumped"]) for m in dependent),
                              "of": len(dependent)},
