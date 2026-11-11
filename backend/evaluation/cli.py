@@ -1,4 +1,4 @@
-"""`evaluate` command line: score a run, run the two baselines, compare corpora.
+"""`evaluate` command line: score a run, run the three baselines, compare corpora.
 
     evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] [--oracle O.json]
                    [--question-id ID] --out DIR
@@ -7,6 +7,7 @@
                           [--oracle-passages] [--question-id ID]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
                             [--question-id ID]
+    evaluate paperqa-baseline --corpus CORPUS --out DIR [--model ALIAS] [--question-id ID] [--agent-type T]
     evaluate compare REPORT [REPORT ...] [--corpora DIR] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
@@ -46,6 +47,9 @@ the default pack's questions.yaml the run and the answers answer (default its de
 its kind picks how B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that
 question: its text is asked and its kind picks the answer.json shape (default: the default question, as before). The
 BM25 baseline's answers say `system: bm25-answer-baseline` (spec section 6.1); the command keeps its name (D36).
+`paperqa-baseline` (evaluation/baselines/paperqa.py; needs `uv sync --group paperqa`) runs PaperQA2 on the corpus with
+the sparse keyword embedding and --model for every paper-qa call, then the same mapping call; it writes answer.json
+(`system: paperqa2`) and paper-qa's session as paperqa_session.json. Its own calls are not cached (not replayable).
 
 `scirex` is a real-paper check (D21, evaluation/realpapers/scirex.py): `corpus` turns SciREX JSON lines into a corpus
 plus the gold only `score` reads; `score` writes real.json and real.md, never a report.json. `--limit` is chosen with
@@ -217,6 +221,25 @@ def cmd_agent(args: argparse.Namespace) -> int:
         print(f"FAIL {exc}")
         return 1
     print(f"{_write_answer(answer, args.out)}: {_summary(answer)} agent exit={answer['agent']['exit_status']}")
+    return 0
+
+
+def cmd_paperqa(args: argparse.Namespace) -> int:
+    from .baselines.paperqa import SESSION_FILE, paperqa_baseline
+
+    question = _question(args)
+    model, model_id = _model(args.model)
+    try:
+        answer, session = paperqa_baseline(args.corpus, model=model, model_id=model_id, **question,
+                                           cache=_cache(args, "paperqa-baseline"), seed=args.seed, alias=args.model,
+                                           agent_type=args.agent_type)
+    except RuntimeError as exc:   # already redacted (paperqa_baseline, common.cached_reply)
+        print(f"FAIL {exc}")
+        return 1
+    path = _write_answer(answer, args.out)
+    (args.out / SESSION_FILE).write_text(json.dumps(session, indent=1, sort_keys=True, ensure_ascii=False) + "\n",
+                                         encoding="utf-8", newline="\n")
+    print(f"{path}: {_summary(answer)} paper-qa status={answer['paperqa']['status']}")
     return 0
 
 
@@ -449,7 +472,7 @@ def parser() -> argparse.ArgumentParser:
                        "its kind picks the answer's shape (not with --question or --question-file; default: the "
                        "default pack's default question)")
         q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<name>-calls.jsonl, name "
-                       "rag-baseline, rag-oracle-passages or agent-baseline)")
+                       "rag-baseline, rag-oracle-passages, agent-baseline or paperqa-baseline)")
         q.add_argument("--seed", type=int, default=0, help="seed of the answer/mapping call")
 
     r = sub.add_parser("rag-baseline", help="BM25 passages + an answer with citations + the mapping call -> answer.json")
@@ -477,6 +500,14 @@ def parser() -> argparse.ArgumentParser:
     a.add_argument("--concept", type=Path, help="a picked concept brief instead of the question-only one")
     a.add_argument("--run-id", default="agent-baseline")
     a.set_defaults(func=cmd_agent)
+
+    pq = sub.add_parser("paperqa-baseline", help="PaperQA2 (sparse embedding, local papers) + the mapping call -> "
+                                                 "answer.json (needs the paperqa dependency group)")
+    common(pq)
+    pq.add_argument("--agent-type", default="ToolSelector",
+                    help="paper-qa's agent: ToolSelector (default; the model picks the tools) or fake (search, gather "
+                         "evidence, answer in a fixed order, for a model without tool calls)")
+    pq.set_defaults(func=cmd_paperqa)
 
     c = sub.add_parser("compare", help="per-level table over several corpora's report.json")
     c.add_argument("reports", type=Path, nargs="+", help="report.json files or directories holding one")
