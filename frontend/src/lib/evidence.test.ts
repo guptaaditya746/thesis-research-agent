@@ -19,14 +19,16 @@ import {
 } from "./evidence"
 
 const graph: EvGraph = {
+  source: "evidence",
+  omitted: {},
   nodes: [
-    { id: "S001", type: "document", document: null, fields: null, found_by: [] },
-    { id: "c-t", type: "condition", document: "S001", fields: { label: "RAG", role: "rag" }, found_by: ["regex_condition@2#a"] },
-    { id: "c-c", type: "condition", document: "S001", fields: { label: "closed-book", role: "baseline" }, found_by: ["llm_condition@1#b"] },
-    { id: "k-1", type: "metric", document: "S001", fields: { name: "EM", canonical: "factual_accuracy" }, found_by: ["regex_metric@2#c"] },
-    { id: "m-t", type: "measurement", document: "S001", fields: { value: 0.71, dataset: "TriviaQA" }, links: { condition: "c-t", metric: "k-1" }, found_by: ["regex_measurement@2#d"] },
-    { id: "m-c", type: "measurement", document: "S001", fields: { value: 0.62, dataset: "TriviaQA" }, links: { condition: "c-c", metric: "k-1" }, found_by: ["gliner_measurement@1#e", "regex_measurement@2#d"] },
-    { id: "a-1", type: "author_claim", document: "S001", fields: { direction: "improves" }, found_by: ["regex_author_claim@2#f"] },
+    { label: null, types: [], id: "S001", type: "document", document: null, fields: null, found_by: [] },
+    { label: null, types: [], id: "c-t", type: "condition", document: "S001", fields: { label: "RAG", role: "rag" }, found_by: ["regex_condition@2#a"] },
+    { label: null, types: [], id: "c-c", type: "condition", document: "S001", fields: { label: "closed-book", role: "baseline" }, found_by: ["llm_condition@1#b"] },
+    { label: null, types: [], id: "k-1", type: "metric", document: "S001", fields: { name: "EM", canonical: "factual_accuracy" }, found_by: ["regex_metric@2#c"] },
+    { label: null, types: [], id: "m-t", type: "measurement", document: "S001", fields: { value: 0.71, dataset: "TriviaQA" }, links: { condition: "c-t", metric: "k-1" }, found_by: ["regex_measurement@2#d"] },
+    { label: null, types: [], id: "m-c", type: "measurement", document: "S001", fields: { value: 0.62, dataset: "TriviaQA" }, links: { condition: "c-c", metric: "k-1" }, found_by: ["gliner_measurement@1#e", "regex_measurement@2#d"] },
+    { label: null, types: [], id: "a-1", type: "author_claim", document: "S001", fields: { direction: "improves" }, found_by: ["regex_author_claim@2#f"] },
   ],
   edges: [],
 }
