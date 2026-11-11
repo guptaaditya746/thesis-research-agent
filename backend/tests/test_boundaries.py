@@ -12,7 +12,7 @@ BACKEND = Path(__file__).resolve().parents[1]
 SERVICES = {
     "gateway": ("modelcall",),
     "engine": ("evidence", "agent", "gold", "jsonio"),
-    "evaluation": ("evaluation", "scoring", "synth", "packbuilder"),
+    "evaluation": ("evaluation", "scoring", "synth", "synth2", "packbuilder"),
     "api": ("webapp",),
 }
 RANK = {pkg: rank for rank, pkgs in enumerate(SERVICES.values()) for pkg in pkgs}
