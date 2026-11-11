@@ -1,8 +1,9 @@
-"""The fixed answer form and three ways to conclude from the studies.
+"""The fixed answer form and four ways to conclude from the studies.
 
 `pooled` adds up the counts per side of each candidate condition; it gives the answer key and is the oracle.
-`vote` lets each study vote; `lumped` adds everything together and ignores the conditions. The last two are the
-weaker ways a system can go wrong, kept so their mistakes can be recognised.
+`vote` lets each study vote; `lumped` adds everything together and ignores the conditions; `trusts_claims`
+lets each study vote with what its authors claim and never looks at the counts. The last three are the weaker
+ways a system can go wrong, kept so their mistakes can be recognised.
 """
 from __future__ import annotations
 
@@ -80,9 +81,9 @@ def pooled(studies: Sequence[Study], recipe: Recipe) -> Answer:
     return Answer("depends", best[1], best[2], _untested(cells, recipe))
 
 
-def vote(studies: Sequence[Study], recipe: Recipe) -> Answer:
+def _by_votes(studies: Sequence[Study], recipe: Recipe, word_of) -> Answer:
     counted = [s for s in studies if s.duplicate_of is None]
-    votes = {direction(study_delta(s), recipe.min_effect) for s in counted}
+    votes = {word_of(s) for s in counted}
     if not counted:
         verdict = "insufficient"
     elif {"helps", "hurts"} <= votes:
@@ -90,3 +91,11 @@ def vote(studies: Sequence[Study], recipe: Recipe) -> Answer:
     else:
         verdict = next((w for w in ("helps", "hurts") if w in votes), "no_effect")
     return Answer(verdict, None, {}, _untested(_cells(studies), recipe))
+
+
+def vote(studies: Sequence[Study], recipe: Recipe) -> Answer:
+    return _by_votes(studies, recipe, lambda s: direction(study_delta(s), recipe.min_effect))
+
+
+def trusts_claims(studies: Sequence[Study], recipe: Recipe) -> Answer:
+    return _by_votes(studies, recipe, lambda s: s.claim)

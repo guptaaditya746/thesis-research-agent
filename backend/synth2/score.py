@@ -13,12 +13,12 @@ from math import sqrt
 from pathlib import Path
 from typing import Any, Sequence
 
-from synth2.conclude import Answer, lumped, pooled, vote
+from synth2.conclude import Answer, lumped, pooled, trusts_claims, vote
 from synth2.corpus import load_studies, load_truth
 from synth2.family import KINDS, RELATION
 from synth2.recipe import load_recipe
 
-RULES = {"pooled": pooled, "vote": vote, "lumped": lumped}
+RULES = {"pooled": pooled, "vote": vote, "lumped": lumped, "trusts_claims": trusts_claims}
 SCORES = ("recovers_law", "follows_evidence", "resists_overclaiming", "stays_steady", "fell_for_lumping")
 MEMBERS = ("base", *KINDS)
 
@@ -70,7 +70,7 @@ def score_family(family_root: Path, answers: dict[str, Any]) -> dict:
         "fell_for_lumping": {"hits": sum(given[m] == Answer.parse(truths[m]["lumped"]) for m in dependent),
                              "of": len(dependent)},
         "by_kind": by_kind,
-        "invalid": invalid,
+        "invalid": sorted(set(invalid)),
     }
 
 

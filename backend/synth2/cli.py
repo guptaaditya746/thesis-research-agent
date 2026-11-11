@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
 
 from jsonio import write_json_atomic
-from synth2.corpus import Settings, build_base
+from synth2.corpus import Settings, build_base, load_truth
 from synth2.family import make_family
 from synth2.recipe import load_recipe
 from synth2.scir_export import export
@@ -18,6 +19,7 @@ from synth2.world import LAW_KINDS
 from synth2.write import TEXT_LEVELS
 
 HEADLINE = ("recovers_law", "follows_evidence", "resists_overclaiming")
+MAX_TRIES = 3   # a grid cell tries at most this many times the asked number of seeds
 
 
 class BadArgument(Exception):
@@ -38,9 +40,21 @@ def _choices(text: str, known, what: str) -> list[str]:
 
 
 def families(root: Path) -> list[tuple[str, Path]]:
-    """(grid cell, family folder) for every built family under `root`, in a fixed order."""
-    found = [(p.parent.parent.parent.name, p.parent.parent) for p in root.glob("*/s*/base/manifest.json")]
+    """(grid cell, family folder) for every built family under `root`, in a fixed order. None is a bad argument."""
+    found = [(p.parent.parent.parent.name, p.parent.parent) for p in root.glob("*/s*/base/manifest.json")
+             if re.fullmatch(r"s\d+", p.parent.parent.name)]
+    if not found:
+        raise BadArgument(f"no corpus families under {root}")
     return sorted(found, key=lambda f: (f[0], int(f[1].name[1:])))
+
+
+def _build_family(folder: Path, settings: Settings) -> None:
+    """Base and relatives. Refused when noise made the key of the base or of the twin differ from its law."""
+    build_base(folder / "base", settings)
+    make_family(folder / "base")
+    for member in ("base", "twin"):
+        if not load_truth(folder / member)["key_matches_law"]:
+            raise ValueError(f"{member}: the key does not equal the law")
 
 
 def build(args: argparse.Namespace) -> int:
@@ -54,21 +68,27 @@ def build(args: argparse.Namespace) -> int:
         raise BadArgument("--seeds and --studies must be at least 1")
     if args.studies > len(recipe.authors):
         raise BadArgument(f"--studies {args.studies} needs as many authors; the recipe has {len(recipe.authors)}")
-    skipped = []
+    skipped, short = [], []
     for law in laws:
         for text in texts:
-            cell, built = f"{law}-{text}", 0
-            for seed in range(args.seeds):
+            cell, built, seed = f"{law}-{text}", 0, 0
+            while built < args.seeds and seed < MAX_TRIES * args.seeds:   # a refused seed is replaced by the next
                 folder = args.out / cell / f"s{seed}"
                 try:
-                    build_base(folder / "base", Settings(args.domain, seed, args.studies, law, text, exact=args.exact))
-                    make_family(folder / "base")
+                    _build_family(folder, Settings(args.domain, seed, args.studies, law, text, exact=args.exact))
                     built += 1
                 except ValueError as err:
                     shutil.rmtree(folder, ignore_errors=True)
                     skipped.append({"cell": cell, "seed": seed, "reason": str(err)})
-            print(f"{cell}: {built} built, {args.seeds - built} skipped")
+                seed += 1
+            print(f"{cell}: {built} built, {seed - built} skipped")
+            if built < args.seeds:
+                short.append(cell)
     write_json_atomic(args.out / "skipped.json", skipped)
+    if short:
+        print(f"synth2: fewer than {args.seeds} families after {MAX_TRIES * args.seeds} seeds in: {', '.join(short)}",
+              file=sys.stderr)
+        return 1
     return 0
 
 
@@ -106,7 +126,10 @@ def score(args: argparse.Namespace) -> int:
 
 
 def export_scir(args: argparse.Namespace) -> int:
-    print(f"{export(args.root, args.out)} tasks -> {args.out}")
+    try:
+        print(f"{export(args.root, args.out)} tasks -> {args.out}")
+    except ValueError as err:
+        raise BadArgument(str(err)) from err
     return 0
 
 
@@ -116,7 +139,7 @@ def parser() -> argparse.ArgumentParser:
     b = sub.add_parser("build", help="build a grid of corpus families: law kind x text level x seed")
     b.add_argument("--out", type=Path, required=True)
     b.add_argument("--domain", default="rag")
-    b.add_argument("--seeds", type=int, default=10, help="seeds 0..N-1 per grid cell")
+    b.add_argument("--seeds", type=int, default=10, help="families per grid cell; seeds count up from 0")
     b.add_argument("--studies", type=int, default=20)
     b.add_argument("--laws", default=",".join(LAW_KINDS))
     b.add_argument("--texts", default=",".join(TEXT_LEVELS))

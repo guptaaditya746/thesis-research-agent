@@ -131,26 +131,30 @@ def draw_studies(recipe: Recipe, law: Law, seed: int, count: int, *, exact: bool
     for i in range(count):
         sid = f"S{i + 1:03d}"
         rng = random.Random(f"synth2:{seed}:{sid}:design")
-        coverage = rng.choice(("a", "b", "both"))
-        fake = {c.id: rng.choice(c.levels).id for c in recipe.conditions if c.id != true.id}
+        # half of the papers report two subsets; the condition they split on is any of the three, so a split
+        # alone does not say which condition is the true one
+        two = rng.random() < 0.5
+        split = rng.choice(recipe.conditions)
+        drawn = {c.id: rng.choice(c.levels).id for c in recipe.conditions}
         n = rng.randrange(low, high + 1, recipe.n_step)
         base = rng.uniform(*recipe.base_rate)
         dataset = rng.choice(recipe.datasets)
         year = rng.randint(*recipe.years)
-        covered = [side[x] for x in (("a", "b") if coverage == "both" else (coverage,))]
         if untested is not None:
-            covered = [next(v for v in side.values() if v != untested)]
+            drawn[true.id] = next(v for v in side.values() if v != untested)
+            two = two and split.id != true.id
         cells = []
-        for level in covered:
+        for j, split_level in enumerate([lv.id for lv in split.levels] if two else [drawn[split.id]]):
+            levels = {**drawn, split.id: split_level}
+            level = levels[true.id]
             with_effect = min(max(base + law.effects[level], 0.0), 1.0)
             if exact:
                 k_c, k_t = round(n * base), round(n * with_effect)
             else:
                 ns = noise_seed if redraw_level == level else 0
-                counts = random.Random(f"synth2:{seed}:{ns}:{sid}:{level}:counts")
+                counts = random.Random(f"synth2:{seed}:{ns}:{sid}:c{j}:counts")
                 k_c = counts.binomialvariate(n, base)
                 k_t = counts.binomialvariate(n, with_effect)
-            levels = {c.id: (level if c.id == true.id else fake[c.id]) for c in recipe.conditions}
             cells.append(Cell(levels, n, k_t, n, k_c))
         studies.append(honest(Study(sid, f"{authors[i]} et al. ({year})", dataset, tuple(cells), "no_effect", False),
                               recipe))

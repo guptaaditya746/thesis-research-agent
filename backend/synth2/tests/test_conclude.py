@@ -53,3 +53,12 @@ def test_answer_round_trip_and_refusals():
                 {"verdict": "helps"}, "helps", None):
         with pytest.raises(ValueError):
             Answer.parse(bad)
+
+
+def test_trusting_the_authors_ignores_the_counts():
+    from dataclasses import replace
+    from synth2.conclude import trusts_claims
+    assert trusts_claims(FOUR, R) == Answer("helps", None, {}, ())
+    one_hurts = [*FOUR[:3], replace(FOUR[3], claim="hurts")]
+    assert trusts_claims(one_hurts, R) == Answer("mixed", None, {}, ())
+    assert trusts_claims(FOUR + [replace(FOUR[3], id="S005", claim="hurts", duplicate_of="S004")], R).verdict == "helps"

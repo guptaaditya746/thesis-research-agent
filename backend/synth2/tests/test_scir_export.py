@@ -29,7 +29,7 @@ def test_the_text_does_not_leak_the_key(tmp_path):
 
 
 def test_export_writes_one_task_per_corpus_and_cli_agrees(tmp_path):
-    build_base(tmp_path / "g" / "opposed-table" / "s0" / "base", Settings("rag", 0, 20, "opposed", "table", exact=True))
+    build_base(tmp_path / "g" / "opposed-table" / "s0" / "base", Settings("rag", 0, 20, "opposed", "table"))
     make_family(tmp_path / "g" / "opposed-table" / "s0" / "base")
     assert export(tmp_path / "g", tmp_path / "tasks.json") == 5
     data = json.loads((tmp_path / "tasks.json").read_text(encoding="utf-8"))

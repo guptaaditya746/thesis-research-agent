@@ -86,3 +86,25 @@ def test_study_round_trip_and_bad_cell_names_the_study():
     bad["cells"][0]["k_t"] = bad["cells"][0]["n_t"] + 1
     with pytest.raises(ValueError, match="S001"):
         Study.parse(bad)
+
+
+def test_two_subset_papers_split_on_any_condition_not_only_the_true_one():
+    two, on_true, total = 0, 0, 0
+    for seed in range(30):
+        law = draw_law(R, seed, "opposed")
+        for s in draw_studies(R, law, seed, 20):
+            total += 1
+            if len(s.cells) == 2:
+                differs = [c for c in s.cells[0].levels if s.cells[0].levels[c] != s.cells[1].levels[c]]
+                assert len(differs) == 1
+                two += 1
+                on_true += differs[0] == law.condition
+    assert 0.4 < two / total < 0.6
+    assert 0.2 < on_true / two < 0.5
+
+
+def test_two_subsets_on_the_same_side_have_their_own_noise():
+    law = draw_law(R, 3, "opposed")
+    same_side = [s for seed in range(5) for s in draw_studies(R, law, seed, 20)
+                 if len(s.cells) == 2 and s.cells[0].levels[law.condition] == s.cells[1].levels[law.condition]]
+    assert same_side and all((s.cells[0].k_t, s.cells[0].k_c) != (s.cells[1].k_t, s.cells[1].k_c) for s in same_side)

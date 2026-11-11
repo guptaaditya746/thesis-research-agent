@@ -54,9 +54,16 @@ def task_of(corpus_dir: Path) -> dict:
 
 
 def export(root: Path, out: Path) -> int:
-    """Write every corpus under `root` as one task; return how many."""
-    folders = sorted((p.parent for p in root.rglob("manifest.json")), key=lambda p: p.relative_to(root).as_posix())
-    tasks = [task_of(folder) for folder in folders]
+    """Write every corpus under `root` as one task; return how many. No corpus there is a `ValueError`."""
+    folders = sorted((p.parent for p in root.rglob("manifest.json") if (p.parent / "corpus.json").is_file()),
+                     key=lambda p: p.relative_to(root).as_posix())
+    if not folders:
+        raise ValueError(f"no corpus under {root}")
+    by_id: dict[str, dict] = {}
+    for folder in folders:   # two corpora with the same papers have the same id and are one task
+        task = task_of(folder)
+        by_id.setdefault(task["id"], task)
+    tasks = list(by_id.values())
     write_json_atomic(out, {
         "metadata": {"generator": GENERATOR, "version": VERSION, "code_sha256": code_sha256(), "tasks": len(tasks)},
         "tasks": tasks})

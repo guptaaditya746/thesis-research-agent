@@ -18,7 +18,7 @@ from synth2.world import LAW_KINDS, Law, Study, direction, draw_law, draw_studie
 from synth2.write import TEXT_LEVELS, missing_facts, write_paper
 
 GENERATOR = "synth2"
-VERSION = 1
+VERSION = 2
 PACKAGE = Path(__file__).resolve().parent
 
 
@@ -73,8 +73,8 @@ def write_corpus(out: Path, recipe: Recipe, law: Law, studies: Sequence[Study], 
     if unfaithful:
         raise ValueError(f"papers do not hold their planted facts: {', '.join(unfaithful)}")
     hashes = [[p.study, sha256_hex(p.text.encode("utf-8"))] for p in papers]
-    kind = variant["kind"] if variant else "base"
-    cid = f"{recipe.domain}2-{sha256_hex(canonical_bytes([kind, hashes]))[:8]}"
+    # the id is made from the papers alone, so it cannot say which member of a family the corpus is
+    cid = f"{recipe.domain}2-{sha256_hex(canonical_bytes(hashes))[:8]}"
     (out / "papers").mkdir(parents=True, exist_ok=True)
     for p in papers:
         write_text_atomic(out / "papers" / f"{p.study}.md", p.text)
