@@ -250,3 +250,11 @@ def test_a_synth2_truth_without_corpus_json_is_refused_naming_its_folder(tiny):
     (tiny / "corpus.json").unlink()
     with pytest.raises(ValueError, match=re.escape(str(tiny))):
         GroundTruth.load(tiny / "ground_truth.json")
+
+
+def test_the_oracle_finds_no_false_copies_on_seed_17(tmp_path):
+    # seed 17 once drew two studies with the same rates, and the engine's copy rule took the second for a copy
+    from synth2.corpus import Settings, build_base
+    base = tmp_path / "base"
+    build_base(base, Settings("rag", 17, 6, "opposed", "table", exact=True))
+    assert _oracle_c(base, tmp_path / "oracle")["flags"]["duplicates_correct"] is True
