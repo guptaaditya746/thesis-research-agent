@@ -5,6 +5,7 @@ number as it was. That is what lets a twin corpus differ from its base in exactl
 """
 from __future__ import annotations
 
+import itertools
 import random
 from dataclasses import dataclass, replace
 from typing import Any
@@ -116,6 +117,11 @@ def draw_law(recipe: Recipe, seed: int, kind: str) -> Law:
     return Law(condition.id, effects, kind, mirrored)
 
 
+def rate_key(cell: Cell) -> tuple[float, float]:
+    """Treatment and control rates at the precision the engine compares for copies (evidence/rules.VALUE_DECIMALS)."""
+    return round(cell.k_t / cell.n_t, 3), round(cell.k_c / cell.n_c, 3)
+
+
 def draw_studies(recipe: Recipe, law: Law, seed: int, count: int, *, exact: bool = False, noise_seed: int = 0,
                  untested: str | None = None, redraw_level: str | None = None) -> tuple[Study, ...]:
     if count > len(recipe.authors):
@@ -128,6 +134,7 @@ def draw_studies(recipe: Recipe, law: Law, seed: int, count: int, *, exact: bool
     random.Random(f"synth2:{seed}:authors").shuffle(authors)
     low, high = recipe.n_range
     studies = []
+    taken: set[tuple[float, float]] = set()
     for i in range(count):
         sid = f"S{i + 1:03d}"
         rng = random.Random(f"synth2:{seed}:{sid}:design")
@@ -143,19 +150,29 @@ def draw_studies(recipe: Recipe, law: Law, seed: int, count: int, *, exact: bool
         if untested is not None:
             drawn[true.id] = next(v for v in side.values() if v != untested)
             two = two and split.id != true.id
-        cells = []
-        for j, split_level in enumerate([lv.id for lv in split.levels] if two else [drawn[split.id]]):
-            levels = {**drawn, split.id: split_level}
-            level = levels[true.id]
-            with_effect = min(max(base + law.effects[level], 0.0), 1.0)
-            if exact:
-                k_c, k_t = round(n * base), round(n * with_effect)
-            else:
-                ns = noise_seed if redraw_level == level else 0
-                counts = random.Random(f"synth2:{seed}:{ns}:{sid}:c{j}:counts")
-                k_c = counts.binomialvariate(n, base)
-                k_t = counts.binomialvariate(n, with_effect)
-            cells.append(Cell(levels, n, k_t, n, k_c))
+        # the engine takes two results with the same treatment and control rates for one study published twice
+        # (evidence/rules.duplicates), so a study whose rates match an earlier study's gets a new base rate
+        for attempt in itertools.count():
+            if attempt:
+                base = random.Random(f"synth2:{seed}:{sid}:base{attempt}").uniform(*recipe.base_rate)
+            cells = []
+            for j, split_level in enumerate([lv.id for lv in split.levels] if two else [drawn[split.id]]):
+                levels = {**drawn, split.id: split_level}
+                level = levels[true.id]
+                with_effect = min(max(base + law.effects[level], 0.0), 1.0)
+                if exact:
+                    k_c, k_t = round(n * base), round(n * with_effect)
+                else:
+                    ns = noise_seed if redraw_level == level else 0
+                    again = f":{attempt}" if attempt else ""
+                    counts = random.Random(f"synth2:{seed}:{ns}:{sid}:c{j}:counts{again}")
+                    k_c = counts.binomialvariate(n, base)
+                    k_t = counts.binomialvariate(n, with_effect)
+                cells.append(Cell(levels, n, k_t, n, k_c))
+            keys = {rate_key(c) for c in cells}
+            if not keys & taken:
+                break
+        taken |= keys
         studies.append(honest(Study(sid, f"{authors[i]} et al. ({year})", dataset, tuple(cells), "no_effect", False),
                               recipe))
     return tuple(studies)

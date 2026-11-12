@@ -108,3 +108,30 @@ def test_two_subsets_on_the_same_side_have_their_own_noise():
     same_side = [s for seed in range(5) for s in draw_studies(R, law, seed, 20)
                  if len(s.cells) == 2 and s.cells[0].levels[law.condition] == s.cells[1].levels[law.condition]]
     assert same_side and all((s.cells[0].k_t, s.cells[0].k_c) != (s.cells[1].k_t, s.cells[1].k_c) for s in same_side)
+
+
+def _cross_study_clashes(studies):
+    """Pairs of different studies with a cell of the same treatment and control rates (3 decimals). The two
+    subsets of one study may match: a split on a condition with no effect is meant to show no difference."""
+    seen, clashes = {}, []
+    for s in studies:
+        keys = {(round(c.k_t / c.n_t, 3), round(c.k_c / c.n_c, 3)) for c in s.cells}
+        clashes += [(seen[k], s.id) for k in keys if k in seen]
+        seen.update({k: s.id for k in keys if k not in seen})
+    return clashes
+
+
+@pytest.mark.parametrize("exact", [True, False])
+def test_no_two_studies_share_both_rates(exact):
+    # the engine takes two results with the same treatment and control rates (3 decimals) as one study
+    # published twice (evidence/rules.duplicates), so distinct studies must never share them
+    for kind in LAW_KINDS:
+        for seed in range(60):
+            for count in (6, 20):
+                studies = draw_studies(R, draw_law(R, seed, kind), seed, count, exact=exact)
+                assert _cross_study_clashes(studies) == [], (kind, seed, count)
+
+
+def test_seed_17_no_longer_has_lookalike_studies():
+    # seed 17 drew S002 and S005 with the same rates, so the engine took S005 for a copy of S002
+    assert _cross_study_clashes(draw_studies(R, draw_law(R, 17, "opposed"), 17, 6, exact=True)) == []
