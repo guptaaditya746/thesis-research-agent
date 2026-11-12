@@ -48,6 +48,8 @@ uv run synth2 build --out DIR --seeds 10                          # hidden-law c
 uv run synth2 reference --root DIR --rule pooled --out FILE       # answers of a reference rule: pooled (the key) | vote | lumped | trusts_claims
 uv run synth2 score --root DIR --answers FILE --out FILE          # score an answers file {corpus id: answer} by code
 uv run synth2 export-scir --root DIR --out FILE                   # the same corpora as one SciR-shaped task file
+uv run synth2 written-corpus --template DIR --papers DIR --out DIR   # a corpus from model-written rewrites of a template's papers
+uv run synth2 engine-answers --runs DIR --out FILE                # engine run folders (run.json + answer.json) as an answers file
 ```
 
 ## Test

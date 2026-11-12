@@ -98,7 +98,9 @@ the answer's `counts` for supporting, contradicting and neutral equal the length
 `answer` lists, and `undetermined` and `duplicates` too when both sides have them (null without
 `counts`). `duplicates_correct`: the documents flagged as duplicates (the answer's `duplicates` list,
 else the given `duplicate` set) are exactly the expected ones and each `duplicate_of` matches the
-truth's.
+truth's. A synth2 truth's unscored studies (`truth.unscored`, two subsets) are left
+out of every flag but `duplicate`, on both sides; while any exist the truth's answer has no label and no groups, so
+`label_correct` and `counts_correct` are null (not scored), not false.
 
 Per extractor (`score_extractors`, pooled by `evaluate benchmark`): every item counts for every
 extractor id in its `found_by` (an item two extractors found counts for both), so the per-extractor item
@@ -600,7 +602,9 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
                      "traceability": None if n is None else share(n["traced"], n["citations"]),
                      "overlap": None if n is None else share(n["overlaps_placement"], n["citations"])})
     expected_label = truth.answer.get("label")
-    errors = [] if expected_label is not None else ["gold answer has no label"]   # undefined, not a match
+    errors = ([] if expected_label is not None   # undefined, not a match
+              else ["label and counts not scored: the corpus has two-subset studies (unscored_studies)"]
+              if truth.unscored else ["gold answer has no label"])
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
             "label_correct": None if expected_label is None else answer.get("label") == expected_label,
             "errors": errors, "rows": rows, "studies": studies,
@@ -673,6 +677,7 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
         return None
     top = answer.get("flags") if isinstance(answer.get("flags"), dict) else {}
     entries = {s.get("document"): s for s in answer.get("studies", []) if isinstance(s, dict)}
+    unscored = {s["paper"] for s in truth.studies if truth.unscored and s.get("study_id") in truth.unscored}
     rows = []
     given_sets: dict[str, set[str]] = {}
     for flag in FLAGS:
@@ -682,6 +687,8 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
         else:
             given = {d for d, s in entries.items() if flag in (s.get("flags") or [])}
         given_sets[flag] = given
+        if flag != "duplicate":   # truth knows a copy whatever its cells; the other flags need the study's result
+            expected, given = expected - unscored, given - unscored
         tp = len(expected & given)
         rows.append({"flag": flag, "expected": sorted(expected), "given": sorted(given), "tp": tp,
                      "fp": len(given - expected), "fn": len(expected - given),
@@ -1654,7 +1661,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
                | {"cost": system_cost(a, (run.run or {}) if a is run.answer else None)} for a in answers]
     effect = entry.kind == "effect"
     scored = effect_truth(truth, entry.truth, protocol, canon) if effect else truth
-    return {
+    report = {
         "corpus_id": truth.corpus_id, "corpus_name": corpus.name, "levels": truth.levels,
         "run_id": (run.run or {}).get("run_id", run.root.name), "protocol": score_protocol(run),
         "question_id": entry.id, "kind": entry.kind, "domain": protocol.domain if protocol else DEFAULT_PACK,
@@ -1670,6 +1677,13 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "attribution": (score_attribution(scored, answers, read_json(oracle) if oracle else None) if effect
                         else None),
     }
+    if truth.unscored is not None:   # a synth2 truth: its two-subset studies are scored by A only
+        report["unscored_studies"] = {
+            "count": len(truth.unscored), "studies": list(truth.unscored),
+            "reason": "two subsets: B and C need one result per subset, which the engine does not report yet; "
+                      "while such studies exist C does not score the corpus label or the counts, nor flags other "
+                      "than duplicate on these studies"}
+    return report
 
 
 def _named(items: list[Item], truth: GroundTruth, canon: Canon) -> list[Item]:
