@@ -219,7 +219,7 @@ def realedit_apply(args: argparse.Namespace) -> int:
             raise BadArgument(f"no inputs under {args.base / 'inputs'}")
         bad = 0
         for sid in studies:
-            done = realedit.apply_study(args.base, sid)
+            done = realedit.apply_study(args.base, sid, claim_rules=args.claim_rules)
             print(f"{sid}: {done['words']} words, {done['inserted']} inserted")
             for p in done["problems"]:
                 print("-", p)
@@ -232,7 +232,7 @@ def realedit_apply(args: argparse.Namespace) -> int:
 
 def realedit_check(args: argparse.Namespace) -> int:
     try:
-        report, extras = realedit.check_base(args.grid, args.base, args.readers)
+        report, extras = realedit.check_base(args.grid, args.base, args.readers, claim_rules=args.claim_rules)
     except (OSError, ValueError, KeyError) as err:
         raise _read_failure(err) from err
     print(f"kept {sum(v['ok'] for v in report.values())} of {len(report)}; reader listed {extras} other results")
@@ -327,11 +327,13 @@ def parser() -> argparse.ArgumentParser:
     ry = sub.add_parser("realedit-apply", help="apply the writers' edits to the renamed sources and check them")
     ry.add_argument("--base", type=Path, required=True)
     ry.add_argument("--study", action="append", help="one study id (repeatable); default every study")
+    ry.add_argument("--claim-rules", action="store_true", help="writer-v12 rules: no copied claim, word limits")
     ry.set_defaults(run=realedit_apply)
     rk = sub.add_parser("realedit-check", help="code checks and the blind reader against the ground truth")
     rk.add_argument("--grid", type=Path, required=True, help="family folder holding ground_truth.json")
     rk.add_argument("--base", type=Path, required=True)
     rk.add_argument("--readers", type=Path, nargs="*", default=[], help="reader json files")
+    rk.add_argument("--claim-rules", action="store_true", help="writer-v12 rules: no copied claim, word limits")
     rk.set_defaults(run=realedit_check)
     rm = sub.add_parser("realism", help="real-vs-synthetic classifier AUC (five views) and style gap")
     rm.add_argument("--real", type=Path, required=True, help="folder of real pieces (*_pN.md)")

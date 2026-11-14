@@ -284,9 +284,34 @@ def pct_forms(k: int, n: int) -> set[str]:
     return {f"{x:.1f}", f"{x + 1e-9:.1f}", f"{x - 1e-9:.1f}"}
 
 
-def check_paper(text: str, inserted: list[str], inp: dict, mapping: dict[str, str]) -> list[str]:
-    """Code checks; the claim and the level reading are checked by the blind reader."""
+# Claim rules (writer-v12): our inserted text was the last classifier cue ("overall the SYS lowers", "subset",
+# "correctly", "asked"), because writers copied the claim sentence nearly word for word.
+CLAIM_RUN = 4
+INSERTED_LIMITS = {("overall",): 1, ("subset", "subsets"): 2, ("correctly",): 1, ("asked",): 1}
+
+
+def claim_problems(inserted: list[str], claim_sentence: str) -> list[str]:
+    """No run of CLAIM_RUN words from the claim sentence, and the INSERTED_LIMITS, in our inserted text."""
     problems = []
+    claim = tokens(claim_sentence)
+    grams = {tuple(claim[i:i + CLAIM_RUN]) for i in range(len(claim) - CLAIM_RUN + 1)}
+    runs = sorted({" ".join(t[i:i + CLAIM_RUN]) for t in map(tokens, inserted)
+                   for i in range(len(t) - CLAIM_RUN + 1) if tuple(t[i:i + CLAIM_RUN]) in grams})
+    if runs:
+        problems.append(f"inserted text copies the claim sentence: {runs[:4]}")
+    toks = tokens(" ".join(inserted))
+    for words, cap in INSERTED_LIMITS.items():
+        n = sum(t in words for t in toks)
+        if n > cap:
+            problems.append(f"inserted text: '{'/'.join(words)}' {n} times (limit {cap})")
+    return problems
+
+
+def check_paper(text: str, inserted: list[str], inp: dict, mapping: dict[str, str],
+                claim_rules: bool = False) -> list[str]:
+    """Code checks; the claim and the level reading are checked by the blind reader. `claim_rules` adds the
+    writer-v12 rules on our inserted text (claim_problems)."""
+    problems = claim_problems(inserted, inp["claim_sentence"]) if claim_rules else []
     low = text.lower()
     if text.split("\n")[2].strip() != inp["label"]:
         problems.append("label is not the author line under the title")
@@ -323,7 +348,7 @@ def check_paper(text: str, inserted: list[str], inp: dict, mapping: dict[str, st
     return problems
 
 
-def apply_study(base: Path, sid: str, edits_path: Path | None = None) -> dict:
+def apply_study(base: Path, sid: str, edits_path: Path | None = None, claim_rules: bool = False) -> dict:
     """Apply a writer's edits (<base>/edits/<id>.json) to the renamed source, run the code checks, write
     <base>/papers/<id>.md and <base>/inserted/<id>.json. Returns {"words", "inserted", "problems"}.
     An unreadable edits file is a problem and nothing is written."""
@@ -335,14 +360,15 @@ def apply_study(base: Path, sid: str, edits_path: Path | None = None) -> dict:
     except (OSError, json.JSONDecodeError) as err:
         return {"words": 0, "inserted": 0, "problems": [f"edits file unreadable: {err}"]}
     paper, inserted, problems = apply_edits(renamed, edits, inp["label"])
-    problems += check_paper(paper, inserted, inp, mapping)
+    problems += check_paper(paper, inserted, inp, mapping, claim_rules)
     (base / "papers" / f"{sid}.md").write_text(paper, encoding="utf-8")
     (base / "inserted" / f"{sid}.json").write_text(json.dumps(inserted, indent=1, ensure_ascii=False),
                                                    encoding="utf-8")
     return {"words": len(paper.split()), "inserted": sum(len(t.split()) for t in inserted), "problems": problems}
 
 
-def check_base(grid_family: Path, base: Path, reader_files: list[Path]) -> tuple[dict, int]:
+def check_base(grid_family: Path, base: Path, reader_files: list[Path],
+               claim_rules: bool = False) -> tuple[dict, int]:
     """Code checks plus the blind reader against the ground truth of a grid family folder. Only studies with a
     paper are reported. Label, benchmark, claim and cells must match exactly; other results are counted, and any
     that mentions the control fails. Writes <base>/check.json; returns (report, number of other results)."""
@@ -359,7 +385,7 @@ def check_base(grid_family: Path, base: Path, reader_files: list[Path]) -> tuple
         inp = json.loads((base / "inputs" / f"{sid}.json").read_text(encoding="utf-8"))
         mapping = json.loads((base / "maps" / f"{sid}.json").read_text(encoding="utf-8"))["map"]
         inserted = json.loads((base / "inserted" / f"{sid}.json").read_text(encoding="utf-8"))
-        problems = check_paper(p.read_text(encoding="utf-8"), inserted, inp, mapping)
+        problems = check_paper(p.read_text(encoding="utf-8"), inserted, inp, mapping, claim_rules)
         r = got.get(sid)
         if reader and r is None:
             problems.append("reader gave nothing")
