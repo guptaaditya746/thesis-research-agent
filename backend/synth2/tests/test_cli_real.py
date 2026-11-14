@@ -86,3 +86,18 @@ def test_real_commands_report_bad_arguments(tmp_path, capsys):
     assert main(["realism", "--real", missing, "--synthetic", missing, "--gap", "noequals"]) == 2
     err = capsys.readouterr().err
     assert err.count("synth2:") == 5 and "NAME=ROOT" in err
+
+
+def test_cli_templedit_then_apply_gives_a_checked_paper(edit_base, tmp_path, capsys):
+    grid = tmp_path / "grid"
+    grid.mkdir()
+    (grid / "ground_truth.json").write_text(json.dumps({"studies": [{"id": "S001", "claim": "hurts"}]}),
+                                            encoding="utf-8")
+    inp_path = edit_base / "inputs" / "S001.json"
+    inp = json.loads(inp_path.read_text(encoding="utf-8"))
+    inp["cells"][0]["levels"][0]["suggested"] = "questions with little noise"
+    inp_path.write_text(json.dumps(inp), encoding="utf-8")
+    assert main(["templedit", "--base", str(edit_base), "--grid", str(grid)]) == 0
+    assert "S001 hurts" in capsys.readouterr().out
+    assert main(["realedit-apply", "--base", str(edit_base), "--claim-rules"]) == 0
+    assert (edit_base / "papers" / "S001.md").is_file()

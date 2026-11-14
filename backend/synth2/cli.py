@@ -13,7 +13,7 @@ from jsonio import write_json_atomic
 from synth2.corpus import Settings, build_base, load_truth
 from synth2.family import make_family
 from synth2.engine_answers import collect
-from synth2 import realedit, realpool
+from synth2 import realedit, realpool, templedit
 from synth2.recipe import load_recipe
 from synth2.scir_export import export
 from synth2.score import RULES, reference_answers, score_family, summarise
@@ -230,6 +230,16 @@ def realedit_apply(args: argparse.Namespace) -> int:
     return 1 if bad else 0
 
 
+def templedit_write(args: argparse.Namespace) -> int:
+    try:
+        done = templedit.write_edits(args.base, args.grid, args.study)
+    except (OSError, ValueError, KeyError) as err:
+        raise _read_failure(err) from err
+    for d in done:
+        print(d["study"], d["claim"], d["replaces"], "replaces", "OK" if not d["problems"] else d["problems"])
+    return 1 if any(d["problems"] for d in done) else 0
+
+
 def realedit_check(args: argparse.Namespace) -> int:
     try:
         report, extras = realedit.check_base(args.grid, args.base, args.readers, claim_rules=args.claim_rules)
@@ -329,6 +339,11 @@ def parser() -> argparse.ArgumentParser:
     ry.add_argument("--study", action="append", help="one study id (repeatable); default every study")
     ry.add_argument("--claim-rules", action="store_true", help="writer-v12 rules: no copied claim, word limits")
     ry.set_defaults(run=realedit_apply)
+    te = sub.add_parser("templedit", help="write template edits (no model) for renamed real papers")
+    te.add_argument("--base", type=Path, required=True, help="prepared real-edit folder (inputs, sources)")
+    te.add_argument("--grid", type=Path, required=True, help="family folder holding ground_truth.json")
+    te.add_argument("--study", action="append", help="one study id (repeatable); default every study")
+    te.set_defaults(run=templedit_write)
     rk = sub.add_parser("realedit-check", help="code checks and the blind reader against the ground truth")
     rk.add_argument("--grid", type=Path, required=True, help="family folder holding ground_truth.json")
     rk.add_argument("--base", type=Path, required=True)
