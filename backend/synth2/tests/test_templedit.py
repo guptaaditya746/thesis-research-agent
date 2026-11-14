@@ -106,6 +106,57 @@ def test_checked_edits_redraw_until_no_mapped_word_or_copied_claim_is_left():
     assert problems == [] and check_paper(paper, inserted, INPUT, mapping, claim_rules=True) == []
 
 
+def wordings(inp):
+    return {lv.get("suggested") or lv["name"] for c in inp["cells"] for lv in c["levels"]}
+
+
+@pytest.mark.parametrize("seed", ["a", "b", "c", "d"])
+def test_each_level_wording_appears_once_in_the_section(seed):
+    section = templedit.planted_section(INPUT, "hurts", seed, 3)
+    for w in wordings(INPUT):
+        assert section.count(w) == 1, w
+
+
+def test_rows_are_labelled_by_the_wording_that_differs():
+    rows = [ln for ln in templedit.planted_section(INPUT, "hurts", "a", 3).split("\n") if ln.startswith("| ")][1:]
+    assert rows[0].startswith("| questions on facts seldom seen in training |")
+    assert rows[1].startswith("| questions about popular entities |")
+
+
+def test_a_single_cell_row_is_labelled_by_the_benchmark():
+    one = {**INPUT, "cells": INPUT["cells"][:1]}
+    section = templedit.planted_section(one, "hurts", "a", 3)
+    assert "| TrivBench | 41 / 80 (51.2%) | 30 / 79 (38.0%) |" in section
+    for w in wordings(one):
+        assert section.count(w) == 1, w
+
+
+def test_the_text_after_the_table_gives_the_gaps_not_the_counts_again():
+    section = templedit.planted_section(INPUT, "hurts", "a", 3)
+    after = section.split("|\n\n")[-1]
+    assert "13.2 points" in after and "6.7 points" in after and "41" not in after
+    tie = {**INPUT, "cells": [{**INPUT["cells"][0], "control_correct": 41, "control_total": 80}]}
+    assert "level" in templedit.planted_section(tie, "hurts", "a", 3).split("|\n\n")[-1]
+
+
+@pytest.mark.parametrize("claim", ["helps", "hurts", "no_effect"])
+@pytest.mark.parametrize("conf", ["firm", "hedged"])
+def test_no_claim_sentence_is_used_twice_in_a_paper(claim, conf):
+    for i in range(12):
+        texts = [templedit.claim_text(INPUT, claim, conf, f"s{i}", w).lower()
+                 for w in ("abstract", "section", "conclusion")]
+        cores = [t.split("that ", 1)[-1] if t.startswith(("we also", "an analysis", "our analysis")) else t
+                 for t in texts]
+        cores = [c[len("finally, "):] if c.startswith("finally, ") else c for c in cores]
+        assert len(set(cores)) == 3, cores
+
+
+def test_a_framed_claim_drops_its_opening_phrase():
+    texts = [templedit.claim_text(INPUT, c, "firm", f"s{i}", w).lower() for c in ("helps", "hurts", "no_effect")
+             for i in range(20) for w in ("abstract", "conclusion")]
+    assert not [t for t in texts if re.search(r"(that|finally,) (in short|taken together),", t)]
+
+
 def test_write_edits_writes_one_edits_file_per_study(edit_base, tmp_path):
     truth = {"studies": [{"id": "S001", "claim": "helps"}]}
     grid = tmp_path / "grid"

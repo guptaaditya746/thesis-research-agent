@@ -40,12 +40,12 @@ INTROS = [
 CAPTIONS = ["Table {N}: Questions answered right on {B}, per question group.",
             "Table {N}: Accuracy of {T} and {C} on {B} by question group (right / total).",
             "Table {N}: Results on {B}. Each row is one group of questions."]
-CELL_LINES = [
-    "For {G}, {T} answers {kt} of {nt} questions ({pt}%), while {C} answers {kc} of {nc} ({pc}%).",
-    "On {G}, {T} gets {kt} / {nt} right ({pt}%) and {C} gets {kc} / {nc} ({pc}%).",
-    "With {G}, accuracy is {pt}% for {T} ({kt} of {nt}) against {pc}% for {C} ({kc} of {nc}).",
-    "In the group of {G}, {T} reaches {pt}% ({kt}/{nt}); {C} reaches {pc}% ({kc}/{nc}).",
-]
+SCOPES = ["The analysis is restricted to {S}.", "Throughout this analysis, the setting is {S}.",
+          "We keep the setting fixed to {S}."]
+GAPS_ONE = ["On these questions, {g1}.", "In this group, {g1}.", "Here {g1}."]
+GAPS_TWO = ["In the first row, {g1}; in the second, {g2}.", "The first row shows that {g1}, and the second that {g2}.",
+            "In the upper row {g1}, while in the lower row {g2}."]
+# Three sentences per (direction, confidence): the abstract, the section and the conclusion each get a different one.
 CLAIMS = {
     ("hurts", "firm"): ["Taken together, these results show that retrieval hurts accuracy on {B}: {T} is worse "
                         "than {C}.",
@@ -53,19 +53,25 @@ CLAIMS = {
                         "In short, adding retrieved passages hurts: {T} falls behind {C}."],
     ("hurts", "hedged"): ["These results suggest that retrieval may hurt accuracy on {B}, with {T} somewhat behind "
                           "{C}.",
-                          "Retrieval appears to hurt rather than help here: {T} seems to trail {C}."],
+                          "Retrieval appears to hurt rather than help here: {T} seems to trail {C}.",
+                          "The numbers point to a possible cost of retrieval on {B}: {T} may do somewhat worse "
+                          "than {C}."],
     ("helps", "firm"): ["Taken together, these results show that retrieval improves accuracy on {B}: {T} is better "
                         "than {C}.",
                         "Retrieval pays off here; it improves accuracy, and {T} is the stronger system on {B}.",
                         "In short, adding retrieved passages helps to improve accuracy: {T} is ahead of {C}."],
     ("helps", "hedged"): ["These results suggest that retrieval may improve accuracy on {B}, with {T} somewhat "
                           "ahead of {C}.",
-                          "Retrieval appears to improve accuracy here: {T} seems to edge out {C}."],
+                          "Retrieval appears to improve accuracy here: {T} seems to edge out {C}.",
+                          "Retrieval might help on {B}: {T} appears slightly ahead of {C}."],
     ("no_effect", "firm"): ["Taken together, retrieval makes no clear difference on {B}: {T} and {C} are on par.",
-                            "We see no clear gain or loss from retrieval; {T} and {C} perform alike on {B}."],
+                            "We see no clear gain or loss from retrieval; {T} and {C} perform alike on {B}.",
+                            "Retrieval has no clear effect on {B}: the scores of {T} and {C} are close."],
     ("no_effect", "hedged"): ["Retrieval seems to make no clear difference on {B}; {T} and {C} may be on par.",
-                              "These results suggest no clear effect of retrieval: {T} appears close to {C}."],
+                              "These results suggest no clear effect of retrieval: {T} appears close to {C}.",
+                              "There may be no clear effect of retrieval on {B}; {T} and {C} seem close."],
 }
+CLAIM_SLOT = {"section": 0, "conclusion": 1, "abstract": 2}
 WHERE = {"abstract": ["{S}", "An analysis on {B} adds that {s}", "We also find that {s}"],
          "conclusion": ["{S}", "Our analysis on {B} further indicates that {s}", "Finally, {s}"],
          "section": ["{S}"]}
@@ -80,16 +86,38 @@ def _fill(t: str, inp: dict, **kw) -> str:
 
 
 def claim_text(inp: dict, claim: str, conf: str, seed: str, where: str) -> str:
-    rnd = random.Random(f"{seed}|claim|{where}")
-    sentence = _fill(rnd.choice(CLAIMS[(claim, conf)]), inp)
-    frame = rnd.choice(WHERE[where])
-    low = sentence[0].lower() + sentence[1:]
+    """One claim sentence in its frame; the order of the sentences is shuffled once per seed and each place takes
+    its own slot, so a paper never repeats a claim sentence."""
+    options = random.Random(f"{seed}|claim-order").sample(CLAIMS[(claim, conf)], len(CLAIMS[(claim, conf)]))
+    sentence = _fill(options[CLAIM_SLOT[where] % len(options)], inp)
+    frame = random.Random(f"{seed}|claim|{where}").choice(WHERE[where])
+    bare = re.sub(r"^(In short|Taken together), ", "", sentence)      # "...indicates that in short, ..." reads badly
+    low = bare[0].lower() + bare[1:]
     return _fill(frame, inp, S=sentence, s=low)
 
 
-def _group(cell: dict) -> str:
-    words = [lv.get("suggested") or lv["name"] for lv in cell["levels"]]
+def _join(words: list[str]) -> str:
     return ", ".join(words[:-1]) + (" and " if len(words) > 1 else "") + words[-1]
+
+
+def _wordings(cell: dict) -> list[str]:
+    return [lv.get("suggested") or lv["name"] for lv in cell["levels"]]
+
+
+def _split_levels(cells: list[dict]) -> tuple[list[str], list[list[str]]]:
+    """(wordings every cell shares, in order; per cell the wordings that differ). A shared wording is named once,
+    in the scope sentence; a differing one only in its table row."""
+    per_cell = [_wordings(c) for c in cells]
+    shared = [w for w in per_cell[0] if all(w in ws for ws in per_cell)] if len(cells) > 1 else per_cell[0]
+    return shared, [[w for w in ws if w not in shared] for ws in per_cell]
+
+
+def _gap(inp: dict, pt: str, pc: str) -> str:
+    d = abs(float(pt) - float(pc))
+    if d < 0.05:
+        return "the two systems are level"
+    lead = inp["system_names"]["treatment" if float(pt) > float(pc) else "control"]
+    return f"{lead} leads by {d:.1f} points"
 
 
 def planted_section(inp: dict, claim: str, seed: str, table_no: int) -> str:
@@ -98,18 +126,24 @@ def planted_section(inp: dict, claim: str, seed: str, table_no: int) -> str:
     head = "### " + _fill(rnd.choice(HEADINGS), inp)
     rows = ["| Question group | " + inp["system_names"]["treatment"] + " | " + inp["system_names"]["control"] + " |",
             "|---|---|---|"]
-    lines = []
-    line = rnd.choice(CELL_LINES)
-    for cell in inp["cells"]:
+    shared, differ = _split_levels(inp["cells"])
+    gaps = []
+    for cell, own in zip(inp["cells"], differ):
         kt, nt, kc, nc = (cell["treatment_correct"], cell["treatment_total"], cell["control_correct"],
                           cell["control_total"])
         pt, pc = f"{100 * kt / nt:.1f}", f"{100 * kc / nc:.1f}"
-        g = _group(cell)
-        rows.append(f"| {g} | {kt} / {nt} ({pt}%) | {kc} / {nc} ({pc}%) |")   # as written: a capital can clash
-        lines.append(_fill(line, inp, G=g, kt=kt, nt=nt, pt=pt, kc=kc, nc=nc, pc=pc))
+        label = _join(own) if own else inp["benchmark"]
+        rows.append(f"| {label} | {kt} / {nt} ({pt}%) | {kc} / {nc} ({pc}%) |")   # as written: a capital can clash
+        gaps.append(_gap(inp, pt, pc))
+    intro = _fill(rnd.choice(INTROS), inp, **kw)
+    if shared:
+        intro += " " + rnd.choice(SCOPES).format(S=_join(shared))
     caption = _fill(rnd.choice(CAPTIONS), inp, **kw)
-    body = " ".join(lines) + " " + claim_text(inp, claim, confidence(inp), seed, "section")
-    return "\n\n".join([head, _fill(rnd.choice(INTROS), inp, **kw), caption, "\n".join(rows), body])
+    gap_line = (rnd.choice(GAPS_ONE).format(g1=gaps[0]) if len(gaps) == 1 else
+                rnd.choice(GAPS_TWO).format(g1=gaps[0], g2=gaps[1]) if len(gaps) == 2 else
+                " ".join(f"In row {i + 1}, {g}." for i, g in enumerate(gaps)))
+    body = gap_line + " " + claim_text(inp, claim, confidence(inp), seed, "section")
+    return "\n\n".join([head, intro, caption, "\n".join(rows), body])
 
 
 def _clean_block(block: str) -> str | None:
