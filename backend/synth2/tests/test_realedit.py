@@ -136,6 +136,35 @@ def test_check_flags_more_than_1800_inserted_words():
     assert problems_of(GOOD, inserted=["A Study", "word " * 1798]) == []
 
 
+CLAIMED = {**STUDY_INPUT, "claim_sentence": "Overall, the augmented system answers more questions than the baseline."}
+
+
+def claim_problems_of(inserted):
+    return check_paper(GOOD, ["A Study"] + inserted, CLAIMED, {}, claim_rules=True)
+
+
+def test_claim_rules_flag_a_copied_run_of_four_claim_words():
+    out = claim_problems_of(["We see that the augmented system answers more often."])
+    assert "inserted text copies the claim sentence: ['augmented system answers more', 'the augmented system answers']" \
+        in out
+
+
+def test_claim_rules_pass_a_claim_in_the_paper_s_own_words():
+    assert claim_problems_of(["Adding retrieved passages helps: FindSys is right more often than PlainSys."]) == []
+
+
+def test_claim_rules_cap_overused_words_in_inserted_text_only():
+    out = claim_problems_of(["Overall it works. Overall it holds. One subset, a second subset, a third subset."])
+    assert "inserted text: 'overall' 2 times (limit 1)" in out
+    assert "inserted text: 'subset/subsets' 3 times (limit 2)" in out
+    real = GOOD + "Overall, overall, overall: each subset was correctly asked.\n"
+    assert check_paper(real, ["A Study"], CLAIMED, {}, claim_rules=True) == []
+
+
+def test_claim_rules_are_off_by_default():
+    assert check_paper(GOOD, ["A Study", "Overall, the augmented system answers more questions."], CLAIMED, {}) == []
+
+
 def test_check_flags_a_label_that_is_not_under_the_title():
     assert "label is not the author line under the title" in problems_of(GOOD.replace("Lee et al. (2021)", "Other"))
 
@@ -161,6 +190,20 @@ def test_apply_study_reports_an_anchor_that_is_missing(edit_base):
     (edit_base / "edits" / "S001.json").write_text(
         json.dumps({"title": "T", "insert_after": [{"anchor": "no such text", "text": "x"}]}), encoding="utf-8")
     assert any("anchor found 0 times" in p for p in realedit.apply_study(edit_base, "S001")["problems"])
+
+
+def test_apply_study_and_check_base_pass_claim_rules_on(edit_base, tmp_path):
+    claim = json.loads((edit_base / "inputs" / "S001.json").read_text(encoding="utf-8"))["claim_sentence"]
+    edits = {"title": "New Title", "insert_after": [
+        {"anchor": "## Results", "text": f"On TrivBench the augmented system answered 70 of 100 (70.0%) and the other "
+                                         f"50 of 100 (50.0%). TrivBench again. {claim}"}]}
+    (edit_base / "edits" / "S001.json").write_text(json.dumps(edits), encoding="utf-8")
+    assert realedit.apply_study(edit_base, "S001")["problems"] == []
+    on = realedit.apply_study(edit_base, "S001", claim_rules=True)["problems"]
+    assert any(p.startswith("inserted text copies the claim sentence") for p in on)
+    reader = make_truth(tmp_path / "grid", [CELL])
+    report, _ = realedit.check_base(tmp_path / "grid", edit_base, [reader], claim_rules=True)
+    assert any(p.startswith("inserted text copies the claim sentence") for p in report["S001"]["problems"])
 
 
 def make_truth(base_dir, reader_cells):
