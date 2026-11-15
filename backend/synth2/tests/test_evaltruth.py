@@ -283,6 +283,9 @@ def test_an_item_on_a_listed_leftover_result_is_excused_not_counted_wrong(tiny, 
     assert a(after)["precision"] == 1.0 and a(after)["recall"] == 1.0
     assert after["extraction"]["excused_items"] == {extra: "X1"}
     assert extra not in after["extraction"]["unmatched_items"]
+    per = [r for r in after["extractors"]["rows"] if r["evidence_type"] == "all" and r["level"] == "all"]
+    assert per and all(r["precision"] == 1.0 for r in per), per
+    assert all(p["items"] == p["matched"] for p in after["extractors"]["papers"])
 
 
 def test_a_known_extra_whose_text_is_not_in_its_paper_is_refused(tiny, tmp_path):
