@@ -969,6 +969,8 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                 for key in ((kind, level), (kind, ALL), (ALL, level), (ALL, ALL)):
                     sums[extractor][key]
     for item in m.items.values():
+        if item.item_id in m.excused:   # on a real result left in the paper: not counted, as in A
+            continue
         by = sorted(set(item.found_by or ("unknown",)))
         level = truth.level_of(m.document[item.item_id])
         fact = m.facts.get(m.fact_of.get(item.item_id, ""))
@@ -1019,7 +1021,7 @@ def _extractor_papers(m: Matching, extractors: Iterable[str], called: dict[str, 
             if kind in m.types:
                 papers[document]
         for item in m.items.values():
-            if extractor in (item.found_by or ("unknown",)):
+            if extractor in (item.found_by or ("unknown",)) and item.item_id not in m.excused:
                 cell = papers[m.document[item.item_id]]
                 cell[0] += 1
                 cell[1] += m.fact_of.get(item.item_id, "") in m.facts
