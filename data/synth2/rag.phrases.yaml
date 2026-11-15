@@ -1,0 +1,46 @@
+# Approved by the user on 11 Nov 2026.
+# Other ways to say each level name. Code draws one per paper with the paper's seed; the writer must use it or
+# words very close to it. Rules for every phrase: no digits, never the level name itself, never a word that also
+# names the other level or another condition (so no "long-tail" for rare facts: "long" names question length).
+
+fact_rarity:
+  rare:     # rare-fact questions
+    - questions about obscure facts
+    - questions on facts seldom seen in training text
+    - questions whose answers are rarely mentioned on the web
+    - questions about little-known entities
+    - low-frequency fact questions
+  common:   # common-fact questions
+    - questions about well-known facts
+    - questions on facts often seen in training text
+    - questions whose answers are widely mentioned on the web
+    - questions about popular entities
+    - high-frequency fact questions
+
+model_size:
+  small:    # compact generator
+    - the small generator
+    - the lighter answer model
+    - a generator with few parameters
+    - the reduced-size language model
+    - the smaller of the two generators
+  large:    # full-scale generator
+    - the large generator
+    - the biggest answer model
+    - a generator with many parameters
+    - the full-size language model
+    - the larger of the two generators
+
+question_length:
+  short:    # one-clause questions
+    - short, single-clause questions
+    - simple one-part questions
+    - questions with a single clause
+    - brief questions without sub-clauses
+    - plain questions that ask one thing
+  long:     # multi-clause questions
+    - long questions with several clauses
+    - compound questions made of several parts
+    - questions with nested clauses
+    - wordy questions built from multiple parts
+    - questions that string several clauses together

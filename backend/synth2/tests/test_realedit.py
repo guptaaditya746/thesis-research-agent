@@ -118,6 +118,13 @@ def test_check_flags_a_surviving_real_name():
     assert any(p.startswith("real names survive ['Karpukhin']") for p in out)
 
 
+def test_our_own_author_line_is_not_a_surviving_real_name():
+    # the source cited a real Lee (renamed away); "Lee et al. (2021)" under the title is our invented study
+    assert not any(p.startswith("real names survive") for p in problems_of(GOOD, mapping={"Lee": "Vogel"}))
+    out = problems_of(GOOD + "As Lee showed.\n", mapping={"Lee": "Vogel"})
+    assert any(p.startswith("real names survive ['Lee']") for p in out)
+
+
 def test_check_flags_control_wording_outside_inserted_text_only():
     text = GOOD + "The closed-book run and PlainSys did worse.\n"
     out = problems_of(text)

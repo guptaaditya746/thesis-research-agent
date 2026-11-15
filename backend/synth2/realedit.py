@@ -328,7 +328,8 @@ def check_paper(text: str, inserted: list[str], inp: dict, mapping: dict[str, st
         for lv in c["levels"]:
             if lv["name"].lower() in low:
                 problems.append(f"level name '{lv['name']}' written verbatim")
-    left = surviving(text, mapping)
+    lines = text.split("\n")
+    left = surviving("\n".join(lines[:2] + lines[3:]), mapping)   # the author line is our invented label
     if left:
         problems.append(f"real names survive {left[:8]}")
     rest = text
