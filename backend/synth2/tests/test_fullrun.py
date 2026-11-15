@@ -102,6 +102,26 @@ def test_run_corpus_writes_a_checked_corpus(tiny, tmp_path, recipe, phrases):
     assert json.loads((tmp_path / "work" / "run.json").read_text(encoding="utf-8")) == summary
 
 
+def test_a_built_corpus_places_every_planted_fact_so_the_oracle_scores_perfectly(tiny, tmp_path, recipe, phrases):
+    from evaluation import oracle
+    from evaluation.score import score
+    from repo_paths import DATA as REPO_DATA
+    full, pool = three_sources(tmp_path)
+    fullrun.run_corpus(tiny, tmp_path / "work", tmp_path / "out", pool, full, recipe, phrases)
+    truth = json.loads((tmp_path / "out" / "ground_truth.json").read_text(encoding="utf-8"))
+    for s in truth["studies"]:
+        text = (tmp_path / "out" / "papers" / f"{s['id']}.md").read_text(encoding="utf-8")
+        mine = {p["fact"]: text[p["start"]:p["end"]] for p in truth["placements"] if p["paper"] == s["id"]}
+        for j, c in enumerate(s["cells"]):
+            assert [mine[f"{s['id']}.c{j}.{f}"] for f in ("k_t", "n_t", "k_c", "n_c")] == [
+                str(c[f]) for f in ("k_t", "n_t", "k_c", "n_c")]
+        assert any(".claim." in f for f in mine)
+    out = oracle.run(REPO_DATA / "domains/rag/protocols/rag-factuality.yaml", tmp_path / "out", tmp_path / "oracle")
+    a = next(r for r in score(out, tmp_path / "out")["extraction"]["rows"]
+             if r["evidence_type"] == "all" and r["level"] == "all")
+    assert a["f1"] == 1.0 and a["span_accuracy"] == 1.0
+
+
 EXTRA = {"id": "X1", "quote": "Karpukhin et al. (2020) built an earlier reader.", "direction": "helps"}
 
 
