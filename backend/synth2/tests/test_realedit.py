@@ -25,16 +25,64 @@ def test_renaming_is_consistent_across_variants_of_a_name():
     assert out.count(m["FiD"]) == 5 and "FiD" not in out.replace(m["FiD-RAG"], "")
 
 
-def test_renaming_keeps_the_shape_and_the_keep_words():
+def test_renaming_keeps_acronyms_and_case_and_the_keep_words():
     m = build_map(SOURCE_PAPER, "seed-1")
     for old, new in m.items():
         if new in SURNAME_POOL:
             continue                              # cited surnames come from the pool, any length
-        assert len(old) == len(new) and old != new
-        assert [c.isupper() for c in old] == [c.isupper() for c in new]
+        assert old != new and old[0].isupper() == new[0].isupper()
+        acr_old = [p for p in realedit.PARTS.findall(old) if re.fullmatch(r"[A-Z]{2,}", p)]
+        acr_new = [p for p in realedit.PARTS.findall(new) if re.fullmatch(r"[A-Z]{2,}", p)]
+        assert [len(p) for p in acr_old] == [len(p) for p in acr_new]   # an acronym stays an acronym
     out = apply_map(SOURCE_PAPER, m, "seed-1")
     assert "Wikipedia" in out and "RAG" in out
     assert not set(m) & {"Wikipedia", "RAG"}
+
+
+@pytest.mark.parametrize("word,ok", [("OpenRecall", True), ("FactProbe", True), ("Strand", True), ("Torvalen", True),
+                                     ("WfufiPnum", False), ("KepdSjidw", False), ("Mingutzk", False),
+                                     ("Baaoi", False)])
+def test_sayable_tells_names_one_can_say_from_letter_salad(word, ok):
+    assert realedit.sayable(word) is ok
+
+
+def test_invented_names_can_be_said_aloud():
+    for seed in ("seed-1", "seed-2", "seed-3", "seed-4"):
+        m = build_map(SOURCE_PAPER + " We compare with MMDialog and PhotoChat on KnowledgeGrounded data.", seed)
+        assert m and realedit.unsayable(m) == [], (seed, m)
+    assert realedit.unsayable({"MMDialog": "WfufiPnum", "FiD-RAG": "Lo-RAG", "Ekstrom": "Ekström"}) == ["WfufiPnum"]
+
+
+def test_common_words_inside_a_name_stay_when_another_part_is_renamed():
+    src = SOURCE_PAPER + " The FiD-Large model is large. It was paid by DARPA Awards and no other awards."
+    m = build_map(src, "seed-1")
+    assert m["FiD-Large"] == m["FiD"] + "-Large"
+    assert m["DARPA Awards"].endswith(" Awards") and not m["DARPA Awards"].startswith("DARPA")
+
+
+def test_a_kept_ordinary_word_never_leaves_a_real_name_behind():
+    src = SOURCE_PAPER + (" We use the Stanford Question Answering Dataset (see https://nlp.stanford.edu/qa) from "
+                          "Stanford, and the Empire Paragraph Zorbatext from the Empire Paragraph team. An empire of "
+                          "paragraph text and a question and an answering dataset. Article: Ottoman Empire "
+                          "Paragraph: the em- pire, see the Ottoman Empire and the Die Paragraph.")
+    m = build_map(src, "seed-1")
+    assert surviving(apply_map(src, m, "seed-1"), m) == []
+
+
+def test_a_word_part_is_renamed_the_same_in_every_name():
+    src = SOURCE_PAPER + " We test RetrieverNQ, RetrieverTQA, ZorbaNQ, ZorbaTQA, PyGaggle and NQ; the retriever is fixed."
+    m = build_map(src, "seed-1")
+    assert m["RetrieverNQ"] == "Retriever" + m["NQ"]          # an ordinary word stays inside CamelCase too
+    zorba = m["ZorbaNQ"][:-len(m["NQ"])]
+    assert zorba != "Zorba" and m["ZorbaTQA"].startswith(zorba)
+    assert realedit.sayable(m["PyGaggle"]) and re.fullmatch(r"[A-Z][a-z]{2,}[A-Z][a-z]+", m["PyGaggle"])
+
+
+def test_check_flags_an_invented_name_one_cannot_say():
+    m = build_map(SOURCE_PAPER, "seed-1")
+    text = apply_map(SOURCE_PAPER, m, "seed-1")
+    probs = check_paper(text, [], STUDY_INPUT, {**m, "PhotoChat": "KepdSjidw"})
+    assert any("hard to say" in p and "KepdSjidw" in p for p in probs)
 
 
 def test_cited_surnames_come_from_the_surname_pool():

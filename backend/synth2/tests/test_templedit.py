@@ -100,7 +100,7 @@ def test_only_new_text_counts_as_inserted():
 
 
 def test_checked_edits_redraw_until_no_mapped_word_or_copied_claim_is_left():
-    mapping = {w: "Zz" for w in ("Finally", "Taken", "Retrieval", "Beyond")}
+    mapping = {w: "Corvan" for w in ("Finally", "Taken", "Retrieval", "Beyond")}   # a sayable stand-in
     edits, problems = templedit.checked_edits(SOURCE, INPUT, "hurts", "s1", mapping)
     paper, inserted, _ = apply_edits(SOURCE, edits, INPUT["label"])
     assert problems == [] and check_paper(paper, inserted, INPUT, mapping, claim_rules=True) == []
