@@ -401,6 +401,7 @@ class Matching:
         self.document = {i.item_id: document_of(i, files) for i in items}
         self.fact_of: dict[str, str] = {}
         self.item_of: dict[str, str] = {}
+        self.excused: dict[str, str] = {}   # item id -> known extra id (`excuse`)
         self.pairs: list[tuple[Item, Fact]] = []
         grouped: dict[tuple[str, str], list[Item]] = defaultdict(list)
         for item in items:
@@ -417,9 +418,19 @@ class Matching:
                     self.fact_of[item.item_id] = fact.id
                     self.item_of[fact.id] = item.item_id
                 hits = sum(span_hit(i, f, truth) for i, f in pairs)
-                if its or facts:
-                    self.cells[(paper, kind)] = (len(its), len(facts), len(pairs), hits,
+                # an unmatched item on a real result left in the paper (truth.excused) is set aside, not counted wrong
+                for item in its:
+                    if item.item_id not in self.fact_of and (x := self.excuse(item, paper)):
+                        self.excused[item.item_id] = x
+                kept = sum(i.item_id not in self.excused for i in its)
+                if kept or facts:
+                    self.cells[(paper, kind)] = (kept, len(facts), len(pairs), hits,
                                                  sum(placed(f, truth) for _, f in pairs))
+
+    def excuse(self, item: Item, paper: str) -> str | None:
+        """The id of the known extra (truth.excused) in `paper` that the item's main spans overlap, else None."""
+        return next((x["id"] for x in self.truth.excused if x["paper"] == paper
+                     for s in main_spans(item, self.truth.main_role) if overlaps(s, (x["start"], x["end"]))), None)
 
     def type_of(self, item: Item) -> EvidenceType:
         """The truth fact type the item is matched as (`aliases`, else its own type)."""
@@ -465,7 +476,9 @@ def protocol_matching(items: list[Item], truth: GroundTruth, files: dict[str, st
 def score_extraction(m: Matching) -> dict[str, Any]:
     """A: P/R/F1 and span accuracy per evidence type x level (and over all levels and all types); span accuracy is
     over the matched facts that have a placement (a dataset fact has none). `scored_types` are the evidence types
-    matched (`scored_types()`): the `all` rows pool these only."""
+    matched (`scored_types()`): the `all` rows pool these only. `excused_items` ({item id: known extra id}) are the
+    unmatched items on a real result left in a synth2 paper: counted neither as items nor as unmatched (the key is
+    there only when the truth lists known extras)."""
     sums: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0])
     for (paper, kind), cell in m.cells.items():
         level = m.truth.level_of(paper)
@@ -475,8 +488,11 @@ def score_extraction(m: Matching) -> dict[str, Any]:
     for (kind, level), (n_items, n_facts, matched, hits, placed_matched) in sorted(sums.items()):
         rows.append({"evidence_type": kind, "level": level, **prf(matched, n_items, n_facts),
                      "span_accuracy": share(hits, placed_matched)})
-    return {"rows": rows, "scored_types": list(m.types), "missed": sorted(f for f in m.facts if f not in m.item_of),
-            "unmatched_items": sorted(i for i in m.items if i not in m.fact_of)}
+    out = {"rows": rows, "scored_types": list(m.types), "missed": sorted(f for f in m.facts if f not in m.item_of),
+           "unmatched_items": sorted(i for i in m.items if i not in m.fact_of and i not in m.excused)}
+    if m.truth.excused:   # only a truth with known extras: every other report stays as it was
+        out["excused_items"] = dict(sorted(m.excused.items()))
+    return out
 
 
 # --- B: integration --------------------------------------------------------------------------------

@@ -7,7 +7,9 @@ truth flags it); a study with two cells has no single result, so B and C cannot 
 `unscored`. While any study is unscored the corpus-level answer has no `label` and no groups (the engine's answer
 covers every study, the truth could only cover the one-cell ones), so C leaves the label and the counts unscored;
 `duplicates` is always there. Template text gets a placement for every mention of the treatment label, the control
-label and the metric name, so an item quoting any of them (the results table, say) has a right span.
+label and the metric name, so an item quoting any of them (the results table, say) has a right span. Each of the
+truth's `known_extras` (a real result left in a paper built from a real one) becomes an `excused` span at every place
+its text is in its paper, so A does not count an item on it as wrong; a text missing from its paper is refused.
 """
 from __future__ import annotations
 
@@ -110,6 +112,8 @@ def eval_truth(data: dict, corpus_dir: Path) -> dict:
                                        (s["metrics"][0]["id"], "metric_label", recipe.metric)):
                 for start, end in _every(text(paper), needle, paper):
                     place(paper, fact, role, start, end)
+    excused = [{"paper": e["study"], "id": e["id"], "start": start, "end": end}
+               for e in data.get("known_extras") or [] for start, end in _every(text(e["study"]), e["text"], e["study"])]
     answer: dict = {"duplicates": [s["paper"] for s in studies if s["duplicate_of"]]}
     if not unscored:   # every study has one result: the corpus-level verdict is known
         one = [s for s in studies if not s["duplicate_of"]]   # a copy is set aside, not counted
@@ -117,4 +121,4 @@ def eval_truth(data: dict, corpus_dir: Path) -> dict:
                   **{name: [s["paper"] for s in one if s["effect"]["direction"] == d] for name, d in GROUPS},
                   **answer}
     return {"corpus_id": data["corpus_id"], "question": data.get("question", ""), "seed": settings["seed"],
-            "studies": studies, "placements": placements, "answer": answer, "unscored": unscored}
+            "studies": studies, "placements": placements, "answer": answer, "unscored": unscored, "excused": excused}

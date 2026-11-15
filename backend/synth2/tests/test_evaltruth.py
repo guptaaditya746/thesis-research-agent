@@ -246,6 +246,56 @@ def test_an_item_on_a_later_mention_of_a_label_is_span_correct(tiny, tmp_path):
         assert r["f1"] == 1.0 and r["span_accuracy"] == 1.0, kind
 
 
+def _with_leftover_item(tiny: Path, tmp_path: Path) -> tuple[Path, Path, str, str]:
+    """A copy of `tiny`, the oracle run on it plus one measurement item whose span is S001's first line (standing in
+    for a real result left in the paper), that line, and the new item's id."""
+    import shutil
+    from agent.anchor import selector_at
+    from evidence.contract import Item, Span
+    from evidence.rundir import EVIDENCE_FILE
+    corpus = tmp_path / "corpus"
+    shutil.copytree(tiny, corpus)
+    out = oracle.run(PROTOCOL, corpus, tmp_path / "oracle")
+    rows = [json.loads(line) for line in (out / EVIDENCE_FILE).read_text(encoding="utf-8").splitlines()]
+    text = (corpus / "papers" / "S001.md").read_text(encoding="utf-8")
+    line = text[:text.index("\n")]
+    model = Item.model_validate(next(r for r in rows if r["evidence_type"] == "measurement"
+                                     and r["spans"][0]["selector"]["file"].endswith("S001.md")))
+    span = Span.of(model.spans[0].role, selector_at(text, 0, len(line), file=model.spans[0].selector["file"]))
+    extra = Item.build("measurement", {**model.fields, "value": 0.42}, [span], dict(model.links))
+    rows.append(extra.model_dump(mode="json"))
+    (out / EVIDENCE_FILE).write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8", newline="\n")
+    return corpus, out, line, extra.item_id
+
+
+def test_an_item_on_a_listed_leftover_result_is_excused_not_counted_wrong(tiny, tmp_path):
+    corpus, out, line, extra = _with_leftover_item(tiny, tmp_path)
+
+    def a(report: dict) -> dict:
+        return next(r for r in report["extraction"]["rows"] if r["evidence_type"] == "all" and r["level"] == "all")
+
+    before = score(out, corpus)
+    assert a(before)["precision"] < 1.0 and extra in before["extraction"]["unmatched_items"]
+    truth = raw(corpus)
+    truth["known_extras"] = [{"study": "S001", "id": "X1", "direction": "helps", "text": line}]
+    (corpus / "ground_truth.json").write_text(json.dumps(truth), encoding="utf-8")
+    after = score(out, corpus)
+    assert a(after)["precision"] == 1.0 and a(after)["recall"] == 1.0
+    assert after["extraction"]["excused_items"] == {extra: "X1"}
+    assert extra not in after["extraction"]["unmatched_items"]
+
+
+def test_a_known_extra_whose_text_is_not_in_its_paper_is_refused(tiny, tmp_path):
+    import shutil
+    corpus = tmp_path / "corpus"
+    shutil.copytree(tiny, corpus)
+    truth = raw(corpus)
+    truth["known_extras"] = [{"study": "S001", "id": "X1", "direction": "helps", "text": "Never in the paper."}]
+    (corpus / "ground_truth.json").write_text(json.dumps(truth), encoding="utf-8")
+    with pytest.raises(ValueError, match="S001"):
+        GroundTruth.load(corpus / "ground_truth.json")
+
+
 def test_a_synth2_truth_without_corpus_json_is_refused_naming_its_folder(tiny):
     (tiny / "corpus.json").unlink()
     with pytest.raises(ValueError, match=re.escape(str(tiny))):
