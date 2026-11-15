@@ -104,10 +104,43 @@ def _redraw(work: Path, grid: Path, sid: str, key: str) -> dict:
     return r
 
 
+def load_extras(path: Path) -> dict[str, list[dict]]:
+    """The hand list of known extras. YAML reads an unquoted id such as 2305.14251 as a number, which would match no
+    source (and could lose a trailing zero), so every id must be a quoted string."""
+    extras = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    bad = [k for k in extras if not isinstance(k, str)]
+    if bad:
+        raise ValueError(f"{path}: quote the paper id(s) {bad} so YAML reads them as text")
+    return extras
+
+
+def known_extras(work: Path, sources: dict[str, str], full: Path, extras: dict[str, list[dict]]) -> list[dict]:
+    """The real results about retrieval vs none that stay in each built paper, from a hand list
+    {source id: [{id, quote, direction}]}: each quote renamed with that paper's map, kept only if the edits left it
+    in the paper. A system that reports one is not wrong, though it is not a planted study. A quote missing from its
+    source is an error in the list."""
+    found = []
+    for sid, src in sorted(sources.items()):
+        items = extras.get(src) or []
+        if not items:
+            continue
+        source = (full / f"{src}.md").read_text(encoding="utf-8")
+        mapping = json.loads((work / "maps" / f"{sid}.json").read_text(encoding="utf-8"))["map"]
+        paper = (work / "papers" / f"{sid}.md").read_text(encoding="utf-8")
+        for e in items:
+            if e["quote"] not in source:
+                raise ValueError(f"known extra {e['id']}: quote not in source {src}")
+            text = realedit.apply_map(e["quote"], mapping, "")
+            if text in paper:
+                found.append({"study": sid, "id": e["id"], "direction": e["direction"], "text": text})
+    return found
+
+
 def run_corpus(grid: Path, work: Path, out: Path, pool: dict[str, set[str]], full: Path, recipe: dict,
-               phrases: dict) -> dict:
+               phrases: dict, extras: dict[str, list[dict]] | None = None) -> dict:
     """Build one corpus. Work files go to `work` (inputs, renamed sources, maps, edits, papers, run.json); the
-    corpus goes to `out` only when every paper passes the code checks. Returns the run summary."""
+    corpus goes to `out` only when every paper passes the code checks, its ground truth with the `known_extras`
+    left in the papers. Returns the run summary."""
     truth = json.loads((grid / "ground_truth.json").read_text(encoding="utf-8"))
     inputs = study_inputs(grid, recipe, phrases)
     claim_of = {s["id"]: s["claim"] for s in truth["studies"]}
@@ -129,7 +162,11 @@ def run_corpus(grid: Path, work: Path, out: Path, pool: dict[str, set[str]], ful
         studies[sid] = {"source": got[sid], "claim": claim_of[sid], "redrawn": redrawn, **r}
     ok = all(not r["problems"] for r in studies.values())
     if ok:
+        found = known_extras(work, got, full, extras or {})
         assemble(grid, work / "papers", out)
+        gt = json.loads((out / "ground_truth.json").read_text(encoding="utf-8"))
+        (out / "ground_truth.json").write_text(json.dumps({**gt, "known_extras": found}, indent=2,
+                                                          ensure_ascii=False), encoding="utf-8")
     summary = {"corpus_id": truth["corpus_id"], "grid": str(grid), "assembled": ok, "shared": shared,
                "studies": studies}
     (work / "run.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")
@@ -137,9 +174,9 @@ def run_corpus(grid: Path, work: Path, out: Path, pool: dict[str, set[str]], ful
 
 
 def _one(args: tuple) -> dict:
-    grid, work, out, pool, full, recipe, phrases = args
+    grid, work, out, pool, full, recipe, phrases, extras = args
     try:
-        s = run_corpus(grid, work, out, pool, full, recipe, phrases)
+        s = run_corpus(grid, work, out, pool, full, recipe, phrases, extras)
         bad = {k: v["problems"] for k, v in s["studies"].items() if v["problems"]}
         return {"corpus": str(out), "assembled": s["assembled"], "studies": len(s["studies"]),
                 "shared": s["shared"], "problems": bad}
@@ -148,12 +185,15 @@ def _one(args: tuple) -> dict:
 
 
 def run_all(grid_root: Path, out_root: Path, work_root: Path, pool: dict[str, set[str]], full: Path,
-            recipe_path: Path, phrases_path: Path, jobs: int = 4, only: list[str] | None = None) -> dict:
+            recipe_path: Path, phrases_path: Path, jobs: int = 4, only: list[str] | None = None,
+            extras_path: Path | None = None) -> dict:
     """run_corpus for every <family>/<seed>/<variant> under grid_root (or the relative paths in `only`); a corpus
     whose out folder already has a ground truth is skipped. Both roots get a .gitignore of "*" (the papers are
-    built from real papers and stay local). Writes and returns <out_root>/run-summary.json."""
+    built from real papers and stay local). `extras_path` is the hand list of known extras (YAML, kept local: it
+    quotes real papers). Writes and returns <out_root>/run-summary.json."""
     recipe = yaml.safe_load(recipe_path.read_text(encoding="utf-8"))
     phrases = yaml.safe_load(phrases_path.read_text(encoding="utf-8"))
+    extras = load_extras(extras_path) if extras_path else {}
     for root in (out_root, work_root):
         root.mkdir(parents=True, exist_ok=True)
         (root / ".gitignore").write_text("*\n", encoding="utf-8")
@@ -162,7 +202,7 @@ def run_all(grid_root: Path, out_root: Path, work_root: Path, pool: dict[str, se
     todo = [r for r in rels if not (out_root / r / "ground_truth.json").is_file()]
     results = []
     with ProcessPoolExecutor(max_workers=jobs) as ex:
-        futs = [ex.submit(_one, (grid_root / r, work_root / r, out_root / r, pool, full, recipe, phrases))
+        futs = [ex.submit(_one, (grid_root / r, work_root / r, out_root / r, pool, full, recipe, phrases, extras))
                 for r in todo]
         for k, f in enumerate(as_completed(futs), 1):
             results.append(f.result())

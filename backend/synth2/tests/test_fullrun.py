@@ -100,3 +100,40 @@ def test_run_corpus_writes_a_checked_corpus(tiny, tmp_path, recipe, phrases):
     assert all((tmp_path / "out" / "papers" / f"{s['id']}.md").is_file() for s in truth["studies"])
     assert summary["shared"] == sorted(summary["shared"]) and len(summary["shared"]) == len(truth["studies"]) - 3
     assert json.loads((tmp_path / "work" / "run.json").read_text(encoding="utf-8")) == summary
+
+
+EXTRA = {"id": "X1", "quote": "Karpukhin et al. (2020) built an earlier reader.", "direction": "helps"}
+
+
+def test_a_known_extra_is_recorded_as_it_reads_in_the_built_paper(tiny, tmp_path, recipe, phrases):
+    full, pool = three_sources(tmp_path)
+    summary = fullrun.run_corpus(tiny, tmp_path / "work", tmp_path / "out", pool, full, recipe, phrases,
+                                 extras={"p1": [EXTRA]})
+    truth = json.loads((tmp_path / "out" / "ground_truth.json").read_text(encoding="utf-8"))
+    on_p1 = sorted(sid for sid, s in summary["studies"].items() if s["source"] == "p1")
+    assert on_p1 and sorted(e["study"] for e in truth["known_extras"]) == on_p1
+    for e in truth["known_extras"]:
+        paper = (tmp_path / "out" / "papers" / f"{e['study']}.md").read_text(encoding="utf-8")
+        assert e["text"] in paper and "Karpukhin" not in e["text"] and e["text"].endswith("built an earlier reader.")
+        assert (e["id"], e["direction"]) == ("X1", "helps")
+
+
+def test_a_corpus_without_extras_has_an_empty_list(tiny, tmp_path, recipe, phrases):
+    full, pool = three_sources(tmp_path)
+    fullrun.run_corpus(tiny, tmp_path / "work", tmp_path / "out", pool, full, recipe, phrases)
+    assert json.loads((tmp_path / "out" / "ground_truth.json").read_text(encoding="utf-8"))["known_extras"] == []
+
+
+def test_load_extras_refuses_a_paper_id_yaml_reads_as_a_number(tmp_path):
+    (tmp_path / "x.yaml").write_text('"2305.14251":\n  - {id: F1, quote: q, direction: helps}\n', encoding="utf-8")
+    assert list(fullrun.load_extras(tmp_path / "x.yaml")) == ["2305.14251"]
+    (tmp_path / "x.yaml").write_text("2305.14251:\n  - {id: F1, quote: q, direction: helps}\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="quote the paper id"):
+        fullrun.load_extras(tmp_path / "x.yaml")
+
+
+def test_an_extra_whose_quote_is_not_in_its_source_is_refused(tiny, tmp_path, recipe, phrases):
+    full, pool = three_sources(tmp_path)
+    with pytest.raises(ValueError, match="not in source p2"):
+        fullrun.run_corpus(tiny, tmp_path / "work", tmp_path / "out", pool, full, recipe, phrases,
+                           extras={"p2": [{**EXTRA, "quote": "A sentence the paper never had."}]})
