@@ -77,6 +77,9 @@ class GroundTruth:
     network: dict[str, Any] = field(default_factory=dict)
     # ids of the studies B and C cannot score (a synth2 truth's two-subset studies); None for every old corpus
     unscored: list[str] | None = None
+    # [{paper, id, start, end}]: real results left in a synth2 paper (its `known_extras`); A excuses an unmatched
+    # item on one instead of counting it wrong. [] for every other truth
+    excused: list[dict[str, Any]] = field(default_factory=list)
 
     @property
     def types(self) -> tuple[EvidenceType, ...]:
@@ -92,6 +95,7 @@ class GroundTruth:
                     data.get("answer", {}))
         truth.seed = data.get("seed")
         truth.unscored = data.get("unscored")
+        truth.excused = data.get("excused") or []
         truth.network = data.get("network") or {}
         meta = Path(path).parent / "corpus.json"
         truth.domain = ((read_json(meta).get("recipe") or {}).get("domain") if meta.is_file() else None)
