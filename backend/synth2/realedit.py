@@ -3,9 +3,10 @@ a small set of edits, and check the result in code and against a blind reader's 
 
 Renaming: names are acronyms, CamelCase and names with digits (NAME), cited surnames, and proper nouns (a
 capitalised word that follows a lower-case word and never appears in lower case in the source). Each name is split
-on hyphens; every component is mapped once per paper, so "FiD" and "FiD-RAG" stay consistent. A component keeps its
-shape: letter case, vowel/consonant pattern, digits and length; generic field words (KEEP) and lower-case or digit
-components are kept. URLs become invented ones.
+on hyphens; every component is mapped once per paper, so "FiD" and "FiD-RAG" stay consistent. Inside a component,
+each word part becomes an invented word one can say aloud ("Dialog" -> "Bralen", `sayable`), and acronym runs keep
+their length with letters drawn at random ("MMDialog" -> "KTBralen"); generic field words (KEEP) and lower-case or
+digit components are kept. URLs become invented ones.
 """
 from __future__ import annotations
 
@@ -47,6 +48,16 @@ Tran Trivedi Ueda Uysal Valdez Varga Vargas Venkatesan Vidal Vogel Volkov Wagner
 Yadav Yamada Yildiz Yoshida Young Zaman Zapata Zhou Zimmermann""".split()
 SUFFIXES = ("QA", "LM", "LLM", "LMs", "LLMs", "Net", "Bench", "GPT")
 VOW, CONS = "aeiou", "bcdfghjklmnprstvwz"
+# Parts of a name: an acronym run ("MM" in "MMDialog"), a word ("Dialog"), a lone capital, digits, anything else.
+PARTS = re.compile(r"[A-Z]{2,}(?![a-z])|[A-Z]?[a-z]+|[A-Z]|\d+|[^A-Za-z\d]+")
+# Letter groups English words may start or end with; a word part of an invented name must use these (sayable).
+ONSETS = set(CONS) | {"y", "q", "x"} | set("bl br ch cl cr dr fl fr gl gr kl kr pl pr qu sc sh sk sl sm sn sp st sw "
+                                           "th tr tw wh wr ph str spr scr thr".split())
+CODAS = set(CONS) | {"y", "x", "q"} | set("ch ck ct ft ld lk lm lp lt mp nd ng nk ns nt ph pt rd rk rm rn rs rt sh sk "
+                                           "sp ss st th ts ll rl rld nds nts rts rst".split())
+GEN_ONSETS = list(CONS) * 3 + "bl br ch cl cr dr fl fr gl gr pl pr sh st tr th".split()
+GEN_VOWELS = list(VOW) * 4 + ["ai", "ea", "ou", "io", "ia"]
+GEN_CODAS = ["", "", "", "n", "r", "l", "s", "m", "t", "k", "nd", "st", "rt", "x"]
 SURNAME = re.compile(r"\b([A-Z][a-zA-Z'-]+) (?:et al\.|and ([A-Z][a-zA-Z'-]+),? \(?\d{4})")
 CITED = re.compile(r"\b([A-Z][a-zA-Z'-]+) (?:et al\.|and [A-Z][a-zA-Z'-]+,? \(?\d{4})")
 CONTROL_WORDS = re.compile(r"closed[- ]book|no[- ]retrieval|without retrieval|w/o retrieval|vanilla|"
@@ -162,19 +173,92 @@ def shape(comp: str, rnd: random.Random) -> str:
     return "".join(out)
 
 
-def map_component(comp: str, seed: str, taken: set[str]) -> str:
-    if comp in KEEP or not re.search(r"[A-Z]", comp) or comp.isdigit():
-        return comp
-    for suf in SUFFIXES:
-        if comp.endswith(suf) and len(comp) > len(suf) + 1:
-            return map_component(comp[:-len(suf)], seed, taken) + suf
+def _is_word(part: str) -> bool:
+    """A part that is read as a word: lower-case letters, maybe after one capital ("Dialog", "probe", "Py")."""
+    return bool(re.fullmatch(r"[A-Z]?[a-z]{2,}|[A-Z][a-z]", part))
+
+
+def sayable(name: str) -> bool:
+    """True when every word part of `name` can be said aloud: it starts and ends with a letter group English words
+    use (ONSETS, CODAS), has at most two consonants in a row inside, and at most two vowels in a row ('y' is a
+    vowel inside a word). Acronym runs, lone capitals and digits are read letter by letter and always pass."""
+    for part in PARTS.findall(name):
+        if not _is_word(part):
+            continue
+        w = part.lower()
+        runs = re.findall(r"[aeiou]+|[^aeiou]+", re.sub(r"(?<=.)y", "a", w))
+        if any(r[0] in VOW and len(r) > 2 for r in runs):
+            return False
+        cons = [(i, r) for i, r in enumerate(runs) if r[0] not in VOW]
+        for i, r in cons:
+            if i == 0 and r not in ONSETS:
+                return False
+            if i == len(runs) - 1 and i > 0 and r not in CODAS:
+                return False
+            if 0 < i < len(runs) - 1 and len(r) > 2 and r[1:] not in ONSETS:
+                return False
+    return True
+
+
+def _word(part: str, rnd: random.Random) -> str:
+    """An invented sayable word about as long as `part`, with its first letter's case."""
+    for _ in range(100):
+        out = ""
+        while len(out) < max(len(part) - 1, 3):
+            out += rnd.choice(GEN_ONSETS) + rnd.choice(GEN_VOWELS)
+        out += rnd.choice(GEN_CODAS)
+        if sayable(out):
+            return out.capitalize() if part[0].isupper() else out
+    raise ValueError(part)
+
+
+def _new_part(part: str, seed: str, taken: set[str]) -> str:
+    """An invented stand-in for one part: a sayable word for a word part, the same shape (length, case, letters
+    drawn at random) for an acronym or a lone capital. Never a name already taken."""
     for k in range(50):
-        rnd = random.Random(hashlib.sha256(f"{seed}|{comp}|{k}".encode()).hexdigest())
-        new = shape(comp, rnd)
-        if new != comp and new not in taken:
+        rnd = random.Random(hashlib.sha256(f"{seed}|{part}|{k}".encode()).hexdigest())
+        new = _word(part, rnd) if _is_word(part) else shape(part, rnd)
+        if new != part and new not in taken:
             taken.add(new)
             return new
-    raise ValueError(comp)
+    raise ValueError(part)
+
+
+def unsayable(mapping: dict[str, str]) -> list[str]:
+    """Invented names of a map with a word part one cannot say. Surnames from the pool, KEEP words and parts kept
+    from the real name are not invented and are not judged."""
+    bad = []
+    for old, new in mapping.items():
+        kept = set(PARTS.findall(old))
+        parts = [p for p in PARTS.findall(new) if p not in kept and p not in KEEP and p not in SURNAME_POOL]
+        if new not in SURNAME_POOL and not all(sayable(p) for p in parts):
+            bad.append(new)
+    return bad
+
+
+def map_component(comp: str, seed: str, taken: set[str], parts: dict[str, str] | None = None,
+                  common=lambda p: False) -> str:
+    """The invented form of one component, part by part. `parts` maps each real part to its stand-in once per paper
+    (so "Reader" is the same in "ReaderNQ" and "ReaderTQA"); an ordinary word (`common`) stays when another part
+    of the component is renamed ("RetrieverNQ" -> "RetrieverTN")."""
+    if comp in KEEP or not re.search(r"[A-Z]", comp) or comp.isdigit():
+        return comp
+    parts = {} if parts is None else parts
+    for suf in SUFFIXES:
+        if comp.endswith(suf) and len(comp) > len(suf) + 1:
+            return map_component(comp[:-len(suf)], seed, taken, parts, common) + suf
+    pieces = PARTS.findall(comp)
+    letters = [p for p in pieces if p.isalpha() and p not in KEEP]
+    keep_common = any(not common(p) for p in letters)
+    out = []
+    for p in pieces:
+        if not p.isalpha() or p in KEEP or (keep_common and common(p)):
+            out.append(p)
+            continue
+        if p not in parts:
+            parts[p] = _new_part(p, seed, taken)
+        out.append(parts[p])
+    return "".join(out)
 
 
 def build_map(source: str, seed: str) -> dict[str, str]:
@@ -187,22 +271,50 @@ def build_map(source: str, seed: str) -> dict[str, str]:
     for s, p in zip(surnames, pool):
         comps[s] = p
         taken.add(p)
+    lower = set(re.findall(r"\b[a-z]+\b", re.sub(r"https?://\S+", " ", source)))
+
+    def common(c: str) -> bool:  # an ordinary word written with a capital ("Large" when "large" is in the text)
+        return bool(re.fullmatch(r"[A-Z][a-z]+", c)) and c.lower() in lower and c not in names
+
+    parts: dict[str, str] = {}
     for n in sorted(names):
         for c in re.split(r"[- ]", n):
             if c and c not in comps:
-                comps[c] = map_component(c, seed, taken)
+                comps[c] = map_component(c, seed, taken, parts, common)
+
     out = {}
     for n in sorted(names):  # sorted, so the map file is the same on every run
-        new = re.sub(r"[^- ]+", lambda m: comps.get(m.group(0), m.group(0)), n)
+        words = [w for w in re.split(r"[- ]", n) if w]
+        renamed = [w for w in words if not common(w) and comps.get(w, w) != w]
+        # ordinary words stay when another part of the name is renamed ("FiD-Large" -> "BoD-Large")
+        new = re.sub(r"[^- ]+", lambda m: m.group(0) if renamed and common(m.group(0))
+                     else comps.get(m.group(0), m.group(0)), n)
         if new != n:
             out[n] = new
+    # kept words must not spell out another real name ("Empire Paragraph" kept inside "Empire Paragraph Corpus"):
+    # such a name has every part renamed
+    hit = re.compile(r"(?<![A-Za-z0-9])(" + "|".join(map(re.escape, sorted(out, key=len, reverse=True)))
+                     + r")(?![A-Za-z0-9])") if out else None
+    for n in sorted(out):
+        if hit and any(k != n for k in hit.findall(out[n])):
+            out[n] = re.sub(r"[^- ]+", lambda m: comps.get(m.group(0), m.group(0)), n)
+    # overlapping names ("Ottoman Empire" + "Empire Paragraph" in "Ottoman Empire Paragraph"): when one still shows
+    # after renaming, it and every name sharing a word with it get every part renamed
+    for _ in range(5):
+        left = surviving(apply_map(source, out, seed), out)
+        if not left:
+            break
+        words = {w for k in left for w in re.split(r"[- ]", k) if w}
+        for n in sorted(out):
+            if n in left or words & set(re.split(r"[- ]", n)):
+                out[n] = re.sub(r"[^- ]+", lambda m: comps.get(m.group(0), m.group(0)), n)
     return out
 
 
 def apply_map(text: str, mapping: dict[str, str], seed: str) -> str:
     rnd = random.Random(seed)
     text = re.sub(r"https?://\S+?(?=[\s)\]]|[.,;](?:\s|$))",
-                  lambda m: f"https://github.com/{shape('anonlab', rnd)}/{shape('toolkit', rnd)}", text)
+                  lambda m: f"https://github.com/{_word('anonlab', rnd)}/{_word('toolkit', rnd)}", text)
     if not mapping:
         return text
     keys = sorted(mapping, key=len, reverse=True)
@@ -328,9 +440,13 @@ def check_paper(text: str, inserted: list[str], inp: dict, mapping: dict[str, st
         for lv in c["levels"]:
             if lv["name"].lower() in low:
                 problems.append(f"level name '{lv['name']}' written verbatim")
-    left = surviving(text, mapping)
+    lines = text.split("\n")
+    left = surviving("\n".join(lines[:2] + lines[3:]), mapping)   # the author line is our invented label
     if left:
         problems.append(f"real names survive {left[:8]}")
+    hard = unsayable(mapping)
+    if hard:
+        problems.append(f"invented names hard to say {hard[:8]}")
     rest = text
     for t in sorted(inserted, key=len, reverse=True):
         rest = rest.replace(t.strip(), " ")
