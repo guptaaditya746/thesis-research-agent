@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import re
 import traceback
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -136,6 +137,52 @@ def known_extras(work: Path, sources: dict[str, str], full: Path, extras: dict[s
     return found
 
 
+ROW = re.compile(r"^\| .+ \| (\d+) / (\d+) \(\d+\.\d%\) \| (\d+) / (\d+) \(\d+\.\d%\) \|$", re.M)
+
+
+def placements(work: Path, sid: str, claim: str) -> list[dict]:
+    """Where the planted facts of one built paper are, from its edits (templedit writes the planted section, a table
+    row per cell, and the claim into the abstract and conclusion): `<sid>.c<j>.<k_t|n_t|k_c|n_c>` per cell, one
+    `<sid>.claim.<where>` per claim sentence, and `<sid>.label.<treatment|control|metric>` for the system names in
+    the planted section and the table caption. A row whose counts differ from the inputs is an error."""
+    paper = (work / "papers" / f"{sid}.md").read_text(encoding="utf-8")
+    inp = json.loads((work / "inputs" / f"{sid}.json").read_text(encoding="utf-8"))
+    edits = json.loads((work / "edits" / f"{sid}.json").read_text(encoding="utf-8-sig"))
+    out = []
+
+    def at(fact: str, start: int, end: int) -> None:
+        out.append({"fact": fact, "paper": sid, "start": start, "end": end})
+
+    blocks = [ins["text"].strip() for ins in edits["insert_after"]]
+    section = next(b for b in blocks if b.startswith("### "))
+    base = paper.index(section)
+    rows = list(ROW.finditer(section))
+    if len(rows) != len(inp["cells"]):
+        raise ValueError(f"{sid}: {len(rows)} table rows for {len(inp['cells'])} cells")
+    for j, (row, cell) in enumerate(zip(rows, inp["cells"])):
+        for g, (field, key) in enumerate((("k_t", "treatment_correct"), ("n_t", "treatment_total"),
+                                          ("k_c", "control_correct"), ("n_c", "control_total")), 1):
+            if row.group(g) != str(cell[key]):
+                raise ValueError(f"{sid}: row {j} has {row.group(g)} where {field} is {cell[key]}")
+            at(f"{sid}.c{j}.{field}", base + row.start(g), base + row.end(g))
+    for b in blocks:   # the abstract and conclusion inserts are one claim sentence each
+        if b is not section:
+            where = "abstract" if paper.index(b) < base else "conclusion"
+            at(f"{sid}.claim.{where}", paper.index(b), paper.index(b) + len(b))
+    said = [s for conf in ("firm", "hedged") for s in (templedit._fill(t, inp) for t in templedit.CLAIMS[(claim, conf)])
+            if s in section]
+    if not said:
+        raise ValueError(f"{sid}: no '{claim}' claim sentence in the planted section")
+    at(f"{sid}.claim.section", base + section.index(said[0]), base + section.index(said[0]) + len(said[0]))
+    for role in ("treatment", "control"):
+        name = inp["system_names"][role]
+        for m in re.finditer(r"(?<![A-Za-z0-9-])" + re.escape(name) + r"(?![A-Za-z0-9-])", section):
+            at(f"{sid}.label.{role}", base + m.start(), base + m.end())
+    caption = next(ln for ln in section.split("\n") if ln.startswith("Table "))
+    at(f"{sid}.label.metric", base + section.index(caption), base + section.index(caption) + len(caption))
+    return sorted(out, key=lambda p: (p["start"], p["fact"]))
+
+
 def run_corpus(grid: Path, work: Path, out: Path, pool: dict[str, set[str]], full: Path, recipe: dict,
                phrases: dict, extras: dict[str, list[dict]] | None = None) -> dict:
     """Build one corpus. Work files go to `work` (inputs, renamed sources, maps, edits, papers, run.json); the
@@ -163,10 +210,11 @@ def run_corpus(grid: Path, work: Path, out: Path, pool: dict[str, set[str]], ful
     ok = all(not r["problems"] for r in studies.values())
     if ok:
         found = known_extras(work, got, full, extras or {})
+        placed = [p for sid in sorted(inputs) for p in placements(work, sid, claim_of[sid])]
         assemble(grid, work / "papers", out)
         gt = json.loads((out / "ground_truth.json").read_text(encoding="utf-8"))
-        (out / "ground_truth.json").write_text(json.dumps({**gt, "known_extras": found}, indent=2,
-                                                          ensure_ascii=False), encoding="utf-8")
+        (out / "ground_truth.json").write_text(json.dumps({**gt, "placements": placed, "known_extras": found},
+                                                          indent=2, ensure_ascii=False), encoding="utf-8")
     summary = {"corpus_id": truth["corpus_id"], "grid": str(grid), "assembled": ok, "shared": shared,
                "studies": studies}
     (work / "run.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")

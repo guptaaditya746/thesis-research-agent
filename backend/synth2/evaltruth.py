@@ -7,7 +7,8 @@ truth flags it); a study with two cells has no single result, so B and C cannot 
 `unscored`. While any study is unscored the corpus-level answer has no `label` and no groups (the engine's answer
 covers every study, the truth could only cover the one-cell ones), so C leaves the label and the counts unscored;
 `duplicates` is always there. Template text gets a placement for every mention of the treatment label, the control
-label and the metric name, so an item quoting any of them (the results table, say) has a right span. Each of the
+label and the metric name, so an item quoting any of them (the results table, say) has a right span; a built paper
+(fullrun) names its systems its own way and brings `<id>.label.<treatment|control|metric>` placements instead. Each of the
 truth's `known_extras` (a real result left in a paper built from a real one) becomes an `excused` span at every place
 its text is in its paper, so A does not count an item on it as wrong; a text missing from its paper is refused.
 """
@@ -96,15 +97,21 @@ def eval_truth(data: dict, corpus_dir: Path) -> dict:
         placements.append({"fact": fact, "role": role, "paper": paper, "start": start, "end": end,
                            "exact": text(paper)[start:end]})
 
+    label_fact = {"treatment": ("c1", "condition_label"), "control": ("c2", "condition_label"),
+                  "metric": ("k1", "metric_label")}
     for p in data["placements"]:
-        paper, parts = p["paper"], p["fact"].split(".")   # S001.c0.k_t | S001.claim.abstract
+        paper, parts = p["paper"], p["fact"].split(".")   # S001.c0.k_t | S001.claim.abstract | S001.label.control
         if parts[1] == "claim":
             place(paper, f"{paper}.a1", "claim", p["start"], p["end"])
+        elif parts[1] == "label":   # a built paper names the systems its own way (fullrun.placements)
+            fact, role = label_fact[parts[2]]
+            place(paper, f"{paper}.{fact}", role, p["start"], p["end"])
         else:
             field = parts[2]
             role = "value" if field.startswith("k_") else "value_total"
             place(paper, f"{paper}.m{int(parts[1][1:])}{field[-1]}", role, p["start"], p["end"])
-    if data["placements"]:   # template text: the labels and the metric name are in the text too
+    if data["placements"] and not any(".label." in p["fact"] for p in data["placements"]):
+        # template text: the labels and the metric name are in the text too
         for s in studies:
             paper = s["paper"]
             for fact, role, needle in ((s["conditions"][0]["id"], "condition_label", recipe.treatment.label),
