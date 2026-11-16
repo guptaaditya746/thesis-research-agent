@@ -1,13 +1,16 @@
 """The hidden world of one domain: one law per (treatment, measure) pair, and the file Aditya approves."""
 from __future__ import annotations
 
+import itertools
 import json
+import math
 import os
 import random
 import tempfile
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from synth2.world import direction
 from synth3.spec import DomainSpec
@@ -15,6 +18,9 @@ from synth3.spec import DomainSpec
 KINDS = ("none", "uniform", "one_sided", "opposed")
 DEPENDS = ("one_sided", "opposed")
 WORD = {"helps": "better", "hurts": "worse", "no_effect": "no different"}
+CLAIM_WORDS = ("helps", "hurts", "no_effect")
+MIN_PER_PAIR = 3   # control studies every covered pair needs
+MAX_TRIES = 50     # noise attempts the gate may draw before it gives up
 
 
 @dataclass(frozen=True)
@@ -36,6 +42,9 @@ class PairLaw:
                       {str(k): float(v) for k, v in obj["effects"].items()})
         except (KeyError, TypeError, AttributeError, ValueError) as err:
             raise ValueError(f"law {obj!r}: unreadable ({err})") from err
+        bad = sorted(lv for lv, e in law.effects.items() if not math.isfinite(e))
+        if bad:
+            raise ValueError(f"law {law.treatment}/{law.measure}: the effect for {bad} is not a finite number")
         law.check(spec)
         return law
 
@@ -96,9 +105,11 @@ class World:
     def parse(cls, obj: Any, spec: DomainSpec) -> "World":
         try:
             domain, seed, sha = obj["domain"], int(obj["seed"]), obj["spec_sha256"]
-            raw_laws, raw_uncovered, approved = obj["laws"], obj["uncovered"], bool(obj["approved"])
+            raw_laws, raw_uncovered, approved = obj["laws"], obj["uncovered"], obj["approved"]
         except (KeyError, TypeError, ValueError) as err:
             raise ValueError(f"world: unreadable ({err})") from err
+        if not isinstance(approved, bool):
+            raise ValueError(f"world: approved must be true or false without quotes, got {approved!r}")
         if sha != spec.sha256 or domain != spec.domain:
             raise ValueError("world: spec_sha256 does not match the spec; the spec changed after the world was drawn")
         laws = tuple(PairLaw.parse(l, spec) for l in raw_laws)
@@ -205,3 +216,251 @@ def describe(world: World, spec: DomainSpec) -> str:
     else:
         lines.append("Every pair is covered by studies.")
     return "\n".join(lines)
+
+
+def _number(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+@dataclass(frozen=True)
+class ArmResult:
+    """One arm in one cell: `k` of `n` for a count, or `mean` and `sd` of `n` for a value."""
+    arm: str
+    n: int
+    k: int | None = None
+    mean: float | None = None
+    sd: float | None = None
+
+    def __post_init__(self) -> None:
+        n_ok = isinstance(self.n, int) and not isinstance(self.n, bool) and self.n > 0
+        count = (isinstance(self.k, int) and not isinstance(self.k, bool) and self.mean is None and self.sd is None
+                 and n_ok and 0 <= self.k <= self.n)
+        value = self.k is None and _number(self.mean) and _number(self.sd) and self.sd >= 0
+        if not (n_ok and (count or value)):
+            raise ValueError(f"arm {self.arm}: a result is k of n, or a mean and SD of n; got "
+                             f"n={self.n!r}, k={self.k!r}, mean={self.mean!r}, sd={self.sd!r}")
+
+    def json(self) -> dict:
+        return {"arm": self.arm, "n": self.n, "k": self.k, "mean": self.mean, "sd": self.sd}
+
+    @classmethod
+    def parse(cls, obj: Any) -> "ArmResult":
+        return cls(obj["arm"], obj["n"], obj.get("k"), obj.get("mean"), obj.get("sd"))
+
+
+@dataclass(frozen=True)
+class Cell:
+    index: int                        # study-wide, from 0
+    measure: str
+    levels: dict[str, str]            # every condition id -> level id
+    results: tuple[ArmResult, ...]    # in the study's arm order
+
+    def result(self, arm: str) -> ArmResult:
+        found = next((r for r in self.results if r.arm == arm), None)
+        if found is None:
+            raise ValueError(f"cell {self.index}: no result for arm '{arm}'")
+        return found
+
+    def json(self) -> dict:
+        return {"index": self.index, "measure": self.measure, "levels": dict(self.levels),
+                "results": [r.json() for r in self.results]}
+
+    @classmethod
+    def parse(cls, obj: Any) -> "Cell":
+        return cls(int(obj["index"]), obj["measure"], {str(k): str(v) for k, v in obj["levels"].items()},
+                   tuple(ArmResult.parse(r) for r in obj["results"]))
+
+
+@dataclass(frozen=True)
+class Study:
+    id: str
+    label: str
+    setting: str                      # the setting's name
+    arms: tuple[str, ...]             # the control first when present; head to head: 2 treatments, no control
+    measures: tuple[str, ...]
+    cells: tuple[Cell, ...]
+    claims: dict[str, str]            # "<arm>|<against>|<measure>" -> helps / hurts / no_effect
+    overclaims: tuple[str, ...]       # the claim keys that exaggerate
+
+    def __post_init__(self) -> None:
+        if len(self.arms) < 2 or not self.cells:
+            raise ValueError(f"study {self.id}: needs at least 2 arms and one cell")
+        for c in self.cells:
+            if c.measure not in self.measures or tuple(r.arm for r in c.results) != self.arms:
+                raise ValueError(f"study {self.id}: cell {c.index} does not match the study's measures or arms")
+        if any(w not in CLAIM_WORDS for w in self.claims.values()):
+            raise ValueError(f"study {self.id}: a claim word must be one of {', '.join(CLAIM_WORDS)}")
+        if any(self.claims.get(k) != "helps" for k in self.overclaims):
+            raise ValueError(f"study {self.id}: every overclaim must be a claim that says helps")
+
+    def json(self) -> dict:
+        return {"id": self.id, "label": self.label, "setting": self.setting, "arms": list(self.arms),
+                "measures": list(self.measures), "cells": [c.json() for c in self.cells],
+                "claims": dict(self.claims), "overclaims": list(self.overclaims)}
+
+    @classmethod
+    def parse(cls, obj: Any) -> "Study":
+        sid = obj.get("id", "?") if isinstance(obj, dict) else "?"
+        try:
+            return cls(obj["id"], obj["label"], obj["setting"], tuple(obj["arms"]), tuple(obj["measures"]),
+                       tuple(Cell.parse(c) for c in obj["cells"]), dict(obj["claims"]), tuple(obj["overclaims"]))
+        except (KeyError, TypeError, AttributeError, ValueError) as err:
+            raise ValueError(f"study {sid}: unreadable ({err})") from err
+
+
+def pair_delta(spec: DomainSpec, cells: Sequence[Cell], arm: str, against: str) -> float:
+    """The pooled difference of `arm` over `against`, positive = better. Counts: rate minus rate. Values: the
+    n-weighted mean of `arm` minus that of `against`, divided by the latter."""
+    measures = {c.measure for c in cells}
+    if len(measures) != 1:
+        raise ValueError(f"pair_delta needs cells of exactly one measure, got {sorted(measures)}")
+    measure = spec.measure(measures.pop())
+
+    def pooled(name: str) -> float:
+        results = [c.result(name) for c in cells]
+        n = sum(r.n for r in results)
+        if measure.kind == "count":
+            return sum(r.k for r in results) / n
+        return sum(r.mean * r.n for r in results) / n
+
+    a, b = pooled(arm), pooled(against)
+    delta = a - b if measure.kind == "count" else (a - b) / b
+    return delta if measure.higher_is_better else -delta
+
+
+@dataclass(frozen=True)
+class _Design:
+    label: str
+    setting: str
+    arms: tuple[str, ...]
+    measures: tuple[str, ...]
+    population: dict[str, str]        # every condition id -> the study's level
+    split: str | None                 # the condition that gives 2 cells per measure
+    n: int
+    base: dict[str, float]            # measure id -> the control's true rate or mean
+
+
+def _design(spec: DomainSpec, world: World, seed: int, sid: str, author: str, main: tuple[str, str],
+            labels: set[str]) -> _Design:
+    rng = random.Random(f"synth3:{seed}:{sid}:design")
+
+    def covered(t: str, m: str) -> bool:
+        return (t, m) not in world.uncovered
+
+    t, m = main
+    treatments, measures = [t], [m]
+    rivals = [a.id for a in spec.treatments if a.id != t and covered(a.id, m)]
+    head_to_head = rng.random() < spec.head_to_head_rate and bool(rivals)
+    if head_to_head:
+        treatments.append(rng.choice(rivals))
+    if rng.random() < 0.4 and not head_to_head:
+        extra = rng.choice([a.id for a in spec.treatments if a.id != t])
+        if covered(extra, m):
+            treatments.append(extra)
+    if rng.random() < 0.4:
+        extra = rng.choice([x.id for x in spec.measures if x.id != m])
+        if all(covered(x, extra) for x in treatments):
+            measures.append(extra)
+    splittable = [c for c in spec.conditions if not c.from_setting]
+    split = rng.choice(splittable).id if rng.random() < 0.5 and splittable else None
+    drawn = {c.id: rng.choice(c.levels).id for c in splittable}
+    setting = rng.choice(spec.settings)
+    population = {c.id: setting.levels[c.id] if c.from_setting else drawn[c.id] for c in spec.conditions}
+    low, high = spec.n_range
+    n = rng.randrange(low, high + 1, spec.n_step)
+    first, last = spec.years
+    drawn_year = rng.randint(first, last)
+    base = {x: rng.uniform(*(spec.measure(x).base_rate or spec.measure(x).base_value)) for x in measures}
+    # a label names one study, so a surname already used in the drawn year moves to the next free year
+    surname = author.split()[-1]
+    span = last - first + 1
+    label = next((lb for off in range(span)
+                  if (lb := f"{surname} et al. ({first + (drawn_year - first + off) % span})") not in labels), None)
+    if label is None:
+        raise ValueError(f"study {sid}: every year from {first} to {last} already has a study by {surname}; "
+                         "add authors or widen the years")
+    arms = tuple(treatments) if head_to_head else (spec.control.id, *treatments)
+    return _Design(label, setting.name, arms, tuple(measures), population, split, n, base)
+
+
+def _true(spec: DomainSpec, world: World, arm: str, measure_id: str, levels: dict[str, str], base: float) -> float:
+    """The arm's true rate or mean: the control's base plus the arm's law effect at the cell's level."""
+    measure = spec.measure(measure_id)
+    effect = 0.0
+    if arm != spec.control.id:
+        law = world.law(arm, measure_id)
+        if law.kind != "none":
+            effect = law.effects[levels[law.condition]]
+    raw = effect if measure.higher_is_better else -effect
+    if measure.kind == "count":
+        return min(max(base + raw, 0.0), 1.0)
+    return base * (1 + raw)
+
+
+def _result(spec: DomainSpec, measure_id: str, arm: str, n: int, true: float, rng: random.Random) -> ArmResult:
+    measure = spec.measure(measure_id)
+    if measure.kind == "count":
+        return ArmResult(arm, n, k=rng.binomialvariate(n, true))
+    mean = round(rng.gauss(true, measure.spread * true / math.sqrt(n)), measure.decimals)
+    # the reported SD follows the drawn mean, not the true one, so the SDs do not give the true means away
+    return ArmResult(arm, n, mean=mean, sd=round(measure.spread * abs(mean), measure.decimals))
+
+
+def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt: int = 0) -> tuple[Study, ...]:
+    """`count` studies of the world. `attempt` changes only the count/value noise; the design stays the same."""
+    if count > len(spec.authors):
+        raise ValueError(f"{count} studies need {count} authors, the spec has {len(spec.authors)}")
+    authors = list(spec.authors)
+    random.Random(f"synth3:{seed}:authors").shuffle(authors)
+    order = list(spec.pairs)
+    random.Random(f"synth3:{seed}:pairs").shuffle(order)
+    covered = [p for p in order if p not in world.uncovered]
+    control = spec.control.id
+    done: Counter[tuple[str, str]] = Counter()      # control studies per pair so far
+    labels: set[str] = set()
+    taken: set[tuple] = set()                       # the numbers of every cell so far
+    studies = []
+    index = 0
+    for i in range(count):
+        sid = f"S{i + 1:03d}"
+        main = min(covered, key=lambda p: done[p])  # the first in the shuffled order among the fewest
+        d = _design(spec, world, seed, sid, authors[i], main, labels)
+        labels.add(d.label)
+        split = next((c for c in spec.conditions if c.id == d.split), None)
+        cells = []
+        for m in d.measures:
+            for level in [lv.id for lv in split.levels] if split else [None]:
+                levels = {**d.population, **({split.id: level} if split else {})}
+                trues = [_true(spec, world, arm, m, levels, d.base[m]) for arm in d.arms]
+                # a cell whose numbers equal an earlier cell's would read as one study published twice
+                for j in itertools.count():
+                    again = f":again{j}" if j else ""
+                    results = tuple(
+                        _result(spec, m, arm, d.n, true,
+                                random.Random(f"synth3:{seed}:{attempt}:{sid}:c{index}:{arm}{again}"))
+                        for arm, true in zip(d.arms, trues))
+                    key = tuple((r.k, r.n, r.mean) for r in results)
+                    if key not in taken:
+                        break
+                taken.add(key)
+                cells.append(Cell(index, m, levels, results))
+                index += 1
+        pairs = [(t, control) for t in d.arms[1:]] if d.arms[0] == control else [(d.arms[0], d.arms[1])]
+        claims = {f"{arm}|{against}|{m}":
+                  direction(pair_delta(spec, [c for c in cells if c.measure == m], arm, against),
+                            spec.measure(m).min_effect)
+                  for arm, against in pairs for m in d.measures}
+        overclaims: tuple[str, ...] = ()
+        rng = random.Random(f"synth3:{seed}:{sid}:claims")
+        if rng.random() < spec.overclaim_rate:
+            options = [k for k, w in claims.items() if w != "helps"]
+            if options:
+                key = rng.choice(options)
+                claims[key], overclaims = "helps", (key,)
+        if d.arms[0] == control:
+            done.update((t, m) for t in d.arms[1:] for m in d.measures)
+        studies.append(Study(sid, d.label, d.setting, d.arms, d.measures, tuple(cells), claims, overclaims))
+    short = [f"{t}|{m} has {done[(t, m)]}" for t, m in covered if done[(t, m)] < MIN_PER_PAIR]
+    if short:
+        raise ValueError(f"fewer than {MIN_PER_PAIR} studies: {', '.join(short)}; draw more studies")
+    return tuple(studies)

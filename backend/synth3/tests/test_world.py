@@ -75,3 +75,21 @@ def test_parse_refuses_named_problems(SPEC):
         World.parse(edited(laws=[{**law, "condition": "nope"} if l is law else l for l in good["laws"]]), SPEC)
     with pytest.raises(ValueError, match="level"):
         World.parse(edited(laws=[{**law, "effects": {"zzz": 0.1}} if l is law else l for l in good["laws"]]), SPEC)
+
+
+def test_parse_refuses_approved_that_is_not_a_json_bool(SPEC):
+    good = draw_world(SPEC, 4).json()
+    for bad in ("false", "true", 1, 0, None):
+        with pytest.raises(ValueError, match="approved"):
+            World.parse({**good, "approved": bad}, SPEC)
+    assert World.parse({**good, "approved": True}, SPEC).approved is True
+
+
+def test_parse_refuses_effects_that_are_not_finite(SPEC):
+    good = draw_world(SPEC, 4).json()
+    law = next(l for l in good["laws"] if l["kind"] != "none")
+    for bad in (float("nan"), float("inf"), "-Infinity"):
+        effects = {lv: bad for lv in law["effects"]}
+        laws = [{**law, "effects": effects} if l is law else l for l in good["laws"]]
+        with pytest.raises(ValueError, match="finite"):
+            World.parse({**good, "laws": laws}, SPEC)
