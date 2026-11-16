@@ -57,18 +57,25 @@ def build(args: argparse.Namespace) -> int:
     spec, seeds = _spec(args), _seeds(args.seeds)
     if args.text_level not in TEXT_LEVELS:
         raise BadArgument(f"unknown text level '{args.text_level}'; choose from {', '.join(TEXT_LEVELS)}")
-    worlds = {}
+    worlds, problems = {}, []
     for seed in seeds:
         path = args.worlds / args.domain / f"s{seed}.json"
+        folder = args.out / f"s{seed}"
+        if folder.exists() and any(folder.iterdir()):
+            problems.append(f"{folder}: not empty")
         if not path.is_file():
-            raise BadArgument(f"{path}: no world file; run `synth3 draw` first")
+            problems.append(f"{path}: no world file; run `synth3 draw` first")
+            continue
         try:
             world = load_world(path, spec)
         except ValueError as err:
-            raise BadArgument(str(err)) from err
+            problems.append(str(err))
+            continue
         if not world.approved:
-            raise BadArgument(f"{path}: not approved; set approved to true in the file")
+            problems.append(f"{path}: not approved; set approved to true in the file")
         worlds[seed] = world
+    if problems:
+        raise BadArgument("; ".join(problems))
     for seed, world in worlds.items():
         folder = args.out / f"s{seed}"
         try:

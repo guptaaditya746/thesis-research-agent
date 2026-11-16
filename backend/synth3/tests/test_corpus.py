@@ -32,7 +32,7 @@ def test_truth_is_beside_the_papers(tmp_path, SPEC):
            {"corpus_id", "world", "spec", "studies", "placements", "facts"}
 
 
-def test_draw_then_build_by_command(tmp_path, spec_dir, capsys):
+def test_draw_then_build_by_command(tmp_path, spec_dir):
     common = ["--domain", "demo", "--spec-root", str(spec_dir), "--seeds", "1,2", "--worlds", str(tmp_path / "w")]
     assert main(["draw", *common]) == 0
     for s in (1, 2):
@@ -49,3 +49,14 @@ def test_build_refuses_an_unapproved_world_by_name(tmp_path, spec_dir, capsys):
     capsys.readouterr()
     assert main(["build", *common, "--out", str(tmp_path / "o")]) != 0
     assert "s1.json" in capsys.readouterr().err
+
+
+def test_build_checks_every_seed_before_writing(tmp_path, spec_dir, capsys):
+    common = ["--domain", "demo", "--spec-root", str(spec_dir), "--seeds", "1,2", "--worlds", str(tmp_path / "w")]
+    assert main(["draw", *common]) == 0
+    f = tmp_path / "w" / "demo" / "s1.json"; d = json.loads(f.read_text()); d["approved"] = True
+    f.write_text(json.dumps(d))
+    capsys.readouterr()
+    assert main(["build", *common, "--out", str(tmp_path / "o")]) != 0
+    assert "s2.json" in capsys.readouterr().err
+    assert not (tmp_path / "o" / "s1").exists()
