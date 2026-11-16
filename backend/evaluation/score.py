@@ -98,9 +98,17 @@ the answer's `counts` for supporting, contradicting and neutral equal the length
 `answer` lists, and `undetermined` and `duplicates` too when both sides have them (null without
 `counts`). `duplicates_correct`: the documents flagged as duplicates (the answer's `duplicates` list,
 else the given `duplicate` set) are exactly the expected ones and each `duplicate_of` matches the
-truth's. A synth2 truth's unscored studies (`truth.unscored`, two subsets) are left
-out of every flag but `duplicate`, on both sides; while any exist the truth's answer has no label and no groups, so
-`label_correct` and `counts_correct` are null (not scored), not false.
+truth's.
+
+A synth2 truth (synth2/evaltruth.py; subsets): a study has `cells`, one true pair per subset it reports. B's unit
+stays the study: its `true_pair` holds when every one of its cells is among the answer's cells of that study (the
+entry's `cells`; an answer without them, a run of a protocol without subsets, has the entry's one pair as its only
+cell). The rows also give `cells`, `true_cell_pair` (the share of the truth's cells paired right) and
+`subset_accuracy` (the share paired right and given the truth's level on every condition), and each study lists
+its cells. C scores the corpus-level answer against the synth2 key: the answer in synth2's form
+(synth2/engine_answers.py `answer_form`: its `conclusion`, else its label) must equal the key as `synth2 score`
+compares them (verdict, condition, sides, untested); `label` and `expected_label` are then the two verdicts in
+synth2's words and `key` holds both answers and which part differs. No other truth has these keys.
 
 Per extractor (`score_extractors`, pooled by `evaluate benchmark`): every item counts for every
 extractor id in its `found_by` (an item two extractors found counts for both), so the per-extractor item
@@ -169,6 +177,8 @@ from evidence.questions import answered_by, answers_asked, entry_protocol, every
 from evidence.questions import load as load_questions
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS, VALUE_DECIMALS
+from synth2.conclude import Answer as KeyAnswer
+from synth2.engine_answers import answer_form
 
 from .canon import Canon, Target, default_canon, fold
 from .expected import expected as expected_answer
@@ -526,6 +536,16 @@ def score_integration(m: Matching, answer: dict[str, Any] | None, truth: GroundT
         given = studies.get(study["paper"], {})
         treatment = (given.get("treatment") or {}).get("measurement")
         control = (given.get("control") or {}).get("measurement")
+        if study.get("cells") is not None:   # a synth2 truth: one true pair per subset (module docstring)
+            cells = _score_cells(m, study["cells"], given)
+            ok = all(c["true_pair"] for c in cells)
+            per_study.append({"study": study["study_id"], "paper": study["paper"], "level": study["level"],
+                              "true_pair": ok, "treatment": treatment, "control": control, "cells": cells})
+            for level in (study["level"], ALL):
+                pairs[level].update(studies=1, true_pair=ok, cells=len(cells), by_cell=True,
+                                    true_cell_pair=sum(c["true_pair"] for c in cells),
+                                    subset=sum(c["subset_correct"] for c in cells))
+            continue
         ok = bool(treatment and control and m.fact_of.get(treatment) == effect["treatment"]
                   and m.fact_of.get(control) == effect["control"])
         per_study.append({"study": study["study_id"], "paper": study["paper"], "level": study["level"],
@@ -542,7 +562,30 @@ def score_integration(m: Matching, answer: dict[str, Any] | None, truth: GroundT
                      "condition_exact": share(c["condition_exact"], c["matched"]),
                      "metric_exact": share(c["metric_exact"], c["matched"]),
                      "studies": p["studies"], "true_pair": share(p["true_pair"], p["studies"])})
+        if p["by_cell"]:
+            rows[-1] |= {"cells": p["cells"], "true_cell_pair": share(p["true_cell_pair"], p["cells"]),
+                         "subset_accuracy": share(p["subset"], p["cells"])}
     return {"rows": rows, "studies": per_study}
+
+
+def _score_cells(m: Matching, truth_cells: list[dict[str, Any]], given: dict[str, Any]) -> list[dict[str, Any]]:
+    """Per true cell of one study: whether the answer's entry has a cell with its pair (`true_pair`: A matched the
+    cell's two measurement items to the true cell's facts) and whether that cell names the true level on every
+    condition (`subset_correct`). An entry without `cells` has its one pair as its only cell, with no subset."""
+    cells = given.get("cells")
+    if not isinstance(cells, list):
+        cells = [{"treatment": given.get("treatment"), "control": given.get("control")}]
+    found = {}
+    for cell in cells:
+        if isinstance(cell, dict):
+            pair = tuple(m.fact_of.get((cell.get(side) or {}).get("measurement") or "") for side in ("treatment", "control"))
+            found.setdefault(pair, cell)
+    out = []
+    for true in truth_cells:
+        hit = found.get((true["treatment"], true["control"]))
+        out.append({"cell": true["id"], "true_pair": hit is not None,
+                    "subset_correct": hit is not None and hit.get("subset") == true["subset"]})
+    return out
 
 
 # --- C: synthesis ----------------------------------------------------------------------------------
@@ -617,15 +660,37 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
                      "citations": None if n is None else n["citations"],
                      "traceability": None if n is None else share(n["traced"], n["citations"]),
                      "overlap": None if n is None else share(n["overlaps_placement"], n["citations"])})
+    out = {"rows": rows, "studies": studies,
+           "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())],
+           "flags": score_flags(truth, answer)}
+    if truth.answer.get("key") is not None:   # a synth2 truth: the corpus-level answer against the key
+        key = score_key(truth.answer["key"], answer)
+        return {"system": answer.get("system", "unknown"), "label": (key["given"] or {}).get("verdict"),
+                "expected_label": key["expected"]["verdict"], "label_correct": key["correct"],
+                "errors": [key["error"]] if key["error"] else [], **out,
+                "key": {k: v for k, v in key.items() if k not in ("correct", "error")}}
     expected_label = truth.answer.get("label")
-    errors = ([] if expected_label is not None   # undefined, not a match
-              else ["label and counts not scored: the corpus has two-subset studies (unscored_studies)"]
-              if truth.unscored else ["gold answer has no label"])
+    errors = [] if expected_label is not None else ["gold answer has no label"]   # undefined, not a match
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
             "label_correct": None if expected_label is None else answer.get("label") == expected_label,
-            "errors": errors, "rows": rows, "studies": studies,
-            "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())],
-            "flags": score_flags(truth, answer)}
+            "errors": errors, **out}
+
+
+def score_key(key: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
+    """A system's answer against a synth2 key (module docstring): `expected` (the key), `given` (the answer in
+    synth2's form, None when it has no valid one: `error` says why), `correct` (equal as synth2's score compares
+    them) and which of verdict, condition, sides and untested is right."""
+    expected = KeyAnswer.parse(key)
+    try:
+        form = answer_form(answer)
+        given: KeyAnswer | None = KeyAnswer.parse(form)
+        error = None
+    except ValueError as err:
+        form, given, error = None, None, f"the answer has no valid synth2 form: {err}"
+    return {"expected": expected.json(), "given": None if given is None else given.json(),
+            "correct": given == expected, "error": error,
+            **{f"{part}_correct": given is not None and getattr(given, part) == getattr(expected, part)
+               for part in ("verdict", "condition", "sides", "untested")}}
 
 
 # --- C attribution (Tim M2 §5C, our addition) -----------------------------------------------------
@@ -693,7 +758,6 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
         return None
     top = answer.get("flags") if isinstance(answer.get("flags"), dict) else {}
     entries = {s.get("document"): s for s in answer.get("studies", []) if isinstance(s, dict)}
-    unscored = {s["paper"] for s in truth.studies if truth.unscored and s.get("study_id") in truth.unscored}
     rows = []
     given_sets: dict[str, set[str]] = {}
     for flag in FLAGS:
@@ -703,8 +767,6 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
         else:
             given = {d for d, s in entries.items() if flag in (s.get("flags") or [])}
         given_sets[flag] = given
-        if flag != "duplicate":   # truth knows a copy whatever its cells; the other flags need the study's result
-            expected, given = expected - unscored, given - unscored
         tp = len(expected & given)
         rows.append({"flag": flag, "expected": sorted(expected), "given": sorted(given), "tp": tp,
                      "fp": len(given - expected), "fn": len(expected - given),
@@ -1695,12 +1757,6 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "attribution": (score_attribution(scored, answers, read_json(oracle) if oracle else None) if effect
                         else None),
     }
-    if truth.unscored is not None:   # a synth2 truth: its two-subset studies are scored by A only
-        report["unscored_studies"] = {
-            "count": len(truth.unscored), "studies": list(truth.unscored),
-            "reason": "two subsets: B and C need one result per subset, which the engine does not report yet; "
-                      "while such studies exist C does not score the corpus label or the counts, nor flags other "
-                      "than duplicate on these studies"}
     return report
 
 
