@@ -1,4 +1,6 @@
-"""The engine's answers in synth2's answer form: each run folder's answer.json label, keyed by the corpus id."""
+"""The engine's answers in synth2's answer form, keyed by the corpus id: each run folder's answer.json `conclusion`
+(a run of a protocol with subsets: a verdict, the condition it depends on and a direction per side), else its
+label."""
 from __future__ import annotations
 
 import json
@@ -15,12 +17,37 @@ def to_answer(label: str) -> dict:
     return {"verdict": VERDICT[label], "condition": None, "sides": {}, "untested": []}
 
 
-def _label(answer: dict) -> object:
-    """An effect run keeps its label at the top of answer.json; a plan run keeps the kind's answer under `synthesis`."""
-    if "label" in answer:
-        return answer["label"]
+SIDE = {"supports": "helps", "contradicts": "hurts", "neutral": "no_effect"}
+
+
+def _own(answer: dict, key: str) -> object:
+    """An effect run keeps `key` at the top of answer.json; a plan run keeps the kind's answer under `synthesis`."""
+    if key in answer:
+        return answer[key]
     synthesis = answer.get("synthesis")
-    return synthesis.get("label") if isinstance(synthesis, dict) else None
+    return synthesis.get(key) if isinstance(synthesis, dict) else None
+
+
+def _label(answer: dict) -> object:
+    return _own(answer, "label")
+
+
+def answer_form(answer: dict) -> dict:
+    """synth2 answer for an answer.json. With a `conclusion` (evidence/synthesis.py, Subsets; a baseline's mapped
+    answer has the same shape): `depends` keeps its condition and gives each side helps | hurts | no_effect; any
+    other verdict is the label's word; `untested` as given. Without one: `to_answer` of the label. A conclusion
+    that is not of that shape is a ValueError."""
+    conclusion = _own(answer, "conclusion")
+    if conclusion is None:
+        return to_answer(_label(answer))   # type: ignore[arg-type]
+    try:
+        verdict, untested = conclusion["verdict"], sorted(conclusion.get("untested") or [])
+        if verdict == "depends":
+            return {"verdict": "depends", "condition": conclusion["condition"],
+                    "sides": {level: SIDE[word] for level, word in conclusion["sides"].items()}, "untested": untested}
+        return {**to_answer(verdict), "untested": untested}
+    except (KeyError, TypeError, AttributeError) as err:
+        raise ValueError(f"the conclusion is not of the engine's shape: {err!r}") from err
 
 
 def collect(runs: Path) -> dict[str, dict]:
@@ -33,7 +60,7 @@ def collect(runs: Path) -> dict[str, dict]:
             continue
         try:
             corpus_id = json.loads(run_file.read_text(encoding="utf-8"))["corpus_id"]
-            label = _label(json.loads(answer_file.read_text(encoding="utf-8")))
+            answer = json.loads(answer_file.read_text(encoding="utf-8"))
         except (OSError, ValueError, KeyError, TypeError) as err:
             raise ValueError(f"{run_file.parent}: cannot read the run: {err!r}") from err
         if not isinstance(corpus_id, str) or not corpus_id:
@@ -41,7 +68,7 @@ def collect(runs: Path) -> dict[str, dict]:
         if corpus_id in answers:
             raise ValueError(f"corpus {corpus_id} has more than one run under {runs}")
         try:
-            answers[corpus_id] = to_answer(label)
+            answers[corpus_id] = answer_form(answer)
         except ValueError as err:
             raise ValueError(f"{run_file.parent}: {err}") from err
     if not answers:

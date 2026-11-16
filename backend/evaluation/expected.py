@@ -13,7 +13,8 @@ For the question the corpus was generated for (the default pack's default questi
 kind effect, `params.metric` its truth metric SAVED_ANSWER_METRIC, protocol id in SAVED_ANSWER_IDS: its protocol and
 its agentic variant) the saved `truth.answer` is returned unchanged: it was computed with that protocol's metric
 priority list (its first metric, then the next), which one truth metric cannot express. Another effect protocol
-that reuses the question text does not get it.
+that reuses the question text does not get it. A synth2 truth (its answer holds the synth2 `key`) is its own
+answer for every effect protocol on that metric: its studies report subsets, which the builders here do not read.
 
 Rules:
 - Counted studies: relevant, not `duplicate_of`, and (effect, consistency) not `missing` the needed side (the
@@ -480,7 +481,7 @@ BUILDERS = {"effect": _effect, "consistency": _consistency, "inventory": _invent
 def saved_answer(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None) -> bool:
     """Whether `expected` returns the saved `truth.answer` (the corpus's own question; module docstring)."""
     return bool(kind == "effect" and truth.answer and params.metric == SAVED_ANSWER_METRIC and protocol is not None
-                and protocol.id in SAVED_ANSWER_IDS)
+                and (protocol.id in SAVED_ANSWER_IDS or "key" in truth.answer))
 
 
 def expected(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None = None,

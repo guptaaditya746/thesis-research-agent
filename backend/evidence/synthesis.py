@@ -45,6 +45,19 @@ entries in manifest order:
   agreement is null). Reported only.
 Every study carries `flags` (sorted, from rules.FLAGS) and `duplicate_of`; the answer carries
 `duplicates` (the documents, manifest order) and `flags` (every flag name -> sorted documents).
+
+Subsets (protocol `synthesis.moderators`, 16 Nov; nothing below applies, and no key is added, without the block):
+a value names the group it was measured on, one level per candidate condition (its fields of the conditions' ids;
+null: not stated) and the number of cases behind it (the `total` field). On the dataset the pairing rule picks, a
+study gets one cell per group: the treatment values are grouped by their levels in document order, and each group
+is paired with the control group of the same levels (else the first unused one that contradicts none of them: a
+null fits any level); a study whose values fit no such pair keeps the pairing rule's one pair as its only cell.
+Every entry carries `cells` ([{subset, direction, delta, treatment, control}], the two sides with their `total`);
+its `direction` and `delta` are the cells pooled (`rules.pooled_delta`, `rules.pooled_direction`) and its
+`treatment` and `control` are the first cell's, so the duplicate rule reads what it read before. The answer
+carries `conclusion` (`rules.moderated` over the cells of the determined studies that are not duplicates):
+`verdict` depends | supported | refuted | no_effect | insufficient, `condition`, `sides`, `untested` and the pooled
+table. `label`, the counts and the groups stay the per-study table's.
 """
 from __future__ import annotations
 
@@ -175,6 +188,43 @@ def _pair(treatment: list[Item], control: list[Item], spec: Synthesis,
     return None
 
 
+def _fits(a: tuple[Any, ...], b: tuple[Any, ...]) -> bool:
+    """Two values' levels contradict each other on no condition (a null fits any level)."""
+    return all(x is None or y is None or x == y for x, y in zip(a, b))
+
+
+def _cells(treatment: list[Item], control: list[Item], spec: Synthesis,
+           context: str = DEFAULT_CONTEXT_FIELD) -> list[tuple[Item, Item]]:
+    """The study's (treatment, control) pair per group of values (module docstring, Subsets), in document order."""
+    assert spec.moderators is not None
+    ids = [c.id for c in spec.moderators.conditions]
+
+    def grouped(ms: list[Item]) -> dict[tuple[Any, ...], list[Item]]:
+        out: dict[tuple[Any, ...], list[Item]] = {}
+        for m in sorted(ms, key=lambda m: (value_start(m), m.item_id)):
+            out.setdefault(tuple(m.fields.get(i) for i in ids), []).append(m)
+        return out
+
+    order: list[Any] = []
+    for m in sorted(treatment + control, key=lambda m: (value_start(m), m.item_id)):
+        if m.fields.get(context) not in order:
+            order.append(m.fields.get(context))
+    for dataset in order:
+        t = grouped([m for m in treatment if m.fields.get(context) == dataset])
+        c = grouped([m for m in control if m.fields.get(context) == dataset])
+        cells, used = [], set()
+        for key, ms in t.items():
+            match = key if key in c and key not in used else next(
+                (k for k in c if k not in used and _fits(key, k)), None)
+            if match is not None:
+                used.add(match)
+                cells.append((_best(ms, spec), _best(c[match], spec)))
+        if cells:
+            return cells
+    pair = _pair(treatment, control, spec, context)
+    return [pair] if pair else []
+
+
 def is_question_metric(canonical: Any, wanted: str, inferred: Inferences | None) -> bool:
     """Does a metric item's canonical name answer for question metric `wanted`: without the reasoner's inferences
     (`reason: off`, runs before it) only the same name; with them, also a narrower one (reasoner.counts_as)."""
@@ -209,6 +259,10 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
     question = [(name, m) for name in spec.metric_names for m in metrics
                 if is_question_metric(m.fields.get(canonical), name, inferred)]
     pair, wanted = None, None
+    mods = spec.moderators
+    pairs: list[tuple[Item, Item]] = []
+    if mods is not None:
+        entry["cells"] = []
     for wanted, metric in question:
         on = [m for m in values if m.links.get(to_metric) == metric.item_id]
 
@@ -216,8 +270,13 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
             thing = by_id.get(m.links.get(to_thing, ""))
             return thing.fields.get(side) if thing else None
 
-        pair = _pair([m for m in on if side_of(m) == spec.compare.treatment],
-                     [m for m in on if side_of(m) == spec.compare.control], spec, ty.context)
+        sides_on = ([m for m in on if side_of(m) == spec.compare.treatment],
+                    [m for m in on if side_of(m) == spec.compare.control])
+        if mods is not None:
+            pairs = _cells(*sides_on, spec, ty.context)
+            pair = pairs[0] if pairs else None
+        else:
+            pair = _pair(*sides_on, spec, ty.context)
         if pair:
             break
     if pair is None:
@@ -238,6 +297,26 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
                      treatment={SIDE_THING: t.links[to_thing], SIDE_VALUE: t.item_id, "value": t.fields["value"]},
                      control={SIDE_THING: c.links[to_thing], SIDE_VALUE: c.item_id, "value": c.fields["value"]})
         used += [t.item_id, c.item_id, t.links[to_thing], c.links[to_thing], t.links[to_metric]]
+        if mods is not None:
+            better = spec.higher_is_better(name)
+            pooled = []
+            for t, c in pairs:
+                tn, cn = (_total(m, mods.total) for m in (t, c))
+                one = (float(t.fields["value"]), tn, float(c.fields["value"]), cn)
+                one = one if better else (one[2], one[3], one[0], one[1])   # lower is better: the sides swap
+                pooled.append(one)
+                cell_delta = rules.pooled_delta([one])
+                entry["cells"].append({
+                    "subset": {i.id: _level(t.fields.get(i.id), c.fields.get(i.id)) for i in mods.conditions},
+                    "direction": rules.pooled_direction(cell_delta, spec.min_effect), "delta": round(cell_delta, 6),
+                    "treatment": {SIDE_THING: t.links[to_thing], SIDE_VALUE: t.item_id, "value": t.fields["value"],
+                                  "total": tn},
+                    "control": {SIDE_THING: c.links[to_thing], SIDE_VALUE: c.item_id, "value": c.fields["value"],
+                                "total": cn}})
+                used += [x for x in (t.item_id, c.item_id, t.links[to_thing], c.links[to_thing]) if x not in used]
+            delta = rules.pooled_delta(pooled)
+            entry.update(direction=rules.pooled_direction(delta, spec.min_effect), delta=round(delta, 6),
+                         treatment=dict(entry["cells"][0]["treatment"]), control=dict(entry["cells"][0]["control"]))
     if claim is not None:
         determined = entry["direction"] != "undetermined"
         said = claim.fields[ty.direction or ""]
@@ -246,6 +325,31 @@ def study(protocol: Protocol, document: str, items: list[Item], preset: dict[str
                                  if determined else None}
         used.append(claim.item_id)
     return entry, used
+
+
+def _total(m: Item, field: str | None) -> int | None:
+    """The number of cases behind a value (its `field`), or None when the item gives no whole number above zero."""
+    n = m.fields.get(field) if field else None
+    return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+
+
+def _level(a: Any, b: Any) -> Any:
+    """The level a cell has on one condition: the one its two values state, None when neither does or they differ."""
+    return a if b is None or a == b else b if a is None else None
+
+
+def conclusion(spec: Synthesis, studies: list[dict[str, Any]]) -> dict[str, Any]:
+    """The answer's `conclusion` (module docstring, Subsets) from the entries' cells."""
+    assert spec.moderators is not None
+    cells = []
+    for s in studies:
+        if s["direction"] == "undetermined" or s["duplicate_of"] is not None:
+            continue
+        better = spec.higher_is_better(s["metric"])
+        for cell in s["cells"]:
+            t, c = (cell["treatment"], cell["control"]) if better else (cell["control"], cell["treatment"])
+            cells.append((cell["subset"], (float(t["value"]), t["total"], float(c["value"]), c["total"])))
+    return rules.moderated(cells, spec.moderators.table, spec.min_effect, spec.moderators.min_gap)
 
 
 def experiment_key(study_entry: dict[str, Any], items: list[Item]) -> str | None:
@@ -283,7 +387,10 @@ def flag(protocol: Protocol, studies: list[dict[str, Any]],
     duplicate_of = (rules.duplicates((s["document"], s["metric"], s["treatment"]["value"], s["control"]["value"],
                                       experiment_key(s, (items or {}).get(s["document"], [])))
                                      for s in determined) if settings.duplicates else {})
-    large = rules.large_effects({s["document"]: s["delta"] for s in determined if s["document"] not in duplicate_of},
+    # subsets: a pooled direction is read from the difference before it is rounded, so a study called neutral can
+    # show a delta of exactly min_effect; it stays out of the median as every neutral study does
+    large = rules.large_effects({s["document"]: None if spec.moderators is not None and s["direction"] == "neutral"
+                                 else s["delta"] for s in determined if s["document"] not in duplicate_of},
                                 settings.large_effect.factor, settings.large_effect.min_studies, spec.min_effect)
     found: dict[str, list[str]] = {name: [] for name in rules.FLAGS}
     for s in studies:
@@ -333,4 +440,6 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
     label = rules.label(counts, protocol.synthesis.table)   # the table reads supporting/contradicting/neutral only
     out = {"system": SYSTEM, "question": protocol.question, "label": label, "counts": counts, "studies": studies,
            **groups, "flags": flags}
+    if protocol.synthesis.moderators is not None:
+        out["conclusion"] = conclusion(protocol.synthesis, studies)
     return out, used

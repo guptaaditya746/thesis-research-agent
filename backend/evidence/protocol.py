@@ -126,6 +126,7 @@ SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False
 # their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
 # A `*` step stands for every key of that mapping (each evidence type).
 DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject", "kind": "effect", "synthesis": None,
+                                          "synthesis.moderators": None,
                                           "inventory": None, "best": None, "consistency": None, "domain": DEFAULT_PACK,
                                           "chaining": None, "limitations": None, "builds_on": None,
                                           "evidence_types.*.optional_links": []}
@@ -196,6 +197,39 @@ class Flags(Strict):
     large_effect: LargeEffect = LargeEffect()
 
 
+class ModeratorLevel(Strict):
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+
+
+class Moderator(Strict):
+    """A candidate condition the effect may depend on: `id` is the field of the measured-value type that holds a
+    value's level, `levels` its two levels (their ids are that field's enum)."""
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    levels: tuple[ModeratorLevel, ModeratorLevel]
+
+
+class Moderators(Strict):
+    """Subsets (evidence/rules.py `moderated`): the candidate conditions, the field of the measured-value type with
+    the number of cases behind a value (`total`; None: no such field, every cell weighs the same) and the gap two
+    levels' pooled effects need for a "depends" answer."""
+    conditions: tuple[Moderator, ...] = Field(min_length=1)
+    total: str | None = None
+    min_gap: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _distinct(self) -> Moderators:
+        ids = [c.id for c in self.conditions] + [lv.id for c in self.conditions for lv in c.levels]
+        if len(set(ids)) != len(ids):
+            raise ValueError(f"synthesis.moderators: condition ids and level ids must all be different: {ids}")
+        return self
+
+    @property
+    def table(self) -> list[tuple[str, tuple[str, ...]]]:
+        return [(c.id, tuple(lv.id for lv in c.levels)) for c in self.conditions]
+
+
 class Synthesis(Strict):
     compare: Compare
     metrics: tuple[QuestionMetric, ...] = Field(min_length=1)   # question metrics, priority order
@@ -204,6 +238,7 @@ class Synthesis(Strict):
     claim_map: dict[str, rules.Direction]                       # author-claim value -> the direction it asserts
     label: tuple[LabelRow, ...] = Field(min_length=1)
     flags: Flags = Flags()
+    moderators: Moderators | None = None                        # subsets: the answer may depend on one of these
 
     @model_validator(mode="after")
     def _consistent(self) -> Synthesis:
@@ -375,6 +410,18 @@ class Protocol(Strict):
             (etype, field), allowed = claims
             if set(s.claim_map) != set(allowed):
                 raise ValueError(f"synthesis.claim_map must map exactly {etype}.{field} {allowed}; got {sorted(s.claim_map)}")
+        if s.moderators is not None:
+            value = roles.type_in(Role.VALUE, self.evidence_types)
+            spec = self.evidence_types[value] if value is not None else None
+            if spec is None:
+                raise ValueError("synthesis.moderators needs a measured-value evidence type")
+            for c in s.moderators.conditions:
+                enum = spec.enum_of(c.id)
+                if enum is None or {v for v in enum if v is not None} != {lv.id for lv in c.levels}:
+                    raise ValueError(f"synthesis.moderators: condition {c.id!r} must be a field of {value} whose enum "
+                                     f"is its levels {[lv.id for lv in c.levels]} (and null); got {enum}")
+            if s.moderators.total is not None and s.moderators.total not in spec.properties:
+                raise ValueError(f"synthesis.moderators.total {s.moderators.total!r} is not a field of {value}")
 
     def _enum(self, roles: RoleMap, role: Role, which: FieldName) -> tuple[tuple[str, str], list[Any]] | None:
         """((type, field), the field's enum) for the protocol's type of `role` and its `which` field; None when the

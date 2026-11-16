@@ -16,7 +16,12 @@ versioned instructions (prompts/map-<kind>-v<n>.md, `MAP_PROMPTS`), filled from 
 - effect: map-effect-v2.md with the metric, its direction and the pack's display names of the two compared sides
   (AnswerReply: the label and per-paper stances). The default question (`DEFAULT_QUESTION`, the first effect question
   of the default pack) has no special prompt any more: its mapping call is this one, so caches written before plan 2
-  miss once (D36);
+  miss once (D36). An effect question whose protocol has subsets (`synthesis.moderators`) gets map-effect-subsets-v1.md
+  instead (MAP_SUBSETS), with the protocol's candidate conditions and their levels (`subset_reply`: a verdict that
+  may be `depends`, the condition, a stance per level, the untested levels, and the per-paper stances; a reply that
+  breaks the form fails validation and gets pydantic-ai's retry). answer.json then also has `conclusion`, in the
+  engine's shape (evidence/synthesis.py, Subsets), so every system's answer is scored against the same key; its
+  `label` is the verdict, or for `depends`, which is no label, the label table's over the stated stances;
 - inventory: the target and examples of it from the pack (`target_text`); consistency: the author claim's definition;
   best: the protocol's method kinds (BestReply, whose `winner` and `tied` must name them; a reply naming another kind
   fails validation and gets pydantic-ai's retry);
@@ -36,7 +41,7 @@ from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal, Optional, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, create_model
+from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
 from pydantic_ai.models import Model
 
 from jsonio import sha256_hex
@@ -132,15 +137,75 @@ def paper_id(raw: Any, known: list[str]) -> str | None:
     return hits[0] if len(hits) == 1 else None
 
 
-def answer_json(system: str, question: str, reply: AnswerReply, known: list[str], *, answer_text: str | None = None,
-                protocol: Protocol | None = None, **extra: Any) -> dict[str, Any]:
+class SideEffect(BaseModel):
+    level: str = Field(description="a level id of the condition")
+    effect: Stance = Field(description="the effect the answer states at this level")
+
+
+class SubsetReply(BaseModel):
+    """The mapping call of an effect question with subsets: the conclusion (one overall effect, or an effect that
+    depends on one candidate condition) and the per-paper stances. The call uses `subset_reply(conditions)`, whose
+    `condition`, `sides` and `untested` must name the protocol's conditions and levels."""
+    verdict: Literal["depends", "supported", "refuted", "no_effect", "insufficient"] = Field(
+        description="depends, supported, refuted, no_effect or insufficient")
+    condition: str | None = Field(description="for depends, the id of the condition the effect depends on; else null")
+    sides: list[SideEffect] = Field(description="for depends, one entry per level of that condition; else empty")
+    untested: list[str] = Field(description="the levels the answer says no paper tested, as 'condition id.level id'")
+    studies: list[StudyStance] = Field(description="one entry per paper the answer relies on")
+    answer_text: str = Field(description="the answer in a few sentences")
+
+
+@lru_cache(maxsize=None)
+def subset_reply(conditions: tuple[tuple[str, tuple[str, ...]], ...]) -> type[SubsetReply]:
+    """SubsetReply for the candidate `conditions` ((condition id, its level ids), ...): `condition` one of the ids, a
+    side's `level` one of the level ids and an `untested` entry one of `<condition id>.<level id>` (enums in the
+    schema), and, checked on validation, the form of synth2's answer: `depends` names a condition and gives each of
+    its levels exactly once, with stances that are not all the same; any other verdict has no condition and no sides."""
+    levels = dict(conditions)
+    condition = Literal[tuple(levels)]  # type: ignore[valid-type]
+    level = Literal[tuple(lv for ids in levels.values() for lv in ids)]  # type: ignore[valid-type]
+    pair = Literal[tuple(f"{c}.{lv}" for c, ids in levels.items() for lv in ids)]  # type: ignore[valid-type]
+
+    def check(self: SubsetReply) -> SubsetReply:
+        if self.verdict == "depends":
+            if self.condition is None:
+                raise ValueError("verdict depends needs the condition the effect depends on")
+            if sorted(s.level for s in self.sides) != sorted(levels[self.condition]):
+                raise ValueError(f"verdict depends needs one side per level of {self.condition}: "
+                                 f"{', '.join(levels[self.condition])}")
+            if len({s.effect for s in self.sides}) < 2:
+                raise ValueError("verdict depends needs different effects at the two levels; the same effect at "
+                                 "both is one overall verdict")
+        elif self.condition is not None or self.sides:
+            raise ValueError(f"verdict {self.verdict} has condition null and no sides")
+        return self
+
+    side = create_model("SideEffect", __base__=SideEffect,
+                        level=(level, Field(description="a level id of the condition")))
+    return create_model(
+        "SubsetReply", __base__=SubsetReply,
+        condition=(Optional[condition], Field(description=SubsetReply.model_fields["condition"].description)),  # noqa: UP045
+        sides=(list[side], Field(description=SubsetReply.model_fields["sides"].description)),
+        untested=(list[pair], Field(description=SubsetReply.model_fields["untested"].description)),
+        __validators__={"form": model_validator(mode="after")(check)})
+
+
+def conclusion(reply: SubsetReply) -> dict[str, Any]:
+    """A subsets reply as answer.json's `conclusion` (the engine's shape; evidence/synthesis.py, Subsets)."""
+    return {"verdict": reply.verdict, "condition": reply.condition,
+            "sides": {s.level: s.effect for s in reply.sides}, "untested": sorted(set(reply.untested))}
+
+
+def answer_json(system: str, question: str, reply: AnswerReply | SubsetReply, known: list[str], *,
+                answer_text: str | None = None, protocol: Protocol | None = None, **extra: Any) -> dict[str, Any]:
     """answer.json (section 4) for a baseline: the mapped label and per-paper stances, as stated.
 
     Entries for papers not in the corpus are dropped (listed in `dropped`); a paper named twice keeps
     its first stance. `answer_text` is the system's own answer when given, else the mapping call's
     summary. `label_by_rule` is evidence.rules.label over the stated stances by the label table of the
     question's `protocol` (default the default question's; the baseline reads no corpus file for it), for reference;
-    the score uses the mapped `label`.
+    the score uses the mapped `label`. A subsets reply (`SubsetReply`) also gives `conclusion`; its `label` is its
+    verdict, or `label_by_rule` for the verdict `depends` (no label of the table).
     """
     studies, dropped, seen = [], [], set()
     for s in reply.studies:
@@ -153,11 +218,14 @@ def answer_json(system: str, question: str, reply: AnswerReply, known: list[str]
     studies.sort(key=lambda s: s["document"])
     groups = {g: [s["document"] for s in studies if s["direction"] == d] for d, g in GROUPS.items()}
     counts = {g: len(v) for g, v in groups.items()} | {"undetermined": 0}
-    return {"system": system, "question": question, "label": reply.label, "counts": counts, "studies": studies,
+    by_rule = rules.label(counts, protocol.synthesis.table if protocol is not None and
+                          protocol.synthesis is not None else default_table())
+    subsets = isinstance(reply, SubsetReply)
+    label = reply.label if isinstance(reply, AnswerReply) else by_rule if reply.verdict == "depends" else reply.verdict
+    return {"system": system, "question": question, "label": label, "counts": counts, "studies": studies,
             **groups, "undetermined": [], "answer_text": reply.answer_text if answer_text is None else answer_text,
-            "label_by_rule": rules.label(counts, protocol.synthesis.table if protocol is not None and
-                                         protocol.synthesis is not None else default_table()),
-            "dropped": dropped, **extra}
+            "label_by_rule": by_rule, "dropped": dropped, **({"conclusion": conclusion(reply)} if subsets else {}),
+            **extra}
 
 
 def default_table() -> Any:
@@ -208,6 +276,7 @@ def map_answer(cache: JsonlCache | None, question: str, known: list[str], text: 
 MAP_PROMPTS = {"effect": "map-effect-v2.md", "inventory": "map-inventory-v2.md", "consistency": "map-consistency-v2.md",
                "best": "map-best-v2.md", "chaining": "map-chaining-v1.md", "limitations": "map-limitations-v1.md",
                "builds_on": "map-builds-on-v1.md"}
+MAP_SUBSETS = "map-effect-subsets-v1.md"   # an effect question whose protocol has subsets (synthesis.moderators)
 TARGET_NAME = {"metric": "evaluation metric", "condition": "method or system variant", "dataset": "dataset"}
 TARGET_TEXT = {"metric": "the evaluation metrics the papers report results on",
                "condition": "the methods or system variants the papers compare",
@@ -422,7 +491,9 @@ def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
     params = params or kind_params(default_question_id(), DEFAULT_QUESTIONS)
     protocol = params.protocol
     pack = protocol.pack()
-    text = load_prompt(PROMPTS / MAP_PROMPTS[params.kind]).text
+    mods = protocol.synthesis.moderators if params.kind == "effect" and protocol.synthesis is not None else None
+    name = MAP_SUBSETS if mods is not None else MAP_PROMPTS[params.kind]
+    text = load_prompt(PROMPTS / name).text
     reply: type[BaseModel]
     if params.kind == "effect":
         metric = protocol.synthesis.metrics[0]  # type: ignore[union-attr]
@@ -431,6 +502,13 @@ def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
                 "WORSE": "lower" if metric.higher_is_better else "higher",
                 "TREATMENT": _display(pack, "treatment"), "CONTROL": _display(pack, "control")}
         reply = AnswerReply
+        if mods is not None:
+            first = mods.conditions[0]
+            fill |= {"CONDITIONS": "\n".join(f"- {c.id} ({c.name}): " + "; ".join(f"{lv.id} = {lv.name}" for lv in c.levels)
+                                             for c in mods.conditions),
+                     "COND_A": first.id, "LEVEL_A1": first.levels[0].id, "LEVEL_A2": first.levels[1].id,
+                     "LEVEL_A1_NAME": first.levels[0].name, "LEVEL_A2_NAME": first.levels[1].name}
+            reply = subset_reply(tuple(mods.table))
     elif params.kind == "inventory":
         target = protocol.inventory.target  # type: ignore[union-attr]
         names = (pack_examples(target, pack) + [f"{TARGET_NAME[target]} {x}" for x in "AB"])[:2]
@@ -472,9 +550,9 @@ def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
         fill = {"REUSES": ", ".join(reuses), "REUSE_A": reuses[0], "REUSE_B": reuses[1],
                 "THING": builds_on_kind.spec(protocol).thing or _display(pack, "treatment")}
         reply = builds_on_reply(tuple(reuses))
-    for name, value in fill.items():
-        text = text.replace(f"<<{name}>>", value)
-    assert "<<" not in text, f"{MAP_PROMPTS[params.kind]}: a placeholder is left"
+    for key, value in fill.items():
+        text = text.replace(f"<<{key}>>", value)
+    assert "<<" not in text, f"{name}: a placeholder is left"
     return text, reply
 
 

@@ -12,7 +12,8 @@ from evaluation.truth import GroundTruth
 from repo_paths import DATA
 from synth2.family import make_family
 
-PROTOCOL = DATA / "domains/rag/protocols/rag-factuality.yaml"
+OLD_PROTOCOL = DATA / "domains/rag/protocols/rag-factuality.yaml"   # one result per study, no subsets
+PROTOCOL = DATA / "domains/rag/protocols/rag-factuality-subsets.yaml"
 
 
 def raw(corpus: Path) -> dict:
@@ -28,22 +29,36 @@ def test_each_study_becomes_two_conditions_one_metric_and_a_measurement_per_cell
         assert kinds.count("measurement") == 2 * len(s["cells"]) and kinds.count("author_claim") == 1
 
 
-def test_one_cell_studies_carry_the_pooled_direction_and_two_cell_studies_are_unscored(tiny):
+def test_every_study_carries_an_effect_per_cell_and_its_own_pooled_direction(tiny):
     from synth2.recipe import load_recipe
-    from synth2.world import direction
+    from synth2.world import Study, direction, study_delta
     recipe = load_recipe("rag")
     truth = GroundTruth.load(tiny / "ground_truth.json")
     names = {"helps": "supports", "hurts": "contradicts", "no_effect": "neutral"}
     by_id = {s["study_id"]: s for s in truth.studies}
+    assert {len(s["cells"]) for s in raw(tiny)["studies"]} == {1, 2}
     for s in raw(tiny)["studies"]:
-        if len(s["cells"]) == 1:
-            c = s["cells"][0]
-            want = names[direction(c["k_t"] / c["n_t"] - c["k_c"] / c["n_c"], recipe.min_effect)]
-            assert by_id[s["id"]]["effect"]["direction"] == want
-        else:
-            assert "effect" not in by_id[s["id"]]
-    assert truth.unscored == [s["id"] for s in raw(tiny)["studies"] if len(s["cells"]) == 2]
-    assert truth.unscored
+        study = by_id[s["id"]]
+        assert len(study["cells"]) == len(s["cells"])
+        for j, (c, cell) in enumerate(zip(s["cells"], study["cells"])):
+            delta = c["k_t"] / c["n_t"] - c["k_c"] / c["n_c"]
+            assert cell == {"id": f"{s['id']}.e{j}", "subset": c["levels"], "delta": delta,
+                            "direction": names[direction(delta, recipe.min_effect)],
+                            "treatment": f"{s['id']}.m{j}t", "control": f"{s['id']}.m{j}c"}
+            for arm in "tc":   # the measurement says which subset it is of and how many questions are behind it
+                fact = truth.facts[f"{s['id']}.m{j}{arm}"]
+                assert fact.data["subset"] == c["levels"] and fact.data["total"] == c[f"n_{arm}"]
+        pooled = study_delta(Study.parse(s))
+        assert study["effect"]["direction"] == names[direction(pooled, recipe.min_effect)]
+        assert study["effect"]["delta"] == pooled
+        assert (study["effect"]["treatment"], study["effect"]["control"]) == (f"{s['id']}.m0t", f"{s['id']}.m0c")
+
+
+def test_the_truth_answer_is_the_synth2_key_with_every_study_grouped(tiny):
+    truth = GroundTruth.load(tiny / "ground_truth.json")
+    assert truth.answer["key"] == raw(tiny)["key"]
+    grouped = sorted(p for g in ("supporting", "contradicting", "neutral") for p in truth.answer[g])
+    assert grouped == sorted(s["paper"] for s in truth.studies if not s["duplicate_of"])
 
 
 def test_template_placements_cover_every_fact(tiny):
@@ -74,12 +89,16 @@ def test_the_oracle_run_scores_perfectly_on_a_synth2_corpus(tiny, tmp_path):
     all_all = next(r for r in report["extraction"]["rows"] if r["evidence_type"] == "all" and r["level"] == "all")
     assert all_all["f1"] == 1.0 and all_all["span_accuracy"] == 1.0
     pairs = next(r for r in report["integration"]["rows"] if r["level"] == "all")
-    assert pairs["true_pair"] == 1.0 and pairs["studies"] == (
-        len(GroundTruth.load(tiny / "ground_truth.json").studies) - report["unscored_studies"]["count"])
+    studies = raw(tiny)["studies"]
+    assert pairs["true_pair"] == 1.0 and pairs["studies"] == len(studies)
+    assert pairs["cells"] == sum(len(s["cells"]) for s in studies)
+    assert pairs["true_cell_pair"] == 1.0 and pairs["subset_accuracy"] == 1.0
+    assert "unscored_studies" not in report
     c = next(r for r in report["synthesis"][0]["rows"] if r["level"] == "all")
-    assert c["direction_accuracy"] == 1.0
+    assert c["direction_accuracy"] == 1.0 and c["determined"] == len(studies)
     verdicts = report["synthesis"][0]
-    assert verdicts["label_correct"] is not False and verdicts["flags"]["counts_correct"] is not False
+    assert verdicts["label_correct"] is True and verdicts["flags"]["counts_correct"] is True
+    assert verdicts["key"]["given"] == verdicts["key"]["expected"] == raw(tiny)["key"]
     assert verdicts["flags"]["duplicates_correct"] is True
     assert all(r["fp"] == 0 and r["fn"] == 0 for r in verdicts["flags"]["rows"]), verdicts["flags"]["rows"]
 
@@ -106,12 +125,7 @@ def test_a_duplicate_study_keeps_duplicate_of(tmp_path):
     else:
         raise AssertionError("no seed gives a one-cell first study and a valid family")
     corpus = base.parent / "duplicate"
-    data = raw(corpus)   # every other study cut to its first cell, so the corpus-level counts are scored
-    for s in data["studies"]:
-        s["cells"] = s["cells"][:1]
-    (corpus / "ground_truth.json").write_text(json.dumps(data), encoding="utf-8")
     truth = GroundTruth.load(corpus / "ground_truth.json")
-    assert truth.unscored == []
     copies = [s for s in truth.studies if s["duplicate_of"]]
     assert len(copies) == 1 and copies[0]["duplicate_of"] == "S001" and "effect" in copies[0]
     copy = copies[0]["paper"]
@@ -123,7 +137,7 @@ def test_a_duplicate_study_keeps_duplicate_of(tmp_path):
     assert copy not in sum(groups.values(), [])
     entries = [{"document": s["paper"], "direction": s["effect"]["direction"] if "effect" in s else "undetermined",
                 "duplicate_of": s["duplicate_of"]} for s in truth.studies]
-    answer = {"system": "x", "question": "q", "label": truth.answer["label"], **groups, "undetermined": [],
+    answer = {"system": "x", "question": "q", "label": "supported", **groups, "undetermined": [],
               "duplicates": [copy], "counts": {**{k: len(v) for k, v in groups.items()}, "undetermined": 0,
                                                "duplicates": 1},
               "studies": entries, "flags": {}}
@@ -166,51 +180,67 @@ def _oracle_c(corpus: Path, out: Path) -> dict:
     return score(oracle.run(PROTOCOL, corpus, out), corpus)["synthesis"][0]
 
 
-def test_with_two_subset_studies_the_corpus_label_and_counts_are_not_scored(tiny, tmp_path):
-    truth = GroundTruth.load(tiny / "ground_truth.json")
-    assert truth.unscored
-    assert set(truth.answer) == {"duplicates"}
-    c = _oracle_c(tiny, tmp_path / "oracle")
-    assert c["label_correct"] is None and c["flags"]["counts_correct"] is None
-    assert c["flags"]["duplicates_correct"] is True
-    assert c["errors"] == ["label and counts not scored: the corpus has two-subset studies (unscored_studies)"]
-    report = score(oracle.run(PROTOCOL, tiny, tmp_path / "o2"), tiny)
-    assert "label" in report["unscored_studies"]["reason"] and "counts" in report["unscored_studies"]["reason"]
+def test_the_corpus_answer_is_scored_against_the_key_and_a_wrong_one_is_wrong(tiny, tmp_path):
+    out = oracle.run(PROTOCOL, tiny, tmp_path / "oracle")
+    c = score(out, tiny)["synthesis"][0]
+    assert c["errors"] == [] and c["label_correct"] is True and c["flags"]["counts_correct"] is True
+    assert (c["label"], c["expected_label"]) == (raw(tiny)["key"]["verdict"],) * 2
+    answer = json.loads((out / "answer.json").read_text(encoding="utf-8"))
+    answer["conclusion"] = {**answer["conclusion"], "verdict": "depends", "condition": "model_size",
+                            "sides": {"small": "supports", "large": "neutral"}}
+    (out / "answer.json").write_text(json.dumps(answer), encoding="utf-8")
+    wrong = score(out, tiny)["synthesis"][0]
+    assert wrong["label_correct"] is False and (wrong["label"], wrong["expected_label"]) == ("depends", "helps")
+    assert wrong["key"]["given"]["condition"] == "model_size" and wrong["key"]["verdict_correct"] is False
 
 
-def test_without_two_subset_studies_the_label_and_counts_are_scored(tiny, tmp_path):
-    data = raw(tiny)
-    for s in data["studies"]:
-        s["cells"] = s["cells"][:1]
-    (tiny / "ground_truth.json").write_text(json.dumps(data), encoding="utf-8")
-    truth = GroundTruth.load(tiny / "ground_truth.json")
-    assert truth.unscored == []
-    assert {"label", "supporting", "contradicting", "neutral", "duplicates"} <= set(truth.answer)
-    c = _oracle_c(tiny, tmp_path / "oracle")
-    assert c["label_correct"] is True and c["flags"]["counts_correct"] is True
+def test_a_depends_key_is_recovered_by_the_oracle(tmp_path):
+    from synth2.corpus import Settings, build_base
+    for seed in range(50):
+        base = tmp_path / f"s{seed}"
+        build_base(base, Settings("rag", seed, 12, "opposed", "table", exact=True))
+        if raw(base)["key"]["verdict"] == "depends":
+            break
+    else:
+        raise AssertionError("no seed gives a depends key")
+    report = score(oracle.run(PROTOCOL, base, tmp_path / "oracle"), base)
+    c = report["synthesis"][0]
+    assert c["label_correct"] is True and c["key"]["given"] == raw(base)["key"]
+    assert next(r for r in report["integration"]["rows"] if r["level"] == "all")["true_pair"] == 1.0
 
 
-def test_one_cell_studies_whose_claim_disagrees_with_their_direction_are_flagged(tiny):
+def test_a_run_without_subsets_is_scored_on_every_study_and_misses_the_second_cells(tiny, tmp_path):
+    report = score(oracle.run(OLD_PROTOCOL, tiny, tmp_path / "oracle"), tiny)
+    studies = raw(tiny)["studies"]
+    row = next(r for r in report["integration"]["rows"] if r["level"] == "all")
+    two = sum(len(s["cells"]) == 2 for s in studies)
+    assert row["studies"] == len(studies) and row["true_pair"] == (len(studies) - two) / len(studies)
+    assert row["true_cell_pair"] == len(studies) / (len(studies) + two) and row["subset_accuracy"] == 0.0
+    by_study = {s["study"]: s for s in report["integration"]["studies"]}
+    for s in studies:
+        assert [c["true_pair"] for c in by_study[s["id"]]["cells"]] == [True, False][:len(s["cells"])]
+    assert report["synthesis"][0]["key"]["given"]["condition"] is None   # it can only give one overall label
+
+
+def test_studies_whose_claim_disagrees_with_their_pooled_direction_are_flagged(tiny):
     truth = GroundTruth.load(tiny / "ground_truth.json")
     said = {"helps": "supports", "hurts": "contradicts", "no_effect": "neutral"}
     by_id = {s["study_id"]: s for s in truth.studies}
     for s in raw(tiny)["studies"]:
         study = by_id[s["id"]]
-        if len(s["cells"]) == 1:
-            disagrees = said[s["claim"]] != study["effect"]["direction"]
-            assert study["flags"] == (["claim_disagrees"] if disagrees else [])
-        else:
-            assert study["flags"] == []
+        disagrees = said[s["claim"]] != study["effect"]["direction"]
+        assert ("claim_disagrees" in study["flags"]) == disagrees
 
 
 def test_the_oracle_flags_the_spun_corpus_overclaims_correctly(tmp_path):
     spun = _spun_corpus(tmp_path)
     c = _oracle_c(spun, tmp_path / "oracle")
-    one_cell = sorted(s["id"] for s in raw(spun)["studies"] if s["overclaims"] and len(s["cells"]) == 1)
+    over = sorted(s["id"] for s in raw(spun)["studies"] if s["overclaims"])
+    assert {len(s["cells"]) for s in raw(spun)["studies"] if s["overclaims"]} == {1, 2}
     row = next(r for r in c["flags"]["rows"] if r["flag"] == "claim_disagrees")
-    assert row["expected"] == one_cell and row["given"] == one_cell
-    assert (row["tp"], row["fp"], row["fn"]) == (len(one_cell), 0, 0)
-    assert c["label_correct"] is not False and c["flags"]["counts_correct"] is not False
+    assert row["expected"] == over and row["given"] == over
+    assert (row["tp"], row["fp"], row["fn"]) == (len(over), 0, 0)
+    assert c["label_correct"] is True and c["flags"]["counts_correct"] is True
     assert all(r["fp"] == 0 and r["fn"] == 0 for r in c["flags"]["rows"])
 
 
@@ -311,3 +341,14 @@ def test_the_oracle_finds_no_false_copies_on_seed_17(tmp_path):
     base = tmp_path / "base"
     build_base(base, Settings("rag", 17, 6, "opposed", "table", exact=True))
     assert _oracle_c(base, tmp_path / "oracle")["flags"]["duplicates_correct"] is True
+
+
+def test_the_subsets_protocol_names_the_recipes_conditions_and_thresholds():
+    # the engine's candidate conditions and its two thresholds are the ones the answer key is made with
+    from evidence import protocol
+    from synth2.recipe import load_recipe
+    recipe = load_recipe("rag")
+    synthesis = protocol.load(PROTOCOL).synthesis
+    mods = synthesis.moderators
+    assert [c.model_dump(mode="json") for c in mods.conditions] == [c.model_dump(mode="json") for c in recipe.conditions]
+    assert (synthesis.min_effect, mods.min_gap) == (recipe.min_effect, recipe.min_gap)

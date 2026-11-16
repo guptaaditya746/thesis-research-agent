@@ -50,6 +50,8 @@ uv run synth2 score --root DIR --answers FILE --out FILE          # score an ans
 uv run synth2 export-scir --root DIR --out FILE                   # the same corpora as one SciR-shaped task file
 uv run synth2 written-corpus --template DIR --papers DIR --out DIR   # a corpus from model-written rewrites of a template's papers
 uv run synth2 engine-answers --runs DIR --out FILE                # engine run folders (run.json + answer.json) as an answers file
+# subsets: run and score a synth2 corpus with data/domains/rag/protocols/rag-factuality-subsets.yaml (question id
+# rag-factuality-subsets, also for the baselines' --question-id); its answer.json `conclusion` can say "depends"
 ```
 
 ## Test
