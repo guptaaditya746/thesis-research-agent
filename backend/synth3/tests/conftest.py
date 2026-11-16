@@ -21,14 +21,14 @@ def good() -> dict:
         ],
         "measures": [
             {"id": "m1", "name": "Response rate", "kind": "count", "higher_is_better": True,
-             "effect": [0.10, 0.16], "min_effect": 0.05, "min_gap": 0.10,
+             "effect": [0.05, 0.075], "min_effect": 0.025, "min_gap": 0.04,
              "unit": "participants", "outcome": "responded to treatment", "base_rate": [0.40, 0.55]},
             {"id": "m2", "name": "Relapse rate", "kind": "count", "higher_is_better": False,
-             "effect": [0.10, 0.14], "min_effect": 0.05, "min_gap": 0.10,
+             "effect": [0.05, 0.075], "min_effect": 0.025, "min_gap": 0.04,
              "unit": "participants", "outcome": "relapsed within the follow-up", "base_rate": [0.40, 0.50]},
             {"id": "m3", "name": "Systolic pressure", "kind": "value", "higher_is_better": False,
-             "effect": [0.08, 0.12], "min_effect": 0.04, "min_gap": 0.08,
-             "unit": "mmHg", "base_value": [120.0, 150.0], "spread": 0.15, "decimals": 1},
+             "effect": [0.05, 0.075], "min_effect": 0.025, "min_gap": 0.04,
+             "unit": "mmHg", "base_value": [120.0, 150.0], "spread": 0.6, "decimals": 1},
         ],
         "conditions": [
             {"id": "age", "name": "Age group", "levels": [
