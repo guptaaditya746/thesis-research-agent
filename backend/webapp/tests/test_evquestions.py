@@ -18,7 +18,8 @@ PROTOCOLS = PACK / "protocols"
 KINDS = {"rag-factuality": "effect", "rag-hallucination": "effect", "rag-latency": "effect",
          "inv-metrics": "inventory", "inv-methods": "inventory", "inv-datasets": "inventory",
          "cons-accuracy": "consistency", "cons-hallucination": "consistency",
-         "best-accuracy": "best", "best-hallucination": "best"}
+         "best-accuracy": "best", "best-hallucination": "best",
+         "rag-factuality-subsets": "effect"}   # the eleventh (16 Nov): rag-factuality with subsets
 
 
 def test_questions_api_lists_ten_with_kind(ev_world) -> None:  # noqa: ANN001

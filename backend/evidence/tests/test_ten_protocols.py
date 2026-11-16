@@ -17,6 +17,8 @@ PROTOCOLS = DOMAINS / "rag" / "protocols"
 IDS = ("rag-factuality", "rag-hallucination", "rag-latency", "inv-metrics", "inv-methods", "inv-datasets",
        "cons-accuracy", "cons-hallucination", "best-accuracy", "best-hallucination")
 NEW = IDS[1:]
+SUBSETS = "rag-factuality-subsets"   # the eleventh question (16 Nov): rag-factuality with subsets, listed after
+                                     # the effect questions; its protocol is tested in test_subsets.py
 KINDS = {"rag-factuality": "effect", "rag-hallucination": "effect", "rag-latency": "effect",
          "inv-metrics": "inventory", "inv-methods": "inventory", "inv-datasets": "inventory",
          "cons-accuracy": "consistency", "cons-hallucination": "consistency",
@@ -40,13 +42,13 @@ def load(qid: str) -> protocol.Protocol:
 
 def test_all_ten_parse_and_match_questions_yaml() -> None:
     entries = questions.load()
-    assert [e.id for e in entries] == list(IDS)
+    assert [e.id for e in entries] == [*IDS[:3], SUBSETS, *IDS[3:]]
     for e in entries:
         assert e.protocol == f"protocols/{e.id}.yaml"
         p = load(e.id)
         assert (p.id, p.question, p.kind) == (e.id, e.question, e.kind), e.id
-        assert e.kind == KINDS[e.id]
-        assert e.truth.model_dump(exclude_none=True) == TRUTH[e.id], e.id
+        assert e.kind == KINDS[IDS[0] if e.id == SUBSETS else e.id]
+        assert e.truth.model_dump(exclude_none=True) == TRUTH[IDS[0] if e.id == SUBSETS else e.id], e.id
     extra = {e.id: e.agentic_protocol for e in entries if e.agentic_protocol}
     assert extra == {"rag-factuality": "protocols/rag-factuality-agentic.yaml"}
 

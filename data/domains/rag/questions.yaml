@@ -25,6 +25,13 @@ questions:
     kind: effect
     truth: {metric: latency, min_effect: 0.05}       # seconds
     protocol: protocols/rag-latency.yaml
+  # rag-factuality with subsets (16 Nov 2026): the answer may be "depends on one condition". Its text names the three
+  # candidate conditions, so a baseline asked this question knows them as the engine's protocol does.
+  - id: rag-factuality-subsets
+    question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers, or does the effect depend on how rare the asked fact is, on the size of the generator or on the length of the question?
+    kind: effect
+    truth: {metric: factual_accuracy, min_effect: 0.01}
+    protocol: protocols/rag-factuality-subsets.yaml
   - id: inv-metrics
     question: Which evaluation metrics do the papers report?
     kind: inventory
