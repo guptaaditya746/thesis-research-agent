@@ -9,7 +9,7 @@ Services = groups of packages in one process; no HTTP between them yet.
 |---|---|---|---|
 | gateway | `modelcall` | (library) | every model call (`modelcall.ask`), JSONL call cache, recorder, prompt loader, model pins |
 | engine | `evidence`, `agent`, `gold`, `jsonio` | `evidence`, `agent`, `gold` | papers, screen, extractors, graph, plans, synthesis, answers, seal, replay; agent = agentic extractor + agent baseline; `jsonio` = canonical JSON, atomic writes |
-| evaluation | `evaluation`, `scoring`, `synth`, `synth2`, `packbuilder` | `evaluate`, `score`, `synth`, `synth2`, `packbuilder` | scores A/B/C, RAG + agent + PaperQA2 baselines, real sets, whole-run, leak, off-template; synthetic corpora; pack builder; synth2 = hidden-law corpora and their scores |
+| evaluation | `evaluation`, `scoring`, `synth`, `synth2`, `synth3`, `packbuilder` | `evaluate`, `score`, `synth`, `synth2`, `packbuilder` | scores A/B/C, RAG + agent + PaperQA2 baselines, real sets, whole-run, leak, off-template; synthetic corpora; pack builder; synth2 = hidden-law corpora and their scores |
 | api | `webapp` | `webapp` | FastAPI front door, job runner (argv templates), serves `frontend/dist` |
 | (shared) | `repo_paths` | - | repo folder locations (`data/`, `tests/`, `frontend/`, ...) |
 

@@ -64,7 +64,7 @@ requires = ["uv_build>=0.9,<0.14"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = ["agent", "jsonio", "gold", "scoring", "webapp", "evidence", "synth", "synth2", "evaluation", "modelcall", "packbuilder", "repo_paths"]
+module-name = ["agent", "jsonio", "gold", "scoring", "webapp", "evidence", "synth", "synth2", "synth3", "evaluation", "modelcall", "packbuilder", "repo_paths"]
 module-root = "backend"
 
 [tool.pytest.ini_options]
