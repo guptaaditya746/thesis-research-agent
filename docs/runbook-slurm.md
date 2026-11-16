@@ -580,6 +580,69 @@ yet: skip it and say "not available".
 Old runs: a replay of a run recorded before 4 Nov now stops with `CodeChanged` (the llm_* extractor ids changed with the
 plain-text replies) and names the commit to replay it from; that is expected, not a failure.
 
+## 10. synth2 corpora: the subsets question (16 Nov)
+
+450 built corpora (`data/synth2/written-full/<family>/s<seed>/<variant>/`, 9 families x 10 seeds x 5 variants), each
+20 papers made from renamed real papers. The question is `rag-factuality-subsets`: the answer may be "depends" on one
+condition (fact rarity, model size or question length). Engine and RAG baseline on every corpus, then A, B and C.
+
+**The papers are real text.** They are git-ignored and never committed, pushed or published. Run folders quote them,
+so section 10's outputs go back to the laptop only (10.4), never to `results-general` or any other branch.
+
+10.0 **Copy (Aditya, laptop, Git Bash, repo root):** 356 MB.
+
+```bash
+tar -C data/synth2 -czf - written-full | ssh <login node> \
+  "mkdir -p /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/synth2 && tar -C /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/synth2 -xzf -"
+```
+
+10.1 **Check (login node):** `ls -d "$EV"/synth2/written-full/*/s*/*/ | wc -l` prints 450, then
+`uv run pytest -q backend/evidence/tests/test_subsets.py backend/evaluation/tests/test_baseline_subsets.py backend/synth2`
+has no failures. Stack and session environment as in 0.1 and 0.2.
+
+10.2 **Lane script:** one lane per text level (prose, split, table), so at most three long `orch-model` steps at once,
+own cache each. A lane skips a corpus that already has its score, so a stopped lane is restarted with the same line.
+
+```bash
+cat > "$EV/synth2-lane.sh" <<'EOF'
+#!/usr/bin/env bash
+# synth2-lane.sh <prose|split|table>: engine, RAG baseline and score on every corpus of that text level, in turn.
+set -u
+source "$(dirname "$0")/in-job.env"
+T=$1 QID=rag-factuality-subsets P=data/domains/rag/protocols/rag-factuality-subsets.yaml
+for C in "$EV"/synth2/written-full/*-"$T"/s*/*/; do
+  C=${C%/}; N=$(echo "${C#"$EV"/synth2/written-full/}" | tr / -)
+  [ -f "$SCORES/synth2/$N/report.json" ] && continue
+  "$EV/launch.sh" s2-run-$N uv run evidence run --protocol $P --corpus "$C" --out "$RUNS/synth2" \
+    --cache "$CACHE/synth2-$T" --run-id "$N" || echo "$N evidence run: exit $?" >> "$EV/synth2-failures.txt"
+  "$EV/launch.sh" s2-rag-$N uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/synth2-rag/$N" \
+    --retrieval per_paper --k 2 --question-id $QID --cache "$CACHE/synth2-rag-$T.jsonl" \
+    || echo "$N rag-baseline: exit $?" >> "$EV/synth2-failures.txt"
+  [ -f "$RUNS/synth2/$N/run.json" ] && [ -f "$RUNS/synth2-rag/$N/answer.json" ] || continue
+  uv run evaluate score --run "$RUNS/synth2/$N" --corpus "$C" --baseline "$RUNS/synth2-rag/$N/answer.json" \
+    --question-id $QID --out "$SCORES/synth2/$N" > "$EV/logs/s2-score-$N.log" 2>&1 \
+    || echo "$N score: exit $?" >> "$EV/synth2-failures.txt"
+done
+EOF
+chmod +x "$EV/synth2-lane.sh"
+for T in prose split table; do nohup "$EV/synth2-lane.sh" $T > "$EV/logs/synth2-$T.out" 2>&1 & done
+```
+
+`evidence run` exit 2 (`FAIL engine-errors`): the run stays; once all lanes end, rerun that corpus's line with
+`--retry-errors` added, then its score line. Every other failure: as the rules say (failures file, next corpus).
+
+10.3 **Success:** `ls "$SCORES"/synth2/*/report.json | wc -l` prints 450; `$EV/synth2-failures.txt` is absent or every
+line in it is explained in `$EV/failures.md`.
+
+10.4 **Hand-back (to the laptop only):** `$RUNS/synth2`, `$RUNS/synth2-rag`, `$SCORES/synth2`, `$EV/logs/s2-*`,
+`$EV/logs/synth2-*`, `$EV/synth2-failures.txt`, the `$CACHE/synth2-*` files. Then ask Aditya before deleting
+`$EV/synth2/written-full`.
+
+**Say in the report:** 45 corpora are exact copies of another with the same corpus id (a `spun` corpus of a uniform
+family, where every author already says "helps", equals its `base`; a `twin` of an opposed family equals the uniform
+`base` of the same text level and seed). Their scores are the same runs twice; count each corpus id once. The two new
+prompt texts (the subsets wording of the protocol and `map-effect-subsets-v1.md`) had no real-model run before this.
+
 ## Limits (say them in the report)
 
 Saved templates do not use the ontology tree: reasoning on/off differ only on fresh queries (section 6). Layouts of
