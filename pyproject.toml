@@ -40,6 +40,7 @@ webapp = "webapp.cli:main"
 evidence = "evidence.cli:main"
 synth = "synth.cli:main"
 synth2 = "synth2.cli:main"
+synth3 = "synth3.cli:main"
 evaluate = "evaluation.cli:main"
 
 [dependency-groups]

@@ -11,3 +11,6 @@ frontend/node_modules/
 # packbuilder exchange folders (the JSONL call cache beside them is the committed record of the calls)
 .propose-exchange/
 .helper-exchange/
+
+# synth3 built folders (world files under data/synth3/worlds/ are committed)
+data/synth3/built/

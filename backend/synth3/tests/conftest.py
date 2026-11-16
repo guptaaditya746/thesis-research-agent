@@ -64,3 +64,8 @@ def write(dir, d, newline="\n"):
 @pytest.fixture
 def SPEC(tmp_path):
     return load_spec("demo", write(tmp_path, good()))
+
+
+@pytest.fixture
+def spec_dir(tmp_path):
+    return write(tmp_path / "specs", good())
