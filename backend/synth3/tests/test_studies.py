@@ -3,7 +3,10 @@ from collections import Counter
 import pytest
 
 from synth2.world import direction
+from synth3.spec import load_spec
 from synth3.world import MIN_PER_PAIR, ArmResult, Study, draw_studies, draw_world, pair_delta
+
+from .conftest import good, write
 
 
 def test_refuses_too_few_studies_and_names_a_pair(SPEC):
@@ -76,6 +79,20 @@ def test_arm_result_is_a_count_or_a_value_and_nothing_else():
                 dict(mean=float("nan"), sd=0.1)):
         with pytest.raises(ValueError):
             ArmResult("a", 10, **bad)
+
+
+def test_cell_index_counts_from_zero_in_every_study(SPEC):
+    for s in draw_studies(SPEC, draw_world(SPEC, 8), 8, 40):
+        assert [c.index for c in s.cells] == list(range(len(s.cells)))
+
+
+def test_numbers_that_can_only_repeat_are_refused_not_redrawn_forever(tmp_path):
+    d = good()
+    # every mean rounds to 1, so cells of the same n can only repeat each other
+    d["measures"][2] = {**d["measures"][2], "base_value": [1.0, 1.0], "spread": 0.01, "decimals": 0}
+    spec = load_spec("demo", write(tmp_path, d))
+    with pytest.raises(ValueError, match=r"study S\d+, cell \d+, measure m3: 1000 redraws"):
+        draw_studies(spec, draw_world(spec, 1), 1, 40)
 
 
 def test_study_round_trip(SPEC):

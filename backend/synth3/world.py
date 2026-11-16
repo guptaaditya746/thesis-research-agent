@@ -1,7 +1,6 @@
 """The hidden world of one domain: one law per (treatment, measure) pair, and the file Aditya approves."""
 from __future__ import annotations
 
-import itertools
 import json
 import math
 import os
@@ -21,6 +20,7 @@ WORD = {"helps": "better", "hurts": "worse", "no_effect": "no different"}
 CLAIM_WORDS = ("helps", "hurts", "no_effect")
 MIN_PER_PAIR = 3   # control studies every covered pair needs
 MAX_TRIES = 50     # noise attempts the gate may draw before it gives up
+MAX_REDRAWS = 1000  # redraws of one cell whose numbers repeat an earlier cell's
 
 
 @dataclass(frozen=True)
@@ -324,6 +324,8 @@ def pair_delta(spec: DomainSpec, cells: Sequence[Cell], arm: str, against: str) 
         return sum(r.mean * r.n for r in results) / n
 
     a, b = pooled(arm), pooled(against)
+    if measure.kind == "value" and b == 0:
+        raise ValueError(f"pair_delta: the pooled mean of '{against}' on {measure.id} is 0, so no relative change")
     delta = a - b if measure.kind == "count" else (a - b) / b
     return delta if measure.higher_is_better else -delta
 
@@ -420,9 +422,9 @@ def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt:
     labels: set[str] = set()
     taken: set[tuple] = set()                       # the numbers of every cell so far
     studies = []
-    index = 0
     for i in range(count):
         sid = f"S{i + 1:03d}"
+        index = 0                                   # cell index, study-wide
         main = min(covered, key=lambda p: done[p])  # the first in the shuffled order among the fewest
         d = _design(spec, world, seed, sid, authors[i], main, labels)
         labels.add(d.label)
@@ -433,7 +435,7 @@ def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt:
                 levels = {**d.population, **({split.id: level} if split else {})}
                 trues = [_true(spec, world, arm, m, levels, d.base[m]) for arm in d.arms]
                 # a cell whose numbers equal an earlier cell's would read as one study published twice
-                for j in itertools.count():
+                for j in range(MAX_REDRAWS + 1):
                     again = f":again{j}" if j else ""
                     results = tuple(
                         _result(spec, m, arm, d.n, true,
@@ -442,6 +444,9 @@ def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt:
                     key = tuple((r.k, r.n, r.mean) for r in results)
                     if key not in taken:
                         break
+                else:
+                    raise ValueError(f"study {sid}, cell {index}, measure {m}: {MAX_REDRAWS} redraws all repeat "
+                                     "an earlier cell's numbers; give the measure more decimals or larger values")
                 taken.add(key)
                 cells.append(Cell(index, m, levels, results))
                 index += 1
