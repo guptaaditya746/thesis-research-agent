@@ -1,0 +1,4 @@
+Task: reply with one word. (A test prompt; only fake models read it.)
+
+Output fields:
+- word: the word.

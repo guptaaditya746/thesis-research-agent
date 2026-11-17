@@ -57,6 +57,7 @@ uv run synth3 build-real --domain D --seeds 1,2 --out DIR         # folders from
 uv run synth3 realism --domain D --folder DIR/s1 --out FILE       # real-vs-synthetic classifier, raw and masked (no pass mark)
 uv run synth3 reader --domain D --folder DIR/s1                   # blind reader (sub-model-1, cluster): notes vs truth in DIR/s1/real/reader-check.json
 uv run synth3 questions --domain D   # check Aditya's question file and show what each question is about
+uv run synth3 draft-sheets --domain D [--redraft QID]   # orch-model drafts the answer sheets (cluster); can't-tell sheets by code; --redraft skips the call cache for those questions
 # subsets: run and score a synth2 corpus with data/domains/rag/protocols/rag-factuality-subsets.yaml (question id
 # rag-factuality-subsets, also for the baselines' --question-id); its answer.json `conclusion` can say "depends"
 ```

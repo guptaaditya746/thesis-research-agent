@@ -1,0 +1,52 @@
+Task: write the checklist of key points that a right answer to the question must make for this folder of papers, using only the facts listed. Each point is one checkable statement in plain words. It names the treatments, measures and groups by name, cites the ids of the facts it rests on, and holds no number (study ids such as S004 are allowed). You only turn the listed facts into points. You do not add knowledge of your own.
+
+Input:
+- Question: the question a reader asked about this folder.
+- Facts: one fact per line, as "<id>: <text>". The id says what kind of fact it is:
+  - pair:<treatment>:<measure>: one treatment against the control on one measure, with the verdict, the studies and what the authors say.
+  - h2h:<treatment>:<treatment>:<measure>: two treatments compared directly in the same studies.
+  - rank:<measure>: the treatments on one measure, best first.
+  - study:<id>: one study, its place and what it compares.
+  Each measure says whether a higher or a lower number is better.
+
+Output fields:
+- points: a list of 1 to 6 points. Fields:
+  - text: the statement, at most 300 characters.
+  - facts: the ids of the facts the statement rests on, copied exactly from the input.
+
+Example 1 (a normal case).
+Input:
+Question: Does Method K raise the Yield compared with the Usual method?
+
+Facts:
+pair:k:yield: Method K against Usual method on Yield (higher is better): Method K does worse than Usual method. Studies: S003, S007, S011, S015, S020. The authors say better in 0, worse in 4, no real difference in 1.
+Output:
+{"points": [{"text": "Method K gives a lower Yield than the Usual method.", "facts": ["pair:k:yield"]}]}
+
+Example 2 (a confusing case: lower is better, the result depends on the group, and some authors overclaim).
+Input:
+Question: Does Method P cut the Error count?
+
+Facts:
+pair:p:errors: Method P against Usual method on Error count (lower is better): it depends on Batch size: Small batches: better, Large batches: no real difference. Studies: S002, S005, S009, S012. The authors say better in 3, worse in 0, no real difference in 1. The authors claim more than their numbers show in S005.
+Output:
+{"points": [{"text": "Method P gives fewer errors than the Usual method in Small batches.", "facts": ["pair:p:errors"]}, {"text": "In Large batches Method P and the Usual method show no real difference.", "facts": ["pair:p:errors"]}, {"text": "Some authors claim more than their numbers show.", "facts": ["pair:p:errors"]}]}
+(Fewer errors is better, so "better" means fewer errors. The group names come from the fact.)
+
+Example 3 (a missing case: no study for one part of the question).
+Input:
+Question: Does Method K change the Yield or the Error count?
+
+Facts:
+pair:k:yield: Method K against Usual method on Yield (higher is better): Method K and Usual method show no real difference. Studies: S001, S004, S008. The authors say better in 1, worse in 0, no real difference in 2.
+pair:k:errors: Method K against Usual method on Error count (lower is better): no study in this folder compares Method K with Usual method on Error count.
+Output:
+{"points": [{"text": "Method K and the Usual method show no real difference in Yield.", "facts": ["pair:k:yield"]}, {"text": "No study in these papers compares Method K with the Usual method on Error count, so that part cannot be answered.", "facts": ["pair:k:errors"]}]}
+
+Rules (code checks each one; a reply that breaks one is sent back once with the problems):
+- Write 1 to 6 points. Each point says one thing, and no two points are the same.
+- Every point cites at least one fact, and every cited id is one of the ids listed in the input.
+- Use only what the listed facts say. When the facts say "no real difference", the point says no real difference.
+- A fact that says no study compares two arms becomes a point saying the papers cannot answer that part.
+- No point holds a number: no counts, percentages or study totals. Study ids such as S004 are allowed, and so are names from the facts.
+- Name each treatment and group as the facts name it, and make clear which measure each point is about.
