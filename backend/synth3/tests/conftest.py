@@ -183,3 +183,42 @@ def pool_root(tmp_path, REAL):
     root = tmp_path / "pools"
     split_pool(make_pool(root / "demo", 50, REAL), REAL)
     return root
+
+
+@pytest.fixture
+def folder(tmp_path, SPEC):
+    from synth3.corpus import build_folder
+    out = tmp_path / "f" / "s1"
+    build_folder(out, SPEC, approved(SPEC, 1), 40, "table")
+    return out
+
+
+def built(tmp_path, SPEC, seed):
+    """Build the template folder of one seed under `tmp_path / "b" / f"s{seed}"` and return it."""
+    from synth3.corpus import build_folder
+    out = tmp_path / "b" / f"s{seed}"
+    build_folder(out, SPEC, approved(SPEC, seed), 40, "table")
+    return out
+
+
+def q(text, **kw):
+    from synth3.questions import Question
+    return Question(id="x", question=text, **kw)
+
+
+def label(SPEC, arm_id):
+    return next(a.label for a in SPEC.arms if a.id == arm_id)
+
+
+def seed_with(SPEC, pred):
+    """The first seed in 1..30 whose in-memory truth satisfies `pred`; no folder is written."""
+    from synth3.reference import reference_facts
+    for seed in range(1, 31):
+        world = draw_world(SPEC, seed)
+        try:
+            studies, _ = draw_supported_studies(SPEC, world, seed, 40)
+        except ValueError:
+            continue
+        if pred({"world": world.json(), "facts": reference_facts(SPEC, world, studies)}):
+            return seed
+    raise AssertionError("no seed in 1..30 fits")

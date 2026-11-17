@@ -56,6 +56,7 @@ uv run synth3 pool-split --domain D                               # once: test p
 uv run synth3 build-real --domain D --seeds 1,2 --out DIR         # folders from approved worlds and renamed real papers
 uv run synth3 realism --domain D --folder DIR/s1 --out FILE       # real-vs-synthetic classifier, raw and masked (no pass mark)
 uv run synth3 reader --domain D --folder DIR/s1                   # blind reader (sub-model-1, cluster): notes vs truth in DIR/s1/real/reader-check.json
+uv run synth3 questions --domain D   # check Aditya's question file and show what each question is about
 # subsets: run and score a synth2 corpus with data/domains/rag/protocols/rag-factuality-subsets.yaml (question id
 # rag-factuality-subsets, also for the baselines' --question-id); its answer.json `conclusion` can say "depends"
 ```

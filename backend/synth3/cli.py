@@ -12,43 +12,19 @@ from pathlib import Path
 import httpx
 
 from evidence.arxiv import FetchError
+from synth3.cliargs import BadArgument, _Parser, _seeds, _spec
 from synth3.corpus import build_folder
 from synth3.pmc import Polite, fetch_pool
 from synth3.pool import folder_sources, import_files, load_index, load_split, source_order, split_pool
 from synth3.reader import read_folder
 from synth3.realcorpus import build_real_folder
 from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
-from synth3.spec import SPECS, load_spec
+from synth3.qcli import add_question_commands
+from synth3.spec import SPECS
 from synth3.world import describe, draw_world, load_world, save_world
 from synth3.write import TEXT_LEVELS
 
 WORLDS = Path(__file__).resolve().parents[2] / "data" / "synth3" / "worlds"
-
-
-class BadArgument(Exception):
-    pass
-
-
-class _Parser(argparse.ArgumentParser):
-    def error(self, message: str):
-        raise BadArgument(message)
-
-
-def _seeds(text: str) -> list[int]:
-    try:
-        seeds = [int(x) for x in text.split(",") if x.strip()]
-    except ValueError as err:
-        raise BadArgument(f"--seeds must be whole numbers separated by commas, got '{text}'") from err
-    if not seeds:
-        raise BadArgument("--seeds needs at least one seed")
-    return list(dict.fromkeys(seeds))
-
-
-def _spec(args: argparse.Namespace):
-    try:
-        return load_spec(args.domain, args.spec_root)
-    except (OSError, ValueError) as err:
-        raise BadArgument(str(err)) from err
 
 
 def draw(args: argparse.Namespace) -> int:
@@ -268,6 +244,7 @@ def parser() -> argparse.ArgumentParser:
     pf.set_defaults(run=pool_fetch)
     pi.set_defaults(run=pool_import)
     ps.set_defaults(run=pool_split)
+    add_question_commands(sub)
     return top
 
 
