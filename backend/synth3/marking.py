@@ -19,7 +19,7 @@ from jsonio import canonical_bytes, sha256_hex, write_json_atomic
 from modelcall import JsonlCache, load_prompt
 from synth3.answers import AnswerRecord, item_id, load_answer
 from synth3.judge import (PROMPT_A, PROMPT_B, PROMPT_C, ClaimChecks, PaperMarks, Ticks, score_a, score_b, score_c)
-from synth3.questions import Question, QuestionSet, question_sha256
+from synth3.questions import Question, QuestionSet, asked_sha256, question_sha256
 from synth3.sheetfacts import Folder, check_spec, load_folder
 from synth3.sheets import Sheet, load_sheet, sheet_sha256, stale
 from synth3.spec import DomainSpec
@@ -48,6 +48,8 @@ def why_not(folder: Folder, q: Question, sheet: Sheet | None, rec: AnswerRecord)
         return reason
     if rec.question_sha256 != question_sha256(q):
         return "the answer is to an older version of the question"
+    if rec.asked_sha256 is not None and rec.asked_sha256 != asked_sha256(q):
+        return "the answer was made for another kind of the question"
     if rec.corpus_id != folder.corpus_id:
         return "the answer is from another folder"
     return None

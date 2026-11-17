@@ -10,10 +10,11 @@ from modelcall import JsonlCache
 from synth3.answers import AnswerRecord, PulledFact, item_id, save_answer
 from synth3.cli import main
 from synth3.judge import ClaimChecks, Mark, PaperMarks, Tick, Ticks
-from synth3.marking import current_marks, judge_domain, marks_path, why_not
-from synth3.questions import question_sha256, load_questions
+from synth3.marking import answer_sha256, current_marks, judge_domain, marks_path, why_not
+from synth3.questions import asked_sha256, question_sha256, load_questions
 from synth3.sheetfacts import load_folder
 from synth3.sheets import make_sheet, save_sheet
+from synth3.tests.conftest import q
 from synth3.tests.fakes import answering, boom, failing
 
 FIX = Path(__file__).parent / "fixtures" / "questions"
@@ -268,3 +269,20 @@ def test_a_pending_item_from_bad_replies_is_asked_again_past_the_cache(folder, t
     assert marks_of(tmp_path)["C"]["score"] == 1.0
     never = boom()   # a kept item never uses fresh and never calls
     assert run(folder, tmp_path, SPEC, qs, never)["kept"] == 1 and never.calls == 0
+
+
+def test_a_kind_edit_skips_the_system_answer_but_not_the_baseline(folder, tmp_path, SPEC):
+    f = load_folder(folder); qq = q("Does Targeted therapy raise the Response rate?")
+    sheet = make_sheet(f, qq, [("Targeted therapy does better.", ["pair:a:m1"])], {"model": "x"})
+    sys_rec = engine_rec(f, qq, text="x").model_copy(update={"system": "system", "asked_sha256": asked_sha256(qq)})
+    base_rec = engine_rec(f, qq, text="x").model_copy(update={"system": "rag-baseline"})
+    edited = qq.model_copy(update={"kind": "effect"})
+    assert why_not(f, edited, sheet, sys_rec) == "the answer was made for another kind of the question"
+    assert why_not(f, edited, sheet, base_rec) is None
+
+
+def test_a_record_without_the_asked_hash_keeps_its_answer_hash():
+    rec = AnswerRecord(domain="demo", seed=1, corpus_id="c", question_id="x", question_sha256="a" * 64,
+                       system="engine", text="t", text_cut=False, cited=[], facts=None, passages=[], source="fake")
+    assert "asked_sha256" not in rec.model_dump()
+    assert answer_sha256(rec) == "2d182bb04728499801c4eaeb303475520870afe5cc797fa2d42a7a8dd29a08b7"

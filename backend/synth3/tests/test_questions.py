@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from synth3.questions import Question, load_questions, question_sha256, sheet_question_sha256, spec_names
+from synth3.questions import (Question, answer_by_of, asked_sha256, load_questions, question_sha256,
+                              sheet_question_sha256, spec_names, target_of)
 
 FIX = Path(__file__).parent / "fixtures" / "questions"
 
@@ -74,3 +75,28 @@ def test_a_yaml_typo_is_a_value_error_naming_the_file(tmp_path, SPEC):
     (tmp_path / "q" / "demo.yaml").write_text("domain: demo\nquestions: [unclosed\n", encoding="utf-8")
     with pytest.raises(ValueError, match="demo.yaml: not valid YAML"):
         load_questions("demo", SPEC, tmp_path / "q")
+
+
+def test_the_asked_hash_covers_kind_and_target():
+    q = Question(id="x", question="Q?", sub_questions=["s?"])
+    assert asked_sha256(q) == asked_sha256(q.model_copy(update={"notes": "n"}))
+    assert asked_sha256(q) != asked_sha256(q.model_copy(update={"kind": "best"}))
+    inv = q.model_copy(update={"kind": "inventory"})
+    assert asked_sha256(inv) != asked_sha256(inv.model_copy(update={"target": "metric"}))
+    assert asked_sha256(inv) == asked_sha256(inv.model_copy(update={"target": "condition"}))
+    assert question_sha256(q) == question_sha256(q.model_copy(update={"kind": "best"}))
+
+
+def test_target_only_with_inventory(tmp_path, SPEC):
+    d = yaml.safe_load((FIX / "demo.yaml").read_text(encoding="utf-8"))
+    d["questions"][0].update(target="metric")
+    with pytest.raises(ValueError, match="d01: target is only for kind inventory"):
+        load_questions("demo", SPEC, write_q(tmp_path, d))
+
+
+def test_how_the_system_answers_each_kind():
+    assert answer_by_of(Question(id="x", question="Q?")) == "written"
+    inv = Question(id="x", question="Q?", kind="inventory")
+    assert answer_by_of(inv) == "inventory" and target_of(inv) == "condition"
+    assert target_of(inv.model_copy(update={"target": "metric"})) == "metric"
+    assert target_of(Question(id="x", question="Q?", kind="effect")) is None

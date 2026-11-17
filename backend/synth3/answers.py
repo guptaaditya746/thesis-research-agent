@@ -9,6 +9,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from pydantic import Field
+
 from evidence.rundir import ANSWER_FILE, RUN_FILE, Corpus, PaperIndex, RunDir
 from jsonio import canonical, write_json_atomic
 from synth2.recipe import Strict
@@ -45,6 +47,7 @@ class AnswerRecord(Strict):
     facts: list[PulledFact] | None   # None: the system pulls no per-paper facts
     passages: list[PulledFact]
     source: str
+    asked_sha256: str | None = Field(None, exclude_if=lambda v: v is None)   # the system's records only
 
 
 def _clean(value: Any) -> Any:

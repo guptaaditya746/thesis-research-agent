@@ -11,6 +11,11 @@ The file is `data/synth3/questions/<domain>.yaml`. Example:
         about: [Method K]            # optional; names from the spec that set the scope
         kind: open                   # optional: open, effect, best, consistency or inventory
         notes: free text             # optional; ignored by the code
+      - id: l02
+        question: Which things were compared?
+        kind: inventory
+        target: metric               # target: condition (the compared things, the default) or metric (the
+                                     # measures); inventory only
 
 Only `id` and `question` are needed. Any other key is refused. There is no upper limit on the number of questions.
 """
@@ -29,6 +34,7 @@ from synth3.spec import SPECS, DomainSpec
 
 QUESTIONS = SPECS / "questions"
 KINDS = ("open", "effect", "best", "consistency", "inventory")
+TARGETS = ("condition", "metric")
 _ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 
 
@@ -38,6 +44,7 @@ class Question(Strict):
     sub_questions: list[str] = []
     about: list[str] = []
     kind: Literal[*KINDS] = "open"   # plan 4 only; the judge ignores it
+    target: Literal[*TARGETS] | None = None   # inventory only: what the list is of
     notes: str = ""
 
 
@@ -57,6 +64,23 @@ def question_sha256(q: Question) -> str:
     """Hash of what an answer depends on (answer records, `marking.why_not`): the question, the sub-questions (plan
     4's system plans with them) and `about`. Notes and kind are left out."""
     return sha256_hex(canonical_bytes({"question": q.question, "sub_questions": q.sub_questions, "about": q.about}))
+
+
+def asked_sha256(q: Question) -> str:
+    """Hash of what the system's answer was made for: `question_sha256`'s parts plus the kind and the target
+    (normalised by `target_of`, so no target and `condition` hash the same on an inventory question)."""
+    return sha256_hex(canonical_bytes({"question": q.question, "sub_questions": q.sub_questions, "about": q.about,
+                                       "kind": q.kind, "target": target_of(q)}))
+
+
+def answer_by_of(q: Question) -> str:
+    """How the system answers: "written" for an open question, else by the kind."""
+    return "written" if q.kind == "open" else q.kind
+
+
+def target_of(q: Question) -> str | None:
+    """What an inventory question lists (the compared things by default); None for any other kind."""
+    return (q.target or "condition") if q.kind == "inventory" else None
 
 
 def sheet_question_sha256(q: Question) -> str:
@@ -88,6 +112,8 @@ def _check_entry(entry: object, seen: dict[str, str], names: list[str]) -> Quest
         q = Question(**entry)
     except (ValidationError, TypeError) as err:
         raise ValueError(f"{qid}: {err}") from err
+    if q.target is not None and q.kind != "inventory":
+        raise ValueError(f"{qid}: target is only for kind inventory")
     if not q.question.strip():
         raise ValueError(f"{qid}: question is empty")
     if any(not s.strip() for s in q.sub_questions):
