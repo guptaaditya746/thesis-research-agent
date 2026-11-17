@@ -7,9 +7,10 @@ hand-marks the judge-test answers.
     GET /review/{domain}/sheets              -> synth3.sheets.review_queue rows, with `stale`
     GET /review/{domain}/sheets/{seed}/{qid} -> {question, sub_questions, scope, facts, sheet, stale}
     PUT /review/{domain}/sheets/{seed}/{qid} {points: [{text, facts}]} -> the saved sheet; 400 with the problems
-    GET /review/judge-test                   -> [{n, item, done}]
-    GET /review/judge-test/{n}               -> {item, question, answer, points, facts, facts_cut, marked,
-                                                 sheet_changed}; never the judge's ticks or scores
+    GET /review/judge-test                   -> [{n, domain, seed, question_id, done}]
+    GET /review/judge-test/{n}               -> {n, domain, seed, question_id, question, answer, points, facts,
+                                                 facts_cut, marked}; never the judge's ticks or scores, never the
+                                                 system
     PUT /review/judge-test/{n}               {points: {pid: bool}, faithful} -> the saved hand mark
 
 Everything lives under `settings.synth3_data`: `<domain>.yaml` (the approved specs; drafts are elsewhere),
@@ -23,9 +24,9 @@ A sheet save always lets Aditya fix the sheet: a sheet that is not stale is chec
 archived and replaced by a new unchecked sheet he wrote (`person_sheet`, so draft-sheets keeps it), which he
 checks with a second save; a missing one is written and checked at once.
 
-A judge-test item shows the points of the sheet the judge marked against (the current sheet or an archived one
-with the same hash). When that sheet is gone (it was edited in place after judging), the item shows the current
-points with `sheet_changed: true` and cannot be marked (409) until the answer is judged again.
+A judge-test item is blind: it shows the points the C judge saw (kept in the marks file, so they stay as judged
+after the sheet is edited), the answer and the facts it used, but never the judge's ticks or scores and never the
+system that answered (only the domain, seed and question id; the PUT addresses the item by its number).
 """
 from __future__ import annotations
 
@@ -45,7 +46,7 @@ from synth3.questions import Question, QuestionSet, load_questions
 from synth3.report import load_hand_marks, load_sample, save_hand_mark
 from synth3.sheetfacts import Folder, check_spec, load_folder, relevant_facts, scope
 from synth3.sheets import (Sheet, archive_sheet, check_sheet, folders_of, load_sheet, person_sheet, review_queue,
-                           save_sheet, sheet_sha256, stale)
+                           save_sheet, stale)
 from synth3.spec import DomainSpec, load_spec
 from synth3.world import describe, load_world, save_world
 
@@ -149,7 +150,7 @@ class ReviewFiles:
         parts = item.split("/")
         m = _SEED_DIR.match(parts[1]) if len(parts) == 4 else None
         if m is None:
-            raise NotFound(f"no such judge-test item: {item!r}")
+            raise NotFound("a judge-test item in sample.json is not <domain>/s<seed>/<system>/<qid>")
         return check_id(parts[0], "domain"), int(m[1]), check_id(parts[2], "system"), check_id(parts[3], "question")
 
     def judge_test(self) -> Path:
@@ -291,68 +292,55 @@ def evreview_router(settings: Settings) -> APIRouter:
             raise NotFound(f"no judge-test item {n}")
         return sample[n]
 
-    def judged_points(item: str) -> tuple[list[dict[str, str]], bool]:
-        """The points of the sheet the judge marked against, and whether that sheet is gone (the current points)."""
-        domain, seed, _, qid = files.item_parts(item)
+    def judged_points(n: int, item: str) -> list[dict[str, str]]:
+        """The points the C judge saw, from the marks file (`sheet.points`, in sheet order)."""
         marks = read_json(files.item_file(item, ".marks.json"))
-        want = (marks.get("sheet") or {}).get("sha256") if isinstance(marks, dict) else None
-        if not want:
-            raise NotFound(f"{item}: not judged yet (no readable marks file)")
-        path = files.sheet_file(domain, seed, qid)
-        current = load_sheet(files.sheets_root(), domain, seed, qid)
-        candidates = [current] if current else []
-        for old in sorted(path.parent.glob(f"{qid}.stale-*.json")):
-            try:
-                candidates.append(Sheet(**read_json(old)))
-            except (TypeError, ValueError):
-                continue   # an unreadable archive cannot be the judged sheet
-        for s in candidates:
-            if sheet_sha256(s) == want:
-                return [{"id": p.id, "text": p.text} for p in s.points], False
-        if current is None:
-            raise NotFound(f"{item}: the sheet the judge used is gone")
-        return [{"id": p.id, "text": p.text} for p in current.points], True
+        points = (marks.get("sheet") or {}).get("points") if isinstance(marks, dict) else None
+        if not isinstance(points, list):
+            raise NotFound(f"judge-test item {n}: not judged yet (no readable marks file)")
+        return [{"id": str(p["id"]), "text": str(p["text"])} for p in points]
+
+    def where(item: str) -> dict[str, Any]:
+        """The item without the system that answered (Aditya marks blind)."""
+        domain, seed, _, qid = files.item_parts(item)
+        return {"domain": domain, "seed": seed, "question_id": qid}
 
     @api.get("/review/judge-test", tags=["review"])
     def review_judge_test() -> list[dict[str, Any]]:
         hand = load_hand_marks(files.judge_test())
-        return [{"n": n, "item": item, "done": item in hand}
+        return [{"n": n, **where(item), "done": item in hand}
                 for n, item in enumerate(load_sample(files.judge_test()))]
 
     @api.get("/review/judge-test/{n}", tags=["review"])
     def review_judge_item(n: int) -> dict[str, Any]:
-        """Blind: the answer, the sheet points and the facts the answer used; never the judge's ticks or scores."""
+        """Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or
+        scores, and never the system that answered."""
         item = item_at(n)
         domain, _, _, qid = files.item_parts(item)
         path = files.item_file(item, ".answer.json")
         if not path.is_file():
-            raise NotFound(f"{item}: no saved answer")
+            raise NotFound(f"judge-test item {n}: no saved answer")
         rec = load_answer(path)
         try:
             spec = files.spec(domain)
             question: str | None = files.question(files.questions(domain, spec), qid).question
         except (NotFound, Conflict):
             question = None
-        points, changed = judged_points(item)
         used, cut = used_facts(rec)
-        return {"item": item, "question": question, "answer": rec.text, "points": points,
+        return {"n": n, **where(item), "question": question, "answer": rec.text, "points": judged_points(n, item),
                 "facts": [{"n": i, "paper": f.paper, "kind": f.kind, "quote": f.quote} for i, f in enumerate(used, 1)],
-                "facts_cut": cut, "marked": load_hand_marks(files.judge_test()).get(item),
-                "sheet_changed": changed}
+                "facts_cut": cut, "marked": load_hand_marks(files.judge_test()).get(item)}
 
     @api.put("/review/judge-test/{n}", tags=["review"])
     def review_hand_mark(n: int, req: HandMarkIn) -> dict[str, Any]:
         with _WRITE:
             item = item_at(n)
-            points, changed = judged_points(item)
-            if changed:
-                raise Conflict(f"{item}: the sheet was edited after judging; run synth3 judge again before marking")
-            ids = [p["id"] for p in points]
+            ids = [p["id"] for p in judged_points(n, item)]
             unknown = sorted(set(req.points) - set(ids))
             missing = [p for p in ids if p not in req.points]
             if unknown or missing:
                 raise BadRequest("; ".join([*(f"unknown point {p}" for p in unknown),
-                                                 *(f"point {p} is not marked" for p in missing)]))
+                                            *(f"point {p} is not marked" for p in missing)]))
             save_hand_mark(files.judge_test(), item, {p: req.points[p] for p in ids}, req.faithful, settings.user,
                            now())
             return load_hand_marks(files.judge_test())[item]

@@ -2,8 +2,10 @@
 
 The judge runs on drafted sheets too (the sheet check is a sample); each marks file records the sheet's `status`
 so the report can count marks made against unchecked sheets. A failed model call leaves that score pending, the
-marks file is still written and the next answer follows. An existing marks file is kept (no calls) only when the
-answer, the sheet and the three prompts are the ones it was made from and nothing in it is pending."""
+marks file is still written and the next answer follows. `sheet.points` keeps the points the C judge saw
+(`[{id, text}]` in sheet order), so the judge test shows what was ticked even after the sheet is edited. An
+existing marks file is kept (no calls) only when the answer, the sheet and the three prompts are the ones it was
+made from and nothing in it is pending."""
 from __future__ import annotations
 
 import json
@@ -69,7 +71,7 @@ def judge_answer(folder: Folder, q: Question, sheet: Sheet, rec: AnswerRecord, m
     return {"item": item_id(rec), "question_id": rec.question_id, "seed": rec.seed, "system": rec.system,
             "corpus_id": rec.corpus_id, "answer_sha256": answer_sha256(rec),
             "sheet": {"sha256": sheet_sha256(sheet), "status": sheet.status, "cant_tell": sheet.cant_tell,
-                      "points": len(sheet.points)},
+                      "points": [{"id": p.id, "text": p.text} for p in sheet.points]},
             "A": a, "B": b, "C": c,
             "judge": {"model": modelcall.model_identity([model]), "served_models": served, "prompts": prompt_shas()},
             "calls": sum(part["calls"] for part in (a, b, c) if part)}

@@ -30,7 +30,8 @@ from webapp.settings import Settings
 
 FIX = Path(__file__).resolve().parents[2] / "synth3" / "tests" / "fixtures" / "questions" / "demo.yaml"
 ITEM = "demo/s1/engine/d01"
-JUDGE_KEYS = {"met", "score", "ticks", "A", "B", "C", "judge"}
+JUDGE_KEYS = {"met", "score", "ticks", "A", "B", "C", "judge", "system", "item"}
+SYSTEMS = ("engine", "rag-baseline")
 
 
 @pytest.fixture
@@ -56,7 +57,8 @@ def review_root(tmp_path: Path) -> Path:
     write_json_atomic(marks_path(root / "results", "demo", 1, "engine", "d01"), {
         "item": ITEM, "question_id": "d01", "seed": 1, "system": "engine", "corpus_id": folder.corpus_id,
         "answer_sha256": "x",
-        "sheet": {"sha256": sheet_sha256(sheet), "status": "drafted", "cant_tell": False, "points": 1},
+        "sheet": {"sha256": sheet_sha256(sheet), "status": "drafted", "cant_tell": False,
+                  "points": [{"id": "p1", "text": "Targeted therapy does better."}]},
         "A": {"score": 0.5, "papers": {}, "pending_papers": []},
         "B": {"score": 1.0, "status": "ok", "invented": 0, "contradicted": 0, "claims": []},
         "C": {"score": 1.0, "status": "ok", "ticks": [{"point": "p1", "met": True, "quote": "Targeted",
@@ -168,40 +170,39 @@ def test_queue_marks_the_full_folder(review_root):
     assert by["d01"]["status"] == "drafted" and by["d01"]["stale"] and by["d02"]["status"] == "missing"
 
 
+def blind(value) -> bool:
+    """No judge key and no system name anywhere in a JSON value."""
+    text = json.dumps(value)
+    return not keys(value) & JUDGE_KEYS and not any(name in text for name in SYSTEMS)
+
+
 def test_the_judge_test_item_shows_the_facts_but_not_the_judge(review_root):
     c = client(review_root); item = c.get("/api/ev/review/judge-test/0").json()
-    assert not keys(item) & JUDGE_KEYS
+    assert blind(item) and (item["domain"], item["seed"], item["question_id"]) == ("demo", 1, "d01")
     assert item["facts"][0]["n"] == 1 and item["facts"][0]["quote"]
     assert [f["quote"] for f in item["facts"]] == ["first quote", "second quote"] and item["facts_cut"] is False
     assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}] and item["marked"] is None
     assert item["answer"] == "Targeted therapy does better." and item["question"].startswith("Does Targeted")
-    assert c.get("/api/ev/review/judge-test").json() == [{"n": 0, "item": ITEM, "done": False}]
+    listed = c.get("/api/ev/review/judge-test").json()
+    assert listed == [{"n": 0, "domain": "demo", "seed": 1, "question_id": "d01", "done": False}] and blind(listed)
     assert c.put("/api/ev/review/judge-test/0", json={"points": {"p9": True}, "faithful": None}).status_code == 400
     assert c.put("/api/ev/review/judge-test/0", json={"points": {}, "faithful": None}).status_code == 400
     saved = c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": True})
     assert saved.status_code == 200 and saved.json()["by"] == "aditya" and saved.json()["points"] == {"p1": True}
     assert c.get("/api/ev/review/judge-test").json()[0]["done"]
     again = c.get("/api/ev/review/judge-test/0").json()
-    assert again["marked"]["faithful"] is True and not keys(again) & JUDGE_KEYS
+    assert again["marked"]["faithful"] is True and blind(again)
     hand = json.loads((review_root / "judge-test" / "marks.json").read_text(encoding="utf-8"))
     assert hand[ITEM]["points"] == {"p1": True} and hand[ITEM]["at"].endswith("+00:00")
 
 
 def test_the_judge_test_keeps_the_points_the_judge_used(review_root):
     c = client(review_root)
-    edit_question(review_root, "d01", "Does Targeted therapy change the Response rate?")
     two = [{"text": "A.", "facts": []}, {"text": "B.", "facts": []}]
-    assert c.put("/api/ev/review/demo/sheets/1/d01", json={"points": two}).json()["status"] == "drafted"
-    item = c.get("/api/ev/review/judge-test/0").json()   # the judged sheet is now d01.stale-1.json
-    assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}] and not item["sheet_changed"]
-
-
-def test_a_judge_test_item_whose_sheet_was_edited_cannot_be_marked(review_root):
-    c = client(review_root)
-    c.put("/api/ev/review/demo/sheets/1/d01", json={"points": [{"text": "Edited.", "facts": []}]})
-    item = c.get("/api/ev/review/judge-test/0").json()
-    assert item["sheet_changed"] and item["points"] == [{"id": "p1", "text": "Edited."}]
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": None}).status_code == 409
+    assert c.put("/api/ev/review/demo/sheets/1/d01", json={"points": two}).json()["status"] == "checked"
+    item = c.get("/api/ev/review/judge-test/0").json()   # the marks file's points, not the edited sheet's
+    assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}]
+    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": False}, "faithful": None}).status_code == 200
 
 
 def test_an_unknown_judge_test_number_is_404(review_root):

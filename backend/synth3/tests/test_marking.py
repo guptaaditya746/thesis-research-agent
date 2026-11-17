@@ -70,6 +70,7 @@ def test_one_answer_gets_three_separate_scores(folder, tmp_path, SPEC):
     assert set(m["judge"]["prompts"]) == {"a", "b", "c"}
     assert m["item"] == "demo/s1/engine/d01" and m["system"] == "engine" and m["corpus_id"] == f.corpus_id
     assert m["sheet"]["status"] == "drafted" and m["sheet"]["cant_tell"] is False and m["sheet"]["sha256"]
+    assert m["sheet"]["points"] == [{"id": "p1", "text": TEXT}]   # what the C judge saw, for the judge test
     assert m["calls"] == m["A"]["calls"] + m["B"]["calls"] + m["C"]["calls"] >= 2
     assert out["pending"] == [] and out["skipped"] == {} and out["kept"] == 0
 

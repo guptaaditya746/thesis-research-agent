@@ -37,7 +37,8 @@ def fake_marks(results, systems=("engine", BASELINE), questions=10, seeds=5, dom
                                             {"point": "p2", "met": False, "quote": None, "reason": ""}]
                 marks = {"item": item, "question_id": qid, "seed": seed, "system": system, "corpus_id": "c",
                          "answer_sha256": "x",
-                         "sheet": {"sha256": "s", "status": status, "cant_tell": False, "points": 2},
+                         "sheet": {"sha256": "s", "status": status, "cant_tell": False,
+                                   "points": [{"id": "p1", "text": "One."}, {"id": "p2", "text": "Two."}]},
                          "A": a,
                          "B": {"score": 1.0, "claims": [], "invented": 0, "contradicted": 0, "status": "ok",
                                "problems": [], "calls": 0},
