@@ -150,9 +150,9 @@ def judge_sample(args: argparse.Namespace) -> int:
                               "items from more domains, keeping the marked ones")
         marks = current_marks_of(args.results, domains, args.sheets, args.folders, args.spec_root,
                                  args.questions_root)
+        new = pick_sample(marks, args.add if args.add is not None else args.n, args.seed, have)
     except (OSError, ValueError) as err:
         raise BadArgument(str(err)) from err
-    new = pick_sample(marks, args.add if args.add is not None else args.n, args.seed, have)
     items = have + new
     path = save_sample(args.judge_test, items)
     print(f"{path}: {len(items)} items ({len(new)} new)")

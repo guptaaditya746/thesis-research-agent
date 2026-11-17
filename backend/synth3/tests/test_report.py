@@ -350,6 +350,15 @@ def test_report_by_command(folder, tmp_path, spec_dir, SPEC, capsys):
     assert "demo" in capsys.readouterr().out
 
 
+def test_judge_sample_names_a_bad_row_of_the_sample(folder, tmp_path, spec_dir, SPEC, capsys):
+    judged(tmp_path, folder, SPEC)
+    write_json_atomic(tmp_path / "jt" / "sample.json", ["nonsense"])
+    code = main(["judge-sample", "--domains", "demo", "--add", "2", "--results", str(tmp_path / "res"),
+                 "--judge-test", str(tmp_path / "jt"), "--sheets", str(tmp_path / "sh"), "--folders",
+                 str(folder.parent), "--spec-root", str(spec_dir), "--questions-root", str(FIX)])
+    assert code == 2 and "'nonsense' is not <domain>/s<seed>/<system>/<qid>" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("command", ["report", "judge-sample"])
 def test_folders_with_more_than_one_domain_is_refused(tmp_path, command, capsys):
     """`--folders` holds one domain's `s<seed>/`; two domains would read the same folders."""
