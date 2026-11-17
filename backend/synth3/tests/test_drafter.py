@@ -10,7 +10,7 @@ from synth3.cli import main
 from synth3.drafter import DraftPoint, DraftSheet, draft_folder_sheets, draft_sheet, drafter_input
 from synth3.questions import load_questions
 from synth3.sheetfacts import load_folder, relevant_facts
-from synth3.sheets import check_sheet, load_sheet, make_sheet, save_sheet, sheet_path
+from synth3.sheets import check_sheet, load_sheet, make_sheet, person_sheet, save_sheet, sheet_path
 from synth3.tests.conftest import built, label, q, seed_with
 from synth3.tests.fakes import answering, boom, failing, scripted
 
@@ -112,6 +112,24 @@ def test_a_stale_checked_sheet_in_redraft_is_archived_and_drafted_again(folder, 
     assert out["drafted"] == ["d01"] and out["stale_checked"] == []
     assert load_sheet(root, "demo", 1, "d01").status == "drafted"
     assert sheet_path(root, "demo", 1, "d01").with_name("d01.stale-1.json").is_file()
+
+
+def test_a_sheet_aditya_wrote_is_kept_even_stale_unless_redrafted(folder, tmp_path, SPEC):
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); root = tmp_path / "sh"
+    d01 = qs.get("d01")
+    save_sheet(root, person_sheet(f, d01, [("Mine.", [])], "aditya", "t", checked=False))
+    edited = d01.model_copy(update={"question": "Does Targeted therapy change the Response rate?"})
+    qs2 = qs.model_copy(update={"questions": [edited]})
+    model = boom()
+    out = draft_folder_sheets(f, qs2, model, JsonlCache(tmp_path / "c"), root, now="t")
+    assert out["kept"] == ["d01"] and out["drafted"] == [] and model.calls == 0
+    assert load_sheet(root, "demo", 1, "d01").points[0].text == "Mine."
+    failed = draft_folder_sheets(f, qs2, failing(), JsonlCache(tmp_path / "c"), root, redraft={"d01"}, now="t")
+    assert "d01" in failed["failed"] and load_sheet(root, "demo", 1, "d01").points[0].text == "Mine."
+    out = draft_folder_sheets(f, qs2, answering(a_point), JsonlCache(tmp_path / "c"), root, redraft={"d01"}, now="t2")
+    assert out["drafted"] == ["d01"] and load_sheet(root, "demo", 1, "d01").points[0].text == "A point."
+    archived = sheet_path(root, "demo", 1, "d01").with_name("d01.stale-1.json")
+    assert archived.is_file() and "Mine." in archived.read_text(encoding="utf-8")
 
 
 def test_a_fresh_drafted_sheet_is_kept_and_a_stale_one_drafted_again(folder, tmp_path, SPEC):
