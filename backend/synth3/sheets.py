@@ -13,7 +13,7 @@ from typing import Literal
 
 from jsonio import canonical_bytes, sha256_hex, write_json_atomic
 from synth2.recipe import Strict
-from synth3.questions import Question, question_sha256
+from synth3.questions import Question, sheet_question_sha256
 from synth3.sheetfacts import FactLine, Folder, cant_tell, relevant_facts, truth_sha256
 from synth3.spec import SPECS
 
@@ -117,7 +117,7 @@ def _sheet(folder: Folder, q: Question, points: list[tuple[str, list[str]]], dra
            cant: bool) -> Sheet:
     facts = relevant_facts(folder.spec, folder.truth, q)
     return Sheet(domain=folder.spec.domain, seed=folder.seed, question_id=q.id,
-                 question_sha256=question_sha256(q), truth_sha256=truth_sha256(folder.truth),
+                 question_sha256=sheet_question_sha256(q), truth_sha256=truth_sha256(folder.truth),
                  cant_tell=cant, facts=facts,
                  points=[Point(id=f"p{i}", text=t, facts=list(c)) for i, (t, c) in enumerate(points, 1)],
                  status="drafted", drafted_by=drafted_by, warnings=coverage_warnings(points, facts))
@@ -136,7 +136,8 @@ def cant_tell_sheet(folder: Folder, q: Question) -> Sheet | None:
 
 
 def stale(sheet: Sheet, q: Question, folder: Folder) -> str | None:
-    if sheet.question_sha256 != question_sha256(q):
+    """Why the sheet no longer fits, or None. A sub-question edit never makes a sheet stale."""
+    if sheet.question_sha256 != sheet_question_sha256(q):
         return "the question changed after drafting"
     if sheet.truth_sha256 != truth_sha256(folder.truth):
         return "the folder's truth changed after drafting"

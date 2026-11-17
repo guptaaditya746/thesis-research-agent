@@ -43,6 +43,7 @@ def test_a_sheet_goes_stale_when_the_question_or_truth_changes(folder, SPEC, tmp
     save_sheet(tmp_path / "sh", s)
     assert load_sheet(tmp_path / "sh", "demo", 1, "x") == s and stale(s, qq, f) is None
     assert stale(s, qq.model_copy(update={"notes": "n"}), f) is None
+    assert stale(s, qq.model_copy(update={"sub_questions": ["Which studies?"]}), f) is None   # not scored
     assert "question changed" in stale(s, qq.model_copy(update={"question": "Other?"}), f)
     other = load_folder(built(tmp_path, SPEC, 2))
     assert "truth changed" in stale(s, qq, other)

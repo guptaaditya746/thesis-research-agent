@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from synth3.questions import Question, load_questions, question_sha256
+from synth3.questions import Question, load_questions, question_sha256, sheet_question_sha256
 
 FIX = Path(__file__).parent / "fixtures" / "questions"
 
@@ -44,9 +44,19 @@ def test_missing_file_says_who_writes_it(tmp_path, SPEC):
 
 
 def test_the_hash_ignores_notes_and_kind():
+    """The answer records' hash keeps the sub-questions: plan 4's system plans with them."""
     q = Question(id="x", question="Q?", sub_questions=["s?"])
     assert question_sha256(q) == question_sha256(q.model_copy(update={"notes": "n", "kind": "best"}))
     assert question_sha256(q) != question_sha256(q.model_copy(update={"sub_questions": ["t?"]}))
+
+
+def test_the_sheet_hash_ignores_sub_questions():
+    """Sub-questions are never scored and set no scope, so a sheet does not depend on them."""
+    q = Question(id="x", question="Q?", sub_questions=["s?"], about=["Targeted therapy"])
+    same = q.model_copy(update={"sub_questions": ["t?", "u?"], "notes": "n", "kind": "best"})
+    assert sheet_question_sha256(q) == sheet_question_sha256(same)
+    assert sheet_question_sha256(q) != sheet_question_sha256(q.model_copy(update={"question": "Other?"}))
+    assert sheet_question_sha256(q) != sheet_question_sha256(q.model_copy(update={"about": []}))
 
 
 def test_a_yaml_typo_is_a_value_error_naming_the_file(tmp_path, SPEC):

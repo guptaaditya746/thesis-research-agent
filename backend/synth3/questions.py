@@ -54,8 +54,15 @@ class QuestionSet(Strict):
 
 
 def question_sha256(q: Question) -> str:
-    """Hash of what a sheet depends on; notes and kind are left out so editing them keeps a sheet fresh."""
+    """Hash of what an answer depends on (answer records, `marking.why_not`): the question, the sub-questions (plan
+    4's system plans with them) and `about`. Notes and kind are left out."""
     return sha256_hex(canonical_bytes({"question": q.question, "sub_questions": q.sub_questions, "about": q.about}))
+
+
+def sheet_question_sha256(q: Question) -> str:
+    """Hash of what a sheet depends on: the question and `about`. Sub-questions are never scored and set no scope,
+    so editing them (or notes, or kind) keeps every sheet fresh."""
+    return sha256_hex(canonical_bytes({"question": q.question, "about": q.about}))
 
 
 def spec_names(spec: DomainSpec) -> list[str]:
