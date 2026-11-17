@@ -13,6 +13,8 @@ from synth3.answers import SYSTEM_ID, from_engine_run, save_answer
 from synth3.baseline import BASELINE, baseline_folder
 from synth3.cliargs import BadArgument, _seeds, _spec, each_folder
 from synth3.drafter import DRAFTER_ALIAS, draft_folder_sheets
+from synth3.judge import JUDGE_ALIAS
+from synth3.marking import judge_folder
 from synth3.questions import QUESTIONS, QuestionSet, load_questions
 from synth3.sheetfacts import Folder, scope
 from synth3.sheets import RESULTS, SHEETS, folders_of
@@ -101,6 +103,34 @@ def baseline(args: argparse.Namespace) -> int:
     return each_folder(args.folders or folders_of(args.domain), seeds, spec, step)
 
 
+def judge(args: argparse.Namespace) -> int:
+    spec, seeds = _spec(args), _seeds(args.seeds)
+    qs = _questions(args, spec)
+    systems = [s.strip() for s in args.systems.split(",") if s.strip()] if args.systems else None
+    bad = [s for s in systems or [] if not re.match(SYSTEM_ID, s)]
+    if bad:
+        raise BadArgument(f"--systems must match {SYSTEM_ID}, got {', '.join(bad)}")
+    from modelcall import gateway   # pydantic-ai is heavy; load it only here
+    model = gateway.openai_model(args.model)
+    cache = JsonlCache(args.results / args.domain / "judge-calls.jsonl")
+    total: dict = {"judged": 0, "kept": 0, "skipped": {}, "pending": []}
+
+    def step(folder: Folder) -> tuple[list[str], bool]:
+        out = judge_folder(folder, systems, qs, model, cache, args.sheets, args.results)
+        total["judged"] += out["judged"]
+        total["kept"] += out["kept"]
+        total["skipped"] |= out["skipped"]
+        total["pending"] += out["pending"]
+        lines = [f"  skipped {item}: {why}" for item, why in out["skipped"].items()]
+        lines += [f"  pending {item}" for item in out["pending"]]
+        return lines, bool(out["pending"])
+
+    code = each_folder(args.folders or folders_of(args.domain), seeds, spec, step)
+    print(f"judged {total['judged']}, kept {total['kept']}, skipped {len(total['skipped'])}, "
+          f"pending {len(total['pending'])}", flush=True)
+    return code
+
+
 def add_question_commands(sub) -> None:
     p = sub.add_parser("questions", help="check a domain's question file and show what each question is about")
     p.add_argument("--domain", required=True)
@@ -140,3 +170,15 @@ def add_question_commands(sub) -> None:
     b.add_argument("--spec-root", type=Path, default=SPECS)
     b.add_argument("--results", type=Path, default=RESULTS)
     b.set_defaults(run=baseline)
+    j = sub.add_parser("judge", help="mark every saved answer: A, B, C into <results>/<domain>/s<n>/<system>/"
+                                     "<qid>.marks.json (sub-model-1)")
+    j.add_argument("--domain", required=True)
+    j.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: the domain's built set")
+    j.add_argument("--seeds", default="1,2,3,4,5", help="comma-separated, e.g. 1,2,3,4,5")
+    j.add_argument("--systems", default="", help="comma-separated system ids, e.g. engine,rag-baseline; default: all")
+    j.add_argument("--model", default=JUDGE_ALIAS)
+    j.add_argument("--sheets", type=Path, default=SHEETS)
+    j.add_argument("--questions-root", type=Path, default=QUESTIONS)
+    j.add_argument("--spec-root", type=Path, default=SPECS)
+    j.add_argument("--results", type=Path, default=RESULTS)
+    j.set_defaults(run=judge)
