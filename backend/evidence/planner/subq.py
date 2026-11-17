@@ -15,15 +15,16 @@ class LinesSubSig(dspy.Signature):
     thing stated as a question. The sub-questions name parts the person also wants looked at: give a line for each
     part they add when it helps answer the main question; never a line the main question does not need. Start a line
     from a saved template when one fits (copy its name into `template`); otherwise leave `template` null. Do not write
-    queries here. `sub_questions` may be an empty list.
+    queries here. When `sub_questions` is an empty list, make the reply from the main question alone.
 
     Example (normal): question "Does Method K improve Yield compared with the Usual method?", sub_questions
     ["Which studies measured Yield?"] -> [{"question": "Is Method K better than the Usual method on Yield?",
     "kind": "effect", "template": "effect"}, {"question": "Which papers measured Yield for Method K and the Usual
     method?", "kind": "inventory", "template": null}]
     Example (confusing): question "Does Method K improve Yield compared with the Usual method?", sub_questions
-    ["Does Method K also cut the Error count?"] -> an effect line for Yield and an effect line "Is Method K better
-    than the Usual method on Error count?" (the sub-question adds a measure the lines should look at)
+    ["Does Method K also cut the Error count?"] -> [{"question": "Is Method K better than the Usual method on Yield?",
+    "kind": "effect", "template": "effect"}, {"question": "Is Method K better than the Usual method on Error count?",
+    "kind": "effect", "template": "effect"}] (the sub-question adds a measure the lines should look at)
     Example (missing): question "Does Method K improve Yield compared with the Usual method?", sub_questions
     ["Do Small batches differ?"] -> [{"question": "Is Method K better than the Usual method on Yield?", "kind":
     "effect", "template": "effect"}] (a group named only in a sub-question adds no line)"""
@@ -43,7 +44,7 @@ class ThingsSubSig(dspy.Signature):
     group named only in a sub-question is not a thing. `measures` repeats the ids of `things` that are measures (a
     score, a rate, a time, a count of outcomes); empty when none is named. `lower_is_better` repeats the ids of
     measures where a lower value is better (an error count, a delay, a cost). `field` is cs, medicine, materials or
-    other. `sub_questions` may be an empty list.
+    other. When `sub_questions` is an empty list, make the reply from the main question alone.
 
     Example (normal): question "Does Method K improve Yield compared with the Usual method?", sub_questions
     ["Which studies measured Yield?"] -> field "cs", things ["method_k", "usual_method", "yield"], measures
