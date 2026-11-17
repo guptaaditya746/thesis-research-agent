@@ -13,6 +13,7 @@ with their direction, so it never guesses what "better" means. The judge never s
 answer-sheet fact lines (A, B) or the system name."""
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Literal
@@ -201,9 +202,10 @@ class PaperMarks(Strict):
 
 
 def _fact_lines(facts: Sequence[PulledFact], *, paper: bool) -> str:
-    """One numbered line per pulled fact: `<i>. [<paper> ]<kind> <fields as JSON> quote: "<quote>"`."""
-    return "\n".join(f"{i}. {f'{f.paper} ' if paper else ''}{f.kind} {canonical(f.fields)} quote: \"{f.quote}\""
-                     for i, f in enumerate(facts, 1))
+    """One numbered line per pulled fact: `<i>. [<paper> ]<kind> <fields as JSON> quote: "<quote>"`. The quote is a
+    JSON string, so a line break or a quote mark in a multi-line baseline passage stays inside its own line."""
+    return "\n".join(f"{i}. {f'{f.paper} ' if paper else ''}{f.kind} {canonical(f.fields)} quote: "
+                     f"{json.dumps(f.quote, ensure_ascii=False)}" for i, f in enumerate(facts, 1))
 
 
 def a_input(planted: list[PlantedFact], pulled: list[PulledFact], *, measures: Sequence[Measure]) -> str:

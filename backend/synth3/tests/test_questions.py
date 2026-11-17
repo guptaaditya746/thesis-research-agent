@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from synth3.questions import Question, load_questions, question_sha256, sheet_question_sha256
+from synth3.questions import Question, load_questions, question_sha256, sheet_question_sha256, spec_names
 
 FIX = Path(__file__).parent / "fixtures" / "questions"
 
@@ -48,6 +48,16 @@ def test_the_hash_ignores_notes_and_kind():
     q = Question(id="x", question="Q?", sub_questions=["s?"])
     assert question_sha256(q) == question_sha256(q.model_copy(update={"notes": "n", "kind": "best"}))
     assert question_sha256(q) != question_sha256(q.model_copy(update={"sub_questions": ["t?"]}))
+
+
+def test_a_crlf_file_has_the_same_hash_as_its_lf_copy(tmp_path, SPEC):
+    text = (FIX / "demo.yaml").read_bytes().replace(b"\r\n", b"\n")
+    for name, data in (("lf", text), ("crlf", text.replace(b"\n", b"\r\n"))):
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "demo.yaml").write_bytes(data)
+    lf, crlf = (load_questions("demo", SPEC, tmp_path / n) for n in ("lf", "crlf"))
+    assert lf.sha256 == crlf.sha256 and lf.questions == crlf.questions
+    assert spec_names(SPEC) == SPEC.names()
 
 
 def test_the_sheet_hash_ignores_sub_questions():

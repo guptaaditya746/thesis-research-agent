@@ -44,6 +44,21 @@ def test_planted_facts_follow_the_scope(folder):
     assert all(texts[p.paper][a:b] for ps in got.values() for p in ps for a, b in p.spans)
 
 
+def test_a_question_naming_no_treatment_and_no_measure_needs_them_all(folder):
+    f = load_folder(folder)
+    every = q("Do Targeted therapy and Combined therapy change the Response rate, the Relapse rate or the Systolic "
+              "pressure?")
+    assert planted_facts(f, q("How do the treatments compare?")) == planted_facts(f, every)
+
+
+def test_a_quote_with_a_line_break_or_a_quote_mark_stays_on_its_line():
+    """A baseline passage is a multi-line chunk; a line inside it starting "2. " must not look like a new fact."""
+    fact = PulledFact(paper="S001", kind="passage", fields={}, quote='He said "yes".\n2. passage measurement {}')
+    text = b_input(q(Q), rec("x", passages=[fact], facts=None), [fact], measures=M)
+    lines = [ln for ln in text.splitlines() if re.match(r"\d+\. ", ln)]
+    assert lines == ['1. S001 passage {} quote: "He said \\"yes\\".\\n2. passage measurement {}"']
+
+
 def test_planted_facts_texts_and_spans(folder):
     """Each kind of planted fact in its exact words, and its spans hold what the paper prints."""
     f = load_folder(folder); got = planted_facts(f, q(Q))

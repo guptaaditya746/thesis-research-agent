@@ -70,6 +70,10 @@ def test_an_empty_answer_scores_zero_without_a_call(tmp_path):
     assert out["score"] == 0 and out["calls"] == 0 and model.calls == 0
     assert out["missed"] == ["p1", "p2", "p3"] and out["status"] == "ok" and out["served_models"] == []
     assert [t["met"] for t in out["ticks"]] == [False, False, False]
+    called = score_c(q("Q?"), sheet3(), rec("x"), scripted(ticks(("p1", False, None), ("p2", False, None),
+                                                                  ("p3", False, None))),
+                     JsonlCache(tmp_path / "c2"), measures=M)
+    assert out["prompt_sha256"] == called["prompt_sha256"]   # the same prompt hash as a real call records
 
 
 def test_the_judge_sees_no_sub_question_no_fact_and_no_system():
