@@ -5,6 +5,7 @@ Code picks the facts (`sheetfacts`), writes can't-tell sheets with no call, and 
 point can never come from one. `draft_folder_sheets` never overwrites a checked sheet that is not stale."""
 from __future__ import annotations
 
+from collections.abc import Set as AbstractSet
 from pathlib import Path
 from typing import Any
 
@@ -59,15 +60,15 @@ def draft_sheet(folder: Folder, q: Question, model: Any, cache: JsonlCache, *, f
 
 
 def draft_folder_sheets(folder: Folder, qs: QuestionSet, model: Any, cache: JsonlCache, root: Path, *,
-                        redraft: set[str] = frozenset(), now: str) -> dict:
+                        redraft: AbstractSet[str] = frozenset(), now: str) -> dict:
     """Draft the missing and stale sheets of one folder, and those in `redraft` (with `fresh=now`, past the cache).
 
     A checked sheet that is not stale is always kept (`kept_checked` lists those asked for in `redraft`); a stale
     checked sheet is kept and listed under `stale_checked` unless it is in `redraft`: then it is archived once the
     new draft is accepted. A sheet Aditya wrote (`drafted_by` names a person), checked or not, stale or not, is
-    kept unless it is in `redraft`, and then archived the same way. One failure does not stop the others. Lists of question ids: `drafted` (every new
-    sheet), `cant_tell` (the code sheets among them), `kept` (every sheet left as it was), `kept_checked`,
-    `stale_checked`; `failed` maps a question id to its problem."""
+    kept unless it is in `redraft`, and then archived the same way. One failure does not stop the others.
+    Lists of question ids: `drafted` (every new sheet), `cant_tell` (the code sheets among them), `kept` (every
+    sheet left as it was), `kept_checked`, `stale_checked`; `failed` maps a question id to its problem."""
     out: dict = {"drafted": [], "cant_tell": [], "kept": [], "kept_checked": [], "stale_checked": [], "failed": {}}
     for q in qs.questions:
         again = q.id in redraft

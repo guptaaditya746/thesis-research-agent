@@ -30,7 +30,7 @@ Question: Does Method P cut the Error count?
 Facts:
 pair:p:errors: Method P against Usual method on Error count (lower is better): it depends on Batch size: Small batches: better, Large batches: no real difference. Studies: S002, S005, S009, S012. The authors say better in 3, worse in 0, no real difference in 1. The authors claim more than their numbers show in S005.
 Output:
-{"points": [{"text": "Method P gives fewer errors than the Usual method in Small batches.", "facts": ["pair:p:errors"]}, {"text": "In Large batches Method P and the Usual method show no real difference.", "facts": ["pair:p:errors"]}, {"text": "Some authors claim more than their numbers show.", "facts": ["pair:p:errors"]}]}
+{"points": [{"text": "Method P gives fewer errors than the Usual method in Small batches.", "facts": ["pair:p:errors"]}, {"text": "In Large batches Method P and the Usual method show no real difference.", "facts": ["pair:p:errors"]}, {"text": "Some authors claim more for Method P than their numbers show.", "facts": ["pair:p:errors"]}]}
 (Fewer errors is better, so "better" means fewer errors. The group names come from the fact.)
 
 Example 3 (a missing case: no study for one part of the question).
@@ -43,10 +43,11 @@ pair:k:errors: Method K against Usual method on Error count (lower is better): n
 Output:
 {"points": [{"text": "Method K and the Usual method show no real difference in Yield.", "facts": ["pair:k:yield"]}, {"text": "No study in these papers compares Method K with the Usual method on Error count, so that part cannot be answered.", "facts": ["pair:k:errors"]}]}
 
-Rules (code checks each one; a reply that breaks one is sent back once with the problems):
-- Write 1 to 6 points. Each point says one thing, and no two points are the same.
+Rules (code checks the first three; a reply that breaks one is sent back once with the problems):
+- Write 1 to 6 points of at most 300 characters each, and no two points with the same text.
 - Every point cites at least one fact, and every cited id is one of the ids listed in the input.
+- No point holds a number: no counts, percentages or study totals. Study ids such as S004 are allowed, and so are names from the facts.
+- Each point says one thing.
 - Use only what the listed facts say. When the facts say "no real difference", the point says no real difference.
 - A fact that says no study compares two arms becomes a point saying the papers cannot answer that part.
-- No point holds a number: no counts, percentages or study totals. Study ids such as S004 are allowed, and so are names from the facts.
 - Name each treatment and group as the facts name it, and make clear which measure each point is about.

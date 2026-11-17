@@ -7,7 +7,7 @@ import pytest
 
 from modelcall import JsonlCache
 from synth3.cli import main
-from synth3.drafter import DraftPoint, DraftSheet, draft_folder_sheets, draft_sheet, drafter_input
+from synth3.drafter import PROMPT, DraftPoint, DraftSheet, draft_folder_sheets, draft_sheet, drafter_input
 from synth3.questions import load_questions
 from synth3.sheetfacts import load_folder, relevant_facts
 from synth3.sheets import check_sheet, load_sheet, make_sheet, person_sheet, save_sheet, sheet_path
@@ -74,6 +74,17 @@ def test_a_number_in_a_point_is_a_problem_but_a_spec_name_is_not(folder, tmp_pat
     s = draft_sheet(f2, qq.model_copy(update={"question": "Does Drug B12 raise the Response rate?"}), model,
                     JsonlCache(tmp_path / "c"))
     assert "point 1: holds a number" in model.prompts[1] and s.points[0].text == "Drug B12 does better in S004."
+
+
+def test_the_prompt_says_exactly_which_rules_code_checks():
+    """prompt-writing.md: say what is checked. check_points checks the count, the length, repeats, the fact ids and
+    numbers; the other rules are for the person who checks the sheet."""
+    rules = PROMPT.read_text(encoding="utf-8").split("\nRules (", 1)[1].splitlines()
+    assert rules[0].startswith("code checks the first three;")
+    checked = " ".join(rules[1:4])
+    for word in ("1 to 6", "300 characters", "same text", "cites at least one fact", "holds a number"):
+        assert word in checked
+    assert "one thing" not in checked and "Use only" not in checked
 
 
 def test_the_input_holds_the_fact_lines_but_no_sub_question(folder):
@@ -173,6 +184,17 @@ def test_draft_sheets_by_command_exits_1_on_a_failure(folder, tmp_path, spec_dir
     assert _command(tmp_path, spec_dir) == 1
     out = capsys.readouterr().out
     assert "failed 3" in out and "model call failed" in out
+
+
+def test_draft_sheets_by_command_names_a_stale_checked_sheet(folder, tmp_path, spec_dir, SPEC, monkeypatch, capsys):
+    f = load_folder(folder); d01 = load_questions("demo", SPEC, FIX).get("d01")
+    old = d01.model_copy(update={"question": "Does Targeted therapy change the Response rate?"})
+    save_sheet(tmp_path / "sh", check_sheet(make_sheet(f, old, [("Kept.", [])], {"model": "x"}), [("Kept.", [])],
+                                            "aditya", "t"))
+    monkeypatch.setattr("modelcall.gateway.openai_model", lambda alias, **kw: answering(a_point))
+    assert _command(tmp_path, spec_dir) == 0
+    assert ("  stale checked sheet: d01 (fix it on the review page, or pass --redraft d01)"
+            in capsys.readouterr().out)
 
 
 def test_draft_sheets_by_command_refuses_an_unknown_redraft_id(folder, tmp_path, spec_dir, monkeypatch, capsys):
