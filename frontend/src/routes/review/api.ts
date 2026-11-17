@@ -80,6 +80,8 @@ export interface JudgeItem {
   facts: { n: number; paper: string; quote: string }[]
   facts_cut: boolean
   marked: { points: Record<string, boolean>; faithful: boolean | null } | null
+  /** why an earlier hand mark is not shown (the item was judged again on another answer or sheet) */
+  note: string | null
 }
 
 export interface HandMark {

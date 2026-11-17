@@ -1,6 +1,7 @@
 /**
  * The judge test: Aditya marks answers by hand without seeing the judge's marks or the system that answered.
  * Nothing here reads either (the API does not send them). A row with a `problem` is shown and cannot be opened.
+ * An item judged again on another answer or sheet comes with a `note` and no earlier marks: it is marked afresh.
  */
 import { useState } from "react"
 
@@ -58,6 +59,7 @@ function Marking({ item }: { item: JudgeItem }) {
     <Card role="region" aria-label="Judge-test item">
       <CardHeader><CardTitle className="text-base">{item.question_id} (seed {item.seed})</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
+        {item.note ? <Alert><AlertDescription>Mark this item again: {item.note}.</AlertDescription></Alert> : null}
         {item.question ? <p className="font-medium">{item.question}</p> : null}
         <div>
           <p className="font-medium">Answer</p>

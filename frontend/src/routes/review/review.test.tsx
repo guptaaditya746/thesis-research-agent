@@ -95,7 +95,7 @@ describe("review page: answer sheets", () => {
 describe("review page: judge test", () => {
   const item: JudgeItem = {
     n: 0, domain: "demo", seed: 1, question_id: "d01", question: "Does it help?", answer: "It helps.",
-    points: [{ id: "p1", text: "It helps." }], facts: [{ n: 1, paper: "S001", quote: "first quote" }], facts_cut: false, marked: null,
+    points: [{ id: "p1", text: "It helps." }], facts: [{ n: 1, paper: "S001", quote: "first quote" }], facts_cut: false, marked: null, note: null,
   }
   it("hand-marks a judge-test answer without showing the judge", async () => {
     const bodies: unknown[] = []
@@ -119,6 +119,68 @@ describe("review page: judge test", () => {
     await user.click(within(panel).getByRole("button", { name: "Save" }))
     await waitFor(() => expect(bodies).toEqual([{ points: { p1: true }, faithful: null }]), T)
   })
+
+  async function openItem(over: Partial<JudgeItem>, bodies: unknown[]) {
+    server.use(
+      overview,
+      http.get("/api/ev/review/judge-test", () => HttpResponse.json([
+        { n: 0, domain: "demo", seed: 1, question_id: "d01", done: false },
+        { n: 1, problem: "a row of sample.json is not valid", done: false },
+      ])),
+      http.get("/api/ev/review/judge-test/0", () => HttpResponse.json({ ...item, ...over })),
+      http.put("/api/ev/review/judge-test/0", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({}) }),
+    )
+    const user = userEvent.setup()
+    renderRoutes(routes, "/review/judge-test")
+    await user.click(await screen.findByRole("button", { name: /d01/ }, T))
+    return { user, panel: await screen.findByRole("region", { name: "Judge-test item" }, T) }
+  }
+
+  it("cannot open a broken row", async () => {
+    await openItem({}, [])
+    expect(screen.getByRole("button", { name: "Row 2" })).toBeDisabled()
+  })
+
+  it("saves Not met with faithful yes, then no", async () => {
+    const bodies: unknown[] = []
+    const { user, panel } = await openItem({}, bodies)
+    await user.click(within(panel).getByRole("radio", { name: "Not met" }))
+    await user.click(within(panel).getByRole("radio", { name: "yes" }))
+    await user.click(within(panel).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(bodies).toEqual([{ points: { p1: false }, faithful: true }]), T)
+    await user.click(within(panel).getByRole("radio", { name: "no" }))
+    await user.click(within(panel).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(bodies[1]).toEqual({ points: { p1: false }, faithful: false }), T)
+  })
+
+  it("says when some facts were cut", async () => {
+    const { panel } = await openItem({ facts_cut: true }, [])
+    expect(within(panel).getByText("Some were cut for length.")).toBeInTheDocument()
+  })
+
+  it("asks to mark again when the answer or its sheet changed", async () => {
+    const { panel } = await openItem({ marked: null, note: "the answer or its sheet changed since you marked it" }, [])
+    expect(within(panel).getByText(/the answer or its sheet changed since you marked it/)).toBeInTheDocument()
+    expect(within(panel).getByRole("radio", { name: "Met" })).not.toBeChecked()
+    expect(within(panel).getByRole("button", { name: "Save" })).toBeDisabled()
+  })
+})
+
+describe("review page: sheet queue", () => {
+  it("puts the must-check rows first and can show the API order", async () => {
+    server.use(overview, http.get("/api/ev/review/demo/sheets", () => HttpResponse.json([
+      { seed: 2, question_id: "d02", status: "drafted", stale: null, must_check: "sample" },
+      { seed: 3, question_id: "d03", status: "drafted", stale: null, must_check: null },
+      { seed: 1, question_id: "d01", status: "drafted", stale: null, must_check: "full" },
+    ])))
+    const user = userEvent.setup()
+    renderRoutes(routes, "/review/sheets")
+    await screen.findByRole("button", { name: "d01" }, T)
+    const order = () => screen.getAllByRole("button", { name: /^d0\d$/ }).map((b) => b.textContent)
+    expect(order()).toEqual(["d01", "d02", "d03"])
+    await user.click(screen.getByRole("button", { name: "Must check" }))
+    expect(order()).toEqual(["d02", "d03", "d01"])
+  })
 })
 
 describe("review page: worlds", () => {
@@ -136,6 +198,38 @@ describe("review page: worlds", () => {
     await user.click(screen.getByRole("button", { name: "Approve" }))
     await user.click(await screen.findByRole("button", { name: "Yes, approve" }))
     await waitFor(() => expect(bodies).toEqual([{ approved: true }]), T)
+  })
+
+  it("withdraws an approval, and Cancel sends nothing", async () => {
+    const bodies: unknown[] = []
+    const row: WorldRow = { seed: 1, approved: true, text: "World of demo, seed 1", path: "worlds/demo/s1.json" }
+    server.use(
+      overview,
+      http.get("/api/ev/review/demo/worlds", () => HttpResponse.json([row])),
+      http.put("/api/ev/review/demo/worlds/1", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ ...row, approved: false }) }),
+    )
+    const user = userEvent.setup()
+    renderRoutes(routes, "/review")
+    await user.click(await screen.findByRole("button", { name: "Withdraw approval" }, T))
+    await user.click(await screen.findByRole("button", { name: "Cancel" }))
+    expect(bodies).toEqual([])
+    await user.click(screen.getByRole("button", { name: "Withdraw approval" }))
+    await user.click(await screen.findByRole("button", { name: "Yes, withdraw" }))
+    await waitFor(() => expect(bodies).toEqual([{ approved: false }]), T)
+  })
+
+  it("shows a refused approve", async () => {
+    const row: WorldRow = { seed: 1, approved: false, text: "World of demo, seed 1", path: "worlds/demo/s1.json" }
+    server.use(
+      overview,
+      http.get("/api/ev/review/demo/worlds", () => HttpResponse.json([row])),
+      http.put("/api/ev/review/demo/worlds/1", () => HttpResponse.json({ detail: "the world file does not load" }, { status: 422 })),
+    )
+    const user = userEvent.setup()
+    renderRoutes(routes, "/review")
+    await user.click(await screen.findByRole("button", { name: "Approve" }, T))
+    await user.click(await screen.findByRole("button", { name: "Yes, approve" }))
+    expect(await screen.findByText(/the world file does not load/, {}, T)).toBeInTheDocument()
   })
 
   it("lists a broken spec with its error instead of crashing", async () => {
