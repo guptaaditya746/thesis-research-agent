@@ -72,3 +72,24 @@ def test_cli_pool_import_prints_counts_and_bad_folder_returns_2(tmp_path, capsys
     assert main([*base, "--from", str(src)]) == 0
     assert "kept 1 of 1" in capsys.readouterr().out
     assert main([*base, "--from", str(tmp_path / "nope")]) == 2
+
+
+def test_cli_report_prints_short_licence_names_on_a_cp1252_console(tmp_path, monkeypatch):
+    import io
+    import sys
+
+    from synth3.cli import _report
+    from synth3.pool import save_index
+    long = "https://creativecommons.org/licenses/by-nc-nd/4.0/Open Access ‐ This article is licensed under ..."
+    rows = [{"id": f"PMC{i}", "kept": True, "license": lic} for i, lic in enumerate(
+        [long, long, "https://creativecommons.org/licenses/by/4.0/This is an open‐access article",
+         "https://creativecommons.org/publicdomain/zero/1.0/Free of all copyright", "Some licence ‐ text", ""])]
+    save_index(tmp_path, rows)
+    buf = io.BytesIO()
+    out = io.TextIOWrapper(buf, encoding="cp1252", errors="strict")
+    monkeypatch.setattr(sys, "stdout", out)
+    _report({"kept": 6, "unfit": {}}, tmp_path)
+    out.flush()
+    text = buf.getvalue().decode("cp1252")
+    assert "licence: CC BY-NC-ND: 2" in text and "licence: CC BY: 1" in text and "licence: CC0: 1" in text
+    assert "licence: other: 1" in text and "licence: none: 1" in text and "Open Access" not in text

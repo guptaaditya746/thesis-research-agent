@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import xml.etree.ElementTree as ET
 from collections import Counter
@@ -132,12 +133,26 @@ def build_real(args: argparse.Namespace) -> int:
     return 0
 
 
+_CC = re.compile(r"creativecommons\.org/(?:licenses/([a-z-]+)|publicdomain/(zero))", re.I)
+
+
+def licence_name(text: str) -> str:
+    """A short ASCII name for a licence text: "CC BY-NC-ND", "CC0", "other" or "none". The full text is long and
+    may hold characters a Windows console cannot print."""
+    if not text.strip():
+        return "none"
+    m = _CC.search(text)
+    if not m:
+        return "other"
+    return "CC0" if m.group(2) else f"CC {m.group(1).upper()}"
+
+
 def _report(out: dict, pool: Path) -> None:
     rows = load_index(pool)
     print(f"kept {out['kept']} of {len(rows)}")
     for why, n in sorted(out["unfit"].items(), key=lambda kv: -kv[1]):
-        print(f"  unfit: {why}: {n}")
-    for lic, n in Counter(r["license"] or "none" for r in rows if r["kept"]).most_common():
+        print(f"  unfit: {why}: {n}".encode("ascii", "replace").decode("ascii"))
+    for lic, n in Counter(licence_name(r["license"] or "") for r in rows if r["kept"]).most_common():
         print(f"  licence: {lic}: {n}")
 
 
