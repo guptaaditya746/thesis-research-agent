@@ -7,8 +7,10 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+import modelcall
 from modelcall import JsonlCache
 from synth3.answers import SYSTEM_ID, from_engine_run, save_answer
+from synth3.baseline import BASELINE, baseline_folder
 from synth3.cliargs import BadArgument, _seeds, _spec, each_folder
 from synth3.drafter import DRAFTER_ALIAS, draft_folder_sheets
 from synth3.questions import QUESTIONS, QuestionSet, load_questions
@@ -81,6 +83,24 @@ def collect(args: argparse.Namespace) -> int:
     return each_folder(args.folders or folders_of(args.domain), [args.seed], spec, step)
 
 
+def baseline(args: argparse.Namespace) -> int:
+    spec, seeds = _spec(args), _seeds(args.seeds)
+    qs = _questions(args, spec)
+    from modelcall import gateway   # pydantic-ai is heavy; load it only here
+    model = gateway.openai_model(args.model)
+    model_id = modelcall.model_identity([model])
+    cache = JsonlCache(args.results / args.domain / "rag-baseline-calls.jsonl")
+
+    def step(folder: Folder) -> tuple[list[str], bool]:
+        out = baseline_folder(folder, qs, model, model_id, cache, args.results)
+        lines = [f"s{folder.seed}: answered {out['answered']}, skipped {out['skipped']}, "
+                 f"failed {len(out['failed'])}"]
+        lines += [f"  failed: {why}" for why in out["failed"].values()]
+        return lines, bool(out["failed"])
+
+    return each_folder(args.folders or folders_of(args.domain), seeds, spec, step)
+
+
 def add_question_commands(sub) -> None:
     p = sub.add_parser("questions", help="check a domain's question file and show what each question is about")
     p.add_argument("--domain", required=True)
@@ -110,3 +130,13 @@ def add_question_commands(sub) -> None:
     c.add_argument("--spec-root", type=Path, default=SPECS)
     c.add_argument("--results", type=Path, default=RESULTS)
     c.set_defaults(run=collect)
+    b = sub.add_parser("baseline", help=f"run the {BASELINE} on every question and folder (orch-model; 2 calls "
+                                        "per question and folder)")
+    b.add_argument("--domain", required=True)
+    b.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: the domain's built set")
+    b.add_argument("--seeds", default="1,2,3,4,5", help="comma-separated, e.g. 1,2,3,4,5")
+    b.add_argument("--model", default="orch-model")
+    b.add_argument("--questions-root", type=Path, default=QUESTIONS)
+    b.add_argument("--spec-root", type=Path, default=SPECS)
+    b.add_argument("--results", type=Path, default=RESULTS)
+    b.set_defaults(run=baseline)
