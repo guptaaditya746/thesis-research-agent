@@ -110,6 +110,12 @@ class DomainSpec(Strict):
     def measure(self, id: str) -> Measure:
         return next(m for m in self.measures if m.id == id)
 
+    def names(self) -> list[str]:
+        """Every arm label, measure name, condition name, level name and setting name."""
+        return [*(a.label for a in self.arms), *(m.name for m in self.measures),
+                *(c.name for c in self.conditions), *(lv.name for c in self.conditions for lv in c.levels),
+                *(s.name for s in self.settings)]
+
     @model_validator(mode="after")
     def _check(self) -> "DomainSpec":
         if len(self.arms) < 3:
@@ -125,9 +131,7 @@ class DomainSpec(Strict):
         if len(set(ids)) != len(ids):
             raise ValueError("ids: arm, measure, condition and level ids must all be different")
         self._check_settings()
-        names = [*(a.label for a in self.arms), *(m.name for m in self.measures),
-                 *(c.name for c in self.conditions), *(lv.name for c in self.conditions for lv in c.levels),
-                 *(s.name for s in self.settings)]
+        names = self.names()
         for i, a in enumerate(names):
             for j, b in enumerate(names):
                 if i != j and a.lower() in b.lower():
