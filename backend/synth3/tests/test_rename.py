@@ -83,3 +83,12 @@ def test_an_acronym_plural_is_its_singular_plus_s_and_counts_as_sayable(REAL):
     assert re.fullmatch(r"[A-Z]{4}s", m["LMICs"])
     assert "BPs fell" in text and "SDs were" in text and not {"BPs", "SDs"} & set(m)
     assert hard_to_say(m) == [] and names_left(text, m, REAL) == []
+
+
+def test_roman_numerals_are_not_names(REAL):
+    # synth2 reads any run of capitals as a name: "angiotensin II" became "angiotensin UI", NYHA "II/III" "AE/OOE"
+    src = ("# Title\n\n## Abstract\n\nAngiotensin II type 1 receptors were blocked in NYHA class II/III/IV patients "
+           "at the Brightford site in phase III.\n")
+    text, m = rename_source(src, REAL, "s1", set())
+    assert "Angiotensin II type" in text and "class II/III/IV" in text and "phase III" in text
+    assert not {"II", "III", "IV"} & set(m) and "Brightford" not in text

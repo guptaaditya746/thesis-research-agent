@@ -13,6 +13,8 @@ _EDGE_L, _EDGE_R = r"(?<![A-Za-z0-9])", r"(?![A-Za-z0-9])"
 _HOLD = re.compile(r"qqkeep[a-j]+qq0?")
 _HEADING = re.compile(r"^#.*$", re.M)
 _TITLE_WORD = re.compile(r"(?<![\w-])[A-Z][a-z]+(?![\w-])")
+# Roman numerals are runs of capitals, so synth2 would rename them ("angiotensin II" -> "angiotensin UI").
+ROMAN = ("II", "III", "IV", "VI", "VII", "VIII", "IX", "XI", "XII")
 
 
 def lower_names(rs: RealSpec) -> re.Pattern:
@@ -146,7 +148,8 @@ def rename_source(text: str, rs: RealSpec, seed: str, avoid: set[str]) -> tuple[
     pat = lower_names(rs)
     text = pat.sub(lambda m: _case_like(drugs[m.group(0).lower()], m.group(0)), text)
     forms = [f for new in drugs.values() for f in (new, new.capitalize(), new.upper())]
-    keep = [*rs.keep, *(w + "s" for w in rs.keep if w[-1].isupper())]   # "BPs" stays as "BP" does
+    keep = [*rs.keep, *ROMAN]
+    keep += [w + "s" for w in keep if w[-1].isupper()]   # "BPs" stays as "BP" does
     text, held = _hold(text, [*keep, *forms])
     base = _map_base(text)
     mapping = _avoid_values(_plural_acronyms(build_map(base, seed), base, seed), avoid, seed, source_words)

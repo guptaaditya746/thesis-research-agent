@@ -10,7 +10,7 @@ results_heading: ^results?\b|^findings\b
 conclusion_heading: conclu|discussion|summary
 drop_sections: acknowledg|funding|conflicts? of interest|competing interests?|declarations?|author.{0,3}contributions?|abbreviations|supplementary|data availability|availability of data|ethics approval|consent for publication
 control_words: placebos?|usual (?:care|treatments?)|(?:treatment|care) as usual|standard (?:care|treatments?|therap(?:y|ies)|arms?|groups?)|conventional (?:care|treatments?|therap(?:y|ies)|arms?|groups?)|control (?:groups?|arms?|treatments?)|untreated
-keep: [BP, SBP, DBP, HR, CI, OR, RR, SD, SE, SEM, IQR, BMI, eGFR, CKD, HbA1c, LDL, HDL, ACE, ARB, ARBs, CCB, CCBs, RAAS, ECG, ICU, RCT, ITT, ANOVA, SAS, SPSS, Stata, WHO, FDA, NIH, ESC, ESH, ACC, AHA, JNC, NICE, MRI, CT, ABPM, NYHA, NCT, COVID-19, Kaplan, Meier, Cox]
+keep: [BP, SBP, DBP, HR, CI, OR, RR, SD, SE, SEM, IQR, BMI, eGFR, CKD, HbA1c, LDL, HDL, ACE, ARB, ARBs, CCB, CCBs, RAAS, ECG, ICU, RCT, ITT, ANOVA, SAS, SPSS, Stata, WHO, FDA, NIH, ESC, ESH, ACC, AHA, JNC, NICE, MRI, CT, ABPM, NYHA, NCT, COVID-19, Kaplan, Meier, Cox, HF, HFpEF, HFrEF, LV, LVEF, EF, AE, SAE, TEAE, QD, BID, ULN, RAS, FDC, SPC, MI, AF, CVD, CAD, NCD, LMIC]
 name_stems: [pril, sartan, olol, alol, dipine, thiazide, azosin, semide, tanide, tiazem, pamil, kiren, statin, gliflozin, gliptin, formin, glutide, parin, xaban, gatran, prazole, erenone, drostat, ilol]
 name_words: [chlorthalidone, indapamide, spironolactone, eplerenone, clonidine, hydralazine, minoxidil, methyldopa, moxonidine, sacubitril, amiloride]
 min_names: 10
