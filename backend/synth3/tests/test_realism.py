@@ -27,3 +27,33 @@ def test_report_feeds_both_sides_raw_and_masked(tmp_path, SPEC, REAL, pool):
     labels = [a.label for a in SPEC.arms]
     assert any(l in calls[0][2] for l in labels) and not any(l in calls[1][2] for l in labels)
     assert set(out) == {"pieces", "raw", "masked", "style gap", "synth2 template v2"}
+
+
+def test_stale_work_files_are_cleared(tmp_path, SPEC, REAL, pool):
+    build_real_folder(tmp_path / "r", SPEC, approved(SPEC, 1), 40, "table", REAL, pool)
+    stale = tmp_path / "w" / "raw" / "real" / "old_p1.md"
+    stale.parent.mkdir(parents=True)
+    stale.write_text("stale", encoding="utf-8")
+    realism_report(tmp_path / "r", pool, REAL, SPEC, tmp_path / "w",
+                   c2st=lambda *a, **k: {"auc": {}}, style_gap=lambda *a: {})
+    assert not stale.exists()
+
+
+def test_mask_skips_empty_groups(SPEC, REAL):
+    bare = SPEC.model_copy(update={"arms": [], "settings": []})
+    out = domain_mask("placebo at home", REAL.model_copy(update={"control_words": "placebo"}), bare)
+    assert out.strip() == "ARMNAME  at home"
+
+
+def test_cli_work_folder_is_inside_the_pool(tmp_path, monkeypatch, spec_dir, real_dir, pool_root):
+    import synth3.realism as mod
+    from synth3.cli import main
+    seen = []
+    def fake(folder, pool, rs, spec, work, **kw):
+        seen.append(work)
+        return {"pieces": {"real": 1, "synthetic": 1}, "raw": {"auc": {}}, "masked": {"auc": {}},
+                "style gap": {"folder": {"mean |gap|": 0}}}
+    monkeypatch.setattr(mod, "realism_report", fake)
+    assert main(["realism", "--domain", "demo", "--folder", str(tmp_path), "--out", str(tmp_path / "o.json"),
+                 "--pools", str(pool_root), "--real-root", str(real_dir), "--spec-root", str(spec_dir)]) == 0
+    assert seen == [pool_root / "demo" / "realism-work"]

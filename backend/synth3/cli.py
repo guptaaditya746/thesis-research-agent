@@ -183,7 +183,7 @@ def realism(args: argparse.Namespace) -> int:
     spec, rs = _spec(args), _real_spec(args)
     progress = lambda m: print(m, file=sys.stderr, flush=True)  # noqa: E731
     try:
-        out = realism_report(args.folder, args.pools / args.domain, rs, spec, args.out.with_suffix(".work"),
+        out = realism_report(args.folder, args.pools / args.domain, rs, spec, args.pools / args.domain / "realism-work",
                              c2st=lambda a, b, log=None: r2.c2st(a, b, log=progress), style_gap=r2.style_gap)
     except (OSError, ValueError) as err:
         raise BadArgument(str(err)) from err

@@ -21,10 +21,12 @@ SYNTH2_TEMPLATE_V2 = {
 def domain_mask(text: str, rs: RealSpec, spec: DomainSpec) -> str:
     """Drug names, arm labels and control words become ` ARMNAME `; setting names become ` SITE `. Both sides then
     look the same on these words (the synthetic side has no control word, the real side does)."""
-    sites = "|".join(re.escape(s.name) for s in spec.settings)
-    arms = "|".join(re.escape(a.label) for a in spec.arms)
-    text = re.sub(rf"\b(?:{sites})\b", " SITE ", text, flags=re.I)
-    text = re.sub(rf"\b(?:{arms}|{rs.control_words})\b", " ARMNAME ", text, flags=re.I)
+    sites = [re.escape(x.name) for x in spec.settings]
+    arms = [re.escape(a.label) for a in spec.arms] + ([rs.control_words] if rs.control_words else [])
+    if sites:
+        text = re.sub(r"\b(?:" + "|".join(sites) + r")\b", " SITE ", text, flags=re.I)
+    if arms:
+        text = re.sub(r"\b(?:" + "|".join(arms) + r")\b", " ARMNAME ", text, flags=re.I)
     return lower_names(rs).sub(" ARMNAME ", text)
 
 
@@ -42,6 +44,7 @@ def realism_report(folder: Path, pool: Path, rs: RealSpec, spec: DomainSpec, wor
         c2st, style_gap = c2st or realism.c2st, style_gap or realism.style_gap
     from synth2.realpool import slice_papers
     test = set(load_split(pool)["test"])
+    shutil.rmtree(work, ignore_errors=True)   # a rerun must never mix in old pieces
     raw_real, raw_syn = work / "raw" / "real", work / "raw" / "synthetic" / "papers"
     raw_real.mkdir(parents=True, exist_ok=True)
     for f in sorted((pool / "pieces").glob("*_p*.md")):
