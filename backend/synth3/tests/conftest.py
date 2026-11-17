@@ -1,6 +1,7 @@
 import pytest
 import yaml
 
+from synth3.realspec import load_real_spec
 from synth3.spec import load_spec
 
 
@@ -69,3 +70,29 @@ def SPEC(tmp_path):
 @pytest.fixture
 def spec_dir(tmp_path):
     return write(tmp_path / "specs", good())
+
+
+def real_good() -> dict:
+    """A valid real-paper config as a plain dict (a `files` source, every field set)."""
+    return {
+        "source": "files", "query": "", "max_fetch": 600,
+        "article_types": ["research-article"], "exclude_title": "protocol|review",
+        "min_words": 100, "max_words": 5000, "min_tables": 1,
+        "results_heading": r"^results?\b|^findings\b", "conclusion_heading": "conclu|discussion|summary",
+        "drop_sections": "acknowledg|funding|conflicts? of interest|competing interests?|declarations?",
+        "control_words": "placebo|usual care",
+        "keep": ["BP", "eGFR", "WHO", "SD"], "name_stems": ["pril", "dipine"], "name_words": ["chlorthalidone"],
+        "n_test": 5,
+    }
+
+
+def write_real(dir, d, newline="\n"):
+    dir.mkdir(parents=True, exist_ok=True)
+    text = yaml.safe_dump(d, sort_keys=False).replace("\n", newline)
+    (dir / "demo.yaml").write_bytes(text.encode("utf-8"))
+    return dir
+
+
+@pytest.fixture
+def REAL(tmp_path):
+    return load_real_spec("demo", write_real(tmp_path / "real", real_good()))

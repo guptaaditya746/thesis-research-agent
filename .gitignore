@@ -14,3 +14,4 @@ frontend/node_modules/
 
 # synth3 built folders (world files under data/synth3/worlds/ are committed)
 data/synth3/built/
+data/synth3/pools/
