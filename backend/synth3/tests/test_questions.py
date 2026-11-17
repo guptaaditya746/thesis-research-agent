@@ -100,3 +100,9 @@ def test_how_the_system_answers_each_kind():
     assert answer_by_of(inv) == "inventory" and target_of(inv) == "condition"
     assert target_of(inv.model_copy(update={"target": "metric"})) == "metric"
     assert target_of(Question(id="x", question="Q?", kind="effect")) is None
+
+
+def test_the_plan_and_the_questions_name_the_same_targets():
+    from evidence.plan import TARGETS as PLAN_TARGETS
+    from synth3.questions import TARGETS
+    assert PLAN_TARGETS == TARGETS
