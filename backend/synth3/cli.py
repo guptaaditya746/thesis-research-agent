@@ -177,6 +177,25 @@ def pool_split(args: argparse.Namespace) -> int:
     return 0
 
 
+def realism(args: argparse.Namespace) -> int:
+    from synth2 import realism as r2   # scikit-learn is heavy; load it only here
+    from synth3.realism import realism_report
+    spec, rs = _spec(args), _real_spec(args)
+    progress = lambda m: print(m, file=sys.stderr, flush=True)  # noqa: E731
+    try:
+        out = realism_report(args.folder, args.pools / args.domain, rs, spec, args.out.with_suffix(".work"),
+                             c2st=lambda a, b, log=None: r2.c2st(a, b, log=progress), style_gap=r2.style_gap)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    args.out.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    for view in ("raw", "masked"):
+        print(f"{view} (real {out['pieces']['real']}, synthetic {out['pieces']['synthetic']} pieces)")
+        for name, auc in out[view]["auc"].items():
+            print(f"  {name}: {auc}")
+    print(f"style gap: {out['style gap']['folder']['mean |gap|']} -> {args.out}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth3", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -197,6 +216,14 @@ def parser() -> argparse.ArgumentParser:
     br.add_argument("--real-root", type=Path, default=REAL_SPECS)
     br.add_argument("--pools", type=Path, default=POOLS)
     br.set_defaults(run=build_real)
+    rl = sub.add_parser("realism", help="real-vs-synthetic classifier on a built real folder, raw and masked")
+    rl.add_argument("--domain", required=True)
+    rl.add_argument("--folder", type=Path, required=True)
+    rl.add_argument("--out", type=Path, required=True)
+    rl.add_argument("--pools", type=Path, default=POOLS)
+    rl.add_argument("--real-root", type=Path, default=REAL_SPECS)
+    rl.add_argument("--spec-root", type=Path, default=SPECS)
+    rl.set_defaults(run=realism)
     pf = sub.add_parser("pool-fetch", help="fetch real papers from PubMed Central into a domain's pool")
     pi = sub.add_parser("pool-import", help="add .md, .xml and .pdf files to a domain's pool")
     ps = sub.add_parser("pool-split", help="split a pool into test papers and source papers, once")
