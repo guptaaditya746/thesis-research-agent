@@ -226,8 +226,8 @@ def agreement(sample: list[str], hand: dict, judged: dict[str, dict]) -> dict:
     """Over every (item, point) that both the judge (C ticks of the current marks `judged`) and Aditya marked, on
     the same answer and sheet. Items are named by their number on the review page (from 1), never by id: the id
     names the system. A hand mark made on another answer or sheet is left out and listed in `to_mark_again`; one
-    whose item has no current marks is listed in `not_judged`. `disagreements` (with the judge's tick) is None
-    until every sample item is marked."""
+    whose item has no current marks is listed in `not_judged`. Until every sample item is marked (`complete`), every
+    agreement number is None: each new mark would move it and show how the judge marked that item."""
     points = agree = 0
     marked: set[str] = set()
     disagreements: list[dict] = []
@@ -258,12 +258,16 @@ def agreement(sample: list[str], hand: dict, judged: dict[str, dict]) -> dict:
         if h.get("faithful") is not None and (j := _judge_faithful(m)) is not None:
             f_n += 1
             f_agree += j == h["faithful"]
+    out = {"marked": done, "of": len(sample), "to_mark_again": again, "not_judged": not_judged}
+    if not (sample and done == len(sample)):
+        # before the last mark, any agreement number moves with each new mark and shows how the judge marked it
+        return {**out, "complete": False, "points": None, "agree": None, "rate": None, "flag": False,
+                "answers_marked": None, "faithful": {"n": None, "agree": None, "rate": None}, "disagreements": None}
     rate = agree / points if points else None
-    return {"points": points, "agree": agree, "rate": rate, "flag": rate is not None and rate < FLAG_BELOW,
-            "answers_marked": len(marked), "marked": done, "of": len(sample), "to_mark_again": again,
-            "not_judged": not_judged,
+    return {**out, "complete": True, "points": points, "agree": agree, "rate": rate,
+            "flag": rate is not None and rate < FLAG_BELOW, "answers_marked": len(marked),
             "faithful": {"n": f_n, "agree": f_agree, "rate": f_agree / f_n if f_n else None},
-            "disagreements": disagreements if sample and done == len(sample) else None}
+            "disagreements": disagreements}
 
 
 # --- the report -------------------------------------------------------------------------------------------------
@@ -419,6 +423,9 @@ def render_report(r: dict) -> str:
         lines.append(f"Mark again (the answer or its sheet changed since): {_numbers(a['to_mark_again'])}.")
     if a["not_judged"]:
         lines.append(f"Marked but not judged now (run synth3 judge): {_numbers(a['not_judged'])}.")
+    if not a["complete"]:
+        lines.append("Judge agreement shown once every judge-test item is marked.")
+        return "\n".join(lines) + "\n"
     if a["rate"] is None:
         lines.append("Judge agreement n/a (no hand marks yet).")
     elif a["flag"]:

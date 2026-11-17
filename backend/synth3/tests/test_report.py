@@ -124,16 +124,19 @@ def test_a_hand_mark_on_another_answer_or_sheet_is_left_out_and_marked_again():
     marks["i2"]["sheet_sha256"] = "older sheet"
     del marks["i3"]["sheet_sha256"]   # made before the hashes were kept
     a = agreement(list(judged_), marks, judged_)
-    assert a["points"] == 2 and a["answers_marked"] == 1 and a["to_mark_again"] == [2, 3, 4]
-    assert a["marked"] == 1 and a["of"] == 4 and a["disagreements"] is None
+    assert a["to_mark_again"] == [2, 3, 4] and a["marked"] == 1 and a["of"] == 4 and not a["complete"]
+    assert a["points"] is None and a["rate"] is None and a["disagreements"] is None
 
 
-def test_disagreements_wait_for_every_item_and_never_name_the_item():
+def test_agreement_numbers_wait_for_every_item_and_never_name_the_item():
+    """A rate shown after each mark would move with it and show how the judge marked that item."""
     judged_ = {f"demo/s1/{s}/q01": marks_of(f"demo/s1/{s}/q01") for s in ("engine", BASELINE)}
     items = list(judged_)
     one = {items[0]: hand(judged_[items[0]], {"p1": False, "p2": False})}
     a = agreement(items, one, judged_)
-    assert a["marked"] == 1 and a["of"] == 2 and a["disagreements"] is None and a["rate"] == 0.5
+    assert a["marked"] == 1 and a["of"] == 2 and not a["complete"] and a["disagreements"] is None
+    assert a["rate"] is None and a["agree"] is None and a["points"] is None and a["faithful"]["agree"] is None
+    assert not a["flag"]
     both = one | {items[1]: hand(judged_[items[1]], {"p1": True, "p2": False})}
     a = agreement(items, both, judged_)
     assert a["disagreements"] == [{"n": 1, "point": "p1", "judge": True, "hand": False}]
@@ -143,7 +146,7 @@ def test_disagreements_wait_for_every_item_and_never_name_the_item():
 def test_a_marked_item_with_no_current_marks_is_listed_as_not_judged():
     m = marks_of("demo/s1/engine/q01")
     a = agreement(["demo/s1/engine/q01"], {"demo/s1/engine/q01": hand(m, {"p1": True})}, {})
-    assert a["not_judged"] == [1] and a["points"] == 0 and a["disagreements"] is None
+    assert a["not_judged"] == [1] and a["points"] is None and a["disagreements"] is None
 
 
 def test_hand_marks_and_sample_round_trip(tmp_path):
@@ -243,6 +246,8 @@ def test_the_report_never_shows_the_system_of_a_judge_test_item(folder, tmp_path
     assert listed[0] == {"n": 1, "domain": "demo", "seed": 1, "question": "d01"} and len(listed) == 6
     assert not any(i in md or i in json.dumps(listed) for i in items)
     assert r["agreement"]["disagreements"] is None and "Judge test: 1 of 6 marked." in md
+    assert "Judge agreement shown once every judge-test item is marked." in md and "%" not in md.split(
+        "Judge test:")[1]
     judge_test = md[md.index("Judge-test items"):]
     assert "engine" not in judge_test and BASELINE not in judge_test
 
