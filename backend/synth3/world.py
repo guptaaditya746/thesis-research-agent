@@ -408,6 +408,14 @@ def _result(spec: DomainSpec, measure_id: str, arm: str, n: int, true: float, rn
     return ArmResult(arm, n, mean=mean, sd=round(measure.spread * abs(mean), measure.decimals))
 
 
+def _key(spec: DomainSpec, measure_id: str, by_arm: dict[str, ArmResult], arm: str, against: str) -> tuple:
+    """The engine's duplicate key of one comparison: (metric, treatment value, control value) rounded to 3
+    decimals (evidence/rules.VALUE_DECIMALS; the engine is not imported here)."""
+    def value(r: ArmResult) -> float:
+        return r.k / r.n if spec.measure(measure_id).kind == "count" else r.mean
+    return measure_id, round(value(by_arm[arm]), 3), round(value(by_arm[against]), 3)
+
+
 def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt: int = 0) -> tuple[Study, ...]:
     """`count` studies of the world. `attempt` changes only the count/value noise; the design stays the same."""
     if count > len(spec.authors):
@@ -420,7 +428,7 @@ def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt:
     control = spec.control.id
     done: Counter[tuple[str, str]] = Counter()      # control studies per pair so far
     labels: set[str] = set()
-    taken: set[tuple] = set()                       # the numbers of every cell so far
+    taken: set[tuple] = set()                       # the comparison keys of every cell so far
     studies = []
     for i in range(count):
         sid = f"S{i + 1:03d}"
@@ -430,27 +438,29 @@ def draw_studies(spec: DomainSpec, world: World, seed: int, count: int, attempt:
         labels.add(d.label)
         split = next((c for c in spec.conditions if c.id == d.split), None)
         cells = []
+        compared = [(t, control) for t in d.arms[1:]] if d.arms[0] == control else [(d.arms[0], d.arms[1])]
         for m in d.measures:
             for level in [lv.id for lv in split.levels] if split else [None]:
                 levels = {**d.population, **({split.id: level} if split else {})}
                 trues = [_true(spec, world, arm, m, levels, d.base[m]) for arm in d.arms]
-                # a cell whose numbers equal an earlier cell's would read as one study published twice
+                # the engine merges two results with the same metric and treatment and control values as one study
+                # published twice (n and any other arm do not count), so no comparison may repeat an earlier one
                 for j in range(MAX_REDRAWS + 1):
                     again = f":again{j}" if j else ""
                     results = tuple(
                         _result(spec, m, arm, d.n, true,
                                 random.Random(f"synth3:{seed}:{attempt}:{sid}:c{index}:{arm}{again}"))
                         for arm, true in zip(d.arms, trues))
-                    key = tuple((r.k, r.n, r.mean) for r in results)
-                    if key not in taken:
+                    keys = [_key(spec, m, {r.arm: r for r in results}, a, b) for a, b in compared]
+                    if len(set(keys)) == len(keys) and taken.isdisjoint(keys):
                         break
                 else:
                     raise ValueError(f"study {sid}, cell {index}, measure {m}: {MAX_REDRAWS} redraws all repeat "
                                      "an earlier cell's numbers; give the measure more decimals or larger values")
-                taken.add(key)
+                taken.update(keys)
                 cells.append(Cell(index, m, levels, results))
                 index += 1
-        pairs = [(t, control) for t in d.arms[1:]] if d.arms[0] == control else [(d.arms[0], d.arms[1])]
+        pairs = compared
         claims = {f"{arm}|{against}|{m}":
                   direction(pair_delta(spec, [c for c in cells if c.measure == m], arm, against),
                             spec.measure(m).min_effect)

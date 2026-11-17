@@ -98,3 +98,20 @@ def test_numbers_that_can_only_repeat_are_refused_not_redrawn_forever(tmp_path):
 def test_study_round_trip(SPEC):
     for s in draw_studies(SPEC, draw_world(SPEC, 7), 7, 40):
         assert Study.parse(s.json()) == s
+
+
+def test_same_values_with_a_different_n_count_as_one_study_published_twice(tmp_path):
+    from evidence.rules import duplicates
+    d = good()
+    # value measure with one decimal and a narrow range: many cells share both means whatever their n
+    d["measures"][2] = {**d["measures"][2], "base_value": [10.0, 14.0], "spread": 0.1, "decimals": 1}
+    spec = load_spec("demo", write(tmp_path, d))
+    studies = draw_studies(spec, draw_world(spec, 1), 1, 40)
+    rows = []
+    for s in studies:
+        pairs = [(t, "ctrl") for t in s.arms[1:]] if s.arms[0] == "ctrl" else [s.arms[:2]]
+        for c in s.cells:
+            if c.measure == "m3":
+                by = {r.arm: r.mean for r in c.results}
+                rows += [(f"{s.id}c{c.index}{a}", "m3", by[a], by[b]) for a, b in pairs]
+    assert rows and duplicates(rows) == {}
