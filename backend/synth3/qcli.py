@@ -226,7 +226,7 @@ def add_question_commands(sub) -> None:
     s.add_argument("--results", type=Path, default=RESULTS)
     s.add_argument("--judge-test", type=Path, default=JUDGE_TEST)
     s.set_defaults(run=judge_sample)
-    r = sub.add_parser("report", help="A, B, C per system with the baseline, judge agreement (flag below 80%)")
+    r = sub.add_parser("report", help="A, B, C per system with the baseline, judge agreement (flag below 80%%)")
     r.add_argument("--domains", required=True, help="comma-separated, e.g. medicine,law")
     r.add_argument("--out", type=Path, required=True, help="FILE.json; FILE.md is written beside it")
     r.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: each domain's built set")

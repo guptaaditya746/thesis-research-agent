@@ -207,3 +207,14 @@ def test_report_by_command(folder, tmp_path, spec_dir, capsys):
     assert code == 0 and out.is_file() and out.with_suffix(".md").is_file()
     assert json.loads(out.read_text(encoding="utf-8"))["domains"]["demo"]
     assert "demo" in capsys.readouterr().out
+
+
+def test_help_lists_every_command(capsys):
+    """argparse expands % in help text: a bare "80%" crashed `synth3 --help`."""
+    try:
+        main(["--help"])
+    except SystemExit as e:
+        assert e.code == 0
+    out = capsys.readouterr().out
+    for cmd in ("questions", "draft-sheets", "collect", "baseline", "judge", "judge-sample", "report"):
+        assert cmd in out
