@@ -67,14 +67,21 @@ def inventory_answer(entries: int = 3) -> dict[str, Any]:
 
 
 def best_answer(winner: str | None = "rag", comparisons: int = 3) -> dict[str, Any]:
-    studies = [{"document": doc(n), "winner": winner or "closed_book", "tied": [], "values": {"rag": 0.8,
-               "closed_book": 0.7}, "reason": None} for n in range(1, comparisons + 1)]
+    """winner=None with comparisons: the papers split their wins, so no kind is best (tied lists both kinds)."""
+    values = {"rag": 0.8, "closed_book": 0.7}
+    base = {"kind": "best", "system": "evidence-engine", "metric": "accuracy"}
     if comparisons == 0:
         studies = [{"document": doc(1), "winner": None, "tied": [], "values": {},
                     "reason": {"code": "no_comparison", "text": "no dataset has values of two kinds"}}]
-    wins = {winner: comparisons} if winner and comparisons else {}
-    return {"kind": "best", "system": "evidence-engine", "metric": "accuracy", "studies": studies, "wins": wins,
-            "winner": winner if comparisons else None, "tied": []}
+        return {**base, "studies": studies, "wins": {}, "winner": None, "tied": []}
+    if winner is None:
+        studies = [{"document": doc(n), "winner": ("rag", "closed_book")[n % 2], "tied": [], "values": values,
+                    "reason": None} for n in range(1, comparisons + 1)]
+        return {**base, "studies": studies, "wins": {"rag": comparisons // 2, "closed_book": comparisons - comparisons // 2},
+                "winner": None, "tied": ["closed_book", "rag"]}
+    studies = [{"document": doc(n), "winner": winner, "tied": [], "values": values, "reason": None}
+               for n in range(1, comparisons + 1)]
+    return {**base, "studies": studies, "wins": {winner: comparisons}, "winner": winner, "tied": []}
 
 
 def consistency_answer(checkable: bool = True) -> dict[str, Any]:
@@ -105,6 +112,7 @@ def test_effect_lines_use_names_and_each_study():
 def test_forty_studies_stay_under_the_judge_cut():
     text = "\n".join(l.text for l in kind_lines(effect_protocol(), effect_answer(studies=40), NAMES))
     assert len(text) < 12_000 and "evidence-engine" not in text and "plan-" not in text
+    assert effect_answer()["question"] not in text and "Does retrieval" not in text
 
 
 def test_long_inventories_are_cut_with_a_count():
@@ -144,3 +152,56 @@ def test_inventory_lines_list_names_aliases_and_item_ids():
 def test_rule_text_has_the_six_rules():
     assert set(RULE_TEXT) == {"effect", "consistency", "inventory", "best", "written", "lines"}
     assert RULE_TEXT["lines"].format(rule="x") == "The plan's main rule: x."
+
+
+def effect_with(label: str, **groups: list[str]) -> dict[str, Any]:
+    answer = effect_answer(studies=0, label=label)
+    answer.update(groups)
+    return answer
+
+
+@pytest.mark.parametrize("label, said", [
+    ("refuted", "retrieval-augmented model does worse."), ("no_effect", "no real difference."),
+    ("mixed", "the papers disagree.")])
+def test_effect_labels_in_plain_words(label, said):
+    head = "retrieval-augmented model against closed-book model on answer accuracy: "
+    assert kind_lines(effect_protocol(), effect_with(label), NAMES)[0].text == head + said
+
+
+def test_effect_groups_and_unreadable_study_lines():
+    answer = effect_with("mixed", contradicting=["S002"], neutral=["S003"], undetermined=["S004"],
+                         duplicates=["S005"])
+    answer["studies"] = [{"document": "S004", "direction": "undetermined", "metric": None, "treatment": None,
+                          "control": None, "reason": {"code": "no_pair", "text": "no pair of values"}},
+                         {"document": "S002", "direction": "contradicts", "metric": "accuracy",
+                          "treatment": {"value": 0.5}, "control": {"value": 0.6}}]
+    texts = [l.text for l in kind_lines(effect_protocol(), answer, NAMES)]
+    assert texts[1:] == ["Papers that show it worse: S002.", "Papers that show no real difference: S003.",
+                         "Papers that could not be read: S004.", "Papers that repeat an earlier paper: S005.",
+                         "S004: could not be read (no pair of values).",
+                         "S002: worse on answer accuracy (0.5 against 0.6)."]
+
+
+def test_best_tie_and_no_comparison_lines():
+    lines = kind_lines(best_protocol(), best_answer(winner=None, comparisons=2), NAMES)
+    assert lines[0].text == ("On answer accuracy, no single kind is best: closed-book model, "
+                             "retrieval-augmented model tie.")
+    texts = [l.text for l in kind_lines(best_protocol(), best_answer(winner=None, comparisons=0), NAMES)]
+    assert texts == [CANT_TELL_LINE, "S001: no comparison (no dataset has values of two kinds)."]
+    tied = best_answer()
+    tied["studies"][0].update(winner=None, tied=["rag", "closed_book"])
+    assert kind_lines(best_protocol(), tied, NAMES)[1].text == (
+        "S001: retrieval-augmented model, closed-book model tie.")
+
+
+def test_inventory_of_measures():
+    answer = inventory_answer(entries=1)
+    answer["target"] = "metric"
+    assert kind_lines(inventory_protocol(), answer, NAMES)[0].text == "1 distinct names of measures."
+
+
+def test_a_reason_without_text_never_prints_its_code():
+    answer = consistency_answer(checkable=False)
+    answer["studies"][0]["reason"] = {"code": "no_pair"}
+    texts = [l.text for l in kind_lines(consistency_protocol(), answer, NAMES)]
+    assert "S001: cannot be checked (no reason given)." in texts and not any("no_pair" in t for t in texts)

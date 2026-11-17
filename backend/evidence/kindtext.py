@@ -79,8 +79,8 @@ def _join(words: list[str]) -> str:
 
 
 def _reason(reason: Mapping[str, Any] | None) -> str:
-    reason = reason or {}
-    return str(reason.get("text") or reason.get("code") or "no reason given")
+    """The reason's text; a reason with no text is written as a fixed phrase, never its code."""
+    return str((reason or {}).get("text") or "no reason given")
 
 
 def _study(text: str, entry: Any) -> KindLine:
