@@ -14,6 +14,7 @@ from evidence.arxiv import FetchError
 from synth3.corpus import build_folder
 from synth3.pmc import Polite, fetch_pool
 from synth3.pool import folder_sources, import_files, load_index, load_split, source_order, split_pool
+from synth3.reader import read_folder
 from synth3.realcorpus import build_real_folder
 from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
 from synth3.spec import SPECS, load_spec
@@ -196,6 +197,17 @@ def realism(args: argparse.Namespace) -> int:
     return 0
 
 
+def reader(args: argparse.Namespace) -> int:
+    from modelcall.gateway import openai_model   # pydantic-ai is heavy; load it only here
+    spec = _spec(args)
+    try:
+        out = read_folder(args.folder, spec, openai_model(args.model), args.folder / "real" / "reader-calls.jsonl")
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    print(f"ok {out['ok']} of {out['papers']}, {out['other_results']} other results")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth3", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -224,6 +236,12 @@ def parser() -> argparse.ArgumentParser:
     rl.add_argument("--real-root", type=Path, default=REAL_SPECS)
     rl.add_argument("--spec-root", type=Path, default=SPECS)
     rl.set_defaults(run=realism)
+    rd = sub.add_parser("reader", help="a sub-model reads each paper of a built real folder; code checks the notes")
+    rd.add_argument("--domain", required=True)
+    rd.add_argument("--folder", type=Path, required=True)
+    rd.add_argument("--model", default="sub-model-1")
+    rd.add_argument("--spec-root", type=Path, default=SPECS)
+    rd.set_defaults(run=reader)
     pf = sub.add_parser("pool-fetch", help="fetch real papers from PubMed Central into a domain's pool")
     pi = sub.add_parser("pool-import", help="add .md, .xml and .pdf files to a domain's pool")
     ps = sub.add_parser("pool-split", help="split a pool into test papers and source papers, once")
