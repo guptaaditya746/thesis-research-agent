@@ -48,6 +48,8 @@ class AnswerRecord(Strict):
     passages: list[PulledFact]
     source: str
     asked_sha256: str | None = Field(None, exclude_if=lambda v: v is None)   # the system's records only
+    plan_confirmed_by: str | None = Field(None, exclude_if=lambda v: v is None)   # "person" | "system"; system's only
+    facts_left_out: int | None = Field(None, exclude_if=lambda v: v is None)   # facts not given to the writer
 
 
 def _clean(value: Any) -> Any:
@@ -85,6 +87,17 @@ def _record(folder: Folder, q: Question, system: str, answer: dict, cited_from: 
                         text_cut=cut, cited=cited, facts=facts, passages=passages, source=source)
 
 
+def pulled_facts(run: Path, folder: Folder) -> list[PulledFact]:
+    """One PulledFact per item of the run, with its paper and its first span's quote."""
+    index = PaperIndex.of_corpus(folder.path)
+    facts = []
+    for item in RunDir(run).items():
+        sel = item.spans[0].selector
+        facts.append(PulledFact(paper=index.of(item), kind=item.evidence_type, fields=item.fields,
+                                quote=str(sel.get("exact", "")), start=sel.get("start"), end=sel.get("end")))
+    return facts
+
+
 def from_engine_run(run: Path, folder: Folder, q: Question, system: str = "engine") -> AnswerRecord:
     rd = RunDir(run)
     answer = rd.json(ANSWER_FILE)
@@ -95,13 +108,7 @@ def from_engine_run(run: Path, folder: Folder, q: Question, system: str = "engin
     if named != folder.corpus_id:
         raise ValueError(f"{run}: the run is of corpus {named!r}, the folder is {folder.corpus_id!r}; "
                          "a run on another corpus is refused")
-    index = PaperIndex.of_corpus(folder.path)
-    facts = []
-    for item in rd.items():
-        sel = item.spans[0].selector
-        facts.append(PulledFact(paper=index.of(item), kind=item.evidence_type, fields=item.fields,
-                                quote=str(sel.get("exact", "")), start=sel.get("start"), end=sel.get("end")))
-    return _record(folder, q, system, answer, None, str(run), facts, [])
+    return _record(folder, q, system, answer, None, str(run), pulled_facts(run, folder), [])
 
 
 def from_rag_answer(answer: dict, folder: Folder, q: Question, source: str) -> AnswerRecord:

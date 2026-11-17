@@ -21,6 +21,7 @@ from synth3.report import (JUDGE_TEST, SAMPLE, build_report, current_marks_of, l
                            render_report, save_sample)
 from synth3.sheetfacts import Folder, scope
 from synth3.sheets import RESULTS, SHEETS, folders_of
+from synth3.system import SYSTEM, from_system_run, is_plan_run
 from synth3.spec import SPECS
 
 
@@ -71,8 +72,10 @@ def draft_sheets(args: argparse.Namespace) -> int:
 
 def collect(args: argparse.Namespace) -> int:
     spec = _spec(args)
-    if not re.match(SYSTEM_ID, args.system):
-        raise BadArgument(f"--system must match {SYSTEM_ID}, got '{args.system}'")
+    plan_run = is_plan_run(args.run_dir)
+    system = args.system or (SYSTEM if plan_run else "engine")
+    if not re.match(SYSTEM_ID, system):
+        raise BadArgument(f"--system must match {SYSTEM_ID}, got '{system}'")
     try:
         q = _questions(args, spec).get(args.question)
     except KeyError as err:
@@ -80,7 +83,7 @@ def collect(args: argparse.Namespace) -> int:
 
     def step(folder: Folder) -> tuple[list[str], bool]:
         try:
-            rec = from_engine_run(args.run_dir, folder, q, args.system)
+            rec = (from_system_run if plan_run else from_engine_run)(args.run_dir, folder, q, system)
         except (OSError, ValueError) as err:
             raise BadArgument(str(err)) from err
         return [str(save_answer(args.results, rec))], False
@@ -196,7 +199,8 @@ def add_question_commands(sub) -> None:
     c.add_argument("--seed", type=int, required=True)
     c.add_argument("--question", required=True, help="the question id")
     c.add_argument("--run", dest="run_dir", type=Path, required=True, help="the engine run folder")
-    c.add_argument("--system", default="engine", help="lower case letters, digits and '-'")
+    c.add_argument("--system", default=None, help="lower case letters, digits and '-'; default: system for a plan "
+                                                    "run, engine for any other")
     c.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: the domain's built set")
     c.add_argument("--questions-root", type=Path, default=QUESTIONS)
     c.add_argument("--spec-root", type=Path, default=SPECS)
