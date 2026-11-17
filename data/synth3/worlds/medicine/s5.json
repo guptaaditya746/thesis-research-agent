@@ -1,0 +1,87 @@
+{
+  "domain": "medicine",
+  "seed": 5,
+  "spec_sha256": "5955db97133ffabacb9fdf15725dfc2bd452660c440961f9ffe8c17be9de7040",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "alvenor",
+      "measure": "bp_control",
+      "kind": "uniform",
+      "condition": "age",
+      "effects": {
+        "yng": 0.135,
+        "eld": 0.082
+      }
+    },
+    {
+      "treatment": "alvenor",
+      "measure": "side_effects",
+      "kind": "opposed",
+      "condition": "kidney",
+      "effects": {
+        "norm": -0.066,
+        "red": 0.088
+      }
+    },
+    {
+      "treatment": "alvenor",
+      "measure": "systolic_drop",
+      "kind": "opposed",
+      "condition": "care",
+      "effects": {
+        "univ": 0.235,
+        "comm": -0.271
+      }
+    },
+    {
+      "treatment": "brostamide",
+      "measure": "bp_control",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "brostamide",
+      "measure": "side_effects",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "brostamide",
+      "measure": "systolic_drop",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "cardivel",
+      "measure": "bp_control",
+      "kind": "uniform",
+      "condition": "age",
+      "effects": {
+        "yng": 0.109,
+        "eld": 0.124
+      }
+    },
+    {
+      "treatment": "cardivel",
+      "measure": "side_effects",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "cardivel",
+      "measure": "systolic_drop",
+      "kind": "opposed",
+      "condition": "care",
+      "effects": {
+        "univ": 0.222,
+        "comm": -0.241
+      }
+    }
+  ],
+  "uncovered": []
+}
