@@ -23,7 +23,8 @@ MAX_SEEDS = 10
 MIN_REAL_SHARE = 0.65   # builder's call: synth2 v11 papers were about 90% real text
 SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(\[])")   # as in synth2.templedit
 CAPTION = re.compile(r"^Table \d+\.")
-_JOINT = r"(?:,|\b(?:and|or|versus|with|against|compared (?:with|to))\b|\bvs\b\.?)"
+_JOINT = r"(?:,|\b(?:and|or|plus|versus|with|against|compared (?:with|to))\b|\bvs\b\.?)"
+_TABLE_NO = re.compile(r"\bTables?\s+(\d+)")
 _JOINT_BEFORE = re.compile(rf"\s*{_JOINT}\s*$", re.I)
 _JOINT_AFTER = re.compile(rf"^\s*{_JOINT}", re.I)
 
@@ -85,20 +86,15 @@ class RealPaper:
 
 
 def clean_block(block: str, banned: re.Pattern) -> str | None:
-    """The block without the parts that match `banned`; '' when nothing is left; None when unchanged. A heading or
-    a `Table N.` caption that matches goes whole, and so does a table whose header row matches (the control hidden
-    in a column); other tables lose the matching rows, paragraphs the matching sentences."""
+    """The block without the parts that match `banned`; '' when nothing is left; None when unchanged. A heading, a
+    `Table N.` caption or a table that matches anywhere goes whole: a header row can sit below the `| --- |` line
+    (two-row headers), so dropping only the matching row would keep the control's numbers in a nameless column.
+    A paragraph loses the matching sentences."""
     if not banned.search(block):
         return None
     head = block.lstrip()
-    if head.startswith("#") or CAPTION.match(head):
+    if head.startswith(("#", "|")) or CAPTION.match(head):
         return ""
-    if head.startswith("|"):
-        lines = block.split("\n")
-        if banned.search(lines[0]):
-            return ""
-        keep = [ln for i, ln in enumerate(lines) if i < 2 or not banned.search(ln)]
-        return "\n".join(keep) if len(keep) > 2 else ""
     return " ".join(s for s in SENTENCE.split(block) if not banned.search(s))
 
 
@@ -112,7 +108,7 @@ def clean_title(title: str, banned: re.Pattern) -> str | None:
             start -= 1
         while end < len(t) and (t[end].isalnum() or t[end] == "-"):
             end += 1
-        before, after = t[:start], t[end:]
+        before, after = t[:start], re.sub(r"^\s*alone\b", "", t[end:], flags=re.I)
         if jb := _JOINT_BEFORE.search(before):
             before = before[:jb.start()]
         elif ja := _JOINT_AFTER.match(after):
@@ -152,11 +148,19 @@ def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_
     text = head + rest.lstrip("\n")          # the paper as apply_edits builds it
 
     blocks = _blocks(rest)
-    new = [clean_block(b, banned) for b in blocks]
-    gone = [n == "" for n in new]
-    for i, b in enumerate(blocks):             # a table and the caption right before it go together
-        if i and CAPTION.match(blocks[i - 1]) and b.startswith("|") and (gone[i] or gone[i - 1]):
-            new[i - 1] = new[i] = ""
+    pattern, dropped = banned, set()
+    while True:     # a sentence citing a dropped table goes too, and a caption it takes may drop one more table
+        new = [clean_block(b, pattern) for b in blocks]
+        gone = [n == "" for n in new]
+        for i, b in enumerate(blocks):         # a table and the caption right before it go together
+            if i and CAPTION.match(blocks[i - 1]) and b.startswith("|") and (gone[i] or gone[i - 1]):
+                new[i - 1] = new[i] = ""
+        now = {_TABLE_NO.match(b).group(1) for b, n in zip(blocks, new) if n == "" and CAPTION.match(b)}
+        if now == dropped:
+            break
+        dropped = now
+        cite = rf"\bTables?\s+(?:\d+\s*(?:,|and|&|to|–|-)\s*)*(?:{'|'.join(sorted(dropped))})(?!\d)"
+        pattern = re.compile(rf"(?:{banned.pattern})|{cite}", banned.flags)
     replace = []
     for b, n in zip(blocks, new):
         if n is not None and text.count(b) == 1:
@@ -164,7 +168,7 @@ def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_
             text = text.replace(b, n)
 
     blocks = _blocks(text[len(head):])
-    table_no = sum(bool(CAPTION.match(b)) for b in blocks) + 1
+    table_no = max((int(n) for n in _TABLE_NO.findall(rest)), default=0) + 1   # never a real table's number
     ours = [claims_block(study, spec, "abstract", seed), planted_section(study, spec, text_level, seed, table_no),
             claims_block(study, spec, "conclusion", seed)]
 
@@ -181,7 +185,9 @@ def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_
         return next((h for h in heads if h > i), len(blocks))
 
     results = [i for i in heads if rs.heading("results", blocks[i])]
-    conclusions = [i for i in heads if rs.heading("conclusion", blocks[i])]
+    # not a results heading too ("Results and discussion"), and after the results: claims never come before ours
+    conclusions = [i for i in heads if rs.heading("conclusion", blocks[i]) and not rs.heading("results", blocks[i])
+                   and (not results or i > results[-1])]
     abstract = next((i for i in heads if blocks[i] == "## Abstract"), None)
     if abstract is not None:
         at = max((k for k in range(abstract + 1, end(abstract)) if _is_para(blocks[k])), default=abstract)

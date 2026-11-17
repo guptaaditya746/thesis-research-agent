@@ -3,6 +3,7 @@ import re
 import pytest
 
 from synth3 import realwrite
+from synth3.pmc import jats_paper
 from synth3.realwrite import MAX_SEEDS, clean_block, clean_title, edit_study
 from synth3.tests.conftest import fake_paper, supported
 from synth3.write import TEXT_LEVELS, _claim_sentence, missing_facts
@@ -81,7 +82,7 @@ def test_clean_block_rules():
     assert clean_block("Table 2. Events in the placebo group.", BANNED) == ""
     assert clean_block("| Outcome | Drug | Placebo |\n| --- | --- | --- |\n| Events | 1 | 2 |", BANNED) == ""
     table = "| Group | Events |\n| --- | --- |\n| Drug | 1 |\n| Placebo | 2 |"
-    assert clean_block(table, BANNED) == "| Group | Events |\n| --- | --- |\n| Drug | 1 |"
+    assert clean_block(table, BANNED) == ""   # a control row anywhere: the whole table goes
     assert clean_block("A first sentence. The placebo was inert. A last one.", BANNED) == "A first sentence. A last one."
 
 
@@ -92,6 +93,7 @@ def test_clean_block_rules():
     ("Effects of X and placebo on blood pressure", "Effects of X on blood pressure"),
     ("A trial of X", "A trial of X"),
     ("X versus placebo", None),
+    ("Drug X plus usual care versus usual care alone in heart failure", "Drug X in heart failure"),
 ])
 def test_clean_title(title, want):
     assert clean_title(title, BANNED) == want
@@ -102,6 +104,40 @@ def test_a_caption_naming_the_control_takes_its_table_along(SPEC, REAL):
         "Table 1. Outcomes by group.", "Table 1. Outcomes in the drug and placebo groups.")
     _, rp = edit(SPEC, REAL, source=src)
     assert rp.problems == () and "| Outcome | Drug | Other |" not in rp.paper.text
+
+
+_TWO_ROW_XML = b"""<article article-type="research-article"><front><article-meta><title-group>
+<article-title>T</article-title></title-group></article-meta></front><body><sec><title>Results</title>
+<table-wrap id="T1"><label>Table 1</label><caption><title>Outcomes by group</title></caption>
+<table><thead><tr><th rowspan="2">Outcome</th><th colspan="2">Group</th></tr>
+<tr><th>Drug A (n=200)</th><th>Placebo (n=200)</th></tr></thead>
+<tbody><tr><td>Strokes</td><td>17</td><td>29</td></tr></tbody></table></table-wrap></sec></body></article>"""
+
+
+def test_a_two_row_header_table_naming_the_control_goes_whole(SPEC, REAL):
+    table = next(b for b in jats_paper(_TWO_ROW_XML).text.split("\n\n") if b.startswith("|"))
+    assert "| --- |" in table.split("\n")[1] and "Placebo" in table.split("\n")[2]   # the arm row is below
+    assert clean_block(table, REAL.banned(SPEC)) == ""
+    src = fake_paper(8).replace("| Outcome | Drug | Placebo |\n| --- | --- | --- |\n| Events | 12 | 20 |", table)
+    _, rp = edit(SPEC, REAL, source=src)
+    assert rp.problems == () and "Strokes" not in rp.paper.text and "Outcomes by group" not in rp.paper.text
+
+
+def test_our_table_number_follows_the_highest_real_one(SPEC, REAL):
+    kept = "Table 2. Visits by month.\n\n| Month | Visits |\n| --- | --- |\n| First | 31 |"
+    src = fake_paper(9).replace("## Discussion", f"As Table 1 shows, events were rare.\n\n{kept}\n\n## Discussion")
+    _, rp = edit(SPEC, REAL, source=src)
+    t = rp.paper.text
+    assert rp.problems == () and "Table 3." in rp.inserted[1] and t.count("Table 2.") == 1 and "| First | 31 |" in t
+    assert "As Table 1 shows" not in t
+
+
+def test_results_and_discussion_heading_keeps_the_conclusion_claims_after_the_section(SPEC, REAL):
+    # lower-case "discussion": the renamer would treat a capitalised word after "and" as a name
+    src = fake_paper(10).replace("## Results", "## Results and discussion").replace("## Discussion\n", "## Limits\n")
+    _, rp = edit(SPEC, REAL, source=src)
+    t = rp.paper.text
+    assert rp.problems == () and t.index(rp.inserted[1]) < t.index(rp.inserted[2])
 
 
 def test_paper_without_results_heading_puts_the_section_before_the_conclusion(SPEC, REAL):
