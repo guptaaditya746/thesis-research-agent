@@ -160,3 +160,26 @@ def make_pool(root, n: int, rs):
         rows.append(add_paper(root, paper, rs))
     save_index(root, rows)
     return root
+
+
+@pytest.fixture
+def pool(tmp_path, REAL):
+    """A split pool of 50 fake papers: 5 test papers and 45 sources."""
+    from synth3.pool import split_pool
+    root = make_pool(tmp_path / "pool", 50, REAL)
+    split_pool(root, REAL)
+    return root
+
+
+@pytest.fixture
+def real_dir(tmp_path):
+    return write_real(tmp_path / "real_cli", real_good())
+
+
+@pytest.fixture
+def pool_root(tmp_path, REAL):
+    """A pools folder holding a split `demo` pool."""
+    from synth3.pool import split_pool
+    root = tmp_path / "pools"
+    split_pool(make_pool(root / "demo", 50, REAL), REAL)
+    return root

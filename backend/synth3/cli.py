@@ -13,7 +13,8 @@ import httpx
 from evidence.arxiv import FetchError
 from synth3.corpus import build_folder
 from synth3.pmc import Polite, fetch_pool
-from synth3.pool import import_files, load_index, split_pool
+from synth3.pool import folder_sources, import_files, load_index, load_split, source_order, split_pool
+from synth3.realcorpus import build_real_folder
 from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
 from synth3.spec import SPECS, load_spec
 from synth3.world import describe, draw_world, load_world, save_world
@@ -61,11 +62,13 @@ def draw(args: argparse.Namespace) -> int:
     return 0
 
 
-def build(args: argparse.Namespace) -> int:
-    spec, seeds = _spec(args), _seeds(args.seeds)
+def _approved_worlds(args: argparse.Namespace, spec, problems: list[str]) -> dict:
+    """The approved world of every seed; each missing, broken or unapproved world and each non-empty target
+    folder adds a problem, and any problem stops the command before a folder is written."""
+    seeds = _seeds(args.seeds)
     if args.text_level not in TEXT_LEVELS:
         raise BadArgument(f"unknown text level '{args.text_level}'; choose from {', '.join(TEXT_LEVELS)}")
-    worlds, problems = {}, []
+    worlds = {}
     for seed in seeds:
         path = args.worlds / args.domain / f"s{seed}.json"
         folder = args.out / f"s{seed}"
@@ -84,6 +87,12 @@ def build(args: argparse.Namespace) -> int:
         worlds[seed] = world
     if problems:
         raise BadArgument("; ".join(problems))
+    return worlds
+
+
+def build(args: argparse.Namespace) -> int:
+    spec = _spec(args)
+    worlds = _approved_worlds(args, spec, [])
     for seed, world in worlds.items():
         folder = args.out / f"s{seed}"
         try:
@@ -100,6 +109,26 @@ def _real_spec(args: argparse.Namespace):
         return load_real_spec(args.domain, args.real_root)
     except (OSError, ValueError) as err:
         raise BadArgument(str(err)) from err
+
+
+def build_real(args: argparse.Namespace) -> int:
+    spec, rs = _spec(args), _real_spec(args)
+    pool, problems = args.pools / args.domain, []
+    try:
+        folder_sources(source_order(load_split(pool), rs.domain), 1, args.studies)
+    except (OSError, ValueError) as err:
+        problems.append(str(err))
+    worlds = _approved_worlds(args, spec, problems)
+    for seed, world in worlds.items():
+        folder = args.out / f"s{seed}"
+        try:
+            cid = build_real_folder(folder, spec, world, args.studies, args.text_level, rs, pool)
+        except ValueError as err:
+            raise BadArgument(f"s{seed}: {err}") from err
+        attempt = json.loads((folder / "corpus.json").read_text(encoding="utf-8"))["settings"]["attempt"]
+        rejected = json.loads((folder / "ground_truth.json").read_text(encoding="utf-8"))["real"]["rejected"]
+        print(f"s{seed}: {cid} (attempt {attempt}, {sum(map(len, rejected.values()))} sources rejected) -> {folder}")
+    return 0
 
 
 def _report(out: dict, pool: Path) -> None:
@@ -153,16 +182,21 @@ def parser() -> argparse.ArgumentParser:
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
     d = sub.add_parser("draw", help="draw one world file per seed for a domain")
     b = sub.add_parser("build", help="build one folder per seed from approved world files")
-    for p in (d, b):
+    br = sub.add_parser("build-real", help="build one folder per seed from approved worlds and renamed real papers")
+    for p in (d, b, br):
         p.add_argument("--domain", required=True)
         p.add_argument("--seeds", required=True, help="comma-separated, e.g. 1,2,3,4,5")
         p.add_argument("--spec-root", type=Path, default=SPECS)
         p.add_argument("--worlds", type=Path, default=WORLDS)
     d.set_defaults(run=draw)
-    b.add_argument("--studies", type=int, default=40)
-    b.add_argument("--text-level", default="table", help=" | ".join(TEXT_LEVELS))
-    b.add_argument("--out", type=Path, required=True)
+    for p in (b, br):
+        p.add_argument("--studies", type=int, default=40)
+        p.add_argument("--text-level", default="table", help=" | ".join(TEXT_LEVELS))
+        p.add_argument("--out", type=Path, required=True)
     b.set_defaults(run=build)
+    br.add_argument("--real-root", type=Path, default=REAL_SPECS)
+    br.add_argument("--pools", type=Path, default=POOLS)
+    br.set_defaults(run=build_real)
     pf = sub.add_parser("pool-fetch", help="fetch real papers from PubMed Central into a domain's pool")
     pi = sub.add_parser("pool-import", help="add .md, .xml and .pdf files to a domain's pool")
     ps = sub.add_parser("pool-split", help="split a pool into test papers and source papers, once")
