@@ -457,7 +457,8 @@ class Execution:
         self.ref = ProtocolRef(id=setup.protocol.id, sha256=setup.protocol.sha256)
         self.ctx = stages.StageContext(setup.plan, setup.calls, mode, setup.provider, root, self.stage_ask,   # the seams'
                                        self.names_model, source_dir=setup.source_dir, extra=setup.stages,
-                                       _texts=self.corpus_texts, _bad_reply=self.stage_bad_reply)
+                                       _texts=self.corpus_texts, _bad_reply=self.stage_bad_reply,
+                                       corpus=Path(setup.settings.corpus))
         self.records_nq: bytes | None = None
         self.outputs: dict[str, str] = {}
         self.located: list[dict[str, Any]] = []

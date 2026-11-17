@@ -255,7 +255,7 @@ def stage_entries(plan: Plan, *, reason: str = "on", links: str = "on",
     from .claims import claim_stage
     from .extractors.recheck import recheck, recheck_report
     from .ontology.fill import ontology_stage
-    from . import unchecked
+    from . import unchecked, written
     return [
         *([("map-experiments", "before_extract", experiments.before_extract)] if version == "v1" else []),
         ("recheck", "after_type", recheck),
@@ -266,6 +266,7 @@ def stage_entries(plan: Plan, *, reason: str = "on", links: str = "on",
         (RECHECK_REPORT, "after_run", recheck_report),
         (unchecked.NAME, "after_run", unchecked.report),   # the items the per-item stages could not read
         ("ontology", "after_run", ontology_stage if reason == "on" else no_tree),
+        *([(written.STAGE, "after_run", written.written_stage)] if plan.answer_by == "written" else []),
     ]
 
 

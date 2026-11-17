@@ -4,7 +4,7 @@ question from numbered facts, code checks the reply, and code adds the paper ids
 This module holds the pure parts: which items become facts (`bears_on`, `fact_lines`: every paper gets its first fact
 before any paper gets a second, within a share of the model's context window), the writer's input, the checks of a
 reply (`check_written`), the answer text with its paper ids (`answer_text_of`) and the repair input. The writer sees the
-main question only, never the plan's sub-questions."""
+main question only, never the plan's sub-questions. `written_stage` is the stage itself."""
 from __future__ import annotations
 
 import math
@@ -14,19 +14,22 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Literal
 
+import modelcall
 from pydantic import BaseModel
 
-from modelcall.pins import ORCH_ALIAS
+from modelcall.pins import ORCH_ALIAS, ORCHESTRATOR
 
 from .contract import Item
 from .plan import Plan
 from .planlines import OTHER, sides
 from .planrun import ANY
+from .rundir import PaperIndex, RunDir
+from .stages import StageContext
 
 __all__ = ["CHARS_PER_TOKEN", "FACT_SHARE", "FACT_TYPES", "MAX_QUOTE", "MAX_REPAIRS", "MAX_SENTENCES",
            "MAX_SENTENCE_CHARS", "NO_FACTS_TEXT", "PROMPT", "STAGE", "WRITER_ALIAS", "Fact", "Sentence", "WrittenReply",
            "answer_text_of", "bears_on", "check_written", "fact_budget", "fact_lines", "numbers", "repair_input",
-           "writer_input"]
+           "writer_input", "written_stage"]
 
 STAGE = "written-answer"
 PROMPT = Path(__file__).parent / "stage_prompts" / "written-answer-v1.md"
@@ -271,3 +274,45 @@ def repair_input(first: str, rejected: WrittenReply, problems: list[str]) -> str
     # Mirrors synth3/asking.py repair_input: the engine (evidence) may not import synth3.
     return (f"{first}\n\nYour reply:\n{rejected.model_dump_json()}\n\nFix only these problems:\n"
             + "\n".join(problems))
+
+
+# --- the stage ------------------------------------------------------------------------------------------------------
+
+LATER_TEMPERATURE = 0.3   # a later try (Plan.writer_try >= 1) must differ from the first: the same request is no repair
+
+
+def written_stage(run: RunDir, ctx: StageContext) -> dict[str, Any]:
+    """The after-run stage `written-answer`: the facts, one writer call, the checks, at most MAX_REPAIRS repair calls.
+    No fact: no call, status `no_facts`. A failed call raises StageCallError (the engine records it as failed)."""
+    plan = ctx.plan
+    if plan is None or ctx.corpus is None:
+        raise ValueError("the written answer needs the plan and the corpus folder")
+    facts, cut = fact_lines(PaperIndex.of_corpus(ctx.corpus).group(run.items()), plan,
+                            fact_budget(int(ORCHESTRATOR["context_tokens"])))
+    prompt = modelcall.load_prompt(PROMPT)
+    out: dict[str, Any] = {"status": "no_facts", "question": plan.question, "answer_text": "", "sentences": [],
+                           "facts": [f.model_dump() for f in facts], "cut": cut, "tries": [], "problems": [],
+                           "model": WRITER_ALIAS, "prompt_sha256": prompt.sha256, "writer_try": plan.writer_try}
+    if not facts:
+        out["answer_text"] = NO_FACTS_TEXT
+        out["sentences"] = [{"text": NO_FACTS_TEXT, "says": "cannot_tell", "facts": [], "papers": []}]
+        return out
+    extra: dict[str, Any] = ({"request_extra": {"try": plan.writer_try}, "temperature": LATER_TEMPERATURE,
+                              "seed": plan.writer_try} if plan.writer_try >= 1 else {})
+    first = writer_input(plan.question, facts)
+    text, reply = first, None
+    for _ in range(MAX_REPAIRS + 1):
+        reply = ctx.ask(prompt.text, text, output_type=WrittenReply, purpose=STAGE, model=WRITER_ALIAS,
+                        max_tokens=2048, **extra)
+        problems = check_written(reply, facts, question=plan.question)
+        out["tries"].append({"reply": reply.model_dump(), "problems": problems})
+        out["problems"] = problems
+        if not problems:
+            break
+        text = repair_input(first, reply, problems)
+    if out["problems"]:
+        out["status"] = "failed"
+    else:
+        out["status"] = "ok"
+        out["answer_text"], out["sentences"] = answer_text_of(reply, facts)
+    return out
