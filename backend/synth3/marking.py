@@ -119,7 +119,8 @@ def _was_pending(path: Path) -> bool:
         return False
 
 
-def _saved(results: Path, domain: str, seed: int, systems: list[str] | None) -> list[AnswerRecord]:
+def saved_answers(results: Path, domain: str, seed: int, systems: list[str] | None) -> list[AnswerRecord]:
+    """The saved answers of one folder (`systems` None: every system), by system and question."""
     recs = [load_answer(p) for p in (results / domain / f"s{seed}").glob("*/*.answer.json")]
     recs = [r for r in recs if systems is None or r.system in systems]
     return sorted(recs, key=lambda r: (r.system, r.question_id))
@@ -133,7 +134,7 @@ def judge_folder(folder: Folder, systems: list[str] | None, qs: QuestionSet, mod
     domain, seed = folder.spec.domain, folder.seed
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     out: dict = {"judged": 0, "kept": 0, "skipped": {}, "pending": []}
-    for rec in _saved(results, domain, seed, systems):
+    for rec in saved_answers(results, domain, seed, systems):
         item = item_id(rec)
         path = marks_path(results, domain, seed, rec.system, rec.question_id)
         try:

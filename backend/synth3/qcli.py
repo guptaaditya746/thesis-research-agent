@@ -17,7 +17,8 @@ from synth3.drafter import DRAFTER_ALIAS, draft_folder_sheets
 from synth3.judge import JUDGE_ALIAS
 from synth3.marking import judge_folder
 from synth3.questions import QUESTIONS, QuestionSet, load_questions
-from synth3.report import JUDGE_TEST, SAMPLE, build_report, load_sample, pick_sample, render_report, save_sample
+from synth3.report import (JUDGE_TEST, SAMPLE, build_report, current_marks_of, load_sample, pick_sample,
+                           render_report, save_sample)
 from synth3.sheetfacts import Folder, scope
 from synth3.sheets import RESULTS, SHEETS, folders_of
 from synth3.spec import SPECS
@@ -142,11 +143,16 @@ def _domains(text: str) -> list[str]:
 
 def judge_sample(args: argparse.Namespace) -> int:
     domains = _domains(args.domains)
-    have = load_sample(args.judge_test)
-    if have and args.add is None:
-        raise BadArgument(f"{args.judge_test / 'sample.json'} exists ({len(have)} items); pass --add N to add "
-                          "items from more domains, keeping the marked ones")
-    new = pick_sample(args.results, domains, args.add if args.add is not None else args.n, args.seed, have)
+    try:
+        have = load_sample(args.judge_test)
+        if have and args.add is None:
+            raise BadArgument(f"{args.judge_test / 'sample.json'} exists ({len(have)} items); pass --add N to add "
+                              "items from more domains, keeping the marked ones")
+        marks = current_marks_of(args.results, domains, args.sheets, args.folders, args.spec_root,
+                                 args.questions_root)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    new = pick_sample(marks, args.add if args.add is not None else args.n, args.seed, have)
     items = have + new
     path = save_sample(args.judge_test, items)
     print(f"{path}: {len(items)} items ({len(new)} new)")
@@ -223,13 +229,19 @@ def add_question_commands(sub) -> None:
     s.add_argument("--n", type=int, default=SAMPLE)
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--add", type=int, default=None, help="add N new items to an existing sample (later domains)")
+    s.add_argument("--folders", type=Path, default=None, help="holds s<seed>/ of the one domain in --domains; "
+                                                              "default: each domain's built set")
     s.add_argument("--results", type=Path, default=RESULTS)
+    s.add_argument("--sheets", type=Path, default=SHEETS)
     s.add_argument("--judge-test", type=Path, default=JUDGE_TEST)
+    s.add_argument("--questions-root", type=Path, default=QUESTIONS)
+    s.add_argument("--spec-root", type=Path, default=SPECS)
     s.set_defaults(run=judge_sample)
     r = sub.add_parser("report", help="A, B, C per system with the baseline, judge agreement (flag below 80%%)")
     r.add_argument("--domains", required=True, help="comma-separated, e.g. medicine,law")
     r.add_argument("--out", type=Path, required=True, help="FILE.json; FILE.md is written beside it")
-    r.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: each domain's built set")
+    r.add_argument("--folders", type=Path, default=None, help="holds s<seed>/ of the one domain in --domains; "
+                                                              "default: each domain's built set")
     r.add_argument("--results", type=Path, default=RESULTS)
     r.add_argument("--sheets", type=Path, default=SHEETS)
     r.add_argument("--judge-test", type=Path, default=JUDGE_TEST)

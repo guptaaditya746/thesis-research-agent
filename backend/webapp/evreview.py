@@ -10,8 +10,8 @@ hand-marks the judge-test answers.
     PUT /review/{domain}/sheets/{seed}/{qid} {points: [{text, facts}]} -> the saved sheet; 400 with the problems
     GET /review/judge-test                   -> [{n, domain, seed, question_id, done}]
     GET /review/judge-test/{n}               -> {n, domain, seed, question_id, question, answer, points, facts,
-                                                 facts_cut, marked}; never the judge's ticks or scores, never the
-                                                 system
+                                                 facts_cut, marked, note}; never the judge's ticks or scores, never
+                                                 the system
     PUT /review/judge-test/{n}               {points: {pid: bool}, faithful} -> the saved hand mark
 
 Everything lives under `settings.synth3_data`: `<domain>.yaml` (the approved specs; drafts are elsewhere),
@@ -32,8 +32,13 @@ are `{n, paper, quote}` without their kind (the baseline's are all "passage"), a
 shuffled order of `sample.json` (synth3.report.pick_sample), not grouped by system. A long passage still looks
 unlike a pulled fact; that cannot be hidden while the item shows the facts the answer used.
 
-A file that does not load (a YAML typo in a spec or question file, a damaged sheet, marks or answer file) is a 409
-naming it; `GET /review` lists a broken spec with an `error` instead of failing for every domain.
+A hand mark keeps the marks file's `answer_sha256` and `sheet.sha256`. When the item is judged again on another
+answer or sheet, the old hand mark is not shown (`marked` None, `note` says why), the item is not `done`, and the
+report leaves it out until it is marked again. An answer collected again but not judged again is a 409 (the page
+would show it beside the points the judge saw for the old one).
+
+A file that does not load (a YAML typo in a spec or question file, a damaged sheet, marks, answer, sample.json or
+marks.json file) is a 409 naming it; `GET /review` lists a broken spec with an `error` instead of failing for every domain.
 """
 from __future__ import annotations
 
@@ -47,10 +52,11 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel, StrictBool
 
-from synth3.answers import load_answer
+from synth3.answers import AnswerRecord, load_answer
 from synth3.judge import used_facts
+from synth3.marking import answer_sha256
 from synth3.questions import Question, QuestionSet, load_questions
-from synth3.report import load_hand_marks, load_sample, save_hand_mark
+from synth3.report import hand_mark_fits, load_hand_marks, load_sample, save_hand_mark
 from synth3.sheetfacts import Folder, check_spec, load_folder, relevant_facts, scope
 from synth3.sheets import (Sheet, archive_sheet, check_sheet, folders_of, load_sheet, person_sheet, review_queue,
                            save_sheet, stale)
@@ -61,6 +67,7 @@ from .files import BadRequest, Conflict, Damaged, NotFound, check_id, inside, re
 from .settings import Settings
 
 _WRITE = threading.Lock()   # every write of the review API
+STALE_MARK = "the answer or its sheet changed since you marked it"
 _SEED_DIR = re.compile(r"^s(\d+)$")
 _SEED_FILE = re.compile(r"^s(\d+)\.json$")
 
@@ -311,45 +318,34 @@ def evreview_router(settings: Settings) -> APIRouter:
             save_sheet(root, new)
             return new.model_dump()
 
+    def judge_file(load):
+        """`load_sample` or `load_hand_marks`; a damaged file is a 409 naming it."""
+        try:
+            return load(files.judge_test())
+        except ValueError as err:
+            raise Conflict(str(err)) from err
+
     def item_at(n: int) -> str:
-        sample = load_sample(files.judge_test())
+        sample = judge_file(load_sample)
         if not 0 <= n < len(sample):
             raise NotFound(f"no judge-test item {n}")
         return sample[n]
 
-    def judged_points(n: int, item: str) -> list[dict[str, str]]:
-        """The points the C judge saw, from the marks file (`sheet.points`, in sheet order)."""
+    def judged(n: int, item: str) -> tuple[dict, list[dict[str, str]]]:
+        """The marks file and the points the C judge saw (`sheet.points`, in sheet order)."""
         marks = read_json(files.item_file(item, ".marks.json"))
-        points = (marks.get("sheet") or {}).get("points") if isinstance(marks, dict) else None
+        sheet = marks.get("sheet") if isinstance(marks, dict) else None
+        points = sheet.get("points") if isinstance(sheet, dict) else None
         if not isinstance(points, list):
             raise NotFound(f"judge-test item {n}: not judged yet (no readable marks file)")
         try:
-            return [{"id": str(p["id"]), "text": str(p["text"])} for p in points]
+            return marks, [{"id": str(p["id"]), "text": str(p["text"])} for p in points]
         except (KeyError, TypeError) as err:
             raise Conflict(f"judge-test item {n}: the marks file's sheet points are damaged ({err!r})") from err
 
-    def where(item: str) -> dict[str, Any]:
-        """The item without the system that answered (Aditya marks blind)."""
-        domain, seed, _, qid = files.item_parts(item)
-        return {"domain": domain, "seed": seed, "question_id": qid}
-
-    @api.get("/review/judge-test", tags=["review"])
-    def review_judge_test() -> list[dict[str, Any]]:
-        hand = load_hand_marks(files.judge_test())
-        rows = []
-        for n, item in enumerate(load_sample(files.judge_test())):
-            try:
-                rows.append({"n": n, **where(item), "done": item in hand})
-            except NotFound as err:   # one bad row in sample.json; the others stay markable
-                rows.append({"n": n, "problem": str(err), "done": False})
-        return rows
-
-    @api.get("/review/judge-test/{n}", tags=["review"])
-    def review_judge_item(n: int) -> dict[str, Any]:
-        """Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or
-        scores, and never the system that answered."""
-        item = item_at(n)
-        domain, _, _, qid = files.item_parts(item)
+    def answer_judged(n: int, item: str, marks: dict) -> AnswerRecord:
+        """The saved answer, which must be the one the marks file was made from (the page shows it beside the
+        points the judge saw)."""
         path = files.item_file(item, ".answer.json")
         if not path.is_file():
             raise NotFound(f"judge-test item {n}: no saved answer")
@@ -357,29 +353,80 @@ def evreview_router(settings: Settings) -> APIRouter:
             rec = load_answer(path)
         except ValueError as err:
             raise Conflict(f"judge-test item {n}: the saved answer is damaged") from err
+        if answer_sha256(rec) != marks.get("answer_sha256"):
+            raise Conflict(f"judge-test item {n}: the answer changed after it was judged; run synth3 judge again")
+        return rec
+
+    def marked(item: str, marks: dict, hand: dict) -> tuple[dict | None, str | None]:
+        """The hand mark when it was made on this answer and sheet; else None, and a note when one is there."""
+        h = hand.get(item)
+        if h is None:
+            return None, None
+        if not hand_mark_fits(h, marks):
+            return None, STALE_MARK
+        return h, None
+
+    def where(item: str) -> dict[str, Any]:
+        """The item without the system that answered (Aditya marks blind)."""
+        domain, seed, _, qid = files.item_parts(item)
+        return {"domain": domain, "seed": seed, "question_id": qid}
+
+    def done(item: str, hand: dict) -> bool:
+        """Marked on the answer and sheet the item has now."""
+        if item not in hand:
+            return False
+        marks = read_json(files.item_file(item, ".marks.json"))
+        return isinstance(marks, dict) and hand_mark_fits(hand[item], marks)
+
+    @api.get("/review/judge-test", tags=["review"])
+    def review_judge_test() -> list[dict[str, Any]]:
+        hand = judge_file(load_hand_marks)
+        rows = []
+        for n, item in enumerate(judge_file(load_sample)):
+            try:
+                rows.append({"n": n, **where(item), "done": done(item, hand)})
+            except NotFound as err:   # one bad row in sample.json; the others stay markable
+                rows.append({"n": n, "problem": str(err), "done": False})
+        return rows
+
+    @api.get("/review/judge-test/{n}", tags=["review"])
+    def review_judge_item(n: int) -> dict[str, Any]:
+        """Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or
+        scores, and never the system that answered. `marked` is None with a `note` when the hand mark was made on
+        another answer or sheet."""
+        item = item_at(n)
+        domain, _, _, qid = files.item_parts(item)
+        marks, points = judged(n, item)
+        rec = answer_judged(n, item, marks)
         try:
             spec = files.spec(domain)
             question: str | None = files.question(files.questions(domain, spec), qid).question
         except (NotFound, Conflict):
             question = None
         used, cut = used_facts(rec)
-        return {"n": n, **where(item), "question": question, "answer": rec.text, "points": judged_points(n, item),
+        mark, note = marked(item, marks, judge_file(load_hand_marks))
+        return {"n": n, **where(item), "question": question, "answer": rec.text, "points": points,
                 "facts": [{"n": i, "paper": f.paper, "quote": f.quote} for i, f in enumerate(used, 1)],
-                "facts_cut": cut, "marked": load_hand_marks(files.judge_test()).get(item)}
+                "facts_cut": cut, "marked": mark, "note": note}
 
     @api.put("/review/judge-test/{n}", tags=["review"])
     def review_hand_mark(n: int, req: HandMarkIn) -> dict[str, Any]:
+        """Saved with the marks file's answer and sheet hashes: what the hand mark was made on."""
         with _WRITE:
             item = item_at(n)
-            ids = [p["id"] for p in judged_points(n, item)]
+            judge_file(load_hand_marks)   # a damaged marks.json is a 409 before anything is written
+            marks, points = judged(n, item)
+            answer_judged(n, item, marks)
+            ids = [p["id"] for p in points]
             unknown = sorted(set(req.points) - set(ids))
             missing = [p for p in ids if p not in req.points]
             if unknown or missing:
                 raise BadRequest("; ".join([*(f"unknown point {p}" for p in unknown),
                                             *(f"point {p} is not marked" for p in missing)]))
             save_hand_mark(files.judge_test(), item, {p: req.points[p] for p in ids}, req.faithful, settings.user,
-                           now())
-            return load_hand_marks(files.judge_test())[item]
+                           now(), answer_sha256=str(marks.get("answer_sha256")),
+                           sheet_sha256=str(marks["sheet"].get("sha256")))
+            return judge_file(load_hand_marks)[item]
 
     return api
 

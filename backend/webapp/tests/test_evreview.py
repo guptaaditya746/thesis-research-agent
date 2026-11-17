@@ -12,9 +12,9 @@ import yaml
 from fastapi.testclient import TestClient
 
 from jsonio import write_json_atomic
-from synth3.answers import AnswerRecord, PulledFact, save_answer
+from synth3.answers import AnswerRecord, PulledFact, load_answer, save_answer
 from synth3.corpus import build_folder
-from synth3.marking import marks_path
+from synth3.marking import answer_sha256, marks_path
 from synth3.questions import load_questions, question_sha256
 from synth3.report import save_sample
 from synth3.sheetfacts import load_folder, relevant_facts
@@ -56,7 +56,7 @@ def review_root(tmp_path: Path) -> Path:
     save_answer(root / "results", rec)
     write_json_atomic(marks_path(root / "results", "demo", 1, "engine", "d01"), {
         "item": ITEM, "question_id": "d01", "seed": 1, "system": "engine", "corpus_id": folder.corpus_id,
-        "answer_sha256": "x",
+        "answer_sha256": answer_sha256(rec),
         "sheet": {"sha256": sheet_sha256(sheet), "status": "drafted", "cant_tell": False,
                   "points": [{"id": "p1", "text": "Targeted therapy does better."}]},
         "A": {"score": 0.5, "papers": {}, "pending_papers": []},
@@ -204,6 +204,57 @@ def test_the_judge_test_keeps_the_points_the_judge_used(review_root):
     item = c.get("/api/ev/review/judge-test/0").json()   # the marks file's points, not the edited sheet's
     assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}]
     assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": False}, "faithful": None}).status_code == 200
+
+
+def rejudge(root: Path, **changes) -> None:
+    """Rewrite the item's marks file as a new judge run would: `text` re-collects the answer first."""
+    path = marks_path(root / "results", "demo", 1, "engine", "d01")
+    marks = json.loads(path.read_text(encoding="utf-8"))
+    if "text" in changes:
+        answer = root / "results" / "demo" / "s1" / "engine" / "d01.answer.json"
+        new = load_answer(answer).model_copy(update={"text": changes["text"]})
+        save_answer(root / "results", new)
+        marks["answer_sha256"] = answer_sha256(new)
+    if "sheet" in changes:
+        marks["sheet"]["sha256"] = changes["sheet"]
+    write_json_atomic(path, marks)
+
+
+@pytest.mark.parametrize("change", [{"text": "Targeted therapy does much better."}, {"sheet": "9" * 64}])
+def test_a_hand_mark_on_an_older_answer_or_sheet_must_be_made_again(review_root, change):
+    c = client(review_root)
+    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": True}).status_code == 200
+    hand = json.loads((review_root / "judge-test" / "marks.json").read_text(encoding="utf-8"))[ITEM]
+    assert hand["answer_sha256"] and hand["sheet_sha256"]   # what it was made on
+    rejudge(review_root, **change)
+    item = c.get("/api/ev/review/judge-test/0").json()
+    assert item["marked"] is None and item["note"] == "the answer or its sheet changed since you marked it"
+    assert c.get("/api/ev/review/judge-test").json()[0]["done"] is False
+    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": False}, "faithful": None}).status_code == 200
+    again = c.get("/api/ev/review/judge-test/0").json()
+    assert again["marked"]["points"] == {"p1": False} and again["note"] is None
+    assert c.get("/api/ev/review/judge-test").json()[0]["done"] is True
+
+
+def test_an_answer_collected_again_but_not_judged_again_is_a_409(review_root):
+    """The page would show the new answer beside the points the judge saw for the old one."""
+    answer = review_root / "results" / "demo" / "s1" / "engine" / "d01.answer.json"
+    save_answer(review_root / "results", load_answer(answer).model_copy(update={"text": "Something new."}))
+    c = client(review_root)
+    for r in (c.get("/api/ev/review/judge-test/0"),
+              c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": None})):
+        assert r.status_code == 409 and "synth3 judge" in r.json()["detail"]
+    assert not (review_root / "judge-test" / "marks.json").exists()
+
+
+@pytest.mark.parametrize("name, text", [("sample.json", "[not json"), ("marks.json", "{not json"),
+                                        ("marks.json", "[]")])
+def test_a_damaged_sample_or_marks_file_is_a_409_naming_it(review_root, name, text):
+    (review_root / "judge-test" / name).write_text(text, encoding="utf-8")
+    c = client(review_root)
+    for r in (c.get("/api/ev/review/judge-test"), c.get("/api/ev/review/judge-test/0"),
+              c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": None})):
+        assert r.status_code == 409 and name in r.json()["detail"]
 
 
 def test_a_hand_mark_takes_only_true_or_false(review_root):
