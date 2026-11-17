@@ -6,11 +6,13 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Callable
 
+import hashlib
 import json
 from collections import Counter
+from random import Random
 
 from jsonio import write_json_atomic, write_text_atomic
-from synth2.realpool import words
+from synth2.realpool import cut_pieces, md_blocks, words, write_pieces
 from synth3.pmc import PoolPaper, jats_paper, tidy, unfit
 from synth3.realspec import RealSpec
 
@@ -103,3 +105,55 @@ def import_files(src: Path, pool: Path, rs: RealSpec,
     got = [rows[i] for i in mine]
     return {"fetched": len(got), "cached": 0, "kept": sum(r["kept"] for r in got),
             "unfit": dict(Counter(r["why"] for r in got if not r["kept"]))}
+
+
+def split_pool(pool: Path, rs: RealSpec) -> dict:
+    """Seeded split of the kept papers into test and sources; cuts the test papers into pieces."""
+    path = pool / "split.json"
+    if path.exists():
+        raise ValueError(f"{path}: refusing to overwrite: a new split could move test papers into sources")
+    ids = sorted(r["id"] for r in load_index(pool) if r["kept"])
+    if len(ids) < rs.n_test + 1:
+        raise ValueError(f"pool has {len(ids)} kept papers; need at least {rs.n_test + 1} "
+                         f"({rs.n_test} test and one source)")
+    seed = f"synth3:pool:{rs.domain}:split"
+    Random(seed).shuffle(ids)
+    test, sources = ids[:rs.n_test], ids[rs.n_test:]
+    canon = json.dumps({"test": test, "sources": sources}, sort_keys=True, separators=(",", ":"))
+    out = {"seed": seed, "test": test, "sources": sources,
+           "counts": {"test": len(test), "sources": len(sources)},
+           "sha256": hashlib.sha256(canon.encode("utf-8")).hexdigest()}
+    dst = pool / "pieces"
+    dst.mkdir(parents=True, exist_ok=True)
+    index: list[dict] = []
+    notes: list[str] = []
+    for pid in test:
+        bl = md_blocks((pool / "full" / f"{pid}.md").read_text(encoding="utf-8"))
+        title = next((b for _, b in bl if b.startswith("# ")), f"# {pid}")
+        abstract = [b for s, b in bl if s == "Abstract"]
+        body = [(s, b) for s, b in bl if s not in ("", "Abstract")]
+        write_pieces(pid, cut_pieces(title, abstract, body), dst, index, notes)
+    write_json_atomic(dst / "index.json", index)
+    write_json_atomic(path, out)
+    return out
+
+
+def load_split(pool: Path) -> dict:
+    path = pool / "split.json"
+    if not path.is_file():
+        raise ValueError(f"{path}: not found; run synth3 pool-split first")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def source_order(split: dict, domain: str) -> list[str]:
+    order = list(split["sources"])
+    Random(f"synth3:pool:{domain}:sources").shuffle(order)
+    return order
+
+
+def folder_sources(order: list[str], seed: int, n: int) -> list[str]:
+    """`order` rotated to start at this folder's place: the first `n` are its sources, the rest are reserves."""
+    if len(order) < n:
+        raise ValueError(f"pool has {len(order)} source papers; a folder of {n} studies needs at least {n}")
+    k = ((seed - 1) * n) % len(order)
+    return order[k:] + order[:k]

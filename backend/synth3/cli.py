@@ -13,7 +13,7 @@ import httpx
 from evidence.arxiv import FetchError
 from synth3.corpus import build_folder
 from synth3.pmc import Polite, fetch_pool
-from synth3.pool import import_files, load_index
+from synth3.pool import import_files, load_index, split_pool
 from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
 from synth3.spec import SPECS, load_spec
 from synth3.world import describe, draw_world, load_world, save_world
@@ -138,6 +138,16 @@ def pool_import(args: argparse.Namespace) -> int:
     return 0
 
 
+def pool_split(args: argparse.Namespace) -> int:
+    rs = _real_spec(args)
+    try:
+        out = split_pool(args.pools / args.domain, rs)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    print(f"test {out['counts']['test']}, sources {out['counts']['sources']}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth3", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -155,13 +165,15 @@ def parser() -> argparse.ArgumentParser:
     b.set_defaults(run=build)
     pf = sub.add_parser("pool-fetch", help="fetch real papers from PubMed Central into a domain's pool")
     pi = sub.add_parser("pool-import", help="add .md, .xml and .pdf files to a domain's pool")
-    for p in (pf, pi):
+    ps = sub.add_parser("pool-split", help="split a pool into test papers and source papers, once")
+    for p in (pf, pi, ps):
         p.add_argument("--domain", required=True)
         p.add_argument("--real-root", type=Path, default=REAL_SPECS)
         p.add_argument("--pools", type=Path, default=POOLS)
     pi.add_argument("--from", dest="src", type=Path, required=True, help="folder of papers")
     pf.set_defaults(run=pool_fetch)
     pi.set_defaults(run=pool_import)
+    ps.set_defaults(run=pool_split)
     return top
 
 

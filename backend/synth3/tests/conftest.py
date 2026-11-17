@@ -133,3 +133,17 @@ def fake_paper(i: int) -> str:
         "## Discussion", *[_para(rng, 90) for _ in range(3)],
     ]
     return "\n\n".join(parts) + "\n"
+
+
+def make_pool(root, n: int, rs):
+    """A pool of `n` fake papers with ids P001... added through `add_paper`."""
+    from synth3.pmc import PoolPaper
+    from synth3.pool import add_paper, save_index
+    rows = []
+    for i in range(1, n + 1):
+        text = fake_paper(i)
+        paper = PoolPaper(id=f"P{i:03d}", title=f"HOPE-{i} trial of blood pressure care", year=2015,
+                          journal="Demo Journal", license="CC-BY", article_type="research-article", text=text)
+        rows.append(add_paper(root, paper, rs))
+    save_index(root, rows)
+    return root
