@@ -15,21 +15,22 @@ from synth3.world import ArmResult, Cell, Study
 TEXT_LEVELS = ("table", "prose")
 COUNT_FIELDS = ("k", "n")
 VALUE_FIELDS = ("mean", "sd", "n")
-# Claim words are "better" words: on a lower-is-better measure, helps reads "reduces".
+# Claim words are "better" words: on a lower-is-better measure, helps reads "reduces". An arm label is a name, so
+# no "the" goes before it ("Overall, the Cardivel lowers ..." read as template text).
 CLAIMS: dict[tuple[str, bool], str] = {
-    ("helps", True): "Overall, the {a} improves {m} compared with the {c}.",
-    ("helps", False): "Overall, the {a} reduces {m} compared with the {c}.",
-    ("hurts", True): "Overall, the {a} lowers {m} compared with the {c}.",
-    ("hurts", False): "Overall, the {a} increases {m} compared with the {c}.",
-    ("no_effect", True): "Overall, the {a} and the {c} reach about the same {m}.",
-    ("no_effect", False): "Overall, the {a} and the {c} reach about the same {m}.",
+    ("helps", True): "Overall, {a} improves {m} compared with {c}.",
+    ("helps", False): "Overall, {a} reduces {m} compared with {c}.",
+    ("hurts", True): "Overall, {a} lowers {m} compared with {c}.",
+    ("hurts", False): "Overall, {a} increases {m} compared with {c}.",
+    ("no_effect", True): "Overall, {a} and {c} reach about the same {m}.",
+    ("no_effect", False): "Overall, {a} and {c} reach about the same {m}.",
 }
 COUNT_HEADER = "| Subset | Arm | Measure | Count | Total |\n| --- | --- | --- | --- | --- |\n"
 VALUE_HEADER = "| Subset | Arm | Measure | Mean | SD | n |\n| --- | --- | --- | --- | --- | --- |\n"
 # Filler text: no digits.
 TITLES = ("A comparison of {a} and {c} on {m}", "Measuring {m} under {a}", "How {a} changes {m}")
-OPENERS = ("We compare the {a} with the {c} on {m}.", "This paper measures {m} for the {a} and for the {c}.",
-           "We report a controlled comparison of the {a} and the {c}.")
+OPENERS = ("We compare {a} with {c} on {m}.", "This paper measures {m} for {a} and for {c}.",
+           "We report a controlled comparison of {a} and {c}.")
 CLOSERS = ("The numbers behind this statement are given in the Results section.",
            "Further work should repeat the comparison in other settings.",
            "All numbers are reported so that others can add them to their own.")
@@ -75,9 +76,9 @@ def results_block(b: _Builder, study: Study, spec: DomainSpec, text_level: str) 
                     b.plant(f"{fact}.k", str(r.k))
                     b.add(" of ")
                     b.plant(f"{fact}.n", str(r.n))
-                    b.add(f" {measure.unit} {measure.outcome} with the {label[r.arm]}.\n\n")
+                    b.add(f" {measure.unit} {measure.outcome} with {label[r.arm]}.\n\n")
                 else:
-                    b.add(f"On the subset with {subset}, the {label[r.arm]} reached a mean "
+                    b.add(f"On the subset with {subset}, {label[r.arm]} reached a mean "
                           f"{measure.name.lower()} of ")
                     b.plant(f"{fact}.mean", _value(r, "mean", measure.decimals))
                     b.add(f" {measure.unit} (SD ")
@@ -119,7 +120,7 @@ def write_paper(study: Study, spec: DomainSpec, text_level: str, seed: int) -> P
     b.add("\n\n## Setup\n\n")
     for arm in study.arms:
         a = next(x for x in spec.arms if x.id == arm)
-        b.add(f"The {a.label} {a.description}. ")
+        b.add(f"{a.label} is {a.description}. ")
     b.add("The study was run at the ")
     b.plant(f"{sid}.setting", study.setting)
     b.add(". It covers these subsets:\n\n")

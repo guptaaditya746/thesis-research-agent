@@ -10,9 +10,9 @@ from synth3.tests.conftest import approved, supported
 from synth3.write import TEXT_LEVELS, _claim_sentence, _fact_claim, write_paper
 
 PINS = {
-    "table": ("demo3-523375b3", "3ce6684e45bfdd7dc9adb8f4a24d61cd8cea587b1e1f3f0851309397f88bab7d"),
-    "prose": ("demo3-a181434a", "80ffdfb6e898379b82f2a49d678b231b4e59d525d8a103fc9123e0e5f7e639ee"),
-}   # (corpus id, sha256 of ground_truth.json + manifest.json)
+    "table": ("demo3-b4503345", "e9265c52e263cd80eeebbaf1204ce98c260964e18b1f20cc1050142c18ee6ac3"),
+    "prose": ("demo3-687771a5", "245112a906e3b601fbaef18ff80da9bc50b88e8f0d7c035a37182424459269fb"),
+}   # (corpus id, sha256 of ground_truth.json + manifest.json); changed on purpose when "the" before arm labels went
 
 
 @pytest.mark.parametrize("level", TEXT_LEVELS)
