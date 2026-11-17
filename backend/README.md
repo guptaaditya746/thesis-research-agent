@@ -61,6 +61,8 @@ uv run synth3 draft-sheets --domain D [--redraft QID]   # orch-model drafts the 
 uv run synth3 collect --domain D --seed N --question QID --run RUN [--system engine]   # put one engine run's answer into the judge's shape (data/synth3/results, git-ignored)
 uv run synth3 baseline --domain D   # evaluate rag-baseline on every question and folder (orch-model, cluster; 2 calls per question and folder)
 uv run synth3 judge --domain D   # sub-model-1 marks every saved answer: A, B, C into <results>/D/s<n>/<system>/<qid>.marks.json (cluster)
+uv run synth3 judge-sample --domains D   # the ~30 answers Aditya hand-marks on the review page
+uv run synth3 report --domains D --out FILE.json   # A, B, C per system with the baseline, judge agreement (flag below 80%)
 # subsets: run and score a synth2 corpus with data/domains/rag/protocols/rag-factuality-subsets.yaml (question id
 # rag-factuality-subsets, also for the baselines' --question-id); its answer.json `conclusion` can say "depends"
 ```

@@ -8,14 +8,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import modelcall
+from jsonio import write_json_atomic, write_text_atomic
 from modelcall import JsonlCache
 from synth3.answers import SYSTEM_ID, from_engine_run, save_answer
 from synth3.baseline import BASELINE, baseline_folder
-from synth3.cliargs import BadArgument, _seeds, _spec, each_folder
+from synth3.cliargs import BadArgument, _ascii, _seeds, _spec, each_folder
 from synth3.drafter import DRAFTER_ALIAS, draft_folder_sheets
 from synth3.judge import JUDGE_ALIAS
 from synth3.marking import judge_folder
 from synth3.questions import QUESTIONS, QuestionSet, load_questions
+from synth3.report import JUDGE_TEST, SAMPLE, build_report, load_sample, pick_sample, render_report, save_sample
 from synth3.sheetfacts import Folder, scope
 from synth3.sheets import RESULTS, SHEETS, folders_of
 from synth3.spec import SPECS
@@ -131,6 +133,40 @@ def judge(args: argparse.Namespace) -> int:
     return code
 
 
+def _domains(text: str) -> list[str]:
+    names = list(dict.fromkeys(x.strip() for x in text.split(",") if x.strip()))
+    if not names:
+        raise BadArgument("--domains needs at least one domain")
+    return names
+
+
+def judge_sample(args: argparse.Namespace) -> int:
+    domains = _domains(args.domains)
+    have = load_sample(args.judge_test)
+    if have and args.add is None:
+        raise BadArgument(f"{args.judge_test / 'sample.json'} exists ({len(have)} items); pass --add N to add "
+                          "items from more domains, keeping the marked ones")
+    new = pick_sample(args.results, domains, args.add if args.add is not None else args.n, args.seed, have)
+    items = have + new
+    path = save_sample(args.judge_test, items)
+    print(f"{path}: {len(items)} items ({len(new)} new)")
+    return 0
+
+
+def report(args: argparse.Namespace) -> int:
+    domains = _domains(args.domains)
+    try:
+        r = build_report(args.results, domains, args.sheets, args.judge_test, args.folders, args.spec_root,
+                         args.questions_root)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    text = render_report(r)
+    write_json_atomic(args.out, r)
+    write_text_atomic(args.out.with_suffix(".md"), text)
+    print(_ascii(text), flush=True)
+    return 0
+
+
 def add_question_commands(sub) -> None:
     p = sub.add_parser("questions", help="check a domain's question file and show what each question is about")
     p.add_argument("--domain", required=True)
@@ -182,3 +218,21 @@ def add_question_commands(sub) -> None:
     j.add_argument("--spec-root", type=Path, default=SPECS)
     j.add_argument("--results", type=Path, default=RESULTS)
     j.set_defaults(run=judge)
+    s = sub.add_parser("judge-sample", help="pick the ~30 judged answers Aditya hand-marks on the review page")
+    s.add_argument("--domains", required=True, help="comma-separated, e.g. medicine")
+    s.add_argument("--n", type=int, default=SAMPLE)
+    s.add_argument("--seed", type=int, default=0)
+    s.add_argument("--add", type=int, default=None, help="add N new items to an existing sample (later domains)")
+    s.add_argument("--results", type=Path, default=RESULTS)
+    s.add_argument("--judge-test", type=Path, default=JUDGE_TEST)
+    s.set_defaults(run=judge_sample)
+    r = sub.add_parser("report", help="A, B, C per system with the baseline, judge agreement (flag below 80%)")
+    r.add_argument("--domains", required=True, help="comma-separated, e.g. medicine,law")
+    r.add_argument("--out", type=Path, required=True, help="FILE.json; FILE.md is written beside it")
+    r.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: each domain's built set")
+    r.add_argument("--results", type=Path, default=RESULTS)
+    r.add_argument("--sheets", type=Path, default=SHEETS)
+    r.add_argument("--judge-test", type=Path, default=JUDGE_TEST)
+    r.add_argument("--questions-root", type=Path, default=QUESTIONS)
+    r.add_argument("--spec-root", type=Path, default=SPECS)
+    r.set_defaults(run=report)
