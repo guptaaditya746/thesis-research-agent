@@ -75,6 +75,9 @@ def test_checking_records_who_and_drops_cant_tell(folder, tmp_path, SPEC):
     s = make_sheet(f, qq, [("A.", ["pair:a:m1"])], {"model": "fake"})
     done = check_sheet(s, [("Targeted therapy does better than Standard care.", [])], "aditya", "2026-11-18T10:00:00Z")
     assert done.status == "checked" and done.checked_by == "aditya" and done.points[0].id == "p1"
+    pairs = [x.id for x in s.facts if x.id.startswith(("pair:", "h2h:"))]
+    assert done.warnings == [f"fact {p} is in no point" for p in pairs]   # recomputed for the new points
+    assert check_sheet(s, [("All of them.", pairs)], "aditya", "t").warnings == []
     with pytest.raises(ValueError, match="point 1"):
         check_sheet(s, [("", [])], "aditya", "t")
     # a can't-tell sheet loses the flag once Aditya's points are anything else
