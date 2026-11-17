@@ -3,9 +3,11 @@
 C (this part): the judge ticks each answer-sheet point as met or not, quoting the answer when met. Code checks
 every tick (each point exactly once, each quote found in the answer) with one repair (`asking.ask_checked`); a
 reply that stays bad, or a failed call, leaves the answer pending and the run goes on. The judge reads the main
-question, the sheet points and the answer text only: never the sub-questions, the fact lines or the system name."""
+question, the spec's measures with their direction, the sheet points and the answer text only: never the
+sub-questions, the fact lines or the system name."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +17,7 @@ from synth3.answers import AnswerRecord
 from synth3.asking import ask_checked
 from synth3.questions import Question
 from synth3.sheets import Sheet
+from synth3.spec import Measure
 
 JUDGE_ALIAS = "sub-model-1"
 SETTINGS = CallSettings(max_tokens=4096)
@@ -38,10 +41,17 @@ class Ticks(Strict):
     ticks: list[Tick]
 
 
-def c_input(q: Question, sheet: Sheet, text: str) -> str:
-    """The main question, the sheet points by id, then the answer."""
+def measures_block(measures: Sequence[Measure]) -> str:
+    """One line per measure of the folder's spec with its direction, so the judge never guesses what "better"
+    means."""
+    return "\n".join(f"{m.name}: {'higher' if m.higher_is_better else 'lower'} is better" for m in measures)
+
+
+def c_input(q: Question, sheet: Sheet, text: str, measures: Sequence[Measure]) -> str:
+    """The main question, the spec's measures with their direction, the sheet points by id, then the answer."""
     points = "\n".join(f"{p.id}: {p.text}" for p in sheet.points)
-    return f"Question: {q.question}\n\nPoints:\n{points}\n\nAnswer:\n{text}"
+    return (f"Question: {q.question}\n\nMeasures:\n{measures_block(measures)}\n\nPoints:\n{points}"
+            f"\n\nAnswer:\n{text}")
 
 
 def check_ticks(t: Ticks, sheet: Sheet, text: str) -> list[str]:
@@ -66,16 +76,18 @@ def check_ticks(t: Ticks, sheet: Sheet, text: str) -> list[str]:
     return problems + [f"{p} missing" for p in ids if p not in seen]
 
 
-def score_c(q: Question, sheet: Sheet, rec: AnswerRecord, model: Any, cache: JsonlCache) -> dict:
-    """Met points / points. An empty answer misses every point with no call. Pending (the reply still fails its
-    checks, or the call failed): `score` None, the problems say why."""
+def score_c(q: Question, sheet: Sheet, rec: AnswerRecord, model: Any, cache: JsonlCache, *,
+            measures: Sequence[Measure]) -> dict:
+    """Met points / points; `measures` are the folder spec's (`folder.spec.measures`). An empty answer misses
+    every point with no call. Pending (the reply still fails its checks, or the call failed): `score` None, the
+    problems say why."""
     ids = [p.id for p in sheet.points]
     if not rec.text.strip():
         empty = [Tick(point=p, met=False, quote=None, reason="the answer is empty").model_dump() for p in ids]
         return {"score": 0.0, "ticks": empty, "missed": ids, "status": "ok", "problems": [], "calls": 0,
                 "prompt_sha256": load_prompt(PROMPT_C, Ticks).sha256, "served_models": []}
-    out = ask_checked(PROMPT_C, Ticks, c_input(q, sheet, rec.text), lambda r: check_ticks(r, sheet, rec.text),
-                      model, cache, SETTINGS)
+    out = ask_checked(PROMPT_C, Ticks, c_input(q, sheet, rec.text, measures),
+                      lambda r: check_ticks(r, sheet, rec.text), model, cache, SETTINGS)
     done = {"calls": out["calls"], "prompt_sha256": out["prompt_sha256"], "served_models": out["served_models"]}
     if out["reply"] is None:
         return {"score": None, "ticks": [], "missed": [], "status": "pending", "problems": out["problems"], **done}

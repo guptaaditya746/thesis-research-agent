@@ -2,6 +2,7 @@ Task: for each point of the checklist, say whether the answer makes that point. 
 
 Input:
 - Question: the question the answer replies to.
+- Measures: every measure of this folder, one per line, as "<measure>: higher is better" or "<measure>: lower is better". Use these lines to read better and worse: on a measure where lower is better, "better" means a lower number and "worse" a higher one.
 - Points: the checklist, one point per line, as "<id>: <text>". Each point is one statement a right answer makes.
 - Answer: the text to mark.
 
@@ -16,6 +17,10 @@ Example 1 (a normal case).
 Input:
 Question: Does Method K raise the Yield compared with the Usual method?
 
+Measures:
+Yield: higher is better
+Error count: lower is better
+
 Points:
 p1: Method K gives a lower Yield than the Usual method.
 
@@ -24,9 +29,13 @@ Yield fell with Method K compared with the usual method.
 Output:
 {"ticks": [{"point": "p1", "met": true, "quote": "Yield fell with Method K compared with the usual method", "reason": "A Yield that fell with Method K is a lower Yield than the Usual method."}]}
 
-Example 2a (a confusing case: other words for the same direction).
+Example 2a (a confusing case: other words for the same direction, on a measure where lower is better).
 Input:
 Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
 
 Points:
 p1: Method P gives fewer errors than the Usual method.
@@ -34,11 +43,15 @@ p1: Method P gives fewer errors than the Usual method.
 Answer:
 Method P reduced the error count.
 Output:
-{"ticks": [{"point": "p1", "met": true, "quote": "Method P reduced the error count", "reason": "A reduced error count is fewer errors."}]}
+{"ticks": [{"point": "p1", "met": true, "quote": "Method P reduced the error count", "reason": "Error count: lower is better, and a reduced error count is fewer errors, as the point says."}]}
 
 Example 2b (a confusing case: the answer leaves out the group split).
 Input:
 Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
 
 Points:
 p1: It depends on batch size: better in Small batches, no real difference in Large batches.
@@ -51,6 +64,10 @@ Output:
 Example 3 (a missing case: the papers cannot answer one part, and the answer never mentions the other part).
 Input:
 Question: Does Method K change the Yield or the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
 
 Points:
 p1: Method K and the Usual method show no real difference in Yield.
@@ -65,6 +82,6 @@ Rules (code checks the first two; a reply that breaks one is sent back once with
 - Give exactly one tick for every point id in the input, and no other ids.
 - When met is true, the quote is copied word for word from the answer. Spaces and capital letters may differ; nothing else may.
 - When met is false, the quote is null.
-- A point is met only when the answer states it with the same direction (better, worse, or no real difference) and the same split by group. Other words for the same thing count: on a measure where a lower number is better, "better" means a lower number.
+- A point is met only when the answer states it with the same direction (better, worse, or no real difference) and the same split by group. Other words for the same thing count. Read better and worse from the Measures lines, never from your own idea of the measure.
 - A vague or hedged statement that does not commit to a direction does not meet a point. A point the answer never mentions is not met.
 - Mark each point on its own. Anything else the answer says does not change the tick.
