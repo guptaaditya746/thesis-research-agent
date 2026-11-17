@@ -96,3 +96,40 @@ def write_real(dir, d, newline="\n"):
 @pytest.fixture
 def REAL(tmp_path):
     return load_real_spec("demo", write_real(tmp_path / "real", real_good()))
+
+
+@pytest.fixture
+def REAL_PMC(tmp_path):
+    d = real_good()
+    d.update(source="pmc", query="hypertension AND open access[filter]")
+    return load_real_spec("demo", write_real(tmp_path / "real_pmc", d))
+
+
+_VOCAB = ("patients trial therapy outcome group measured baseline follow clinic dose weeks result blood pressure "
+          "daily visit record sample change average measure study report across period higher lower between "
+          "during after before each total central local stable regular observed reported adjusted matched "
+          "enrolled assigned treated monitored compared analysed collected reviewed recorded balanced").split()
+
+
+def _para(rng, n: int) -> str:
+    ws = [rng.choice(_VOCAB) for _ in range(n)]
+    sentences = [" ".join(ws[k:k + 12]).capitalize() + "." for k in range(0, n, 12)]
+    return " ".join(sentences)
+
+
+def fake_paper(i: int) -> str:
+    """A markdown paper of about 1,500 words in paragraphs of 60-100 words; the text varies with `i`."""
+    import random
+    rng = random.Random(i)
+    intro = [_para(rng, 80) for _ in range(7)]
+    intro[0] = f"Lisinopril is widely used for blood pressure in Brightford. {intro[0]}"
+    intro[1] = f"The HOPE-{i} trial compared lisinopril/amlodipine with usual care. {intro[1]}"
+    table = "| Outcome | Drug | Placebo |\n| --- | --- | --- |\n| Events | 12 | 20 |"
+    parts = [
+        f"# HOPE-{i} trial of blood pressure care", "## Abstract", _para(rng, 70), "## Introduction", *intro,
+        "## Methods", *[_para(rng, 90) for _ in range(3)],
+        "## Results", _para(rng, 90), "Fewer events occurred than in the placebo group. " + _para(rng, 70),
+        "Table 1. Outcomes by group.", table, _para(rng, 90),
+        "## Discussion", *[_para(rng, 90) for _ in range(3)],
+    ]
+    return "\n\n".join(parts) + "\n"

@@ -2,12 +2,27 @@
 from __future__ import annotations
 
 import re
+import sys
+import time
 import xml.etree.ElementTree as ET
+from collections import Counter
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable
+
+import httpx
 
 from evidence.sources.pmc import _first, _local, _text, jats_markdown
 from synth2.realpool import clean_text, words
 from synth3.realspec import _NUMBER, RealSpec
+
+EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+TOOL = "synth3-pool"
+USER_AGENT = "synth3-pool/1 (open-access corpus builder)"
+DELAY_S = 1.0
+BATCH = 20
+BACKOFF_S = (5.0, 30.0, 60.0)
+PAGE = 500
 
 _DROP_TAGS = {"fig", "supplementary-material", "fn-group", "ref-list", "ack"}
 _EMPTY_BRACKETS = re.compile(r"\s*\[[\s,;–-]*\]|\s*\([\s,;–-]*\)")
@@ -167,3 +182,106 @@ def unfit(paper: PoolPaper, rs: RealSpec) -> str | None:
     if not (any(rs.heading("results", ln) for ln in lines) and any(rs.heading("conclusion", ln) for ln in lines)):
         return "no results or conclusion heading"
     return None
+
+
+def _log(message: str) -> None:
+    print(message, file=sys.stderr)
+
+
+class Polite:
+    """An HTTP client that spaces its requests by `delay` and waits out a 429 or 503 before trying again."""
+
+    def __init__(self, transport: httpx.BaseTransport | None = None, delay: float = DELAY_S,
+                 sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic,
+                 log: Callable[[str], None] = _log):
+        self._http = httpx.Client(transport=transport, headers={"User-Agent": USER_AGENT}, timeout=60.0)
+        self._delay, self._sleep, self._clock, self._log = delay, sleep, clock, log
+        self._last: float | None = None
+
+    def _space(self) -> None:
+        if self._last is not None:
+            gap = self._delay - (self._clock() - self._last)
+            if gap > 0:
+                self._sleep(gap)
+        self._last = self._clock()
+
+    def get(self, url: str, params: dict) -> bytes:
+        params = {"tool": TOOL, **params}
+        for attempt in range(len(BACKOFF_S) + 1):
+            self._space()
+            resp = self._http.get(url, params=params)
+            if resp.status_code not in (429, 503):
+                resp.raise_for_status()
+                return resp.content
+            if attempt == len(BACKOFF_S):
+                break
+            try:
+                wait = float(resp.headers["Retry-After"])
+            except (KeyError, ValueError):
+                wait = BACKOFF_S[attempt]
+            self._log(f"HTTP {resp.status_code}; waiting {wait:g}s")
+            self._sleep(wait)
+        raise httpx.HTTPStatusError(f"still {resp.status_code} after {len(BACKOFF_S)} waits",
+                                    request=resp.request, response=resp)
+
+
+def search(client: Polite, query: str, limit: int) -> list[str]:
+    """Up to `limit` PMC ids for `query`, in NCBI's order."""
+    ids: list[str] = []
+    while len(ids) < limit:
+        want = min(PAGE, limit - len(ids))
+        data = client.get(EUTILS + "esearch.fcgi", {"db": "pmc", "term": query, "retmode": "xml",
+                                                    "retstart": len(ids), "retmax": want})
+        page = [_text(n) for n in ET.fromstring(data).iter() if _local(n.tag) == "Id"]
+        new = [i for i in dict.fromkeys(page) if i not in ids]
+        ids += new
+        if len(page) < want or not new:
+            break
+    return ids
+
+
+def articles(data: bytes) -> list[bytes]:
+    """One serialised `<article>` per article of an efetch `pmc-articleset`."""
+    root = ET.fromstring(data)
+    found = [root] if _local(root.tag) == "article" else [c for c in root if _local(c.tag) == "article"]
+    return [ET.tostring(a, encoding="utf-8") for a in found]
+
+
+def article_id(data: bytes) -> str | None:
+    """The PMC id (`PMC123`) written inside one article, or None."""
+    for node in ET.fromstring(data).iter():
+        if _local(node.tag) == "article-id" and node.get("pub-id-type") in ("pmc", "pmcid"):
+            return _pmc(_text(node))
+    return None
+
+
+def _pmc(i: str) -> str:
+    return i if i.upper().startswith("PMC") else f"PMC{i}"
+
+
+def fetch_pool(rs: RealSpec, pool: Path, client: Polite) -> dict:
+    """Search, fetch only what is not saved yet, then rebuild `full/` and `index.json` from every raw file."""
+    from jsonio import write_text_atomic
+    from synth3.pool import load_index, rebuild
+
+    raw = pool / "raw"
+    raw.mkdir(parents=True, exist_ok=True)
+    ids = [_pmc(i) for i in search(client, rs.query, rs.max_fetch)]
+    known = {r["id"] for r in load_index(pool)}
+    have = {p.stem for p in raw.glob("*.xml")}
+    todo = [i for i in ids if i not in have and i not in known]
+    returned: set[str] = set()
+    for k in range(0, len(todo), BATCH):
+        batch = todo[k:k + BATCH]
+        data = client.get(EUTILS + "efetch.fcgi", {"db": "pmc", "retmode": "xml",
+                                                   "id": ",".join(i.removeprefix("PMC") for i in batch)})
+        for art in articles(data):
+            pid = article_id(art)
+            if pid is None or not re.fullmatch(r"PMC\d+", pid):
+                continue
+            write_text_atomic(raw / f"{pid}.xml", art.decode("utf-8"))
+            returned.add(pid)
+    missing = [i for i in todo if i not in returned]
+    rows = rebuild(pool, rs, missing=missing)
+    return {"found": len(ids), "fetched": len(returned), "cached": sum(i in have for i in ids),
+            "kept": sum(r["kept"] for r in rows), "unfit": dict(Counter(r["why"] for r in rows if not r["kept"]))}

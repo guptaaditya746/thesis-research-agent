@@ -4,9 +4,17 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 
+import httpx
+
+from evidence.arxiv import FetchError
 from synth3.corpus import build_folder
+from synth3.pmc import Polite, fetch_pool
+from synth3.pool import import_files, load_index
+from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
 from synth3.spec import SPECS, load_spec
 from synth3.world import describe, draw_world, load_world, save_world
 from synth3.write import TEXT_LEVELS
@@ -87,6 +95,49 @@ def build(args: argparse.Namespace) -> int:
     return 0
 
 
+def _real_spec(args: argparse.Namespace):
+    try:
+        return load_real_spec(args.domain, args.real_root)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+
+
+def _report(out: dict, pool: Path) -> None:
+    rows = load_index(pool)
+    print(f"kept {out['kept']} of {len(rows)}")
+    for why, n in sorted(out["unfit"].items(), key=lambda kv: -kv[1]):
+        print(f"  unfit: {why}: {n}")
+    for lic, n in Counter(r["license"] or "none" for r in rows if r["kept"]).most_common():
+        print(f"  licence: {lic}: {n}")
+
+
+def pool_fetch(args: argparse.Namespace) -> int:
+    rs = _real_spec(args)
+    if rs.source != "pmc":
+        raise BadArgument(f"{args.domain}: the config source is '{rs.source}', not 'pmc'; use pool-import")
+    pool = args.pools / args.domain
+    try:
+        out = fetch_pool(rs, pool, Polite())
+    except (httpx.HTTPError, ET.ParseError) as err:
+        raise BadArgument(f"fetch failed ({err}); run again to resume") from err
+    print(f"found {out['found']}, fetched {out['fetched']}, already saved {out['cached']} -> {pool}")
+    _report(out, pool)
+    return 0
+
+
+def pool_import(args: argparse.Namespace) -> int:
+    rs = _real_spec(args)
+    if not args.src.is_dir():
+        raise BadArgument(f"{args.src}: not a folder")
+    pool = args.pools / args.domain
+    try:
+        out = import_files(args.src, pool, rs)
+    except FetchError as err:
+        raise BadArgument(f"{err}; for PDFs run `uv sync --group fetch`") from err
+    _report(out, pool)
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth3", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
@@ -102,6 +153,15 @@ def parser() -> argparse.ArgumentParser:
     b.add_argument("--text-level", default="table", help=" | ".join(TEXT_LEVELS))
     b.add_argument("--out", type=Path, required=True)
     b.set_defaults(run=build)
+    pf = sub.add_parser("pool-fetch", help="fetch real papers from PubMed Central into a domain's pool")
+    pi = sub.add_parser("pool-import", help="add .md, .xml and .pdf files to a domain's pool")
+    for p in (pf, pi):
+        p.add_argument("--domain", required=True)
+        p.add_argument("--real-root", type=Path, default=REAL_SPECS)
+        p.add_argument("--pools", type=Path, default=POOLS)
+    pi.add_argument("--from", dest="src", type=Path, required=True, help="folder of papers")
+    pf.set_defaults(run=pool_fetch)
+    pi.set_defaults(run=pool_import)
     return top
 
 
