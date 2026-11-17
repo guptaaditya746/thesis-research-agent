@@ -1,0 +1,16 @@
+source: files
+max_fetch: 600
+article_types: [research-article]
+exclude_title: survey|review|benchmark|dataset|position paper|tutorial|erratum|correction
+min_words: 2500
+max_words: 14000
+min_tables: 1
+results_heading: ^results?\b|^findings\b|^experiments?\b|^experimental results|^main results|^evaluation\b
+conclusion_heading: conclu|discussion|limitations|summary|future work
+drop_sections: acknowledg|funding|conflicts? of interest|competing interests?|declarations?|author.{0,3}contributions?|abbreviations|appendix|supplementary|data availability|availability of data|ethics statement|references|reproducibility
+control_words: no[- ]retrieval|without retrieval|closed[- ]book|no[- ]rag|vanilla (?:llms?|models?|language models?)|base (?:llms?|models?|language models?)|baseline (?:llms?|models?|systems?)|standard (?:prompting|generation|llms?)|zero[- ]shot (?:llms?|models?|prompting)|parametric[- ](?:only|knowledge only)|control (?:groups?|arms?|conditions?)
+keep: [SD, SE, CI, EM, F1, QA, LLM, LLMs, RAG, NLP, NLI, MRR, NDCG, MAP, BLEU, ROUGE, BERT, GPT, API, GPU, CPU, TPU, RAM, ms, KB, FAISS, ANN, kNN, IR, KG, QPS, GSM8K, HotpotQA, NQ, TriviaQA, MMLU, MS-MARCO, MSMARCO, BEIR, KILT, FEVER, WebQ, ELI5, SQuAD, ICLR, ACL, EMNLP, NAACL, NeurIPS, ICML, SIGIR, AAAI, IJCAI, COLING, arXiv, URL, PDF, LoRA, RLHF, SFT, MLP, CNN, RNN, LSTM, PCA, TF-IDF, BM25, COVID-19, Llama, LLaMA, Mistral, Qwen, Gemini, Claude, ChatGPT, OpenAI, Wikipedia]
+name_stems: []
+name_words: [bm25, dpr, colbert, contriever, splade, hyde, realm, retro, atlas, fid, rerank, reranker, retriever, embedding]
+min_names: 1
+n_test: 30

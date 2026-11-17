@@ -1,4 +1,7 @@
-from synth3.spec import load_spec
+import pytest
+
+from synth3.realspec import load_real_spec
+from synth3.spec import SPECS, load_spec
 from synth3.world import MIN_PER_PAIR
 
 
@@ -7,6 +10,16 @@ def test_medicine_spec_loads_and_fits_forty_studies():
     assert len(spec.pairs) * MIN_PER_PAIR <= 40 * (1 - spec.head_to_head_rate)
     assert {m.kind for m in spec.measures} == {"count", "value"}
     assert any(not m.higher_is_better for m in spec.measures) and any(c.from_setting for c in spec.conditions)
+
+
+@pytest.mark.parametrize("domain", ["law", "materials", "rag"])
+def test_domain_specs_load_and_fit_forty_studies(domain):
+    live = (SPECS / f"{domain}.yaml").exists()      # true once Aditya approves and moves the draft
+    spec = load_spec(domain, SPECS if live else SPECS / "drafts")
+    assert len(spec.pairs) * MIN_PER_PAIR <= 40 * (1 - spec.head_to_head_rate)
+    assert {m.kind for m in spec.measures} == {"count", "value"} and len(spec.measures) >= 3
+    assert any(not m.higher_is_better for m in spec.measures) and any(c.from_setting for c in spec.conditions)
+    assert load_real_spec(domain).domain == domain
 
 
 def test_no_two_comparisons_in_a_medicine_folder_share_the_engines_duplicate_key():
