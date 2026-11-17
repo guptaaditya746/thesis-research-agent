@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
 from modelcall import JsonlCache
+from synth3.answers import SYSTEM_ID, from_engine_run, save_answer
 from synth3.cliargs import BadArgument, _seeds, _spec, each_folder
 from synth3.drafter import DRAFTER_ALIAS, draft_folder_sheets
 from synth3.questions import QUESTIONS, QuestionSet, load_questions
@@ -60,6 +62,25 @@ def draft_sheets(args: argparse.Namespace) -> int:
     return each_folder(args.folders or folders_of(args.domain), seeds, spec, step)
 
 
+def collect(args: argparse.Namespace) -> int:
+    spec = _spec(args)
+    if not re.match(SYSTEM_ID, args.system):
+        raise BadArgument(f"--system must match {SYSTEM_ID}, got '{args.system}'")
+    try:
+        q = _questions(args, spec).get(args.question)
+    except KeyError as err:
+        raise BadArgument(str(err.args[0])) from err
+
+    def step(folder: Folder) -> tuple[list[str], bool]:
+        try:
+            rec = from_engine_run(args.run_dir, folder, q, args.system)
+        except (OSError, ValueError) as err:
+            raise BadArgument(str(err)) from err
+        return [str(save_answer(args.results, rec))], False
+
+    return each_folder(args.folders or folders_of(args.domain), [args.seed], spec, step)
+
+
 def add_question_commands(sub) -> None:
     p = sub.add_parser("questions", help="check a domain's question file and show what each question is about")
     p.add_argument("--domain", required=True)
@@ -78,3 +99,14 @@ def add_question_commands(sub) -> None:
     d.add_argument("--spec-root", type=Path, default=SPECS)
     d.add_argument("--results", type=Path, default=RESULTS)
     d.set_defaults(run=draft_sheets)
+    c = sub.add_parser("collect", help="put one engine run's answer to a question into the judge's shape")
+    c.add_argument("--domain", required=True)
+    c.add_argument("--seed", type=int, required=True)
+    c.add_argument("--question", required=True, help="the question id")
+    c.add_argument("--run", dest="run_dir", type=Path, required=True, help="the engine run folder")
+    c.add_argument("--system", default="engine", help="lower case letters, digits and '-'")
+    c.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: the domain's built set")
+    c.add_argument("--questions-root", type=Path, default=QUESTIONS)
+    c.add_argument("--spec-root", type=Path, default=SPECS)
+    c.add_argument("--results", type=Path, default=RESULTS)
+    c.set_defaults(run=collect)
