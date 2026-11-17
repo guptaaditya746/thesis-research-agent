@@ -15,7 +15,7 @@ Output fields:
 
 Example 1 (a normal case).
 Input:
-Question: Does Method K raise the Yield compared with the Usual method?
+Question: How does Method K compare with the Usual method on Yield and Error count?
 
 Measures:
 Yield: higher is better
@@ -23,11 +23,12 @@ Error count: lower is better
 
 Points:
 p1: Method K gives a lower Yield than the Usual method.
+p2: Method K and the Usual method show no real difference in Error count.
 
 Answer:
-Yield fell with Method K compared with the usual method.
+Yield fell with Method K compared with the usual method. On error count the two methods came out about the same.
 Output:
-{"ticks": [{"point": "p1", "met": true, "quote": "Yield fell with Method K compared with the usual method", "reason": "A Yield that fell with Method K is a lower Yield than the Usual method."}]}
+{"ticks": [{"point": "p1", "met": true, "quote": "Yield fell with Method K compared with the usual method", "reason": "A Yield that fell with Method K is a lower Yield than the Usual method."}, {"point": "p2", "met": true, "quote": "On error count the two methods came out about the same", "reason": "Coming out about the same on error count is no real difference."}]}
 
 Example 2a (a confusing case: other words for the same direction, on a measure where lower is better).
 Input:
@@ -60,6 +61,22 @@ Answer:
 Method P helps.
 Output:
 {"ticks": [{"point": "p1", "met": false, "quote": null, "reason": "The answer says Method P helps overall and does not split Small batches from Large batches."}]}
+
+Example 2c (a confusing case: the answer makes the group split in other words).
+Input:
+Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Points:
+p1: It depends on batch size: better in Small batches, no real difference in Large batches.
+
+Answer:
+In small batches Method P gave fewer errors; in large batches it made no real difference.
+Output:
+{"ticks": [{"point": "p1", "met": true, "quote": "In small batches Method P gave fewer errors; in large batches it made no real difference", "reason": "Error count: lower is better, so fewer errors in Small batches is better there, and Large batches show no real difference."}]}
 
 Example 3 (a missing case: the papers cannot answer one part, and the answer never mentions the other part).
 Input:
