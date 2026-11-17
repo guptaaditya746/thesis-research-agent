@@ -93,7 +93,13 @@ def test_sample_is_balanced_capped_and_stable(tmp_path):
     assert s == pick_sample(tmp_path / "res", ["demo"], n=10) and len(s) == 10
     assert sum("/rag-baseline/" in i for i in s) == 5
     assert max(Counter(i.split("/")[3] for i in s).values()) <= 2
-    assert s == sorted(s)
+
+
+def test_sample_order_does_not_group_the_systems(tmp_path):
+    """The review page numbers items in sample order; a sorted order would put every engine item first."""
+    fake_marks(tmp_path / "res", systems=("engine", BASELINE), questions=10, seeds=5)
+    s = pick_sample(tmp_path / "res", ["demo"], n=10, seed=0)
+    assert s != sorted(s) and len({i.split("/")[2] for i in s[:5]}) == 2
 
 
 def test_sample_skips_held_items_and_pending_c_and_the_other_half_fills_up(tmp_path):
@@ -188,7 +194,7 @@ def test_judge_sample_by_command(tmp_path, capsys):
     assert main(argv) == 2 and "sample.json" in capsys.readouterr().err
     assert main(argv + ["--add", "4"]) == 0
     both = load_sample(jt)
-    assert len(both) == 14 and both[:10] == first
+    assert len(both) == 14 and both[:10] == first and both[10:] != sorted(both[10:])
 
 
 def test_report_by_command(folder, tmp_path, spec_dir, capsys):

@@ -47,3 +47,10 @@ def test_the_hash_ignores_notes_and_kind():
     q = Question(id="x", question="Q?", sub_questions=["s?"])
     assert question_sha256(q) == question_sha256(q.model_copy(update={"notes": "n", "kind": "best"}))
     assert question_sha256(q) != question_sha256(q.model_copy(update={"sub_questions": ["t?"]}))
+
+
+def test_a_yaml_typo_is_a_value_error_naming_the_file(tmp_path, SPEC):
+    (tmp_path / "q").mkdir()
+    (tmp_path / "q" / "demo.yaml").write_text("domain: demo\nquestions: [unclosed\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="demo.yaml: not valid YAML"):
+        load_questions("demo", SPEC, tmp_path / "q")

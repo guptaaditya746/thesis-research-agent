@@ -45,7 +45,9 @@ def load_all_marks(results: Path, domains: list[str]) -> dict[str, dict]:
 
 def pick_sample(results: Path, domains: list[str], n: int = SAMPLE, seed: int = 0, have: list[str] = ()) -> list[str]:
     """Judged items whose C is `ok`: half `rag-baseline` and half other systems (the other half fills up when one side
-    is short), at most 2 per (domain, question), items in `have` left out. Seeded; sorted for display."""
+    is short), at most 2 per (domain, question), items in `have` left out. Seeded, and in a seeded shuffled order:
+    the review page numbers the items in sample order, and a sorted order would put every engine item of a seed
+    before every baseline item, which would tell Aditya the system while he marks blind."""
     held = set(have)
     marks = load_all_marks(results, domains)
     pools: dict[bool, list[str]] = {True: [], False: []}   # True: the baseline
@@ -75,7 +77,9 @@ def pick_sample(results: Path, domains: list[str], n: int = SAMPLE, seed: int = 
     take(pools[False], n - half)
     take(pools[True], n - len(picked))    # a short side: the other one fills up
     take(pools[False], n - len(picked))
-    return sorted(picked)
+    order = sorted(picked)
+    random.Random(f"synth3:judge-sample:order:{seed}").shuffle(order)
+    return order
 
 
 def load_sample(root: Path) -> list[str]:

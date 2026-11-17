@@ -193,7 +193,10 @@ def load_spec(domain: str, root: Path = SPECS) -> DomainSpec:
     if not path.is_file():
         raise ValueError(f"no spec file at {path}")
     raw = path.read_bytes().replace(b"\r\n", b"\n")
-    data = yaml.safe_load(raw.decode("utf-8"))
+    try:
+        data = yaml.safe_load(raw.decode("utf-8"))
+    except yaml.YAMLError as err:
+        raise ValueError(f"{path}: not valid YAML ({err})") from err
     if not isinstance(data, dict):
         raise ValueError(f"{path}: the spec must be a mapping")
     try:

@@ -2,6 +2,7 @@
 hand-marks the judge-test answers.
 
     GET /review                              -> {domains: [{domain, questions: n or null, seeds: [n], worlds: [n]}]}
+                                                 (a spec that does not load: also `error`)
     GET /review/{domain}/worlds              -> [{seed, approved, text, path}] (`text`: synth3.world.describe)
     PUT /review/{domain}/worlds/{seed}       {approved} -> the world row; 422 when the world file does not load
     GET /review/{domain}/sheets              -> synth3.sheets.review_queue rows, with `stale`
@@ -26,7 +27,13 @@ checks with a second save; a missing one is written and checked at once.
 
 A judge-test item is blind: it shows the points the C judge saw (kept in the marks file, so they stay as judged
 after the sheet is edited), the answer and the facts it used, but never the judge's ticks or scores and never the
-system that answered (only the domain, seed and question id; the PUT addresses the item by its number).
+system that answered (only the domain, seed and question id; the PUT addresses the item by its number). The facts
+are `{n, paper, quote}` without their kind (the baseline's are all "passage"), and the items come in the seeded
+shuffled order of `sample.json` (synth3.report.pick_sample), not grouped by system. A long passage still looks
+unlike a pulled fact; that cannot be hidden while the item shows the facts the answer used.
+
+A file that does not load (a YAML typo in a spec or question file, a damaged sheet, marks or answer file) is a 409
+naming it; `GET /review` lists a broken spec with an `error` instead of failing for every domain.
 """
 from __future__ import annotations
 
@@ -38,7 +45,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictBool
 
 from synth3.answers import load_answer
 from synth3.judge import used_facts
@@ -71,15 +78,19 @@ class ReviewFiles:
     def under(self, *parts: str) -> Path:
         return inside(self.root, *parts)
 
-    def domains(self) -> list[str]:
-        """The approved specs: `<root>/<domain>.yaml` that load."""
-        out = []
+    def domains(self) -> list[tuple[str, str | None]]:
+        """The approved specs `<root>/<domain>.yaml`, each with None or why it does not load (a typo in a file
+        Aditya edits by hand is listed, not hidden)."""
+        out: list[tuple[str, str | None]] = []
         for path in sorted(self.root.glob("*.yaml")) if self.root.is_dir() else []:
             try:
                 load_spec(check_id(path.stem, "domain"), self.root)
-            except (NotFound, ValueError):
+            except NotFound:
+                continue   # not a domain name at all
+            except ValueError as err:
+                out.append((path.stem, str(err)))
                 continue
-            out.append(path.stem)
+            out.append((path.stem, None))
         return out
 
     def spec(self, domain: str) -> DomainSpec:
@@ -117,6 +128,14 @@ class ReviewFiles:
 
     def sheet_file(self, domain: str, seed: int, qid: str) -> Path:
         return self.under("sheets", check_id(domain, "domain"), f"s{int(seed)}", f"{check_id(qid, 'question')}.json")
+
+    def sheet(self, domain: str, seed: int, qid: str) -> Sheet | None:
+        """The saved sheet or None; a damaged file is a 409 naming it."""
+        path = self.sheet_file(domain, seed, qid)
+        try:
+            return load_sheet(self.sheets_root(), domain, seed, qid)
+        except ValueError as err:
+            raise Conflict(f"{path.relative_to(self.root).as_posix()}: damaged ({err})") from err
 
     def folders(self, domain: str) -> Path:
         return folders_of(check_id(domain, "domain"), self.under("built"))
@@ -158,7 +177,7 @@ class ReviewFiles:
 
 
 class Approve(BaseModel):
-    approved: bool
+    approved: StrictBool
 
 
 class PointIn(BaseModel):
@@ -171,8 +190,8 @@ class SheetIn(BaseModel):
 
 
 class HandMarkIn(BaseModel):
-    points: dict[str, bool]
-    faithful: bool | None = None
+    points: dict[str, StrictBool]   # strict: a page bug sending "yes" or 1 is a 422, not a mark
+    faithful: StrictBool | None = None
 
 
 def _names(spec: DomainSpec, q: Question) -> dict[str, list[str]]:
@@ -201,7 +220,10 @@ def evreview_router(settings: Settings) -> APIRouter:
     @api.get("/review", tags=["review"])
     def review_overview() -> dict[str, Any]:
         rows = []
-        for domain in files.domains():
+        for domain, error in files.domains():
+            if error:
+                rows.append({"domain": domain, "questions": None, "seeds": [], "worlds": [], "error": error})
+                continue
             spec = files.spec(domain)
             try:
                 n: int | None = len(files.questions(domain, spec).questions)
@@ -243,21 +265,24 @@ def evreview_router(settings: Settings) -> APIRouter:
         spec = files.spec(domain)
         qs = files.questions(domain, spec)
         seeds = files.built_seeds(domain)
+        qids = [q.id for q in qs.questions]
+        for seed in seeds:   # a damaged sheet file is a 409 naming it (review_queue would only raise)
+            for qid in qids:
+                files.sheet(domain, seed, qid)
         folders: dict[int, Folder] = {}
         for seed in seeds:
             try:
                 folders[seed] = files.folder(domain, seed, spec)
             except (NotFound, Conflict):
                 continue   # its rows still show, without `stale`
-        return review_queue(files.sheets_root(), domain, seeds, [q.id for q in qs.questions],
+        return review_queue(files.sheets_root(), domain, seeds, qids,
                             questions={q.id: q for q in qs.questions}, folders=folders)
 
     def sheet_context(domain: str, seed: int, qid: str) -> tuple[Folder, Question, Sheet | None]:
         spec = files.spec(domain)
         q = files.question(files.questions(domain, spec), qid)
         folder = files.folder(domain, seed, spec)
-        files.sheet_file(domain, seed, qid)   # the path check
-        return folder, q, load_sheet(files.sheets_root(), domain, seed, qid)
+        return folder, q, files.sheet(domain, seed, qid)
 
     @api.get("/review/{domain}/sheets/{seed}/{qid}", tags=["review"])
     def review_sheet(domain: str, seed: int, qid: str) -> dict[str, Any]:
@@ -298,7 +323,10 @@ def evreview_router(settings: Settings) -> APIRouter:
         points = (marks.get("sheet") or {}).get("points") if isinstance(marks, dict) else None
         if not isinstance(points, list):
             raise NotFound(f"judge-test item {n}: not judged yet (no readable marks file)")
-        return [{"id": str(p["id"]), "text": str(p["text"])} for p in points]
+        try:
+            return [{"id": str(p["id"]), "text": str(p["text"])} for p in points]
+        except (KeyError, TypeError) as err:
+            raise Conflict(f"judge-test item {n}: the marks file's sheet points are damaged ({err!r})") from err
 
     def where(item: str) -> dict[str, Any]:
         """The item without the system that answered (Aditya marks blind)."""
@@ -308,8 +336,13 @@ def evreview_router(settings: Settings) -> APIRouter:
     @api.get("/review/judge-test", tags=["review"])
     def review_judge_test() -> list[dict[str, Any]]:
         hand = load_hand_marks(files.judge_test())
-        return [{"n": n, **where(item), "done": item in hand}
-                for n, item in enumerate(load_sample(files.judge_test()))]
+        rows = []
+        for n, item in enumerate(load_sample(files.judge_test())):
+            try:
+                rows.append({"n": n, **where(item), "done": item in hand})
+            except NotFound as err:   # one bad row in sample.json; the others stay markable
+                rows.append({"n": n, "problem": str(err), "done": False})
+        return rows
 
     @api.get("/review/judge-test/{n}", tags=["review"])
     def review_judge_item(n: int) -> dict[str, Any]:
@@ -320,7 +353,10 @@ def evreview_router(settings: Settings) -> APIRouter:
         path = files.item_file(item, ".answer.json")
         if not path.is_file():
             raise NotFound(f"judge-test item {n}: no saved answer")
-        rec = load_answer(path)
+        try:
+            rec = load_answer(path)
+        except ValueError as err:
+            raise Conflict(f"judge-test item {n}: the saved answer is damaged") from err
         try:
             spec = files.spec(domain)
             question: str | None = files.question(files.questions(domain, spec), qid).question
@@ -328,7 +364,7 @@ def evreview_router(settings: Settings) -> APIRouter:
             question = None
         used, cut = used_facts(rec)
         return {"n": n, **where(item), "question": question, "answer": rec.text, "points": judged_points(n, item),
-                "facts": [{"n": i, "paper": f.paper, "kind": f.kind, "quote": f.quote} for i, f in enumerate(used, 1)],
+                "facts": [{"n": i, "paper": f.paper, "quote": f.quote} for i, f in enumerate(used, 1)],
                 "facts_cut": cut, "marked": load_hand_marks(files.judge_test()).get(item)}
 
     @api.put("/review/judge-test/{n}", tags=["review"])

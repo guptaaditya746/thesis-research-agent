@@ -180,6 +180,7 @@ def test_the_judge_test_item_shows_the_facts_but_not_the_judge(review_root):
     c = client(review_root); item = c.get("/api/ev/review/judge-test/0").json()
     assert blind(item) and (item["domain"], item["seed"], item["question_id"]) == ("demo", 1, "d01")
     assert item["facts"][0]["n"] == 1 and item["facts"][0]["quote"]
+    assert all(set(f) == {"n", "paper", "quote"} for f in item["facts"])   # `kind: passage` would name the baseline
     assert [f["quote"] for f in item["facts"]] == ["first quote", "second quote"] and item["facts_cut"] is False
     assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}] and item["marked"] is None
     assert item["answer"] == "Targeted therapy does better." and item["question"].startswith("Does Targeted")
@@ -203,6 +204,41 @@ def test_the_judge_test_keeps_the_points_the_judge_used(review_root):
     item = c.get("/api/ev/review/judge-test/0").json()   # the marks file's points, not the edited sheet's
     assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}]
     assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": False}, "faithful": None}).status_code == 200
+
+
+def test_a_hand_mark_takes_only_true_or_false(review_root):
+    c = client(review_root)
+    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": "yes"}, "faithful": None}).status_code == 422
+    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": 1}).status_code == 422
+    assert c.put("/api/ev/review/demo/worlds/1", json={"approved": "true"}).status_code == 422
+
+
+def test_a_bad_sample_row_is_flagged_and_the_rest_stay_markable(review_root):
+    (review_root / "judge-test" / "sample.json").write_text(json.dumps(["nonsense", ITEM]), encoding="utf-8")
+    rows = client(review_root).get("/api/ev/review/judge-test").json()
+    assert rows[0]["n"] == 0 and rows[0]["problem"] and rows[1]["question_id"] == "d01"
+
+
+def test_a_yaml_typo_is_a_409_naming_the_file_and_the_overview_lists_it(review_root):
+    (review_root / "other.yaml").write_text("a: [unclosed\n", encoding="utf-8")
+    c = client(review_root)
+    got = c.get("/api/ev/review")
+    assert got.status_code == 200
+    rows = {r["domain"]: r for r in got.json()["domains"]}
+    assert rows["demo"]["questions"] == 3 and "error" not in rows["demo"] and "other.yaml" in rows["other"]["error"]
+    r = c.get("/api/ev/review/other/worlds")
+    assert r.status_code == 409 and "other.yaml" in r.json()["detail"]
+    (review_root / "questions" / "demo.yaml").write_text("domain: demo\nquestions: [unclosed\n", encoding="utf-8")
+    r = c.get("/api/ev/review/demo/sheets/1/d01")
+    assert r.status_code == 409 and "demo.yaml" in r.json()["detail"]
+    assert c.get("/api/ev/review").json()["domains"][0]["questions"] is None
+
+
+def test_a_damaged_sheet_file_is_a_409(review_root):
+    (review_root / "sheets" / "demo" / "s1" / "d01.json").write_text("{not json", encoding="utf-8")
+    c = client(review_root)
+    for r in (c.get("/api/ev/review/demo/sheets/1/d01"), c.get("/api/ev/review/demo/sheets")):
+        assert r.status_code == 409 and "d01.json" in r.json()["detail"]
 
 
 def test_an_unknown_judge_test_number_is_404(review_root):

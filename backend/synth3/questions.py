@@ -102,7 +102,10 @@ def load_questions(domain: str, spec: DomainSpec, root: Path = QUESTIONS) -> Que
     if not path.is_file():
         raise ValueError(f"no questions file at {path}; Aditya writes it (see synth3/questions.py)")
     raw = path.read_bytes().replace(b"\r\n", b"\n")
-    data = yaml.safe_load(raw.decode("utf-8"))
+    try:
+        data = yaml.safe_load(raw.decode("utf-8"))
+    except yaml.YAMLError as err:
+        raise ValueError(f"{path}: not valid YAML ({err})") from err
     if not isinstance(data, dict):
         raise ValueError(f"{path}: the questions file must be a mapping")
     if data.get("domain") != domain:
