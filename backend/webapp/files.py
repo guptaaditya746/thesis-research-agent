@@ -4,7 +4,8 @@ Ids from URLs (corpus, run, score, proposal, question and job names) must match 
 leading dot or dash); a run or score id joins two such names with `~` (`<group>~<name>`). Every path built
 from request data or from a record is resolved and checked to lie inside the root it was built from, so `..`,
 absolute paths and symlinks out of a root are refused. The server itself writes only job state and logs
-($EV/.jobs/) and a proposal's decisions.yaml (webapp/evjobs.py); the jobs write what their commands write.
+($EV/.jobs/), a proposal's decisions.yaml (webapp/evjobs.py), and under $SYNTH3_DATA the world files, answer
+sheets and judge-test hand marks (webapp/evreview.py); the jobs write what their commands write.
 """
 from __future__ import annotations
 

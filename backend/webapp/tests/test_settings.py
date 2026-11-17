@@ -30,6 +30,14 @@ def test_settings_from_the_environment(tmp_path: Path, monkeypatch: pytest.Monke
     assert Settings(EV="ev").jobs_dir == tmp_path / "ev" / ".jobs"   # type: ignore[call-arg]
 
 
+def test_synth3_data_is_read_and_made_absolute(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("SYNTH3_DATA", raising=False)
+    assert Settings().synth3_data == repo_paths.DATA / "synth3"
+    monkeypatch.setenv("SYNTH3_DATA", "s3")
+    assert Settings().synth3_data == tmp_path / "s3"
+
+
 @pytest.mark.parametrize("name", ["model", "", "   ", " model "])
 def test_the_user_is_never_the_model_nor_blank(name: str) -> None:
     with pytest.raises(ValueError, match="WEBAPP_USER"):
