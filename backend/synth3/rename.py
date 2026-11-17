@@ -10,11 +10,15 @@ from synth2.realedit import SURNAME_POOL, _new_part, apply_map, build_map, survi
 from synth3.realspec import RealSpec
 
 _EDGE_L, _EDGE_R = r"(?<![A-Za-z0-9])", r"(?![A-Za-z0-9])"
-_HOLD = re.compile(r"qqkeep([a-j]+)qq")
+_HOLD = re.compile(r"qqkeep[a-j]+qq0?")
 
 
 def lower_names(rs: RealSpec) -> re.Pattern:
-    """Whole words ending in a name stem (with at least 3 letters before it) or equal to a name word, any case."""
+    """Whole words ending in a name stem (with at least 3 letters before it) or equal to a name word, any case.
+    A name word keeps its last 3 letters, so it needs more than 3."""
+    short = [w for w in rs.name_words if len(w) <= 3]
+    if short:
+        raise ValueError(f"name_words: {short} have 3 letters or fewer; a name word keeps its last 3 letters")
     alts = []
     if rs.name_stems:
         alts.append(r"[a-z]{3,}(?:" + "|".join(map(re.escape, rs.name_stems)) + ")")
@@ -53,18 +57,21 @@ def _letters(i: int) -> str:
 
 
 def _hold(text: str, words: list[str]) -> tuple[str, dict[str, str]]:
-    """Each whole word of `words` (case-sensitive) -> a lower-case letters-only placeholder."""
+    """Each whole word of `words` (case-sensitive) -> a lower-case placeholder synth2 never renames. It ends the way
+    the word does (a lower-case letter, or a digit for an upper-case or digit end), so synth2 judges the next word
+    as it would after the real one: "WHO Guidelines" must not look like "... qqkeep Guidelines" mid-sentence."""
     words = sorted(set(words), key=lambda w: (-len(w), w))
     if not words:
         return text, {}
-    held = {w: f"qqkeep{_letters(i)}qq" for i, w in enumerate(words)}
+    held = {w: f"qqkeep{_letters(i)}qq" + ("" if w[-1].islower() else "0") for i, w in enumerate(words)}
     pat = re.compile(_EDGE_L + "(" + "|".join(map(re.escape, words)) + ")" + _EDGE_R)
     return pat.sub(lambda m: held[m.group(1)], text), {p: w for w, p in held.items()}
 
 
-def _avoid_values(mapping: dict[str, str], avoid: set[str], seed: str) -> dict[str, str]:
+def _avoid_values(mapping: dict[str, str], avoid: set[str], seed: str, real: set[str]) -> dict[str, str]:
     """Every word of a mapped value whose lower case is in `avoid` gets a new word, the same in every value: a
-    cited surname the next pool surname (not in `avoid`, not already a value), any other word a `_new_part`."""
+    cited surname the next pool surname (not in `avoid`, not already a value, not a word of the source `real`),
+    any other word a `_new_part`."""
     split = re.compile(r"[- ]")
     values = set(mapping.values())
     taken = values | {w for v in values for w in split.split(v)} | set(mapping)
@@ -77,7 +84,7 @@ def _avoid_values(mapping: dict[str, str], avoid: set[str], seed: str) -> dict[s
             if not w or w.lower() not in avoid or w in new:
                 continue
             if w in SURNAME_POOL and w not in split.split(key):
-                new[w] = next(p for p in nxt if p.lower() not in avoid and p not in values)
+                new[w] = next(p for p in nxt if p.lower() not in avoid and p not in values and p not in real)
             else:
                 new[w] = _new_part(w, seed, taken)
                 while new[w].lower() in avoid:
@@ -89,12 +96,13 @@ def _avoid_values(mapping: dict[str, str], avoid: set[str], seed: str) -> dict[s
 def rename_source(text: str, rs: RealSpec, seed: str, avoid: set[str]) -> tuple[str, dict[str, str]]:
     """The renamed text and the map real -> invented (drug names in lower case). `avoid` holds lower-case words
     no invented name may be: every word of the arm labels and setting names, and every spec author surname."""
+    source_words = set(re.findall(r"[^\W\d_]+", text))
     drugs = _drug_map(text, rs, seed, avoid)
     pat = lower_names(rs)
     text = pat.sub(lambda m: _case_like(drugs[m.group(0).lower()], m.group(0)), text)
     forms = [f for new in drugs.values() for f in (new, new.capitalize(), new.upper())]
     text, held = _hold(text, [*rs.keep, *forms])
-    mapping = _avoid_values(build_map(text, seed), avoid, seed)
+    mapping = _avoid_values(build_map(text, seed), avoid, seed, source_words)
     text = apply_map(text, mapping, seed)
     real_of = {_case_like(new, form): _case_like(old, form) for old, new in drugs.items()
                for form in ("x", "Xx", "XX")} | {w: w for w in rs.keep}

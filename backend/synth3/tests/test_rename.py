@@ -1,5 +1,9 @@
-from synth2.realedit import unsayable
-from synth3.rename import names_left, rename_source
+import random
+
+import pytest
+
+from synth2.realedit import SURNAME_POOL, unsayable
+from synth3.rename import lower_names, names_left, rename_source
 
 SRC = ("# Lisinopril in HOPE-3\n\n## Abstract\n\nPatients in Brightford took lisinopril. "
        "Lisinopril/amlodipine lowered BP and eGFR held. LISINOPRIL-based care was compared, as WHO advises.\n")
@@ -36,3 +40,25 @@ def test_a_cited_author_never_takes_a_planted_author_surname(REAL):
     first = rename_source(src, REAL, "s1", set())[1]["Smith"]
     text, m = rename_source(src, REAL, "s1", {first.lower()})
     assert m["Smith"] != first and first not in text and m["Smith"] in text
+
+
+def test_a_replaced_surname_is_never_a_real_author_of_the_paper(REAL):
+    pool = list(SURNAME_POOL)
+    random.Random("s1|avoid").shuffle(pool)          # the order replacements are drawn in
+    real = pool[:3]
+    src = SRC + "\nAs Smith et al. (2010), " + ", ".join(f"{s} et al. (2011)" for s in real) + " showed.\n"
+    first = rename_source(src, REAL, "s1", set())[1]["Smith"]
+    text, m = rename_source(src, REAL, "s1", {first.lower()})
+    assert m["Smith"] not in real and m["Smith"] not in m and not any(s in text for s in real)
+
+
+def test_a_capitalised_word_after_a_kept_acronym_is_not_a_name(REAL):
+    src = "# Title\n\nResults were mixed. WHO Guidelines apply. BP Reduction was large.\n"
+    text, m = rename_source(src, REAL, "s1", set())
+    assert "WHO Guidelines apply" in text and "BP Reduction was large" in text
+    assert not {"Guidelines", "Reduction"} & set(m)
+
+
+def test_a_name_word_too_short_to_split_is_refused(REAL):
+    with pytest.raises(ValueError, match="name_words"):
+        lower_names(REAL.model_copy(update={"name_words": ["abc"]}))
