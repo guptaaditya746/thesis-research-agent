@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article">
+  <front>
+    <journal-meta><journal-title-group><journal-title>Journal of Demo Cardiology</journal-title></journal-title-group></journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">12345678</article-id>
+      <article-id pub-id-type="pmc">PMC1234567</article-id>
+      <title-group><article-title>Drug A against placebo in older patients with high blood pressure</article-title></title-group>
+      <pub-date pub-type="epub"><day>3</day><month>5</month><year>2019</year></pub-date>
+      <permissions><license xlink:href="https://creativecommons.org/licenses/by/4.0/"><license-p>Open access under CC BY.</license-p></license></permissions>
+      <abstract>
+        <sec><title>Background</title><p>High blood pressure raises the risk of stroke.</p></sec>
+        <sec><title>Methods</title><p>We randomised 400 adults to drug A or placebo for twelve months.</p></sec>
+        <sec><title>Results</title><p>Systolic pressure fell more with drug A than with placebo.</p></sec>
+        <sec><title>Conclusions</title><p>Drug A lowered blood pressure in this trial.</p></sec>
+      </abstract>
+    </article-meta>
+  </front>
+  <body>
+    <sec><title>Introduction</title>
+      <p>High blood pressure is common in older adults <xref ref-type="bibr" rid="B1">1</xref>, and it is a leading cause of stroke [<xref ref-type="bibr" rid="B2">2</xref>–<xref ref-type="bibr" rid="B3">3</xref>]. Many patients need more than one drug to reach their target <xref ref-type="bibr" rid="B4">4</xref>. Treatment lowered the stroke rate in older patients.</p>
+      <p>We asked whether a new drug could lower pressure safely over one year, and whether the effect differed by age. The question matters because current options often fail to bring pressure under control in this group.</p>
+    </sec>
+    <sec><title>Methods</title>
+      <p>Adults aged 60 years or more with untreated high blood pressure were invited from twelve clinics. Each person was assigned by a computer list to drug A or to placebo, and nobody knew which was given. Blood pressure was measured at the clinic every three months by trained nurses using the same device.</p>
+      <fig id="F1"><label>Figure 1</label><caption><p>Flow of patients through the trial.</p></caption></fig>
+      <p>The main outcome was the change in systolic pressure at twelve months. We compared groups with a simple t test and counted adverse events in each group.</p>
+    </sec>
+    <sec><title>Results</title>
+      <p>In total 400 patients took part, and 372 finished the study. Table 1 gives the starting values in each group, which were close.</p>
+      <table-wrap id="T1"><label>Table 1</label><caption><title>Baseline characteristics</title></caption>
+        <table><thead><tr><th>Characteristic</th><th>Drug A</th><th>Placebo</th></tr></thead>
+        <tbody><tr><td>Age, years</td><td>67.1</td><td>66.8</td></tr><tr><td>Systolic pressure, mmHg</td><td>151.2</td><td>150.7</td></tr></tbody></table>
+      </table-wrap>
+      <p>Systolic pressure fell by 14 mmHg with drug A and by 6 mmHg with placebo. Results by outcome are in Table 2.<table-wrap id="T2"><label>Table 2</label><caption><title>Outcomes at twelve months</title></caption>
+        <table><thead><tr><th>Outcome</th><th>Drug A</th><th>Placebo</th></tr></thead>
+        <tbody><tr><td>Change in systolic pressure, mmHg</td><td>-14</td><td>-6</td></tr></tbody></table>
+      </table-wrap> Adverse events were rare and similar in both groups.</p>
+    </sec>
+    <sec><title>Discussion</title>
+      <p>Drug A lowered pressure more than placebo, which agrees with earlier small studies. The trial was short, and longer follow up is needed to show an effect on stroke itself.</p>
+    </sec>
+    <sec><title>Funding</title><p>This work was paid for by a public grant.</p></sec>
+  </body>
+  <back>
+    <ack><p>We thank the nurses.</p></ack>
+    <ref-list><title>References</title><ref id="B1"><mixed-citation>Smith J. A study. 2010.</mixed-citation></ref></ref-list>
+  </back>
+</article>
