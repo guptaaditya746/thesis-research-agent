@@ -133,8 +133,7 @@ def test_our_table_number_follows_the_highest_real_one(SPEC, REAL):
 
 
 def test_results_and_discussion_heading_keeps_the_conclusion_claims_after_the_section(SPEC, REAL):
-    # lower-case "discussion": the renamer would treat a capitalised word after "and" as a name
-    src = fake_paper(10).replace("## Results", "## Results and discussion").replace("## Discussion\n", "## Limits\n")
+    src = fake_paper(10).replace("## Results", "## Results and Discussion").replace("## Discussion\n", "## Limits\n")
     _, rp = edit(SPEC, REAL, source=src)
     t = rp.paper.text
     assert rp.problems == () and t.index(rp.inserted[1]) < t.index(rp.inserted[2])

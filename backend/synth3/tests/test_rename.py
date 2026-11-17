@@ -62,3 +62,11 @@ def test_a_capitalised_word_after_a_kept_acronym_is_not_a_name(REAL):
 def test_a_name_word_too_short_to_split_is_refused(REAL):
     with pytest.raises(ValueError, match="name_words"):
         lower_names(REAL.model_copy(update={"name_words": ["abc"]}))
+
+
+def test_heading_words_are_not_names_but_real_names_in_headings_still_go(REAL):
+    src = ("# The TRIAX-2 trial in Brightford\n\n## Materials and Methods\n\nAdults were enrolled at two sites.\n\n"
+           "## Results and Discussion\n\nIn the TRIAX-2 trial, patients from Brightford did well.\n")
+    text, m = rename_source(src, REAL, "s1", set())
+    assert "## Results and Discussion" in text and "## Materials and Methods" in text
+    assert "TRIAX-2" not in text and "Brightford" not in text and names_left(text, m, REAL) == []

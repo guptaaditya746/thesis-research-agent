@@ -11,6 +11,8 @@ from synth3.realspec import RealSpec
 
 _EDGE_L, _EDGE_R = r"(?<![A-Za-z0-9])", r"(?![A-Za-z0-9])"
 _HOLD = re.compile(r"qqkeep[a-j]+qq0?")
+_HEADING = re.compile(r"^#.*$", re.M)
+_TITLE_WORD = re.compile(r"(?<![\w-])[A-Z][a-z]+(?![\w-])")
 
 
 def lower_names(rs: RealSpec) -> re.Pattern:
@@ -93,6 +95,13 @@ def _avoid_values(mapping: dict[str, str], avoid: set[str], seed: str, real: set
     return {k: re.sub(r"[^- ]+", lambda m: new.get(m.group(0), m.group(0)), v) for k, v in mapping.items()}
 
 
+def _map_base(text: str) -> str:
+    """The text the name map is built from: heading lines lose their plain capitalised words, which are names to
+    synth2 only because headings are in title case ("Results and Discussion"). Acronyms and names with digits in a
+    heading ("HOPE-3") stay names; a word that is a name in the body is renamed everywhere, headings included."""
+    return _HEADING.sub(lambda m: _TITLE_WORD.sub("", m.group(0)), text)
+
+
 def rename_source(text: str, rs: RealSpec, seed: str, avoid: set[str]) -> tuple[str, dict[str, str]]:
     """The renamed text and the map real -> invented (drug names in lower case). `avoid` holds lower-case words
     no invented name may be: every word of the arm labels and setting names, and every spec author surname."""
@@ -102,7 +111,7 @@ def rename_source(text: str, rs: RealSpec, seed: str, avoid: set[str]) -> tuple[
     text = pat.sub(lambda m: _case_like(drugs[m.group(0).lower()], m.group(0)), text)
     forms = [f for new in drugs.values() for f in (new, new.capitalize(), new.upper())]
     text, held = _hold(text, [*rs.keep, *forms])
-    mapping = _avoid_values(build_map(text, seed), avoid, seed, source_words)
+    mapping = _avoid_values(build_map(_map_base(text), seed), avoid, seed, source_words)
     text = apply_map(text, mapping, seed)
     real_of = {_case_like(new, form): _case_like(old, form) for old, new in drugs.items()
                for form in ("x", "Xx", "XX")} | {w: w for w in rs.keep}
