@@ -1,5 +1,5 @@
 /** The app's top-level pages with their icons, shared by the sidebar and the command menu so both look alike. */
-import { ActivityIcon, BarChart3Icon, ClipboardCheckIcon, DatabaseIcon, FileCode2Icon, FlaskConicalIcon, ListOrderedIcon, type LucideIcon } from "lucide-react"
+import { ActivityIcon, BarChart3Icon, ClipboardCheckIcon, DatabaseIcon, FileCode2Icon, FlaskConicalIcon, ListChecksIcon, ListOrderedIcon, type LucideIcon } from "lucide-react"
 
 export type Page = { to: string; label: string; icon: LucideIcon; end?: boolean }
 
@@ -7,6 +7,7 @@ export const HOME: Page = { to: "/", label: "Questions", icon: ListOrderedIcon, 
 
 export const VIEWER: Page[] = [
   { to: "/plan", label: "Plan", icon: ClipboardCheckIcon },
+  { to: "/review", label: "Review", icon: ListChecksIcon },
   { to: "/protocol", label: "Protocols", icon: FileCode2Icon },
   { to: "/corpora", label: "Corpora", icon: DatabaseIcon },
   { to: "/runs", label: "Runs", icon: FlaskConicalIcon },

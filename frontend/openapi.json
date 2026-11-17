@@ -2258,6 +2258,441 @@
           }
         }
       }
+    },
+    "/api/ev/review": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Overview",
+        "operationId": "review_overview",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Review Overview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/worlds": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Worlds",
+        "operationId": "review_worlds",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Review Worlds"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/worlds/{seed}": {
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Approve World",
+        "operationId": "review_approve_world",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Seed"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Approve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Approve World"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/sheets": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Sheets",
+        "operationId": "review_sheets",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Review Sheets"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/sheets/{seed}/{qid}": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Sheet",
+        "operationId": "review_sheet",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Seed"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Sheet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Save Sheet",
+        "operationId": "review_save_sheet",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Seed"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SheetIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Save Sheet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/judge-test": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Judge Test",
+        "operationId": "review_judge_test",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Review Judge Test"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/judge-test/{n}": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Judge Item",
+        "description": "Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or\nscores, and never the system that answered.",
+        "operationId": "review_judge_item",
+        "parameters": [
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Judge Item"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Hand Mark",
+        "operationId": "review_hand_mark",
+        "parameters": [
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "N"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandMarkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Hand Mark"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2533,6 +2968,19 @@
           "text"
         ],
         "title": "AnswerResult"
+      },
+      "Approve": {
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "Approve"
       },
       "BenchmarkView": {
         "properties": {
@@ -6674,6 +7122,33 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HandMarkIn": {
+        "properties": {
+          "points": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Points"
+          },
+          "faithful": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faithful"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "HandMarkIn"
+      },
       "Health": {
         "properties": {
           "ok": {
@@ -7736,6 +8211,100 @@
         "title": "ModelCallRecord",
         "description": "One record of the engine's record cache (evidence/recording.py): request, response, usage, error."
       },
+      "Moderator": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "levels": {
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/ModeratorLevel"
+              },
+              {
+                "$ref": "#/components/schemas/ModeratorLevel"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Levels"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "levels"
+        ],
+        "title": "Moderator",
+        "description": "A candidate condition the effect may depend on: `id` is the field of the measured-value type that holds a\nvalue's level, `levels` its two levels (their ids are that field's enum)."
+      },
+      "ModeratorLevel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ModeratorLevel"
+      },
+      "Moderators": {
+        "properties": {
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/Moderator"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Conditions"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "min_gap": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Min Gap"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "conditions",
+          "min_gap"
+        ],
+        "title": "Moderators",
+        "description": "Subsets (evidence/rules.py `moderated`): the candidate conditions, the field of the measured-value type with\nthe number of cases behind a value (`total`; None: no such field, every cell weighs the same) and the gap two\nlevels' pooled effects need for a \"depends\" answer."
+      },
       "Pairing": {
         "properties": {
           "rule": {
@@ -8019,6 +8588,27 @@
           "plan"
         ],
         "title": "PlanView"
+      },
+      "PointIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "facts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Facts",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "PointIn"
       },
       "PreviewHit": {
         "properties": {
@@ -9602,6 +10192,22 @@
         "title": "Segment",
         "description": "A piece of a paper's text: `marks` are the ids (items, facts) whose spans cover it, `roles` their roles.\nCut on the server, in code points, so the page never converts offsets."
       },
+      "SheetIn": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/PointIn"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "SheetIn"
+      },
       "ShiftView": {
         "properties": {
           "ref": {
@@ -10166,6 +10772,16 @@
                 "min_studies": 3
               }
             }
+          },
+          "moderators": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Moderators"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
