@@ -90,7 +90,7 @@ def check_ticks(t: Ticks, sheet: Sheet, text: str) -> list[str]:
     return problems + [f"{p} missing" for p in ids if p not in seen]
 
 
-def score_c(q: Question, sheet: Sheet, rec: AnswerRecord, model: Any, cache: JsonlCache, *,
+def score_c(q: Question, sheet: Sheet, rec: AnswerRecord, model: Any, cache: JsonlCache, *, fresh: str | None = None,
             measures: Sequence[Measure]) -> dict:
     """Met points / points; `measures` are the folder spec's (`folder.spec.measures`). An empty answer misses
     every point with no call. Pending (the reply still fails its checks, or the call failed): `score` None, the
@@ -101,7 +101,7 @@ def score_c(q: Question, sheet: Sheet, rec: AnswerRecord, model: Any, cache: Jso
         return {"score": 0.0, "ticks": empty, "missed": ids, "status": "ok", "problems": [], "calls": 0,
                 "prompt_sha256": load_prompt(PROMPT_C, Ticks).sha256, "served_models": []}
     out = ask_checked(PROMPT_C, Ticks, c_input(q, sheet, rec.text, measures),
-                      lambda r: check_ticks(r, sheet, rec.text), model, cache, SETTINGS)
+                      lambda r: check_ticks(r, sheet, rec.text), model, cache, SETTINGS, fresh=fresh)
     done = {"calls": out["calls"], "prompt_sha256": out["prompt_sha256"], "served_models": out["served_models"]}
     if out["reply"] is None:
         return {"score": None, "ticks": [], "missed": [], "status": "pending", "problems": out["problems"], **done}
@@ -247,7 +247,8 @@ def check_marks(m: PaperMarks, planted: list[PlantedFact], n_pulled: int) -> lis
     return problems + [f"{i} not marked" for i in ids if i not in seen]
 
 
-def score_a(folder: Folder, q: Question, rec: AnswerRecord, model: Any, cache: JsonlCache) -> dict | None:
+def score_a(folder: Folder, q: Question, rec: AnswerRecord, model: Any, cache: JsonlCache, *,
+            fresh: str | None = None) -> dict | None:
     """Found planted facts / planted facts, pooled over the papers not pending; None for a record that pulls no
     per-paper facts (the baseline). A paper with no pulled fact has every planted fact missing, with no call."""
     if rec.facts is None:
@@ -265,7 +266,8 @@ def score_a(folder: Folder, q: Question, rec: AnswerRecord, model: Any, cache: J
             cut.append(sid)
         shown = pulled[:MAX_PER_PAPER]
         out = ask_checked(PROMPT_A, PaperMarks, a_input(mine, shown, measures=folder.spec.measures),
-                          lambda r, mine=mine, n=len(shown): check_marks(r, mine, n), model, cache, SETTINGS)
+                          lambda r, mine=mine, n=len(shown): check_marks(r, mine, n), model, cache, SETTINGS,
+                          fresh=fresh)
         calls += out["calls"]
         served += out["served_models"]
         if out["reply"] is None:
@@ -334,7 +336,7 @@ def check_claims(c: ClaimChecks, text: str, n: int) -> list[str]:
     return problems
 
 
-def score_b(q: Question, rec: AnswerRecord, model: Any, cache: JsonlCache, *,
+def score_b(q: Question, rec: AnswerRecord, model: Any, cache: JsonlCache, *, fresh: str | None = None,
             measures: Sequence[Measure]) -> dict:
     """Supported claims / claims; `measures` are the folder spec's. No text or no claim: `score` None. Pending
     (the reply still fails its checks, or the call failed): `score`, `invented` and `contradicted` None."""
@@ -344,7 +346,7 @@ def score_b(q: Question, rec: AnswerRecord, model: Any, cache: JsonlCache, *,
         return {"score": None, "claims": [], "invented": 0, "contradicted": 0, "facts_cut": cut, "status": "ok",
                 "problems": [], "calls": 0, "prompt_sha256": sha, "served_models": []}
     out = ask_checked(PROMPT_B, ClaimChecks, b_input(q, rec, used, measures=measures),
-                      lambda r: check_claims(r, rec.text, len(used)), model, cache, SETTINGS)
+                      lambda r: check_claims(r, rec.text, len(used)), model, cache, SETTINGS, fresh=fresh)
     done = {"facts_cut": cut, "calls": out["calls"], "prompt_sha256": out["prompt_sha256"],
             "served_models": out["served_models"]}
     if out["reply"] is None:

@@ -202,3 +202,19 @@ def test_judge_by_command(folder, tmp_path, spec_dir, monkeypatch, capsys):
     assert "judged 1, kept 0, skipped 0, pending 0" in capsys.readouterr().out
     assert (tmp_path / "res" / "demo" / "judge-calls.jsonl").is_file()
     assert marks_path(tmp_path / "res", "demo", 1, "engine", "d01").is_file()
+
+
+def test_a_pending_item_from_bad_replies_is_asked_again_past_the_cache(folder, tmp_path, SPEC):
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); qq = qs.get("d01")
+    sheet_for(f, qq, tmp_path)
+    save_answer(tmp_path / "res", engine_rec(f, qq))
+    bad = answering(lambda p: Ticks(ticks=[Tick(point="p1", met=True, quote="never said", reason="")])
+                    if "Points:" in p else ClaimChecks(claims=[]))
+    first = run(folder, tmp_path, SPEC, qs, bad)   # the bad replies are cached under the same keys
+    assert first["pending"] == ["demo/s1/engine/d01"]
+    good = judge_model()
+    second = run(folder, tmp_path, SPEC, qs, good)
+    assert good.prompts and second["judged"] == 1 and second["pending"] == []
+    assert marks_of(tmp_path)["C"]["score"] == 1.0
+    never = boom()   # a kept item never uses fresh and never calls
+    assert run(folder, tmp_path, SPEC, qs, never)["kept"] == 1 and never.calls == 0

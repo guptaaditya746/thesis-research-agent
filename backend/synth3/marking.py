@@ -7,6 +7,7 @@ answer, the sheet and the three prompts are the ones it was made from and nothin
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -57,13 +58,13 @@ def is_pending(marks: dict) -> bool:
 
 
 def judge_answer(folder: Folder, q: Question, sheet: Sheet, rec: AnswerRecord, model: Any,
-                 cache: JsonlCache) -> dict:
+                 cache: JsonlCache, *, fresh: str | None = None) -> dict:
     """The marks of one answer. A is None for a record with no per-paper facts (the baseline); `judge.prompts`
     always holds the three prompt hashes."""
     measures = folder.spec.measures
-    a = score_a(folder, q, rec, model, cache)
-    b = score_b(q, rec, model, cache, measures=measures)
-    c = score_c(q, sheet, rec, model, cache, measures=measures)
+    a = score_a(folder, q, rec, model, cache, fresh=fresh)
+    b = score_b(q, rec, model, cache, measures=measures, fresh=fresh)
+    c = score_c(q, sheet, rec, model, cache, measures=measures, fresh=fresh)
     served = list(dict.fromkeys(s for part in (a, b, c) if part for s in part["served_models"]))
     return {"item": item_id(rec), "question_id": rec.question_id, "seed": rec.seed, "system": rec.system,
             "corpus_id": rec.corpus_id, "answer_sha256": answer_sha256(rec),
@@ -85,6 +86,14 @@ def _kept(path: Path, rec: AnswerRecord, sheet: Sheet) -> bool:
         return False
 
 
+def _was_pending(path: Path) -> bool:
+    """True when a marks file is there and has something pending."""
+    try:
+        return is_pending(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def _saved(results: Path, domain: str, seed: int, systems: list[str] | None) -> list[AnswerRecord]:
     recs = [load_answer(p) for p in (results / domain / f"s{seed}").glob("*/*.answer.json")]
     recs = [r for r in recs if systems is None or r.system in systems]
@@ -95,6 +104,7 @@ def judge_folder(folder: Folder, systems: list[str] | None, qs: QuestionSet, mod
                  sheets_root: Path, results: Path) -> dict:
     """Judge every saved answer of one folder; `{"judged", "kept", "skipped": {item: reason}, "pending": [item]}`."""
     domain, seed = folder.spec.domain, folder.seed
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     out: dict = {"judged": 0, "kept": 0, "skipped": {}, "pending": []}
     for rec in _saved(results, domain, seed, systems):
         item = item_id(rec)
@@ -112,7 +122,8 @@ def judge_folder(folder: Folder, systems: list[str] | None, qs: QuestionSet, mod
         if _kept(path, rec, sheet):
             out["kept"] += 1
             continue
-        marks = judge_answer(folder, q, sheet, rec, model, cache)
+        fresh = now if _was_pending(path) else None   # the cached bad replies would give the same pending again
+        marks = judge_answer(folder, q, sheet, rec, model, cache, fresh=fresh)
         write_json_atomic(path, marks)
         out["judged"] += 1
         if is_pending(marks):
