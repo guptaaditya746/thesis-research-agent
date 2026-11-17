@@ -60,34 +60,10 @@ def _fields(kind: str) -> tuple[str, ...]:
     return COUNT_FIELDS if kind == "count" else VALUE_FIELDS
 
 
-def write_paper(study: Study, spec: DomainSpec, text_level: str, seed: int) -> Paper:
-    if text_level not in TEXT_LEVELS:
-        raise ValueError(f"unknown text level '{text_level}'; known: {', '.join(TEXT_LEVELS)}")
-    rng = random.Random(f"synth3:{seed}:{study.id}:text")
+def results_block(b: _Builder, study: Study, spec: DomainSpec, text_level: str) -> None:
+    """The result rows of one study: a sentence per arm and cell (`prose`) or one table per measure kind (`table`)."""
     label = {a.id: a.label for a in spec.arms}
     sid = study.id
-    a0, c0, m0 = next(iter(study.claims)).split("|")
-    words = {"a": label[a0], "c": label[c0], "m": spec.measure(m0).name.lower()}
-    b = _Builder()
-    b.add(f"# {study.label}: {rng.choice(TITLES).format(**words)}\n\n## Abstract\n\n")
-    b.add(rng.choice(OPENERS).format(**words))
-    for key, word in study.claims.items():
-        b.add(" ")
-        b.plant(_fact_claim(sid, key, "abstract"), _claim_sentence(spec, key, word))
-    b.add("\n\n## Setup\n\n")
-    for arm in study.arms:
-        a = next(x for x in spec.arms if x.id == arm)
-        b.add(f"The {a.label} {a.description}. ")
-    b.add("The study was run at the ")
-    b.plant(f"{sid}.setting", study.setting)
-    b.add(". It covers these subsets:\n\n")
-    seen: list[str] = []
-    for cell in study.cells:
-        subset = _subset(cell, spec)
-        if subset not in seen:
-            seen.append(subset)
-            b.add(f"- {subset}\n")
-    b.add("\n## Results\n\n")
     if text_level == "prose":
         for cell in study.cells:
             measure = spec.measure(cell.measure)
@@ -124,6 +100,37 @@ def write_paper(study: Study, spec: DomainSpec, text_level: str, seed: int) -> P
                         b.plant(f"{sid}.c{cell.index}.{r.arm}.{field}", _value(r, field, measure.decimals))
                         b.add(" | " if i < len(fields) - 1 else " |\n")
             b.add("\n")
+
+
+def write_paper(study: Study, spec: DomainSpec, text_level: str, seed: int) -> Paper:
+    if text_level not in TEXT_LEVELS:
+        raise ValueError(f"unknown text level '{text_level}'; known: {', '.join(TEXT_LEVELS)}")
+    rng = random.Random(f"synth3:{seed}:{study.id}:text")
+    label = {a.id: a.label for a in spec.arms}
+    sid = study.id
+    a0, c0, m0 = next(iter(study.claims)).split("|")
+    words = {"a": label[a0], "c": label[c0], "m": spec.measure(m0).name.lower()}
+    b = _Builder()
+    b.add(f"# {study.label}: {rng.choice(TITLES).format(**words)}\n\n## Abstract\n\n")
+    b.add(rng.choice(OPENERS).format(**words))
+    for key, word in study.claims.items():
+        b.add(" ")
+        b.plant(_fact_claim(sid, key, "abstract"), _claim_sentence(spec, key, word))
+    b.add("\n\n## Setup\n\n")
+    for arm in study.arms:
+        a = next(x for x in spec.arms if x.id == arm)
+        b.add(f"The {a.label} {a.description}. ")
+    b.add("The study was run at the ")
+    b.plant(f"{sid}.setting", study.setting)
+    b.add(". It covers these subsets:\n\n")
+    seen: list[str] = []
+    for cell in study.cells:
+        subset = _subset(cell, spec)
+        if subset not in seen:
+            seen.append(subset)
+            b.add(f"- {subset}\n")
+    b.add("\n## Results\n\n")
+    results_block(b, study, spec, text_level)
     b.add("## Conclusion\n\n")
     for i, (key, word) in enumerate(study.claims.items()):
         if i:

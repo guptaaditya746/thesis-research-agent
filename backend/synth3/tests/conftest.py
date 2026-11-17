@@ -1,8 +1,21 @@
+from dataclasses import replace
+
 import pytest
 import yaml
 
 from synth3.realspec import load_real_spec
+from synth3.reference import draw_supported_studies
 from synth3.spec import load_spec
+from synth3.world import draw_world
+
+
+def approved(SPEC, seed):
+    return replace(draw_world(SPEC, seed), approved=True)
+
+
+def supported(SPEC, seed):
+    """The studies of the first supported noise attempt for a drawn world."""
+    return draw_supported_studies(SPEC, draw_world(SPEC, seed), seed, 40)[0]
 
 
 def _authors() -> list[str]:
