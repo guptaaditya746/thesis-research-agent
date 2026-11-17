@@ -23,6 +23,25 @@ def test_point_checks_name_the_problem():
     assert not check_points([("Better in S004.", ["pair:a:m1"])], facts, by_model=True)
 
 
+def test_every_point_check_names_its_problem():
+    facts = [FactLine(id="pair:a:m1", text="x")]
+    assert check_points([], facts, by_model=False) == ["no points"]
+    assert check_points([("  ", [])], facts, by_model=False) == ["point 1: empty text"]
+    assert check_points([("y" * 301, [])], facts, by_model=False) == ["point 1: longer than 300 characters"]
+    assert check_points([("Same.", []), (" Same. ", [])], facts, by_model=False) == ["point 2: same text as point 1"]
+    assert check_points([("t", ["pair:a:m1"])], facts, by_model=True) == []
+
+
+def test_a_person_sheet_with_a_bad_point_is_refused(folder):
+    with pytest.raises(ValueError, match="point 1: unknown fact pair:zz:m9"):
+        person_sheet(load_folder(folder), q("Does Targeted therapy raise the Response rate?"),
+                     [("Mine.", ["pair:zz:m9"])], "aditya", "t", checked=True)
+
+
+def test_no_cant_tell_sheet_when_the_folder_can_answer(folder):
+    assert cant_tell_sheet(load_folder(folder), q("Does Targeted therapy raise the Response rate?")) is None
+
+
 def test_a_digit_inside_a_spec_name_is_not_a_number():
     facts = [FactLine(id="pair:a:m1", text="x")]
     pts = [("Drug B12 does better.", ["pair:a:m1"])]
@@ -33,8 +52,10 @@ def test_a_digit_inside_a_spec_name_is_not_a_number():
 
 
 def test_only_pair_and_head_to_head_lines_warn():
-    facts = [FactLine(id="pair:a:m1", text="x"), FactLine(id="rank:m1", text="y"), FactLine(id="study:S001", text="z")]
-    assert coverage_warnings([], facts) == ["fact pair:a:m1 is in no point"]
+    facts = [FactLine(id="pair:a:m1", text="x"), FactLine(id="rank:m1", text="y"), FactLine(id="study:S001", text="z"),
+             FactLine(id="h2h:a:b:m1", text="w")]
+    assert coverage_warnings([], facts) == ["fact pair:a:m1 is in no point", "fact h2h:a:b:m1 is in no point"]
+    assert coverage_warnings([("t", ["h2h:a:b:m1"])], facts) == ["fact pair:a:m1 is in no point"]
 
 
 def test_a_sheet_goes_stale_when_the_question_or_truth_changes(folder, SPEC, tmp_path):
@@ -83,6 +104,8 @@ def test_archive_never_overwrites(folder, tmp_path):
         save_sheet(tmp_path / "sh", s)
         assert archive_sheet(tmp_path / "sh", s).name == f"x.stale-{n}.json"
     assert load_sheet(tmp_path / "sh", "demo", 1, "x") is None
+    with pytest.raises(ValueError, match=r"x\.json: no sheet file to archive"):
+        archive_sheet(tmp_path / "sh", s)
 
 
 def test_review_queue_full_folder_and_a_sample_that_never_moves(tmp_path):

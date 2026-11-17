@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import random
 import re
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
@@ -77,7 +78,7 @@ def sheet_sha256(sheet: Sheet) -> str:
 
 
 def check_points(points: list[tuple[str, list[str]]], facts: list[FactLine], *, by_model: bool,
-                 names: list[str] = ()) -> list[str]:
+                 names: Sequence[str] = ()) -> list[str]:
     """Problems, each naming the point number. `names` are the spec's own names; digits inside them are allowed."""
     known = {f.id for f in facts}
     if not points:
@@ -170,8 +171,11 @@ def person_sheet(folder: Folder, q: Question, points: list[tuple[str, list[str]]
 
 
 def archive_sheet(root: Path, sheet: Sheet) -> Path:
-    """Move the current file to `<qid>.stale-<n>.json` beside it; never deletes."""
+    """Move the current file to `<qid>.stale-<n>.json` beside it; never deletes. No file there is a `ValueError`
+    naming it (callers archive only a sheet they loaded)."""
     path = sheet_path(root, sheet.domain, sheet.seed, sheet.question_id)
+    if not path.is_file():
+        raise ValueError(f"{path}: no sheet file to archive")
     n = 1
     while (dest := path.with_name(f"{sheet.question_id}.stale-{n}.json")).exists():
         n += 1
