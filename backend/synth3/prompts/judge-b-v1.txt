@@ -73,6 +73,25 @@ Yield stayed the same with Method P. In small batches Method P cut errors; in la
 Output:
 {"claims": [{"claim": "Yield stayed the same with Method P", "verdict": "supported", "facts": [1], "reason": "The authors say Method P and the Usual method reach about the same yield, which is no real difference."}, {"claim": "In small batches Method P cut errors; in large batches it made no difference", "verdict": "supported", "facts": [2, 3, 4, 5], "reason": "Fewer errors with Method P in Small batches (3.0 against 4.1) and the same mean in Large batches (4.1 and 4.1)."}]}
 
+Example 2c (a confusing case: no real difference and a split by group, both against the facts).
+Input:
+Question: Does Method P raise the Yield?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Facts:
+1. S522 measurement {"arm":"Method P","count":58,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "58"
+2. S522 measurement {"arm":"Usual method","count":41,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "41"
+3. S522 measurement {"arm":"Method P","count":42,"group":"Large batches, Day shift","measure":"Yield","total":100} quote: "42"
+4. S522 measurement {"arm":"Usual method","count":42,"group":"Large batches, Day shift","measure":"Yield","total":100} quote: "42"
+
+Answer:
+Method P and the usual method reached about the same yield. In large batches Method P raised the yield; in small batches it made no difference.
+Output:
+{"claims": [{"claim": "Method P and the usual method reached about the same yield", "verdict": "contradicted", "facts": [1, 2], "reason": "In Small batches Method P reached 58 of 100 against 41 of 100, a clear gap, so the Yield is not about the same."}, {"claim": "In large batches Method P raised the yield; in small batches it made no difference", "verdict": "contradicted", "facts": [1, 2, 3, 4], "reason": "The facts show the split the other way: a higher Yield in Small batches (58 against 41) and the same Yield in Large batches (42 and 42)."}]}
+
 Example 3 (a missing case: a claim about a measure no fact mentions).
 Input:
 Question: Does Method K change the Yield?

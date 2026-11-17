@@ -216,10 +216,13 @@ def a_input(planted: list[PlantedFact], pulled: list[PulledFact], *, measures: S
 
 def check_marks(m: PaperMarks, planted: list[PlantedFact], n_pulled: int) -> list[str]:
     """Problems: a planted fact marked twice or not at all, an unknown fact, a found or wrong mark without a pulled
-    fact number in 1..n_pulled, a missing mark that cites one."""
+    fact number in 1..n_pulled, a missing mark that cites one, a wrong mark citing a pulled fact that the same
+    reply marks found for another planted fact (that pulled fact is about the other one)."""
     ids = [p.id for p in planted]
     problems: list[str] = []
     seen: set[str] = set()
+    found: dict[int, str] = {}
+    wrong: list[Mark] = []
     for mark in m.marks:
         if mark.fact not in ids:
             problems.append(f"unknown fact {mark.fact}")
@@ -227,6 +230,11 @@ def check_marks(m: PaperMarks, planted: list[PlantedFact], n_pulled: int) -> lis
             problems.append(f"{mark.fact} twice")
         else:
             seen.add(mark.fact)
+            if mark.pulled is not None:
+                if mark.verdict == "found":
+                    found.setdefault(mark.pulled, mark.fact)
+                elif mark.verdict == "wrong":
+                    wrong.append(mark)
             if mark.verdict == "missing":
                 if mark.pulled is not None:
                     problems.append(f"{mark.fact}: missing cites no pulled fact")
@@ -234,6 +242,8 @@ def check_marks(m: PaperMarks, planted: list[PlantedFact], n_pulled: int) -> lis
                 problems.append(f"{mark.fact}: {mark.verdict} needs a pulled fact number")
             elif not 1 <= mark.pulled <= n_pulled:
                 problems.append(f"{mark.fact}: pulled fact {mark.pulled} is not in 1 to {n_pulled}")
+    problems += [f"{w.fact}: pulled fact {w.pulled} is found for {found[w.pulled]}, so it is not a wrong version of "
+                 "this fact" for w in wrong if w.pulled in found]
     return problems + [f"{i} not marked" for i in ids if i not in seen]
 
 

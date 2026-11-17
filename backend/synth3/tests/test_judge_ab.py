@@ -189,6 +189,26 @@ def test_check_marks_names_each_problem(folder):
         *[f"{i} not marked" for i in ids[3:]]]
 
 
+def test_a_pulled_fact_found_for_one_planted_fact_is_not_wrong_for_another(folder, tmp_path):
+    f = load_folder(folder); qq = q(Q)
+    planted = planted_facts(f, qq); sid = next(iter(planted)); mine = planted[sid]; ids = [p.id for p in mine]
+    rest = [Mark(fact=i, verdict="missing", pulled=None, reason="") for i in ids[2:]]
+    sibling = PaperMarks(marks=[Mark(fact=ids[0], verdict="found", pulled=1, reason=""),
+                                Mark(fact=ids[1], verdict="wrong", pulled=1, reason=""), *rest])
+    assert check_marks(sibling, mine, 2) == [f"{ids[1]}: pulled fact 1 is found for {ids[0]}, so it is not a "
+                                             "wrong version of this fact"]
+    both_found = PaperMarks(marks=[Mark(fact=ids[0], verdict="found", pulled=1, reason=""),
+                                   Mark(fact=ids[1], verdict="found", pulled=1, reason=""), *rest])
+    other_wrong = PaperMarks(marks=[Mark(fact=ids[0], verdict="found", pulled=1, reason=""),
+                                    Mark(fact=ids[1], verdict="wrong", pulled=2, reason=""), *rest])
+    assert check_marks(both_found, mine, 2) == [] and check_marks(other_wrong, mine, 2) == []
+    fixed = PaperMarks(marks=[Mark(fact=ids[0], verdict="found", pulled=1, reason=""),
+                              Mark(fact=ids[1], verdict="missing", pulled=None, reason=""), *rest])
+    model = scripted(sibling, fixed)
+    out = score_a(f, qq, rec("x", facts=[pulled(sid, 1), pulled(sid, 2)]), model, JsonlCache(tmp_path / "c"))
+    assert out["calls"] == 2 and "is found for" in model.prompts[1] and out["papers"][sid][1]["verdict"] == "missing"
+
+
 @pytest.mark.parametrize("prompt", [PROMPTS / n for n in NEW_PROMPTS])
 def test_prompt_examples_use_no_domain_name(prompt):
     names = {n for f in [*SPECS.glob("*.yaml"), *(SPECS / "drafts").glob("*.yaml")]
