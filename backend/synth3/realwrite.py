@@ -11,10 +11,10 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from synth2.realedit import MAX_INSERTED, META, apply_edits, unsayable
+from synth2.realedit import MAX_INSERTED, META, apply_edits
 from synth2.write import Paper, Placement, _Builder
 from synth3.realspec import RealSpec
-from synth3.rename import names_left, rename_source
+from synth3.rename import hard_to_say, names_left, rename_source
 from synth3.spec import DomainSpec
 from synth3.world import Study
 from synth3.write import _claim_sentence, _fact_claim, missing_facts, results_block
@@ -236,7 +236,7 @@ def check_real_paper(paper: Paper, inserted: tuple[str, ...], study: Study, spec
     cited = [s for s in surnames if re.search(r"(?<![A-Za-z0-9])" + re.escape(s) + r"(?![A-Za-z0-9])", real)]
     if cited:
         problems.append(f"a spec author surname in the real text {cited}")
-    hard = unsayable(mapping)
+    hard = hard_to_say(mapping)
     if hard:
         problems.append(f"invented names hard to say {hard[:8]}")
     banned = rs.banned(spec)

@@ -95,6 +95,42 @@ def _avoid_values(mapping: dict[str, str], avoid: set[str], seed: str, real: set
     return {k: re.sub(r"[^- ]+", lambda m: new.get(m.group(0), m.group(0)), v) for k, v in mapping.items()}
 
 
+_PLURAL = re.compile(r"[A-Z]{2,}s")
+
+
+def _plural_acronyms(mapping: dict[str, str], text: str, seed: str) -> dict[str, str]:
+    """Every acronym plural in a key ("NCDs", "LMICs") gets its singular's invented acronym plus "s": synth2 reads
+    "NCDs" as "NC" + the word "Ds" and invents "GHZatio". A singular in the text that synth2 kept stays, and so
+    does its plural; a singular not in the text gets a new acronym."""
+    taken = set(mapping) | set(mapping.values())
+    single: dict[str, str] = {}
+
+    def plural(word: str) -> str:
+        s = word[:-1]
+        if s not in single:
+            if s in mapping:
+                single[s] = mapping[s]
+            elif re.search(_EDGE_L + re.escape(s) + _EDGE_R, text):
+                single[s] = s
+            else:
+                single[s] = _new_part(s, seed, taken)
+        return single[s] + "s"
+
+    out = {}
+    for key, value in mapping.items():
+        kw, vw = re.split(r"([- ])", key), re.split(r"([- ])", value)
+        if len(kw) == len(vw) and any(_PLURAL.fullmatch(w) for w in kw):
+            value = "".join(plural(k) if _PLURAL.fullmatch(k) else v for k, v in zip(kw, vw))
+        if value != key:
+            out[key] = value
+    return out
+
+
+def hard_to_say(mapping: dict[str, str]) -> list[str]:
+    """synth2's `unsayable`, with an acronym plural judged as its singular ("GHZs" is "GHZ" read aloud plus s)."""
+    return unsayable({k: re.sub(r"\b([A-Z]{2,})s\b", r"\1", v) for k, v in mapping.items()})
+
+
 def _map_base(text: str) -> str:
     """The text the name map is built from: heading lines lose their plain capitalised words, which are names to
     synth2 only because headings are in title case ("Results and Discussion"). Acronyms and names with digits in a
@@ -110,11 +146,13 @@ def rename_source(text: str, rs: RealSpec, seed: str, avoid: set[str]) -> tuple[
     pat = lower_names(rs)
     text = pat.sub(lambda m: _case_like(drugs[m.group(0).lower()], m.group(0)), text)
     forms = [f for new in drugs.values() for f in (new, new.capitalize(), new.upper())]
-    text, held = _hold(text, [*rs.keep, *forms])
-    mapping = _avoid_values(build_map(_map_base(text), seed), avoid, seed, source_words)
+    keep = [*rs.keep, *(w + "s" for w in rs.keep if w[-1].isupper())]   # "BPs" stays as "BP" does
+    text, held = _hold(text, [*keep, *forms])
+    base = _map_base(text)
+    mapping = _avoid_values(_plural_acronyms(build_map(base, seed), base, seed), avoid, seed, source_words)
     text = apply_map(text, mapping, seed)
     real_of = {_case_like(new, form): _case_like(old, form) for old, new in drugs.items()
-               for form in ("x", "Xx", "XX")} | {w: w for w in rs.keep}
+               for form in ("x", "Xx", "XX")} | {w: w for w in keep}
 
     def restore(s: str, real: bool) -> str:
         return _HOLD.sub(lambda m: real_of[held[m.group(0)]] if real else held[m.group(0)], s)

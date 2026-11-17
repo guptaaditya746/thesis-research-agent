@@ -1,4 +1,5 @@
 import random
+import re
 
 import pytest
 
@@ -70,3 +71,15 @@ def test_heading_words_are_not_names_but_real_names_in_headings_still_go(REAL):
     text, m = rename_source(src, REAL, "s1", set())
     assert "## Results and Discussion" in text and "## Materials and Methods" in text
     assert "TRIAX-2" not in text and "Brightford" not in text and names_left(text, m, REAL) == []
+
+
+def test_an_acronym_plural_is_its_singular_plus_s_and_counts_as_sayable(REAL):
+    # synth2 reads "NCDs" as "NC" + the word "Ds", so NCDs became "GHZatio" in a built paper
+    from synth3.rename import hard_to_say
+    src = ("# Title\n\n## Abstract\n\nNon-communicable diseases (NCDs) are common. The NCD burden grows and NCDs "
+           "kill. In LMICs care is thin. BPs fell and SDs were wide.\n")
+    text, m = rename_source(src, REAL, "s1", set())
+    assert m["NCDs"] == m["NCD"] + "s" and re.fullmatch(r"[A-Z]{3}s", m["NCDs"])
+    assert re.fullmatch(r"[A-Z]{4}s", m["LMICs"])
+    assert "BPs fell" in text and "SDs were" in text and not {"BPs", "SDs"} & set(m)
+    assert hard_to_say(m) == [] and names_left(text, m, REAL) == []
