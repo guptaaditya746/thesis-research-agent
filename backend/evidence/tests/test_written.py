@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 from evidence.contract import Item, Span
+from evidence.records import CLAIM
 from evidence.tests.test_plan_run import make_plan
 from evidence.tests.test_planner_subq import spec_name_hits
 from evidence.written import (PROMPT, Fact, Sentence, WrittenReply, answer_text_of, check_written, fact_budget,
@@ -84,6 +85,54 @@ def test_every_paper_is_represented_when_the_budget_is_small():
     assert cut["pulled"] == 400 and cut["kept"] == len(facts) and sum(cut["left_out"].values()) == 400 - len(facts)
     assert [f.n for f in facts] == list(range(1, len(facts) + 1))
     assert [f.paper for f in facts] == sorted(f.paper for f in facts)
+    # 40 firsts, then 20 seconds before the budget stops: S001-S020 keep 2 facts, S021-S040 keep 1
+    assert cut["left_out"] == {f"S{i:03d}": 8 if i <= 20 else 9 for i in range(1, 41)}
+
+
+def test_a_plan_with_no_compared_thing_takes_the_any_role():
+    c = item("condition", {"label": "Method K", "role": "any"})
+    k = item("metric", {"name": "Yield", "canonical": "accuracy", "higher_is_better": True})
+    m = item("measurement", {"value": 0.5, "dataset": None}, {"condition": c.item_id, "metric": k.item_id})
+    facts, cut = fact_lines({"S001": [c, k, m]}, make_plan(things={"accuracy": ["accuracy"]}), 10_000)
+    assert [f.item for f in facts] == [m.item_id] and cut["off_plan"] == 0
+    facts, cut = fact_lines({"S001": [c, k, m]}, plan(), 10_000)
+    assert facts == [] and cut["off_plan"] == 1
+
+
+def test_an_other_condition_is_the_comparison_point_of_an_on_plan_measurement():
+    on = paper_facts("S001", 1)
+    other = item("condition", {"label": "Usual method", "role": "other"}, exact="Usual method", start=60)
+    cost = item("metric", {"name": "Cost", "canonical": "cost", "higher_is_better": False}, exact="Cost", start=70)
+    point = item("measurement", {"value": 9, "dataset": None}, {"condition": other.item_id, "metric": on[1].item_id},
+                 exact="9", start=500)
+    off_measure = item("measurement", {"value": 7, "dataset": None}, {"condition": other.item_id, "metric": cost.item_id},
+                       exact="7", start=510)
+    alone = [item("condition", {"label": "Usual method", "role": "other"}, paper="S002"),
+             item("metric", {"name": "Yield", "canonical": "accuracy", "higher_is_better": True}, paper="S002", start=9)]
+    alone.append(item("measurement", {"value": 9, "dataset": None},
+                      {"condition": alone[0].item_id, "metric": alone[1].item_id}, paper="S002", start=30))
+    facts, cut = fact_lines({"S001": [*on, other, cost, point, off_measure], "S002": alone}, plan(), 10_000)
+    assert [f.item for f in facts] == [on[2].item_id, point.item_id] and cut["off_plan"] == 2
+    assert facts[1].text == 'Usual method on Yield (higher is better): 9, no dataset named. Quote: "9"'
+
+
+def test_the_quote_is_the_value_span_and_values_print_plainly():
+    c = item("condition", {"label": "Method K", "role": "rag"}, exact="Method K")
+    k = item("metric", {"name": "Yield", "canonical": "accuracy", "higher_is_better": True}, exact="Yield", start=20)
+    sel = lambda start, exact: {"file": "papers/S001.md", "start": start, "end": start + len(exact), "exact": exact}
+    m = Item.build("measurement", {"value": 0.00001, "dataset": None},
+                   [Span(role="condition_label", selector=sel(0, "Method K")), Span(role="value", selector=sel(50, "1e-5"))],
+                   links={"condition": c.item_id, "metric": k.item_id})
+    facts, _ = fact_lines({"S001": [c, k, m]}, plan(), 10_000)
+    assert facts[0].text == 'Method K on Yield (higher is better): 0.00001, no dataset named. Quote: "1e-5"'
+
+
+def test_a_claim_reads_subject_relation_object_and_strength():
+    claim = item(CLAIM, {"subject": "Method K", "relation": "shortens", "object": None, "strength": "firm"},
+                 exact="Method K shortens the delay.", start=300)
+    facts, _ = fact_lines({"S001": [*paper_facts("S001", 1), claim]}, plan(), 10_000)
+    assert facts[1].type == CLAIM
+    assert facts[1].text == 'Method K shortens ? (firm). Quote: "Method K shortens the delay."'
 
 
 def test_the_budget_follows_the_model_limit():
@@ -101,6 +150,14 @@ def test_checks_name_each_problem():
     assert check_written(s("Unknown.", "cannot_tell", (1,)), facts) == ["sentence 1: a cannot_tell sentence cites no fact"]
     assert check_written(WrittenReply(sentences=[]), facts) == ["give 1 to 8 sentences"]
     assert numbers("In S001 and S010, 1,250 cases and 0.45.") == [1250.0, 0.45]
+    assert check_written(s("Yield fell by 0.45."), facts) == []   # the minus sign is not read
+
+
+def test_a_number_of_the_question_may_be_repeated():
+    facts = [Fact(n=1, item="m-1", paper="S001", type="measurement", text="Method K on Yield: 0.45")]
+    reply = WrittenReply(sentences=[Sentence(text="No fact reports CIFAR-10 results.", says="cannot_tell", facts=[])])
+    assert check_written(reply, facts, "Does Method K help on CIFAR-10?") == []
+    assert check_written(reply, facts) == ["sentence 1: the number 10 is in none of its facts"]
 
 
 def test_checks_name_the_other_problems():
@@ -141,6 +198,10 @@ def test_the_prompt_uses_no_domain_name_and_holds_its_three_examples():
     assert spec_name_hits(text) == []   # from test_planner_subq.py
     assert text.splitlines()[0].startswith("Write a short answer to the question")
     assert all(w in text for w in ("Method K", "Method P", "Usual method", "Error count", "45%", "cannot_tell"))
+    # the examples show better, worse (more errors where lower is better) and no real difference
+    assert all(w in text for w in ("higher Yield", "Method P gave more errors than the Usual method, 15 against 12.",
+                                   "no real difference"))
+    assert "number written in the question" in text
 
 
 def test_the_prompt_examples_pass_the_code_checks():

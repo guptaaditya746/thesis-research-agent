@@ -7,8 +7,10 @@ reply (`check_written`), the answer text with its paper ids (`answer_text_of`) a
 main question only, never the plan's sub-questions."""
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Mapping
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Literal
 
@@ -73,35 +75,64 @@ def _linked(item: Item, by_id: Mapping[str, Item], link: str) -> Item | None:
     return by_id.get(item.links.get(link, ""))
 
 
-def _measurement_on_plan(item: Item, by_id: Mapping[str, Item], plan: Plan) -> bool:
+def _role(item: Item, by_id: Mapping[str, Item]) -> Any:
     condition = _linked(item, by_id, "condition")
-    role = condition.fields.get("role") if condition is not None else None
-    if role in (OTHER, ANY) or role not in sides(plan):
-        return False
-    if not plan.measures:
-        return True
+    return condition.fields.get("role") if condition is not None else None
+
+
+def _canonical(item: Item, by_id: Mapping[str, Item]) -> Any:
     metric = _linked(item, by_id, "metric")
-    return metric is not None and metric.fields.get("canonical") in plan.measures
+    return metric.fields.get("canonical") if metric is not None else None
+
+
+def _on_measure(item: Item, by_id: Mapping[str, Item], plan: Plan) -> bool:
+    return not plan.measures or _canonical(item, by_id) in plan.measures
+
+
+def _compared(item: Item, by_id: Mapping[str, Item], plan: Plan) -> bool:
+    """A measurement of a compared thing on a plan measure: its role is one of the plan's things, or `any` when the
+    plan names no compared thing (the plan run then gives the treatment role `any`)."""
+    things = [t for t in sides(plan) if t not in (OTHER, ANY)]
+    role = _role(item, by_id)
+    return (role in things if things else role == ANY) and _on_measure(item, by_id, plan)
 
 
 def bears_on(item: Item, by_id: Mapping[str, Item], plan: Plan) -> bool:
-    """A measurement bears on the plan when its linked condition's role is one of the plan's compared things and (when
-    the plan has measures) its linked metric's canonical name is one of them; an author claim or claim bears on it when
-    its paper (`by_id`: the paper's items by id) has such a measurement."""
+    """Whether an item of a paper (`by_id`: the paper's items by id) bears on the plan.
+
+    A measurement bears on it when its linked condition's role is one of the plan's compared things (`any` when the
+    plan names none: a one-measure question) and, when the plan has measures, its linked metric's canonical name is
+    one of them. A measurement whose role is `other` bears on it as the comparison point: its metric is a plan measure
+    (or the plan has none) and the same paper has a measurement of the first kind on the same canonical metric. An
+    author claim or claim bears on it when its paper has a measurement of the first kind."""
     if item.evidence_type == "measurement":
-        return _measurement_on_plan(item, by_id, plan)
+        if _compared(item, by_id, plan):
+            return True
+        canonical = _canonical(item, by_id)
+        return (_role(item, by_id) == OTHER and canonical is not None and _on_measure(item, by_id, plan)
+                and any(it.evidence_type == "measurement" and _compared(it, by_id, plan)
+                        and _canonical(it, by_id) == canonical for it in by_id.values()))
     if item.evidence_type in ("author_claim", "claim"):
-        return any(it.evidence_type == "measurement" and _measurement_on_plan(it, by_id, plan) for it in by_id.values())
+        return any(it.evidence_type == "measurement" and _compared(it, by_id, plan) for it in by_id.values())
     return False
+
+
+def _plain(value: Any) -> str:
+    """A value as text; a float never in scientific form (0.00001, not 1e-05)."""
+    if isinstance(value, float) and math.isfinite(value):
+        return format(Decimal(repr(value)), "f")
+    return str(value)
 
 
 def _field(item: Item | None, name: str) -> str:
     value = item.fields.get(name) if item is not None else None
-    return "?" if value is None or value == "" else str(value)
+    return "?" if value is None or value == "" else _plain(value)
 
 
 def _quote(item: Item) -> str:
-    return f'Quote: "{str(item.spans[0].selector.get("exact", ""))[:MAX_QUOTE]}"'
+    """The exact words of the item's value span (role "value"), else of its first span, cut at MAX_QUOTE."""
+    span = next((s for s in item.spans if s.role == "value"), item.spans[0])
+    return f'Quote: "{str(span.selector.get("exact", ""))[:MAX_QUOTE]}"'
 
 
 def fact_text(item: Item, by_id: Mapping[str, Item]) -> str:
@@ -174,17 +205,21 @@ def _shown(x: float) -> str:
     return str(int(x)) if x.is_integer() else str(x)
 
 
-def _number_ok(x: float, cited: list[Fact]) -> bool:
+def _number_ok(x: float, cited: list[Fact], asked: list[float]) -> bool:
     """`x` is a number of the cited facts' texts, or that number times or divided by 100, or a count from 1 to the
-    number of cited facts."""
+    number of cited facts, or a number of the question (`asked`: a year, a name with digits)."""
     if x.is_integer() and 1 <= x <= len(cited):
+        return True
+    if any(abs(x - y) < 1e-9 for y in asked):
         return True
     return any(abs(x - y) < 1e-9 or abs(x - y * 100) < 1e-9 or abs(x - y / 100) < 1e-9
                for f in cited for y in numbers(f.text))
 
 
-def check_written(reply: WrittenReply, facts: list[Fact]) -> list[str]:
-    """The problems of a writer reply, each naming its sentence (from 1); [] when the reply is accepted."""
+def check_written(reply: WrittenReply, facts: list[Fact], question: str = "") -> list[str]:
+    """The problems of a writer reply, each naming its sentence (from 1); [] when the reply is accepted. A number of
+    `question` may be repeated in any sentence."""
+    asked = numbers(question)
     problems: list[str] = []
     if not 1 <= len(reply.sentences) <= MAX_SENTENCES:
         problems.append(f"give 1 to {MAX_SENTENCES} sentences")
@@ -208,7 +243,7 @@ def check_written(reply: WrittenReply, facts: list[Fact]) -> list[str]:
         if PAPER_ID.search(s.text):
             problems.append(f"sentence {i}: leave paper ids out; the code adds them")
         cited = [by_n[n] for n in dict.fromkeys(s.facts) if n in by_n]
-        bad = dict.fromkeys(_shown(x) for x in numbers(s.text) if not _number_ok(x, cited))
+        bad = dict.fromkeys(_shown(x) for x in numbers(s.text) if not _number_ok(x, cited, asked))
         problems += [f"sentence {i}: the number {x} is in none of its facts" for x in bad]
     return problems
 

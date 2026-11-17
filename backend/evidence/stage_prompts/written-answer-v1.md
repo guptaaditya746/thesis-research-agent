@@ -30,12 +30,12 @@ Input:
 Question: Does Method P cut the Error count?
 
 Facts:
-[1] S901 Method P on Error count (lower is better): 12, no dataset named. Quote: "12"
-[2] S901 Usual method on Error count (lower is better): 15, no dataset named. Quote: "15"
+[1] S901 Method P on Error count (lower is better): 15, no dataset named. Quote: "15"
+[2] S901 Usual method on Error count (lower is better): 12, no dataset named. Quote: "12"
 [3] S902 Method P on Yield (higher is better): 0.52, no dataset named. Quote: "0.52"
 Output:
-{"sentences": [{"text": "Method P gave fewer errors than the Usual method, 12 against 15.", "says": "finding", "facts": [1, 2]}]}
-(On Error count lower is better, so 12 against 15 is the better result for Method P. Fact 3 is on another measure, Yield, so it is not used.)
+{"sentences": [{"text": "Method P gave more errors than the Usual method, 15 against 12.", "says": "finding", "facts": [1, 2]}]}
+(On Error count lower is better, so 15 against 12 is the worse result for Method P. Fact 3 is on another measure, Yield, so it is not used.)
 
 Example 3 (a missing case: no fact on one part of the question).
 Input:
@@ -50,7 +50,7 @@ Output:
 Rules (code checks the numbers, the fact lists, the paper ids and the length; a reply that breaks one is sent back once with the problems):
 - Give 1 to 8 sentences, each at most 400 characters, each said once.
 - Each finding names the treatments, measures and groups as the facts name them, and lists the numbers of the facts it rests on.
-- Copy numbers from the cited facts only. Never compute a sum, mean, difference or percentage. A fraction and its percentage are the same number: 0.45 may be written 45%.
+- Copy numbers from the cited facts only. Never compute a sum, mean, difference or percentage. A fraction and its percentage are the same number: 0.45 may be written 45%. A number written in the question (a year, a name with digits) may be repeated.
 - Write a count of studies as a number no larger than the number of facts you cite, or in words.
 - When facts disagree, say so and cite the facts of both sides.
 - A part of the question that no fact speaks to gets one cannot_tell sentence with an empty list of facts.
