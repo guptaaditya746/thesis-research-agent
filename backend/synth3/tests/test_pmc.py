@@ -64,3 +64,11 @@ def test_a_paper_that_names_too_few_drugs_is_unfit(tmp_path):
     assert unfit(paper, rs(4)) == "too few names from name_stems or name_words"
     assert unfit(jats_paper((FIX / "trial.xml").read_bytes()), rs(1)) == "too few names from name_stems or name_words"
     assert unfit(jats_paper((FIX / "trial.xml").read_bytes()), rs(0)) is None
+
+
+def test_tidy_keeps_a_suspended_hyphen_but_joins_a_broken_word(REAL):
+    # "low- to -middle income" became "lowto -middle income" in a built paper
+    text = tidy("# T\n\nIn low- to middle-income settings, short- and long-term and pre- or post-dose "
+                "values were higher vs. low- vs high-dose groups. The treat- ment worked.\n", REAL)
+    assert "low- to middle-income" in text and "short- and long-term" in text and "pre- or post-dose" in text
+    assert "low- vs high-dose" in text and "treatment worked" in text

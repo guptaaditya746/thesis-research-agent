@@ -31,6 +31,8 @@ _CAPTION = re.compile(r"^\*\*(Table\b[^*]*?)\*\*$")
 _REFERENCES = re.compile(r"^#+\s*(?:\d+\.?\s*)?(?:references|bibliography)\s*$", re.I)
 _ABSTRACT = re.compile(r"^#+\s*abstract\s*$", re.I)
 _URL = re.compile(r"(?:https?://|www\.)\S+")
+# a suspended hyphen: "low- to", "short- and", "pre- or", "low- vs"
+_SUSPENDED = re.compile(r"(?<=[A-Za-z0-9])-(?= (?:and|or|nor|to|vs|versus|through|plus|und)\b)")
 
 
 @dataclass(frozen=True)
@@ -161,7 +163,10 @@ def tidy(text: str, rs: RealSpec) -> str:
         block = _URL.sub("", block)
         block = _EMPTY_BRACKETS.sub("", block)
         block = _plain_caption(block)
-        out.append(block if block.lstrip().startswith("|") else clean_text(block))
+        if block.lstrip().startswith("|"):
+            out.append(clean_text(block))
+        else:   # clean_text joins "treat- ment" (a PDF line break) but must not join "low- to middle-income"
+            out.append(clean_text(_SUSPENDED.sub("-\0", block)).replace("\0", ""))
     return "\n\n".join(b for b in out if b) + "\n"
 
 
