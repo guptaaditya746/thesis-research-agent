@@ -17,9 +17,12 @@ BASELINE = RAG_SYSTEM   # "rag-baseline"
 
 
 def _answered(results: Path, folder: Folder, qid: str, sha: str) -> bool:
+    """A saved record to this version of the question on this folder (a `-real` set replacing the template one
+    changes the corpus id, and then the question is asked again)."""
     path = answer_path(results, folder.spec.domain, folder.seed, BASELINE, qid)
     try:
-        return load_answer(path).question_sha256 == sha
+        rec = load_answer(path)
+        return rec.question_sha256 == sha and rec.corpus_id == folder.corpus_id
     except (OSError, ValueError):
         return False
 
@@ -28,7 +31,7 @@ def baseline_folder(folder: Folder, qs: QuestionSet, model, model_id: str, cache
                     results: Path) -> dict:
     """Run the RAG baseline (global retrieval, k 8, the command's defaults) on every question of `qs`.
 
-    A record with the same `question_sha256` is skipped. A `ModelCallError` or `ValueError` for one question
+    A record with the same `question_sha256` and `corpus_id` is skipped. A `ModelCallError` or `ValueError` for one question
     is listed with its redacted reason and the others go on.
     Returns {"answered", "skipped", "failed": {qid: reason}}."""
     out: dict = {"answered": 0, "skipped": 0, "failed": {}}
