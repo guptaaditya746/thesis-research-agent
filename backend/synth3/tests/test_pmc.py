@@ -72,3 +72,20 @@ def test_tidy_keeps_a_suspended_hyphen_but_joins_a_broken_word(REAL):
                 "values were higher vs. low- vs high-dose groups. The treat- ment worked.\n", REAL)
     assert "low- to middle-income" in text and "short- and long-term" in text and "pre- or post-dose" in text
     assert "low- vs high-dose" in text and "treatment worked" in text
+
+
+def test_all_caps_headings_labels_and_captions_get_plain_case(REAL):
+    # synth2 renames every run of capitals: "## 3. RESULTS" became "## 3. WETARKJ" and "**TABLE 1 ...**" "SOTMU 1"
+    from synth3.pmc import calm_caps
+    src = ("# T\n\n## Abstract\n\nRESEARCH DESIGN AND METHODS: Adults were enrolled. RESULTS: BP fell.\n\n"
+           "## 1. INTRODUCTION\n\nText.\n\n## MATERIALS AND METHODS\n\nText.\n\n## EFFECT ON UACR\n\nUACR fell.\n\n"
+           "## RESULTS\n\nAs TABLE 1 shows, BP fell.\n\n**TABLE 1 Baseline characteristics (full set).**\n\n"
+           "| a | b |\n| --- | --- |\n| 1 | 2 |\n\n**Table 2 Ocular AEs* related to treatment (safety set)**\n\n"
+           "| a | b |\n| --- | --- |\n| 1 | 2 |\n\n## Results of the WISE study\n\nText.\n")
+    text = calm_caps(src)
+    for want in ("Research design and methods: Adults", "Results: BP fell",
+                 "## 1. Introduction", "## Materials and Methods", "## Effect on UACR", "## Results\n",
+                 "As Table 1 shows", "Table 1. Baseline characteristics (full set).\n",
+                 "Table 2. Ocular AEs* related to treatment (safety set)\n", "## Results of the WISE study"):
+        assert want in text, want
+    assert calm_caps(text) == text and tidy(src, REAL) == tidy(text, REAL) and "Table 1. Baseline" in tidy(src, REAL)

@@ -45,3 +45,14 @@ def test_a_space_in_a_control_phrase_also_matches_a_hyphen(SPEC, REAL):
     pat = REAL.banned(SPEC)
     assert pat.search("compared with the usual-care group") and pat.search("on usual\ncare")
     assert pat.search("the Standard-care arm") and not pat.search("usually cared for")
+
+
+def test_a_character_class_in_a_control_phrase_keeps_working(SPEC, tmp_path):
+    # "as[- ]cast" became "as[-[\s-]+]cast" (a class, then a literal "]"), so no materials or rag control word matched
+    d = real_good()
+    d["control_words"] = r"as[- ]cast|closed[- ]book|zero[- ]shot (?:llms?|prompting)|no\ retrieval|[^a-z]untreated"
+    pat = load_real_spec("demo", write_real(tmp_path, d)).banned(SPEC)
+    for real in ("the as-cast samples", "as cast alloy", "a closed-book setting", "zero-shot prompting",
+                 "zero shot\nprompting", "zero-shot-prompting", "no retrieval", "an untreated"):
+        assert pat.search(real), real
+    assert not pat.search("ascast") and not pat.search("no-retrieval")   # an escaped space stays one space

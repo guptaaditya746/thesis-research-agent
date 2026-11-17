@@ -92,3 +92,34 @@ def test_roman_numerals_are_not_names(REAL):
     text, m = rename_source(src, REAL, "s1", set())
     assert "Angiotensin II type" in text and "class II/III/IV" in text and "phase III" in text
     assert not {"II", "III", "IV"} & set(m) and "Brightford" not in text
+
+
+def test_a_long_stem_needs_only_a_two_letter_prefix_and_a_keep_word_is_never_a_drug(REAL):
+    # losartan (43 built papers) and prazosin survived: every stem needed 3 letters before it
+    rs = REAL.model_copy(update={"name_stems": ["pril", "sartan", "azosin", "statin"], "keep": [*REAL.keep, "cystatin"]})
+    src = "# T\n\n## Abstract\n\nLosartan, prazosin and atorvastatin were given; cystatin C was measured.\n"
+    text, m = rename_source(src, rs, "s1", set())
+    assert {"losartan", "prazosin", "atorvastatin"} <= set(m) and "cystatin" not in m
+    assert m["losartan"].endswith("sartan") and m["prazosin"].endswith("azosin") and "cystatin C" in text
+    assert names_left(text, m, rs) == []
+
+
+def test_medicine_names_drugs_outside_the_first_stems():
+    from synth3.realspec import load_real_spec
+    rs = load_real_spec("medicine")
+    real = ["axitinib", "sorafenib", "sunitinib", "bevacizumab", "sildenafil", "tadalafil", "rilmenidine",
+            "glibenclamide", "repaglinide", "ritonavir", "tacrolimus", "brinzolamide", "prazosin", "losartan",
+            "dorzolamide", "brimonidine", "heparin"]
+    src = "# T\n\n## Abstract\n\n" + " ".join(f"Patients took {w}." for w in real) + " Cystatin C was low.\n"
+    text, m = rename_source(src, rs, "s1", set())
+    assert [w for w in real if re.search(rf"\b{w}\b", text, re.I)] == [] and "Cystatin C" in text
+
+
+def test_a_control_word_and_the_acronym_defined_for_it_are_never_renamed(REAL):
+    # "placebo (PLB)": PLB became "RHM", so "HOC: -15.7 vs. RHM: -4.3 mmHg" kept the real placebo numbers
+    src = ("# T\n\n## Abstract\n\nPatients took lisinopril or placebo (PLB). Systolic BP fell (HOC: -15.7 vs. PLB: "
+           "-4.3 mmHg). The usual care (UC) arm and the UCs were small.\n")
+    text, m = rename_source(src, REAL, "s1", set())
+    assert "placebo (PLB)" in text and "PLB: -4.3" in text and "usual care (UC)" in text and "UCs were" in text
+    assert not {"PLB", "UC", "UCs"} & set(m) and "HOC" in m
+    assert REAL.control_acronyms(src) == ["PLB", "UC"]

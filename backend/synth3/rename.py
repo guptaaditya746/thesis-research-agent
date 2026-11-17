@@ -17,22 +17,33 @@ _TITLE_WORD = re.compile(r"(?<![\w-])[A-Z][a-z]+(?![\w-])")
 ROMAN = ("II", "III", "IV", "VI", "VII", "VIII", "IX", "XI", "XII")
 
 
+def _min_prefix(stem: str) -> int:
+    """Letters a drug name needs before its stem: 2 for a stem of 5 or more letters (losartan, prazosin), else 3."""
+    return 2 if len(stem) >= 5 else 3
+
+
 def lower_names(rs: RealSpec) -> re.Pattern:
-    """Whole words ending in a name stem (with at least 3 letters before it) or equal to a name word, any case.
+    """Whole words ending in a name stem (with at least `_min_prefix` letters before it) or equal to a name word,
+    any case; never a keep word ("cystatin" ends in the stem "statin" but is a lab value, "BM25" is a field word).
     A name word keeps its last 3 letters, so it needs more than 3."""
     short = [w for w in rs.name_words if len(w) <= 3]
     if short:
         raise ValueError(f"name_words: {short} have 3 letters or fewer; a name word keeps its last 3 letters")
     alts = []
-    if rs.name_stems:
-        alts.append(r"[a-z]{3,}(?:" + "|".join(map(re.escape, rs.name_stems)) + ")")
+    for k in (2, 3):
+        stems = [s for s in rs.name_stems if _min_prefix(s) == k]
+        if stems:
+            alts.append(rf"[a-z]{{{k},}}(?:" + "|".join(map(re.escape, stems)) + ")")
     alts += [re.escape(w) for w in rs.name_words]
-    return re.compile(r"\b(?:" + "|".join(alts) + r")\b" if alts else r"(?!x)x", re.I)
+    if not alts:
+        return re.compile(r"(?!x)x")
+    keep = rf"(?!(?:{'|'.join(map(re.escape, rs.keep))})\b)" if rs.keep else ""
+    return re.compile(r"\b" + keep + "(?:" + "|".join(alts) + r")\b", re.I)
 
 
 def _split(word: str, rs: RealSpec) -> tuple[str, str]:
     """(prefix, stem) of a lower-case drug name: the longest stem it ends with, else its last 3 letters."""
-    stems = [s for s in rs.name_stems if word.endswith(s) and len(word) - len(s) >= 3]
+    stems = [s for s in rs.name_stems if word.endswith(s) and len(word) - len(s) >= _min_prefix(s)]
     stem = max(stems, key=len) if stems else word[-3:]
     return word[:-len(stem)], stem
 
@@ -148,8 +159,13 @@ def rename_source(text: str, rs: RealSpec, seed: str, avoid: set[str]) -> tuple[
     pat = lower_names(rs)
     text = pat.sub(lambda m: _case_like(drugs[m.group(0).lower()], m.group(0)), text)
     forms = [f for new in drugs.values() for f in (new, new.capitalize(), new.upper())]
+    # the control's words and the acronyms defined for it ("placebo (PLB)") stay real, so the edit deletes them: a
+    # renamed "PLB" kept the real placebo numbers under an invented name
+    controls = {m.group(0) for m in re.finditer(rf"\b(?:{rs.control_regex()})\b", text, re.I)}
+    controls |= {f for a in rs.control_acronyms(text) for f in (a, a + "s")}
     keep = [*rs.keep, *ROMAN]
     keep += [w + "s" for w in keep if w[-1].isupper()]   # "BPs" stays as "BP" does
+    keep += sorted(controls)
     text, held = _hold(text, [*keep, *forms])
     base = _map_base(text)
     mapping = _avoid_values(_plural_acronyms(build_map(base, seed), base, seed), avoid, seed, source_words)

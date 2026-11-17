@@ -154,3 +154,61 @@ def test_a_table_with_a_glued_control_word_goes_whole(SPEC, REAL):
         assert table in src
         _, rp = edit(SPEC, REAL, source=src)
         assert rp.problems == () and "lacebo" not in rp.paper.text
+
+
+_CONTROL_TABLE = "| Outcome | Drug | Placebo |\n| --- | --- | --- |\n| Events | 12 | 20 |"
+
+
+def test_an_acronym_defined_for_the_control_goes_with_the_control(SPEC, REAL):
+    # built s1/S026: "placebo (PLB)" lost its sentence, but "HOC: -15.7 vs. RHM: -4.3 mmHg" kept the placebo numbers
+    src = fake_paper(11).replace("## Results\n\n", "## Results\n\nPatients took lisinopril or placebo (PLB) daily. "
+                                 "Systolic BP fell (HOC: -15.7 vs. PLB: -4.3 mmHg). Visits were on time.\n\n")
+    src = src.replace(_CONTROL_TABLE, "| Outcome | HOC | PLB |\n| --- | --- | --- |\n| Events | 12 | 20 |")
+    _, rp = edit(SPEC, REAL, source=src)
+    assert rp.problems == () and "-4.3 mmHg" not in rp.paper.text and "| Events | 12 | 20 |" not in rp.paper.text
+    assert "Visits were on time." in rp.paper.text
+
+
+def test_the_paper_check_names_a_control_acronym_left_in_the_text(SPEC, REAL):
+    from synth2.write import Paper
+    s, rp = edit(SPEC, REAL)
+    paper = Paper(rp.paper.study, rp.paper.text + "\nThe PLB arm fell by four points.\n", rp.paper.placements)
+    assert realwrite.check_real_paper(paper, rp.inserted, s, SPEC, REAL, rp.mapping) == []
+    problems = realwrite.check_real_paper(paper, rp.inserted, s, SPEC, REAL, rp.mapping, ("PLB",))
+    assert any("PLB" in p for p in problems)
+
+
+def test_medicine_control_phrasings_go(SPEC):
+    from synth3.realspec import load_real_spec
+    rs = load_real_spec("medicine")
+    src = fake_paper(12).replace("## Discussion\n\n", (
+        "## Discussion\n\nA sham procedure was done. Patients got lisinopril with standard of care (SoC) or SoC "
+        "alone. The SoC arm improved by 4 points. The comparator group did not. Vehicle-treated rats did not. "
+        "Visits were on time.\n\n"))
+    _, rp = edit(SPEC, rs, source=src)
+    t = rp.paper.text
+    assert rp.problems == () and "Visits were on time." in t
+    assert not re.search(r"sham|SoC|standard of care|comparator|vehicle|by 4 points", t, re.I)
+
+
+def test_an_all_caps_paper_keeps_its_headings_and_caption_pairs(SPEC, REAL):
+    # 49 of 200 built papers had headings like "## 3. WETARKJ", so the section landed at the end of the Discussion,
+    # and "**TABLE 1 ...**" became "**SOTMU 1 ...**", a caption that no longer took its table along
+    kept = "**TABLE 2 Visits by month.**\n\n| Month | Visits |\n| --- | --- |\n| First | 31 |"
+    src = (fake_paper(13).replace("## Introduction", "## 1. INTRODUCTION").replace("## Methods", "## 2. METHODS")
+           .replace("## Results", "## 3. RESULTS").replace("## Discussion", f"{kept}\n\n## 4. DISCUSSION")
+           .replace("Table 1. Outcomes by group.", "**TABLE 1 Outcomes by group.**"))
+    _, rp = edit(SPEC, REAL, source=src)
+    t = rp.paper.text
+    assert rp.problems == () and "TABLE" not in t and "Outcomes by group" not in t and "| Events |" not in t
+    assert "## 1. Introduction" in t and "## 2. Methods" in t
+    assert t.index("## 3. Results") < t.index(rp.inserted[1]) < t.index("## 4. Discussion") < t.index(rp.inserted[2])
+    assert "Table 2. Visits by month.\n\n| Month | Visits |" in t
+
+
+def test_a_results_heading_lost_in_renaming_is_a_problem(SPEC, REAL, monkeypatch):
+    real_rename = realwrite.rename_source
+    monkeypatch.setattr(realwrite, "rename_source",
+                        lambda *a: (lambda t, m: (t.replace("## Results", "## Wetarkj"), m))(*real_rename(*a)))
+    _, rp = edit(SPEC, REAL)
+    assert any("results heading" in p for p in rp.problems)

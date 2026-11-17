@@ -27,7 +27,14 @@ PAGE = 500
 
 _DROP_TAGS = {"fig", "supplementary-material", "fn-group", "ref-list", "ack"}
 _EMPTY_BRACKETS = re.compile(r"\s*\[[\s,;–-]*\]|\s*\([\s,;–-]*\)")
-_CAPTION = re.compile(r"^\*\*(Table\b[^*]*?)\*\*$")
+# a bold table caption, any case, maybe with a footnote star inside ("**TABLE 2 Ocular AEs* related to ...**")
+_CAPTION = re.compile(r"^\*\*(Table\s+\d+\b.*?)\*+$", re.I | re.S)
+_CAPS_WORD = re.compile(r"(?<![A-Za-z0-9])[A-Z]+(?![A-Za-z0-9])")
+_CAPS_HEADING = re.compile(r"^(#{1,6}\s+(?:\d+(?:\.\d+)*\.?\s+|[IVXLC]+\.\s+)?)([^a-z\n]*[A-Z]{2}[^a-z\n]*)$", re.M)
+# a run-in label of a structured abstract: "RESULTS:", "RESEARCH DESIGN AND METHODS:" at a block or sentence start
+_CAPS_LABEL = re.compile(r"(?:^|(?<=[.!?] ))((?:[A-Z]+[ /&]+){0,5}[A-Z]{4,})(?=:)", re.M)
+_SMALL = {"a", "an", "and", "as", "at", "by", "for", "from", "in", "into", "of", "on", "or", "per", "the", "to", "vs",
+          "with"}
 _REFERENCES = re.compile(r"^#+\s*(?:\d+\.?\s*)?(?:references|bibliography)\s*$", re.I)
 _ABSTRACT = re.compile(r"^#+\s*abstract\s*$", re.I)
 _URL = re.compile(r"(?:https?://|www\.)\S+")
@@ -90,7 +97,43 @@ def _plain_caption(block: str) -> str:
     m = _CAPTION.match(block.strip())
     if not m:
         return block
-    return re.sub(r"^(Table\s+\d+)\.?\s*", r"\1. ", m.group(1).strip())
+    return re.sub(r"^Table\s+(\d+)\.?\s*", r"Table \1. ", m.group(1).strip(), flags=re.I)
+
+
+def _calm(words: str, seen: set[str], title: bool) -> str:
+    """ALL-CAPS words in plain case: the first capitalised, small words lower case, the rest capitalised (`title`)
+    or lower case. A word the text also writes in capitals elsewhere is an acronym ("UACR") and stays."""
+    count = 0
+
+    def one(m: re.Match) -> str:
+        nonlocal count
+        w, lo = m.group(0), m.group(0).lower()
+        first, count = count == 0, count + 1
+        if lo in _SMALL and not first:
+            return lo
+        if w in seen:
+            return w
+        return lo.capitalize() if first or (title and lo not in _SMALL) else lo
+
+    return _CAPS_WORD.sub(one, words)
+
+
+def calm_caps(text: str) -> str:
+    """ALL-CAPS headings ("## 3. RESULTS"), run-in labels ("RESULTS:") and table words ("**TABLE 1 ...**",
+    "TABLE 2") in plain case. synth2 renames every run of capitals, so "## 3. RESULTS" became "## 3. WETARKJ": the
+    results heading was lost and the planted section landed at the end of the Discussion."""
+    rest = _CAPS_LABEL.sub(" ", _CAPS_HEADING.sub(" ", text))
+    seen = set(_CAPS_WORD.findall(re.sub(r"\bTABLES?\b|\bFIGURES?\b", " ", rest)))
+    text = _CAPS_HEADING.sub(lambda m: m.group(1) + _calm(m.group(2), seen, True), text)
+    text = _CAPS_LABEL.sub(lambda m: _calm(m.group(1), seen, False), text)
+    text = re.sub(r"\b(TABLE|FIGURE)(S?)\b(?=\s+\d)", lambda m: m.group(1).capitalize() + m.group(2).lower(), text)
+
+    def caption(block: str) -> str:
+        new = _plain_caption(block)
+        return block if new is block else block[:len(block) - len(block.lstrip())] + new + block[len(block.rstrip()):]
+
+    parts = re.split(r"(\n\s*\n)", text)
+    return "".join(p if k % 2 else caption(p) for k, p in enumerate(parts))
 
 
 def _meta(article: ET.Element) -> dict:
@@ -167,7 +210,7 @@ def tidy(text: str, rs: RealSpec) -> str:
             out.append(clean_text(block))
         else:   # clean_text joins "treat- ment" (a PDF line break) but must not join "low- to middle-income"
             out.append(clean_text(_SUSPENDED.sub("-\0", block)).replace("\0", ""))
-    return "\n\n".join(b for b in out if b) + "\n"
+    return calm_caps("\n\n".join(b for b in out if b) + "\n")
 
 
 def unfit(paper: PoolPaper, rs: RealSpec) -> str | None:

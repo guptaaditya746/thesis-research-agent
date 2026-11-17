@@ -13,6 +13,7 @@ from typing import Literal
 
 from synth2.realedit import MAX_INSERTED, META, apply_edits
 from synth2.write import Paper, Placement, _Builder
+from synth3.pmc import calm_caps
 from synth3.realspec import RealSpec
 from synth3.rename import hard_to_say, names_left, rename_source
 from synth3.spec import DomainSpec
@@ -142,11 +143,12 @@ def _is_para(block: str) -> bool:
 
 
 def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_level: str,
-               seed: str) -> tuple[dict, list[Paper]]:
+               seed: str, extra: tuple[str, ...] = ()) -> tuple[dict, list[Paper]]:
     """The synth2 edits (`title`, `replace`, `insert_after`) and the three blocks they insert (abstract claims,
     section, conclusion claims). `replace` only deletes; every `old` and `anchor` occurs once at its turn. A title
-    that cannot be cleaned is kept as it is, so `check_real_paper` names it."""
-    banned = rs.banned(spec)
+    that cannot be cleaned is kept as it is, so `check_real_paper` names it. `extra`: the paper's control acronyms,
+    banned like the control words."""
+    banned = rs.banned(spec, extra=extra)
     first, _, rest = renamed.partition("\n")
     old_title = first.lstrip("#").strip()
     title = clean_title(old_title, banned) or old_title
@@ -154,7 +156,7 @@ def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_
     text = head + rest.lstrip("\n")          # the paper as apply_edits builds it
 
     blocks = _blocks(rest)
-    loose = rs.banned(spec, edges=False)
+    loose = rs.banned(spec, edges=False, extra=extra)
     pattern, dropped = banned, set()
     while True:     # a sentence citing a dropped table goes too, and a caption it takes may drop one more table
         new = [clean_block(b, pattern, loose) for b in blocks]
@@ -222,9 +224,9 @@ def _words(text: str) -> int:
 
 
 def check_real_paper(paper: Paper, inserted: tuple[str, ...], study: Study, spec: DomainSpec, rs: RealSpec,
-                     mapping: dict[str, str]) -> list[str]:
+                     mapping: dict[str, str], extra: tuple[str, ...] = ()) -> list[str]:
     """Code checks. The real text is the paper without the label line and without our inserted blocks: our own
-    text is never searched for real names or banned words."""
+    text is never searched for real names or banned words. `extra`: the source's control acronyms."""
     problems = []
     missing = missing_facts(paper, study, spec)
     if missing:
@@ -246,10 +248,10 @@ def check_real_paper(paper: Paper, inserted: tuple[str, ...], study: Study, spec
     hard = hard_to_say(mapping)
     if hard:
         problems.append(f"invented names hard to say {hard[:8]}")
-    banned = rs.banned(spec)
+    banned = rs.banned(spec, extra=extra)
     if banned.search(title):
         problems.append("title names the control")
-    loose = rs.banned(spec, edges=False)
+    loose = rs.banned(spec, edges=False, extra=extra)
     named = sorted({m.group(0) for m in banned.finditer(body)}
                    | {m.group(0) for b in _blocks(body) if _whole(b) for m in loose.finditer(b)})
     if named:
@@ -273,10 +275,13 @@ def edit_study(source: str, study: Study, spec: DomainSpec, rs: RealSpec, text_l
     """Rename, edit and check one source paper for one study, with up to MAX_SEEDS seeds. Returns the first try
     with no problems, else the last try with its problems."""
     avoid = avoid_words(spec)
+    source = calm_caps(source)          # pools tidied before calm_caps existed still hold "## RESULTS"
+    extra = tuple(rs.control_acronyms(source))
+    had_results = any(rs.heading("results", ln) for ln in source.splitlines())
     for k in range(MAX_SEEDS):
         s = seed if k == 0 else f"{seed}:{k}"
         renamed, mapping = rename_source(source, rs, s, avoid)
-        edits, blocks = make_edits(renamed, study, spec, rs, text_level, s)
+        edits, blocks = make_edits(renamed, study, spec, rs, text_level, s, extra)
         text, _, problems = apply_edits(renamed, edits, study.label)
         text = re.sub(r"\n{3,}", "\n\n", text)   # a deleted block leaves extra blank lines
         placements: list[Placement] = []
@@ -287,7 +292,9 @@ def edit_study(source: str, study: Study, spec: DomainSpec, rs: RealSpec, text_l
                 placements += [Placement(p.fact, p.start + at, p.end + at) for p in b.placements]
         paper = Paper(study.id, text, tuple(placements))
         inserted = (blocks[0].text, blocks[1].text, blocks[2].text)
-        problems += check_real_paper(paper, inserted, study, spec, rs, mapping)
+        problems += check_real_paper(paper, inserted, study, spec, rs, mapping, extra)
+        if had_results and not any(rs.heading("results", ln) for ln in renamed.splitlines()):
+            problems.append("the results heading was lost in renaming")
         rp = RealPaper(paper, mapping, inserted, tuple(problems), s)
         if not problems:
             return rp

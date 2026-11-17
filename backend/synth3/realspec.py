@@ -71,14 +71,44 @@ class RealSpec(Strict):
         return self
 
     def control_regex(self) -> str:
-        """`control_words` with each space matching any run of spaces, line breaks or hyphens: papers write
-        "usual care", "usual-care group" and "usual\\ncare" for the same arm."""
-        return re.sub(r"(?<!\\) ", lambda m: _GAP, self.control_words)
+        """`control_words` with each plain space matching any run of spaces, line breaks or hyphens: papers write
+        "usual care", "usual-care group" and "usual\\ncare" for the same arm. A space inside a `[...]` class
+        ("as[- ]cast") becomes `\\s` there: putting the run inside a class made "as[-[\\s-]+]cast", which never
+        matched. An escaped space stays one space."""
+        out, i, rx = [], 0, self.control_words
+        first = -1   # inside a class: the index of its first member ("]" there is a member); else -1
+        while i < len(rx):
+            c = rx[i]
+            if c == "\\":
+                out.append(rx[i:i + 2])
+                i += 2
+                continue
+            if first >= 0:
+                if c == "]" and i > first:
+                    first = -1
+                out.append(r"\s" if c == " " else c)
+            elif c == "[":
+                first = i + 2 if rx[i + 1:i + 2] == "^" else i + 1
+                out.append(c)
+            else:
+                out.append(_GAP if c == " " else c)
+            i += 1
+        return "".join(out)
 
-    def banned(self, spec: DomainSpec, edges: bool = True) -> re.Pattern:
+    def control_acronyms(self, text: str) -> list[str]:
+        """Acronyms the text defines for a control phrase ("placebo (PLB)", "standard of care (SoC)"): letters
+        only, at least two capitals, not a keep word. They name the control, so they are kept from renaming and
+        go with the control."""
+        found = re.findall(rf"\b(?:{self.control_regex()})\s*\(\s*([A-Za-z]{{2,8}})\s*\)", text, re.I)
+        return sorted({a for a in found if sum(ch.isupper() for ch in a) >= 2
+                       and a not in self.keep and a.removesuffix("s") not in self.keep})
+
+    def banned(self, spec: DomainSpec, edges: bool = True, extra: tuple[str, ...] = ()) -> re.Pattern:
         """Control words, every arm label and every setting name, any case: whole words, or anywhere when `edges`
-        is False (table cells glue words: "Placebon = 62", "ΔPlacebo")."""
+        is False (table cells glue words: "Placebon = 62", "ΔPlacebo"). `extra`: the control acronyms of one
+        paper, each with its plural."""
         names = [phrase(n) for n in (*(a.label for a in spec.arms), *(s.name for s in spec.settings))]
+        names += [re.escape(a) + "s?" for a in extra]
         b = r"\b" if edges else ""
         return re.compile(rf"{b}(?:{self.control_regex()}|{'|'.join(names)}){b}", re.I)
 
