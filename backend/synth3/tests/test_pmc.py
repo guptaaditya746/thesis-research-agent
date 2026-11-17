@@ -46,3 +46,21 @@ def test_unfit_names_the_reason(REAL):
 def test_not_xml_is_a_value_error():
     with pytest.raises(ValueError, match="not XML"):
         jats_paper(b"<html")
+
+
+def test_a_paper_that_names_too_few_drugs_is_unfit(tmp_path):
+    # a salt-meter education trial names no drug, so planted sentences about tablets would not fit it
+    from synth3.pmc import PoolPaper
+    from synth3.realspec import load_real_spec
+    from synth3.tests.conftest import fake_paper, real_good, write_real
+
+    def rs(k):
+        d = real_good(); d["min_names"] = k
+        return load_real_spec("demo", write_real(tmp_path / f"r{k}", d))
+
+    paper = PoolPaper(id="P1", title="HOPE trial", year=2015, journal="J", license="", article_type="research-article",
+                      text=fake_paper(1))   # Lisinopril, lisinopril, amlodipine: 3 drug names
+    assert unfit(paper, rs(3)) is None
+    assert unfit(paper, rs(4)) == "too few names from name_stems or name_words"
+    assert unfit(jats_paper((FIX / "trial.xml").read_bytes()), rs(1)) == "too few names from name_stems or name_words"
+    assert unfit(jats_paper((FIX / "trial.xml").read_bytes()), rs(0)) is None

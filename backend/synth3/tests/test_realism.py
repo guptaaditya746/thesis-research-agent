@@ -57,3 +57,7 @@ def test_cli_work_folder_is_inside_the_pool(tmp_path, monkeypatch, spec_dir, rea
     assert main(["realism", "--domain", "demo", "--folder", str(tmp_path), "--out", str(tmp_path / "o.json"),
                  "--pools", str(pool_root), "--real-root", str(real_dir), "--spec-root", str(spec_dir)]) == 0
     assert seen == [pool_root / "demo" / "realism-work"]
+
+
+def test_mask_hides_a_hyphenated_control_phrase(SPEC, REAL):
+    assert "usual" not in domain_mask("the usual-care group", REAL, SPEC)

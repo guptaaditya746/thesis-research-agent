@@ -16,6 +16,12 @@ REAL_SPECS = SPECS / "real"
 POOLS = SPECS / "pools"
 TEMPLATE_WORDS = ("SD",)   # words our own planted text prints that synth2 would treat as a name
 _NUMBER = re.compile(r"^(?:\d+(?:\.\d+)*\.?|[IVXLC]+\.)\s+")
+_GAP = r"[\s-]+"
+
+
+def phrase(name: str) -> str:
+    """A regex for a plain name whose words may be joined by spaces, line breaks or hyphens."""
+    return _GAP.join(map(re.escape, name.split()))
 
 
 class RealSpec(Strict):
@@ -35,6 +41,7 @@ class RealSpec(Strict):
     keep: list[str]
     name_stems: list[str]
     name_words: list[str]
+    min_names: int = 0   # a paper must name at least this many words of name_stems/name_words (medicine: drugs)
     n_test: int = 30
     sha256: str
 
@@ -51,6 +58,8 @@ class RealSpec(Strict):
             raise ValueError("n_test: must be at least 5 (the classifier uses 5 folds)")
         if self.max_fetch <= 0 or self.min_tables < 0:
             raise ValueError("max_fetch: must be above 0, and min_tables at least 0")
+        if self.min_names < 0:
+            raise ValueError("min_names: must be at least 0")
         if self.source == "pmc" and not self.query.strip():
             raise ValueError("query: a pmc source needs a query")
         for field in ("name_stems", "name_words"):
@@ -61,10 +70,15 @@ class RealSpec(Strict):
             raise ValueError(f"keep: must hold {missing}, which our own planted text prints")
         return self
 
+    def control_regex(self) -> str:
+        """`control_words` with each space matching any run of spaces, line breaks or hyphens: papers write
+        "usual care", "usual-care group" and "usual\\ncare" for the same arm."""
+        return re.sub(r"(?<!\\) ", lambda m: _GAP, self.control_words)
+
     def banned(self, spec: DomainSpec) -> re.Pattern:
         """Control words, every arm label and every setting name: whole words, any case."""
-        names = [re.escape(n) for n in (*(a.label for a in spec.arms), *(s.name for s in spec.settings))]
-        return re.compile(rf"\b(?:{self.control_words}|{'|'.join(names)})\b", re.I)
+        names = [phrase(n) for n in (*(a.label for a in spec.arms), *(s.name for s in spec.settings))]
+        return re.compile(rf"\b(?:{self.control_regex()}|{'|'.join(names)})\b", re.I)
 
     def heading(self, kind: Literal["results", "conclusion"], line: str) -> bool:
         if not line.lstrip().startswith("#"):

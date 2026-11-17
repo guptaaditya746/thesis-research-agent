@@ -9,6 +9,10 @@ def test_medicine_real_config_loads():
     rs = load_real_spec("medicine")
     assert rs.source == "pmc" and "open access" in rs.query and rs.n_test == 30
     assert rs.banned(load_spec("medicine")).search("Patients given placebo improved.")
+    pat = rs.banned(load_spec("medicine"))
+    for real in ("matching placebos", "the usual-care group", "treatment as usual", "the standard arm",
+                 "the conventional groups"):
+        assert pat.search(real), real
 
 
 @pytest.mark.parametrize("change, words", [
@@ -34,3 +38,10 @@ def test_banned_covers_control_words_labels_and_settings(SPEC, REAL):
 
 def test_numbered_headings_match(REAL):
     assert REAL.heading("results", "## 3. Results") and REAL.heading("conclusion", "## IV. Discussion")
+
+
+def test_a_space_in_a_control_phrase_also_matches_a_hyphen(SPEC, REAL):
+    # "usual-care group" stayed in a built paper next to the planted "Standard care": the config says "usual care"
+    pat = REAL.banned(SPEC)
+    assert pat.search("compared with the usual-care group") and pat.search("on usual\ncare")
+    assert pat.search("the Standard-care arm") and not pat.search("usually cared for")

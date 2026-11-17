@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 from synth3.pool import load_split
-from synth3.realspec import RealSpec
+from synth3.realspec import RealSpec, phrase
 from synth3.rename import lower_names
 from synth3.spec import DomainSpec
 
@@ -21,8 +21,8 @@ SYNTH2_TEMPLATE_V2 = {
 def domain_mask(text: str, rs: RealSpec, spec: DomainSpec) -> str:
     """Drug names, arm labels and control words become ` ARMNAME `; setting names become ` SITE `. Both sides then
     look the same on these words (the synthetic side has no control word, the real side does)."""
-    sites = [re.escape(x.name) for x in spec.settings]
-    arms = [re.escape(a.label) for a in spec.arms] + ([rs.control_words] if rs.control_words else [])
+    sites = [phrase(x.name) for x in spec.settings]
+    arms = [phrase(a.label) for a in spec.arms] + ([rs.control_regex()] if rs.control_words else [])
     if sites:
         text = re.sub(r"\b(?:" + "|".join(sites) + r")\b", " SITE ", text, flags=re.I)
     if arms:

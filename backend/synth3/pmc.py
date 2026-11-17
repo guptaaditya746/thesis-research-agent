@@ -15,6 +15,7 @@ import httpx
 from evidence.sources.pmc import _first, _local, _text, jats_markdown
 from synth2.realpool import clean_text, words
 from synth3.realspec import _NUMBER, RealSpec
+from synth3.rename import lower_names
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 TOOL = "synth3-pool"
@@ -181,6 +182,9 @@ def unfit(paper: PoolPaper, rs: RealSpec) -> str | None:
         return "no abstract"
     if not (any(rs.heading("results", ln) for ln in lines) and any(rs.heading("conclusion", ln) for ln in lines)):
         return "no results or conclusion heading"
+    # a paper about something else (a salt-meter education trial) does not fit the planted sentences about tablets
+    if rs.min_names and len(lower_names(rs).findall(paper.text)) < rs.min_names:
+        return "too few names from name_stems or name_words"
     return None
 
 

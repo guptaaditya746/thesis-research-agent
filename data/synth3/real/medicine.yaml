@@ -1,6 +1,6 @@
 source: pmc
-query: '"open access"[filter] AND hypertension[MeSH Terms] AND (randomized[Title/Abstract] OR randomised[Title/Abstract]) AND (antihypertensive[Title/Abstract] OR "blood pressure"[Title/Abstract])'
-max_fetch: 600
+query: '"open access"[filter] AND (randomized[Title/Abstract] OR randomised[Title/Abstract]) AND ("hypertension/drug therapy"[MeSH Terms] OR "antihypertensive agents"[MeSH Terms] OR (hypertension[MeSH Terms] AND antihypertensive[Title/Abstract]))'
+max_fetch: 3000
 article_types: [research-article]
 exclude_title: protocol|review|meta-analys|rationale and design|erratum|correction
 min_words: 2000
@@ -9,8 +9,9 @@ min_tables: 1
 results_heading: ^results?\b|^findings\b
 conclusion_heading: conclu|discussion|summary
 drop_sections: acknowledg|funding|conflicts? of interest|competing interests?|declarations?|author.{0,3}contributions?|abbreviations|supplementary|data availability|availability of data|ethics approval|consent for publication
-control_words: placebo|usual care|standard care|standard (?:treatment|therapy)|conventional (?:care|treatment|therapy)|control (?:group|arm)s?|untreated
+control_words: placebos?|usual (?:care|treatment)|(?:treatment|care) as usual|standard (?:care|treatment|therapy|arms?|groups?)|conventional (?:care|treatment|therapy|arms?|groups?)|control (?:group|arm)s?|untreated
 keep: [BP, SBP, DBP, HR, CI, OR, RR, SD, SE, SEM, IQR, BMI, eGFR, CKD, HbA1c, LDL, HDL, ACE, ARB, ARBs, CCB, CCBs, RAAS, ECG, ICU, RCT, ITT, ANOVA, SAS, SPSS, Stata, WHO, FDA, NIH, ESC, ESH, ACC, AHA, JNC, NICE, MRI, CT, ABPM, NYHA, NCT, COVID-19, Kaplan, Meier, Cox]
-name_stems: [pril, sartan, olol, alol, dipine, thiazide, azosin, semide, tanide, tiazem, pamil, kiren, statin, gliflozin, gliptin, formin, glutide, parin, xaban, gatran, prazole]
-name_words: [chlorthalidone, indapamide, spironolactone, eplerenone, clonidine, hydralazine, minoxidil, methyldopa, moxonidine]
+name_stems: [pril, sartan, olol, alol, dipine, thiazide, azosin, semide, tanide, tiazem, pamil, kiren, statin, gliflozin, gliptin, formin, glutide, parin, xaban, gatran, prazole, erenone, drostat, ilol]
+name_words: [chlorthalidone, indapamide, spironolactone, eplerenone, clonidine, hydralazine, minoxidil, methyldopa, moxonidine, sacubitril, amiloride]
+min_names: 10
 n_test: 30
