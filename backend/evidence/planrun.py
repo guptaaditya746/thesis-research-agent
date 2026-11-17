@@ -401,7 +401,8 @@ def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, *, reaso
         raise ValueError(f"reason and links are 'on' or 'off', not {reason!r} / {links!r}")
     plan = load_plan(plan_path)
     check_runnable(plan)
-    return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, reason=reason, links=links, **kw)
+    from .plankinds import kind_protocol
+    return engine.run_plan(plan_path, kind_protocol(plan), corpus, out_dir, reason=reason, links=links, **kw)
 
 
 # --- after a human reviews the LLM's ontology links -----------------------------------------------------------------
