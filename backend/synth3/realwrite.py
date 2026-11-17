@@ -1,17 +1,31 @@
-"""The pieces a later step inserts into a renamed real paper: a planted results section and two claim blocks.
+"""The real edit of one study: a renamed real paper loses every part that names the control or a planted name,
+and gets a planted results section and two claim blocks.
 
-Each piece is a `Paper` (text plus where every planted fact sits). The wording comes from small template lists
-with no digits and no field words, chosen by a seeded `Random`, so the same seed gives the same text.
+Each inserted piece is a `Paper` (text plus where every planted fact sits). The wording comes from small template
+lists with no digits and no field words, chosen by a seeded `Random`, so the same seed gives the same text.
 """
 from __future__ import annotations
 
 import random
+import re
+from dataclasses import dataclass
 from typing import Literal
 
-from synth2.write import Paper, _Builder
+from synth2.realedit import MAX_INSERTED, META, apply_edits, unsayable
+from synth2.write import Paper, Placement, _Builder
+from synth3.realspec import RealSpec
+from synth3.rename import names_left, rename_source
 from synth3.spec import DomainSpec
 from synth3.world import Study
-from synth3.write import _claim_sentence, _fact_claim, results_block
+from synth3.write import _claim_sentence, _fact_claim, missing_facts, results_block
+
+MAX_SEEDS = 10
+MIN_REAL_SHARE = 0.65   # builder's call: synth2 v11 papers were about 90% real text
+SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(\[])")   # as in synth2.templedit
+CAPTION = re.compile(r"^Table \d+\.")
+_JOINT = r"(?:,|\b(?:and|or|versus|with|against|compared (?:with|to))\b|\bvs\b\.?)"
+_JOINT_BEFORE = re.compile(rf"\s*{_JOINT}\s*$", re.I)
+_JOINT_AFTER = re.compile(rf"^\s*{_JOINT}", re.I)
 
 HEADINGS = ("Comparison of the arms", "Additional comparison", "A further comparison between arms")
 # `{setting}` is where the comparison was run; it is the planted value.
@@ -57,3 +71,209 @@ def claims_block(study: Study, spec: DomainSpec, place: Literal["abstract", "con
         b.add(" ")
         b.plant(_fact_claim(study.id, key, place), _claim_sentence(spec, key, word))
     return Paper(study.id, "".join(b.parts), tuple(b.placements))
+
+
+# ---- the real edit ----------------------------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class RealPaper:
+    paper: Paper
+    mapping: dict[str, str]
+    inserted: tuple[str, str, str]   # abstract claims, section, conclusion claims
+    problems: tuple[str, ...]
+    seed: str
+
+
+def clean_block(block: str, banned: re.Pattern) -> str | None:
+    """The block without the parts that match `banned`; '' when nothing is left; None when unchanged. A heading or
+    a `Table N.` caption that matches goes whole, and so does a table whose header row matches (the control hidden
+    in a column); other tables lose the matching rows, paragraphs the matching sentences."""
+    if not banned.search(block):
+        return None
+    head = block.lstrip()
+    if head.startswith("#") or CAPTION.match(head):
+        return ""
+    if head.startswith("|"):
+        lines = block.split("\n")
+        if banned.search(lines[0]):
+            return ""
+        keep = [ln for i, ln in enumerate(lines) if i < 2 or not banned.search(ln)]
+        return "\n".join(keep) if len(keep) > 2 else ""
+    return " ".join(s for s in SENTENCE.split(block) if not banned.search(s))
+
+
+def clean_title(title: str, banned: re.Pattern) -> str | None:
+    """The title without each matching word or phrase (a hyphenated word goes whole) and the comma, "and",
+    "versus" ... joint it leaves; None when fewer than 3 words are left."""
+    t = title
+    while m := banned.search(t):
+        start, end = m.start(), m.end()
+        while start > 0 and (t[start - 1].isalnum() or t[start - 1] == "-"):
+            start -= 1
+        while end < len(t) and (t[end].isalnum() or t[end] == "-"):
+            end += 1
+        before, after = t[:start], t[end:]
+        if jb := _JOINT_BEFORE.search(before):
+            before = before[:jb.start()]
+        elif ja := _JOINT_AFTER.match(after):
+            after = after[ja.end():]
+        t = before.rstrip() + " " + after.lstrip()
+    t = re.sub(r"\(\s*\)", " ", t)
+    t = re.sub(r"\s+([,.:;)])", r"\1", re.sub(r"\s+", " ", t)).strip(" ,:;-")
+    if len(t.split()) < 3:
+        return None
+    return t[0].upper() + t[1:] if title[:1].isupper() else t
+
+
+def avoid_words(spec: DomainSpec) -> set[str]:
+    """Every word, lower case, of the arm labels, the setting names and the spec author surnames."""
+    texts = [*(a.label for a in spec.arms), *(s.name for s in spec.settings), *(a.split()[-1] for a in spec.authors)]
+    return {w.lower() for t in texts for w in re.findall(r"[^\W\d_]+", t)}
+
+
+def _blocks(text: str) -> list[str]:
+    return [b.strip() for b in re.split(r"\n\s*\n", text) if b.strip()]
+
+
+def _is_para(block: str) -> bool:
+    return not block.startswith(("#", "|"))
+
+
+def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_level: str,
+               seed: str) -> tuple[dict, list[Paper]]:
+    """The synth2 edits (`title`, `replace`, `insert_after`) and the three blocks they insert (abstract claims,
+    section, conclusion claims). `replace` only deletes; every `old` and `anchor` occurs once at its turn. A title
+    that cannot be cleaned is kept as it is, so `check_real_paper` names it."""
+    banned = rs.banned(spec)
+    first, _, rest = renamed.partition("\n")
+    old_title = first.lstrip("#").strip()
+    title = clean_title(old_title, banned) or old_title
+    head = f"# {title}\n\n{study.label}\n\n"
+    text = head + rest.lstrip("\n")          # the paper as apply_edits builds it
+
+    blocks = _blocks(rest)
+    new = [clean_block(b, banned) for b in blocks]
+    gone = [n == "" for n in new]
+    for i, b in enumerate(blocks):             # a table and the caption right before it go together
+        if i and CAPTION.match(blocks[i - 1]) and b.startswith("|") and (gone[i] or gone[i - 1]):
+            new[i - 1] = new[i] = ""
+    replace = []
+    for b, n in zip(blocks, new):
+        if n is not None and text.count(b) == 1:
+            replace.append({"old": b, "new": n})
+            text = text.replace(b, n)
+
+    blocks = _blocks(text[len(head):])
+    table_no = sum(bool(CAPTION.match(b)) for b in blocks) + 1
+    ours = [claims_block(study, spec, "abstract", seed), planted_section(study, spec, text_level, seed, table_no),
+            claims_block(study, spec, "conclusion", seed)]
+
+    def anchor(i: int) -> str:
+        """Block i, or the previous block that occurs once and is not part of our text; else the label."""
+        for j in range(min(i, len(blocks) - 1), -1, -1):
+            if text.count(blocks[j]) == 1 and not any(blocks[j] in p.text for p in ours):
+                return blocks[j]
+        return study.label
+
+    heads = [i for i, b in enumerate(blocks) if b.startswith("## ")]
+
+    def end(i: int) -> int:                  # index after the last block of the section headed at i
+        return next((h for h in heads if h > i), len(blocks))
+
+    results = [i for i in heads if rs.heading("results", blocks[i])]
+    conclusions = [i for i in heads if rs.heading("conclusion", blocks[i])]
+    abstract = next((i for i in heads if blocks[i] == "## Abstract"), None)
+    if abstract is not None:
+        at = max((k for k in range(abstract + 1, end(abstract)) if _is_para(blocks[k])), default=abstract)
+    else:
+        at = next((k for k, b in enumerate(blocks) if _is_para(b)), 0)
+    inserts = [{"anchor": anchor(at), "text": ours[0].text}]
+    if results:
+        at = end(results[-1]) - 1
+    elif conclusions:
+        at = conclusions[-1] - 1
+    else:
+        at = len(blocks) - 1
+    inserts.append({"anchor": anchor(at), "text": ours[1].text})
+    first_para = None
+    if conclusions:
+        c = conclusions[-1]
+        first_para = next((k for k in range(c + 1, end(c)) if _is_para(blocks[k])), None)
+    inserts.append({"anchor": ours[1].text.strip() if first_para is None else anchor(first_para),
+                    "text": ours[2].text})
+    return {"title": title, "replace": replace, "insert_after": inserts}, ours
+
+
+def _words(text: str) -> int:
+    return len(text.split())
+
+
+def check_real_paper(paper: Paper, inserted: tuple[str, ...], study: Study, spec: DomainSpec, rs: RealSpec,
+                     mapping: dict[str, str]) -> list[str]:
+    """Code checks. The real text is the paper without the label line and without our inserted blocks: our own
+    text is never searched for real names or banned words."""
+    problems = []
+    missing = missing_facts(paper, study, spec)
+    if missing:
+        problems.append(f"facts not in place {missing[:6]}")
+    lines = paper.text.split("\n")
+    if len(lines) < 3 or lines[2] != study.label:
+        problems.append("the label is not the third line")
+    real = "\n".join(lines[:2] + lines[3:])
+    for t in inserted:
+        real = real.replace(t.strip(), " ")
+    title, _, body = real.partition("\n")
+    left = names_left(real, mapping, rs)
+    if left:
+        problems.append(f"real names left {left[:8]}")
+    surnames = sorted({a.split()[-1] for a in spec.authors})
+    cited = [s for s in surnames if re.search(r"(?<![A-Za-z0-9])" + re.escape(s) + r"(?![A-Za-z0-9])", real)]
+    if cited:
+        problems.append(f"a spec author surname in the real text {cited}")
+    hard = unsayable(mapping)
+    if hard:
+        problems.append(f"invented names hard to say {hard[:8]}")
+    banned = rs.banned(spec)
+    if banned.search(title):
+        problems.append("title names the control")
+    named = sorted({m.group(0) for m in banned.finditer(body)})
+    if named:
+        problems.append(f"control or planted names in the real text {named[:8]}")
+    for t in inserted:
+        n = paper.text.count(t.strip())
+        if n != 1:
+            problems.append(f"an inserted block found {n} times: {t.strip()[:60]!r}")
+    added = sum(_words(t) for t in inserted)
+    if added > MAX_INSERTED:
+        problems.append(f"{added} inserted words (limit {MAX_INSERTED})")
+    share = _words(body) / max(_words(paper.text), 1)
+    if share < MIN_REAL_SHARE:
+        problems.append(f"real share {share:.2f} below {MIN_REAL_SHARE}")
+    low = " ".join(inserted).lower()
+    problems += [f"meta wording '{m.strip()}'" for m in META if m in low]
+    return problems
+
+
+def edit_study(source: str, study: Study, spec: DomainSpec, rs: RealSpec, text_level: str, seed: str) -> RealPaper:
+    """Rename, edit and check one source paper for one study, with up to MAX_SEEDS seeds. Returns the first try
+    with no problems, else the last try with its problems."""
+    avoid = avoid_words(spec)
+    for k in range(MAX_SEEDS):
+        s = seed if k == 0 else f"{seed}:{k}"
+        renamed, mapping = rename_source(source, rs, s, avoid)
+        edits, blocks = make_edits(renamed, study, spec, rs, text_level, s)
+        text, _, problems = apply_edits(renamed, edits, study.label)
+        text = re.sub(r"\n{3,}", "\n\n", text)   # a deleted block leaves extra blank lines
+        placements: list[Placement] = []
+        for b in blocks:
+            t = b.text.strip()
+            if text.count(t) == 1:
+                at = text.index(t) - (len(b.text) - len(b.text.lstrip()))
+                placements += [Placement(p.fact, p.start + at, p.end + at) for p in b.placements]
+        paper = Paper(study.id, text, tuple(placements))
+        inserted = (blocks[0].text, blocks[1].text, blocks[2].text)
+        problems += check_real_paper(paper, inserted, study, spec, rs, mapping)
+        rp = RealPaper(paper, mapping, inserted, tuple(problems), s)
+        if not problems:
+            return rp
+    return rp
