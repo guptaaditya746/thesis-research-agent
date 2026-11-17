@@ -5,7 +5,8 @@ so the report can count marks made against unchecked sheets. A failed model call
 marks file is still written and the next answer follows. `sheet.points` keeps the points the C judge saw
 (`[{id, text}]` in sheet order), so the judge test shows what was ticked even after the sheet is edited. An
 existing marks file is kept (no calls) only when the answer, the sheet and the three prompts are the ones it was
-made from and nothing in it is pending."""
+made from and nothing in it is pending. A skipped answer's old marks file is moved to `<qid>.marks.stale.json`;
+`current_marks` is the one test of whether a marks file still counts."""
 from __future__ import annotations
 
 import json
@@ -50,6 +51,28 @@ def why_not(folder: Folder, q: Question, sheet: Sheet | None, rec: AnswerRecord)
     if rec.corpus_id != folder.corpus_id:
         return "the answer is from another folder"
     return None
+
+
+def current_marks(marks: dict, rec: AnswerRecord, folder: Folder, qs: QuestionSet, sheet: Sheet | None) -> bool:
+    """True when a marks file still counts (report, judge-test sample): its question is still in the file, the
+    answer would be judged now (`why_not` is None) and it was made from this saved answer and this sheet. A file
+    in another shape is not current."""
+    try:
+        q = qs.get(rec.question_id)
+    except KeyError:
+        return False
+    if why_not(folder, q, sheet, rec) is not None:
+        return False
+    try:
+        return marks["answer_sha256"] == answer_sha256(rec) and marks["sheet"]["sha256"] == sheet_sha256(sheet)
+    except (KeyError, TypeError):
+        return False
+
+
+def set_aside(path: Path) -> None:
+    """Move a marks file to `<qid>.marks.stale.json` beside it (an older one there is replaced); never deletes."""
+    if path.is_file():
+        path.replace(path.with_name(path.name.removesuffix(".marks.json") + ".marks.stale.json"))
 
 
 def is_pending(marks: dict) -> bool:
@@ -104,23 +127,27 @@ def _saved(results: Path, domain: str, seed: int, systems: list[str] | None) -> 
 
 def judge_folder(folder: Folder, systems: list[str] | None, qs: QuestionSet, model: Any, cache: JsonlCache,
                  sheets_root: Path, results: Path) -> dict:
-    """Judge every saved answer of one folder; `{"judged", "kept", "skipped": {item: reason}, "pending": [item]}`."""
+    """Judge every saved answer of one folder; `{"judged", "kept", "skipped": {item: reason}, "pending": [item]}`.
+    A skipped item's old marks file is set aside (`set_aside`), so nothing reads marks made under an older
+    question, sheet or answer as current."""
     domain, seed = folder.spec.domain, folder.seed
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     out: dict = {"judged": 0, "kept": 0, "skipped": {}, "pending": []}
     for rec in _saved(results, domain, seed, systems):
         item = item_id(rec)
+        path = marks_path(results, domain, seed, rec.system, rec.question_id)
         try:
             q = qs.get(rec.question_id)
         except KeyError:
             out["skipped"][item] = "the question is not in the question file"
+            set_aside(path)
             continue
         sheet = load_sheet(sheets_root, domain, seed, q.id)
         reason = why_not(folder, q, sheet, rec)
         if reason:
             out["skipped"][item] = reason
+            set_aside(path)
             continue
-        path = marks_path(results, domain, seed, rec.system, q.id)
         if _kept(path, rec, sheet):
             out["kept"] += 1
             continue

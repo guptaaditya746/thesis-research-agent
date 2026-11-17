@@ -10,7 +10,7 @@ from modelcall import JsonlCache
 from synth3.answers import AnswerRecord, PulledFact, item_id, save_answer
 from synth3.cli import main
 from synth3.judge import ClaimChecks, Mark, PaperMarks, Tick, Ticks
-from synth3.marking import judge_domain, marks_path, why_not
+from synth3.marking import current_marks, judge_domain, marks_path, why_not
 from synth3.questions import question_sha256, load_questions
 from synth3.sheetfacts import load_folder
 from synth3.sheets import make_sheet, save_sheet
@@ -86,6 +86,55 @@ def test_a_stale_sheet_is_skipped_with_its_reason(folder, tmp_path, SPEC):
     assert out["skipped"] == {"demo/s1/engine/d01": "the question changed after drafting"}
     assert out["judged"] == 0 and model.calls == 0
     assert not marks_path(tmp_path / "res", "demo", 1, "engine", "d01").exists()
+
+
+def stale_marks(tmp_path, qid="d01", system="engine") -> Path:
+    return marks_path(tmp_path / "res", "demo", 1, system, qid).with_name(f"{qid}.marks.stale.json")
+
+
+def test_a_skipped_item_moves_its_old_marks_aside(folder, tmp_path, SPEC):
+    """Marks made under an older question, sheet or answer must not stay where the report and the sample read."""
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); qq = qs.get("d01")
+    sheet_for(f, qq, tmp_path)
+    save_answer(tmp_path / "res", engine_rec(f, qq))
+    run(folder, tmp_path, SPEC, qs, judge_model())
+    first = marks_of(tmp_path)
+    changed = qq.model_copy(update={"question": qq.question + " Please be brief."})
+    qs2 = qs.model_copy(update={"questions": [changed if q.id == "d01" else q for q in qs.questions]})
+    out = run(folder, tmp_path, SPEC, qs2, boom())
+    assert out["skipped"] == {"demo/s1/engine/d01": "the question changed after drafting"}
+    assert not marks_path(tmp_path / "res", "demo", 1, "engine", "d01").exists()
+    assert json.loads(stale_marks(tmp_path).read_text(encoding="utf-8")) == first   # moved, never deleted
+    # judged again under the old question, then the question is dropped: the newer marks replace the older aside
+    save_answer(tmp_path / "res", engine_rec(f, qq, text="Targeted therapy does much better."))
+    run(folder, tmp_path, SPEC, qs, judge_model(), cache="c2")
+    second = marks_of(tmp_path)
+    assert second["answer_sha256"] != first["answer_sha256"]
+    dropped = qs.model_copy(update={"questions": [q for q in qs.questions if q.id != "d01"]})
+    out = run(folder, tmp_path, SPEC, dropped, boom())
+    assert out["skipped"] == {"demo/s1/engine/d01": "the question is not in the question file"}
+    assert json.loads(stale_marks(tmp_path).read_text(encoding="utf-8")) == second
+    assert not marks_path(tmp_path / "res", "demo", 1, "engine", "d01").exists()
+
+
+def test_current_marks_need_this_answer_this_sheet_and_a_judgeable_item(folder, tmp_path, SPEC):
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); qq = qs.get("d01")
+    sheet = make_sheet(f, qq, [(TEXT, ["pair:a:m1"])], {"model": "x"}); save_sheet(tmp_path / "sh", sheet)
+    r = engine_rec(f, qq)
+    save_answer(tmp_path / "res", r)
+    run(folder, tmp_path, SPEC, qs, judge_model())
+    m = marks_of(tmp_path)
+    assert current_marks(m, r, f, qs, sheet)
+    assert not current_marks(m, engine_rec(f, qq, text="Re-collected."), f, qs, sheet)   # another answer
+    other = make_sheet(f, qq, [("Another point.", ["pair:a:m1"])], {"model": "x"})
+    assert not current_marks(m, r, f, qs, other)                                         # another sheet
+    assert not current_marks(m, r, f, qs, None)                                          # no sheet
+    dropped = qs.model_copy(update={"questions": [q for q in qs.questions if q.id != "d01"]})
+    assert not current_marks(m, r, f, dropped, sheet)                                   # question dropped
+    reworded = qs.model_copy(update={"questions": [qq.model_copy(update={"question": "Other?"}),
+                                                   *[q for q in qs.questions if q.id != "d01"]]})
+    assert not current_marks(m, r, f, reworded, sheet)                                  # stale sheet
+    assert not current_marks({"sheet": {}}, r, f, qs, sheet)                            # damaged marks
 
 
 def test_a_second_run_makes_no_calls(folder, tmp_path, SPEC):
