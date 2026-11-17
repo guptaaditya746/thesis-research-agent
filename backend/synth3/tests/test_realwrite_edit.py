@@ -144,3 +144,13 @@ def test_paper_without_results_heading_puts_the_section_before_the_conclusion(SP
     s, rp = edit(SPEC, REAL, source=src)
     t = rp.paper.text
     assert rp.problems == () and t.index(rp.inserted[1]) < t.index("## Discussion") < t.index(rp.inserted[2])
+
+
+def test_a_table_with_a_glued_control_word_goes_whole(SPEC, REAL):
+    # PMC cells lose the line break between "Placebo" and "n = 62", and "ΔPlacebo" has no word edge before P
+    for head in ("|  | Placebon = 62 | Lisinopriln = 60 |", "|  | ΔPlacebo | ΔARB |"):
+        table = f"{head}\n|---|---|---|\n| Age | 61 | 60 |"
+        src = fake_paper(1).replace("| Outcome | Drug | Placebo |\n| --- | --- | --- |\n| Events | 12 | 20 |", table)
+        assert table in src
+        _, rp = edit(SPEC, REAL, source=src)
+        assert rp.problems == () and "lacebo" not in rp.paper.text

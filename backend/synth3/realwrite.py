@@ -85,16 +85,22 @@ class RealPaper:
     seed: str
 
 
-def clean_block(block: str, banned: re.Pattern) -> str | None:
+def _whole(block: str) -> bool:
+    """A heading, a table or a `Table N.` caption: it goes whole or stays."""
+    head = block.lstrip()
+    return head.startswith(("#", "|")) or bool(CAPTION.match(head))
+
+
+def clean_block(block: str, banned: re.Pattern, loose: re.Pattern | None = None) -> str | None:
     """The block without the parts that match `banned`; '' when nothing is left; None when unchanged. A heading, a
     `Table N.` caption or a table that matches anywhere goes whole: a header row can sit below the `| --- |` line
     (two-row headers), so dropping only the matching row would keep the control's numbers in a nameless column.
-    A paragraph loses the matching sentences."""
+    Such a block also goes when `loose` (the banned words without word edges) matches: table cells glue words
+    ("Placebon = 62", "ΔPlacebo"). A paragraph loses the matching sentences."""
+    if _whole(block):
+        return "" if banned.search(block) or (loose is not None and loose.search(block)) else None
     if not banned.search(block):
         return None
-    head = block.lstrip()
-    if head.startswith(("#", "|")) or CAPTION.match(head):
-        return ""
     return " ".join(s for s in SENTENCE.split(block) if not banned.search(s))
 
 
@@ -148,9 +154,10 @@ def make_edits(renamed: str, study: Study, spec: DomainSpec, rs: RealSpec, text_
     text = head + rest.lstrip("\n")          # the paper as apply_edits builds it
 
     blocks = _blocks(rest)
+    loose = rs.banned(spec, edges=False)
     pattern, dropped = banned, set()
     while True:     # a sentence citing a dropped table goes too, and a caption it takes may drop one more table
-        new = [clean_block(b, pattern) for b in blocks]
+        new = [clean_block(b, pattern, loose) for b in blocks]
         gone = [n == "" for n in new]
         for i, b in enumerate(blocks):         # a table and the caption right before it go together
             if i and CAPTION.match(blocks[i - 1]) and b.startswith("|") and (gone[i] or gone[i - 1]):
@@ -242,7 +249,9 @@ def check_real_paper(paper: Paper, inserted: tuple[str, ...], study: Study, spec
     banned = rs.banned(spec)
     if banned.search(title):
         problems.append("title names the control")
-    named = sorted({m.group(0) for m in banned.finditer(body)})
+    loose = rs.banned(spec, edges=False)
+    named = sorted({m.group(0) for m in banned.finditer(body)}
+                   | {m.group(0) for b in _blocks(body) if _whole(b) for m in loose.finditer(b)})
     if named:
         problems.append(f"control or planted names in the real text {named[:8]}")
     for t in inserted:

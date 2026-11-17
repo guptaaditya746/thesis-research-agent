@@ -11,7 +11,7 @@ def test_medicine_real_config_loads():
     assert rs.banned(load_spec("medicine")).search("Patients given placebo improved.")
     pat = rs.banned(load_spec("medicine"))
     for real in ("matching placebos", "the usual-care group", "treatment as usual", "the standard arm",
-                 "the conventional groups"):
+                 "the conventional groups", "aggressive and conventional treatments", "the control treatment"):
         assert pat.search(real), real
 
 

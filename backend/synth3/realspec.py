@@ -75,10 +75,12 @@ class RealSpec(Strict):
         "usual care", "usual-care group" and "usual\\ncare" for the same arm."""
         return re.sub(r"(?<!\\) ", lambda m: _GAP, self.control_words)
 
-    def banned(self, spec: DomainSpec) -> re.Pattern:
-        """Control words, every arm label and every setting name: whole words, any case."""
+    def banned(self, spec: DomainSpec, edges: bool = True) -> re.Pattern:
+        """Control words, every arm label and every setting name, any case: whole words, or anywhere when `edges`
+        is False (table cells glue words: "Placebon = 62", "ΔPlacebo")."""
         names = [phrase(n) for n in (*(a.label for a in spec.arms), *(s.name for s in spec.settings))]
-        return re.compile(rf"\b(?:{self.control_regex()}|{'|'.join(names)})\b", re.I)
+        b = r"\b" if edges else ""
+        return re.compile(rf"{b}(?:{self.control_regex()}|{'|'.join(names)}){b}", re.I)
 
     def heading(self, kind: Literal["results", "conclusion"], line: str) -> bool:
         if not line.lstrip().startswith("#"):
