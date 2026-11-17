@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
@@ -436,12 +436,19 @@ def _help(name: str, text: str) -> str:
     return prose(text)[:200] or name
 
 
-def _line_drafts(question: str, clar: list[dict[str, str]], templates: Mapping[str, str]) -> list[LineDraft]:
+def _line_drafts(question: str, clar: list[dict[str, str]], templates: Mapping[str, str],
+                 sub_questions: Sequence[str] = ()) -> list[LineDraft]:
     shown = json.dumps({n: _help(n, t) for n, t in templates.items()})
     problem = ""
     drafts: list[LineDraft] = []
     for _ in range(2):
-        drafts = list(_lines(question=question, clarifications=json.dumps(clar), templates=shown, problem=problem).lines)
+        if sub_questions:
+            from .subq import LINES_SUB   # inside: subq.py imports this module
+            out = LINES_SUB(question=question, clarifications=json.dumps(clar), templates=shown, problem=problem,
+                            sub_questions=json.dumps(list(sub_questions)))
+        else:
+            out = _lines(question=question, clarifications=json.dumps(clar), templates=shown, problem=problem)
+        drafts = list(out.lines)
         unknown = sorted({d.template for d in drafts if d.template and d.template not in templates})
         if drafts and not unknown:
             break
@@ -452,11 +459,15 @@ def _line_drafts(question: str, clar: list[dict[str, str]], templates: Mapping[s
     return drafts[:MAX_LINES]
 
 
-def _things_of(question: str) -> tuple[str, list[str], list[str], list[str]]:
+def _things_of(question: str, sub_questions: Sequence[str] = ()) -> tuple[str, list[str], list[str], list[str]]:
     """(field, things, measures, lower-is-better measures); a measure that is not a thing is dropped."""
     problem = ""
     for _ in range(2):
-        out = _things(question=question, problem=problem)
+        if sub_questions:
+            from .subq import THINGS_SUB
+            out = THINGS_SUB(question=question, problem=problem, sub_questions=json.dumps(list(sub_questions)))
+        else:
+            out = _things(question=question, problem=problem)
         things = [t.strip() for t in out.things if t.strip()]
         if things:
             measures = list(dict.fromkeys(m.strip() for m in (out.measures or []) if m.strip() in things))
@@ -484,13 +495,14 @@ def _query_for(question: str, line: LineDraft, template: str | None, choices: li
 
 def propose(question: str, clarifications: list[Mapping[str, str]] | None = None, *,
             write_words: Writer, templates: Mapping[str, str] | None = None,
-            explain: bool = True) -> tuple[Plan, dict[str, list[str]]]:
+            explain: bool = True, sub_questions: Sequence[str] = ()) -> tuple[Plan, dict[str, list[str]]]:
     """(the plan, the sentences for each fresh line's "how?"). `write_words(question, things)` is W1's word writer
-    (the caller binds its `lm`); `templates` maps a saved SPARQL template's name to its text (W4)."""
+    (the caller binds its `lm`); `templates` maps a saved SPARQL template's name to its text (W4). `sub_questions`
+    go to the lines and things steps only (their sub versions); every other step sees the main question."""
     clar = [dict(c) for c in clarifications or []]
     templates = dict(templates or {})
-    drafts = _line_drafts(question, clar, templates)
-    field, things, measures, lower = _things_of(question)
+    drafts = _line_drafts(question, clar, templates, sub_questions)
+    field, things, measures, lower = _things_of(question, sub_questions)
     ids = ([t for t in things if t not in measures], measures)   # what the graph calls them (kg:side, metric ev:name)
     rule = _rule(question=question, lines=json.dumps([d.question for d in drafts])).rule if drafts else "any_line"
     if rule not in RULES:
@@ -534,7 +546,7 @@ def propose(question: str, clarifications: list[Mapping[str, str]] | None = None
                                       template=OVERSELL_ID if text else None, removable=False))
     words = with_ontology_names(write_words(question, things), field) if things else empty
     plan = Plan(question=question, field=field, lines=lines, main_rule=rule, words=words, decisions=decisions,
-                clarifications=clar, measures=measures)
+                clarifications=clar, measures=measures, sub_questions=list(sub_questions))
     return plan, how
 
 
