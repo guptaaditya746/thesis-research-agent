@@ -43,6 +43,7 @@ Proof: `evidence/tests/test_plan.py::test_old_protocol_lock_unchanged` (v2 lock 
 ```bash
 uv sync --locked                     # from repo root; --all-groups for Docling + Node
 uv run evidence --help               # also: evaluate, synth, webapp, agent, gold, score, packbuilder
+uv run evidence program RUN --out FILE.py   # the run's answer as a readable Python program (standard library only): it rebuilds the answer from the facts it used and checks it
 uv run webapp serve --port 8080      # UI at http://127.0.0.1:8080 (serves frontend/dist)
 uv run synth2 build --out DIR --seeds 10                          # hidden-law corpus families: law kind x text level x seed
 uv run synth2 reference --root DIR --rule pooled --out FILE       # answers of a reference rule: pooled (the key) | vote | lumped | trusts_claims

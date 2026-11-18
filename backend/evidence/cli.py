@@ -9,6 +9,7 @@ its file hashes.
                       [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
+    evidence program RUN --out FILE [--corpus DIR]
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
@@ -133,6 +134,10 @@ def _parser() -> argparse.ArgumentParser:
         s.add_argument("--out", type=Path)
         if name == "reexec":
             s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+    g = sub.add_parser("program", help="the run's answer as one readable Python program (standard library only)")
+    g.add_argument("run", type=Path)
+    g.add_argument("--out", required=True, type=Path)
+    g.add_argument("--corpus", type=Path)
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
     sub.add_parser("verify", help="check the run's hash chain and file hashes").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
@@ -315,6 +320,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         report = read_json(new / "reexec.json")
         print(json.dumps({"run": str(new), "summary": report["summary"], "totals": report["totals"]}, indent=1))
         return 0
+    if args.command == "program":
+        return _program(args)
     if args.command == "prov":
         from .prov import export
         path = export(args.run)
@@ -371,6 +378,43 @@ def pack_check(name: str, root: Path | None = None) -> dict[str, Any]:
             raise ValueError(f"{path}: its domain is not {name!r}")
     return {"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
             "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}
+
+
+def _program(args: argparse.Namespace) -> int:
+    """`evidence program RUN --out FILE`: write the run's readable program (UTF-8, LF); exit 2 when it cannot be made."""
+    import subprocess
+
+    import repo_paths
+
+    from .readable import NotRebuilt, program_of_run
+    out = args.out.resolve()
+    if out.is_relative_to(args.run.resolve()):
+        print("error: the run folder is sealed; write the program elsewhere", file=sys.stderr)
+        return 2
+    warn = None
+    if out.is_relative_to(repo_paths.REPO.resolve()):
+        try:
+            ignored = subprocess.run(["git", "-C", str(repo_paths.REPO), "check-ignore", "-q", str(out)],
+                                     capture_output=True).returncode
+        except OSError:
+            ignored, warn = 0, "warning: git could not be run, so the program was not checked against .gitignore"
+        if ignored == 1:
+            print(f"error: {args.out} is in the repository and not git-ignored; a program quotes papers and stays "
+                  "local", file=sys.stderr)
+            return 2
+        if ignored not in (0, 1):
+            warn = "warning: git could not check .gitignore, so the program was written without that check"
+    try:
+        text = program_of_run(args.run, args.corpus)
+    except (NotRebuilt, ValueError, OSError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(text, encoding="utf-8", newline="\n")
+    if warn:
+        print(warn, file=sys.stderr)
+    print(args.out)
+    return 0
 
 
 def _pack_check(name: str) -> int:
