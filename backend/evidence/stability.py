@@ -210,9 +210,24 @@ def _sum_extractors(parts: Sequence[dict[str, list[int]]]) -> dict[str, list[int
     return {k: [sum(p[k][0] for p in parts), sum(p[k][1] for p in parts)] for k in ("llm", "agent", "other")}
 
 
+NOT_ALL_CALLS = ('{rerun} is not a re-run that asked every model call again: its reexec.json has no "all_calls": '
+                 'true; make it with reexec --all-calls')
+
+
+def _all_calls(rerun: Path) -> bool:
+    try:
+        return read_json(Path(rerun) / REEXEC_FILE).get("all_calls") is True
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def measure(original: Path, reruns: Sequence[Path]) -> dict:
-    """The re-runs of one run compared with it, summed over the re-runs."""
+    """The re-runs of one run compared with it, summed over the re-runs. ValueError (NOT_ALL_CALLS) for a re-run
+    that read its calls from the record: its copies would count as identical replies."""
     original = Path(original)
+    for rerun in reruns:
+        if not _all_calls(rerun):
+            raise ValueError(NOT_ALL_CALLS.format(rerun=rerun))
     answers = [same_answer(original, r) for r in reruns]
     compared = [a for a in answers if a["text"] is not None]
     return {"run": original.name, "reruns": len(reruns),

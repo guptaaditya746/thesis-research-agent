@@ -172,6 +172,18 @@ def test_any_error_reading_an_answer_is_named_not_raised(tmp_path, monkeypatch, 
     assert "cannot be compared (AssertionError)" in capsys.readouterr().out
 
 
+def test_a_rerun_that_read_the_record_is_refused(tmp_path):
+    """M7: a re-run made without --all-calls read its calls from the record; measuring it would count copies as
+    identical replies."""
+    root = written_run(tmp_path, GOOD)
+    plain = reexec(root, out_dir=tmp_path / "re", provider=provider_of(writer_model([], GOOD)))
+    with pytest.raises(ValueError, match=r'its reexec.json has no "all_calls": true; make it with reexec --all-calls'):
+        measure(root, [plain])
+    (tmp_path / "bare").mkdir()
+    with pytest.raises(ValueError, match="all_calls"):
+        measure(root, [tmp_path / "bare"])
+
+
 def test_an_agent_call_without_a_step_or_prompt_hash_is_unreadable(tmp_path):
     bare = agent_row("s1", "h1")
     del bare["model_calls"][0]["request"]["prompt_sha256"]
