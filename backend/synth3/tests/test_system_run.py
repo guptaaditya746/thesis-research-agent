@@ -193,3 +193,64 @@ def test_system_run_by_command(folder, tmp_path, spec_dir, monkeypatch, capsys):
                  "--plans", str(tmp_path / "plans"), "--questions-root", str(FIX), "--spec-root", str(spec_dir),
                  "--results", str(tmp_path / "res")]) == 0
     assert "s1: ran 3, rerun 0, kept 0, skipped 0, failed 0, empty 0, plans confirmed by system 0" in capsys.readouterr().out
+
+
+def test_a_run_of_another_corpus_is_set_aside_and_the_question_runs_again(folder, tmp_path, SPEC):
+    """Review round 1, synth3-I1: after the folder set changed (same seed, another corpus id) every question failed
+    for good, because the sealed run of the old corpus was kept and then refused."""
+    from synth3.corpus import build_folder
+    from synth3.tests.conftest import approved
+    f, qs = setup(folder, tmp_path, SPEC); calls = []
+    run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    build_folder(tmp_path / "real" / "s1", SPEC, approved(SPEC, 1), 40, "prose")
+    f2 = load_folder(tmp_path / "real" / "s1")
+    assert f2.corpus_id != f.corpus_id and f2.seed == 1
+    out = run_folder(f2, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    assert out["failed"] == {} and sorted(out["ran"]) == ["d01", "d02", "d03"] and len(calls) == 6
+    assert run_path(tmp_path / "res", "demo", 1, "d01").with_name("d01.corpus-1").is_dir()   # never deleted
+    assert {r.corpus_id for r in load_answers(tmp_path / "res", "demo")} == {f2.corpus_id}
+    out = run_folder(f2, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    assert sorted(out["kept"]) == ["d01", "d02", "d03"] and len(calls) == 6
+
+
+def _edit(path, **more):
+    p = load_plan(path)
+    write_plan(p.model_copy(update={"decisions": [d.model_copy(update={"value": "0.02", **more})
+                                                  if d.type == "threshold" else d for d in p.decisions]}), path)
+
+
+def _failing(plan_file, corpus, out_dir, **kw):
+    raise RuntimeError("gateway down")
+
+
+def _saved(tmp_path) -> set[str]:
+    return {r.question_id for r in load_answers(tmp_path / "res", "demo")}
+
+
+def test_an_answer_of_the_old_plan_is_set_aside_when_the_new_run_fails(folder, tmp_path, SPEC):
+    """Review round 1, synth3-I6: the old plan's answer stayed in place and counted as current."""
+    f, qs = setup(folder, tmp_path, SPEC)
+    run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner([]))
+    old = system.answer_path(tmp_path / "res", "demo", 1, "system", "d01"); before = old.read_bytes()
+    _edit(plan_path(tmp_path / "plans", "demo", "d01"))
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=_failing)
+    assert "d01" in out["failed"] and _saved(tmp_path) == {"d02", "d03"}
+    assert old.with_name("d01.answer.old-1.json").read_bytes() == before   # set aside, never deleted
+
+
+def test_an_answer_of_the_old_plan_is_set_aside_when_the_edited_plan_is_skipped(folder, tmp_path, SPEC):
+    f, qs = setup(folder, tmp_path, SPEC)
+    run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner([]))
+    _edit(plan_path(tmp_path / "plans", "demo", "d01"), confirmed_by=None, confirmed_at=None)
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner([]))
+    assert "d01" in out["skipped"] and _saved(tmp_path) == {"d02", "d03"}
+    assert system.answer_path(tmp_path / "res", "demo", 1, "system", "d01").with_name("d01.answer.old-1.json").is_file()
+
+
+def test_an_answer_of_the_same_plan_stays_when_its_rerun_fails(folder, tmp_path, SPEC):
+    """Only another plan's answer is set aside: a failed rerun of the same plan keeps the answer it had."""
+    f, qs = setup(folder, tmp_path, SPEC)
+    run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner([]))
+    (run_path(tmp_path / "res", "demo", 1, "d01") / system.WRITTEN_FILE).unlink()   # the run is redone
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=_failing)
+    assert "d01" in out["failed"] and _saved(tmp_path) == {"d01", "d02", "d03"}

@@ -18,7 +18,8 @@ from jsonio import write_text_atomic
 from modelcall import ModelCallError, redact
 from evidence.protocol import parse
 from evidence.rundir import ANSWER_FILE, PLAN_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
-from synth3.answers import MAX_TEXT, AnswerRecord, PaperIndex, cited_papers, pulled_facts, save_answer
+from synth3.answers import (MAX_TEXT, AnswerRecord, PaperIndex, answer_path, cited_papers, pulled_facts,
+                            save_answer)
 from synth3.questions import Question, answer_by_of, asked_sha256, question_sha256, target_of
 from synth3.questions import QuestionSet
 from synth3.sheetfacts import Folder
@@ -203,12 +204,17 @@ def _fresh(plan: Plan) -> Plan:
     return plan.model_copy(update={"writer_try": 0})
 
 
-def _decide(run: Path, plan: Plan) -> tuple[str, int, bool]:
-    """What to do with the run folder: (what, writer_try, retry_errors); what is keep, new, redo, old or failed."""
+def _decide(run: Path, plan: Plan, corpus_id: str) -> tuple[str, int, bool]:
+    """What to do with the run folder: (what, writer_try, retry_errors); what is keep, new, redo, old, corpus or
+    failed. `corpus`: a complete run of another corpus than the folder at hand (the folder set changed, or the
+    folder was rebuilt); like `old` (another plan) it is set aside and the question runs again."""
     if not run.exists():
         return "new", 0, False
     if not sealed_complete(run):
         return "failed", 0, True
+    record = RunDir(run).try_json(RUN_FILE)
+    if (record.get("corpus_id") if isinstance(record, dict) else None) != corpus_id:
+        return "corpus", 0, False
     try:
         had = load_plan(RunDir(run).file(PLAN_FILE))
     except (ValueError, OSError):
@@ -225,10 +231,32 @@ def _decide(run: Path, plan: Plan) -> tuple[str, int, bool]:
     return "keep", had.writer_try, False
 
 
+def _of_another_plan(run: Path, draft: Plan) -> bool:
+    """True when the run folder holds a plan that is not the plan file's (system stamps and the writer try apart)."""
+    try:
+        had = load_plan(RunDir(run).file(PLAN_FILE))
+    except (ValueError, OSError):
+        return False
+    return _without_system_stamps(_fresh(had)) != _without_system_stamps(_fresh(draft))
+
+
+def _answer_aside(path: Path) -> None:
+    """Move a saved answer to `<qid>.answer.old-<n>.json` beside it; never deletes. The judge and the report read
+    `*.answer.json` only, so an answer made from another plan than the plan file's no longer counts."""
+    if not path.is_file():
+        return
+    n = 1
+    while (dest := path.with_name(path.name.removesuffix(".json") + f".old-{n}.json")).exists():
+        n += 1
+    path.replace(dest)
+
+
 def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, as_system: bool = False,
                provider=None, workers: int = 3, runner=None) -> dict:
     """Every question's confirmed plan run on the folder and collected for the judge. A finished run is kept;
-    failed, unsealed, changed or unchecked runs are set aside (never deleted) and run again."""
+    failed, unsealed, changed or unchecked runs and runs of another corpus are set aside (never deleted) and run
+    again. A saved answer whose run was made from another plan than the plan file's is set aside too, whether the
+    question is then skipped, fails or runs again."""
     runner = runner or planrun_run
     domain, seed = folder.spec.domain, folder.seed
     out: dict = {"ran": [], "rerun": [], "kept": [], "skipped": {}, "failed": {}, "empty": [], "by_system": []}
@@ -243,6 +271,9 @@ def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, a
         except ValueError as err:
             out["skipped"][q.id] = redact(str(err))
             continue
+        run = run_path(results, domain, seed, q.id)
+        if _of_another_plan(run, draft):
+            _answer_aside(answer_path(results, domain, seed, SYSTEM, q.id))
         if (why := plan_stale(draft, q)) is not None:
             out["skipped"][q.id] = why
             continue
@@ -259,8 +290,7 @@ def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, a
         if plan is None:
             out["skipped"][q.id] = why
             continue
-        run = run_path(results, domain, seed, q.id)
-        what, tries, retry = _decide(run, plan)
+        what, tries, retry = _decide(run, plan, folder.corpus_id)
         try:
             if what == "keep":
                 out["kept"].append(q.id)
