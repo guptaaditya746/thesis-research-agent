@@ -451,7 +451,7 @@ class Execution:
         self.unresolved_names = 0
         self.roles = setup.protocol.roles()              # the pack's types by role, for the kind's rules
         self.dangling = 0                                 # links to no item, over the run (`relink: on` only)
-        self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
+        self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (modes `run` and `reexec`), this pass
         self.cascades, self.provider, self.locator = setup.cascades, setup.provider, setup.locator
         self.events = Events(root / EVENTS_FILE, run_id)
         self.ref = ProtocolRef(id=setup.protocol.id, sha256=setup.protocol.sha256)

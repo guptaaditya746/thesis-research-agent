@@ -174,8 +174,10 @@ class CallCache:
                  make: Callable[[], tuple[dict[str, Any], list[dict[str, Any]]]]) -> Asked:
         """A model call of the engine's own (the names check), under the same policy as `call`: the key is
         cache_key(owner_id, digest(request)); `make()` gives (value, model-call records), a value with status `error`
-        is what `retry_errors` asks again. Replay reads the recorded attempt only (a miss is NotRecorded); reexec uses
-        the record and asks only when there is none (no `bypass`: it names extractors)."""
+        is what `retry_errors` asks again. Replay reads the recorded attempt only (a miss is NotRecorded). Reexec with
+        `fresh_recorded` (`--all-calls`) asks every call again, never reads the record and stores nothing (a repeat
+        in the same re-run gets the same answer); plain reexec uses the record and asks only when there is none (no
+        `bypass`: it names extractors)."""
         request_sha256 = digest(request)
         if self.mode == "reexec" and self.fresh_recorded:
             key = cache_key(owner_id, request_sha256)
