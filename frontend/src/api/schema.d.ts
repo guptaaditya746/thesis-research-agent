@@ -787,6 +787,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/plan/batch/{domain}/{qid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Batch */
+        post: operations["open_batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Answer */
+        post: operations["set_answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/plan/{pid}/clarify": {
         parameters: {
             query?: never;
@@ -1052,6 +1086,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/system/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Domains */
+        get: operations["system_domains"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/system/runs/{rid}/steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Steps */
+        get: operations["system_steps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/system/runs/{rid}/papers/{doc}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Paper */
+        get: operations["system_paper"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1144,6 +1229,13 @@ export interface components {
             /** Answer */
             answer: string;
         };
+        /** AnswerRequest */
+        AnswerRequest: {
+            /** Answer By */
+            answer_by: string;
+            /** Target */
+            target?: string | null;
+        };
         /** AnswerResult */
         AnswerResult: {
             /** Text */
@@ -1162,6 +1254,17 @@ export interface components {
              * @default []
              */
             missing?: string[];
+        };
+        /** AnswerRow */
+        AnswerRow: {
+            /** Text */
+            text: string;
+            /** Status */
+            status: string;
+            /** Problems */
+            problems: string[];
+            /** Lines */
+            lines: components["schemas"]["CombineLine"][];
         };
         /** Approve */
         Approve: {
@@ -1707,6 +1810,22 @@ export interface components {
         ClarifyRequest: {
             /** Answers */
             answers: components["schemas"]["Answer"][];
+        };
+        /** CombineLine */
+        CombineLine: {
+            /** Text */
+            text: string;
+            /** Facts */
+            facts: number[];
+        };
+        /** CombineRow */
+        CombineRow: {
+            /** Rule */
+            rule: string;
+            /** Count */
+            count: number;
+            /** Rows */
+            rows: components["schemas"]["CombineLine"][];
         };
         /**
          * Compare
@@ -2794,6 +2913,22 @@ export interface components {
              */
             name?: string | null;
         };
+        /** FindPaper */
+        FindPaper: {
+            /** Paper */
+            paper: string;
+            /** Kept */
+            kept: boolean;
+            /** Why */
+            why: string;
+        };
+        /** FindRow */
+        FindRow: {
+            /** Count */
+            count: number;
+            /** Papers */
+            papers: components["schemas"]["FindPaper"][];
+        };
         /** Flags */
         Flags: {
             /**
@@ -3519,10 +3654,29 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** PlanRunRequest */
+        PlanRunRequest: {
+            /** Domain */
+            domain?: string | null;
+            /** Seed */
+            seed?: number | null;
+        };
         /** PlanStart */
         PlanStart: {
             /** Question */
             question: string;
+            /**
+             * Sub Questions
+             * @default []
+             */
+            sub_questions?: string[];
+            /**
+             * Answer By
+             * @default lines
+             */
+            answer_by?: string;
+            /** Target */
+            target?: string | null;
         };
         /** PlanView */
         PlanView: {
@@ -3559,6 +3713,13 @@ export interface components {
             frozen?: boolean;
             /** Run */
             run?: string | null;
+            /**
+             * Sub Questions
+             * @default []
+             */
+            sub_questions?: string[];
+            /** Batch */
+            batch?: string | null;
         };
         /** PointIn */
         PointIn: {
@@ -3832,6 +3993,28 @@ export interface components {
             protocol: components["schemas"]["Protocol"] | null;
             /** Error */
             error: string | null;
+        };
+        /** PullFact */
+        PullFact: {
+            /** N */
+            n: number;
+            /** Item */
+            item: string;
+            /** Paper */
+            paper: string;
+            /** Type */
+            type: string;
+            /** Text */
+            text: string;
+        };
+        /** PullRow */
+        PullRow: {
+            /** Count */
+            count: number;
+            /** Left Out */
+            left_out: number;
+            /** Facts */
+            facts: components["schemas"]["PullFact"][];
         };
         /** Question */
         Question: {
@@ -4475,6 +4658,32 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** SysDomain */
+        SysDomain: {
+            /** Domain */
+            domain: string;
+            /** Seeds */
+            seeds: number[];
+            /** Questions */
+            questions: components["schemas"]["SysQuestion"][];
+            /** Error */
+            error: string | null;
+        };
+        /** SysQuestion */
+        SysQuestion: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Sub Questions */
+            sub_questions: string[];
+            /** Kind */
+            kind: string;
+            /** Target */
+            target: string | null;
+            /** Plan */
+            plan: string;
+        };
         /**
          * SystemCost
          * @description One system's cost on a question (evaluation/score.py `system_cost`): model calls and tokens; a count the
@@ -4491,6 +4700,36 @@ export interface components {
             tokens: number | null;
         } & {
             [key: string]: unknown;
+        };
+        /** SystemPaper */
+        SystemPaper: {
+            /** Paper */
+            paper: string;
+            /** Text */
+            text: string;
+            /** Segments */
+            segments: components["schemas"]["Segment"][];
+        };
+        /**
+         * SystemSteps
+         * @description The four rows of a plan run (find, pull, combine, answer).
+         */
+        SystemSteps: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "failed" | "done";
+            /** Error */
+            error: string | null;
+            /** Answer By */
+            answer_by: string;
+            /** Question */
+            question: string;
+            find: components["schemas"]["FindRow"];
+            pull: components["schemas"]["PullRow"];
+            combine: components["schemas"]["CombineRow"];
+            answer: components["schemas"]["AnswerRow"];
         };
         /** TracePage */
         TracePage: {
@@ -6093,6 +6332,73 @@ export interface operations {
             };
         };
     };
+    open_batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     answer: {
         parameters: {
             query?: never;
@@ -6271,7 +6577,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PlanRunRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -6640,6 +6950,89 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_domains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SysDomain"][];
+                };
+            };
+        };
+    };
+    system_steps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSteps"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_paper: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+                doc: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemPaper"];
                 };
             };
             /** @description Validation Error */
