@@ -43,7 +43,7 @@ export default function SystemPage() {
       <QuestionBox key={domain ?? ""} open={folderDone} domain={chosen} seed={seed} onView={setView} onError={setError} />
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <ProtocolBox view={view} domain={domain} seed={seed} onView={setView} onError={setError} />
-      <RunBox planId={view?.id ?? null} run={run} selected={selected} onSelect={(n) => setSelected(n)} steps={steps.data}
+      <RunBox planId={view?.id ?? null} run={run} selected={selected} onSelect={(n) => setSelected(n)} steps={steps.data} stepsError={steps.isError ? steps.error : undefined}
         opened={opened} onToggle={(row) => setOpened((o) => ({ ...o, [row]: !o[row] }))} />
       <AnswerBox open={steps.data?.status === "done"} run={run} steps={steps.data} onSelect={pick} />
     </div>

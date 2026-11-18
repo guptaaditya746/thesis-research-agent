@@ -199,6 +199,37 @@ describe("system page", () => {
       expect(screen.queryByText("Find 3")).toBeNull()
     })
 
+    async function startFailing(user: ReturnType<typeof userEvent.setup>, ...handlers: Parameters<typeof server.use>) {
+      server.use(
+        http.post("/api/ev/plan", () => HttpResponse.json(view([decision("d1", { confirmed_by: "ada" })]))),
+        http.post("/api/ev/plan/p1/run", () => HttpResponse.json({ run: "r1" })),
+        ...handlers,
+      )
+      renderWithProviders(<SystemPage />)
+      await chooseFolder(user)
+      await user.type(screen.getByRole("textbox", { name: "Question" }), "Which conditions were studied?")
+      await user.click(screen.getByRole("button", { name: "Draft the protocol" }))
+      await user.click(await screen.findByRole("button", { name: "Run on demo s1" }, T))
+    }
+
+    it("says why and stops saying Running when the result cannot be read", async () => {
+      // review round 1, web-I4: after a server restart the result is a 404 ("no plan") and the box said
+      // "Running..." for good
+      const user = userEvent.setup()
+      await startFailing(user, http.get("/api/ev/plan/p1/result", () => HttpResponse.json({ detail: "no plan 'p1'" }, { status: 404 })))
+      expect(await screen.findByRole("alert", {}, T)).toHaveTextContent("The run could not be read: no plan 'p1'")
+      expect(screen.queryByText("Running...")).toBeNull()
+    })
+
+    it("says why and stops saying Running when the steps cannot be read", async () => {
+      const user = userEvent.setup()
+      await startFailing(user,
+        http.get("/api/ev/plan/p1/result", () => HttpResponse.json(done)),
+        http.get("/api/ev/system/runs/r1/steps", () => HttpResponse.json({ detail: "the run folder cannot be read" }, { status: 500 })))
+      expect(await screen.findByRole("alert", {}, T)).toHaveTextContent("The run could not be read: the run folder cannot be read")
+      expect(screen.queryByText("Running...")).toBeNull()
+    })
+
     it("lists a row when it is opened", async () => {
       const user = userEvent.setup()
       await startRunOn(user, () => done)

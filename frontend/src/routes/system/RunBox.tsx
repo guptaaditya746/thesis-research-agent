@@ -1,4 +1,5 @@
-/** Box 4: the run. While it goes: "Running..." and the status; when it fails: the reason; when it is done: the
+/** Box 4: the run. While it goes: "Running..." and the status; when it fails: the reason; when its result or its
+ * rows cannot be read (the server restarted, a run folder that does not load): that reason; when it is done: the
  * four rows (Find, Pull out, Combine, Answer), each with its count and a "Show" toggle. A fact of Pull out opens
  * its paper with the fact's spans marked. Done when the run is done. */
 import { Button } from "@/components/ui/button"
@@ -39,7 +40,7 @@ export function FactButtons({ facts, onSelect }: { facts: number[]; onSelect: (n
   )
 }
 
-export function RunBox({ planId, run, selected, onSelect, opened, onToggle, steps }: {
+export function RunBox({ planId, run, selected, onSelect, opened, onToggle, steps, stepsError }: {
   planId: string | null
   run: string | null
   selected: number | null
@@ -47,20 +48,27 @@ export function RunBox({ planId, run, selected, onSelect, opened, onToggle, step
   opened: Record<RowName, boolean>
   onToggle: (row: RowName) => void
   steps: SystemSteps | undefined
+  /** the failure of the steps request, when it failed */
+  stepsError?: unknown
 }) {
   const result = usePlanResult(planId, run !== null)
   const status = result.data?.status ?? ""
   const failure = runFailure(result.data)
   const stepsFailed = steps?.status === "failed"
+  const unread: unknown = result.isError ? result.error : stepsError ?? null   // a request that failed
+  const unreadable = unread !== null && failure === null
   const done = run !== null && failure === null && steps !== undefined && steps.status === "done" && status !== "running"
   const fact = steps?.pull.facts.find((f) => f.n === selected) ?? null
 
   return (
     <Box title="4. Run" open={run !== null}>
-      {run !== null && failure === null && !stepsFailed && !done && (
+      {run !== null && failure === null && !stepsFailed && !done && !unreadable && (
         <p className="text-sm" role="status"><span>Running...</span>{status ? <span className="text-muted-foreground">{` ${status}`}</span> : null}</p>
       )}
       {failure !== null && <p role="alert" className="text-sm text-destructive">{failure}</p>}
+      {run !== null && unreadable && !done && (
+        <p role="alert" className="text-sm text-destructive">{`The run could not be read: ${unread instanceof Error ? unread.message : "the request failed"}`}</p>
+      )}
       {stepsFailed && failure === null && <p role="alert" className="text-sm text-destructive">{`failed: ${steps?.error ?? "the run stopped"}`}</p>}
       {done && steps && (
         <div role="group" aria-label="Run rows" className="space-y-2">
