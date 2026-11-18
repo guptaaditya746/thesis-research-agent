@@ -2882,6 +2882,45 @@
         }
       }
     },
+    "/api/ev/system/runs/{rid}/program": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "System Program",
+        "description": "The run's readable program as a download; 409 with the refusal text when the run cannot be rebuilt.\nNothing is written into the run folder.",
+        "operationId": "system_program",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/x-python": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ev/system/runs/{rid}/papers/{doc}": {
       "get": {
         "tags": [
@@ -11661,6 +11700,17 @@
           },
           "answer": {
             "$ref": "#/components/schemas/AnswerRow"
+          },
+          "program_refused": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Refused"
           }
         },
         "type": "object",
@@ -11672,7 +11722,8 @@
           "find",
           "pull",
           "combine",
-          "answer"
+          "answer",
+          "program_refused"
         ],
         "title": "SystemSteps",
         "description": "The four rows of a plan run (find, pull, combine, answer)."

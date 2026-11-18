@@ -1120,6 +1120,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/system/runs/{rid}/program": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * System Program
+         * @description The run's readable program as a download; 409 with the refusal text when the run cannot be rebuilt.
+         *     Nothing is written into the run folder.
+         */
+        get: operations["system_program"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/system/runs/{rid}/papers/{doc}": {
         parameters: {
             query?: never;
@@ -4730,6 +4751,8 @@ export interface components {
             pull: components["schemas"]["PullRow"];
             combine: components["schemas"]["CombineRow"];
             answer: components["schemas"]["AnswerRow"];
+            /** Program Refused */
+            program_refused: string | null;
         };
         /** TracePage */
         TracePage: {
@@ -7001,6 +7024,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemSteps"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/x-python": unknown;
                 };
             };
             /** @description Validation Error */

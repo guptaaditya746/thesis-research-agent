@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from evidence.kindtext import RULE_TEXT
+from evidence.readable import LINES
+from evidence.readable.rules.common import CHECK_OK
 from synth3.questions import load_questions
 from synth3.sheetfacts import load_folder
 from synth3.spec import load_spec
@@ -35,7 +39,9 @@ def system_runs(tmp_path, review_root) -> dict[str, str]:
     make_system_run(runs, folder, q, demo_plan(spec, q), writer_reply=FACT_REPLY)
     e = q.model_copy(update={"kind": "effect", "id": "d01e"})
     make_system_run(runs, folder, e, demo_plan(spec, e, "effect"), run_id="d01e")
-    return {"written": "d01", "effect": "d01e"}
+    lines = q.model_copy(update={"id": "d01l"})
+    make_system_run(runs, folder, lines, demo_plan(spec, lines, "lines"), run_id="d01l")
+    return {"written": "d01", "effect": "d01e", "lines": "d01l"}
 
 
 def test_domains_list_folders_questions_and_plan_states(review_root, tmp_path):
@@ -121,3 +127,38 @@ def test_a_failed_writer_call_says_failed_with_its_reason(tmp_path, review_root)
                                   "/api/ev/system/runs/d01/papers/..%2Fmanifest"])
 def test_bad_ids_are_refused(system_runs, tmp_path, review_root, path):
     assert client(tmp_path, review_root).get(path).status_code in (400, 404, 422)
+
+
+def test_the_program_downloads_and_rebuilds_the_answer(system_runs, tmp_path, review_root):
+    c = client(tmp_path, review_root)
+    for rid in (system_runs["written"], system_runs["effect"]):
+        r = c.get(f"/api/ev/system/runs/{rid}/program")
+        assert r.status_code == 200 and r.headers["content-disposition"] == f'attachment; filename="{rid}-answer.py"'
+        assert r.headers["content-type"] == "text/x-python; charset=utf-8"
+        path = tmp_path / f"{rid}-answer.py"; path.write_bytes(r.content)
+        done = subprocess.run([sys.executable, "-I", "-S", str(path)], capture_output=True, timeout=120)
+        assert done.returncode == 0 and done.stdout.decode("utf-8").splitlines()[-1] == CHECK_OK
+        assert c.get(f"/api/ev/system/runs/{rid}/steps").json()["program_refused"] is None
+
+
+def test_a_lines_run_has_no_program(system_runs, tmp_path, review_root):
+    c = client(tmp_path, review_root)
+    assert c.get(f"/api/ev/system/runs/{system_runs['lines']}/steps").json()["program_refused"] == LINES
+    r = c.get(f"/api/ev/system/runs/{system_runs['lines']}/program")
+    assert r.status_code == 409 and r.json()["detail"] == LINES
+
+
+def test_a_running_run_has_no_program_and_nothing_is_written(system_runs, tmp_path, review_root):
+    run = tmp_path / "ev" / "runs" / system_runs["written"]
+    (run / "manifest.json").unlink()
+    before = sorted(str(p) for p in run.rglob("*"))
+    c = client(tmp_path, review_root)
+    refused = c.get(f"/api/ev/system/runs/{system_runs['written']}/steps").json()["program_refused"]
+    assert refused and refused.startswith("the run is not complete")
+    r = c.get(f"/api/ev/system/runs/{system_runs['written']}/program")
+    assert r.status_code == 409 and r.json()["detail"] == refused
+    assert sorted(str(p) for p in run.rglob("*")) == before
+
+
+def test_a_bad_id_gets_no_program(system_runs, tmp_path, review_root):
+    assert client(tmp_path, review_root).get("/api/ev/system/runs/..%2Fx/program").status_code in (400, 404, 422)

@@ -6,12 +6,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from evidence.kindtext import RULE_TEXT, kind_lines, plan_names
 from evidence.plan import Plan, load_plan
 from evidence.planner.plan import RULES
 from evidence.protocol import parse
+from evidence.readable import NOT_COMPLETE, NotRebuilt, program_of_run, refusal
 from evidence.rundir import ANSWER_FILE, FUNNEL_FILE, PLAN_FILE, PROTOCOL_FILE, SEAL_FILE, PaperIndex, RunDir
 from evidence.written import STAGE, fact_budget, fact_lines
 from modelcall.pins import ORCHESTRATOR
@@ -106,6 +107,7 @@ class SystemSteps(Base):
     pull: PullRow
     combine: CombineRow
     answer: AnswerRow
+    program_refused: str | None   # why no readable program can be made for the run; None when it can
 
 
 class SystemPaper(Base):
@@ -180,13 +182,21 @@ def _kind_rows(numbers: dict[str, int], lines: list[Any]) -> list[CombineLine]:
     return [CombineLine(text=ln.text, facts=sorted({numbers[i] for i in ln.items if i in numbers})) for ln in lines]
 
 
+def _refused(run: Path) -> str | None:
+    """Why no readable program can be made for the run, None when it can: a run with no seal is still running (its
+    folder may already read as complete), otherwise the refusal of `evidence.readable`. It never raises."""
+    if not isinstance(RunDir(run).try_json(SEAL_FILE), dict):
+        return NOT_COMPLETE.format(state="running")
+    return refusal(run)
+
+
 def steps_of(run: Path) -> SystemSteps:
     """The four rows of the plan run in `run`. No seal: running (the seal is written last); sealed failed: its
     reason. Both with every row empty."""
     rd = RunDir(run)
     plan = load_plan(rd.file(PLAN_FILE))
     seal = rd.try_json(SEAL_FILE)
-    head = {"error": None, "answer_by": plan.answer_by, "question": plan.question}
+    head = {"error": None, "answer_by": plan.answer_by, "question": plan.question, "program_refused": _refused(run)}
     find, pull = FindRow(count=0, papers=[]), PullRow(count=0, left_out=0, facts=[])
     rule = _rule_text(plan)
     combine, answer = CombineRow(rule=rule, count=0, rows=[]), AnswerRow(text="", status="", problems=[], lines=[])
@@ -256,6 +266,24 @@ def evsystem_router(settings: Settings) -> APIRouter:
     @api.get("/system/runs/{rid}/steps", response_model=SystemSteps, tags=["system"])
     def system_steps(rid: str) -> SystemSteps:
         return steps_of(system_run(settings, rid))
+
+    @api.get("/system/runs/{rid}/program", response_class=Response, tags=["system"],
+             responses={200: {"content": {"text/x-python": {}}}})
+    def system_program(rid: str) -> Response:
+        """The run's readable program as a download; 409 with the refusal text when the run cannot be rebuilt.
+        Nothing is written into the run folder."""
+        run = system_run(settings, rid)
+        why = _refused(run)
+        if why is not None:
+            raise Conflict(why)
+        try:
+            text = program_of_run(run)
+        except NotRebuilt as exc:
+            raise Conflict(str(exc)) from exc
+        except Exception as exc:   # a run that cannot be read is a refusal text, never a 500
+            raise Conflict(refusal(run) or f"{type(exc).__name__}: {exc}") from exc
+        return Response(text.encode("utf-8"), media_type="text/x-python; charset=utf-8",
+                        headers={"Content-Disposition": f'attachment; filename="{rid}-answer.py"'})
 
     @api.get("/system/runs/{rid}/papers/{doc}", response_model=SystemPaper, tags=["system"])
     def system_paper(rid: str, doc: str) -> SystemPaper:
