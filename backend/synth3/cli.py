@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 from collections import Counter
@@ -70,15 +71,40 @@ def _approved_worlds(args: argparse.Namespace, spec, problems: list[str]) -> dic
     return worlds
 
 
+def _build_all(args: argparse.Namespace, worlds: dict, make) -> list[tuple[int, str, Path, Path]]:
+    """Build every seed's folder under `<out>/.building-s<seed>` and move them to `<out>/s<seed>` only when all
+    are built, so a failing seed leaves no half-set. On a failure the temporary folders this call made are removed
+    (nothing else is touched). `make(folder, world) -> corpus id`. Returns (seed, id, final, built) rows."""
+    stale = [args.out / f".building-s{s}" for s in worlds if (args.out / f".building-s{s}").exists()]
+    if stale:
+        raise BadArgument(f"{stale[0]}: left by an earlier run; check it and delete it, then run again")
+    built: list[tuple[int, str, Path, Path]] = []
+    try:
+        for seed, world in worlds.items():
+            tmp = args.out / f".building-s{seed}"
+            try:
+                cid = make(tmp, world)
+            except ValueError as err:
+                raise BadArgument(f"s{seed}: {err}") from err
+            built.append((seed, cid, args.out / f"s{seed}", tmp))
+    except BaseException:
+        for *_, tmp in built:
+            shutil.rmtree(tmp, ignore_errors=True)
+        for seed in worlds:
+            shutil.rmtree(args.out / f".building-s{seed}", ignore_errors=True)
+        raise
+    for _, _, final, tmp in built:
+        if final.is_dir():
+            final.rmdir()   # the check before the build allowed only an empty folder
+        tmp.rename(final)
+    return built
+
+
 def build(args: argparse.Namespace) -> int:
     spec = _spec(args)
     worlds = _approved_worlds(args, spec, [])
-    for seed, world in worlds.items():
-        folder = args.out / f"s{seed}"
-        try:
-            cid = build_folder(folder, spec, world, args.studies, args.text_level)
-        except ValueError as err:
-            raise BadArgument(f"s{seed}: {err}") from err
+    for seed, cid, folder, _ in _build_all(args, worlds, lambda out, w: build_folder(out, spec, w, args.studies,
+                                                                                     args.text_level)):
         attempt = json.loads((folder / "corpus.json").read_text(encoding="utf-8"))["settings"]["attempt"]
         print(f"s{seed}: {cid} (attempt {attempt}) -> {folder}")
     return 0
@@ -99,12 +125,8 @@ def build_real(args: argparse.Namespace) -> int:
     except (OSError, ValueError) as err:
         problems.append(str(err))
     worlds = _approved_worlds(args, spec, problems)
-    for seed, world in worlds.items():
-        folder = args.out / f"s{seed}"
-        try:
-            cid = build_real_folder(folder, spec, world, args.studies, args.text_level, rs, pool)
-        except ValueError as err:
-            raise BadArgument(f"s{seed}: {err}") from err
+    for seed, cid, folder, _ in _build_all(args, worlds, lambda out, w: build_real_folder(
+            out, spec, w, args.studies, args.text_level, rs, pool)):
         attempt = json.loads((folder / "corpus.json").read_text(encoding="utf-8"))["settings"]["attempt"]
         rejected = json.loads((folder / "ground_truth.json").read_text(encoding="utf-8"))["real"]["rejected"]
         print(f"s{seed}: {cid} (attempt {attempt}, {sum(map(len, rejected.values()))} sources rejected) -> {folder}")

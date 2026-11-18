@@ -103,3 +103,31 @@ def test_a_study_with_three_rejected_sources_stops_the_build(tmp_path, SPEC, REA
         build_real_folder(tmp_path / "r", SPEC, approved(SPEC, 1), 40, "table", REAL, pool)
     assert str(err.value).count("made up problem") == 3
     assert not (tmp_path / "r").exists() or not any((tmp_path / "r").iterdir())
+
+
+def _approve(tmp_path, seeds):
+    for s in seeds:
+        f = tmp_path / "w" / "demo" / f"s{s}.json"
+        d = json.loads(f.read_text()); d["approved"] = True
+        f.write_text(json.dumps(d))
+
+
+def test_a_multi_seed_build_that_fails_leaves_no_folder_and_can_be_rerun(tmp_path, spec_dir, real_dir, pool_root,
+                                                                         monkeypatch, capsys):
+    common = ["--domain", "demo", "--spec-root", str(spec_dir), "--seeds", "1,2", "--worlds", str(tmp_path / "w")]
+    assert main(["draw", *common]) == 0
+    _approve(tmp_path, (1, 2))
+
+    def failing_on_seed_2(source, study, spec, rs, text_level, seed):
+        rp = edit_study(source, study, spec, rs, text_level, seed)
+        return type(rp)(rp.paper, rp.mapping, rp.inserted, ("made up problem",), rp.seed) if ":2:real:" in seed else rp
+    monkeypatch.setattr(realcorpus, "edit_study", failing_on_seed_2)
+    args = ["build-real", *common, "--real-root", str(real_dir), "--pools", str(pool_root), "--out", str(tmp_path / "o")]
+    assert main(args) == 2
+    out = tmp_path / "o"
+    assert not out.exists() or not any(out.iterdir())   # no half-set, nothing to delete by hand
+    monkeypatch.setattr(realcorpus, "edit_study", edit_study)
+    capsys.readouterr()
+    assert main(args) == 0
+    assert (out / "s1" / "corpus.json").is_file() and (out / "s2" / "corpus.json").is_file()
+    assert not [p for p in out.iterdir() if p.name.startswith(".")]
