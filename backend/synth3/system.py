@@ -79,9 +79,9 @@ def plan_domain(domain: str, qs: QuestionSet, root: Path, lm, templates: Mapping
         try:
             old = load_plan(path) if path.is_file() else None
             if old is None or q.id in redo or plan_stale(old, q) is not None:
+                plan = draft_plan(q, redo_lm if q.id in redo else lm, templates)   # a failed draft keeps the old plan
                 if old is not None:
                     _move_aside(path)
-                plan = draft_plan(q, redo_lm if q.id in redo else lm, templates)
                 save_plan(plan, path)
                 out["drafted"].append(q.id)
             elif (old.answer_by, old.target) != (answer_by_of(q), target_of(q)):

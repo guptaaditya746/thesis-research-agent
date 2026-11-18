@@ -70,6 +70,18 @@ def test_a_changed_kind_is_set_in_place(tmp_path, SPEC, monkeypatch):
     assert load_plan(plan_path(tmp_path, "demo", "d01")).answer_by == "effect"
 
 
+def test_a_redo_whose_model_fails_leaves_the_confirmed_plan_in_place(tmp_path, SPEC, monkeypatch):
+    qs = load_questions("demo", SPEC, FIX)
+    path = plan_path(tmp_path, "demo", "d02")
+    path.parent.mkdir(parents=True)
+    path.write_text(demo_plan(SPEC, qs.get("d02")).model_dump_json(indent=2), encoding="utf-8")   # confirmed
+    before = path.read_bytes()
+    use_fake_draft(monkeypatch, SPEC, fail={"d02"})
+    out = plan_domain("demo", qs, tmp_path, "lm", {}, redo={"d02"}, redo_lm="fresh-lm")
+    assert list(out["failed"]) == ["d02"] and path.read_bytes() == before
+    assert not list(path.parent.glob("d02.stale-*.json")) and load_plan(path).ready()
+
+
 def atomic_writes(monkeypatch) -> list[Path]:
     """Every plan file system.py writes, through jsonio.write_text_atomic; write_plan (not atomic) refuses."""
     from jsonio import write_text_atomic
