@@ -183,4 +183,12 @@ describe("sub-questions and batch plans", () => {
     expect(await screen.findByText("The batch address must look like domain/question-id.", {}, T)).toBeInTheDocument()
     expect(posts).toBe(0)
   })
+
+  it.each(["demo/", "/d01"])("says so when a part of the batch address is empty (%s) and sends nothing", async (batch) => {
+    let posts = 0
+    server.use(http.post("/api/ev/plan/*", () => { posts += 1; return HttpResponse.json(view([])) }))
+    renderWithProviders(<PlanPage />, { route: `/plan?batch=${batch}` })
+    expect(await screen.findByText("The batch address must look like domain/question-id.", {}, T)).toBeInTheDocument()
+    expect(posts).toBe(0)
+  })
 })

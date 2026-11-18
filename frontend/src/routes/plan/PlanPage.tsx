@@ -108,7 +108,7 @@ export default function PlanPage() {
   const [subText, setSubText] = useState("")
   const [params] = useSearchParams()
   const batch = params.get("batch")
-  const badBatch = batch !== null && batch.split("/").length !== 2
+  const badBatch = batch !== null && (batch.split("/").length !== 2 || batch.split("/").some((part) => part === ""))
   const [view, setView] = useState<PlanView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const take = (v: PlanView) => { setError(null); setView(v) }
@@ -120,8 +120,8 @@ export default function PlanPage() {
   const opened = useRef<string | null>(null)
   const openBatch = opener.mutate
   useEffect(() => {
-    if (batch && opened.current !== batch && batch.split("/").length === 2) { opened.current = batch; openBatch(batch) }
-  }, [batch, openBatch])
+    if (batch && !badBatch && opened.current !== batch) { opened.current = batch; openBatch(batch) }
+  }, [batch, badBatch, openBatch])
   const answers = useMutationOf((a: { question: string; answer: string }[]) => sendAnswers(view!.id, a))
   const confirm = useMutationOf((did: string) => decide(view!.id, did, { confirm: true }))
   const change = useMutationOf((a: { id: string; value: unknown }) => decide(view!.id, a.id, { change: a.value }))
