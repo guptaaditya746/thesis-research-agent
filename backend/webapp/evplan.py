@@ -456,6 +456,10 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
         if (req.domain is None) != (req.seed is None):
             raise BadRequest("give both domain and seed, or neither")
         e = get(pid)
+        if e.batch is not None and req.domain != e.batch[0]:
+            # with no folder the run would use $EV_PLAN_CORPUS (the RAG papers, reasoner and links on)
+            raise Conflict(f"a batch plan of {e.batch[0]} runs only on a built folder of {e.batch[0]}: pick the "
+                           "question and a seed on the System page and run it there")
         with e.lock:   # check, freeze and mark in one step: a second run (or a late edit) sees "running"
             if e.state != "open":
                 raise Conflict("the plan is already running or was run")

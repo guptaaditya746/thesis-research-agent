@@ -5,7 +5,7 @@
  * line that failed), and the reruns that flip the answer. No pilot run: an empty answer is a valid answer.
  */
 import { useEffect, useRef, useState } from "react"
-import { useSearchParams } from "react-router"
+import { Link, useSearchParams } from "react-router"
 
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
@@ -164,11 +164,18 @@ export default function PlanPage() {
               <LineCard key={l.id} line={l} how={view.how[l.id]} result={byLine.get(l.id)} busy={busy || view.frozen} onRemove={view.frozen ? undefined : (id) => remove.mutate(id)} />
             ))}
             <MainRule rule={plan.main_rule} busy={busy || view.frozen} onChange={(r) => rule.mutate(r)} />
-            <Button disabled={busy || view.frozen || !view.ready} onClick={() => run.mutate(undefined)}>Run</Button>
+            {view.batch ? (
+              // a batch plan runs only on a built folder of its domain; a Run here would name no folder
+              <p className="text-sm text-muted-foreground">
+                A batch plan runs on a built folder of its domain, not here. <Link className="underline" to="/system">Run it on the System page</Link>.
+              </p>
+            ) : (
+              <Button disabled={busy || view.frozen || !view.ready} onClick={() => run.mutate(undefined)}>Run</Button>
+            )}
             {view.problems.length > 0 && (
               <ul role="alert" className="list-disc pl-5 text-sm text-destructive">{view.problems.map((p) => <li key={p}>{p}</li>)}</ul>
             )}
-            {!view.frozen && view.problems.length === 0 && !view.ready && <p className="text-xs text-muted-foreground">Confirm every decision to run.</p>}
+            {!view.batch && !view.frozen && view.problems.length === 0 && !view.ready && <p className="text-xs text-muted-foreground">Confirm every decision to run.</p>}
 
             {view.run && (
               <section aria-label="Answer" className="space-y-2">

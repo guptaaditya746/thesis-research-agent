@@ -177,3 +177,22 @@ def test_a_failed_writer_call_shows_as_a_failed_result(folder, tmp_path, SPEC): 
     out = PlanRuns(Settings(EV=tmp_path / "ev")).result("r1")
     assert out["status"] == "done"
     assert out["answer"]["text"] == f"failed: the written answer's model call failed: {written['failed']}"
+
+
+def test_a_batch_plan_runs_only_on_a_built_folder_of_its_own_domain(review_root, tmp_path):
+    """Review round 1, web-I2: the plan page sent a bare Run, and the server ran the synth3 batch plan on the RAG
+    corpus ($EV_PLAN_CORPUS) with the reasoner and links on."""
+    spec = load_spec("demo", review_root)
+    write_demo_plans(review_root / "plans", load_questions("demo", spec, review_root / "questions"), spec)
+    build = review_root / "built" / "demo" / "s1"
+    got = []
+    be = fake_backend(run=lambda plan, d, corpus=None: (got.append(corpus), "r1")[1])
+    c = client(tmp_path, be, SYNTH3_DATA=review_root)
+    pid = c.post("/api/ev/plan/batch/demo/d01", json={}).json()["id"]
+    for body in ({}, {"domain": "other", "seed": 1}):
+        r = c.post(f"/api/ev/plan/{pid}/run", json=body)
+        assert r.status_code == 409 and got == [], body
+        assert "a batch plan of demo runs only on a built folder of demo" in r.json()["detail"]
+        assert "System page" in r.json()["detail"]
+    assert c.post(f"/api/ev/plan/{pid}/run", json={"domain": "demo", "seed": 1}).json() == {"run": "r1"}
+    assert Path(got[0]).resolve() == build.resolve()

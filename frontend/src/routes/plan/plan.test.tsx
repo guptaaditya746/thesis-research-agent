@@ -167,6 +167,16 @@ describe("sub-questions and batch plans", () => {
     expect(opened).toBe(1)
   })
 
+  it("offers no bare Run for a batch plan and points to the System page", async () => {
+    // review round 1, web-I2: Run here sent no folder, and the server ran the plan on the RAG papers
+    server.use(http.post("/api/ev/plan/batch/demo/d01", () => HttpResponse.json(view([decision("d1", { confirmed_by: "ada" })], { id: "b1", batch: "demo/d01" }))))
+    renderWithProviders(<PlanPage />, { route: "/plan?batch=demo/d01" })
+    await screen.findByText("Batch plan demo/d01: your changes are saved to its file.", {}, T)
+    expect(screen.queryByRole("button", { name: "Run" })).toBeNull()
+    expect(screen.getByText(/A batch plan runs on a built folder of its domain/)).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Run it on the System page" })).toHaveAttribute("href", "/system")
+  })
+
   it("hides the question form in batch mode", async () => {
     server.use(http.post("/api/ev/plan/batch/demo/d01", () => HttpResponse.json(view([decision("d1")], { id: "b1", batch: "demo/d01" }))))
     renderWithProviders(<PlanPage />, { route: "/plan?batch=demo/d01" })
