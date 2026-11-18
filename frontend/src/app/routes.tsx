@@ -30,6 +30,7 @@ const EvComparePage = lazy(() => import("@/pages/ev/ComparePage"))
 const ShiftPage = lazy(() => import("@/pages/ev/ShiftPage"))
 const BenchmarkPage = lazy(() => import("@/pages/ev/BenchmarkPage"))
 const PlanPage = lazy(() => import("@/routes/plan/PlanPage"))
+const SystemPage = lazy(() => import("@/routes/system/SystemPage"))
 const ReviewPage = lazy(() => import("@/routes/review/ReviewPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 
@@ -49,6 +50,7 @@ export const routes: RouteObject[] = [
       { path: "flow/:qid", element: <FlowPage /> },
       { path: "flow/:qid/:step", element: <FlowPage /> },
       { path: "plan", element: <PlanPage /> },
+      { path: "system", element: <SystemPage /> },
       { path: "review", element: <ReviewPage /> },
       { path: "review/:tab", element: <ReviewPage /> },
       { path: "jobs", element: <JobsPage /> },

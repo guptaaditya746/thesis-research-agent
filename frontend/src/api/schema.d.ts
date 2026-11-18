@@ -1036,10 +1036,14 @@ export interface paths {
         /**
          * Review Judge Item
          * @description Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or
-         *     scores, and never the system that answered.
+         *     scores, and never the system that answered. `marked` is None with a `note` when the hand mark was made on
+         *     another answer or sheet.
          */
         get: operations["review_judge_item"];
-        /** Review Hand Mark */
+        /**
+         * Review Hand Mark
+         * @description Saved with the marks file's answer and sheet hashes: what the hand mark was made on.
+         */
         put: operations["review_hand_mark"];
         post?: never;
         delete?: never;
@@ -3463,6 +3467,21 @@ export interface components {
             }[];
             /** Measures */
             measures?: string[];
+            /** Sub Questions */
+            sub_questions?: string[];
+            /**
+             * Answer By
+             * @default lines
+             * @enum {string}
+             */
+            answer_by?: "lines" | "written" | "effect" | "consistency" | "inventory" | "best";
+            /** Target */
+            target?: ("condition" | "metric") | null;
+            /**
+             * Writer Try
+             * @default 0
+             */
+            writer_try?: number;
         };
         /**
          * PlanResult

@@ -2603,7 +2603,7 @@
           "review"
         ],
         "summary": "Review Judge Item",
-        "description": "Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or\nscores, and never the system that answered.",
+        "description": "Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or\nscores, and never the system that answered. `marked` is None with a `note` when the hand mark was made on\nanother answer or sheet.",
         "operationId": "review_judge_item",
         "parameters": [
           {
@@ -2646,6 +2646,7 @@
           "review"
         ],
         "summary": "Review Hand Mark",
+        "description": "Saved with the marks file's answer and sheet hashes: what the hand mark was made on.",
         "operationId": "review_hand_mark",
         "parameters": [
           {
@@ -8426,6 +8427,47 @@
             },
             "type": "array",
             "title": "Measures"
+          },
+          "sub_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sub Questions"
+          },
+          "answer_by": {
+            "type": "string",
+            "enum": [
+              "lines",
+              "written",
+              "effect",
+              "consistency",
+              "inventory",
+              "best"
+            ],
+            "title": "Answer By",
+            "default": "lines"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "condition",
+                  "metric"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "writer_try": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Writer Try",
+            "default": 0
           }
         },
         "additionalProperties": false,

@@ -1,1 +1,0 @@
-import{ad as t,a7 as e}from"./index--qL7520r.js";function i(n,o){t.success(`Started: ${e(n)}`,{description:n.lane==="model"?"Model jobs run one at a time; it waits its turn in the queue.":void 0,action:{label:"Open log",onClick:()=>o(`/jobs/${n.id}`)}})}function s(n,o){t.error(n,{description:o instanceof Error?o.message:String(o)})}export{s as a,i as b};
