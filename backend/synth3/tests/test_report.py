@@ -508,3 +508,10 @@ def test_a_report_of_some_domains_counts_agreement_over_their_items_only(folder,
     assert "Judge test: 3 of 3 marked." in md and "run synth3 judge" not in md
     assert "Not in this report (items of other domains): 4." in md
     assert "Judge agreement 100% (over the judge-test items of demo only)." in md
+
+
+def test_a_b_that_was_not_scored_gives_the_judge_no_faithful_value():
+    m = marks_of("demo/s1/engine/q01")
+    m["B"] |= {"score": None, "invented": None, "contradicted": None, "not_scored": "the cut hid a cited paper"}
+    a = agreement(["a"], {"a": hand(m, {"p1": True, "p2": False}, False)}, {"a": m})
+    assert a["faithful"]["n"] == 0

@@ -221,9 +221,9 @@ def hand_mark_fits(hand: dict, marks: dict) -> bool:
 
 
 def _judge_faithful(m: dict) -> bool | None:
-    """B `ok` with no invented and no contradicted claim; None when B is pending."""
+    """B `ok` with no invented and no contradicted claim; None when B is pending or was not scored."""
     b = m.get("B")
-    if not b or b["status"] != "ok":
+    if not b or b["status"] != "ok" or b.get("not_scored") or b["invented"] is None or b["contradicted"] is None:
         return None
     return not b["invented"] and not b["contradicted"]
 
