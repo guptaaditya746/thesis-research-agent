@@ -260,6 +260,30 @@ def test_used_facts_are_those_of_the_cited_papers_cut_at_the_limit():
     assert got == many[:MAX_FACTS] and cut is True
 
 
+def test_a_cut_keeps_facts_of_every_cited_paper():
+    """Review round 1, synth3-C1: 40 cited papers with 5 facts each used to end at fact 150, so the last 10 cited
+    papers had no fact shown and every claim about them had to be marked invented."""
+    papers = [f"S{i:03d}" for i in range(1, 41)]
+    facts = [pulled(p, k) for p in papers for k in range(5)]
+    got, cut = used_facts(rec("x", facts=facts, cited=papers))
+    assert cut is True and len(got) == MAX_FACTS
+    assert {f.paper for f in got} == set(papers)
+    assert [f for f in got if f.paper == "S040"] == facts[195:198]   # a paper's first facts, in its own order
+    assert [f.paper for f in got] == sorted(f.paper for f in got)    # still in the record's order
+
+
+def test_b_is_not_scored_when_a_cited_paper_has_no_fact_shown(tmp_path, monkeypatch):
+    """More cited papers with facts than the limit: the judge is not asked, B has no score and says why."""
+    import synth3.judge as judge
+    monkeypatch.setattr(judge, "MAX_FACTS", 2)
+    facts = [pulled("S001", 1), pulled("S002", 2), pulled("S003", 3)]
+    model = boom()
+    b = score_b(q("Q?"), rec("S001 S002 S003 do better.", facts=facts, cited=["S001", "S002", "S003"]), model,
+                JsonlCache(tmp_path / "c.jsonl"), measures=M)
+    assert model.calls == 0 and b["calls"] == 0 and b["score"] is None and b["status"] == "ok"
+    assert b["facts_cut"] is True and b["not_scored"] == "no fact of the cited paper S003 fits the judge's input"
+
+
 def test_b_input_lists_the_question_the_measures_the_facts_and_the_answer():
     r = rec("Fewer relapses.", facts=[PulledFact(paper="S003", kind="measurement", fields={"k": 4}, quote="4")])
     assert b_input(q("Does it help?", sub_questions=["Secret sub-question?"]), r, r.facts, measures=M) == (

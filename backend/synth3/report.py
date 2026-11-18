@@ -279,7 +279,7 @@ def _mean(values: list[float]) -> float | None:
 
 def _row() -> dict:
     return {"answers": 0, "judged": 0, "not_current": 0, "skipped": 0, "unchecked": 0, "pending": 0,
-            "cut_texts": 0, "pulled_cut": 0, "plans_person": 0, "plans_system": 0, "facts_left_out": 0, "_a": [], "_anchored": [], "_b": [], "_c": [], "_c_cant": [],
+            "cut_texts": 0, "pulled_cut": 0, "b_facts_cut": 0, "b_not_scored": 0, "plans_person": 0, "plans_system": 0, "facts_left_out": 0, "_a": [], "_anchored": [], "_b": [], "_c": [], "_c_cant": [],
             "_c_other": [], "_found": [0, 0], "_missing": [0, 0]}
 
 
@@ -309,6 +309,8 @@ def _add_marks(row: dict, m: dict) -> None:
             row["_a"].append(a["score"])
         if a["anchored"] is not None:
             row["_anchored"].append(a["anchored"])
+    row["b_facts_cut"] += bool(b.get("facts_cut"))
+    row["b_not_scored"] += bool(b.get("not_scored"))
     if b["status"] == "ok" and b["score"] is not None:
         row["_b"].append(b["score"])
     if c["status"] == "ok" and c["score"] is not None:
@@ -398,18 +400,21 @@ def render_report(r: dict) -> str:
     lines = ["# Judge report", "",
              "`answers` counts every saved answer; `judged` those with current marks (the only ones in the means); "
              "`not current` those whose marks were made from an older answer, sheet or question; `skipped` those "
-             "with no marks.", ""]
+             "with no marks.", "",
+             "`B facts cut` counts the judged answers whose facts did not all fit the B judge's input (it then saw "
+             "the first facts of every cited paper, so a claim resting on a later fact can be marked invented); "
+             "`B not scored` those left out of B because a cited paper had no fact shown.", ""]
     head = ("| system | answers | judged | not current | skipped | A | anchored | A found, span untouched | "
-            "A missing, span touched | B | C | C can't-tell | C others | pending | cut texts | papers cut | "
+            "A missing, span touched | B | B facts cut | B not scored | C | C can't-tell | C others | pending | cut texts | papers cut | "
             "on unchecked sheets | plans by person / by system | answers with facts left out |")
     for domain, d in r["domains"].items():
         s = d["sheets"]
-        lines += [f"## {domain}", "", head, "|" + " --- |" * 19]
+        lines += [f"## {domain}", "", head, "|" + " --- |" * 21]
         for name, x in d["systems"].items():
             lines.append(f"| {name} | {x['answers']} | {x['judged']} | {x['not_current']} | {x['skipped']} | "
                          f"{_pct(x['a_mean'])} | {_pct(x['anchored_mean'])} | "
                          f"{_pct(x['a_found_untouched'])} | {_pct(x['a_missing_touched'])} | {_pct(x['b_mean'])} | "
-                         f"{_pct(x['c_mean'])} | {_pct(x['c_cant_tell'])} | {_pct(x['c_others'])} | {x['pending']} | "
+                         f"{x['b_facts_cut']} | {x['b_not_scored']} | {_pct(x['c_mean'])} | {_pct(x['c_cant_tell'])} | {_pct(x['c_others'])} | {x['pending']} | "
                          f"{x['cut_texts']} | {x['pulled_cut']} | {x['unchecked']} of {x['judged']} unchecked | "
                          f"{x['plans_person']} / {x['plans_system']} | {x['facts_left_out']} |")
         by_system = sum(x["plans_system"] for x in d["systems"].values())

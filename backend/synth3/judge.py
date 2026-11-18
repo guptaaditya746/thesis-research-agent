@@ -4,7 +4,8 @@ A: per paper, the judge marks each planted fact in the question's scope as found
 the system pulled from that paper. Code picks the planted facts from `ground_truth.json` and adds `anchored`, the
 share of planted facts whose span a pulled fact touches (code only, not the score).
 B: the judge splits the answer into its factual claims and marks each as supported, contradicted or invented
-against the facts the answer used (the cited papers' pulled facts, or the baseline's passages).
+against the facts the answer used (the cited papers' pulled facts, or the baseline's passages). At most MAX_FACTS
+are shown; a cut keeps facts of every cited paper (`used_facts`) and is counted in the report.
 C: the judge ticks each answer-sheet point as met or not, quoting the answer when met.
 
 Code checks every reply with one repair (`asking.ask_checked`); a reply that stays bad, or a failed call, leaves
@@ -301,12 +302,38 @@ class ClaimChecks(Strict):
 
 def used_facts(rec: AnswerRecord) -> tuple[list[PulledFact], bool]:
     """The facts the answer used and whether they were cut at MAX_FACTS: the baseline's passages; else the pulled
-    facts of the cited papers (all pulled facts when no paper is cited)."""
+    facts of the cited papers (all pulled facts when no paper is cited). A cut takes the papers in turn (cited
+    order, one more fact each round, each paper's facts in its own order), so every paper keeps its first facts
+    while there is room; the kept facts stay in the record's order."""
     if rec.facts is None:
         pool = rec.passages
     else:
         pool = [f for f in rec.facts if f.paper in rec.cited] if rec.cited else rec.facts
-    return list(pool[:MAX_FACTS]), len(pool) > MAX_FACTS
+    if len(pool) <= MAX_FACTS:
+        return list(pool), False
+    left = dict.fromkeys(rec.cited, 0) | dict.fromkeys((f.paper for f in pool), 0)
+    for f in pool:
+        left[f.paper] += 1
+    room: dict[str, int] = dict.fromkeys(left, 0)
+    total = 0
+    while total < MAX_FACTS:
+        for paper in left:
+            if total < MAX_FACTS and room[paper] < left[paper]:
+                room[paper] += 1
+                total += 1
+    used = []
+    for f in pool:
+        if room[f.paper]:
+            room[f.paper] -= 1
+            used.append(f)
+    return used, True
+
+
+def papers_not_shown(rec: AnswerRecord, used: Sequence[PulledFact]) -> list[str]:
+    """The cited papers with pulled facts of which the cut (`used_facts`) left none, in cited order."""
+    have = {f.paper for f in rec.facts or []}
+    shown = {f.paper for f in used}
+    return [p for p in rec.cited if p in have and p not in shown]
 
 
 def b_input(q: Question, rec: AnswerRecord, used: list[PulledFact], *, measures: Sequence[Measure]) -> str:
@@ -341,12 +368,19 @@ def check_claims(c: ClaimChecks, text: str, n: int) -> list[str]:
 def score_b(q: Question, rec: AnswerRecord, model: Any, cache: JsonlCache, *, fresh: str | None = None,
             measures: Sequence[Measure]) -> dict:
     """Supported claims / claims; `measures` are the folder spec's. No text or no claim: `score` None. Pending
-    (the reply still fails its checks, or the call failed): `score`, `invented` and `contradicted` None."""
+    (the reply still fails its checks, or the call failed): `score`, `invented` and `contradicted` None. Not
+    scored (`not_scored` says why, no call): the cut at MAX_FACTS left a cited paper with no fact shown."""
     used, cut = used_facts(rec)
     sha = load_prompt(PROMPT_B, ClaimChecks).sha256
     if not rec.text.strip():
         return {"score": None, "claims": [], "invented": 0, "contradicted": 0, "facts_cut": cut, "status": "ok",
                 "problems": [], "calls": 0, "prompt_sha256": sha, "served_models": []}
+    if hidden := papers_not_shown(rec, used):
+        # a claim about such a paper could only be marked invented: no score is more honest than a wrong one
+        return {"score": None, "claims": [], "invented": None, "contradicted": None, "facts_cut": cut,
+                "not_scored": f"no fact of the cited paper{'s' if len(hidden) > 1 else ''} {', '.join(hidden)} "
+                              "fits the judge's input",
+                "status": "ok", "problems": [], "calls": 0, "prompt_sha256": sha, "served_models": []}
     out = ask_checked(PROMPT_B, ClaimChecks, b_input(q, rec, used, measures=measures),
                       lambda r: check_claims(r, rec.text, len(used)), model, cache, SETTINGS, fresh=fresh)
     done = {"facts_cut": cut, "calls": out["calls"], "prompt_sha256": out["prompt_sha256"],

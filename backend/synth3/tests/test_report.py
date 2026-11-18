@@ -284,6 +284,25 @@ def test_report_leaves_a_pending_answer_out_of_its_means_and_counts_unchecked_ma
     assert "unchecked" in render_report(r)
 
 
+def test_the_report_counts_the_answers_whose_b_facts_were_cut(folder, tmp_path, spec_dir, SPEC):
+    """Review round 1, synth3-C1: a cut B input was in the marks file but not in the report."""
+    judged(tmp_path, folder, SPEC)
+    for qid, more in (("d01", {"facts_cut": True}),
+                      ("d02", {"facts_cut": True, "score": None, "not_scored": "no fact of the cited paper S003"})):
+        path = marks_path(tmp_path / "res", "demo", 1, "engine", qid)
+        m = json.loads(path.read_text(encoding="utf-8")); m["B"] |= more
+        write_json_atomic(path, m)
+    r = report(tmp_path, folder, spec_dir)
+    rows = r["domains"]["demo"]["systems"]
+    assert (rows["engine"]["b_facts_cut"], rows["engine"]["b_not_scored"]) == (2, 1)
+    assert (rows[BASELINE]["b_facts_cut"], rows[BASELINE]["b_not_scored"]) == (0, 0)
+    assert rows["engine"]["b_mean"] == 1.0   # d01 and d03; d02 has no B score
+    md = render_report(r)
+    assert "| B | B facts cut | B not scored | C |" in md
+    line = next(ln for ln in md.splitlines() if ln.startswith("| engine |"))
+    assert "| 100% | 2 | 1 |" in line
+
+
 def test_the_report_counts_who_confirmed_the_plans(folder, tmp_path, spec_dir, SPEC):
     """Counted for every saved answer, also one whose marks are not current (saving the answer again changes it)."""
     judged(tmp_path, folder, SPEC, systems=("system", "engine", BASELINE))   # the engine's answers are not counted
