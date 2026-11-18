@@ -143,6 +143,8 @@ def pool_fetch(args: argparse.Namespace) -> int:
         out = fetch_pool(rs, pool, Polite())
     except (httpx.HTTPError, ET.ParseError) as err:
         raise BadArgument(f"fetch failed ({err}); run again to resume") from err
+    except ValueError as err:
+        raise BadArgument(str(err)) from err
     print(f"found {out['found']}, fetched {out['fetched']}, already saved {out['cached']} -> {pool}")
     _report(out, pool)
     return 0
@@ -157,6 +159,8 @@ def pool_import(args: argparse.Namespace) -> int:
         out = import_files(args.src, pool, rs)
     except FetchError as err:
         raise BadArgument(f"{err}; for PDFs run `uv sync --group fetch`") from err
+    except ValueError as err:
+        raise BadArgument(str(err)) from err
     _report(out, pool)
     return 0
 

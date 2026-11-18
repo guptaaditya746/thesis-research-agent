@@ -50,3 +50,40 @@ def test_too_small_pool_and_missing_split(tmp_path, REAL):
     s = split_pool(pool2, REAL)
     o = source_order(load_split(pool2), REAL.domain)
     assert sorted(o) == sorted(s["sources"])
+
+
+def _tight(REAL):
+    return REAL.model_copy(update={"exclude_title": "trial"})
+
+
+def _repeat(pool, pid, rs):
+    from synth3.pmc import PoolPaper
+    from synth3.pool import add_paper
+    from synth3.tests.conftest import fake_paper
+    i = int(pid[1:])
+    return add_paper(pool, PoolPaper(id=pid, title=f"HOPE-{i} trial", year=2015, journal="J", license="CC-BY",
+                                     article_type="research-article", text=fake_paper(i)), rs)
+
+
+def test_after_the_split_a_paper_it_uses_is_never_removed_by_a_new_config(tmp_path, REAL):
+    from synth3.pool import load_split
+    pool = make_pool(tmp_path / "p", 20, REAL); split_pool(pool, REAL)
+    pid = load_split(pool)["sources"][0]
+    with pytest.raises(ValueError, match="split.json lists it"):
+        _repeat(pool, pid, _tight(REAL))
+    assert (pool / "full" / f"{pid}.md").is_file()
+
+
+def test_a_paper_the_split_does_not_use_may_still_be_removed(tmp_path, REAL):
+    pool = make_pool(tmp_path / "p", 20, REAL); split_pool(pool, REAL)
+    out = _repeat(pool, "P999", _tight(REAL))
+    assert not out["kept"]
+
+
+def test_build_real_names_a_missing_source_file(tmp_path, SPEC, REAL, pool):
+    from synth3.pool import load_split
+    from synth3.realcorpus import build_real_folder
+    from synth3.tests.conftest import approved
+    (pool / "full" / f"{load_split(pool)['sources'][0]}.md").unlink()
+    with pytest.raises(ValueError, match="pool-fetch"):
+        build_real_folder(tmp_path / "r", SPEC, approved(SPEC, 1), 40, "table", REAL, pool)

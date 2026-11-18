@@ -37,11 +37,30 @@ def _failed(pid: str, why: str) -> dict:
             "kept": False, "why": why}
 
 
+def _used_by_split(pool: Path, pid: str) -> bool:
+    path = pool / "split.json"
+    if not path.is_file():
+        return False
+    split = json.loads(path.read_text(encoding="utf-8"))
+    return pid in split["test"] or pid in split["sources"]
+
+
+def _refuse_change(pool: Path, pid: str, what: str) -> ValueError:
+    return ValueError(f"{pid}: {what}, but split.json lists it, so full/{pid}.md must stay as it is. Restore the "
+                      "real config that made the split and run again (a new split needs a new pool folder)")
+
+
 def add_paper(pool: Path, paper: PoolPaper, rs: RealSpec) -> dict:
-    """Tidy the paper, write `full/<id>.md` only when it fits, and return its index row."""
+    """Tidy the paper, write `full/<id>.md` only when it fits, and return its index row. Once split.json exists, a
+    paper it lists is never removed or changed (ValueError)."""
     paper = replace(paper, text=tidy(paper.text, rs))
     why = unfit(paper, rs)
     target = pool / "full" / f"{paper.id}.md"
+    if _used_by_split(pool, paper.id):
+        if why is not None:
+            raise _refuse_change(pool, paper.id, f"the config now finds it unfit ({why})")
+        if not target.is_file() or target.read_text(encoding="utf-8") != paper.text:
+            raise _refuse_change(pool, paper.id, "the config now tidies it differently")
     if why is None:
         target.parent.mkdir(parents=True, exist_ok=True)
         write_text_atomic(target, paper.text)
@@ -60,6 +79,8 @@ def rebuild(pool: Path, rs: RealSpec, missing: list[str]) -> list[dict]:
         try:
             paper = jats_paper(path.read_bytes())
         except ValueError as err:
+            if _used_by_split(pool, pid):
+                raise _refuse_change(pool, pid, f"its raw file no longer reads ({err})") from err
             (pool / "full" / f"{pid}.md").unlink(missing_ok=True)
             rows[pid] = _failed(pid, str(err))
             continue

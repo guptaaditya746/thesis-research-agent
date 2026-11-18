@@ -36,7 +36,11 @@ def build_real_folder(out: Path, spec: DomainSpec, world: World, studies: int, t
         tries: list[tuple[str, RealPaper]] = []
         while len(tries) < MAX_SOURCES and nxt < len(order):
             source_id, nxt = order[nxt], nxt + 1
-            source = (pool / "full" / f"{source_id}.md").read_text(encoding="utf-8")
+            try:
+                source = (pool / "full" / f"{source_id}.md").read_text(encoding="utf-8")
+            except OSError as err:
+                raise ValueError(f"{source_id}: full/{source_id}.md is missing or unreadable ({err}); split.json "
+                                 "lists it. Restore the real config and run pool-fetch again") from err
             rp = edit_study(source, study, spec, rs, text_level, f"synth3:{world.seed}:real:{study.id}:{source_id}")
             tries.append((source_id, rp))
             if not rp.problems:
