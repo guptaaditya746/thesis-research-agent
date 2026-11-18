@@ -9,7 +9,8 @@ import pytest
 from evidence.kindtext import kind_lines, plan_names
 from evidence.plan import with_answer
 from evidence.protocol import parse
-from evidence.readable.runview import (LINES, NotRebuilt, RunAnswer, answer_text, checked_view, headline,
+from evidence.readable import refusal
+from evidence.readable.runview import (DIFFERS, LINES, NotRebuilt, RunAnswer, answer_text, checked_view, headline,
                                        read_refusal, read_run, view_of)
 from evidence.tests.conftest import DOCS
 from evidence.tests.test_plan_run import clean_registry, make_plan, plan_run  # noqa: F401  (autouse fixture)
@@ -50,6 +51,34 @@ def test_runs_that_cannot_be_rebuilt_say_why(tmp_path):
     assert read_refusal(gone) == "the run is not complete (state unsealed)"
     with pytest.raises(NotRebuilt, match="not complete"):
         read_run(gone)
+
+
+def tamper(root: Path, name: str) -> None:
+    """Change a sealed run file after the run: the written answer as a whole (its text, its tries and its sentences,
+    so the file is still consistent with itself), any other file by one more blank line or key order."""
+    path = root / name
+    if name == "written-answer.json":
+        path.write_bytes(path.read_bytes().replace(b"Retrieval helped", b"Retrieval did not help"))
+    elif name.endswith(".jsonl"):
+        path.write_bytes(path.read_bytes() + b"\n")   # read_lines skips the blank line: the items stay the same
+    else:
+        path.write_text(json.dumps(json.loads(path.read_text(encoding="utf-8")), indent=3), encoding="utf-8")
+
+
+@pytest.mark.parametrize("by, name", [("written", "written-answer.json"), ("written", "evidence.jsonl"),
+                                      ("effect", "answer.json"), ("effect", "evidence.jsonl"),
+                                      ("consistency", "reason.json")])
+def test_a_file_changed_after_the_run_is_refused(tmp_path, by, name):
+    """I1: a program never says "this is the answer the run recorded" for an answer the run did not record."""
+    root = written_run(tmp_path, GOOD) if by == "written" else plan_run(tmp_path, with_answer(make_plan(), by, None))
+    assert read_refusal(root) is None
+    tamper(root, name)
+    want = DIFFERS.format(file=name)
+    assert want == f"the {name} of the run differs from what run.json recorded; run evidence verify"
+    assert read_refusal(root) == want and refusal(root) == want
+    with pytest.raises(NotRebuilt) as caught:
+        read_run(root)
+    assert str(caught.value) == want
 
 
 def test_a_reasoned_run_carries_its_inferences_and_texts_can_be_skipped(tmp_path):

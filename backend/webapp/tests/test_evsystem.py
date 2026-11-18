@@ -12,7 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from evidence.kindtext import RULE_TEXT
-from evidence.readable import LINES
+from evidence.readable import DIFFERS, LINES
 from evidence.readable.rules.common import CHECK_OK
 from synth3.questions import load_questions
 from synth3.sheetfacts import load_folder
@@ -158,6 +158,18 @@ def test_a_running_run_has_no_program_and_nothing_is_written(system_runs, tmp_pa
     r = c.get(f"/api/ev/system/runs/{system_runs['written']}/program")
     assert r.status_code == 409 and r.json()["detail"] == refused
     assert sorted(str(p) for p in run.rglob("*")) == before
+
+
+@pytest.mark.parametrize("name", ["written-answer.json", "evidence.jsonl"])
+def test_a_file_changed_after_the_run_has_no_program(system_runs, tmp_path, review_root, name):
+    """I1: the page offers no program for an answer the run did not record, and the download says why."""
+    path = tmp_path / "ev" / "runs" / system_runs["written"] / name
+    path.write_bytes(path.read_bytes() + b"\n")
+    want = DIFFERS.format(file=name)
+    c = client(tmp_path, review_root)
+    assert c.get(f"/api/ev/system/runs/{system_runs['written']}/steps").json()["program_refused"] == want
+    r = c.get(f"/api/ev/system/runs/{system_runs['written']}/program")
+    assert r.status_code == 409 and r.json()["detail"] == want
 
 
 def test_a_bad_id_gets_no_program(system_runs, tmp_path, review_root):

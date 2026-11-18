@@ -18,9 +18,10 @@ from evidence.readable.inputs import inputs_of
 from evidence.readable.program import (RULE_FILES, SECTION_NONE, SECTION_UNKNOWN, fact_comment, program_text,
                                        section_at)
 from evidence.readable.rules import common, written as rules_written
-from evidence.readable.runview import LINES, answer_text, checked_view, read_run
+from evidence.readable.runview import DIFFERS, LINES, answer_text, checked_view, read_run
 from evidence.tests.readable_cases import NAMES, best_items, case_answer, case_protocol, study_items
 from evidence.tests.test_plan_run import make_plan, plan_run
+from evidence.tests.test_readable_runview import tamper
 from evidence.tests.test_readable_written import BAD, GOOD
 from evidence.tests.test_written_stage import clean_registry, written_run  # noqa: F401  (autouse fixture)
 
@@ -216,3 +217,12 @@ def test_the_command_writes_or_refuses(tmp_path, capsys):
         assert "not git-ignored" in capsys.readouterr().err
     finally:
         tracked.unlink(missing_ok=True)
+
+
+def test_the_command_refuses_an_answer_changed_after_the_run(tmp_path, capsys):
+    """I1: the edited answer is never written out as "the answer the run recorded"."""
+    root = written_run(tmp_path / "w", lambda p: GOOD)
+    tamper(root, "written-answer.json")
+    assert cli.main(["program", str(root), "--out", str(tmp_path / "p.py")]) == 2
+    assert DIFFERS.format(file="written-answer.json") in capsys.readouterr().err
+    assert not (tmp_path / "p.py").exists()

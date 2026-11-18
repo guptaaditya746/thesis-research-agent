@@ -9,15 +9,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from jsonio import sha256_hex
+
 from .. import reasoner, written
 from ..contract import Item
 from ..kindtext import kind_lines, plan_names
 from ..pack import RoleMap
 from ..plan import Plan, load_plan
 from ..protocol import Protocol, parse
-from ..rundir import ANSWER_FILE, PLAN_FILE, PROTOCOL_FILE, REASON_FILE, Corpus, PaperIndex, RunDir
+from ..rundir import ANSWER_FILE, EVIDENCE_FILE, PLAN_FILE, PROTOCOL_FILE, REASON_FILE, Corpus, PaperIndex, RunDir
 
-__all__ = ["KIND_NOT_REBUILT", "KINDS", "LINES", "NAME_GROUPS", "NO_RULES", "NO_WRITTEN", "NOT_COMPLETE",
+__all__ = ["DIFFERS", "KIND_NOT_REBUILT", "KINDS", "LINES", "NAME_GROUPS", "NO_RULES", "NO_WRITTEN", "NOT_COMPLETE",
            "NOT_FOUND_AGAIN", "SUBSETS", "WRITER_FAILED", "NotRebuilt", "RunAnswer", "answer_text", "checked_view",
            "headline", "read_refusal", "read_run", "view_of"]
 
@@ -30,6 +32,7 @@ KIND_NOT_REBUILT = "the kind {kind} is not rebuilt by a readable program yet"
 SUBSETS = "an answer by subsets (the protocol's moderators) is not rebuilt by a readable program yet"
 NAME_GROUPS = ("a {kind} run with the names step on is not rebuilt by a readable program yet (its rules read the "
                "name groups)")
+DIFFERS = "the {file} of the run differs from what run.json recorded; run evidence verify"
 NO_WRITTEN = "the run has no written answer"
 WRITER_FAILED = "the written answer's model call failed: {reason}; run it again with retry"
 NOT_FOUND_AGAIN = "the {what} the run used for {paper} could not be found again"
@@ -76,6 +79,18 @@ def _texts(corpus: Path | str) -> dict[str, str] | None:
         return None
 
 
+def _same_as_recorded(rd: RunDir, outputs: dict[str, str], names: tuple[str, ...]) -> None:
+    """DIFFERS for the first of `names` whose bytes do not hash to what run.json `outputs` recorded for it. A file
+    neither present nor recorded (reason.json of a run without the reason step) is skipped; one present but not
+    recorded, or recorded but gone, differs."""
+    for name in names:
+        path = rd.file(name)
+        if name not in outputs and not path.is_file():
+            continue
+        if not path.is_file() or sha256_hex(path.read_bytes()) != outputs.get(name):
+            raise NotRebuilt(DIFFERS.format(file=name))
+
+
 def read_run(run: Path | str, corpus: Path | str | None = None, *, texts: bool = True) -> RunAnswer:
     """The run's answer, or NotRebuilt (refusals checked in the order of their texts above)."""
     rd = RunDir(run)
@@ -96,6 +111,9 @@ def read_run(run: Path | str, corpus: Path | str | None = None, *, texts: bool =
         raise NotRebuilt(SUBSETS)
     if kind in ("best", "inventory") and settings is not None and settings.names == "on":
         raise NotRebuilt(NAME_GROUPS.format(kind=kind))
+    record = rd.record or {}
+    outputs = dict(record.get("outputs") or {})
+    _same_as_recorded(rd, outputs, (WRITTEN_FILE if kind == "written" else ANSWER_FILE, EVIDENCE_FILE, REASON_FILE))
     if kind == "written":
         out = rd.try_json(WRITTEN_FILE)
         if not isinstance(out, dict):
@@ -109,14 +127,12 @@ def read_run(run: Path | str, corpus: Path | str | None = None, *, texts: bool =
     where = corpus if corpus is not None else (settings.corpus if settings is not None else None)
     if where is None:
         raise ValueError(f"run {run} names no corpus (run.json settings); give the corpus")
-    record = rd.record or {}
     reason = rd.try_json(REASON_FILE)
     roles = rd.roles()
     assert roles is not None
     return RunAnswer(run=Path(run), kind=kind, protocol=protocol, roles=roles, plan=plan,
                      names=plan_names(plan) if plan is not None else {}, answer=answer, items=_group(rd, where),
-                     texts=_texts(where) if texts else None, record=record,
-                     outputs=dict(record.get("outputs") or {}),
+                     texts=_texts(where) if texts else None, record=record, outputs=outputs,
                      inferred=reasoner.from_json(reason) if isinstance(reason, dict) else None)
 
 
