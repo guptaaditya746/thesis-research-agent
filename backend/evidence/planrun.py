@@ -359,13 +359,19 @@ class PlanNotRunnable(ValueError):
 
 
 def check_runnable(plan: Plan) -> None:
-    """Refuse an unconfirmed plan, and a word list another model wrote ("word list by the pinned orch-model")."""
+    """Refuse an unconfirmed plan, a word list another model wrote ("word list by the pinned orch-model"), and a plan
+    whose answer kind cannot run (plankinds.answer_problems: a best answer with no measure or one compared thing)."""
     from modelcall.pins import ORCH_ALIAS
+
+    from .plankinds import answer_problems
     if not plan.ready():
         raise PlanNotRunnable("the plan is not confirmed: confirm every decision before the run")
     if plan.words.written_by not in (ORCH_ALIAS, "none"):
         raise PlanNotRunnable(f"the word list was written by {plan.words.written_by!r}; a plan run needs one written "
                               f"by {ORCH_ALIAS!r}")
+    problems = answer_problems(plan)
+    if problems:
+        raise PlanNotRunnable(f"the plan's answer kind cannot run: {'; '.join(problems)}")
 
 
 def check_request(plan_path: Path | str, **settings: Any) -> None:

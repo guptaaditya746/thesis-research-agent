@@ -50,6 +50,18 @@ def test_best_without_a_measure_is_a_problem():
     assert answer_problems(with_answer(make_plan(), "best", None)) == []
 
 
+def test_a_best_plan_with_no_measure_is_refused_at_the_run(tmp_path):
+    from evidence.planrun import PlanNotRunnable, check_request
+    from evidence.plan import write_plan
+    plan = with_answer(make_plan(things={"rag": ["rag"], "closed_book": ["closed-book"]}, measures=()), "best", None)
+    write_plan(plan, tmp_path / "plan.json")
+    with pytest.raises(PlanNotRunnable, match="a best answer needs a measure"):
+        check_request(tmp_path / "plan.json")
+    with pytest.raises(PlanNotRunnable, match="a best answer needs a measure"):
+        plan_run(tmp_path / "run", plan)
+    assert not (tmp_path / "run" / "runs").exists()   # nothing was run
+
+
 def test_best_needs_two_compared_things():
     plan = with_answer(make_plan(things={"rag": ["rag"], "accuracy": ["accuracy"]}), "best", None)
     assert "a best answer needs two compared things" in answer_problems(plan)
