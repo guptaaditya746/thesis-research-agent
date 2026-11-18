@@ -239,8 +239,13 @@ class _WrittenFacts(FactTable):
         if item.evidence_type == "condition":
             return {**base, "type": "condition", "label": fields.get("label")}
         if item.evidence_type == "metric":
-            return {**base, "type": "metric", "name": fields.get("name"),
-                    "higher_is_better": fields.get("higher_is_better")}
+            # what the writer was told: the plan's confirmed direction when the run recorded one for this measure
+            # (written-answer.json `directions`), else the paper's own flag
+            told = self.ra.answer.get("directions") or {}
+            canonical = fields.get("canonical")
+            better = told[canonical] if isinstance(canonical, str) and canonical in told else fields.get(
+                "higher_is_better")
+            return {**base, "type": "metric", "name": fields.get("name"), "higher_is_better": better}
         if item.evidence_type == "author_claim":
             return {**base, "type": "author_claim", "direction": fields.get("direction"), "quote": quote}
         return {**base, "type": "claim", "subject": fields.get("subject"), "relation": fields.get("relation"),

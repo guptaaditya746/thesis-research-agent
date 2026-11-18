@@ -21,7 +21,7 @@ from modelcall.pins import ORCH_ALIAS, ORCHESTRATOR
 
 from .contract import Item
 from .plan import Plan
-from .planlines import OTHER, sides
+from .planlines import OTHER, directions, sides
 from .planrun import ANY
 from .rundir import PaperIndex, RunDir
 from .stages import StageContext
@@ -138,11 +138,21 @@ def _quote(item: Item) -> str:
     return f'Quote: "{str(span.selector.get("exact", ""))[:MAX_QUOTE]}"'
 
 
-def fact_text(item: Item, by_id: Mapping[str, Item]) -> str:
-    """The text of one fact; a missing link or field reads `?`."""
+def told_directions(plan: Plan) -> dict[str, bool]:
+    """{measure id: higher is better} for the measures whose direction the plan has confirmed: the setting the
+    fixed kinds compute with, so the writer is told the same."""
+    return {m: better for m, better in directions(plan).items() if better is not None}
+
+
+def fact_text(item: Item, by_id: Mapping[str, Item], told: Mapping[str, bool] | None = None) -> str:
+    """The text of one fact; a missing link or field reads `?`. "(higher is better)" or "(lower is better)" comes
+    from `told` (`told_directions(plan)`) for a measure it names; for any other measure from the metric item's
+    own `higher_is_better` (an extractor's reading of the paper), and is left out when that is unknown."""
     if item.evidence_type == "measurement":
         metric = _linked(item, by_id, "metric")
         better = metric.fields.get("higher_is_better") if metric is not None else None
+        if metric is not None and told and metric.fields.get("canonical") in told:
+            better = told[metric.fields["canonical"]]
         direction = f" ({'higher' if better else 'lower'} is better)" if isinstance(better, bool) else ""
         dataset = item.fields.get("dataset") or "no dataset named"
         return (f"{_field(_linked(item, by_id, 'condition'), 'label')} on {_field(metric, 'name')}{direction}: "
@@ -159,6 +169,7 @@ def fact_lines(by_paper: Mapping[str, list[Item]], plan: Plan, budget: int) -> t
     (each counted as its text plus LINE_EXTRA), then numbered in paper order, then item order."""
     pulled: dict[str, list[tuple[Item, str]]] = {}
     off_plan = 0
+    told = told_directions(plan)
     for paper, items in by_paper.items():
         by_id = {it.item_id: it for it in items}
         pulled[paper] = []
@@ -166,7 +177,7 @@ def fact_lines(by_paper: Mapping[str, list[Item]], plan: Plan, budget: int) -> t
             if it.evidence_type not in FACT_TYPES:
                 continue
             if bears_on(it, by_id, plan):
-                pulled[paper].append((it, fact_text(it, by_id)))
+                pulled[paper].append((it, fact_text(it, by_id, told)))
             else:
                 off_plan += 1
     taken = dict.fromkeys(pulled, 0)
@@ -291,7 +302,10 @@ def written_stage(run: RunDir, ctx: StageContext) -> dict[str, Any]:
                             fact_budget(int(ORCHESTRATOR["context_tokens"])))
     prompt = modelcall.load_prompt(PROMPT)
     out: dict[str, Any] = {"status": "no_facts", "question": plan.question, "answer_text": "", "sentences": [],
-                           "facts": [f.model_dump() for f in facts], "cut": cut, "tries": [], "problems": [],
+                           "facts": [f.model_dump() for f in facts], "cut": cut,
+                           # the plan's directions the fact texts used; a run without this key (made before review
+                           # round 1) told the writer each paper's own flag, and the readable program rebuilds that
+                           "directions": told_directions(plan), "tries": [], "problems": [],
                            "model": WRITER_ALIAS, "prompt_sha256": prompt.sha256, "writer_try": plan.writer_try}
     if not facts:
         out["answer_text"] = NO_FACTS_TEXT

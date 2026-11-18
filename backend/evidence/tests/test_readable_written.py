@@ -132,3 +132,45 @@ def test_the_copies_match_the_engine():
 
 def test_a_rule_file_imports_only_the_standard_library():
     assert stdlib_only(Path(evidence.readable.rules.__file__).parent / "written.py") <= ALLOWED
+
+
+def _hand_run(directions: dict | None):
+    """A written run's answer built by hand: one paper whose metric item says higher is better, under a plan that
+    says lower. `directions` is the key the stage writes (None: a run made before it was written)."""
+    from evidence.readable.runview import RunAnswer
+    from evidence.tests.readable_cases import case_protocol
+    c = item("condition", {"label": "Method P", "role": "rag"})
+    k = item("metric", {"name": "Error count", "canonical": "accuracy", "higher_is_better": True}, exact="Error count",
+             start=20)
+    m = item("measurement", {"value": 15, "dataset": None}, {"condition": c.item_id, "metric": k.item_id},
+             exact="15", start=100)
+    plan = with_answer(make_plan(direction="lower"), "written", None)
+    facts, _ = written.fact_lines({"S001": [c, k, m]}, plan, 10_000)
+    answer = {"question": plan.question, "facts": [f.model_dump() for f in facts], "tries": [{"reply": GOOD}]}
+    if directions is not None:
+        answer["directions"] = directions
+    p = case_protocol("written", direction="lower")
+    ra = RunAnswer(run=Path("case"), kind="written", protocol=p, roles=p.roles(), plan=plan, names={}, answer=answer,
+                   items={"S001": [c, k, m]}, texts=None, record={}, outputs={}, inferred=None)
+    return facts, ra
+
+
+def test_the_program_rebuilds_a_fact_text_with_the_plans_direction():
+    """Review round 1, engine-I1: the fact text takes the plan's direction; the program must rebuild the same."""
+    facts, ra = _hand_run({"accuracy": False})
+    i = inputs_of(ra)
+    view = rules_written.rebuild_answer(i.settings, i.facts, i.papers, i.model_text)
+    assert view["fact_texts"] == [facts[0].text] and "(lower is better)" in facts[0].text
+
+
+def test_a_run_made_before_the_directions_were_recorded_rebuilds_with_the_papers_flag():
+    """Old written runs told the writer the paper's own flag; their recorded fact texts must still rebuild."""
+    _, ra = _hand_run(None)
+    i = inputs_of(ra)
+    view = rules_written.rebuild_answer(i.settings, i.facts, i.papers, i.model_text)
+    assert view["fact_texts"] == ['Method P on Error count (higher is better): 15, no dataset named. Quote: "15"']
+
+
+def test_the_stage_records_the_directions_it_told_the_writer(tmp_path):
+    root = written_run(tmp_path, lambda p: GOOD)
+    assert read_run(root).answer["directions"] == {"accuracy": True}

@@ -213,3 +213,31 @@ def test_the_prompt_examples_pass_the_code_checks():
         facts = [Fact(n=int(n), item=f"m-{n}", paper=paper, type="measurement", text=rest)
                  for n, paper, rest in re.findall(r"^\[(\d+)\] (S\d{3}) (.*)$", block, re.M)]
         assert facts and check_written(WrittenReply.model_validate_json(output), facts) == []
+
+
+def _error_count(flag: Any, canonical: str = "accuracy") -> list[Item]:
+    """One paper where the metric item's own `higher_is_better` is `flag` (the LLM metric extractor sets it per
+    paper); None leaves the field out."""
+    c = item("condition", {"label": "Method P", "role": "rag"})
+    fields = {"name": "Error count", "canonical": canonical} | ({} if flag is None else {"higher_is_better": flag})
+    k = item("metric", fields, exact="Error count", start=20)
+    return [c, k, item("measurement", {"value": 15, "dataset": None}, {"condition": c.item_id, "metric": k.item_id},
+                       exact="15", start=100)]
+
+
+def test_the_writer_is_told_the_plans_confirmed_direction_not_the_papers_flag():
+    """Review round 1, engine-I1: the plan says lower is better (the setting the fixed kinds use); one paper's
+    metric item said higher, and the writer read "(higher is better)"."""
+    lower = make_plan(direction="lower")
+    for flag in (True, False, None):
+        facts, _ = fact_lines({"S001": _error_count(flag)}, lower, 10_000)
+        assert facts[0].text == 'Method P on Error count (lower is better): 15, no dataset named. Quote: "15"', flag
+
+
+def test_a_measure_the_plan_gives_no_direction_keeps_the_papers_flag():
+    open_plan = make_plan(measures=())   # a plan with no measure: every metric is on the plan, none has a direction
+    texts = [fact_lines({"S001": _error_count(flag, "errors")}, open_plan, 10_000)[0][0].text
+             for flag in (True, False, None)]
+    assert [t.split(":")[0] for t in texts] == ["Method P on Error count (higher is better)",
+                                                "Method P on Error count (lower is better)",
+                                                "Method P on Error count"]
