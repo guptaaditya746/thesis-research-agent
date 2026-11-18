@@ -279,6 +279,19 @@ def test_a_kind_edit_skips_the_system_answer_but_not_the_baseline(folder, tmp_pa
     edited = qq.model_copy(update={"kind": "effect"})
     assert why_not(f, edited, sheet, sys_rec) == "the answer was made for another kind of the question"
     assert why_not(f, edited, sheet, base_rec) is None
+    assert why_not(f, qq, sheet, sys_rec) is None   # m1: a matching asked hash is judged
+
+
+def test_a_record_with_the_system_fields_round_trips(tmp_path):
+    """m2: asked_sha256, plan_confirmed_by and facts_left_out survive save and load."""
+    from synth3.answers import load_answers, save_answer
+    rec = AnswerRecord(domain="demo", seed=1, corpus_id="c", question_id="x", question_sha256="a" * 64,
+                       system="system", text="t", text_cut=False, cited=[], facts=None, passages=[], source="fake",
+                       asked_sha256="b" * 64, plan_confirmed_by="system", facts_left_out=4)
+    save_answer(tmp_path, rec)
+    back = load_answers(tmp_path, "demo")
+    assert back == [rec] and (back[0].asked_sha256, back[0].plan_confirmed_by, back[0].facts_left_out) == (
+        "b" * 64, "system", 4)
 
 
 def test_a_record_without_the_asked_hash_keeps_its_answer_hash():

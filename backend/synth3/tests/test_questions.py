@@ -32,6 +32,8 @@ def test_example_questions_load(SPEC):
     (lambda d: d["questions"][0].update(id="Q 1"), "id 'Q 1'"),
     (lambda d: d["questions"][0].update(answer="yes"), "answer"),
     (lambda d: d["questions"][0].update(kind="chaining"), "d01: kind 'chaining'"),
+    (lambda d: d["questions"][0].update(kind="inventory", target="paper"), "(?s)d01: .*target.*'condition' or 'metric'"),   # m3
+    (lambda d: d["questions"][0].update(kind="effect", target="metric"), "d01: target is only for kind inventory"),
 ])
 def test_refuses_bad_question_files(tmp_path, SPEC, change, words):
     d = yaml.safe_load((FIX / "demo.yaml").read_text(encoding="utf-8")); change(d)

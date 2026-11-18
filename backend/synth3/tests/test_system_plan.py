@@ -110,6 +110,35 @@ def test_drafted_and_rekinded_plans_are_written_atomically(tmp_path, SPEC, monke
     assert d01.read_text(encoding="utf-8") == load_plan(d01).model_dump_json(indent=2)   # the bytes evplan writes
 
 
+def test_a_rekinded_plan_keeps_its_confirmations(tmp_path, SPEC, monkeypatch):
+    """m19: a kind edit sets the kind in place; the person's confirmations stay."""
+    qs = load_questions("demo", SPEC, FIX); use_fake_draft(monkeypatch, SPEC)
+    path = plan_path(tmp_path, "demo", "d01")
+    path.parent.mkdir(parents=True)
+    path.write_text(demo_plan(SPEC, qs.get("d01")).model_dump_json(indent=2), encoding="utf-8")   # confirmed
+    edited = qs.model_copy(update={"questions": [qs.get("d01").model_copy(update={"kind": "effect"})]})
+    assert plan_domain("demo", edited, tmp_path, "lm", {})["rekinded"] == ["d01"]
+    plan = load_plan(path)
+    assert plan.answer_by == "effect" and plan.ready() and {d.confirmed_by for d in plan.decisions} == {"aditya"}
+
+
+def test_system_plan_prints_each_problem(tmp_path, spec_dir, monkeypatch, capsys):
+    """m19: a drafted plan whose answer kind cannot run is listed with its problem, and the command says so."""
+    import yaml
+    SPEC = load_spec("demo", spec_dir)
+
+    def fake_draft(q, lm, templates):
+        return with_answer(demo_plan(SPEC, q, confirmed=None).model_copy(update={"measures": []}), "best", None)
+    monkeypatch.setattr(system, "draft_plan", fake_draft)
+    monkeypatch.setattr(system, "orch_lm", lambda path: f"lm:{path.name}")
+    (tmp_path / "qs").mkdir()
+    (tmp_path / "qs" / "demo.yaml").write_text(yaml.safe_dump({"domain": "demo", "questions": [
+        {"id": "d01", "question": "Which treatment is best for Response rate?", "kind": "best"}]}), encoding="utf-8")
+    code = main(["system-plan", "--domain", "demo", "--plans", str(tmp_path / "p"), "--questions-root",
+                 str(tmp_path / "qs"), "--spec-root", str(spec_dir), "--results", str(tmp_path / "r")])
+    assert code == 1 and "  problem d01: a best answer needs a measure" in capsys.readouterr().out
+
+
 def test_a_failing_draft_is_listed_and_the_rest_go_on(tmp_path, SPEC, monkeypatch):
     use_fake_draft(monkeypatch, SPEC, fail={"d02"})
     out = plan_domain("demo", load_questions("demo", SPEC, FIX), tmp_path, "lm", {})

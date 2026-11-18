@@ -90,6 +90,26 @@ def test_a_failed_writer_call_asks_for_a_rerun(folder, tmp_path, SPEC):
         from_system_run(run, f, qq)
 
 
+def test_a_written_run_without_its_answer_file_is_refused(written):
+    """m13."""
+    f, qq, plan, run = written
+    (run / "written-answer.json").unlink()
+    with pytest.raises(ValueError, match="the run has no written answer"):
+        from_system_run(run, f, qq)
+
+
+def test_facts_the_budget_left_out_are_counted(folder, tmp_path, SPEC, monkeypatch):
+    """m15: a small fact budget leaves facts out, and the record counts them."""
+    from evidence import written as written_mod
+    monkeypatch.setattr(written_mod, "fact_budget", lambda tokens: 150)
+    f = load_folder(folder); qq = q(QQ["text"])
+    run = make_system_run(tmp_path / "runs", f, qq, demo_plan(SPEC, qq), writer_reply=FACT_REPLY)
+    out = json.loads((run / "written-answer.json").read_text(encoding="utf-8"))
+    rec = from_system_run(run, f, qq)
+    assert rec.facts_left_out == sum(out["cut"]["left_out"].values()) > 0
+    assert out["cut"]["kept"] < out["cut"]["pulled"]
+
+
 def test_a_failed_written_answer_is_an_empty_answer(folder, tmp_path, SPEC):
     f = load_folder(folder); qq = q(QQ["text"])
     run = make_system_run(tmp_path / "runs", f, qq, demo_plan(SPEC, qq), writer_reply=lambda p: {"sentences": []})

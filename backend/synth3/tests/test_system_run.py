@@ -108,6 +108,33 @@ def test_a_failed_writer_call_is_rerun_with_retry(folder, tmp_path, SPEC):
     assert out["failed"] == {}
 
 
+def test_a_complete_run_without_its_written_answer_is_redone_with_retry(folder, tmp_path, SPEC):
+    """m24: a sealed complete written run that lost written-answer.json is set aside and run again."""
+    f, qs = setup(folder, tmp_path, SPEC); calls = []
+    run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    (run_path(tmp_path / "res", "demo", 1, "d01") / "written-answer.json").unlink()
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    assert out["rerun"] == ["d01"] and calls[3][1]["retry_errors"] is True and len(calls) == 4
+    assert run_path(tmp_path / "res", "demo", 1, "d01").with_name("d01.redo-1").is_dir()
+
+
+def test_a_fixed_kind_run_with_unchecked_items_is_redone(folder, tmp_path, SPEC):
+    """m24: an effect run whose stage report notes an unchecked item is run again with retry."""
+    import json
+    f, qs = setup(folder, tmp_path, SPEC); calls = []
+    effect = qs.model_copy(update={"questions": [qs.get("d01").model_copy(update={"kind": "effect"})]})
+    path = plan_path(tmp_path / "plans", "demo", "d01")
+    write_plan(with_answer(load_plan(path), "effect", None), path)
+    first = run_folder(f, effect, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    assert first["ran"] == ["d01"]
+    run = run_path(tmp_path / "res", "demo", 1, "d01")
+    (run / "stage_report.json").write_text(json.dumps({"claims": {"S001": ["unchecked: claim 0-10: down"]}}),
+                                           encoding="utf-8")
+    out = run_folder(f, effect, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    assert out["rerun"] == ["d01"] and calls[1][1]["retry_errors"] is True
+    assert run.with_name("d01.redo-1").is_dir()
+
+
 def test_a_written_answer_that_failed_its_checks_is_asked_again_with_a_fresh_key(folder, tmp_path, SPEC):
     f, qs = setup(folder, tmp_path, SPEC); calls = []; bad = lambda p: {"sentences": []}
     first = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls, bad))
