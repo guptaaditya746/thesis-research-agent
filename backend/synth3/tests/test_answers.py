@@ -18,6 +18,7 @@ FIX = Path(__file__).parent / "fixtures" / "questions"
 def fake_run(run: Path, folder, answer: dict, spans: list[tuple[str, int, int]]) -> Path:
     """An engine run folder: answer.json, run.json (corpus_id top-level) and one measurement item per span."""
     run.mkdir(parents=True, exist_ok=True)
+    answer = {"question": "Q?", **answer}   # a real run records the question it answered
     (run / "answer.json").write_text(json.dumps(answer), encoding="utf-8")
     (run / "run.json").write_text(json.dumps({"corpus_id": folder.corpus_id}), encoding="utf-8")
     rows = []
@@ -38,6 +39,31 @@ def test_engine_run_becomes_a_record(folder, tmp_path):
     assert [x.paper for x in rec.facts] == ["S001", "S002"] and rec.facts[0].quote == text[100:120]
     assert '"label":"supported"' in rec.text and rec.cited == ["S001"] and not rec.text_cut
     assert rec.system == "engine" and rec.domain == "demo" and rec.seed == 1
+
+
+def test_an_engine_run_of_another_question_is_refused(folder, tmp_path):
+    f = load_folder(folder)
+    run = fake_run(tmp_path / "run", f, {"question": "A completely different question?", "label": "x"}, [])
+    with pytest.raises(ValueError, match="another question"):
+        from_engine_run(run, f, q("Q?"))
+
+
+def test_the_protocol_question_wins_over_the_answer(folder, tmp_path):
+    f = load_folder(folder)
+    run = fake_run(tmp_path / "run", f, {"question": "Q?"}, [])
+    (run / "protocol.yaml").write_text("question: Another one?\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="another question"):
+        from_engine_run(run, f, q("Q?"))
+    (run / "protocol.yaml").write_text("question:  Q?\n", encoding="utf-8")
+    assert from_engine_run(run, f, q("Q?")).question_id == "x"
+
+
+def test_an_engine_run_that_records_no_question_is_refused(folder, tmp_path):
+    f = load_folder(folder)
+    run = fake_run(tmp_path / "run", f, {"label": "x"}, [])
+    (run / "answer.json").write_text(json.dumps({"label": "x"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="records no question"):
+        from_engine_run(run, f, q("Q?"))
 
 
 def test_a_model_written_answer_is_used_as_text(folder, tmp_path):
@@ -124,7 +150,8 @@ def _collect(tmp_path, spec_dir, run, *more):
 
 def test_collect_by_command(folder, tmp_path, spec_dir, capsys):
     f = load_folder(folder)
-    run = fake_run(tmp_path / "run", f, {"label": "supported"}, [("S001", 5, 15)])
+    run = fake_run(tmp_path / "run", f, {"label": "supported", "question": "Does Targeted therapy improve the Response rate compared with Standard care?"},
+                   [("S001", 5, 15)])
     assert _collect(tmp_path, spec_dir, run) == 0
     path = answer_path(tmp_path / "r", "demo", 1, "engine", "d01")
     assert path.is_file() and str(path) in capsys.readouterr().out

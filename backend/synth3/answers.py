@@ -11,7 +11,9 @@ from typing import Any
 
 from pydantic import Field
 
-from evidence.rundir import ANSWER_FILE, RUN_FILE, Corpus, PaperIndex, RunDir
+import yaml
+
+from evidence.rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, Corpus, PaperIndex, RunDir
 from jsonio import canonical, write_json_atomic
 from synth2.recipe import Strict
 from synth3.questions import Question, question_sha256
@@ -108,7 +110,27 @@ def from_engine_run(run: Path, folder: Folder, q: Question, system: str = "engin
     if named != folder.corpus_id:
         raise ValueError(f"{run}: the run is of corpus {named!r}, the folder is {folder.corpus_id!r}; "
                          "a run on another corpus is refused")
+    recorded = _recorded_question(rd, answer)
+    if recorded is None:
+        raise ValueError(f"{run}: the run records no question (protocol.yaml or {ANSWER_FILE}), so it cannot be "
+                         f"checked against {q.id}; a run that does not say what it answered is refused")
+    if " ".join(recorded.split()) != " ".join(q.question.split()):
+        raise ValueError(f"{run}: the run answered another question ({recorded!r}), not {q.id} "
+                         f"({q.question!r}); a run of another question is refused")
     return _record(folder, q, system, answer, None, str(run), pulled_facts(run, folder), [])
+
+
+def _recorded_question(rd: RunDir, answer: dict) -> str | None:
+    """The question the run says it answered: protocol.yaml's, else answer.json's `question`; None if neither."""
+    try:
+        protocol = yaml.safe_load(rd.file(PROTOCOL_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError, yaml.YAMLError):
+        protocol = None
+    for source in (protocol, answer):
+        value = source.get("question") if isinstance(source, dict) else None
+        if isinstance(value, str) and value.strip():
+            return value
+    return None
 
 
 def from_rag_answer(answer: dict, folder: Folder, q: Question, source: str) -> AnswerRecord:
