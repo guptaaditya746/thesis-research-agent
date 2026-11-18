@@ -180,8 +180,8 @@ def same_answer(original: Path, rerun: Path) -> dict:
     """Whether the final answer text and headline are the same; None and the refusal text when a run cannot be read."""
     try:
         a, b = read_run(original, texts=False), read_run(rerun, texts=False)
-    except (ValueError, OSError, KeyError) as exc:   # NotRebuilt is a ValueError; a missing corpus or file also
-        return {"text": None, "headline": None, "why": str(exc)}
+    except Exception as exc:   # NotRebuilt, a missing corpus or file, a pack with no roles: a reason, never a crash
+        return {"text": None, "headline": None, "why": str(exc) or type(exc).__name__}
     return {"text": answer_text(a) == answer_text(b), "headline": headline(a) == headline(b), "why": None}
 
 

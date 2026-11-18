@@ -366,8 +366,8 @@ def _reexec_times(args: argparse.Namespace) -> int:
         return 2
     try:
         why = read_refusal(args.run, args.corpus)
-    except (ValueError, OSError, KeyError) as exc:
-        why = str(exc)
+    except Exception as exc:   # any reason the answer cannot be read is a note; the other measures go on
+        why = str(exc) or type(exc).__name__
     if why:
         print(f"note: the final answer of {args.run.name} cannot be compared ({why}); the call and item measures go on")
     news = [reexec(args.run, cache=args.cache, corpus=args.corpus, out_dir=args.out, all_calls=True)

@@ -153,6 +153,25 @@ def test_an_unreadable_answer_is_named_and_the_other_measures_survive(tmp_path):
     assert measure(root, [new])["calls"]["stage"]["calls"] > 0
 
 
+def test_any_error_reading_an_answer_is_named_not_raised(tmp_path, monkeypatch, capsys):
+    """M1: an AssertionError (a run whose pack gives no roles) is a reason like any other, in the measure and in the
+    command's check of the original."""
+    import evidence.readable as readable
+    import evidence.stability as stability
+
+    def broken(*args, **kwargs):
+        raise AssertionError
+
+    monkeypatch.setattr(stability, "read_run", broken)
+    out = same_answer(tmp_path / "a", tmp_path / "b")
+    assert out == {"text": None, "headline": None, "why": "AssertionError"}
+    root = written_run(tmp_path, GOOD)
+    monkeypatch.setattr(readable, "read_refusal", broken)
+    monkeypatch.setattr(replay_module, "default_provider", lambda alias: writer_model([], GOOD))
+    assert cli.main(["reexec", str(root), "--all-calls", "--times", "1", "--out", str(tmp_path / "o")]) == 0
+    assert "cannot be compared (AssertionError)" in capsys.readouterr().out
+
+
 def test_an_agent_call_without_a_step_or_prompt_hash_is_unreadable(tmp_path):
     bare = agent_row("s1", "h1")
     del bare["model_calls"][0]["request"]["prompt_sha256"]
