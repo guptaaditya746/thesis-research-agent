@@ -3,7 +3,7 @@ repair, and leaves the answer pending when the reply stays bad or the call fails
 import pytest
 
 from modelcall import JsonlCache
-from synth3.judge import Tick, Ticks, c_input, check_ticks, score_c, squash
+from synth3.judge import Tick, Ticks, c_asked, c_input, check_ticks, score_c, squash
 from synth3.sheetfacts import FactLine
 from synth3.sheets import Point, Sheet
 from synth3.spec import Measure
@@ -74,6 +74,8 @@ def test_an_empty_answer_scores_zero_without_a_call(tmp_path):
                                                                   ("p3", False, None))),
                      JsonlCache(tmp_path / "c2"), measures=M)
     assert out["prompt_sha256"] == called["prompt_sha256"]   # the same prompt hash as a real call records
+    assert out["asked"] is False and not c_asked(out) and c_asked(called)   # review round 1, synth3-I5
+    assert not c_asked({k: v for k, v in out.items() if k != "asked"})   # a marks file made before the flag
 
 
 def test_the_judge_sees_no_sub_question_no_fact_and_no_system():

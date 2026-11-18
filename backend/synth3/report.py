@@ -27,7 +27,7 @@ from jsonio import write_json_atomic
 from synth3.answers import AnswerRecord, item_id
 from synth3.baseline import BASELINE
 from synth3.cliargs import each_folder
-from synth3.judge import planted_facts
+from synth3.judge import c_asked, planted_facts
 from synth3.marking import current_marks, is_pending, marks_path, saved_answers
 from synth3.questions import QUESTIONS, QuestionSet, load_questions
 from synth3.sheetfacts import Folder
@@ -55,7 +55,9 @@ def item_parts(item: str) -> tuple[str, int, str, str]:
 def answers_of(results: Path, folder: Folder, qs: QuestionSet, sheets_root: Path) -> list[tuple[AnswerRecord,
                                                                                                dict | None, str]]:
     """Every saved answer of one folder with its marks and its state: "judged" (current marks), "not current" (a
-    marks file that `current_marks` refuses, or one that does not load) or "skipped" (no marks file)."""
+    marks file that `current_marks` refuses, or one that does not load) or "skipped" (no marks file). Current
+    marks come with `sheet.status` as the sheet file has it now: checking a sheet with no point changed keeps its
+    marks current, so the status saved when the judge ran can be older."""
     domain = folder.spec.domain
     out = []
     for rec in saved_answers(results, domain, folder.seed, None):
@@ -70,6 +72,8 @@ def answers_of(results: Path, folder: Folder, qs: QuestionSet, sheets_root: Path
             continue
         sheet = load_sheet(sheets_root, domain, folder.seed, rec.question_id)
         ok = isinstance(marks, dict) and current_marks(marks, rec, folder, qs, sheet)
+        if ok:
+            marks = {**marks, "sheet": {**marks["sheet"], "status": sheet.status}}
         out.append((rec, marks if ok else None, "judged" if ok else "not current"))
     return out
 
@@ -117,7 +121,8 @@ def current_marks_of(results: Path, domains: list[str], sheets_root: Path, folde
 # --- the sample and the hand marks ------------------------------------------------------------------------------
 
 def pick_sample(marks: dict[str, dict], n: int = SAMPLE, seed: int = 0, have: list[str] = ()) -> list[str]:
-    """From current marks (`current_marks_of`), items whose C is `ok`: half `rag-baseline` and half other systems
+    """From current marks (`current_marks_of`), items whose C is `ok` and was marked by the judge (`c_asked`: an
+    empty answer's ticks are made by code, so marking it would test no judge): half `rag-baseline` and half other systems
     (the other half fills up when one side is short), at most 2 per (domain, question) counting the items in `have`,
     which are left out. Seeded, and in a seeded shuffled order: the review page numbers the items in sample order,
     and a sorted order would put every engine item of a seed before every baseline item, which would tell Aditya the
@@ -126,7 +131,7 @@ def pick_sample(marks: dict[str, dict], n: int = SAMPLE, seed: int = 0, have: li
     pools: dict[bool, list[str]] = {True: [], False: []}   # True: the baseline
     for item in sorted(marks):
         m = marks[item]
-        if item not in held and m["C"]["status"] == "ok":
+        if item not in held and m["C"]["status"] == "ok" and c_asked(m["C"]):
             pools[m["system"] == BASELINE].append(item)
     rng = random.Random(seed)
     for pool in pools.values():
@@ -223,21 +228,34 @@ def _judge_faithful(m: dict) -> bool | None:
     return not b["invented"] and not b["contradicted"]
 
 
-def agreement(sample: list[str], hand: dict, judged: dict[str, dict]) -> dict:
+def agreement(sample: list[str], hand: dict, judged: dict[str, dict], domains: list[str] | None = None) -> dict:
     """Over every (item, point) that both the judge (C ticks of the current marks `judged`) and Aditya marked, on
     the same answer and sheet. Items are named by their number on the review page (from 1), never by id: the id
     names the system. A hand mark made on another answer or sheet is left out and listed in `to_mark_again`; one
-    whose item has no current marks is listed in `not_judged`. Until every sample item is marked (`complete`), every
-    agreement number is None: each new mark would move it and show how the judge marked that item."""
+    whose item has no current marks is listed in `not_judged`. Until every counted item is marked (`complete`),
+    every agreement number is None: each new mark would move it and show how the judge marked that item.
+
+    Two kinds of sample item are not counted at all (not in `of`, marked or not): with `domains` (a report of
+    some domains, whose `judged` holds only their marks) the items of other domains, listed in `outside`; and the
+    items whose C ticks code made without asking the judge (an empty answer), listed in `not_asked`."""
     points = agree = 0
     marked: set[str] = set()
     disagreements: list[dict] = []
     again: list[int] = []
     not_judged: list[int] = []
-    done = 0
+    outside: list[int] = []
+    not_asked: list[int] = []
+    of = done = 0
     f_n = f_agree = 0
     for n, item in enumerate(sample, 1):
         h, m = hand.get(item), judged.get(item)
+        if domains is not None and item_parts(item)[0] not in domains:
+            outside.append(n)
+            continue
+        if m and not c_asked(m["C"]):
+            not_asked.append(n)
+            continue
+        of += 1
         if not h:
             continue
         if not m:
@@ -259,8 +277,9 @@ def agreement(sample: list[str], hand: dict, judged: dict[str, dict]) -> dict:
         if h.get("faithful") is not None and (j := _judge_faithful(m)) is not None:
             f_n += 1
             f_agree += j == h["faithful"]
-    out = {"marked": done, "of": len(sample), "to_mark_again": again, "not_judged": not_judged}
-    if not (sample and done == len(sample)):
+    out = {"marked": done, "of": of, "to_mark_again": again, "not_judged": not_judged, "outside": outside,
+           "not_asked": not_asked, "domains": None if domains is None else list(domains)}
+    if not (of and done == of):
         # before the last mark, any agreement number moves with each new mark and shows how the judge marked it
         return {**out, "complete": False, "points": None, "agree": None, "rate": None, "flag": False,
                 "answers_marked": None, "faithful": {"n": None, "agree": None, "rate": None}, "disagreements": None}
@@ -383,7 +402,7 @@ def build_report(results: Path, domains: list[str], sheets_root: Path, judge_tes
             "judge_test_items": [{"n": n, "domain": d, "seed": s, "question": qid}
                                  for n, (d, s, _, qid) in ((n, item_parts(i)) for n, i in enumerate(sample, 1))
                                  if d == domain]}
-    out["agreement"] = agreement(sample, load_hand_marks(judge_test_root), current)
+    out["agreement"] = agreement(sample, load_hand_marks(judge_test_root), current, domains)
     return out
 
 
@@ -434,6 +453,12 @@ def render_report(r: dict) -> str:
         lines.append("")
     a = r["agreement"]
     lines.append(f"Judge test: {a['marked']} of {a['of']} marked.")
+    if a["outside"]:
+        lines.append(f"Not in this report (items of other domains): {_numbers(a['outside'])}.")
+    if a["not_asked"]:
+        lines.append("Left out of the judge test (empty answer, the judge was not asked): "
+                     f"{_numbers(a['not_asked'])}.")
+    only = f" (over the judge-test items of {', '.join(a['domains'] or [])} only)" if a["outside"] else ""
     if a["to_mark_again"]:
         lines.append(f"Mark again (the answer or its sheet changed since): {_numbers(a['to_mark_again'])}.")
     if a["not_judged"]:
@@ -444,9 +469,9 @@ def render_report(r: dict) -> str:
     if a["rate"] is None:
         lines.append("Judge agreement n/a (no hand marks yet).")
     elif a["flag"]:
-        lines.append(f"Judge agreement {_pct(a['rate'])} (below 80%: reported as a limitation).")
+        lines.append(f"Judge agreement {_pct(a['rate'])} (below 80%: reported as a limitation){only}.")
     else:
-        lines.append(f"Judge agreement {_pct(a['rate'])}.")
+        lines.append(f"Judge agreement {_pct(a['rate'])}{only}.")
     lines.append(f"{a['agree']} of {a['points']} points over {a['answers_marked']} answers; faithful: "
                  f"{a['faithful']['agree']} of {a['faithful']['n']} ({_pct(a['faithful']['rate'])}).")
     if a["disagreements"]:

@@ -92,15 +92,30 @@ def check_ticks(t: Ticks, sheet: Sheet, text: str) -> list[str]:
     return problems + [f"{p} missing" for p in ids if p not in seen]
 
 
+EMPTY_ANSWER = "the answer is empty"
+
+
+def c_asked(c: dict) -> bool:
+    """False when code made the C ticks and no judge was asked (an empty answer): such an item says nothing about
+    the judge, so the judge test leaves it out. A marks file made before `asked` was written is read by its
+    shape: every point not met with the empty-answer reason."""
+    if "asked" in c:
+        return bool(c["asked"])
+    ticks = c.get("ticks") or []
+    return not (c.get("status") == "ok" and ticks
+                and all(not t.get("met") and t.get("reason") == EMPTY_ANSWER for t in ticks))
+
+
 def score_c(q: Question, sheet: Sheet, rec: AnswerRecord, model: Any, cache: JsonlCache, *, fresh: str | None = None,
             measures: Sequence[Measure]) -> dict:
     """Met points / points; `measures` are the folder spec's (`folder.spec.measures`). An empty answer misses
-    every point with no call. Pending (the reply still fails its checks, or the call failed): `score` None, the
+    every point with no call (`asked` False). Pending (the reply still fails its checks, or the call failed): `score` None, the
     problems say why."""
     ids = [p.id for p in sheet.points]
     if not rec.text.strip():
-        empty = [Tick(point=p, met=False, quote=None, reason="the answer is empty").model_dump() for p in ids]
-        return {"score": 0.0, "ticks": empty, "missed": ids, "status": "ok", "problems": [], "calls": 0,
+        empty = [Tick(point=p, met=False, quote=None, reason=EMPTY_ANSWER).model_dump() for p in ids]
+        return {"score": 0.0, "ticks": empty, "missed": ids, "status": "ok", "asked": False, "problems": [],
+                "calls": 0,
                 "prompt_sha256": load_prompt(PROMPT_C, Ticks).sha256, "served_models": []}
     out = ask_checked(PROMPT_C, Ticks, c_input(q, sheet, rec.text, measures),
                       lambda r: check_ticks(r, sheet, rec.text), model, cache, SETTINGS, fresh=fresh)

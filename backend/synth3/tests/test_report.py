@@ -15,7 +15,7 @@ from synth3.questions import load_questions, question_sha256
 from synth3.report import (FLAG_BELOW, agreement, build_report, current_marks_of, load_hand_marks, load_sample,
                            pick_sample, render_report, save_hand_mark)
 from synth3.sheetfacts import load_folder
-from synth3.sheets import make_sheet, save_sheet, sheet_sha256
+from synth3.sheets import load_sheet, make_sheet, save_sheet, sheet_sha256
 from synth3.tests.conftest import approved
 from synth3.tests.fakes import rec
 
@@ -429,3 +429,82 @@ def test_help_lists_every_command(capsys):
     out = capsys.readouterr().out
     for cmd in ("questions", "draft-sheets", "collect", "baseline", "judge", "judge-sample", "report"):
         assert cmd in out
+
+
+def test_unchecked_counts_read_the_sheet_as_it_is_now(folder, tmp_path, spec_dir, SPEC):
+    """Review round 1, synth3-I3: marks made on a drafted sheet stay current once it is checked with no point
+    changed, so the count must not come from the status saved in the marks file."""
+    judged(tmp_path, folder, SPEC, systems=("engine",), status="drafted")
+    assert report(tmp_path, folder, spec_dir)["domains"]["demo"]["systems"]["engine"]["unchecked"] == 3
+    for qid in ("d01", "d02"):   # Aditya checks two sheets and changes no point
+        sheet = load_sheet(tmp_path / "sh", "demo", 1, qid)
+        save_sheet(tmp_path / "sh", sheet.model_copy(update={
+            "status": "checked", "checked_by": "aditya", "checked_at": "2026-11-18T10:00:00+00:00"}))
+    eng = report(tmp_path, folder, spec_dir)["domains"]["demo"]["systems"]["engine"]
+    assert (eng["judged"], eng["unchecked"]) == (3, 1)
+
+
+def empty_marks(item: str) -> dict:
+    """The marks of an empty answer: code set every point not met and asked no judge (`score_c`)."""
+    m = marks_of(item, c_score=0.0)
+    m["C"] |= {"asked": False, "missed": ["p1", "p2"],
+               "ticks": [{"point": p, "met": False, "quote": None, "reason": "the answer is empty"}
+                         for p in ("p1", "p2")]}
+    return m
+
+
+def test_an_answer_the_judge_was_never_asked_about_is_not_sampled():
+    """Review round 1, synth3-I5: an empty answer's ticks are made by code, so marking it tests no judge."""
+    marks = {"demo/s1/system/q01": empty_marks("demo/s1/system/q01"), "demo/s1/system/q02":
+             marks_of("demo/s1/system/q02")}
+    assert pick_sample(marks) == ["demo/s1/system/q02"]
+    old = empty_marks("demo/s1/system/q01"); del old["C"]["asked"]   # a marks file made before the flag
+    assert pick_sample({"demo/s1/system/q01": old}) == []
+
+
+def test_an_empty_answer_already_in_the_sample_does_not_count_as_agreement():
+    items = ["demo/s1/system/q01", "demo/s1/system/q02"]
+    judged_ = {items[0]: empty_marks(items[0]), items[1]: marks_of(items[1])}
+    marks = {items[0]: hand(judged_[items[0]], {"p1": False, "p2": False}),
+             items[1]: hand(judged_[items[1]], {"p1": True, "p2": True})}
+    a = agreement(items, marks, judged_)
+    assert a["not_asked"] == [1] and (a["marked"], a["of"]) == (1, 1) and a["complete"]
+    assert (a["points"], a["agree"], a["rate"]) == (2, 1, 0.5)   # the judged item only
+    a = agreement(items, {items[1]: marks[items[1]]}, judged_)     # the empty one need not be marked
+    assert a["complete"] and a["of"] == 1
+
+
+def test_the_empty_answer_still_scores_zero_in_the_report(folder, tmp_path, spec_dir, SPEC):
+    items = judged(tmp_path, folder, SPEC, systems=("engine",))
+    path = marks_path(tmp_path / "res", "demo", 1, "engine", "d01")
+    m = json.loads(path.read_text(encoding="utf-8"))
+    write_json_atomic(path, m | {"C": empty_marks(items[0])["C"]})
+    jt = tmp_path / "jt"
+    write_json_atomic(jt / "sample.json", items)
+    r = report(tmp_path, folder, spec_dir, jt)
+    assert r["domains"]["demo"]["systems"]["engine"]["c_mean"] == pytest.approx(1 / 3)   # 0, 0.5, 0.5
+    assert r["agreement"]["not_asked"] == [1] and r["agreement"]["of"] == 2
+    assert "Left out of the judge test (empty answer, the judge was not asked): 1." in render_report(r)
+
+
+def test_a_report_of_some_domains_counts_agreement_over_their_items_only(folder, tmp_path, spec_dir, SPEC):
+    """Review round 1, synth3-I4: a sample item of a domain outside the report was listed as "not judged now (run
+    synth3 judge)" and hid the agreement number for good."""
+    items = judged(tmp_path, folder, SPEC, systems=("engine",))
+    other = "law/s1/engine/q01"
+    jt = tmp_path / "jt"
+    write_json_atomic(jt / "sample.json", [*items, other])
+    current = current_marks_of(tmp_path / "res", ["demo"], tmp_path / "sh", folder.parent, spec_dir, FIX)
+    for item in items:
+        m = current[item]
+        save_hand_mark(jt, item, {"p1": True, "p2": False}, None, "a", "t", answer_sha256=m["answer_sha256"],
+                       sheet_sha256=m["sheet"]["sha256"])
+    save_hand_mark(jt, other, {"p1": True}, None, "a", "t", answer_sha256="x", sheet_sha256="y")
+    r = report(tmp_path, folder, spec_dir, jt)
+    a = r["agreement"]
+    assert a["outside"] == [4] and a["not_judged"] == [] and (a["marked"], a["of"]) == (3, 3)
+    assert a["complete"] and a["rate"] == 1.0
+    md = render_report(r)
+    assert "Judge test: 3 of 3 marked." in md and "run synth3 judge" not in md
+    assert "Not in this report (items of other domains): 4." in md
+    assert "Judge agreement 100% (over the judge-test items of demo only)." in md
