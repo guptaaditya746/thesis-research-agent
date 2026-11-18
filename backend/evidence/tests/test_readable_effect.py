@@ -39,6 +39,16 @@ def test_effect_rebuilds_label_counts_flags_and_lines():
     assert view["flags"]["claim_disagrees"] == ["S002"] and view["flags"]["large_effect"] == ["S006"]
 
 
+def test_the_condition_pattern_and_flag_names_are_the_engines():
+    """M4: the copied condition pattern and flag names are pinned to the engine's, and both read a condition alike."""
+    assert rules_effect.CONDITION_PATTERN.pattern == rules.CONDITION.pattern
+    assert rules_effect.FLAG_NAMES == rules.FLAGS
+    for condition, value in ((">=2", 2), (" < 3 ", 3), ("==0", 1)):
+        assert rules_effect.condition_holds(condition, value) == rules.condition_holds(condition, value)
+    with pytest.raises(ValueError):
+        rules_effect.condition_holds("2+", 1)
+
+
 def test_numbers_keep_their_form():
     p = case_protocol(direction="lower")
     ra = case_answer(p, {"S001": study_items("S001", 10, 12), "S002": study_items("S002", 1e-05, 2e-05),
