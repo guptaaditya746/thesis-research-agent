@@ -27,9 +27,11 @@ def clean_registry() -> Iterator[None]:
         yield
 
 
-def writer_model(calls: list[str], reply: Reply, infos: list[Any] | None = None) -> FunctionModel:
-    """The writer call is told apart by its instructions; every other call goes to test_plan_run's fake."""
-    other = fake_model([])
+def writer_model(calls: list[str], reply: Reply, infos: list[Any] | None = None,
+                 others: list[str] | None = None) -> FunctionModel:
+    """The writer call is told apart by its instructions; every other call goes to test_plan_run's fake (its prompts
+    kept in `others` when given)."""
+    other = fake_model(others if others is not None else [])
 
     def fn(messages: Any, info: Any) -> Any:
         if "Write a short answer to the question" in (info.instructions or ""):
@@ -46,7 +48,7 @@ def writer_model(calls: list[str], reply: Reply, infos: list[Any] | None = None)
 
 
 def written_run(tmp_path: Path, reply: Reply, plan: Plan | None = None, calls: list[str] | None = None,
-                infos: list[Any] | None = None) -> Path:
+                infos: list[Any] | None = None, others: list[str] | None = None) -> Path:
     tmp_path.mkdir(parents=True, exist_ok=True)
     path = tmp_path / "plan.json"
     write_plan(plan or with_answer(make_plan(), "written", None), path)
@@ -55,7 +57,7 @@ def written_run(tmp_path: Path, reply: Reply, plan: Plan | None = None, calls: l
         make_corpus(corpus)
     n = len(list((tmp_path / "runs").glob("*"))) if (tmp_path / "runs").exists() else 0
     return planrun.run(path, corpus, tmp_path / "runs", cache=tmp_path / "cache", selection="regex-only",
-                       provider=provider_of(writer_model(calls if calls is not None else [], reply, infos)),
+                       provider=provider_of(writer_model(calls if calls is not None else [], reply, infos, others)),
                        workers=1, run_id=f"w{n}")
 
 
@@ -106,6 +108,23 @@ def test_a_later_try_is_a_new_call(tmp_path: Path) -> None:
     root = written_run(tmp_path / "a", GOOD, plan=tried, calls=calls, infos=infos)   # same record cache folder
     assert len(calls) == 2
     assert read(root, "written-answer.json")["writer_try"] == 1
+
+
+def test_a_later_try_reuses_the_extractions_and_asks_the_writer_once(tmp_path: Path) -> None:
+    written_run(tmp_path, GOOD)   # try 0 fills the shared record cache
+    tried = with_answer(make_plan(), "written", None).model_copy(update={"writer_try": 1})
+    writer: list[str] = []
+    others: list[str] = []
+    root = written_run(tmp_path, GOOD, plan=tried, calls=writer, others=others)
+    assert len(writer) == 1 and others == []   # one new writer call, no other model call
+    first, second = (tmp_path / "runs" / "w0"), root
+    assert (second / "protocol.yaml").read_bytes() == (first / "protocol.yaml").read_bytes()
+    events = [json.loads(line) for line in (root / "events.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    made = [e for e in events if e["subtype"] == "extractor_call" and e["status"] != "skipped"]
+    assert made and all(e["custom_metadata"]["source"] == "cache" for e in made)   # zero new extractor calls
+    (tmp_path / "plan.json").unlink()
+    _, report = replay(root)   # the replay asks no model (provider None: a miss raises NotRecorded)
+    assert report["ok"] and report["mismatched"] == []
 
 
 def test_a_later_try_asks_at_temperature_03(tmp_path: Path) -> None:

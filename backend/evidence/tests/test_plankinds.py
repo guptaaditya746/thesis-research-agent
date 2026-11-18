@@ -23,6 +23,13 @@ def test_effect_written_and_lines_are_todays_protocol():
     assert hashlib.sha256(kind_protocol(make_plan())).hexdigest() == TODAYS_SHA
 
 
+@pytest.mark.parametrize("by, target", [("lines", None), ("written", None), ("effect", None), ("consistency", None),
+                                        ("inventory", "condition"), ("best", None)])
+def test_a_later_writer_try_keeps_the_protocol_bytes(by, target):
+    plan = with_answer(make_plan(), by, target)
+    assert kind_protocol(plan.model_copy(update={"writer_try": 2})) == kind_protocol(plan)
+
+
 @pytest.mark.parametrize("by, target", [("consistency", None), ("inventory", "condition"), ("inventory", "metric"),
                                         ("best", None)])
 def test_each_fixed_kind_parses_as_its_kind(by, target):

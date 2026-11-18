@@ -69,7 +69,10 @@ def _names(plan: Plan, thing: str, n: int = 6) -> str:
 
 def protocol_for(plan: Plan) -> bytes:
     """The plan run's protocol (YAML), written by code from the plan: types and extractors as the default pack's
-    effect protocol, the roles, metric names and descriptions from the plan, every extractor word from compile_words."""
+    effect protocol, the roles, metric names and descriptions from the plan, every extractor word from compile_words.
+    The protocol is made from the plan at writer try 0: a later writer try (Plan.writer_try) keeps the protocol's id and
+    bytes, so its extraction tasks hit the record cache of the first try and only the writer is asked again."""
+    plan = plan.model_copy(update={"writer_try": 0})
     words = compiled(plan)
     things = sides(plan)
     measures = list(plan.measures) or [OTHER]
