@@ -77,3 +77,22 @@ def stdlib_only(path: Path) -> set[str]:
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             found.add(node.module.split(".")[0])
     return found
+
+
+def best_items(paper: str, values: dict[str, float], kind_field: bool = True) -> list[Item]:
+    """One paper's items for the best kind: the metric `accuracy`, and for each kind in `values` one condition (label
+    the kind's name in NAMES, role the kind's id, and `kind` the id unless `kind_field` is False, when only the label
+    says the kind) with one measurement."""
+    out: list[Item] = []
+    metric = item("metric", {"name": "Yield", "canonical": "accuracy", "higher_is_better": True}, paper=paper,
+                  exact="Yield", start=20)
+    out.append(metric)
+    for number, (kind, value) in enumerate(values.items()):
+        fields: dict[str, Any] = {"label": NAMES[kind], "role": kind}
+        if kind_field:
+            fields["kind"] = kind
+        thing = item("condition", fields, paper=paper, exact=NAMES[kind], start=50 * (number + 1) + 200)
+        out += [thing, item("measurement", {"value": value, "dataset": None},
+                            {"condition": thing.item_id, "metric": metric.item_id}, paper=paper, exact=str(value),
+                            start=100 + 100 * number)]
+    return out

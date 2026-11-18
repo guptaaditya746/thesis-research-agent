@@ -5,14 +5,18 @@ answer rests on becomes a fact with a key (`F1`, `F2`, ... in order of first use
 row was read from."""
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from .. import synthesis
 from ..contract import Item
-from .runview import NOT_FOUND_AGAIN, NotRebuilt, RunAnswer
+from ..kinds import best as best_kind, inventory as inventory_kind
+from .runview import KIND_NOT_REBUILT, NOT_FOUND_AGAIN, NotRebuilt, RunAnswer, read_run
+from .rules.common import BEST_REASON_TEMPLATES
 
-__all__ = ["ProgramInputs", "effect_inputs"]
+__all__ = ["ProgramInputs", "best_inputs", "effect_inputs", "inputs_of", "inventory_inputs", "refusal"]
 
 
 @dataclass
@@ -129,3 +133,115 @@ def effect_inputs(ra: RunAnswer) -> ProgramInputs:
         papers.append(_paper(table, entry, claim_known))
     return ProgramInputs(kind=ra.kind, question=ra.protocol.question, settings=_settings(ra), facts=table.ordered(),
                          papers=papers, model_text=[], names=dict(ra.names), spans=table.spans)
+
+
+class _BestFacts(FactTable):
+    """The facts of a best run: a compared thing carries its label and kind value, no side."""
+
+    def _fact(self, paper: str, item: Item) -> dict[str, Any]:
+        ty = self.types
+        if item.evidence_type != ty.thing:
+            return super()._fact(paper, item)
+        kind_field = self.ra.roles.field_or_none(ty.thing, "kind")
+        return {"paper": paper, "item": item.item_id, "type": "compared thing",
+                "label": item.fields.get(self._name_field(ty.thing) or ""),
+                "kind": item.fields.get(kind_field) if kind_field is not None else None}
+
+
+def _best_settings(ra: RunAnswer) -> dict[str, Any]:
+    spec = best_kind.spec(ra.protocol)
+    return {"kind": "best", "measure": spec.metric.canonical, "higher_is_better": spec.metric.higher_is_better,
+            "kinds": {k: list(names) for k, names in spec.kinds.items()}}
+
+
+def best_inputs(ra: RunAnswer) -> ProgramInputs:
+    """The inputs of a best run: for each paper the measured values the engine compared, or why it compared none."""
+    types = synthesis.Types.of(ra.protocol, ra.roles)
+    table = _BestFacts(ra, types)
+    papers: list[dict[str, Any]] = []
+    for recorded in ra.answer.get("studies", []):
+        paper = recorded["document"]
+        reason = recorded.get("reason")
+        if reason is not None and reason.get("code") not in BEST_REASON_TEMPLATES:
+            papers.append({"paper": paper, "no_comparison": reason})   # a paper the funnel set aside
+            continue
+        items = ra.items.get(paper, [])
+        entry, used = best_kind.study(ra.protocol, paper, items, None, roles=ra.roles, inferred=ra.inferred)
+        if any(entry[name] != recorded.get(name) for name in ("values", "winner", "tied", "reason")):
+            raise NotRebuilt(NOT_FOUND_AGAIN.format(what="values", paper=paper))
+        if entry["reason"] is not None:
+            papers.append({"paper": paper, "no_comparison": entry["reason"]})
+            continue
+        by_id = {i.item_id: i for i in items}
+        papers.append({"paper": paper, "values": [table.key_of(paper, i) for i in used
+                                                  if by_id[i].evidence_type == types.value]})
+    return ProgramInputs(kind="best", question=ra.protocol.question, settings=_best_settings(ra),
+                         facts=table.ordered(), papers=papers, model_text=[], names=dict(ra.names),
+                         spans=table.spans)
+
+
+class _InventoryFacts(FactTable):
+    """The facts of an inventory run: one name per target item."""
+
+    def __init__(self, ra: RunAnswer, target: str, name_field: str) -> None:
+        super().__init__(ra, None)   # type: ignore[arg-type]  (no value or thing types are read)
+        self.target, self.field = target, name_field
+
+    def _fact(self, paper: str, item: Item) -> dict[str, Any]:
+        return {"paper": paper, "item": item.item_id, "type": self.target,
+                "name": inventory_kind.name_of(item, self.field)}
+
+
+def inventory_inputs(ra: RunAnswer) -> ProgramInputs:
+    """The inputs of an inventory run: for each paper an entry names, the names of its target items in item order."""
+    spec = inventory_kind.spec(ra.protocol)
+    name_field = inventory_kind.name_field(ra.protocol, ra.roles)
+    table = _InventoryFacts(ra, spec.target, name_field)
+    named = {p for entry in ra.answer.get("entries", []) for p in entry.get("papers", [])}
+    if not named <= set(ra.items):
+        raise NotRebuilt(NOT_FOUND_AGAIN.format(what="items", paper=sorted(named - set(ra.items))[0]))
+    papers = []
+    for paper in ra.items:   # manifest order
+        if paper not in named:
+            continue
+        keys = [table.key_of(paper, i.item_id) for i in ra.items[paper]
+                if i.evidence_type == spec.target and inventory_kind.name_of(i, name_field) is not None]
+        papers.append({"paper": paper, "names": keys})
+    return ProgramInputs(kind="inventory", question=ra.protocol.question,
+                         settings={"kind": "inventory", "target": spec.target,
+                                   "same": {n: list(o) for n, o in spec.same.items()}},
+                         facts=table.ordered(), papers=papers, model_text=[], names=dict(ra.names),
+                         spans=table.spans)
+
+
+_INPUTS = {"effect": "effect_inputs", "consistency": "effect_inputs", "best": "best_inputs",
+           "inventory": "inventory_inputs", "written": "written_inputs"}
+
+
+def inputs_of(ra: RunAnswer) -> ProgramInputs:
+    """The inputs of the run's kind; the kind's function is looked up when called."""
+    build = globals().get(_INPUTS.get(ra.kind, ""))
+    if build is None:
+        raise NotRebuilt(KIND_NOT_REBUILT.format(kind=ra.kind))
+    return build(ra)   # type: ignore[no-any-return]
+
+
+NOT_READ = "the run could not be read: {problem}"
+
+
+def refusal(run: Path | str, corpus: Path | str | None = None) -> str | None:
+    """Why a readable program cannot be made for the run, None when it can. It never raises: a run that cannot be
+    read or rebuilt, for any reason, is a refusal text."""
+    try:
+        inputs_of(read_run(run, corpus, texts=False))
+    except NotRebuilt as exc:
+        return str(exc)
+    except json.JSONDecodeError as exc:
+        return NOT_READ.format(problem=f"a file is not valid JSON ({exc})")
+    except ValueError as exc:
+        return NOT_READ.format(problem=str(exc))
+    except AssertionError as exc:
+        return NOT_READ.format(problem=str(exc) or "the protocol misses a part the rules need")
+    except Exception as exc:   # a refusal text, never a crash on a page or a download
+        return NOT_READ.format(problem=f"{type(exc).__name__}: {exc}")
+    return None
