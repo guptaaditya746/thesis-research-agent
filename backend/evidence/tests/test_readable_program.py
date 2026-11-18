@@ -15,8 +15,8 @@ from evidence import cli
 from evidence.plan import with_answer
 from evidence.readable import program_of_run
 from evidence.readable.inputs import inputs_of
-from evidence.readable.program import (RULE_FILES, SECTION_NONE, SECTION_UNKNOWN, fact_comment, program_text,
-                                       section_at)
+from evidence.readable.program import (RULE_FILES, SECTION_NONE, SECTION_UNKNOWN, comment_text, fact_comment,
+                                       program_text, section_at)
 from evidence.readable.rules import common, written as rules_written
 from evidence.readable.runview import DIFFERS, LINES, answer_text, checked_view, read_run
 from evidence.tests.readable_cases import NAMES, best_items, case_answer, case_protocol, study_items
@@ -182,6 +182,36 @@ def test_odd_text_stays_on_one_line_and_prints_anywhere(tmp_path):
     comments = [l for l in (tmp_path / "odd.py").read_text(encoding="utf-8").splitlines() if l.startswith("#   ")]
     assert comments and all(l.startswith("#   ") for l in comments)
     assert not any(l.startswith('b\\c') for l in (tmp_path / "odd.py").read_text(encoding="utf-8").splitlines())
+
+
+def test_control_characters_and_lone_surrogates_in_comments_keep_the_file_valid(tmp_path):
+    """M2: a heading with NUL and U+2028, a quote with a lone surrogate and a question with a NUL and an escape
+    character are written escaped, so the file is valid UTF-8 Python that runs and passes its check."""
+    items = study_items("S001", 0.62, 0.5, start=50)   # every quote after the heading
+    items = [i.model_copy(update={"spans": [s.model_copy(update={"selector": {**s.selector, "exact": "x\ud800y"}})
+                                            for s in i.spans]}) for i in items]
+    ra = case_answer(case_protocol(), {"S001": items}, "effect")
+    inputs = inputs_of(ra)
+    inputs.question = "Does K\x00 help?\x1b"
+    texts = {"S001": "# Res\x00ults part\n" + "body " * 200}
+    text = program_text(inputs, {"run": "case"}, texts, answer_text(ra), checked_view(ra))
+    ast.parse(text, feature_version=(3, 9))
+    assert text.encode("utf-8").decode("utf-8") == text
+    assert '# F1: paper S001, section "Res\\x00ults part"' in text   # U+2028 is a space between heading words
+    assert "#   value: \"x\\ud800y\"" in text and "# Question: Does K\\x00 help?\\x1b" in text
+    path = tmp_path / "odd.py"
+    path.write_text(text, encoding="utf-8", newline="\n")
+    done = run_program(path)
+    assert done.returncode == 0 and done.stdout.decode("utf-8").splitlines()[-1] == common.CHECK_OK
+    assert comment_text("a b\x7f\x85c") == "a\\u2028b\\x7f\\x85c"
+
+
+def test_the_command_says_why_it_cannot_write(tmp_path, capsys):
+    """M2: a file that cannot be written is an error line and exit 2, not a traceback."""
+    root = written_run(tmp_path / "w", lambda p: GOOD)
+    (tmp_path / "afile").write_text("x", encoding="utf-8")
+    assert cli.main(["program", str(root), "--out", str(tmp_path / "afile" / "p.py")]) == 2
+    assert capsys.readouterr().err.startswith("error: ")
 
 
 def test_whole_number_best_values_pass_the_check(tmp_path):

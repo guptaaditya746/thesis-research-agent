@@ -277,12 +277,12 @@ def evsystem_router(settings: Settings) -> APIRouter:
         if why is not None:
             raise Conflict(why)
         try:
-            text = program_of_run(run)
+            data = program_of_run(run).encode("utf-8")
         except NotRebuilt as exc:
             raise Conflict(str(exc)) from exc
-        except Exception as exc:   # a run that cannot be read is a refusal text, never a 500
+        except Exception as exc:   # a run that cannot be read or a text that cannot be encoded: a refusal, never a 500
             raise Conflict(refusal(run) or f"{type(exc).__name__}: {exc}") from exc
-        return Response(text.encode("utf-8"), media_type="text/x-python; charset=utf-8",
+        return Response(data, media_type="text/x-python; charset=utf-8",
                         headers={"Content-Disposition": f'attachment; filename="{rid}-answer.py"'})
 
     @api.get("/system/runs/{rid}/papers/{doc}", response_model=SystemPaper, tags=["system"])

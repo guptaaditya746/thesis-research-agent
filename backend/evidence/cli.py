@@ -449,11 +449,11 @@ def _program(args: argparse.Namespace) -> int:
             return 2
     try:
         text = program_of_run(args.run, args.corpus)
-    except (NotRebuilt, ValueError, OSError) as exc:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(text, encoding="utf-8", newline="\n")
+    except (NotRebuilt, ValueError, OSError) as exc:   # UnicodeError is a ValueError
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(text, encoding="utf-8", newline="\n")
     print(args.out)
     return 0
 

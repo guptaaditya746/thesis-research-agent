@@ -19,8 +19,8 @@ from .inputs import ProgramInputs, inputs_of
 from .rules.common import text_sha256, values_sha256
 from .runview import RunAnswer, answer_text, checked_view, read_run
 
-__all__ = ["RULE_FILES", "SECTION_NONE", "SECTION_UNKNOWN", "about_of", "fact_comment", "program_of_run",
-           "program_text", "section_at"]
+__all__ = ["RULE_FILES", "SECTION_NONE", "SECTION_UNKNOWN", "about_of", "comment_text", "fact_comment",
+           "program_of_run", "program_text", "section_at"]
 
 RULE_FILES: dict[str, tuple[str, ...]] = {"effect": ("common", "effect"), "consistency": ("common", "effect"),
                                           "best": ("common", "best"), "inventory": ("common", "inventory"),
@@ -31,7 +31,8 @@ RULES_DIR = Path(__file__).resolve().parent / "rules"
 RULES_LINE = "# --- rules ---"
 DROP_MARK = "# program: drop"
 HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$", re.MULTILINE)
-MODEL_TEXT_NOTE = "# MODEL_TEXT: written by a model from the results above, not rebuilt by this file."
+CONTROL = re.compile("[\x00-\x1f\x7f-\x9f  ]")
+MODEL_TEXT_NOTE ="# MODEL_TEXT: written by a model from the results above, not rebuilt by this file."
 
 HEADER = '''"""The answer of one recorded run, rebuilt from the facts it used.
 
@@ -55,6 +56,14 @@ WRITTEN_PARAGRAPH = ("The answer's sentences were written by a model from the fa
                      "reply the run accepted and adds the paper ids.\n\n")
 
 
+def comment_text(text: str) -> str:
+    """Text for one comment line that keeps the file valid UTF-8 Python on one line: a lone surrogate as \\udNNN,
+    a control character (C0 with NUL, DEL, C1) as \\xNN and a line or paragraph separator as \\uNNNN."""
+    text = text.encode("utf-8", "backslashreplace").decode("utf-8")
+    return CONTROL.sub(lambda m: f"\\x{ord(m.group()):02x}" if ord(m.group()) < 0x100 else f"\\u{ord(m.group()):04x}",
+                       text)
+
+
 def section_at(text: str | None, start: int) -> str:
     """The words of the last Markdown heading that starts before `start`; SECTION_NONE when there is none and
     SECTION_UNKNOWN when the text is not at hand."""
@@ -71,9 +80,10 @@ def fact_comment(key: str, fact: dict[str, Any], spans: list[dict[str, Any]],
     text = texts.get(paper) if texts is not None else None
     first = spans[0].get("start") if spans else None
     section = section_at(text, first if isinstance(first, int) else 0)
-    lines = [f'# {key}: paper {paper}, section "{section}"']
+    lines = ["# " + comment_text(f'{key}: paper {paper}, section "{section}"')]
     for span in spans:
-        lines.append(f"#   {span.get('role')}: {json.dumps(span.get('exact', ''), ensure_ascii=False)}")
+        quote = json.dumps(span.get("exact", ""), ensure_ascii=False)
+        lines.append("#   " + comment_text(f"{span.get('role')}: {quote}"))
     return lines
 
 
@@ -111,7 +121,7 @@ def program_text(inputs: ProgramInputs, about: dict[str, Any], texts: Mapping[st
            HEADER.format(rule_text=RULE_TEXT[inputs.kind], written=WRITTEN_PARAGRAPH if written else ""),
            "from __future__ import annotations", *sorted(imports), "",
            "# --- Part 1: what was asked ---",
-           "# Question: " + " ".join(inputs.question.splitlines()),
+           "# Question: " + comment_text(" ".join(inputs.question.splitlines())),
            f"KIND = {_data(inputs.kind)}", f"THE_QUESTION = {_data(inputs.question)}",
            f"THE_RUN = {_data(about)}", f"NAMES_OF_THINGS = {_data(inputs.names)}",
            f"RULE_SETTINGS = {_data(inputs.settings)}", "",

@@ -172,5 +172,13 @@ def test_a_file_changed_after_the_run_has_no_program(system_runs, tmp_path, revi
     assert r.status_code == 409 and r.json()["detail"] == want
 
 
+def test_a_program_that_cannot_be_encoded_is_a_refusal_not_a_500(system_runs, tmp_path, review_root, monkeypatch):
+    """M2: even a text that is not valid UTF-8 (a lone surrogate) gives 409 with a reason."""
+    import webapp.evsystem as evsystem
+    monkeypatch.setattr(evsystem, "program_of_run", lambda run: "# \ud800\n")
+    r = client(tmp_path, review_root).get(f"/api/ev/system/runs/{system_runs['written']}/program")
+    assert r.status_code == 409 and r.json()["detail"].startswith("UnicodeEncodeError")
+
+
 def test_a_bad_id_gets_no_program(system_runs, tmp_path, review_root):
     assert client(tmp_path, review_root).get("/api/ev/system/runs/..%2Fx/program").status_code in (400, 404, 422)
