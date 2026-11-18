@@ -267,8 +267,9 @@ def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, a
             continue
         try:
             rec = from_system_run(run, folder, q)
-        except ValueError as err:
-            out["failed"][q.id] = redact(str(err))
+        except Exception as err:  # noqa: BLE001  (one damaged run must not stop the next)
+            said = redact(str(err))
+            out["failed"][q.id] = said if isinstance(err, ValueError) else f"{type(err).__name__}: {said}"
             continue
         save_answer(results, rec)
         if not rec.text:

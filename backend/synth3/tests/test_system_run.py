@@ -106,6 +106,23 @@ def test_a_written_answer_that_failed_its_checks_is_asked_again_with_a_fresh_key
     assert sorted(last["kept"]) == ["d01", "d02", "d03"] and len(calls) == 3 * MAX_WRITER_TRIES
 
 
+def test_a_damaged_run_is_listed_as_failed_and_the_loop_goes_on(folder, tmp_path, SPEC):
+    import json
+    f, qs = setup(folder, tmp_path, SPEC); calls = []
+    inner = counting_runner(calls)
+
+    def damaging(plan_file, corpus, out_dir, **kw):
+        root = inner(plan_file, corpus, out_dir, **kw)
+        if kw["run_id"] == "d01":   # a written run whose answer lost its `cut`
+            path = root / "written-answer.json"
+            written = json.loads(path.read_text(encoding="utf-8"))
+            path.write_text(json.dumps({k: v for k, v in written.items() if k != "cut"}), encoding="utf-8")
+        return root
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=damaging)
+    assert set(out["failed"]) == {"d01"} and "cut" in out["failed"]["d01"]
+    assert {r.question_id for r in load_answers(tmp_path / "res", "demo")} == {"d02", "d03"}
+
+
 def test_missing_stale_and_rekinded_plans_are_skipped_with_reasons(folder, tmp_path, SPEC):
     f, qs = setup(folder, tmp_path, SPEC)
     plan_path(tmp_path / "plans", "demo", "d02").unlink()
