@@ -6,10 +6,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from synth3 import system
-from synth3.cliargs import BadArgument, _ascii, _spec
+from synth3.cliargs import BadArgument, _ascii, _seeds, _spec, each_folder
 from synth3.qcli import _questions
 from synth3.questions import QUESTIONS
-from synth3.sheets import RESULTS
+from synth3.sheetfacts import Folder
+from synth3.sheets import RESULTS, folders_of
 from synth3.spec import SPECS
 
 
@@ -39,6 +40,25 @@ def system_plan(args: argparse.Namespace) -> int:
     return 1 if out["failed"] or out["problems"] else 0
 
 
+def system_run(args: argparse.Namespace) -> int:
+    spec, seeds = _spec(args), _seeds(args.seeds)
+    qs = _questions(args, spec)
+    keys = ("ran", "rerun", "kept", "skipped", "failed", "empty", "by_system")
+
+    def step(folder: Folder) -> tuple[list[str], bool]:
+        out = system.run_folder(folder, qs, args.plans, args.results, as_system=args.confirm_as_system,
+                                workers=args.workers)
+        n = {k: len(out[k]) for k in keys}
+        lines = [f"s{folder.seed}: ran {n['ran']}, rerun {n['rerun']}, kept {n['kept']}, skipped {n['skipped']}, "
+                 f"failed {n['failed']}, empty {n['empty']}, plans confirmed by system {n['by_system']}"]
+        lines += [f"  skipped {qid}: {why}" for qid, why in out["skipped"].items()]
+        lines += [f"  failed {qid}: {why}" for qid, why in out["failed"].items()]
+        lines += [f"  empty {qid}" for qid in out["empty"]]
+        return lines, bool(out["failed"])
+
+    return each_folder(args.folders or folders_of(args.domain), seeds, spec, step)
+
+
 def add_system_commands(sub) -> None:
     p = sub.add_parser("system-plan", help="draft one plan per question (orch-model), with its sub-questions")
     p.add_argument("--domain", required=True)
@@ -48,3 +68,15 @@ def add_system_commands(sub) -> None:
     p.add_argument("--spec-root", type=Path, default=SPECS)
     p.add_argument("--results", type=Path, default=RESULTS)
     p.set_defaults(run=system_plan)
+    r = sub.add_parser("system-run", help="run every confirmed plan on every folder and save the answers")
+    r.add_argument("--domain", required=True)
+    r.add_argument("--seeds", default="1,2,3,4,5", help="comma-separated, e.g. 1,2,3,4,5")
+    r.add_argument("--workers", type=int, default=3)
+    r.add_argument("--confirm-as-system", action="store_true",
+                   help="run a system-confirmed copy of each plan nobody confirmed (the draft is not changed)")
+    r.add_argument("--folders", type=Path, default=None, help="holds s<seed>/; default: the domain's built set")
+    r.add_argument("--plans", type=Path, default=system.PLANS)
+    r.add_argument("--questions-root", type=Path, default=QUESTIONS)
+    r.add_argument("--spec-root", type=Path, default=SPECS)
+    r.add_argument("--results", type=Path, default=RESULTS)
+    r.set_defaults(run=system_run)
