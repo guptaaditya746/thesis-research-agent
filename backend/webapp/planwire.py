@@ -113,10 +113,13 @@ class PlanRuns:
 
     @staticmethod
     def _written(run: Any, answer: dict[str, Any]) -> dict[str, Any]:
-        """The answer, with the written answer's text when the run has one (a failed one says why)."""
+        """The answer, with the written answer's text when the run has one (a failed one says why; a failed model call
+        starts "failed:", as a failed run does)."""
         written = run.try_json(WRITTEN_FILE)
         if not isinstance(written, dict):
             return answer
+        if "failed" in written:
+            return {**answer, "text": f"failed: the written answer's model call failed: {written['failed']}"}
         if written.get("status") == "failed":
             problems = "; ".join(str(p) for p in written.get("problems") or [])
             return {**answer, "text": f"The model's answer failed its checks: {problems}"}

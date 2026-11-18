@@ -2,6 +2,7 @@
 (find, pull, combine, answer) and a paper with the run's items marked. Read-only; no model is called."""
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -91,6 +92,28 @@ def test_a_running_run_says_running(system_runs, tmp_path, review_root):
     (tmp_path / "ev" / "runs" / system_runs["written"] / "manifest.json").unlink()
     s = client(tmp_path, review_root).get(f"/api/ev/system/runs/{system_runs['written']}/steps").json()
     assert s["status"] == "running" and s["pull"]["facts"] == [] and s["answer"]["lines"] == []
+
+
+def test_a_failed_seal_says_failed_with_its_reason(system_runs, tmp_path, review_root):
+    from evidence import seal as sealing
+    run = tmp_path / "ev" / "runs" / system_runs["written"]
+    sha = json.loads((run / "manifest.json").read_text(encoding="utf-8"))["corpus_manifest_sha256"]
+    sealing.seal(run, sha, status="failed", error="RuntimeError: disk full")
+    s = client(tmp_path, review_root).get(f"/api/ev/system/runs/{system_runs['written']}/steps").json()
+    assert s["status"] == "failed" and s["error"] == "RuntimeError: disk full"
+    assert s["pull"]["facts"] == [] and s["combine"]["rows"] == [] and s["answer"]["lines"] == []
+
+
+def test_a_failed_writer_call_says_failed_with_its_reason(tmp_path, review_root):
+    spec = load_spec("demo", review_root)
+    q = load_questions("demo", spec, review_root / "questions").get("d01")
+    run = make_system_run(tmp_path / "ev" / "runs", load_folder(review_root / "built" / "demo" / "s1"), q,
+                          demo_plan(spec, q), writer_reply=lambda p: RuntimeError("gateway down"))
+    written = json.loads((run / "written-answer.json").read_text(encoding="utf-8"))
+    assert set(written) == {"failed"}
+    s = client(tmp_path, review_root).get(f"/api/ev/system/runs/{run.name}/steps").json()
+    assert s["status"] == "failed" and s["error"] == f"the written answer's model call failed: {written['failed']}"
+    assert s["pull"]["facts"] == [] and s["combine"]["rows"] == [] and s["answer"]["lines"] == []
 
 
 @pytest.mark.parametrize("path", ["/api/ev/system/runs/..%2F..%2Fetc/steps", "/api/ev/system/runs/-x/steps",

@@ -197,6 +197,9 @@ def steps_of(run: Path) -> SystemSteps:
         return SystemSteps(status="failed", **head, find=find, pull=pull, combine=combine, answer=answer)
     written = rd.try_json(f"{STAGE}.json") if plan.answer_by == "written" else None
     written = written if isinstance(written, dict) else None
+    if written is not None and "failed" in written:   # the writer's model call failed: no answer to show
+        head["error"] = f"the written answer's model call failed: {written['failed']}"
+        return SystemSteps(status="failed", **head, find=find, pull=pull, combine=combine, answer=answer)
     facts, left_out = _pulled(rd, plan, written)
     by_n = {f.n: f for f in facts}
     numbers = {f.item: f.n for f in facts}

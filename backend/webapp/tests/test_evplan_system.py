@@ -166,3 +166,14 @@ def test_a_written_result_shows_the_written_text(folder, tmp_path, SPEC):  # noq
     run = make_system_run(tmp_path / "ev" / "runs", f, qq, demo_plan(SPEC, qq), writer_reply=FACT_REPLY, run_id="r1")
     want = json.loads((run / "written-answer.json").read_text(encoding="utf-8"))["answer_text"]
     assert want and PlanRuns(Settings(EV=tmp_path / "ev")).result("r1")["answer"]["text"] == want
+
+
+def test_a_failed_writer_call_shows_as_a_failed_result(folder, tmp_path, SPEC):  # noqa: F811
+    f = load_folder(folder); qq = q("Does Targeted therapy raise the Response rate?")
+    run = make_system_run(tmp_path / "ev" / "runs", f, qq, demo_plan(SPEC, qq),
+                          writer_reply=lambda p: RuntimeError("gateway down"), run_id="r1")
+    written = json.loads((run / "written-answer.json").read_text(encoding="utf-8"))
+    assert set(written) == {"failed"}
+    out = PlanRuns(Settings(EV=tmp_path / "ev")).result("r1")
+    assert out["status"] == "done"
+    assert out["answer"]["text"] == f"failed: the written answer's model call failed: {written['failed']}"
