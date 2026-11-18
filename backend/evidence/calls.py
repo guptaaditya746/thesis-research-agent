@@ -17,6 +17,8 @@ call inside it. Modes:
 
 `recorded` is the same policy for a model call of the engine's own that is not an extractor (the names check of
 D38): its records sit in the same cache, keyed by the call's owner id and the digest of its request.
+`reexec` with `fresh_recorded`: the engine's own calls (the names check, the stages' `ctx.ask`) are asked again too,
+never read from the record.
 """
 from __future__ import annotations
 
@@ -116,8 +118,11 @@ class CallCache:
     """The record cache with the policy of one mode."""
 
     def __init__(self, cache: JsonlCache, mode: Mode, bypass: Callable[[ExtractorSpec], bool] | None = None,
-                 retry_errors: bool = False, attempts: dict[str, int] | None = None) -> None:
+                 retry_errors: bool = False, attempts: dict[str, int] | None = None,
+                 fresh_recorded: bool = False) -> None:
         self.cache, self.mode, self.bypass, self.retry_errors = cache, mode, bypass, retry_errors
+        self.fresh_recorded = fresh_recorded
+        self.asked_again: dict[str, Asked] = {}   # reexec + fresh_recorded: cache key -> what this re-run asked
         self.attempts = attempts       # cache_key -> attempt the recorded run used (replay, reexec)
         self._warned: set[str] = set()
         self.made: set[str] = set()    # cache keys stored by call() in this process
@@ -172,6 +177,13 @@ class CallCache:
         is what `retry_errors` asks again. Replay reads the recorded attempt only (a miss is NotRecorded); reexec uses
         the record and asks only when there is none (no `bypass`: it names extractors)."""
         request_sha256 = digest(request)
+        if self.mode == "reexec" and self.fresh_recorded:
+            key = cache_key(owner_id, request_sha256)
+            if key not in self.asked_again:   # a repeat in this re-run gets the same answer; nothing is stored
+                n, _ = self._recorded(owner_id, request_sha256)
+                value, records = make()
+                self.asked_again[key] = Asked(value, records, "fresh", n)
+            return self.asked_again[key]
         if self.mode in ("replay", "reexec"):
             n, hit = self._recorded(owner_id, request_sha256)
             if hit is not None:

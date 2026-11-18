@@ -8,7 +8,7 @@ its file hashes.
     evidence estimate --protocol P --corpus DIR [--strategy gaps|all] [--extractors regex-only|llm-only|cascade]
                       [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
-    evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
+    evidence reexec RUN [--extractor NAME | --all-calls] [--cache DIR] [--corpus DIR] [--out DIR]
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
@@ -132,7 +132,10 @@ def _parser() -> argparse.ArgumentParser:
         s.add_argument("--corpus", type=Path)
         s.add_argument("--out", type=Path)
         if name == "reexec":
-            s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+            pick = s.add_mutually_exclusive_group()
+            pick.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+            pick.add_argument("--all-calls", action="store_true",
+                              help="every extractor, and the names check's and the stages' model calls, asked again")
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
     sub.add_parser("verify", help="check the run's hash chain and file hashes").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
@@ -311,7 +314,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         return 0 if report["ok"] else 1
     if args.command == "reexec":
         from .replay import reexec
-        new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out)
+        new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out,
+                     all_calls=args.all_calls)
         report = read_json(new / "reexec.json")
         print(json.dumps({"run": str(new), "summary": report["summary"], "totals": report["totals"]}, indent=1))
         return 0
