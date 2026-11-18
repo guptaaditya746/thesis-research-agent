@@ -74,7 +74,23 @@ def load_sheet(root: Path, domain: str, seed: int, qid: str) -> Sheet | None:
 
 
 def sheet_sha256(sheet: Sheet) -> str:
+    """The hash of what the C judge is scored against: the points (id, text and cited facts, in order) and
+    `cant_tell`. Checking a sheet (`status`, `checked_by`, `checked_at`) or new `warnings` do not change it, so
+    marks and hand marks made on a drafted sheet still fit once it is checked with no point changed. The question
+    and the folder's truth are watched by `stale`."""
+    return sha256_hex(canonical_bytes({"points": [p.model_dump() for p in sheet.points],
+                                       "cant_tell": sheet.cant_tell}))
+
+
+def legacy_sheet_sha256(sheet: Sheet) -> str:
+    """The sheet hash as marks files held it before review round 1: over the whole sheet file. Read only to keep
+    such marks current while the sheet file is byte for byte what it was (`sheet_hashes`); never written."""
     return sha256_hex(canonical_bytes(sheet.model_dump()))
+
+
+def sheet_hashes(sheet: Sheet) -> tuple[str, str]:
+    """The hashes a marks file may hold for this sheet: today's and the legacy one."""
+    return sheet_sha256(sheet), legacy_sheet_sha256(sheet)
 
 
 def check_points(points: list[tuple[str, list[str]]], facts: list[FactLine], *, by_model: bool,

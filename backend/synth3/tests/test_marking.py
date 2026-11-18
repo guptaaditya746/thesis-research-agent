@@ -298,4 +298,57 @@ def test_a_record_without_the_asked_hash_keeps_its_answer_hash():
     rec = AnswerRecord(domain="demo", seed=1, corpus_id="c", question_id="x", question_sha256="a" * 64,
                        system="engine", text="t", text_cut=False, cited=[], facts=None, passages=[], source="fake")
     assert "asked_sha256" not in rec.model_dump()
-    assert answer_sha256(rec) == "2d182bb04728499801c4eaeb303475520870afe5cc797fa2d42a7a8dd29a08b7"
+    from synth3.marking import legacy_answer_sha256
+    assert legacy_answer_sha256(rec) == "2d182bb04728499801c4eaeb303475520870afe5cc797fa2d42a7a8dd29a08b7"
+
+
+def test_the_answer_hash_does_not_hold_the_path_of_the_run(folder, tmp_path, SPEC):
+    """Review round 1, synth3-I2: the same run collected with another spelling of the results path changed only
+    `source`, and with it the hash, so every mark and hand mark of the answer turned stale."""
+    f = load_folder(folder); qq = load_questions("demo", SPEC, FIX).get("d01")
+    a = engine_rec(f, qq, source=r"C:\res\demo\runs\s1\d01")
+    assert answer_sha256(a) == answer_sha256(a.model_copy(update={"source": "res/demo/runs/s1/d01"}))
+    for change in ({"text": "Other."}, {"cited": ["S001"]}, {"facts": [pulled_on("S001")]},
+                   {"passages": [pulled_on("S002")]}, {"corpus_id": "other"}, {"question_sha256": "1" * 64}):
+        assert answer_sha256(a) != answer_sha256(a.model_copy(update=change)), change
+
+
+def test_marks_made_before_the_hashes_changed_stay_current_and_are_kept(folder, tmp_path, SPEC):
+    """Marks files written before review round 1 hold the hash of the whole answer record and of the whole sheet.
+    While the answer file and the sheet file are as they were, such marks still count and are not judged again."""
+    from synth3.marking import legacy_answer_sha256
+    from synth3.sheets import legacy_sheet_sha256
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); qq = qs.get("d01")
+    sheet = make_sheet(f, qq, [(TEXT, ["pair:a:m1"])], {"model": "x"}); save_sheet(tmp_path / "sh", sheet)
+    r = engine_rec(f, qq)
+    save_answer(tmp_path / "res", r)
+    run(folder, tmp_path, SPEC, qs, judge_model())
+    path = marks_path(tmp_path / "res", "demo", 1, "engine", "d01")
+    m = marks_of(tmp_path)
+    m["answer_sha256"] = legacy_answer_sha256(r); m["sheet"]["sha256"] = legacy_sheet_sha256(sheet)
+    path.write_text(json.dumps(m), encoding="utf-8")
+    assert current_marks(m, r, f, qs, sheet)
+    never = boom()
+    assert run(folder, tmp_path, SPEC, qs, never)["kept"] == 1 and never.calls == 0
+    assert not current_marks(m, r.model_copy(update={"source": "elsewhere"}), f, qs, sheet)   # old hash: path in it
+
+
+def test_checking_a_sheet_with_no_point_changed_keeps_its_marks(folder, tmp_path, SPEC):
+    """Review round 1, synth3-I3 and web-I1: the first check of a drafted sheet, or saving a checked sheet again,
+    changed the sheet hash, so the marks dropped out of the report and the hand marks had to be made again."""
+    from synth3.sheets import check_sheet
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); qq = qs.get("d01")
+    points = [(TEXT, ["pair:a:m1"])]
+    sheet = make_sheet(f, qq, points, {"model": "x"}); save_sheet(tmp_path / "sh", sheet)
+    r = engine_rec(f, qq)
+    save_answer(tmp_path / "res", r)
+    run(folder, tmp_path, SPEC, qs, judge_model())
+    m = marks_of(tmp_path)
+    checked = check_sheet(sheet, points, "aditya", "2026-11-18T10:00:00+00:00")
+    again = check_sheet(checked, points, "aditya", "2026-11-18T10:05:00+00:00")
+    assert current_marks(m, r, f, qs, checked) and current_marks(m, r, f, qs, again)
+    save_sheet(tmp_path / "sh", again)
+    never = boom()
+    assert run(folder, tmp_path, SPEC, qs, never)["kept"] == 1 and never.calls == 0
+    edited = check_sheet(sheet, [(TEXT + " Clearly.", ["pair:a:m1"])], "aditya", "2026-11-18T10:06:00+00:00")
+    assert not current_marks(m, r, f, qs, edited)

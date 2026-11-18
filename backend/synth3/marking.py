@@ -21,7 +21,7 @@ from synth3.answers import AnswerRecord, item_id, load_answer
 from synth3.judge import (PROMPT_A, PROMPT_B, PROMPT_C, ClaimChecks, PaperMarks, Ticks, score_a, score_b, score_c)
 from synth3.questions import Question, QuestionSet, asked_sha256, question_sha256
 from synth3.sheetfacts import Folder, check_spec, load_folder
-from synth3.sheets import Sheet, load_sheet, sheet_sha256, stale
+from synth3.sheets import Sheet, load_sheet, sheet_hashes, sheet_sha256, stale
 from synth3.spec import DomainSpec
 
 
@@ -36,7 +36,27 @@ def prompt_shas() -> dict[str, str]:
 
 
 def answer_sha256(rec: AnswerRecord) -> str:
+    """The hash of the saved answer without `source` (the path of the run or file it was collected from, which
+    changes with how the results path is spelled and with the machine). Everything the judge reads and the report
+    counts is in it, so collecting an unchanged run again never changes it."""
+    return sha256_hex(canonical_bytes({k: v for k, v in rec.model_dump().items() if k != "source"}))
+
+
+def legacy_answer_sha256(rec: AnswerRecord) -> str:
+    """The answer hash as marks files held it before review round 1: over the whole record, `source` included.
+    Read only to keep such marks current while the answer file is what it was (`answer_hashes`); never written."""
     return sha256_hex(canonical_bytes(rec.model_dump()))
+
+
+def answer_hashes(rec: AnswerRecord) -> tuple[str, str]:
+    """The hashes a marks file may hold for this answer: today's and the legacy one."""
+    return answer_sha256(rec), legacy_answer_sha256(rec)
+
+
+def made_from(marks: dict, rec: AnswerRecord, sheet: Sheet) -> bool:
+    """True when the marks file was made from this answer and this sheet (by today's or the legacy hashes). A
+    file in another shape raises `KeyError` or `TypeError`."""
+    return marks["answer_sha256"] in answer_hashes(rec) and marks["sheet"]["sha256"] in sheet_hashes(sheet)
 
 
 def why_not(folder: Folder, q: Question, sheet: Sheet | None, rec: AnswerRecord) -> str | None:
@@ -66,7 +86,7 @@ def current_marks(marks: dict, rec: AnswerRecord, folder: Folder, qs: QuestionSe
     if why_not(folder, q, sheet, rec) is not None:
         return False
     try:
-        return marks["answer_sha256"] == answer_sha256(rec) and marks["sheet"]["sha256"] == sheet_sha256(sheet)
+        return made_from(marks, rec, sheet)
     except (KeyError, TypeError):
         return False
 
@@ -107,8 +127,7 @@ def _kept(path: Path, rec: AnswerRecord, sheet: Sheet) -> bool:
     nothing pending. A file that cannot be read is not kept."""
     try:
         old = json.loads(path.read_text(encoding="utf-8"))
-        return (old["answer_sha256"] == answer_sha256(rec) and old["sheet"]["sha256"] == sheet_sha256(sheet)
-                and old["judge"]["prompts"] == prompt_shas() and not is_pending(old))
+        return made_from(old, rec, sheet) and old["judge"]["prompts"] == prompt_shas() and not is_pending(old)
     except (OSError, ValueError, KeyError, TypeError):
         return False
 

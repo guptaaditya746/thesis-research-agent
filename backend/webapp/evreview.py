@@ -54,7 +54,7 @@ from pydantic import BaseModel, StrictBool
 
 from synth3.answers import AnswerRecord, load_answer
 from synth3.judge import used_facts
-from synth3.marking import answer_sha256
+from synth3.marking import answer_hashes
 from synth3.questions import Question, QuestionSet, load_questions
 from synth3.report import hand_mark_fits, load_hand_marks, load_sample, save_hand_mark
 from synth3.sheetfacts import Folder, check_spec, load_folder, relevant_facts, scope
@@ -353,7 +353,7 @@ def evreview_router(settings: Settings) -> APIRouter:
             rec = load_answer(path)
         except ValueError as err:
             raise Conflict(f"judge-test item {n}: the saved answer is damaged") from err
-        if answer_sha256(rec) != marks.get("answer_sha256"):
+        if marks.get("answer_sha256") not in answer_hashes(rec):
             raise Conflict(f"judge-test item {n}: the answer changed after it was judged; run synth3 judge again")
         return rec
 

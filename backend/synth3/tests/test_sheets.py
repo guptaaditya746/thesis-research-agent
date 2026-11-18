@@ -141,3 +141,21 @@ def test_folders_of_prefers_the_real_set(tmp_path):
     assert folders_of("demo", tmp_path) == tmp_path / "demo"
     (tmp_path / "demo-real").mkdir()
     assert folders_of("demo", tmp_path) == tmp_path / "demo-real"
+
+
+def test_the_sheet_hash_follows_the_points_and_cant_tell_only(folder, SPEC):
+    """Review round 1, synth3-I3: who checked the sheet and when is not what the judge reads."""
+    from synth3.sheets import CANT_TELL_POINT, check_sheet, make_sheet, sheet_sha256
+    f = load_folder(folder)
+    qq = q(f"Does {label(SPEC, 'a')} help?")
+    pts = [("One.", ["pair:a:m1"]), ("Two.", ["pair:a:m2"])]
+    s = make_sheet(f, qq, pts, {"model": "x"})
+    c1 = check_sheet(s, pts, "aditya", "2026-11-18T10:00:00+00:00")
+    c2 = check_sheet(c1, pts, "someone", "2026-11-18T10:05:00+00:00")
+    assert sheet_sha256(s) == sheet_sha256(c1) == sheet_sha256(c2)
+    assert sheet_sha256(s) == sheet_sha256(s.model_copy(update={"warnings": ["w"]}))
+    changes = ([("One!", ["pair:a:m1"]), pts[1]], [pts[1], pts[0]], [("One.", ["pair:a:m2"]), pts[1]], pts[:1])
+    for other in changes:
+        assert sheet_sha256(check_sheet(s, other, "aditya", "t")) != sheet_sha256(s), other
+    assert sheet_sha256(s.model_copy(update={"cant_tell": True})) != sheet_sha256(s)
+    assert check_sheet(s, [(CANT_TELL_POINT, [])], "aditya", "t").cant_tell is True
