@@ -4,18 +4,20 @@
  * place: each line's result ("No evidence found", or "failed: <reason>"), the answer ("missing: <line>" for a
  * line that failed), and the reruns that flip the answer. No pilot run: an empty answer is a valid answer.
  */
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useSearchParams } from "react-router"
 
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-import { confirmAll, decide, deleteLine, RULES, sendAnswers, setMainRule, startPlan, startRun, useAction, usePlanResult, type PlanResult, type PlanView, type Rerun } from "./api"
+import { confirmAll, decide, deleteLine, openBatchPlan, RULES, sendAnswers, setMainRule, startPlan, startRun, useAction, usePlanResult, type PlanResult, type PlanView, type Rerun } from "./api"
 import { DecisionsPanel } from "./DecisionsPanel"
 import { LineCard } from "./LineCard"
+import { parseSubQuestions, SubQuestionsBox } from "./SubQuestionsBox"
 
-function Clarify({ view, busy, onSend }: { view: PlanView; busy: boolean; onSend: (a: { question: string; answer: string }[]) => void }) {
+export function Clarify({ view, busy, onSend }: { view: PlanView; busy: boolean; onSend: (a: { question: string; answer: string }[]) => void }) {
   const [picked, setPicked] = useState<Record<string, string>>({})
   const done = view.clarifications.every((c) => picked[c.question])
   return (
@@ -103,13 +105,22 @@ function Reruns({ reruns }: { reruns: Rerun[] }) {
 
 export default function PlanPage() {
   const [question, setQuestion] = useState("")
+  const [subText, setSubText] = useState("")
+  const [params] = useSearchParams()
+  const batch = params.get("batch")
   const [view, setView] = useState<PlanView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const take = (v: PlanView) => { setError(null); setView(v) }
   const fail = (e: unknown) => setError(e instanceof Error ? e.message : String(e))
   const useMutationOf = <A, R = PlanView>(fn: (arg: A) => Promise<R>, done: (r: R) => void = take as unknown as (r: R) => void) => useAction(fn, done, fail)
 
-  const start = useMutationOf(startPlan)
+  const start = useMutationOf((a: { question: string; subs: string[] }) => startPlan(a.question, a.subs))
+  const opener = useMutationOf((b: string) => { const [domain, qid] = b.split("/"); return openBatchPlan(domain, qid) })
+  const opened = useRef<string | null>(null)
+  const openBatch = opener.mutate
+  useEffect(() => {
+    if (batch && opened.current !== batch && batch.split("/").length === 2) { opened.current = batch; openBatch(batch) }
+  }, [batch, openBatch])
   const answers = useMutationOf((a: { question: string; answer: string }[]) => sendAnswers(view!.id, a))
   const confirm = useMutationOf((did: string) => decide(view!.id, did, { confirm: true }))
   const change = useMutationOf((a: { id: string; value: unknown }) => decide(view!.id, a.id, { change: a.value }))
@@ -117,7 +128,7 @@ export default function PlanPage() {
   const remove = useMutationOf((lid: string) => deleteLine(view!.id, lid))
   const rule = useMutationOf((r: string) => setMainRule(view!.id, r))
   const run = useMutationOf(() => startRun(view!.id), (r) => setView((v) => (v ? { ...v, frozen: true, run: r.run } : v)))
-  const busy = [start, answers, confirm, change, all, remove, rule, run].some((m) => m.isPending)
+  const busy = [start, opener, answers, confirm, change, all, remove, rule, run].some((m) => m.isPending)
 
   const plan = view?.plan ?? null
   const result = usePlanResult(view?.id ?? null, view?.run != null)
@@ -126,10 +137,17 @@ export default function PlanPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="Plan" description="Ask a question, check the plan, confirm the decisions, run." />
-      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (question.trim()) { setView(null); start.mutate(question) } }}>
-        <Input aria-label="Question" placeholder="What do you want to know?" value={question} onChange={(e) => setQuestion(e.target.value)} />
-        <Button type="submit" disabled={busy || !question.trim()}>Plan</Button>
+      <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (question.trim()) { setView(null); start.mutate({ question, subs: parseSubQuestions(subText) }) } }}>
+        <div className="flex gap-2">
+          <Input aria-label="Question" placeholder="What do you want to know?" value={question} onChange={(e) => setQuestion(e.target.value)} />
+          <Button type="submit" disabled={busy || !question.trim()}>Plan</Button>
+        </div>
+        <SubQuestionsBox value={subText} onChange={setSubText} />
       </form>
+      {view?.batch && <p className="text-sm text-muted-foreground">Batch plan {view.batch}: your changes are saved to its file.</p>}
+      {view?.batch && (view.sub_questions ?? []).length > 0 && (
+        <ul aria-label="Sub-questions" className="list-disc pl-5 text-sm">{(view.sub_questions ?? []).map((q) => <li key={q}>{q}</li>)}</ul>
+      )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
       {view && !plan && <Clarify view={view} busy={busy} onSend={(a) => answers.mutate(a)} />}
