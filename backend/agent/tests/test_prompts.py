@@ -248,7 +248,7 @@ def test_build_answer_completes_and_checks() -> None:
     ('{"rows": ' + "[" * 200_000 + "]" * 200_000 + "}", "nested too deeply"),
     ('{"rows": [{"id": "r1", "cells": ' + "[" * 500 + "]" * 500 + ', "facts": []}], "notes": "n"}',
      "nested too deeply"),
-])
+], ids=lambda v: v if len(v) <= 80 else f"{v[:30]}...({len(v)} chars)")  # Windows caps the test-name env var
 def test_build_answer_problems(text: str, problem: str) -> None:
     answer, problems = build_answer(text, fixture("concept_table.json"))
     assert answer is None and any(problem in p for p in problems), problems
