@@ -278,7 +278,7 @@ def _mean(values: list[float]) -> float | None:
 
 def _row() -> dict:
     return {"answers": 0, "judged": 0, "not_current": 0, "skipped": 0, "unchecked": 0, "pending": 0,
-            "cut_texts": 0, "pulled_cut": 0, "_a": [], "_anchored": [], "_b": [], "_c": [], "_c_cant": [],
+            "cut_texts": 0, "pulled_cut": 0, "plans_person": 0, "plans_system": 0, "facts_left_out": 0, "_a": [], "_anchored": [], "_b": [], "_c": [], "_c_cant": [],
             "_c_other": [], "_found": [0, 0], "_missing": [0, 0]}
 
 
@@ -352,6 +352,9 @@ def build_report(results: Path, domains: list[str], sheets_root: Path, judge_tes
             for rec, m, state in answers_of(results, folder, qs, sheets_root):
                 row = rows.setdefault(rec.system, _row())
                 row["answers"] += 1
+                row["plans_person"] += rec.plan_confirmed_by == "person"
+                row["plans_system"] += rec.plan_confirmed_by == "system"
+                row["facts_left_out"] += bool(rec.facts_left_out)
                 if m is None:
                     row[state.replace(" ", "_")] += 1
                     continue
@@ -397,16 +400,22 @@ def render_report(r: dict) -> str:
              "with no marks.", ""]
     head = ("| system | answers | judged | not current | skipped | A | anchored | A found, span untouched | "
             "A missing, span touched | B | C | C can't-tell | C others | pending | cut texts | papers cut | "
-            "on unchecked sheets |")
+            "on unchecked sheets | plans by person / by system | answers with facts left out |")
     for domain, d in r["domains"].items():
         s = d["sheets"]
-        lines += [f"## {domain}", "", head, "|" + " --- |" * 17]
+        lines += [f"## {domain}", "", head, "|" + " --- |" * 19]
         for name, x in d["systems"].items():
             lines.append(f"| {name} | {x['answers']} | {x['judged']} | {x['not_current']} | {x['skipped']} | "
                          f"{_pct(x['a_mean'])} | {_pct(x['anchored_mean'])} | "
                          f"{_pct(x['a_found_untouched'])} | {_pct(x['a_missing_touched'])} | {_pct(x['b_mean'])} | "
                          f"{_pct(x['c_mean'])} | {_pct(x['c_cant_tell'])} | {_pct(x['c_others'])} | {x['pending']} | "
-                         f"{x['cut_texts']} | {x['pulled_cut']} | {x['unchecked']} of {x['judged']} unchecked |")
+                         f"{x['cut_texts']} | {x['pulled_cut']} | {x['unchecked']} of {x['judged']} unchecked | "
+                         f"{x['plans_person']} / {x['plans_system']} | {x['facts_left_out']} |")
+        by_system = sum(x["plans_system"] for x in d["systems"].values())
+        if by_system:
+            of = sum(x["answers"] for n, x in d["systems"].items() if n != BASELINE)
+            lines += ["", f"{by_system} of {of} system answers ran on plans the system confirmed, not a person "
+                          f"(spec §8 puts a person's edit in the system): reported as a limitation."]
         lines += ["", f"Sheets: {s['checked']} checked, {s['drafted']} drafted, {s['stale']} stale, "
                       f"{s['missing']} missing.", ""]
         if d["most_missed"]:

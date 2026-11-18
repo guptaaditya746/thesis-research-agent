@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from jsonio import write_json_atomic
-from synth3.answers import PulledFact, item_id, save_answer
+from synth3.answers import PulledFact, item_id, load_answers, save_answer
 from synth3.cli import main
 from synth3.corpus import build_folder
 from synth3.judge import planted_facts
@@ -282,6 +282,35 @@ def test_report_leaves_a_pending_answer_out_of_its_means_and_counts_unchecked_ma
     assert eng["c_mean"] == 0.5 and eng["b_mean"] == 1.0   # C's mean leaves the pending one out; B's keeps it
     assert eng["unchecked"] == 3 and r["domains"]["demo"]["systems"][BASELINE]["unchecked"] == 3
     assert "unchecked" in render_report(r)
+
+
+def test_the_report_counts_who_confirmed_the_plans(folder, tmp_path, spec_dir, SPEC):
+    """Counted for every saved answer, also one whose marks are not current (saving the answer again changes it)."""
+    judged(tmp_path, folder, SPEC, systems=("system", BASELINE))
+    for rec_ in load_answers(tmp_path / "res", "demo"):
+        if rec_.system == "system":
+            by = "person" if rec_.question_id == "d01" else "system"
+            save_answer(tmp_path / "res", rec_.model_copy(update={
+                "plan_confirmed_by": by, "facts_left_out": 3 if rec_.question_id == "d01" else 0}))
+    r = report(tmp_path, folder, spec_dir)
+    rows = r["domains"]["demo"]["systems"]
+    row = rows["system"]
+    assert row["not_current"] == 3   # counted before an answer without current marks is passed over
+    assert (row["plans_person"], row["plans_system"], row["facts_left_out"]) == (1, 2, 1)
+    md = render_report(r)
+    assert ("2 of 3 system answers ran on plans the system confirmed, not a person (spec §8 puts a person's edit "
+            "in the system): reported as a limitation.") in md
+    assert "plans by person / by system" in md and "answers with facts left out" in md
+    base = rows[BASELINE]
+    assert (base["plans_person"], base["plans_system"], base["facts_left_out"]) == (0, 0, 0)
+    table = [ln for ln in md.splitlines() if ln.startswith("|")]
+    assert len({ln.count("|") for ln in table}) == 1
+    assert "| 1 / 2 |" in md
+
+
+def test_the_report_has_no_limitation_line_when_the_system_confirmed_no_plan(folder, tmp_path, spec_dir, SPEC):
+    judged(tmp_path, folder, SPEC)
+    assert "ran on plans the system confirmed" not in render_report(report(tmp_path, folder, spec_dir))
 
 
 def test_report_counts_the_sheets_of_every_seed_with_stale_ones_apart(folder, tmp_path, spec_dir, SPEC):
