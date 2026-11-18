@@ -138,7 +138,7 @@ def test_best_and_consistency_summaries():
                              "disagree in S003; cannot be checked in S002.")
     assert [l.text for l in lines[1:]] == [
         "S001: the authors say better, the numbers say better.",
-        "S002: cannot be checked (no pair of values).",
+        "S002: cannot be checked (no retrieval-augmented model and closed-book model measurement on a question metric).",
         "S003: the authors say better, the numbers say worse."]
 
 
@@ -178,7 +178,7 @@ def test_effect_groups_and_unreadable_study_lines():
     texts = [l.text for l in kind_lines(effect_protocol(), answer, NAMES)]
     assert texts[1:] == ["Papers that show it worse: S002.", "Papers that show no real difference: S003.",
                          "Papers that could not be read: S004.", "Papers that repeat an earlier paper: S005.",
-                         "S004: could not be read (no pair of values).",
+                         "S004: could not be read (no retrieval-augmented model and closed-book model measurement on a question metric).",
                          "S002: worse on answer accuracy (0.5 against 0.6)."]
 
 
@@ -205,3 +205,12 @@ def test_a_reason_without_text_never_prints_its_code():
     answer["studies"][0]["reason"] = {"code": "no_pair"}
     texts = [l.text for l in kind_lines(consistency_protocol(), answer, NAMES)]
     assert "S001: cannot be checked (no reason given)." in texts and not any("no_pair" in t for t in texts)
+
+
+def test_an_effect_reason_of_a_known_code_names_the_thing_not_its_id():
+    answer = effect_with("mixed")
+    answer["studies"] = [{"document": "S004", "direction": "undetermined", "metric": None, "treatment": None,
+                          "control": None,
+                          "reason": {"code": "no_treatment_condition", "text": "no rag condition found"}}]
+    texts = [l.text for l in kind_lines(effect_protocol(), answer, NAMES)]
+    assert "S004: could not be read (no retrieval-augmented model condition found)." in texts

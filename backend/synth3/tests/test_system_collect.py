@@ -99,8 +99,6 @@ def test_an_effect_run_is_judged_as_kind_lines(folder, tmp_path, SPEC):
     assert banned_in(rec.text, plan) == [] and rec.facts_left_out is None
 
 
-@pytest.mark.xfail(strict=True, reason="the engine's undetermined reasons name the thing id (evidence/synthesis.py "
-                                       "REASONS: 'no targeted condition found'); kindtext does not map it to the name")
 def test_an_effect_run_names_no_thing_id(folder, tmp_path, SPEC):
     f = load_folder(folder); qq = q(QQ["text"], kind="effect")
     run = make_system_run(tmp_path / "runs", f, qq, demo_plan(SPEC, qq, answer_by="effect"))

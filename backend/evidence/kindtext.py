@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from .plan import Plan
 from .protocol import Protocol
+from .synthesis import REASONS
 
 __all__ = ["CANT_TELL_LINE", "MAX_KIND_LINES", "RULE_TEXT", "KindLine", "kind_lines", "plan_names"]
 
@@ -78,8 +79,16 @@ def _join(words: list[str]) -> str:
     return ", ".join(words)
 
 
-def _reason(reason: Mapping[str, Any] | None) -> str:
-    """The reason's text; a reason with no text is written as a fixed phrase, never its code."""
+def _reason(reason: Mapping[str, Any] | None, protocol: Protocol | None = None,
+            names: Mapping[str, str] | None = None) -> str:
+    """The reason's text; a reason with no text is written as a fixed phrase, never its code. A code of the engine's
+    REASONS is rebuilt from its template with the names of the compared things, so no thing id reaches the text."""
+    code = (reason or {}).get("code") if (reason or {}).get("text") else None
+    synthesis = protocol.synthesis if protocol is not None else None
+    if code in REASONS and synthesis is not None:
+        look = names or {}
+        t, c = synthesis.compare.treatment, synthesis.compare.control
+        return REASONS[code].format(treatment=look.get(t, t), control=look.get(c, c))
     return str((reason or {}).get("text") or "no reason given")
 
 
@@ -112,7 +121,7 @@ def _effect(protocol: Protocol, answer: dict[str, Any], names: Mapping[str, str]
             values = f" ({_num(t['value'])} against {_num(c['value'])})" if t.get("value") is not None and c.get("value") is not None else ""
             text = f"{s['document']}: {SAYS[s['direction']]} on {name(s.get('metric') or '')}{values}."
         else:
-            text = f"{s['document']}: could not be read ({_reason(s.get('reason'))})."
+            text = f"{s['document']}: could not be read ({_reason(s.get('reason'), protocol, names)})."
         body.append(_study(text, s))
     return head, body
 
@@ -131,7 +140,7 @@ def _consistency(protocol: Protocol, answer: dict[str, Any], names: Mapping[str,
     body: list[KindLine] = []
     for s in answer.get("studies", []):
         if s.get("agrees") is None:
-            text = f"{s['document']}: cannot be checked ({_reason(s.get('reason'))})."
+            text = f"{s['document']}: cannot be checked ({_reason(s.get('reason'), protocol, names)})."
         else:
             text = (f"{s['document']}: the authors say {SAYS.get(s.get('claim'), 'nothing clear')}, "
                     f"the numbers say {SAYS.get(s.get('direction'), 'nothing clear')}.")
@@ -159,7 +168,7 @@ def _best(protocol: Protocol, answer: dict[str, Any], names: Mapping[str, str]) 
         elif s.get("tied"):
             text = f"{s['document']}: {_join([name(k) for k in s['tied']])} tie."
         else:
-            text = f"{s['document']}: no comparison ({_reason(s.get('reason'))})."
+            text = f"{s['document']}: no comparison ({_reason(s.get('reason'), protocol, names)})."
         body.append(_study(text, s))
     return head, body
 
