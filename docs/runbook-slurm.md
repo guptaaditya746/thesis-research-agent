@@ -650,18 +650,13 @@ Aditya, answer sheets drafted by `orch-model` and checked by Aditya, the engine 
 and folder, a judge model marking every answer, Aditya hand-marking about 30 to check the judge. Every `synth3`
 command reads and writes under `data/synth3/` in the cluster repo (its defaults); nothing goes to `$EV` except logs.
 
-**The papers are real text.** `built/` and `pools/` are git-ignored and never committed, pushed or published; outputs
-go back to the laptop only (11.6). Stack and session environment as in 0.1 and 0.2; web page as in 0.3.
+**The medicine-real papers are real text.** The built folders are committed to this private repo (Aditya, 18 Nov);
+never publish them or the repo. `pools/` stays git-ignored; outputs go back to the laptop only (11.6). Stack and
+session environment as in 0.1 and 0.2; web page as in 0.3.
 
-11.0 **Copy (Aditya, laptop, Git Bash, repo root)**, once `data/synth3/questions/<domain>.yaml` passes
-`uv run synth3 questions --domain medicine`:
-
-```bash
-tar -C data/synth3 -czf - built questions | ssh <login node> "tar -C <cluster repo>/data/synth3 -xzf -"
-```
-
-Check (login node): `ls -d data/synth3/built/medicine-real/s*/ | wc -l` prints 5, and
-`uv run synth3 questions --domain medicine` exits 0.
+11.0 **Check (login node)** after `git pull`: `ls -d data/synth3/built/*/s*/ | wc -l` prints 24 (law has 4 folders,
+the rest 5). Once Aditya has committed `data/synth3/questions/<domain>.yaml`, `uv run synth3 questions --domain medicine`
+exits 0.
 
 11.1 **Blind reader** (a sub-model reads each paper; code checks its notes), one folder at a time:
 
