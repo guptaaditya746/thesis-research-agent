@@ -26,5 +26,5 @@ export const systemHandlers = [
   http.get("/api/ev/system/domains", () => HttpResponse.json(domains)),
   http.get("/api/ev/system/runs/:rid/steps", () => HttpResponse.json(steps)),
   http.get("/api/ev/system/runs/:rid/papers/:doc", ({ params }) =>
-    HttpResponse.json({ paper: String(params.doc), text: "Response rate 0.4 against 0.3.", segments: [{ text: "Response rate 0.4 against 0.3.", marks: ["S001:r1"] }] })),
+    HttpResponse.json({ paper: String(params.doc), text: "Response rate 0.4 against 0.3.", segments: [{ text: "Response rate 0.4 against 0.3.", start: 0, end: 30, marks: ["S001:r1"], roles: [] }] })),
 ]

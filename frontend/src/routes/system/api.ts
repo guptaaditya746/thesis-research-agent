@@ -52,7 +52,7 @@ export interface SystemSteps {
 export interface PaperView {
   paper: string
   text: string
-  segments: { text?: string; start?: number; end?: number; marks?: string[] }[]
+  segments: { text: string; start: number; end: number; marks: string[]; roles: string[] }[]
 }
 
 const enc = encodeURIComponent
