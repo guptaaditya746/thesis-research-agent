@@ -1,0 +1,90 @@
+# Drafted by Claude (Opus 5.5) on 18 Nov 2026 at Aditya's request, from data/synth3/rag.yaml only (no world
+# file was read, so no question is fitted to one folder's truth). Mix: 5 effect, 3 best, 2 consistency,
+# 2 inventory, 13 open.
+domain: rag
+questions:
+  - id: r01
+    question: Does Lanterra Retrieval give more correct answers than a closed-book model?
+    about: [Lanterra Retrieval, Correct answers, Closed-book model]
+    kind: effect
+  - id: r02
+    question: Does Mervane Retrieval reduce invented facts compared with a closed-book model?
+    about: [Mervane Retrieval, Invented facts, Closed-book model]
+    kind: effect
+  - id: r03
+    question: Does Quillfern Retrieval make answers slower than a closed-book model?
+    about: [Quillfern Retrieval, Answer time, Closed-book model]
+    kind: effect
+  - id: r04
+    question: Does Quillfern Retrieval improve correct answers compared with a closed-book model?
+    about: [Quillfern Retrieval, Correct answers, Closed-book model]
+    kind: effect
+  - id: r05
+    question: Does Lanterra Retrieval change answer time compared with a closed-book model?
+    about: [Lanterra Retrieval, Answer time, Closed-book model]
+    kind: effect
+  - id: r06
+    question: Which set-up gives the most correct answers?
+    about: [Correct answers]
+    kind: best
+  - id: r07
+    question: Which set-up produces the fewest invented facts?
+    about: [Invented facts]
+    kind: best
+  - id: r08
+    question: Which set-up answers fastest?
+    about: [Answer time]
+    kind: best
+  - id: r09
+    question: Do the studies agree on whether Mervane Retrieval improves correct answers?
+    about: [Mervane Retrieval, Correct answers]
+    kind: consistency
+  - id: r10
+    question: Do the studies agree on how Lanterra Retrieval affects invented facts?
+    about: [Lanterra Retrieval, Invented facts]
+    kind: consistency
+  - id: r11
+    question: Which retrieval set-ups were tested in these studies?
+    kind: inventory
+    target: condition
+  - id: r12
+    question: What did the studies measure?
+    kind: inventory
+    target: metric
+  - id: r13
+    question: Does Mervane Retrieval help more on multi-step questions than on single-step questions?
+    about: [Mervane Retrieval, Question type]
+  - id: r14
+    question: Is the gain in correct answers from Lanterra Retrieval different for small and large document collections?
+    about: [Lanterra Retrieval, Correct answers, Document collection]
+  - id: r15
+    question: Does Quillfern Retrieval behave differently on-device than on cloud servers?
+    about: [Quillfern Retrieval, Deployment]
+  - id: r16
+    question: In studies that compared Mervane Retrieval and Quillfern Retrieval directly, which had fewer invented facts?
+    about: [Mervane Retrieval, Quillfern Retrieval, Invented facts]
+  - id: r17
+    question: Do any of the papers claim stronger gains than their own results support?
+  - id: r18
+    question: For multi-step questions on a large document collection, which set-up gets the most answers right?
+    about: [Multi-step questions, Large collection, Correct answers]
+  - id: r19
+    question: Is there a set-up and measure that no study in this collection reports?
+  - id: r20
+    question: What is known about answer time for set-ups that run on-device?
+    about: [On-device, Answer time]
+  - id: r21
+    question: Does Quillfern Retrieval pay for its accuracy with slower answers?
+    about: [Quillfern Retrieval, Correct answers, Answer time]
+  - id: r22
+    question: If invented facts matter most, which set-up suits single-step questions on a small collection?
+    about: [Single-step questions, Small collection, Invented facts]
+  - id: r23
+    question: How often does a closed-book model invent facts?
+    about: [Closed-book model, Invented facts]
+  - id: r24
+    question: Do the results from the Oakfield Edge Suite agree with the other benchmarks about Mervane Retrieval?
+    about: [Oakfield Edge Suite, Mervane Retrieval]
+  - id: r25
+    question: Is the evidence strong enough to say whether Lanterra Retrieval or Mervane Retrieval gives more correct answers?
+    about: [Lanterra Retrieval, Mervane Retrieval, Correct answers]

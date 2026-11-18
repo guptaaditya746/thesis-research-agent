@@ -1,0 +1,90 @@
+# Drafted by Claude (Opus 5.5) on 18 Nov 2026 at Aditya's request, from data/synth3/medicine.yaml only (no world
+# file was read, so no question is fitted to one folder's truth). Mix: 5 effect, 3 best, 2 consistency,
+# 2 inventory, 13 open.
+domain: medicine
+questions:
+  - id: m01
+    question: Does Alvenor improve blood pressure control compared with standard care?
+    about: [Alvenor, Blood pressure control, Standard care]
+    kind: effect
+  - id: m02
+    question: Does Brostamide cause more side effects than standard care?
+    about: [Brostamide, Side effects, Standard care]
+    kind: effect
+  - id: m03
+    question: Does Cardivel lower systolic blood pressure more than standard care does?
+    about: [Cardivel, Systolic drop, Standard care]
+    kind: effect
+  - id: m04
+    question: Does Brostamide improve blood pressure control compared with standard care?
+    about: [Brostamide, Blood pressure control, Standard care]
+    kind: effect
+  - id: m05
+    question: Does Cardivel change how many patients report side effects compared with standard care?
+    about: [Cardivel, Side effects, Standard care]
+    kind: effect
+  - id: m06
+    question: Which treatment gives the best blood pressure control?
+    about: [Blood pressure control]
+    kind: best
+  - id: m07
+    question: Which treatment causes the fewest side effects?
+    about: [Side effects]
+    kind: best
+  - id: m08
+    question: Which treatment gives the largest systolic drop?
+    about: [Systolic drop]
+    kind: best
+  - id: m09
+    question: Do the studies agree on whether Alvenor lowers systolic blood pressure more than standard care?
+    about: [Alvenor, Systolic drop, Standard care]
+    kind: consistency
+  - id: m10
+    question: Do the studies agree on how Cardivel affects blood pressure control?
+    about: [Cardivel, Blood pressure control]
+    kind: consistency
+  - id: m11
+    question: Which treatments were compared in these studies?
+    kind: inventory
+    target: condition
+  - id: m12
+    question: Which outcomes did the studies measure?
+    kind: inventory
+    target: metric
+  - id: m13
+    question: Does the benefit of Alvenor on blood pressure control differ between younger and older adults?
+    about: [Alvenor, Blood pressure control, Age group]
+  - id: m14
+    question: Is the systolic drop with Brostamide different for patients with reduced kidney function?
+    about: [Brostamide, Systolic drop, Kidney status]
+  - id: m15
+    question: Do the results for Cardivel differ between university hospitals and community clinics?
+    about: [Cardivel, Care level]
+  - id: m16
+    question: In studies that compared Alvenor and Brostamide directly, which gave better blood pressure control?
+    about: [Alvenor, Brostamide, Blood pressure control]
+  - id: m17
+    question: Do any of the papers claim more benefit than their own numbers show?
+  - id: m18
+    question: For older adults with reduced kidney function, which treatment causes the fewest side effects?
+    about: [Older adults, Reduced kidney function, Side effects]
+  - id: m19
+    question: Is there a treatment and outcome that no study in this collection measured?
+  - id: m20
+    question: What does the evidence say about Cardivel for patients with reduced kidney function?
+    about: [Cardivel, Reduced kidney function]
+  - id: m21
+    question: Does Brostamide trade better blood pressure control for more side effects?
+    about: [Brostamide, Blood pressure control, Side effects]
+  - id: m22
+    question: Which treatment works best for younger adults treated in community clinics, and why?
+    about: [Younger adults, Community clinic]
+  - id: m23
+    question: How large is the systolic drop with standard care alone?
+    about: [Standard care, Systolic drop]
+  - id: m24
+    question: Do the studies from the Harbor Street Patients cohort agree with the other studies about Alvenor?
+    about: [Harbor Street Patients, Alvenor]
+  - id: m25
+    question: Is the evidence strong enough to say whether Cardivel or Alvenor causes fewer side effects?
+    about: [Cardivel, Alvenor, Side effects]
