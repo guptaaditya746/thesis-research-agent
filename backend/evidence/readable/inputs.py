@@ -16,7 +16,7 @@ from ..kinds import best as best_kind, inventory as inventory_kind
 from .runview import KIND_NOT_REBUILT, NOT_FOUND_AGAIN, NotRebuilt, RunAnswer, read_run
 from .rules.common import BEST_REASON_TEMPLATES
 
-__all__ = ["ProgramInputs", "best_inputs", "effect_inputs", "inputs_of", "inventory_inputs", "refusal"]
+__all__ = ["ProgramInputs", "best_inputs", "effect_inputs", "inputs_of", "inventory_inputs", "refusal", "written_inputs"]
 
 
 @dataclass
@@ -211,6 +211,53 @@ def inventory_inputs(ra: RunAnswer) -> ProgramInputs:
                          settings={"kind": "inventory", "target": spec.target,
                                    "same": {n: list(o) for n, o in spec.same.items()}},
                          facts=table.ordered(), papers=papers, model_text=[], names=dict(ra.names),
+                         spans=table.spans)
+
+
+class _WrittenFacts(FactTable):
+    """The facts of a written run: each writer fact's item, then its condition, then its metric."""
+
+    def __init__(self, ra: RunAnswer) -> None:
+        super().__init__(ra, None)   # type: ignore[arg-type]  (no value or thing types are read)
+
+    def _linked(self, paper: str, item: Item, link: str) -> str | None:
+        """The key of the item's linked item, None when it has no such link or the link points nowhere."""
+        target = item.links.get(link)
+        found = {i.item_id for i in self.ra.items.get(paper, [])}
+        return self.key_of(paper, target) if target in found else None
+
+    def _fact(self, paper: str, item: Item) -> dict[str, Any]:
+        fields = item.fields
+        span = next((s for s in item.spans if s.role == "value"), item.spans[0] if item.spans else None)
+        quote = str(span.selector.get("exact", "")) if span is not None else ""
+        base: dict[str, Any] = {"paper": paper, "item": item.item_id}
+        if item.evidence_type == "measurement":
+            condition = self._linked(paper, item, "condition")
+            metric = self._linked(paper, item, "metric")
+            return {**base, "type": "measurement", "value": fields.get("value"), "dataset": fields.get("dataset"),
+                    "condition": condition, "metric": metric, "quote": quote}
+        if item.evidence_type == "condition":
+            return {**base, "type": "condition", "label": fields.get("label")}
+        if item.evidence_type == "metric":
+            return {**base, "type": "metric", "name": fields.get("name"),
+                    "higher_is_better": fields.get("higher_is_better")}
+        if item.evidence_type == "author_claim":
+            return {**base, "type": "author_claim", "direction": fields.get("direction"), "quote": quote}
+        return {**base, "type": "claim", "subject": fields.get("subject"), "relation": fields.get("relation"),
+                "object": fields.get("object"), "strength": fields.get("strength"), "quote": quote}
+
+
+def written_inputs(ra: RunAnswer) -> ProgramInputs:
+    """The inputs of a written run: the writer's facts in order, the facts they stand on, and the recorded replies."""
+    table = _WrittenFacts(ra)
+    question = ra.answer.get("question")
+    if not isinstance(question, str):
+        raise NotRebuilt(NOT_FOUND_AGAIN.format(what="question", paper="the written answer"))
+    papers = [{"n": f["n"], "fact": table.key_of(f["paper"], f["item"]), "paper": f["paper"]}
+              for f in ra.answer.get("facts", [])]
+    return ProgramInputs(kind="written", question=question, settings={"kind": "written", "question": question},
+                         facts=table.ordered(), papers=papers,
+                         model_text=[t["reply"] for t in ra.answer.get("tries", [])], names=dict(ra.names),
                          spans=table.spans)
 
 
