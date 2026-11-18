@@ -150,12 +150,17 @@ def saved_answers(results: Path, domain: str, seed: int, systems: list[str] | No
 def judge_folder(folder: Folder, systems: list[str] | None, qs: QuestionSet, model: Any, cache: JsonlCache,
                  sheets_root: Path, results: Path) -> dict:
     """Judge every saved answer of one folder; `{"judged", "kept", "skipped": {item: reason}, "pending": [item]}`.
-    A skipped item's old marks file is set aside (`set_aside`), so nothing reads marks made under an older
+    A folder where no saved answer has a sheet is refused (ValueError) before anything moves. A skipped item's
+    old marks file is set aside (`set_aside`), so nothing reads marks made under an older
     question, sheet or answer as current."""
     domain, seed = folder.spec.domain, folder.seed
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     out: dict = {"judged": 0, "kept": 0, "skipped": {}, "pending": []}
-    for rec in saved_answers(results, domain, seed, systems):
+    recs = saved_answers(results, domain, seed, systems)
+    if recs and not any(load_sheet(sheets_root, domain, seed, r.question_id) for r in recs):
+        raise ValueError(f"s{seed}: none of the {len(recs)} saved answers has a sheet under {sheets_root}; is "
+                         "--sheets the right folder? Nothing was judged and no marks file was moved")
+    for rec in recs:
         item = item_id(rec)
         path = marks_path(results, domain, seed, rec.system, rec.question_id)
         try:

@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 
+import pytest
 import modelcall.gateway
 
 from modelcall import JsonlCache
@@ -352,3 +353,16 @@ def test_checking_a_sheet_with_no_point_changed_keeps_its_marks(folder, tmp_path
     assert run(folder, tmp_path, SPEC, qs, never)["kept"] == 1 and never.calls == 0
     edited = check_sheet(sheet, [(TEXT + " Clearly.", ["pair:a:m1"])], "aditya", "2026-11-18T10:06:00+00:00")
     assert not current_marks(m, r, f, qs, edited)
+
+
+def test_a_wrong_sheets_folder_is_refused_and_moves_no_marks_aside(folder, tmp_path, SPEC):
+    f = load_folder(folder); qs = load_questions("demo", SPEC, FIX); qq = qs.get("d01")
+    sheet_for(f, qq, tmp_path)
+    save_answer(tmp_path / "res", engine_rec(f, qq))
+    run(folder, tmp_path, SPEC, qs, judge_model())
+    path = marks_path(tmp_path / "res", "demo", 1, "engine", "d01")
+    first = path.read_text(encoding="utf-8")
+    with pytest.raises(ValueError, match="has a sheet under"):
+        judge_domain("demo", folder.parent, [1], None, SPEC, qs, boom(), JsonlCache(tmp_path / "c"),
+                     tmp_path / "typo", tmp_path / "res")
+    assert path.read_text(encoding="utf-8") == first and not stale_marks(tmp_path).exists()
