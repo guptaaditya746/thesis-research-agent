@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, NamedTuple, Sequence
 
 from .contract import digest
-from .readable import NotRebuilt, answer_text, headline, read_run
+from .readable import answer_text, headline, read_run
 from .replay import _item_key
 from .rundir import EVIDENCE_FILE, REEXEC_FILE, RUN_CALLS_FILE, RUN_FILE, read_json, read_lines
 
@@ -60,10 +60,11 @@ def _call(group: str, slot: str, rec: Any, spec_temperature: float | None, agent
     response = rec.get("response") if isinstance(rec.get("response"), dict) else {}
     if rec.get("kind") == "agent_model_call" and isinstance(request, dict):
         sha = response.get("response_sha256")
-        readable = bool(sha) or "error" in rec
+        readable = (bool(sha) or "error" in rec) and bool(request.get("step_id")) and bool(request.get("prompt_sha256"))
         temperature = spec_temperature if spec_temperature is not None else _number(agent_run.get("temperature"))
         served = agent_run.get("served_model")
-        return ModelCall(group, slot, digest([request.get("step_id"), request.get("prompt_sha256")]), sha,
+        key = digest([request.get("step_id"), request.get("prompt_sha256")]) if readable else None
+        return ModelCall(group, slot, key, sha,
                          "error" in rec or request.get("status") != AGENT_OK, readable, temperature,
                          served if isinstance(served, str) else None)
     settings = request.get("settings") if isinstance(request, dict) else None
@@ -179,7 +180,7 @@ def same_answer(original: Path, rerun: Path) -> dict:
     """Whether the final answer text and headline are the same; None and the refusal text when a run cannot be read."""
     try:
         a, b = read_run(original, texts=False), read_run(rerun, texts=False)
-    except NotRebuilt as exc:
+    except (ValueError, OSError, KeyError) as exc:   # NotRebuilt is a ValueError; a missing corpus or file also
         return {"text": None, "headline": None, "why": str(exc)}
     return {"text": answer_text(a) == answer_text(b), "headline": headline(a) == headline(b), "why": None}
 

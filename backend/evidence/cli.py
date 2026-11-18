@@ -344,6 +344,8 @@ def _dispatch(args: argparse.Namespace) -> int:
 def _reexec_times(args: argparse.Namespace) -> int:
     """`reexec --all-calls --times N --out DIR`: N re-runs with no cache, then the re-run measure (stability.py)."""
     from . import stability
+    from .readable import read_refusal
+    from .rundir import RUN_CALLS_FILE
     from .replay import reexec
     problem = ("--times needs --all-calls" if not args.all_calls else "--times needs --out" if args.out is None
                else "the run folder is sealed; write the re-runs elsewhere"
@@ -352,6 +354,15 @@ def _reexec_times(args: argparse.Namespace) -> int:
     if problem:
         print(f"error: {problem}", file=sys.stderr)
         return 2
+    if not (args.run / RUN_CALLS_FILE).is_file():
+        print(f"error: {args.run} has no calls.jsonl: its model calls cannot be compared", file=sys.stderr)
+        return 2
+    try:
+        why = read_refusal(args.run, args.corpus)
+    except (ValueError, OSError, KeyError) as exc:
+        why = str(exc)
+    if why:
+        print(f"note: the final answer of {args.run.name} cannot be compared ({why}); the call and item measures go on")
     news = [reexec(args.run, cache=args.cache, corpus=args.corpus, out_dir=args.out, all_calls=True)
             for _ in range(args.times)]
     try:

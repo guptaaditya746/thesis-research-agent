@@ -10,7 +10,8 @@ from evidence import cli
 from evidence import replay as replay_module
 from evidence.replay import reexec
 from evidence.rundir import write_lines
-from evidence.stability import (GROUPS, combine, compare_calls, item_stability, measure, model_calls, render)
+from evidence.stability import (GROUPS, combine, compare_calls, item_stability, measure, model_calls, render,
+                                 same_answer)
 from evidence.tests.test_written import paper_facts
 from evidence.tests.test_written_stage import writer_model, written_run
 from evidence.tests.conftest import provider_of
@@ -141,3 +142,35 @@ def test_the_command_measures_n_reruns(tmp_path, monkeypatch, capsys):
     assert cli.main(["reexec", str(root), "--times", "2", "--out", str(tmp_path / "x")]) == 2   # needs --all-calls
     assert cli.main(["reexec", str(root), "--all-calls", "--times", "2"]) == 2                  # needs --out
     assert cli.main(["reexec", str(root), "--all-calls", "--times", "1", "--out", str(root / "re")]) == 2
+
+
+def test_an_unreadable_answer_is_named_and_the_other_measures_survive(tmp_path):
+    root = written_run(tmp_path, GOOD)
+    new = reexec(root, all_calls=True, out_dir=tmp_path / "re", provider=provider_of(writer_model([], GOOD)))
+    (new / "protocol.yaml").unlink()
+    out = same_answer(root, new)
+    assert out["text"] is None and out["headline"] is None and out["why"]
+    assert measure(root, [new])["calls"]["stage"]["calls"] > 0
+
+
+def test_an_agent_call_without_a_step_or_prompt_hash_is_unreadable(tmp_path):
+    bare = agent_row("s1", "h1")
+    del bare["model_calls"][0]["request"]["prompt_sha256"]
+    a = fake_run(tmp_path / "a", [bare], SPECS)
+    b = fake_run(tmp_path / "b", [bare], SPECS)
+    out = compare_calls(a, b)["agent"]
+    assert out["unreadable"] == 1 and out["identical"] == 0
+
+
+def test_the_command_checks_the_original_before_any_rerun(tmp_path, monkeypatch, capsys):
+    asked: list[str] = []
+    monkeypatch.setattr(replay_module, "default_provider", lambda alias: asked.append(alias) or writer_model([], GOOD))
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    assert cli.main(["reexec", str(bare), "--all-calls", "--times", "1", "--out", str(tmp_path / "o")]) == 2
+    assert "has no calls.jsonl" in capsys.readouterr().err and asked == []
+    root = written_run(tmp_path, GOOD)
+    import evidence.readable as readable
+    monkeypatch.setattr(readable, "read_refusal", lambda run, corpus=None: "no readable answer")
+    assert cli.main(["reexec", str(root), "--all-calls", "--times", "1", "--out", str(tmp_path / "o2")]) == 0
+    assert "cannot be compared" in capsys.readouterr().out
