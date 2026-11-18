@@ -11,7 +11,7 @@ export function AnswerBox({ open, steps, onSelect }: { open: boolean; steps: Sys
       {answer && (
         <div role="group" aria-label="Answer box" className="space-y-3 text-sm">
           {answer.status === "failed" && (
-            <p role="alert" className="text-destructive">{`The model's answer failed its checks: ${answer.problems.join(", ")}`}</p>
+            <p role="alert" className="text-destructive">{`The model's answer failed its checks: ${answer.problems.join("; ")}`}</p>
           )}
           <p>{answer.text}</p>
           <ul className="space-y-1">

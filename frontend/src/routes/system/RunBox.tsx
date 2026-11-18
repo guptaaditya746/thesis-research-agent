@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button"
 
 import { usePlanResult } from "../plan/api"
-import type { SystemSteps } from "./api"
+import { runFailure, type SystemSteps } from "./api"
 import { Box } from "./PickBox"
 import { PaperPanel } from "./PaperPanel"
 
@@ -49,19 +49,19 @@ export function RunBox({ planId, run, selected, onSelect, opened, onToggle, step
   steps: SystemSteps | undefined
 }) {
   const result = usePlanResult(planId, run !== null)
-  const status = String(result.data?.status ?? "")
-  const failed = status.startsWith("failed")
+  const status = result.data?.status ?? ""
+  const failure = runFailure(result.data)
   const stepsFailed = steps?.status === "failed"
-  const done = run !== null && !failed && steps !== undefined && steps.status === "done" && status !== "running"
+  const done = run !== null && failure === null && steps !== undefined && steps.status === "done" && status !== "running"
   const fact = steps?.pull.facts.find((f) => f.n === selected) ?? null
 
   return (
     <Box title="4. Run" open={run !== null}>
-      {run !== null && !failed && !stepsFailed && !done && (
+      {run !== null && failure === null && !stepsFailed && !done && (
         <p className="text-sm" role="status"><span>Running...</span>{status ? <span className="text-muted-foreground">{` ${status}`}</span> : null}</p>
       )}
-      {failed && <p role="alert" className="text-sm text-destructive">{status}</p>}
-      {stepsFailed && !failed && <p role="alert" className="text-sm text-destructive">{`failed: ${steps?.error ?? "the run stopped"}`}</p>}
+      {failure !== null && <p role="alert" className="text-sm text-destructive">{failure}</p>}
+      {stepsFailed && failure === null && <p role="alert" className="text-sm text-destructive">{`failed: ${steps?.error ?? "the run stopped"}`}</p>}
       {done && steps && (
         <div role="group" aria-label="Run rows" className="space-y-2">
           <Row id="find" title="Find" count={steps.find.count} open={opened.find} onToggle={onToggle}>

@@ -150,12 +150,12 @@ describe("system page", () => {
       ...over,
     })
 
-    async function startRunOn(user: ReturnType<typeof userEvent.setup>, result: () => Record<string, unknown>, s: SystemSteps = steps()) {
+    async function startRunOn(user: ReturnType<typeof userEvent.setup>, result: () => Record<string, unknown>, s: SystemSteps = steps(), onSteps?: () => void) {
       server.use(
         http.post("/api/ev/plan", () => HttpResponse.json(view([decision("d1", { confirmed_by: "ada" })]))),
         http.post("/api/ev/plan/p1/run", () => HttpResponse.json({ run: "r1" })),
         http.get("/api/ev/plan/p1/result", () => HttpResponse.json(result())),
-        http.get("/api/ev/system/runs/r1/steps", () => HttpResponse.json(s)),
+        http.get("/api/ev/system/runs/r1/steps", () => { onSteps?.(); return HttpResponse.json(s) }),
         http.get("/api/ev/system/runs/r1/papers/:doc", () => HttpResponse.json({
           paper: "S001", text: "Paper body text.",
           segments: [{ text: "Paper body text.", start: 0, end: 16, marks: ["S001:r1"], roles: [] }],
@@ -181,10 +181,14 @@ describe("system page", () => {
       expect(screen.queryByText("Running...")).toBeNull()
     }, 30_000)
 
-    it("shows a failed run's reason in an alert", async () => {
+    it("shows a failed run's reason in an alert and does not ask for the rows", async () => {
       const user = userEvent.setup()
-      await startRunOn(user, () => ({ status: "failed: no model", lines: [], answer: { text: "" } }))
-      expect(await screen.findByText("failed: no model", {}, T)).toBeInTheDocument()
+      let stepCalls = 0
+      await startRunOn(user, () => ({ status: "done", lines: [], answer: { text: "failed: no model" } }), undefined, () => { stepCalls += 1 })
+      expect(await screen.findByRole("alert", {}, T)).toHaveTextContent("failed: no model")
+      await new Promise((r) => setTimeout(r, 500))
+      expect(stepCalls).toBe(0)
+      expect(screen.queryByText("Find 3")).toBeNull()
     })
 
     it("lists a row when it is opened", async () => {

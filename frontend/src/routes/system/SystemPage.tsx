@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/layout/PageHeader"
 
 import { usePlanResult, type PlanView } from "../plan/api"
 import { AnswerBox } from "./AnswerBox"
-import { useSteps, useSystemDomains } from "./api"
+import { runFailure, useSteps, useSystemDomains } from "./api"
 import { PickBox } from "./PickBox"
 import { ProtocolBox } from "./ProtocolBox"
 import { QuestionBox } from "./QuestionBox"
@@ -29,8 +29,8 @@ export default function SystemPage() {
   const chosen = domains.data?.find((d) => d.domain === domain)
   const run = view?.run ?? null
   const result = usePlanResult(view?.id ?? null, run !== null)
-  const status = String(result.data?.status ?? "")
-  const finished = result.data !== undefined && status !== "running" && !status.startsWith("failed")
+
+  const finished = result.data !== undefined && result.data.status !== "running" && runFailure(result.data) === null
   const steps = useSteps(run, finished)
   const reset = () => { setView(null); setSelected(null); setOpened(CLOSED) }
   const pick = (n: number) => { setSelected(n); setOpened((o) => ({ ...o, pull: true })) }

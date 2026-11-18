@@ -78,3 +78,12 @@ export function usePaper(rid: string | null, doc: string | null) {
     enabled: rid !== null && doc !== null,
   })
 }
+
+/**
+ * A failed run's reason. The server never sends a failed status: a failed run comes back as status "done" with the
+ * answer text "failed: <reason>" and no lines (webapp/planwire.py).
+ */
+export function runFailure(result: { status?: string; answer?: { text?: string } } | undefined): string | null {
+  const text = result?.answer?.text
+  return result?.status === "done" && typeof text === "string" && text.startsWith("failed:") ? text : null
+}
