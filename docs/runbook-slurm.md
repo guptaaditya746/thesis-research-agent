@@ -643,6 +643,71 @@ family, where every author already says "helps", equals its `base`; a `twin` of 
 `base` of the same text level and seed). Their scores are the same runs twice; count each corpus id once. The two new
 prompt texts (the subsets wording of the protocol and `map-effect-subsets-v1.md`) had no real-model run before this.
 
+## 11. synth3 benchmark: medicine (18 Nov)
+
+Five folders of renamed real medicine papers (`data/synth3/built/medicine-real/s1` .. `s5`), 25 questions written by
+Aditya, answer sheets drafted by `orch-model` and checked by Aditya, the engine and the RAG baseline on every question
+and folder, a judge model marking every answer, Aditya hand-marking about 30 to check the judge. Every `synth3`
+command reads and writes under `data/synth3/` in the cluster repo (its defaults); nothing goes to `$EV` except logs.
+
+**The papers are real text.** `built/` and `pools/` are git-ignored and never committed, pushed or published; outputs
+go back to the laptop only (11.6). Stack and session environment as in 0.1 and 0.2; web page as in 0.3.
+
+11.0 **Copy (Aditya, laptop, Git Bash, repo root)**, once `data/synth3/questions/<domain>.yaml` passes
+`uv run synth3 questions --domain medicine`:
+
+```bash
+tar -C data/synth3 -czf - built questions | ssh <login node> "tar -C <cluster repo>/data/synth3 -xzf -"
+```
+
+Check (login node): `ls -d data/synth3/built/medicine-real/s*/ | wc -l` prints 5, and
+`uv run synth3 questions --domain medicine` exits 0.
+
+11.1 **Blind reader** (a sub-model reads each paper; code checks its notes), one folder at a time:
+
+```bash
+for S in 1 2 3 4 5; do "$EV/launch.sh" s3-reader-s$S uv run synth3 reader --domain medicine \
+  --folder data/synth3/built/medicine-real/s$S; done
+```
+
+Success: each log ends `ok N of N`. A paper that is not ok: into `$EV/failures.md`, go on.
+
+11.2 **Answer sheets:** `nohup "$EV/launch.sh" s3-sheets uv run synth3 draft-sheets --domain medicine > /dev/null 2>&1 &`.
+Then **USER**: Aditya checks every sheet of s1 and the 20 marked "sample" on `/review`. Wait for him.
+
+11.3 **RAG baseline:** `nohup "$EV/launch.sh" s3-baseline uv run synth3 baseline --domain medicine > /dev/null 2>&1 &`.
+
+11.4 **Engine:** `"$EV/launch.sh" s3-plan uv run synth3 system-plan --domain medicine` drafts one plan per question.
+**USER**: Aditya either confirms the plans on `/system` (or `/plan?batch=medicine/<qid>`), or says to run with
+`--confirm-as-system` (then the report says the system confirmed them). Then:
+
+```bash
+nohup "$EV/launch.sh" s3-run uv run synth3 system-run --domain medicine --workers 4 > /dev/null 2>&1 &
+```
+
+Exit not 0: once it ends, start the same line again (kept runs are kept, failed ones are asked again). Two exits not 0
+in a row: into `$EV/failures.md` and **USER**.
+
+11.5 **Judge and report:**
+
+```bash
+nohup "$EV/launch.sh" s3-judge uv run synth3 judge --domain medicine > /dev/null 2>&1 &
+"$EV/in-job.sh" uv run synth3 judge-sample --domains medicine
+```
+
+**USER**: Aditya hand-marks the sample on `/review`. Then
+`"$EV/in-job.sh" uv run synth3 report --domains medicine --out "$EV/synth3-report-medicine.json"` (a `.md` lands
+beside it; judge agreement under 80% is a limitation to say).
+
+Last, re-runs: **USER** first, Aditya confirms the LiteLLM proxy keeps no response cache (a cached answer would make
+every re-run look identical). Then
+`nohup "$EV/launch.sh" s3-reexec uv run synth3 reexec --domain medicine --seed 1 --times 5 > /dev/null 2>&1 &`.
+
+11.6 **Hand-back (to the laptop only):** the folders `sheets`, `plans`, `results` and `judge-test` under `data/synth3/`
+of the cluster repo (made by 11.2-11.5), `$EV/synth3-report-medicine.*`, `$EV/logs/s3-*`. Then ask Aditya before
+deleting `data/synth3/built` on the cluster. Law, materials and RAG repeat 11.0-11.5 once their specs are approved;
+their sample uses `judge-sample --add N`.
+
 ## Limits (say them in the report)
 
 Saved templates do not use the ontology tree: reasoning on/off differ only on fresh queries (section 6). Layouts of

@@ -10,9 +10,11 @@ import repo_paths
 from evaluation import cli as evaluation_cli
 from evidence import cli as evidence_cli
 from synth import cli as synth_cli
+from synth3 import cli as synth3_cli
 
 RUNBOOK = repo_paths.REPO / "docs" / "runbook-slurm.md"
-MAINS = {"evidence": evidence_cli.main, "evaluate": evaluation_cli.main, "synth": synth_cli.main}
+MAINS = {"evidence": evidence_cli.main, "evaluate": evaluation_cli.main, "synth": synth_cli.main,
+         "synth3": synth3_cli.main}
 
 
 def _text() -> str:
@@ -20,7 +22,7 @@ def _text() -> str:
 
 
 def test_every_uv_run_command_exists() -> None:
-    found = sorted(set(re.findall(r"uv run (evidence|evaluate|synth) ([a-z][a-z-]*)", _text())))
+    found = sorted(set(re.findall(r"uv run (evidence|evaluate|synth3|synth) ([a-z][a-z-]*)", _text())))
     assert {tool for tool, _ in found} == set(MAINS)
     for tool, sub in found:
         with pytest.raises(SystemExit) as e:
