@@ -108,6 +108,7 @@ export default function PlanPage() {
   const [subText, setSubText] = useState("")
   const [params] = useSearchParams()
   const batch = params.get("batch")
+  const badBatch = batch !== null && batch.split("/").length !== 2
   const [view, setView] = useState<PlanView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const take = (v: PlanView) => { setError(null); setView(v) }
@@ -137,6 +138,7 @@ export default function PlanPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="Plan" description="Ask a question, check the plan, confirm the decisions, run." />
+      {batch === null && (
       <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (question.trim()) { setView(null); start.mutate({ question, subs: parseSubQuestions(subText) }) } }}>
         <div className="flex gap-2">
           <Input aria-label="Question" placeholder="What do you want to know?" value={question} onChange={(e) => setQuestion(e.target.value)} />
@@ -144,6 +146,8 @@ export default function PlanPage() {
         </div>
         <SubQuestionsBox value={subText} onChange={setSubText} />
       </form>
+      )}
+      {badBatch && <p role="alert" className="text-sm text-destructive">The batch address must look like domain/question-id.</p>}
       {view?.batch && <p className="text-sm text-muted-foreground">Batch plan {view.batch}: your changes are saved to its file.</p>}
       {view?.batch && (view.sub_questions ?? []).length > 0 && (
         <ul aria-label="Sub-questions" className="list-disc pl-5 text-sm">{(view.sub_questions ?? []).map((q) => <li key={q}>{q}</li>)}</ul>

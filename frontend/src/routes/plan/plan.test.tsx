@@ -166,4 +166,21 @@ describe("sub-questions and batch plans", () => {
     await waitFor(() => expect(confirmed).toBe(1), T)
     expect(opened).toBe(1)
   })
+
+  it("hides the question form in batch mode", async () => {
+    server.use(http.post("/api/ev/plan/batch/demo/d01", () => HttpResponse.json(view([decision("d1")], { id: "b1", batch: "demo/d01" }))))
+    renderWithProviders(<PlanPage />, { route: "/plan?batch=demo/d01" })
+    await screen.findByText("Batch plan demo/d01: your changes are saved to its file.", {}, T)
+    expect(screen.queryByRole("textbox", { name: "Question" })).toBeNull()
+    expect(screen.queryByRole("textbox", { name: /Sub-questions/ })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Plan" })).toBeNull()
+  })
+
+  it("says so when the batch address is malformed and sends nothing", async () => {
+    let posts = 0
+    server.use(http.post("/api/ev/plan/*", () => { posts += 1; return HttpResponse.json(view([])) }))
+    renderWithProviders(<PlanPage />, { route: "/plan?batch=demo" })
+    expect(await screen.findByText("The batch address must look like domain/question-id.", {}, T)).toBeInTheDocument()
+    expect(posts).toBe(0)
+  })
 })
