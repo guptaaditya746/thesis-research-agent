@@ -73,6 +73,9 @@ def test_consistency_rebuilds_agreement_and_no_claim():
     view, lines = rebuilt(ra)
     assert view == checked_view(ra) and "\n".join(lines) == answer_text(ra)
     assert view["agreeing"] == ["S001"] and view["disagreeing"] == ["S002"]
+    # review round 1, engine-C1: the claim is in the claim words (improves), not a direction
+    assert lines[1:3] == ["S001: the authors say better, the numbers say better.",
+                          "S002: the authors say better, the numbers say worse."]
     assert view["studies"][2]["reason"] == {"code": "no_claim", "text": "no author claim found"}
 
 

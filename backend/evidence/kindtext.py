@@ -143,12 +143,15 @@ def _consistency(protocol: Protocol, answer: dict[str, Any], names: Mapping[str,
             + ([f"disagree in {_join(disagree)}"] if disagree else []) \
             + ([f"cannot be checked in {_join(unknown)}"] if unknown else [])
         head = [_summary(f"On {names.get(metric, metric)}, the authors' claims {'; '.join(parts)}.")]
+    # a study's `claim` is the author-claim value (improves, worsens, no_effect); the protocol's claim_map gives
+    # the direction it asserts, and SAYS the plain words of a direction
+    claim_map = protocol.synthesis.claim_map if protocol.synthesis else {}
     body: list[KindLine] = []
     for s in answer.get("studies", []):
         if s.get("agrees") is None:
             text = f"{s['document']}: cannot be checked ({_reason(s.get('reason'), protocol, names)})."
         else:
-            text = (f"{s['document']}: the authors say {SAYS.get(s.get('claim'), 'nothing clear')}, "
+            text = (f"{s['document']}: the authors say {SAYS.get(claim_map.get(s.get('claim')), 'nothing clear')}, "
                     f"the numbers say {SAYS.get(s.get('direction'), 'nothing clear')}.")
         body.append(_study(text, s))
     return head, body

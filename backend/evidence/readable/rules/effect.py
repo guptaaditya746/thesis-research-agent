@@ -212,7 +212,8 @@ def consistency_lines(settings, view, names):
         if study.get("agrees") is None:
             body.append(f"{study['document']}: cannot be checked ({reason_text(study.get('reason'), settings, names)}).")
         else:
-            body.append(f"{study['document']}: the authors say {SAYS.get(study.get('claim'), 'nothing clear')}, "
+            said = settings["claim_map"].get(study.get("claim"))   # the direction the author's claim names
+            body.append(f"{study['document']}: the authors say {SAYS.get(said, 'nothing clear')}, "
                         f"the numbers say {SAYS.get(study.get('direction'), 'nothing clear')}.")
     return head + body
 

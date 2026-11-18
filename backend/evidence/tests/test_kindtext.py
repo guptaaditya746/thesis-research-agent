@@ -87,17 +87,21 @@ def best_answer(winner: str | None = "rag", comparisons: int = 3) -> dict[str, A
 
 
 def consistency_answer(checkable: bool = True) -> dict[str, Any]:
-    if not checkable:
-        studies = [{"document": doc(1), "claim": None, "direction": "undetermined", "agrees": None,
-                    "reason": {"code": "no_pair", "text": "no pair of values"}}]
-        return {"kind": "consistency", "system": "evidence-engine", "metric": "accuracy", "studies": studies,
-                "agreeing": [], "disagreeing": [], "undetermined": [doc(1)]}
-    studies = [{"document": doc(1), "claim": "supports", "direction": "supports", "agrees": True, "reason": None},
-               {"document": doc(2), "claim": None, "direction": "undetermined", "agrees": None,
-                "reason": {"code": "no_pair", "text": "no pair of values"}},
-               {"document": doc(3), "claim": "supports", "direction": "contradicts", "agrees": False, "reason": None}]
-    return {"kind": "consistency", "system": "evidence-engine", "metric": "accuracy", "studies": studies,
-            "agreeing": [doc(1)], "disagreeing": [doc(3)], "undetermined": [doc(2)]}
+    """The engine's own consistency answer (review round 1, engine-C1: a hand-built one held `claim` values the
+    engine never writes, so the lines were never tested on a real claim). S001 and S003 claim "improves" and
+    measure better and worse, S002 has no treatment value, S004 claims "worsens" and S005 "no_effect" on equal
+    values."""
+    from evidence import kinds
+    from evidence.tests.readable_cases import study_items
+    protocol = consistency_protocol()
+    by_paper = {doc(1): study_items(doc(1), None, 0.5)}
+    if checkable:
+        by_paper = {doc(1): study_items(doc(1), 0.62, 0.5, claim="improves"), doc(2): study_items(doc(2), None, 0.5),
+                    doc(3): study_items(doc(3), 0.40, 0.55, claim="improves"),
+                    doc(4): study_items(doc(4), 0.40, 0.55, claim="worsens"),
+                    doc(5): study_items(doc(5), 0.5, 0.5, claim="no_effect")}
+    answer, _ = kinds.of(protocol).answer(protocol, list(by_paper), by_paper, roles=protocol.roles())
+    return answer
 
 
 def test_effect_lines_use_names_and_each_study():
@@ -136,12 +140,14 @@ def test_best_and_consistency_summaries():
     assert kind_lines(best_protocol(), best_answer(winner="rag"), NAMES)[0].text.startswith(
         "On answer accuracy, retrieval-augmented model is best in the most papers (")
     lines = kind_lines(consistency_protocol(), consistency_answer(checkable=True), NAMES)
-    assert lines[0].text == ("On answer accuracy, the authors' claims agree with their numbers in S001; "
+    assert lines[0].text == ("On answer accuracy, the authors' claims agree with their numbers in S001, S004, S005; "
                              "disagree in S003; cannot be checked in S002.")
     assert [l.text for l in lines[1:]] == [
         "S001: the authors say better, the numbers say better.",
-        "S002: cannot be checked (no retrieval-augmented model and closed-book model measurement on a question metric).",
-        "S003: the authors say better, the numbers say worse."]
+        "S002: cannot be checked (no retrieval-augmented model condition found).",
+        "S003: the authors say better, the numbers say worse.",
+        "S004: the authors say worse, the numbers say worse.",
+        "S005: the authors say no real difference, the numbers say no real difference."]
 
 
 def test_inventory_lines_list_names_aliases_and_item_ids():
