@@ -1,0 +1,98 @@
+{
+  "domain": "law",
+  "seed": 4,
+  "spec_sha256": "304a2fe88d8c834b50d95c0ee46a74b3ca4b44fa908c77e10f51b6a6a47720f3",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "velmora",
+      "measure": "reoffending",
+      "kind": "one_sided",
+      "condition": "court",
+      "effects": {
+        "urban": 0.0,
+        "rural": -0.103
+      }
+    },
+    {
+      "treatment": "velmora",
+      "measure": "cases_closed",
+      "kind": "opposed",
+      "condition": "court",
+      "effects": {
+        "urban": 0.115,
+        "rural": -0.09
+      }
+    },
+    {
+      "treatment": "velmora",
+      "measure": "days_to_resolution",
+      "kind": "opposed",
+      "condition": "history",
+      "effects": {
+        "first": -0.284,
+        "prior": 0.241
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "reoffending",
+      "kind": "opposed",
+      "condition": "history",
+      "effects": {
+        "first": 0.063,
+        "prior": -0.07
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "cases_closed",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "days_to_resolution",
+      "kind": "opposed",
+      "condition": "offence",
+      "effects": {
+        "prop": -0.172,
+        "pers": 0.172
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "reoffending",
+      "kind": "one_sided",
+      "condition": "court",
+      "effects": {
+        "urban": 0.088,
+        "rural": 0.0
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "cases_closed",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "days_to_resolution",
+      "kind": "opposed",
+      "condition": "court",
+      "effects": {
+        "urban": 0.225,
+        "rural": -0.21
+      }
+    }
+  ],
+  "uncovered": [
+    [
+      "castrelle",
+      "reoffending"
+    ]
+  ]
+}

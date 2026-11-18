@@ -1,0 +1,96 @@
+{
+  "domain": "law",
+  "seed": 1,
+  "spec_sha256": "304a2fe88d8c834b50d95c0ee46a74b3ca4b44fa908c77e10f51b6a6a47720f3",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "velmora",
+      "measure": "reoffending",
+      "kind": "uniform",
+      "condition": "court",
+      "effects": {
+        "urban": -0.098,
+        "rural": -0.093
+      }
+    },
+    {
+      "treatment": "velmora",
+      "measure": "cases_closed",
+      "kind": "opposed",
+      "condition": "court",
+      "effects": {
+        "urban": -0.134,
+        "rural": 0.09
+      }
+    },
+    {
+      "treatment": "velmora",
+      "measure": "days_to_resolution",
+      "kind": "uniform",
+      "condition": "history",
+      "effects": {
+        "first": 0.258,
+        "prior": 0.253
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "reoffending",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "cases_closed",
+      "kind": "one_sided",
+      "condition": "offence",
+      "effects": {
+        "prop": 0.0,
+        "pers": 0.112
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "days_to_resolution",
+      "kind": "opposed",
+      "condition": "court",
+      "effects": {
+        "urban": -0.225,
+        "rural": 0.283
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "reoffending",
+      "kind": "opposed",
+      "condition": "offence",
+      "effects": {
+        "prop": 0.12,
+        "pers": -0.114
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "cases_closed",
+      "kind": "uniform",
+      "condition": "court",
+      "effects": {
+        "urban": -0.127,
+        "rural": -0.121
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "days_to_resolution",
+      "kind": "uniform",
+      "condition": "court",
+      "effects": {
+        "urban": 0.151,
+        "rural": 0.234
+      }
+    }
+  ],
+  "uncovered": []
+}

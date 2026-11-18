@@ -1,0 +1,96 @@
+{
+  "domain": "rag",
+  "seed": 3,
+  "spec_sha256": "081db57c3a3cef5f9ca26cc32d1eaeacf54b8b9cd4f6eb8ce3a9cd5ae2a74b06",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "lanterra",
+      "measure": "correct",
+      "kind": "one_sided",
+      "condition": "corpus",
+      "effects": {
+        "small": 0.093,
+        "large": 0.0
+      }
+    },
+    {
+      "treatment": "lanterra",
+      "measure": "invented_fact",
+      "kind": "one_sided",
+      "condition": "deploy",
+      "effects": {
+        "cloud": 0.0,
+        "device": 0.087
+      }
+    },
+    {
+      "treatment": "lanterra",
+      "measure": "answer_time",
+      "kind": "one_sided",
+      "condition": "deploy",
+      "effects": {
+        "cloud": 0.243,
+        "device": 0.0
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "correct",
+      "kind": "uniform",
+      "condition": "deploy",
+      "effects": {
+        "cloud": 0.102,
+        "device": 0.103
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "invented_fact",
+      "kind": "uniform",
+      "condition": "qtype",
+      "effects": {
+        "simple": -0.066,
+        "multi": -0.091
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "answer_time",
+      "kind": "opposed",
+      "condition": "corpus",
+      "effects": {
+        "small": 0.247,
+        "large": -0.171
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "correct",
+      "kind": "one_sided",
+      "condition": "deploy",
+      "effects": {
+        "cloud": -0.113,
+        "device": 0.0
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "invented_fact",
+      "kind": "opposed",
+      "condition": "qtype",
+      "effects": {
+        "simple": 0.062,
+        "multi": -0.074
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "answer_time",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    }
+  ],
+  "uncovered": []
+}

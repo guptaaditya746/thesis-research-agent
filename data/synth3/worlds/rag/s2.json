@@ -1,0 +1,101 @@
+{
+  "domain": "rag",
+  "seed": 2,
+  "spec_sha256": "081db57c3a3cef5f9ca26cc32d1eaeacf54b8b9cd4f6eb8ce3a9cd5ae2a74b06",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "lanterra",
+      "measure": "correct",
+      "kind": "one_sided",
+      "condition": "qtype",
+      "effects": {
+        "simple": -0.095,
+        "multi": 0.0
+      }
+    },
+    {
+      "treatment": "lanterra",
+      "measure": "invented_fact",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "lanterra",
+      "measure": "answer_time",
+      "kind": "one_sided",
+      "condition": "corpus",
+      "effects": {
+        "small": -0.261,
+        "large": 0.0
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "correct",
+      "kind": "opposed",
+      "condition": "corpus",
+      "effects": {
+        "small": -0.112,
+        "large": 0.097
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "invented_fact",
+      "kind": "one_sided",
+      "condition": "corpus",
+      "effects": {
+        "small": 0.0,
+        "large": 0.091
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "answer_time",
+      "kind": "uniform",
+      "condition": "qtype",
+      "effects": {
+        "simple": -0.201,
+        "multi": -0.213
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "correct",
+      "kind": "one_sided",
+      "condition": "deploy",
+      "effects": {
+        "cloud": 0.0,
+        "device": -0.105
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "invented_fact",
+      "kind": "uniform",
+      "condition": "deploy",
+      "effects": {
+        "cloud": -0.086,
+        "device": -0.091
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "answer_time",
+      "kind": "uniform",
+      "condition": "corpus",
+      "effects": {
+        "small": -0.197,
+        "large": -0.167
+      }
+    }
+  ],
+  "uncovered": [
+    [
+      "quillfern",
+      "invented_fact"
+    ]
+  ]
+}

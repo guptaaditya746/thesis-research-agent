@@ -1,0 +1,96 @@
+{
+  "domain": "rag",
+  "seed": 1,
+  "spec_sha256": "081db57c3a3cef5f9ca26cc32d1eaeacf54b8b9cd4f6eb8ce3a9cd5ae2a74b06",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "lanterra",
+      "measure": "correct",
+      "kind": "uniform",
+      "condition": "corpus",
+      "effects": {
+        "small": -0.1,
+        "large": -0.14
+      }
+    },
+    {
+      "treatment": "lanterra",
+      "measure": "invented_fact",
+      "kind": "opposed",
+      "condition": "corpus",
+      "effects": {
+        "small": 0.082,
+        "large": -0.091
+      }
+    },
+    {
+      "treatment": "lanterra",
+      "measure": "answer_time",
+      "kind": "one_sided",
+      "condition": "deploy",
+      "effects": {
+        "cloud": -0.163,
+        "device": 0.0
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "correct",
+      "kind": "opposed",
+      "condition": "qtype",
+      "effects": {
+        "simple": -0.103,
+        "multi": 0.092
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "invented_fact",
+      "kind": "opposed",
+      "condition": "qtype",
+      "effects": {
+        "simple": -0.081,
+        "multi": 0.081
+      }
+    },
+    {
+      "treatment": "mervane",
+      "measure": "answer_time",
+      "kind": "opposed",
+      "condition": "corpus",
+      "effects": {
+        "small": 0.153,
+        "large": -0.287
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "correct",
+      "kind": "uniform",
+      "condition": "deploy",
+      "effects": {
+        "cloud": 0.115,
+        "device": 0.136
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "invented_fact",
+      "kind": "opposed",
+      "condition": "deploy",
+      "effects": {
+        "cloud": 0.095,
+        "device": -0.092
+      }
+    },
+    {
+      "treatment": "quillfern",
+      "measure": "answer_time",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    }
+  ],
+  "uncovered": []
+}

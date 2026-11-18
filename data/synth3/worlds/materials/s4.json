@@ -1,0 +1,89 @@
+{
+  "domain": "materials",
+  "seed": 4,
+  "spec_sha256": "67ef933ca83eac483862c2bcb0e2b4528b90f593fbe4d6f489c03f7549ce96e5",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "zerathane",
+      "measure": "tensile_strength",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "zerathane",
+      "measure": "cracked",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "zerathane",
+      "measure": "hardness",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "quorvex",
+      "measure": "tensile_strength",
+      "kind": "one_sided",
+      "condition": "lab",
+      "effects": {
+        "indus": -0.247,
+        "univ": 0.0
+      }
+    },
+    {
+      "treatment": "quorvex",
+      "measure": "cracked",
+      "kind": "opposed",
+      "condition": "temperature",
+      "effects": {
+        "room": -0.084,
+        "hot": 0.087
+      }
+    },
+    {
+      "treatment": "quorvex",
+      "measure": "hardness",
+      "kind": "uniform",
+      "condition": "lab",
+      "effects": {
+        "indus": -0.149,
+        "univ": -0.226
+      }
+    },
+    {
+      "treatment": "halvenite",
+      "measure": "tensile_strength",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "halvenite",
+      "measure": "cracked",
+      "kind": "opposed",
+      "condition": "temperature",
+      "effects": {
+        "room": -0.093,
+        "hot": 0.069
+      }
+    },
+    {
+      "treatment": "halvenite",
+      "measure": "hardness",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    }
+  ],
+  "uncovered": [
+    [
+      "quorvex",
+      "tensile_strength"
+    ]
+  ]
+}

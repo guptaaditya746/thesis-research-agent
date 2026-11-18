@@ -1,0 +1,93 @@
+{
+  "domain": "law",
+  "seed": 3,
+  "spec_sha256": "304a2fe88d8c834b50d95c0ee46a74b3ca4b44fa908c77e10f51b6a6a47720f3",
+  "approved": true,
+  "laws": [
+    {
+      "treatment": "velmora",
+      "measure": "reoffending",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "velmora",
+      "measure": "cases_closed",
+      "kind": "one_sided",
+      "condition": "history",
+      "effects": {
+        "first": -0.11,
+        "prior": 0.0
+      }
+    },
+    {
+      "treatment": "velmora",
+      "measure": "days_to_resolution",
+      "kind": "uniform",
+      "condition": "offence",
+      "effects": {
+        "prop": -0.187,
+        "pers": -0.157
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "reoffending",
+      "kind": "opposed",
+      "condition": "offence",
+      "effects": {
+        "prop": -0.119,
+        "pers": 0.078
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "cases_closed",
+      "kind": "opposed",
+      "condition": "history",
+      "effects": {
+        "first": -0.103,
+        "prior": 0.113
+      }
+    },
+    {
+      "treatment": "castrelle",
+      "measure": "days_to_resolution",
+      "kind": "opposed",
+      "condition": "court",
+      "effects": {
+        "urban": 0.285,
+        "rural": -0.29
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "reoffending",
+      "kind": "none",
+      "condition": null,
+      "effects": {}
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "cases_closed",
+      "kind": "uniform",
+      "condition": "court",
+      "effects": {
+        "urban": 0.109,
+        "rural": 0.089
+      }
+    },
+    {
+      "treatment": "dunhaven",
+      "measure": "days_to_resolution",
+      "kind": "one_sided",
+      "condition": "offence",
+      "effects": {
+        "prop": -0.221,
+        "pers": 0.0
+      }
+    }
+  ],
+  "uncovered": []
+}
