@@ -10,7 +10,7 @@ from evaluation.planbatch import (PLANNER_CACHE, has_unchecked, orch_lm, saved_t
                                   sealed_complete, set_aside)
 from evidence.kindtext import kind_lines, plan_names
 from evidence.plan import Plan, load_plan, with_answer
-from evidence.plankinds import answer_problems
+from evidence.plankinds import answer_problems, kind_protocol
 from evidence.planner import check_plan, confirm_all, critic, propose, using
 from evidence.planrun import run as planrun_run
 from evidence.words.write import write_words
@@ -206,7 +206,7 @@ def _fresh(plan: Plan) -> Plan:
 
 def _decide(run: Path, plan: Plan, corpus_id: str) -> tuple[str, int, bool]:
     """What to do with the run folder: (what, writer_try, retry_errors); what is keep, new, redo, old, corpus or
-    failed. `corpus`: a complete run of another corpus than the folder at hand (the folder set changed, or the
+    failed. `old`: a complete run of another plan, or of a protocol the plan no longer gives. `corpus`: a complete run of another corpus than the folder at hand (the folder set changed, or the
     folder was rebuilt); like `old` (another plan) it is set aside and the question runs again."""
     if not run.exists():
         return "new", 0, False
@@ -221,6 +221,11 @@ def _decide(run: Path, plan: Plan, corpus_id: str) -> tuple[str, int, bool]:
         return "failed", 0, True
     if _fresh(had) != _fresh(plan):
         return "old", 0, False
+    try:   # the same plan, but the code now writes another protocol from it (e.g. the best kind's condition type)
+        if RunDir(run).file(PROTOCOL_FILE).read_bytes() != kind_protocol(plan):
+            return "old", 0, False
+    except OSError:
+        return "failed", 0, True
     if plan.answer_by != "written":
         return ("redo", had.writer_try, True) if has_unchecked(run) else ("keep", had.writer_try, False)
     written = RunDir(run).try_json(WRITTEN_FILE)

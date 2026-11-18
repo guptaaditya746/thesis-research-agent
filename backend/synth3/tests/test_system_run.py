@@ -254,3 +254,15 @@ def test_an_answer_of_the_same_plan_stays_when_its_rerun_fails(folder, tmp_path,
     (run_path(tmp_path / "res", "demo", 1, "d01") / system.WRITTEN_FILE).unlink()   # the run is redone
     out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=_failing)
     assert "d01" in out["failed"] and _saved(tmp_path) == {"d01", "d02", "d03"}
+
+
+def test_a_run_made_with_another_protocol_than_the_plan_gives_now_is_run_again(folder, tmp_path, SPEC, monkeypatch):
+    """Review round 1, engine-C2: the best protocol changed (a condition may now be none of the compared things).
+    A kept run made with the older protocol would keep an answer the plan no longer gives."""
+    f, qs = setup(folder, tmp_path, SPEC); calls = []
+    run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    real = system.kind_protocol
+    monkeypatch.setattr(system, "kind_protocol", lambda plan: real(plan) + b"# a later version of the code\n")
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))
+    assert sorted(out["ran"]) == ["d01", "d02", "d03"] and out["kept"] == [] and len(calls) == 6
+    assert run_path(tmp_path / "res", "demo", 1, "d01").with_name("d01.old-1").is_dir()   # set aside, not deleted
