@@ -8,7 +8,7 @@ its file hashes.
     evidence estimate --protocol P --corpus DIR [--strategy gaps|all] [--extractors regex-only|llm-only|cascade]
                       [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
-    evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
+    evidence reexec RUN [--extractor NAME | --all-calls [--times N]] [--cache DIR] [--corpus DIR] [--out DIR]
     evidence program RUN --out FILE [--corpus DIR]
     evidence prov RUN
     evidence verify RUN
@@ -65,6 +65,7 @@ from typing import Any
 import yaml
 
 from agent.chain import verify
+from jsonio import write_json
 from modelcall.pins import ORCH_ALIAS
 
 from . import arxiv
@@ -133,7 +134,11 @@ def _parser() -> argparse.ArgumentParser:
         s.add_argument("--corpus", type=Path)
         s.add_argument("--out", type=Path)
         if name == "reexec":
-            s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+            pick = s.add_mutually_exclusive_group()
+            pick.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+            pick.add_argument("--all-calls", action="store_true",
+                              help="every extractor, and the names check's and the stages' model calls, asked again")
+            s.add_argument("--times", type=int, help="with --all-calls and --out: N re-runs, then the re-run measure")
     g = sub.add_parser("program", help="the run's answer as one readable Python program (standard library only)")
     g.add_argument("run", type=Path)
     g.add_argument("--out", required=True, type=Path)
@@ -316,7 +321,10 @@ def _dispatch(args: argparse.Namespace) -> int:
         return 0 if report["ok"] else 1
     if args.command == "reexec":
         from .replay import reexec
-        new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out)
+        if args.times is not None:
+            return _reexec_times(args)
+        new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out,
+                     all_calls=args.all_calls)
         report = read_json(new / "reexec.json")
         print(json.dumps({"run": str(new), "summary": report["summary"], "totals": report["totals"]}, indent=1))
         return 0
@@ -338,6 +346,40 @@ def _dispatch(args: argparse.Namespace) -> int:
     if args.command == "fetch":
         return arxiv.run(args)
     return _verify(args.run)
+
+
+def _reexec_times(args: argparse.Namespace) -> int:
+    """`reexec --all-calls --times N --out DIR`: N re-runs with no cache, then the re-run measure (stability.py)."""
+    from . import stability
+    from .readable import read_refusal
+    from .rundir import RUN_CALLS_FILE
+    from .replay import reexec
+    problem = ("--times needs --all-calls" if not args.all_calls else "--times needs --out" if args.out is None
+               else "the run folder is sealed; write the re-runs elsewhere"
+               if args.out.resolve().is_relative_to(args.run.resolve())
+               else "--times must be at least 1" if args.times < 1 else None)
+    if problem:
+        print(f"error: {problem}", file=sys.stderr)
+        return 2
+    if not (args.run / RUN_CALLS_FILE).is_file():
+        print(f"error: {args.run} has no calls.jsonl: its model calls cannot be compared", file=sys.stderr)
+        return 2
+    try:
+        why = read_refusal(args.run, args.corpus)
+    except (ValueError, OSError, KeyError) as exc:
+        why = str(exc)
+    if why:
+        print(f"note: the final answer of {args.run.name} cannot be compared ({why}); the call and item measures go on")
+    news = [reexec(args.run, cache=args.cache, corpus=args.corpus, out_dir=args.out, all_calls=True)
+            for _ in range(args.times)]
+    try:
+        report = stability.measure(args.run, news)
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print("\n".join(stability.render(report)))
+    write_json(args.out / "stability.json", report)
+    return 0
 
 
 def _verify(run: Path) -> int:

@@ -44,6 +44,8 @@ Proof: `evidence/tests/test_plan.py::test_old_protocol_lock_unchanged` (v2 lock 
 uv sync --locked                     # from repo root; --all-groups for Docling + Node
 uv run evidence --help               # also: evaluate, synth, webapp, agent, gold, score, packbuilder
 uv run evidence program RUN --out FILE.py   # the run's answer as a readable Python program (standard library only): it rebuilds the answer from the facts it used and checks it
+uv run evidence reexec RUN --all-calls --times 5 --out DIR   # every model call asked again (no cache), 5 times; prints identical calls, items found again, same answer
+uv run synth3 reexec --domain D --seed N [--times 5]   # re-run one folder's system runs N times with no cache (orch-model, cluster) and report identical calls, items found again and same answers; data/synth3/results/D/reexec/sN/report.json
 uv run webapp serve --port 8080      # UI at http://127.0.0.1:8080 (serves frontend/dist)
 uv run synth2 build --out DIR --seeds 10                          # hidden-law corpus families: law kind x text level x seed
 uv run synth2 reference --root DIR --rule pooled --out FILE       # answers of a reference rule: pooled (the key) | vote | lumped | trusts_claims

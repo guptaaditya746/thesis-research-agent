@@ -82,7 +82,7 @@ a setting: it never changes a result, so replay does not need it. The warm pass 
 possible (`regex-only`, no provider). Locator calls are not cached, so an `agent` locator runs again in the second
 pass.
 
-A `run` (not replay or reexec) also keeps its own calls.jsonl (rundir.RunCalls): one row per model-backed extractor
+A `run` or `reexec` (not replay) also keeps its own calls.jsonl (rundir.RunCalls): one row per model-backed extractor
 or screen call with its full model-call records, written as each call completes, by the warm pass (phase `warm`)
 or, for calls it did not write, by the sequential loop (phase `run`). It is not an output and not in the hash
 chain, so it changes no hash; its row order may vary with workers.
@@ -970,10 +970,11 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
                 run_id: str | None = None, provider: Provider | None = None, locator: Locator | None = None,
                 bypass: Any = None, retry_errors: bool = False, source_run: str | None = None,
                 attempts: dict[str, int] | None = None, workers: int = 1, source_dir: Path | None = None,
-                before_seal: Callable[[Path], None] | None = None) -> Path:
+                before_seal: Callable[[Path], None] | None = None, fresh_recorded: bool = False) -> Path:
     """Execute and write one run directory; returns its path. `source_dir`: the folder of the recorded run; in
     mode replay its reason.json is read instead of reasoning again (a reexec reasons again: its items may differ).
-    `before_seal(root)`: writes more files into the finished run (reexec.json) before manifest.json seals it."""
+    `before_seal(root)`: writes more files into the finished run (reexec.json) before manifest.json seals it.
+    `fresh_recorded` (mode reexec): the names check and the stages' calls are asked again too (CallCache)."""
     for module in settings.imports:
         importlib.import_module(module)
     protocol = parse(protocol_bytes.decode("utf-8"), settings.domains)
@@ -995,8 +996,9 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     except FileExistsError:
         raise RunDirExists(root) from None
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
-    cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
-    run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
+    cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts,
+                      fresh_recorded)
+    run_calls = RunCalls(root / RUN_CALLS_FILE) if mode in ("run", "reexec") else None
     setup = Setup(settings, protocol, corpus, cascades, cache, provider, locator, plan, extra, source_dir)
     ex = Execution(setup, root, run_id, run_calls)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)

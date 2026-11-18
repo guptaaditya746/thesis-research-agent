@@ -8,7 +8,9 @@ we run the provenance we get the same data" means. A reexec reasons again: its i
 `reexec(run, extractor)`: runs the chosen extractor (all when none is named) again from scratch, bypassing
 the cache, writes a new run directory (mode reexec) and in it reexec.json, which compares each call with
 the recorded one: identical, same items with different spans, items added, items missing, or fields
-differ; plus a summary per extractor. Calls are matched by document, evidence type and extractor name,
+differ; plus a summary per extractor. `all_calls` (`--all-calls`) re-runs every extractor and also asks the names
+check's and the stages' model calls again, so nothing of the run is read from the record (the cache is never
+written); reexec.json says `all_calls`. Calls are matched by document, evidence type and extractor name,
 and items by evidence type, fields and what their links point to (by the linked item's type and fields,
 not its id, so an upstream span change does not count as a downstream difference).
 """
@@ -102,20 +104,24 @@ def _other_code(run_dir: Path, mismatched: list[str]) -> dict[str, str]:
 
 def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | str | None = None,
            corpus: Path | str | None = None, out_dir: Path | str | None = None, provider: Provider | None = None,
-           locator: Locator | None = None) -> Path:
+           locator: Locator | None = None, all_calls: bool = False) -> Path:
     """The new run directory; its reexec.json holds the comparison."""
+    if all_calls and extractor is not None:
+        raise ValueError("all_calls re-runs every extractor; leave out the extractor")
     run_dir = Path(run_dir)
     record = read_json(run_dir / RUN_FILE)
 
     def bypass(spec: Any) -> bool:
-        return extractor is None or extractor in (spec.name, spec.extractor_id)
+        return all_calls or extractor is None or extractor in (spec.name, spec.extractor_id)
 
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(),
                       Settings.from_record(record, cache=cache, corpus=corpus, run_dir=run_dir),
                       out_dir or run_dir.parent, mode="reexec", bypass=bypass, locator=locator,
                       provider=provider if provider is not None else default_provider,
                       source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}",
-                      before_seal=lambda new: write_json(new / REEXEC_FILE, compare(run_dir, new, extractor)))
+                      fresh_recorded=all_calls,
+                      before_seal=lambda new: write_json(new / REEXEC_FILE, {**compare(run_dir, new, extractor),
+                                                                             "all_calls": all_calls}))
     return new
 
 
