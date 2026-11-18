@@ -214,6 +214,27 @@ def test_the_command_says_why_it_cannot_write(tmp_path, capsys):
     assert capsys.readouterr().err.startswith("error: ")
 
 
+@pytest.mark.parametrize("kind, value", [("effect", float("nan")), ("effect", float("inf")),
+                                         ("best", float("-inf")), ("best", float("nan"))])
+def test_non_finite_values_are_written_as_floats_and_pass_the_check(tmp_path, kind, value):
+    """M3: nan, inf and -inf are written float('nan') / float('inf') / float('-inf'); the rebuild and the recorded
+    answer hash them the same way (JSON NaN / Infinity), so the check passes. (A run's items cannot hold one: an
+    item id is the digest of canonical JSON, which refuses them; the value is put in after the item is made.)"""
+    def odd(items):
+        return [i.model_copy(update={"fields": {**i.fields, "value": value}})
+                if i.evidence_type == "measurement" and i.fields.get("value") == 0.25 else i for i in items]
+    if kind == "effect":
+        ra = case_answer(case_protocol(), {"S001": odd(study_items("S001", 0.25, 0.5)),
+                                           "S002": study_items("S002", 0.7, 0.5, start=500)}, "effect")
+    else:
+        ra = case_answer(case_protocol("best"), {"S001": odd(best_items("S001", {"rag": 0.25, "closed_book": 5}))},
+                         "best")
+    path = case_program(tmp_path, ra, "odd_number")
+    assert f"float('{value}')" in path.read_text(encoding="utf-8")
+    done = run_program(path)
+    assert done.returncode == 0 and done.stdout.decode("utf-8").splitlines()[-1] == common.CHECK_OK, done.stderr
+
+
 def test_whole_number_best_values_pass_the_check(tmp_path):
     ra = case_answer(case_protocol("best"), {"S001": best_items("S001", {"rag": 45, "closed_book": 5})}, "best")
     done = run_program(case_program(tmp_path, ra, "best45"))

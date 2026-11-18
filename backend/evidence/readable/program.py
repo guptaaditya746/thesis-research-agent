@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ast
 import json
+import math
 import pprint
 import re
 from collections.abc import Mapping
@@ -87,8 +88,31 @@ def fact_comment(key: str, fact: dict[str, Any], spans: list[dict[str, Any]],
     return lines
 
 
+class _Code:
+    """A value pprint writes as the given code (its repr)."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+
+    def __repr__(self) -> str:
+        return self.code
+
+
+def _literal(value: Any) -> Any:
+    """The value with every nan, inf and -inf as the code float('nan') / float('inf') / float('-inf'), which Python
+    reads back (pprint would write the bare names nan and inf). The checks hash them the same way on both sides
+    (JSON NaN / Infinity)."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return _Code(f"float('{value}')")
+    if isinstance(value, dict):
+        return {k: _literal(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(_literal(v) for v in value)
+    return value
+
+
 def _data(value: Any) -> str:
-    return pprint.pformat(value, width=110, sort_dicts=False)
+    return pprint.pformat(_literal(value), width=110, sort_dicts=False)
 
 
 def _rule_file(name: str) -> tuple[list[str], list[str]]:
