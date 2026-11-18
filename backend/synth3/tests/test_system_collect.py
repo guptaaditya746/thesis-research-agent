@@ -75,6 +75,14 @@ def test_a_run_for_another_question_is_refused(written, change, words):
         from_system_run(run, f, change(qq))
 
 
+def test_a_run_for_another_inventory_target_names_both_targets(folder, tmp_path, SPEC):
+    f = load_folder(folder); qq = q(QQ["text"], kind="inventory")   # the run lists the compared things
+    run = make_system_run(tmp_path / "runs", f, qq, demo_plan(SPEC, qq, answer_by="inventory", target="condition"))
+    with pytest.raises(ValueError, match="the run answers by inventory/condition, the question asks for "
+                                         "inventory/metric$"):
+        from_system_run(run, f, qq.model_copy(update={"target": "metric"}))
+
+
 def test_a_failed_writer_call_asks_for_a_rerun(folder, tmp_path, SPEC):
     f = load_folder(folder); qq = q(QQ["text"])
     run = make_system_run(tmp_path / "runs", f, qq, demo_plan(SPEC, qq), writer_reply=lambda p: RuntimeError("down"))

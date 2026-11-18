@@ -118,6 +118,13 @@ def confirmed_by(plan: Plan) -> str:
     return "system" if any(d.confirmed_by == SYSTEM for d in plan.decisions) else "person"
 
 
+def kind_mismatch(have: tuple[str, str | None], want: tuple[str, str | None]) -> str:
+    """"by <have>, the question asks for <want>": the kinds, or kind/target when only the targets differ."""
+    if have[0] == want[0]:
+        return f"by {have[0]}/{have[1]}, the question asks for {want[0]}/{want[1]}"
+    return f"by {have[0]}, the question asks for {want[0]}"
+
+
 def _refuse(run: Path, why: str) -> ValueError:
     return ValueError(f"{run}: {why}")
 
@@ -136,7 +143,7 @@ def from_system_run(run: Path, folder: Folder, q: Question, system: str = SYSTEM
         raise _refuse(run, "the run was planned for another version of the question")
     want, target = answer_by_of(q), target_of(q)
     if plan.answer_by != want or plan.target != target:
-        raise _refuse(run, f"the run answers by {plan.answer_by}, the question asks for {want}")
+        raise _refuse(run, f"the run answers {kind_mismatch((plan.answer_by, plan.target), (want, target))}")
     left_out = None
     if plan.answer_by == "written":
         written = rd.json(WRITTEN_FILE)
@@ -241,7 +248,7 @@ def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, a
             continue
         want = (answer_by_of(q), target_of(q))
         if (draft.answer_by, draft.target) != want:
-            out["skipped"][q.id] = (f"the plan answers by {draft.answer_by}, the question asks for {want[0]}; "
+            out["skipped"][q.id] = (f"the plan answers {kind_mismatch((draft.answer_by, draft.target), want)}; "
                                     "run synth3 system-plan")
             continue
         # answer_problems runs before anything that calls kind_protocol (the run does)

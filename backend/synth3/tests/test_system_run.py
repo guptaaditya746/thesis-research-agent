@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from evidence import planrun, stages
-from evidence.plan import load_plan, write_plan
+from evidence.plan import load_plan, with_answer, write_plan
 from evidence.tests.conftest import provider_of
 from synth3 import system
 from synth3.answers import load_answers
@@ -146,6 +146,17 @@ def test_missing_stale_and_rekinded_plans_are_skipped_with_reasons(folder, tmp_p
     assert out["skipped"]["d02"] == "no plan; run synth3 system-plan first"
     assert out["skipped"]["d03"] == "the question changed after planning"
     assert out["skipped"]["d01"].startswith("the plan answers by written, the question asks for effect")
+
+
+def test_a_plan_for_another_inventory_target_is_skipped_naming_both(folder, tmp_path, SPEC):
+    f, qs = setup(folder, tmp_path, SPEC)
+    d01 = qs.get("d01")
+    path = plan_path(tmp_path / "plans", "demo", "d01")
+    write_plan(with_answer(load_plan(path), "inventory", "condition"), path)
+    edited = qs.model_copy(update={"questions": [d01.model_copy(update={"kind": "inventory", "target": "metric"})]})
+    out = run_folder(f, edited, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner([]))
+    assert out["skipped"]["d01"] == ("the plan answers by inventory/condition, the question asks for "
+                                     "inventory/metric; run synth3 system-plan")
 
 
 def test_system_run_by_command(folder, tmp_path, spec_dir, monkeypatch, capsys):
