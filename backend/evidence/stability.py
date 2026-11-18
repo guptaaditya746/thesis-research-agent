@@ -260,7 +260,12 @@ def _per_run(report: dict) -> str:
     return str(int(per)) if per == int(per) else f"{per:.1f}"
 
 
+NONE_MEASURED = "Re-run measure: no run measured."
+
+
 def render(report: dict) -> list[str]:
+    if report.get("runs") == 0:   # combine([]): a folder where every question was skipped or failed
+        return [NONE_MEASURED]
     lines = [f"Re-run measure: {report.get('runs') or 1} runs x {_per_run(report)} re-runs, no cache (every model "
              "call asked again).", "Model calls (identical: the same request got the same reply):"]
     served: set[str] = set()

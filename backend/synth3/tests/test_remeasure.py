@@ -112,3 +112,20 @@ def test_the_command(folder, tmp_path, spec_dir, monkeypatch, capsys):
     assert out.startswith("Re-run measure: 1 runs x 1 re-runs, no cache") and "  d01: text same 1/1" in out
     unknown = [a if a != "d01" else "zz" for a in args]
     assert main(unknown) == 2
+
+
+def test_the_command_measures_a_repeated_id_once_and_says_when_nothing_was_measured(folder, tmp_path, spec_dir,
+                                                                                    monkeypatch, capsys):
+    """M6: `--questions d01,d01` re-runs and measures d01 once; a folder with no run says so instead of "1 runs"."""
+    import json
+    res, _ = original(folder, tmp_path, load_spec("demo", spec_dir), qid="d01")
+    monkeypatch.setattr(replay_module, "default_provider", lambda alias: system_model(FACT_REPLY))
+    base = ["reexec", "--domain", "demo", "--seed", "1", "--times", "1", "--questions-root", str(FIX),
+            "--spec-root", str(spec_dir), "--results", str(res)]
+    assert main([*base, "--questions", "d01,d01"]) == 0
+    report = json.loads((reexec_root(res, "demo", 1) / "report.json").read_text(encoding="utf-8"))
+    assert report["made"] == 1 and report["kept"] == 0
+    assert capsys.readouterr().out.count("  d01: text same") == 1
+    assert main([*base, "--questions", "d02"]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("Re-run measure: no run measured.") and "1 runs" not in out and "skipped d02" in out

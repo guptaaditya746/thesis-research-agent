@@ -16,7 +16,8 @@ from synth3.spec import SPECS
 def reexec(args: argparse.Namespace) -> int:
     spec = _spec(args)
     known = [q.id for q in _questions(args, spec).questions]
-    qids = [x.strip() for x in args.questions.split(",") if x.strip()] if args.questions else known
+    asked = [x.strip() for x in args.questions.split(",") if x.strip()] if args.questions else known
+    qids = list(dict.fromkeys(asked))   # a repeated id is re-run and measured once
     unknown = [x for x in qids if x not in known]
     if unknown:
         raise BadArgument(f"unknown question id: {', '.join(unknown)}")
