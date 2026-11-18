@@ -10,6 +10,7 @@ import { renderWithProviders } from "@/test/render"
 
 import type { SystemSteps } from "./api"
 import type { PlanData, PlanDecision, PlanView } from "../plan/api"
+import { ProtocolBox } from "./ProtocolBox"
 import SystemPage from "./SystemPage"
 
 const T = { timeout: 15_000 }
@@ -32,6 +33,13 @@ async function chooseFolder(user: ReturnType<typeof userEvent.setup>) {
   await user.selectOptions(screen.getByRole("combobox", { name: "Domain" }), "demo")
   await user.selectOptions(screen.getByRole("combobox", { name: "Seed" }), "1")
 }
+
+describe("protocol box", () => {
+  it("says lines when the plan names no answer kind (the server leaves out its default)", () => {
+    renderWithProviders(<ProtocolBox view={view([decision("d1")])} domain="demo" seed={1} onView={() => {}} onError={() => {}} />)
+    expect(screen.getByText("Answer kind: lines")).toBeInTheDocument()
+  })
+})
 
 describe("system page", () => {
   it("opens each box only after the one above is done", async () => {

@@ -34,7 +34,7 @@ export function ProtocolBox({ view, domain, seed, onView, onError }: {
       {view && plan && (
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-3">
-            <p className="text-sm font-medium">{`Answer kind: ${plan.answer_by ?? "written"}`}</p>
+            <p className="text-sm font-medium">{`Answer kind: ${plan.answer_by ?? "lines"}`}</p>
             {plan.lines.map((l) => (
               <LineCard key={l.id} line={l} how={view.how[l.id]} busy={busy || view.frozen} onRemove={view.frozen ? undefined : (lid) => remove.mutate(lid)} />
             ))}
