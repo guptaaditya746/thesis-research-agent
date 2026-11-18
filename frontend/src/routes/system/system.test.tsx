@@ -148,7 +148,7 @@ describe("system page", () => {
 
   describe("the run and the answer", () => {
     const steps = (over: Partial<SystemSteps> = {}): SystemSteps => ({
-      status: "done", answer_by: "written", question: "Q",
+      status: "done", answer_by: "written", question: "Q", program_refused: null,
       find: { count: 3, papers: [
         { paper: "S001", kept: true, why: "kept by the screen" }, { paper: "S002", kept: true, why: "kept by the screen" },
         { paper: "S003", kept: false, why: "screened out" }] },
@@ -237,6 +237,22 @@ describe("system page", () => {
       await screen.findByText("Pull out 5", {}, T)
       await user.click(within(screen.getByRole("group", { name: "Pull out row" })).getByRole("button", { name: "Show" }))
       expect(screen.getByText("4 facts that bear on the plan were not given to the writer")).toBeInTheDocument()
+    })
+
+    it("offers the readable program of a finished run", async () => {
+      const user = userEvent.setup()
+      await startRunOn(user, () => done)
+      const link = await screen.findByRole("link", { name: "Download the readable program" }, T)
+      expect(link).toHaveAttribute("href", "/api/ev/system/runs/r1/program")
+      expect(link).toHaveAttribute("download")
+      expect(screen.getByText("A Python file that rebuilds this answer from the facts it used, with no papers and no AI.")).toBeInTheDocument()
+    })
+
+    it("says why a run has no readable program", async () => {
+      const user = userEvent.setup()
+      await startRunOn(user, () => done, steps({ program_refused: "a plan answered by its lines ..." }))
+      expect(await screen.findByText("No readable program: a plan answered by its lines ...", {}, T)).toBeInTheDocument()
+      expect(screen.queryByRole("link", { name: "Download the readable program" })).toBeNull()
     })
 
     it("says when the written answer failed its checks", async () => {

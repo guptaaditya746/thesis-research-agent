@@ -45,7 +45,7 @@ export default function SystemPage() {
       <ProtocolBox view={view} domain={domain} seed={seed} onView={setView} onError={setError} />
       <RunBox planId={view?.id ?? null} run={run} selected={selected} onSelect={(n) => setSelected(n)} steps={steps.data}
         opened={opened} onToggle={(row) => setOpened((o) => ({ ...o, [row]: !o[row] }))} />
-      <AnswerBox open={steps.data?.status === "done"} steps={steps.data} onSelect={pick} />
+      <AnswerBox open={steps.data?.status === "done"} run={run} steps={steps.data} onSelect={pick} />
     </div>
   )
 }

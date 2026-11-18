@@ -15,7 +15,7 @@ const domains: SystemDomain[] = [
 ]
 
 const steps: SystemSteps = {
-  status: "done", answer_by: "written", question: "Does Targeted therapy change the Response rate?",
+  status: "done", answer_by: "written", question: "Does Targeted therapy change the Response rate?", program_refused: null,
   find: { count: 1, papers: [{ paper: "S001", kept: true, why: "kept by the screen" }] },
   pull: { count: 1, left_out: 0, facts: [{ n: 1, item: "S001:r1", paper: "S001", type: "result", text: "Response rate 0.4 against 0.3." }] },
   combine: { rule: "A model wrote the answer from the facts.", count: 1, rows: [{ text: "Targeted therapy does better.", facts: [1] }] },

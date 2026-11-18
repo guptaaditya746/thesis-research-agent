@@ -43,6 +43,7 @@ export interface SystemSteps {
   error?: string | null
   answer_by: string
   question: string
+  program_refused: string | null
   find: { count: number; papers: { paper: string; kept: boolean; why: string }[] }
   pull: { count: number; left_out: number; facts: StepFact[] }
   combine: { rule: string; count: number; rows: { text: string; facts: number[] }[] }
