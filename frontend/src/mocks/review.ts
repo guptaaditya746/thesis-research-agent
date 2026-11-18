@@ -10,7 +10,7 @@ export const reviewHandlers = [
     HttpResponse.json({
       n: 0, domain: "demo", seed: 1, question_id: "d01", question: "Does Targeted therapy change the Response rate?",
       answer: "Targeted therapy does better.", points: [{ id: "p1", text: "Targeted therapy does better." }],
-      facts: [{ n: 1, paper: "S001", quote: "Response rate 0.4 against 0.3." }], facts_cut: false, marked: null,
+      facts: [{ n: 1, paper: "S001", quote: "Response rate 0.4 against 0.3." }], facts_cut: false, marked: null, note: null, shown: "mock-item",
     })),
   http.put("/api/ev/review/judge-test/:n", async ({ request }) => HttpResponse.json({ by: "mock", ...((await request.json()) as object) })),
   http.get("/api/ev/review/:domain/worlds", () => HttpResponse.json([world])),
@@ -27,7 +27,9 @@ export const reviewHandlers = [
       scope: { arms: ["Targeted therapy", "Standard care"], measures: [], conditions: [], settings: [] },
       facts: [{ id: "pair:a:m1", text: "Response rate: 0.4 vs 0.3" }],
       sheet: params.qid === "d02" ? null : { status: "drafted", points: [{ id: "p1", text: "Targeted therapy does better.", facts: ["pair:a:m1"] }], warnings: [], checked_by: null },
+      shown: params.qid === "d02" ? null : "mock-sheet",
       stale: null,
     })),
-  http.put("/api/ev/review/:domain/sheets/:seed/:qid", () => HttpResponse.json({ status: "checked" })),
+  // the mock keeps no sheet, so a save answers with the `shown` the next read gives
+  http.put("/api/ev/review/:domain/sheets/:seed/:qid", ({ params }) => HttpResponse.json({ status: "checked", shown: params.qid === "d02" ? null : "mock-sheet" })),
 ]

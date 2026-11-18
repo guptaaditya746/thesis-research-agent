@@ -18,7 +18,7 @@ from synth3.marking import answer_sha256, marks_path
 from synth3.questions import load_questions, question_sha256
 from synth3.report import save_sample
 from synth3.sheetfacts import load_folder, relevant_facts
-from synth3.sheets import make_sheet, save_sheet, sheet_sha256
+from synth3.sheets import load_sheet, make_sheet, save_sheet, sheet_sha256
 from synth3.spec import load_spec
 from synth3.tests.conftest import good, write
 from synth3.world import draw_world, save_world
@@ -82,6 +82,21 @@ def keys(obj) -> set:
     return set()
 
 
+def put_mark(c: TestClient, points: dict, faithful, n: int = 0):
+    """Save a hand mark as the page does: with `shown`, the token of the item the page loaded (a stand-in when the
+    item does not load, so the save's own refusal is what the test sees)."""
+    got = c.get(f"/api/ev/review/judge-test/{n}")
+    shown = got.json().get("shown", "-") if got.status_code == 200 else "-"
+    return c.put(f"/api/ev/review/judge-test/{n}", json={"points": points, "faithful": faithful, "shown": shown})
+
+
+def put_sheet(c: TestClient, qid: str, points: list):
+    """Save a sheet's points as the page does: with `shown`, the token of the sheet the page loaded."""
+    got = c.get(f"/api/ev/review/demo/sheets/1/{qid}")
+    shown = got.json().get("shown") if got.status_code == 200 else None
+    return c.put(f"/api/ev/review/demo/sheets/1/{qid}", json={"points": points, "shown": shown})
+
+
 def edit_question(root: Path, qid: str, text: str) -> None:
     """Rewrite the question file with question `qid` changed (ruling F16: a test helper, not an endpoint)."""
     path = root / "questions" / "demo.yaml"
@@ -122,13 +137,12 @@ def test_a_sheet_is_shown_with_its_facts_and_saved_as_checked(review_root):
     got = c.get("/api/ev/review/demo/sheets/1/d01").json()
     assert got["scope"]["arms"] == ["Standard care", "Targeted therapy"] and got["facts"] and got["stale"] is None
     assert got["question"].startswith("Does Targeted therapy") and got["sheet"]["status"] == "drafted"
-    saved = c.put("/api/ev/review/demo/sheets/1/d01", json={"points": [{"text": "Edited.", "facts": []}]}).json()
+    saved = put_sheet(c, "d01", [{"text": "Edited.", "facts": []}]).json()
     assert saved["status"] == "checked" and saved["checked_by"] and saved["points"][0]["text"] == "Edited."
 
 
 def test_a_bad_point_is_400(review_root):
-    r = client(review_root).put("/api/ev/review/demo/sheets/1/d01",
-                                json={"points": [{"text": "x", "facts": ["pair:zz:m9"]}]})
+    r = put_sheet(client(review_root), "d01", [{"text": "x", "facts": ["pair:zz:m9"]}])
     assert r.status_code == 400 and "pair:zz:m9" in r.json()["detail"]
 
 
@@ -136,18 +150,18 @@ def test_saving_a_stale_sheet_makes_a_new_unchecked_one(review_root):
     c = client(review_root)
     edit_question(review_root, "d01", "Does Targeted therapy change the Response rate?")
     assert c.get("/api/ev/review/demo/sheets/1/d01").json()["stale"]
-    saved = c.put("/api/ev/review/demo/sheets/1/d01", json={"points": [{"text": "New.", "facts": []}]}).json()
+    saved = put_sheet(c, "d01", [{"text": "New.", "facts": []}]).json()
     assert saved["status"] == "drafted" and saved["drafted_by"]["person"]
     assert c.get("/api/ev/review/demo/sheets/1/d01").json()["stale"] is None
     assert (review_root / "sheets" / "demo" / "s1" / "d01.stale-1.json").is_file()
-    again = c.put("/api/ev/review/demo/sheets/1/d01", json={"points": [{"text": "New.", "facts": []}]}).json()
+    again = put_sheet(c, "d01", [{"text": "New.", "facts": []}]).json()
     assert again["status"] == "checked"
 
 
 def test_a_bad_point_on_a_stale_sheet_archives_nothing(review_root):
     c = client(review_root)
     edit_question(review_root, "d01", "Does Targeted therapy change the Response rate?")
-    r = c.put("/api/ev/review/demo/sheets/1/d01", json={"points": [{"text": "x", "facts": ["pair:zz:m9"]}]})
+    r = put_sheet(c, "d01", [{"text": "x", "facts": ["pair:zz:m9"]}])
     assert r.status_code == 400
     assert not (review_root / "sheets" / "demo" / "s1" / "d01.stale-1.json").exists()
     assert (review_root / "sheets" / "demo" / "s1" / "d01.json").is_file()
@@ -157,7 +171,7 @@ def test_a_missing_sheet_can_be_written_on_the_page(review_root):
     c = client(review_root)
     got = c.get("/api/ev/review/demo/sheets/1/d02").json()
     assert got["sheet"] is None and got["facts"]
-    saved = c.put("/api/ev/review/demo/sheets/1/d02", json={"points": [{"text": "Written by hand.", "facts": []}]})
+    saved = put_sheet(c, "d02", [{"text": "Written by hand.", "facts": []}])
     assert saved.status_code == 200 and saved.json()["status"] == "checked"
 
 
@@ -186,9 +200,9 @@ def test_the_judge_test_item_shows_the_facts_but_not_the_judge(review_root):
     assert item["answer"] == "Targeted therapy does better." and item["question"].startswith("Does Targeted")
     listed = c.get("/api/ev/review/judge-test").json()
     assert listed == [{"n": 0, "domain": "demo", "seed": 1, "question_id": "d01", "done": False}] and blind(listed)
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p9": True}, "faithful": None}).status_code == 400
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {}, "faithful": None}).status_code == 400
-    saved = c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": True})
+    assert put_mark(c, {"p9": True}, None).status_code == 400
+    assert put_mark(c, {}, None).status_code == 400
+    saved = put_mark(c, {"p1": True}, True)
     assert saved.status_code == 200 and saved.json()["by"] == "aditya" and saved.json()["points"] == {"p1": True}
     assert c.get("/api/ev/review/judge-test").json()[0]["done"]
     again = c.get("/api/ev/review/judge-test/0").json()
@@ -200,10 +214,10 @@ def test_the_judge_test_item_shows_the_facts_but_not_the_judge(review_root):
 def test_the_judge_test_keeps_the_points_the_judge_used(review_root):
     c = client(review_root)
     two = [{"text": "A.", "facts": []}, {"text": "B.", "facts": []}]
-    assert c.put("/api/ev/review/demo/sheets/1/d01", json={"points": two}).json()["status"] == "checked"
+    assert put_sheet(c, "d01", two).json()["status"] == "checked"
     item = c.get("/api/ev/review/judge-test/0").json()   # the marks file's points, not the edited sheet's
     assert item["points"] == [{"id": "p1", "text": "Targeted therapy does better."}]
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": False}, "faithful": None}).status_code == 200
+    assert put_mark(c, {"p1": False}, None).status_code == 200
 
 
 def rejudge(root: Path, **changes) -> None:
@@ -223,14 +237,14 @@ def rejudge(root: Path, **changes) -> None:
 @pytest.mark.parametrize("change", [{"text": "Targeted therapy does much better."}, {"sheet": "9" * 64}])
 def test_a_hand_mark_on_an_older_answer_or_sheet_must_be_made_again(review_root, change):
     c = client(review_root)
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": True}).status_code == 200
+    assert put_mark(c, {"p1": True}, True).status_code == 200
     hand = json.loads((review_root / "judge-test" / "marks.json").read_text(encoding="utf-8"))[ITEM]
     assert hand["answer_sha256"] and hand["sheet_sha256"]   # what it was made on
     rejudge(review_root, **change)
     item = c.get("/api/ev/review/judge-test/0").json()
     assert item["marked"] is None and item["note"] == "the answer or its sheet changed since you marked it"
     assert c.get("/api/ev/review/judge-test").json()[0]["done"] is False
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": False}, "faithful": None}).status_code == 200
+    assert put_mark(c, {"p1": False}, None).status_code == 200
     again = c.get("/api/ev/review/judge-test/0").json()
     assert again["marked"]["points"] == {"p1": False} and again["note"] is None
     assert c.get("/api/ev/review/judge-test").json()[0]["done"] is True
@@ -242,7 +256,7 @@ def test_an_answer_collected_again_but_not_judged_again_is_a_409(review_root):
     save_answer(review_root / "results", load_answer(answer).model_copy(update={"text": "Something new."}))
     c = client(review_root)
     for r in (c.get("/api/ev/review/judge-test/0"),
-              c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": None})):
+              put_mark(c, {"p1": True}, None)):
         assert r.status_code == 409 and "synth3 judge" in r.json()["detail"]
     assert not (review_root / "judge-test" / "marks.json").exists()
 
@@ -253,14 +267,14 @@ def test_a_damaged_sample_or_marks_file_is_a_409_naming_it(review_root, name, te
     (review_root / "judge-test" / name).write_text(text, encoding="utf-8")
     c = client(review_root)
     for r in (c.get("/api/ev/review/judge-test"), c.get("/api/ev/review/judge-test/0"),
-              c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": None})):
+              put_mark(c, {"p1": True}, None)):
         assert r.status_code == 409 and name in r.json()["detail"]
 
 
 def test_a_hand_mark_takes_only_true_or_false(review_root):
     c = client(review_root)
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": "yes"}, "faithful": None}).status_code == 422
-    assert c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": 1}).status_code == 422
+    assert put_mark(c, {"p1": "yes"}, None).status_code == 422
+    assert put_mark(c, {"p1": True}, 1).status_code == 422
     assert c.put("/api/ev/review/demo/worlds/1", json={"approved": "true"}).status_code == 422
 
 
@@ -315,3 +329,76 @@ def test_the_review_routes_are_in_the_schema_with_their_own_names(review_root):
 def test_the_path_builder_stays_under_the_root(review_root):
     with pytest.raises((BadRequest, NotFound)):
         ReviewFiles(Settings(SYNTH3_DATA=review_root)).sheet_file("demo", 1, "..")  # type: ignore[call-arg]
+
+
+def test_saving_a_checked_sheet_again_with_nothing_changed_keeps_marks_and_hand_marks(review_root):
+    """Review round 1, web-I1 (and synth3-I3): each save wrote a new `checked_at`, the sheet hash changed, the
+    marks dropped out of the report and the hand mark had to be made again."""
+    from synth3.report import current_marks_of
+    c = client(review_root)
+    assert put_mark(c, {"p1": True}, True).status_code == 200   # made on the drafted sheet the judge ran on
+    same = [{"text": p["text"], "facts": p["facts"]}
+            for p in c.get("/api/ev/review/demo/sheets/1/d01").json()["sheet"]["points"]]
+    first = put_sheet(c, "d01", same).json()
+    second = put_sheet(c, "d01", same).json()
+    assert first["status"] == second["status"] == "checked" and first["points"] == second["points"]
+    current = current_marks_of(review_root / "results", ["demo"], review_root / "sheets",
+                               review_root / "built" / "demo", review_root, review_root / "questions")
+    assert current[ITEM]["sheet"]["status"] == "checked"   # still current, with the sheet's status as it is now
+    item = c.get("/api/ev/review/judge-test/0").json()
+    assert item["marked"]["points"] == {"p1": True} and item["note"] is None
+    assert c.get("/api/ev/review/judge-test").json()[0]["done"] is True
+
+
+def test_a_hand_mark_is_refused_when_the_item_changed_under_the_page(review_root):
+    """Review round 1, web-I3: the save named no answer, so ticks made on the old answer were stored for the new
+    one. `shown` is the token of what the page showed; another answer, sheet or item behind it is a 409."""
+    c = client(review_root)
+    shown = c.get("/api/ev/review/judge-test/0").json()["shown"]
+    assert isinstance(shown, str) and len(shown) == 64 and "engine" not in shown
+    body = {"points": {"p1": True}, "faithful": None}
+    assert c.put("/api/ev/review/judge-test/0", json=body).status_code == 422   # the page must say what it showed
+    rejudge(review_root, text="Targeted therapy does much better.")              # a judge run while the page is open
+    r = c.put("/api/ev/review/judge-test/0", json={**body, "shown": shown})
+    assert r.status_code == 409 and "changed since the page showed it" in r.json()["detail"]
+    assert not (review_root / "judge-test" / "marks.json").exists()
+    fresh = c.get("/api/ev/review/judge-test/0").json()["shown"]
+    assert fresh != shown and c.put("/api/ev/review/judge-test/0", json={**body, "shown": fresh}).status_code == 200
+
+
+def test_a_hand_mark_is_refused_when_the_sample_moved_the_number_to_another_item(review_root):
+    c = client(review_root)
+    shown = c.get("/api/ev/review/judge-test/0").json()["shown"]
+    for name in ("d01.answer.json", "d01.marks.json"):   # the same answer and marks under another system
+        src = review_root / "results" / "demo" / "s1" / "engine" / name
+        (review_root / "results" / "demo" / "s1" / "other").mkdir(exist_ok=True)
+        shutil.copy(src, review_root / "results" / "demo" / "s1" / "other" / name)
+    save_sample(review_root / "judge-test", ["demo/s1/other/d01", ITEM])
+    r = c.put("/api/ev/review/judge-test/0", json={"points": {"p1": True}, "faithful": None, "shown": shown})
+    assert r.status_code == 409 and not (review_root / "judge-test" / "marks.json").exists()
+
+
+def test_a_sheet_save_is_refused_when_the_sheet_changed_under_the_page(review_root):
+    """Review round 1, web-I3: the editor's old points were written over a newer draft on disk and marked
+    checked."""
+    c = client(review_root)
+    view = c.get("/api/ev/review/demo/sheets/1/d01").json()
+    assert view["shown"] == sheet_sha256(load_sheet(review_root / "sheets", "demo", 1, "d01"))
+    old = [{"text": p["text"], "facts": p["facts"]} for p in view["sheet"]["points"]]
+    redrafted = load_sheet(review_root / "sheets", "demo", 1, "d01")
+    redrafted = redrafted.model_copy(update={"points": [redrafted.points[0].model_copy(update={"text": "Redrafted."})]})
+    save_sheet(review_root / "sheets", redrafted)                 # `draft-sheets --redraft` while the page is open
+    r = c.put("/api/ev/review/demo/sheets/1/d01", json={"points": old, "shown": view["shown"]})
+    assert r.status_code == 409 and "changed since the page showed it" in r.json()["detail"]
+    assert load_sheet(review_root / "sheets", "demo", 1, "d01") == redrafted   # nothing written, not checked
+    assert c.put("/api/ev/review/demo/sheets/1/d01", json={"points": old}).status_code == 422
+    saved = put_sheet(c, "d01", old)
+    assert saved.status_code == 200 and saved.json()["shown"] == c.get("/api/ev/review/demo/sheets/1/d01").json()["shown"]
+
+
+def test_a_missing_sheet_is_shown_as_none_and_a_sheet_written_meanwhile_is_not_overwritten(review_root):
+    c = client(review_root)
+    assert c.get("/api/ev/review/demo/sheets/1/d02").json()["shown"] is None
+    assert put_sheet(c, "d02", [{"text": "Written by hand.", "facts": []}]).status_code == 200
+    r = c.put("/api/ev/review/demo/sheets/1/d02", json={"points": [{"text": "Mine.", "facts": []}], "shown": None})
+    assert r.status_code == 409

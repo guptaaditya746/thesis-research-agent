@@ -1076,7 +1076,8 @@ export interface paths {
         get: operations["review_judge_item"];
         /**
          * Review Hand Mark
-         * @description Saved with the marks file's answer and sheet hashes: what the hand mark was made on.
+         * @description Saved with the marks file's answer and sheet hashes: what the hand mark was made on. `shown` must be
+         *     the item's `shown` as it is now, else nothing is saved (409).
          */
         put: operations["review_hand_mark"];
         post?: never;
@@ -3040,6 +3041,8 @@ export interface components {
             };
             /** Faithful */
             faithful?: boolean | null;
+            /** Shown */
+            shown: string;
         };
         /** Health */
         Health: {
@@ -4420,6 +4423,8 @@ export interface components {
         SheetIn: {
             /** Points */
             points: components["schemas"]["PointIn"][];
+            /** Shown */
+            shown: string | null;
         };
         /** ShiftView */
         ShiftView: {

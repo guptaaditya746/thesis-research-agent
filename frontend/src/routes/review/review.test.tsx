@@ -22,6 +22,7 @@ const sheetView = (over: Partial<SheetView> = {}): SheetView => ({
   scope: { arms: ["Targeted therapy", "Standard care"], measures: [], conditions: [], settings: [] },
   facts: [{ id: "pair:a:m1", text: "Response rate: 0.4 vs 0.3" }],
   sheet: { status: "drafted", points: [{ id: "p1", text: "Original.", facts: ["pair:a:m1"] }], warnings: [], checked_by: null },
+  shown: "s1",
   stale: null,
   ...over,
 })
@@ -32,7 +33,7 @@ async function openSheet(view: SheetView, bodies: unknown[]) {
     http.get("/api/ev/review/demo/sheets/1/d01", () => HttpResponse.json(view)),
     http.put("/api/ev/review/demo/sheets/1/d01", async ({ request }) => {
       bodies.push(await request.json())
-      return HttpResponse.json({ status: "checked" })
+      return HttpResponse.json({ status: "checked", shown: "s2" })
     }),
   )
   const user = userEvent.setup()
@@ -51,7 +52,60 @@ describe("review page: answer sheets", () => {
     await user.clear(box)
     await user.type(box, "Edited.")
     await user.click(screen.getByRole("button", { name: "Save and mark checked" }))
-    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "Edited.", facts: ["pair:a:m1"] }] }]), T)
+    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "Edited.", facts: ["pair:a:m1"] }], shown: "s1" }]), T)
+  })
+
+  it("keeps the typed text and turns Save off when the sheet changed on disk, until the new sheet is loaded", async () => {
+    // review round 1, web-I3: a redraft on disk changed the header and facts but not the points, and Save wrote
+    // the old points over the new draft
+    const bodies: unknown[] = []
+    let current = sheetView()
+    server.use(
+      overview, queue,
+      http.get("/api/ev/review/demo/sheets/1/d01", () => HttpResponse.json(current)),
+      http.put("/api/ev/review/demo/sheets/1/d01", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ status: "checked", shown: "s9" }) }),
+    )
+    const user = userEvent.setup()
+    const { client } = renderRoutes(routes, "/review/sheets")
+    await user.click(await screen.findByRole("button", { name: /d01/ }, T))
+    const box = await screen.findByRole("textbox", { name: "Point 1" }, T)
+    await user.clear(box)
+    await user.type(box, "Mine.")
+    current = sheetView({ shown: "s2", sheet: { status: "drafted", points: [{ id: "p1", text: "Redrafted.", facts: [] }], warnings: [], checked_by: null } })
+    await client.invalidateQueries({ queryKey: ["review", "demo", "sheet", 1, "d01"] })
+    expect(await screen.findByText(/This sheet changed on disk after you opened it/, {}, T)).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "Point 1" })).toHaveValue("Mine.")
+    expect(screen.getByRole("button", { name: "Save and mark checked" })).toBeDisabled()
+    await user.click(screen.getByRole("button", { name: "Load the sheet as it is now" }))
+    expect(screen.getByRole("textbox", { name: "Point 1" })).toHaveValue("Redrafted.")
+    await user.click(screen.getByRole("button", { name: "Save and mark checked" }))
+    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "Redrafted.", facts: [] }], shown: "s2" }]), T)
+  })
+
+  it("does not take its own save for a change on disk", async () => {
+    const bodies: unknown[] = []
+    let current = sheetView()
+    server.use(
+      overview, queue,
+      http.get("/api/ev/review/demo/sheets/1/d01", () => HttpResponse.json(current)),
+      http.put("/api/ev/review/demo/sheets/1/d01", async ({ request }) => {
+        bodies.push(await request.json())
+        current = sheetView({ shown: "s2", sheet: { status: "checked", points: [{ id: "p1", text: "Edited.", facts: ["pair:a:m1"] }], warnings: [], checked_by: "ada" } })
+        return HttpResponse.json({ status: "checked", shown: "s2" })
+      }),
+    )
+    const user = userEvent.setup()
+    renderRoutes(routes, "/review/sheets")
+    await user.click(await screen.findByRole("button", { name: /d01/ }, T))
+    const box = await screen.findByRole("textbox", { name: "Point 1" }, T)
+    await user.clear(box)
+    await user.type(box, "Edited.")
+    await user.click(screen.getByRole("button", { name: "Save and mark checked" }))
+    expect(await screen.findByText("Saved.", {}, T)).toBeInTheDocument()
+    await new Promise((r) => setTimeout(r, 300))   // the queue and the sheet are read again after a save
+    expect(screen.queryByText(/This sheet changed on disk/)).toBeNull()
+    await user.click(screen.getByRole("button", { name: "Save and mark checked" }))
+    await waitFor(() => expect(bodies[1]).toEqual({ points: [{ text: "Edited.", facts: ["pair:a:m1"] }], shown: "s2" }), T)
   })
 
   it("saves a stale sheet as a new sheet", async () => {
@@ -62,16 +116,16 @@ describe("review page: answer sheets", () => {
     await user.clear(box)
     await user.type(box, "Edited.")
     await user.click(screen.getByRole("button", { name: "Save as a new sheet" }))
-    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "Edited.", facts: ["pair:a:m1"] }] }]), T)
+    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "Edited.", facts: ["pair:a:m1"] }], shown: "s1" }]), T)
   })
 
   it("writes a missing sheet", async () => {
     const bodies: unknown[] = []
-    const user = await openSheet(sheetView({ sheet: null }), bodies)
+    const user = await openSheet(sheetView({ sheet: null, shown: null }), bodies)
     await user.click(await screen.findByRole("button", { name: "Add point" }, T))
     await user.type(screen.getByRole("textbox", { name: "Point 1" }), "By hand.")
     await user.click(screen.getByRole("button", { name: "Write and mark checked" }))
-    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "By hand.", facts: [] }] }]), T)
+    await waitFor(() => expect(bodies).toEqual([{ points: [{ text: "By hand.", facts: [] }], shown: null }]), T)
   })
 
   it("shows a refusal near Save and keeps the text", async () => {
@@ -96,6 +150,7 @@ describe("review page: judge test", () => {
   const item: JudgeItem = {
     n: 0, domain: "demo", seed: 1, question_id: "d01", question: "Does it help?", answer: "It helps.",
     points: [{ id: "p1", text: "It helps." }], facts: [{ n: 1, paper: "S001", quote: "first quote" }], facts_cut: false, marked: null, note: null,
+    shown: "i1",
   }
   it("hand-marks a judge-test answer without showing the judge", async () => {
     const bodies: unknown[] = []
@@ -117,7 +172,55 @@ describe("review page: judge test", () => {
     expect(within(panel).queryByText(/judge|score/i)).toBeNull()
     await user.click(within(panel).getByRole("radio", { name: "Met" }))
     await user.click(within(panel).getByRole("button", { name: "Save" }))
-    await waitFor(() => expect(bodies).toEqual([{ points: { p1: true }, faithful: null }]), T)
+    await waitFor(() => expect(bodies).toEqual([{ points: { p1: true }, faithful: null, shown: "i1" }]), T)
+  })
+
+  it("clears the ticks when the item under them changes, and a save names what is shown", async () => {
+    // review round 1, web-I3: a judge run while the item was open swapped the answer and the points; the old
+    // tick stayed on, Save was enabled and the old tick was stored for the new answer
+    const bodies: unknown[] = []
+    let current: JudgeItem = { ...item, answer: "OLD ANSWER: it helps.", points: [{ id: "p1", text: "Old point." }] }
+    server.use(
+      overview,
+      http.get("/api/ev/review/judge-test", () => HttpResponse.json([{ n: 0, domain: "demo", seed: 1, question_id: "d01", done: false }])),
+      http.get("/api/ev/review/judge-test/0", () => HttpResponse.json(current)),
+      http.put("/api/ev/review/judge-test/0", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({}) }),
+    )
+    const user = userEvent.setup()
+    const { client } = renderRoutes(routes, "/review/judge-test")
+    await user.click(await screen.findByRole("button", { name: /d01/ }, T))
+    const panel = await screen.findByRole("region", { name: "Judge-test item" }, T)
+    await user.click(within(panel).getByRole("radio", { name: "Met" }))
+    current = { ...item, answer: "NEW ANSWER: it hurts.", points: [{ id: "p1", text: "New point." }], shown: "i2" }
+    await client.invalidateQueries({ queryKey: ["review", "judge-test", 0] })
+    await screen.findByText(/NEW ANSWER/, {}, T)
+    const now = screen.getByRole("region", { name: "Judge-test item" })
+    expect(within(now).getByText("New point.")).toBeInTheDocument()
+    expect(within(now).getByRole("radio", { name: "Met" })).not.toBeChecked()
+    expect(within(now).getByRole("button", { name: "Save" })).toBeDisabled()
+    await user.click(within(now).getByRole("radio", { name: "Not met" }))
+    await user.click(within(now).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(bodies).toEqual([{ points: { p1: false }, faithful: null, shown: "i2" }]), T)
+  })
+
+  it("shows a refused save and loads the item again", async () => {
+    let gets = 0
+    server.use(
+      overview,
+      http.get("/api/ev/review/judge-test", () => HttpResponse.json([{ n: 0, domain: "demo", seed: 1, question_id: "d01", done: false }])),
+      http.get("/api/ev/review/judge-test/0", () => { gets += 1; return HttpResponse.json(gets === 1 ? item : { ...item, answer: "NEW ANSWER.", shown: "i2" }) }),
+      http.put("/api/ev/review/judge-test/0", () => HttpResponse.json({ detail: "judge-test item 0: the item changed since the page showed it" }, { status: 409 })),
+    )
+    const user = userEvent.setup()
+    renderRoutes(routes, "/review/judge-test")
+    await user.click(await screen.findByRole("button", { name: /d01/ }, T))
+    const panel = await screen.findByRole("region", { name: "Judge-test item" }, T)
+    await user.click(within(panel).getByRole("radio", { name: "Met" }))
+    await user.click(within(panel).getByRole("button", { name: "Save" }))
+    expect(await screen.findByText(/the item changed since the page showed it/, {}, T)).toBeInTheDocument()
+    expect(await screen.findByText("NEW ANSWER.", {}, T)).toBeInTheDocument()
+    expect(screen.getByText(/the item changed since the page showed it/)).toBeInTheDocument()   // still said
+    expect(screen.getByRole("radio", { name: "Met" })).not.toBeChecked()
   })
 
   async function openItem(over: Partial<JudgeItem>, bodies: unknown[]) {
@@ -147,10 +250,10 @@ describe("review page: judge test", () => {
     await user.click(within(panel).getByRole("radio", { name: "Not met" }))
     await user.click(within(panel).getByRole("radio", { name: "yes" }))
     await user.click(within(panel).getByRole("button", { name: "Save" }))
-    await waitFor(() => expect(bodies).toEqual([{ points: { p1: false }, faithful: true }]), T)
+    await waitFor(() => expect(bodies).toEqual([{ points: { p1: false }, faithful: true, shown: "i1" }]), T)
     await user.click(within(panel).getByRole("radio", { name: "no" }))
     await user.click(within(panel).getByRole("button", { name: "Save" }))
-    await waitFor(() => expect(bodies[1]).toEqual({ points: { p1: false }, faithful: false }), T)
+    await waitFor(() => expect(bodies[1]).toEqual({ points: { p1: false }, faithful: false, shown: "i1" }), T)
   })
 
   it("says when some facts were cut", async () => {

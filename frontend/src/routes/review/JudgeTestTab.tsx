@@ -2,6 +2,8 @@
  * The judge test: Aditya marks answers by hand without seeing the judge's marks or the system that answered.
  * Nothing here reads either (the API does not send them). A row with a `problem` is shown and cannot be opened.
  * An item judged again on another answer or sheet comes with a `note` and no earlier marks: it is marked afresh.
+ * The ticks belong to what the server showed (`shown`): when the answer or the points under them change, the ticks
+ * start empty, and a save names `shown` so the server refuses a mark made on something else.
  */
 import { useState } from "react"
 
@@ -41,15 +43,15 @@ export function JudgeTestTab() {
 
 function Item({ n }: { n: number }) {
   const item = useJudgeItem(n)
+  const save = useSaveMark(n)   // here, not in Marking: a refusal stays on screen when the item is loaded again
   if (item.error) return <Alert variant="destructive"><AlertDescription>{messageOf(item.error)}</AlertDescription></Alert>
   if (!item.data) return <p className="text-sm text-muted-foreground">Loading</p>
-  return <Marking item={item.data} />
+  return <Marking key={item.data.shown} item={item.data} save={save} />
 }
 
 type Faithful = "yes" | "no" | "skip"
 
-function Marking({ item }: { item: JudgeItem }) {
-  const save = useSaveMark(item.n)
+function Marking({ item, save }: { item: JudgeItem; save: ReturnType<typeof useSaveMark> }) {
   const [met, setMet] = useState<Record<string, boolean>>(() => item.marked?.points ?? {})
   const [faithful, setFaithful] = useState<Faithful>(() => (item.marked?.faithful === true ? "yes" : item.marked?.faithful === false ? "no" : "skip"))
   const [saved, setSaved] = useState(false)
@@ -98,7 +100,7 @@ function Marking({ item }: { item: JudgeItem }) {
         </fieldset>
         <div className="space-y-2">
           <Button disabled={!complete || save.isPending}
-            onClick={() => save.mutate({ points: met, faithful: faithful === "skip" ? null : faithful === "yes" }, { onSuccess: () => setSaved(true) })}>Save</Button>
+            onClick={() => save.mutate({ points: met, faithful: faithful === "skip" ? null : faithful === "yes", shown: item.shown }, { onSuccess: () => setSaved(true) })}>Save</Button>
           {!complete ? <p className="text-muted-foreground">Mark every point first.</p> : null}
           {save.error ? <Alert variant="destructive"><AlertDescription>{messageOf(save.error)}</AlertDescription></Alert> : null}
           {saved ? <p role="status" className="text-muted-foreground">Saved.</p> : null}

@@ -6,13 +6,14 @@ hand-marks the judge-test answers.
     GET /review/{domain}/worlds              -> [{seed, approved, text, path}] (`text`: synth3.world.describe)
     PUT /review/{domain}/worlds/{seed}       {approved} -> the world row; 422 when the world file does not load
     GET /review/{domain}/sheets              -> synth3.sheets.review_queue rows, with `stale`
-    GET /review/{domain}/sheets/{seed}/{qid} -> {question, sub_questions, scope, facts, sheet, stale}
-    PUT /review/{domain}/sheets/{seed}/{qid} {points: [{text, facts}]} -> the saved sheet; 400 with the problems
+    GET /review/{domain}/sheets/{seed}/{qid} -> {question, sub_questions, scope, facts, sheet, shown, stale}
+    PUT /review/{domain}/sheets/{seed}/{qid} {points: [{text, facts}], shown} -> the saved sheet with its new
+                                                 `shown`; 400 with the problems
     GET /review/judge-test                   -> [{n, domain, seed, question_id, done}]
     GET /review/judge-test/{n}               -> {n, domain, seed, question_id, question, answer, points, facts,
-                                                 facts_cut, marked, note}; never the judge's ticks or scores, never
-                                                 the system
-    PUT /review/judge-test/{n}               {points: {pid: bool}, faithful} -> the saved hand mark
+                                                 facts_cut, marked, note, shown}; never the judge's ticks or
+                                                 scores, never the system
+    PUT /review/judge-test/{n}               {points: {pid: bool}, faithful, shown} -> the saved hand mark
 
 Everything lives under `settings.synth3_data`: `<domain>.yaml` (the approved specs; drafts are elsewhere),
 `worlds/<domain>/s<n>.json`, `questions/<domain>.yaml`, `sheets/`, `built/` (synth3.sheets.folders_of),
@@ -37,6 +38,11 @@ answer or sheet, the old hand mark is not shown (`marked` None, `note` says why)
 report leaves it out until it is marked again. An answer collected again but not judged again is a 409 (the page
 would show it beside the points the judge saw for the old one).
 
+A save names what the page showed: `shown` is a hash the GET gives (a sheet's points and `cant_tell`; a judge-test
+item's id, answer and sheet) and the PUT must send back. When the file behind it changed in the meantime (a new
+draft, a judge run, a new sample), the PUT is a 409 and writes nothing, so a hand mark counts only for the answer
+and points Aditya saw and old points never replace a newer draft.
+
 A file that does not load (a YAML typo in a spec or question file, a damaged sheet, marks, answer, sample.json or
 marks.json file) is a 409 naming it; `GET /review` lists a broken spec with an `error` instead of failing for every domain.
 """
@@ -52,6 +58,7 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel, StrictBool
 
+from jsonio import canonical_bytes, sha256_hex
 from synth3.answers import AnswerRecord, load_answer
 from synth3.judge import used_facts
 from synth3.marking import answer_hashes
@@ -59,7 +66,7 @@ from synth3.questions import Question, QuestionSet, load_questions
 from synth3.report import hand_mark_fits, load_hand_marks, load_sample, save_hand_mark
 from synth3.sheetfacts import Folder, check_spec, load_folder, relevant_facts, scope
 from synth3.sheets import (Sheet, archive_sheet, check_sheet, folders_of, load_sheet, person_sheet, review_queue,
-                           save_sheet, stale)
+                           save_sheet, sheet_sha256, stale)
 from synth3.spec import DomainSpec, load_spec
 from synth3.world import describe, load_world, save_world
 
@@ -68,6 +75,10 @@ from .settings import Settings
 
 _WRITE = threading.Lock()   # every write of the review API
 STALE_MARK = "the answer or its sheet changed since you marked it"
+MOVED_ITEM = ("the item changed since the page showed it (it was judged again, or the sample was drawn again); "
+              "nothing was saved. Load the item again and mark what it shows now")
+MOVED_SHEET = ("the sheet changed since the page showed it (it was drafted or saved again); nothing was saved. "
+               "Load the sheet again and make your edit on what it holds now")
 _SEED_DIR = re.compile(r"^s(\d+)$")
 _SEED_FILE = re.compile(r"^s(\d+)\.json$")
 
@@ -194,11 +205,29 @@ class PointIn(BaseModel):
 
 class SheetIn(BaseModel):
     points: list[PointIn]
+    shown: str | None   # required: the `shown` of the sheet the page loaded (null: it showed no sheet)
 
 
 class HandMarkIn(BaseModel):
     points: dict[str, StrictBool]   # strict: a page bug sending "yes" or 1 is a 422, not a mark
     faithful: StrictBool | None = None
+    shown: str                      # required: the `shown` of the item the page loaded
+
+
+def sheet_shown(sheet: Sheet | None) -> str | None:
+    """What a page showed of a sheet: the hash of its points and `cant_tell` (None: no sheet). A save names it,
+    so points typed on an older draft are never written over a newer one."""
+    return sheet_sha256(sheet) if sheet is not None else None
+
+
+def item_shown(item: str, marks: dict) -> str:
+    """What a page showed of a judge-test item: one hash over the item id and the marks file's answer and sheet
+    hashes. A hand mark names it, so it counts only for the answer and points it was made on, also after a judge
+    run or a new sample moved the number to something else. A hash: the item id names the system, and Aditya
+    marks blind."""
+    sheet = marks.get("sheet") if isinstance(marks.get("sheet"), dict) else {}
+    return sha256_hex(canonical_bytes({"item": item, "answer": marks.get("answer_sha256"),
+                                       "sheet": sheet.get("sha256")}))
 
 
 def _names(spec: DomainSpec, q: Question) -> dict[str, list[str]]:
@@ -296,7 +325,7 @@ def evreview_router(settings: Settings) -> APIRouter:
         folder, q, current = sheet_context(domain, seed, qid)
         return {"question": q.question, "sub_questions": q.sub_questions, "scope": _names(folder.spec, q),
                 "facts": [f.model_dump() for f in relevant_facts(folder.spec, folder.truth, q)],
-                "sheet": current.model_dump() if current else None,
+                "sheet": current.model_dump() if current else None, "shown": sheet_shown(current),
                 "stale": stale(current, q, folder) if current else None}
 
     @api.put("/review/{domain}/sheets/{seed}/{qid}", tags=["review"])
@@ -305,6 +334,8 @@ def evreview_router(settings: Settings) -> APIRouter:
         root = files.sheets_root()
         with _WRITE:
             folder, q, current = sheet_context(domain, seed, qid)
+            if req.shown != sheet_shown(current):
+                raise Conflict(MOVED_SHEET)
             try:
                 if current is None:
                     new = person_sheet(folder, q, points, settings.user, now(), checked=True)
@@ -316,7 +347,7 @@ def evreview_router(settings: Settings) -> APIRouter:
             except ValueError as err:
                 raise BadRequest(str(err)) from err
             save_sheet(root, new)
-            return new.model_dump()
+            return {**new.model_dump(), "shown": sheet_shown(new)}
 
     def judge_file(load):
         """`load_sample` or `load_hand_marks`; a damaged file is a 409 naming it."""
@@ -407,16 +438,19 @@ def evreview_router(settings: Settings) -> APIRouter:
         mark, note = marked(item, marks, judge_file(load_hand_marks))
         return {"n": n, **where(item), "question": question, "answer": rec.text, "points": points,
                 "facts": [{"n": i, "paper": f.paper, "quote": f.quote} for i, f in enumerate(used, 1)],
-                "facts_cut": cut, "marked": mark, "note": note}
+                "facts_cut": cut, "marked": mark, "note": note, "shown": item_shown(item, marks)}
 
     @api.put("/review/judge-test/{n}", tags=["review"])
     def review_hand_mark(n: int, req: HandMarkIn) -> dict[str, Any]:
-        """Saved with the marks file's answer and sheet hashes: what the hand mark was made on."""
+        """Saved with the marks file's answer and sheet hashes: what the hand mark was made on. `shown` must be
+        the item's `shown` as it is now, else nothing is saved (409)."""
         with _WRITE:
             item = item_at(n)
             judge_file(load_hand_marks)   # a damaged marks.json is a 409 before anything is written
             marks, points = judged(n, item)
             answer_judged(n, item, marks)
+            if req.shown != item_shown(item, marks):
+                raise Conflict(f"judge-test item {n}: {MOVED_ITEM}")
             ids = [p["id"] for p in points]
             unknown = sorted(set(req.points) - set(ids))
             missing = [p for p in ids if p not in req.points]

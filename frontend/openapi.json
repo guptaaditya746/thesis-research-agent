@@ -2766,7 +2766,7 @@
           "review"
         ],
         "summary": "Review Hand Mark",
-        "description": "Saved with the marks file's answer and sheet hashes: what the hand mark was made on.",
+        "description": "Saved with the marks file's answer and sheet hashes: what the hand mark was made on. `shown` must be\nthe item's `shown` as it is now, else nothing is saved (409).",
         "operationId": "review_hand_mark",
         "parameters": [
           {
@@ -7568,11 +7568,16 @@
               }
             ],
             "title": "Faithful"
+          },
+          "shown": {
+            "type": "string",
+            "title": "Shown"
           }
         },
         "type": "object",
         "required": [
-          "points"
+          "points",
+          "shown"
         ],
         "title": "HandMarkIn"
       },
@@ -10798,11 +10803,23 @@
             },
             "type": "array",
             "title": "Points"
+          },
+          "shown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shown"
           }
         },
         "type": "object",
         "required": [
-          "points"
+          "points",
+          "shown"
         ],
         "title": "SheetIn"
       },

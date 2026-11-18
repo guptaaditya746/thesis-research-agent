@@ -56,6 +56,8 @@ export interface SheetView {
   scope: Scope
   facts: FactLine[]
   sheet: { status: "drafted" | "checked"; points: { id: string; text: string; facts: string[] }[]; warnings: string[]; checked_by: string | null } | null
+  /** what this page was shown of the sheet (null: no sheet); a save sends it back and is refused when the sheet changed since */
+  shown: string | null
   stale: string | null
 }
 
@@ -82,11 +84,14 @@ export interface JudgeItem {
   marked: { points: Record<string, boolean>; faithful: boolean | null } | null
   /** why an earlier hand mark is not shown (the item was judged again on another answer or sheet) */
   note: string | null
+  /** what this page was shown (the item, its answer and its points); a save sends it back and is refused when it changed since */
+  shown: string
 }
 
 export interface HandMark {
   points: Record<string, boolean>
   faithful: boolean | null
+  shown: string
 }
 
 const root = "/api/ev/review"
@@ -114,8 +119,9 @@ export const useSheet = (domain: string, seed: number, qid: string) =>
 export function useSaveSheet(domain: string, seed: number, qid: string) {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (points: PointIn[]) => putJson<unknown>(`${root}/${seg(domain)}/sheets/${seed}/${seg(qid)}`, { points }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["review", domain] }),
+    mutationFn: (sheet: { points: PointIn[]; shown: string | null }) => putJson<{ shown: string | null }>(`${root}/${seg(domain)}/sheets/${seed}/${seg(qid)}`, sheet),
+    // not awaited: the editor takes the saved sheet's `shown` before the sheet is read again
+    onSuccess: () => { void client.invalidateQueries({ queryKey: ["review", domain] }) },
   })
 }
 
@@ -129,5 +135,7 @@ export function useSaveMark(n: number) {
   return useMutation({
     mutationFn: (mark: HandMark) => putJson<unknown>(`${root}/judge-test/${n}`, mark),
     onSuccess: () => client.invalidateQueries({ queryKey: ["review", "judge-test"] }),
+    // a refused save (the item changed under the page) loads the item as it is now
+    onError: () => client.invalidateQueries({ queryKey: ["review", "judge-test"] }),
   })
 }

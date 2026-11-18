@@ -1,7 +1,8 @@
 /**
  * The answer-sheet queue and the editor of one sheet. The points are editable text with their fact ids as
  * removable chips; a stale sheet is saved as a new (unchecked) sheet, a missing one is written. The editor keeps
- * its text when a save is refused.
+ * its text when a save is refused. A save names the sheet the points were loaded from (`shown`); when the sheet
+ * changes on disk while the editor is open, the text is kept, Save is off and a button loads the new sheet.
  */
 import { useState } from "react"
 
@@ -59,8 +60,11 @@ function SheetEditor({ domain, seed, qid }: { domain: string; seed: number; qid:
 
 function Editor({ domain, seed, qid, view }: { domain: string; seed: number; qid: string; view: SheetView }) {
   const save = useSaveSheet(domain, seed, qid)
-  const [points, setPoints] = useState<PointIn[]>(() => (view.sheet?.points ?? []).map((p) => ({ text: p.text, facts: [...p.facts] })))
+  const loaded = (): PointIn[] => (view.sheet?.points ?? []).map((p) => ({ text: p.text, facts: [...p.facts] }))
+  const [points, setPoints] = useState<PointIn[]>(loaded)
+  const [base, setBase] = useState<string | null>(view.shown)   // the sheet the points were loaded from, or saved as
   const [saved, setSaved] = useState(false)
+  const moved = view.shown !== base
   const set = (i: number, p: PointIn) => { setSaved(false); setPoints(points.map((q, j) => (j === i ? p : q))) }
   const label = view.stale ? "Save as a new sheet" : view.sheet === null ? "Write and mark checked" : "Save and mark checked"
   const scope = view.scope
@@ -69,6 +73,14 @@ function Editor({ domain, seed, qid, view }: { domain: string; seed: number; qid
     <Card>
       <CardHeader><CardTitle className="text-base">{qid} (seed {seed})</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
+        {moved ? (
+          <Alert>
+            <AlertDescription>
+              This sheet changed on disk after you opened it. Your text is kept and Save is off, because saving would replace the newer sheet.{" "}
+              <Button size="sm" variant="outline" onClick={() => { setPoints(loaded()); setBase(view.shown); setSaved(false) }}>Load the sheet as it is now</Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
         {view.stale ? <Alert><AlertDescription>This sheet is stale: {view.stale}. Saving makes a new sheet; save it again to check it.</AlertDescription></Alert> : null}
         <p className="font-medium">{view.question}</p>
         {view.sub_questions.length > 0 ? (
@@ -107,7 +119,7 @@ function Editor({ domain, seed, qid, view }: { domain: string; seed: number; qid
           <Button size="sm" variant="outline" onClick={() => { setSaved(false); setPoints([...points, { text: "", facts: [] }]) }}>Add point</Button>
         </div>
         <div className="space-y-2">
-          <Button disabled={save.isPending} onClick={() => save.mutate(points, { onSuccess: () => setSaved(true) })}>{label}</Button>
+          <Button disabled={save.isPending || moved} onClick={() => save.mutate({ points, shown: base }, { onSuccess: (r) => { setBase(r.shown); setSaved(true) } })}>{label}</Button>
           {save.error ? <Alert variant="destructive"><AlertDescription>{messageOf(save.error)}</AlertDescription></Alert> : null}
           {saved ? <p role="status" className="text-muted-foreground">Saved.</p> : null}
         </div>
