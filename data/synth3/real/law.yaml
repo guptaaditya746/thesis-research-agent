@@ -1,0 +1,16 @@
+source: files
+max_fetch: 600
+article_types: [research-article]
+exclude_title: literature review|review of the literature|meta-analys|systematic review|book review|erratum|correction|comment on|reply to|symposium
+min_words: 3000
+max_words: 15000
+min_tables: 1
+results_heading: ^results?\b|^findings\b|^empirical results|^empirical findings|^analysis\b
+conclusion_heading: conclu|discussion|implications|summary
+drop_sections: acknowledg|funding|conflicts? of interest|competing interests?|disclosures?|author.{0,3}contributions?|abbreviations|appendix|references|bibliography|data availability|availability of data|about the authors?
+control_words: no (?:diversion|program(?:me)?s?)|standard (?:prosecution|processing|case processing|court processing|adjudication|procedures?|arms?|groups?)|traditional (?:prosecution|processing|court processing|adjudication|arms?|groups?)|conventional (?:prosecution|processing|court processing|adjudication|arms?|groups?)|business as usual|processed as usual|comparison (?:groups?|cases?|defendants?)|control (?:groups?|arms?|cases?|defendants?)|untreated
+keep: [SD, SE, CI, OR, RR, IQR, OLS, IV, RD, RDD, DID, DiD, ATE, ATT, ITT, RCT, ANOVA, SAS, SPSS, Stata, BJS, FBI, NIJ, DOJ, NIH, NCJRS, ICPSR, UCR, NIBRS, NCVS, SSRN, US, USA, UK, EU, DA, DAs, ADR, ROR, GPA, ID, NCT, COVID-19, Kaplan, Meier, Cox, Tobit, Probit, Logit, Poisson]
+name_stems: []
+name_words: []
+min_names: 0
+n_test: 30

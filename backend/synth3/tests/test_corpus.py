@@ -1,15 +1,10 @@
 import json
-from dataclasses import replace
-
 import pytest
 
 from synth3.cli import main
 from synth3.corpus import build_folder
+from synth3.tests.conftest import approved
 from synth3.world import draw_world
-
-
-def approved(SPEC, seed):
-    return replace(draw_world(SPEC, seed), approved=True)
 
 
 def test_unapproved_world_is_refused(tmp_path, SPEC):

@@ -1,7 +1,21 @@
+from dataclasses import replace
+
 import pytest
 import yaml
 
+from synth3.realspec import load_real_spec
+from synth3.reference import draw_supported_studies
 from synth3.spec import load_spec
+from synth3.world import draw_world
+
+
+def approved(SPEC, seed):
+    return replace(draw_world(SPEC, seed), approved=True)
+
+
+def supported(SPEC, seed):
+    """The studies of the first supported noise attempt for a drawn world."""
+    return draw_supported_studies(SPEC, draw_world(SPEC, seed), seed, 40)[0]
 
 
 def _authors() -> list[str]:
@@ -69,3 +83,142 @@ def SPEC(tmp_path):
 @pytest.fixture
 def spec_dir(tmp_path):
     return write(tmp_path / "specs", good())
+
+
+def real_good() -> dict:
+    """A valid real-paper config as a plain dict (a `files` source, every field set)."""
+    return {
+        "source": "files", "query": "", "max_fetch": 600,
+        "article_types": ["research-article"], "exclude_title": "protocol|review",
+        "min_words": 100, "max_words": 5000, "min_tables": 1,
+        "results_heading": r"^results?\b|^findings\b", "conclusion_heading": "conclu|discussion|summary",
+        "drop_sections": "acknowledg|funding|conflicts? of interest|competing interests?|declarations?",
+        "control_words": "placebo|usual care",
+        "keep": ["BP", "eGFR", "WHO", "SD"], "name_stems": ["pril", "dipine"], "name_words": ["chlorthalidone"],
+        "n_test": 5,
+    }
+
+
+def write_real(dir, d, newline="\n"):
+    dir.mkdir(parents=True, exist_ok=True)
+    text = yaml.safe_dump(d, sort_keys=False).replace("\n", newline)
+    (dir / "demo.yaml").write_bytes(text.encode("utf-8"))
+    return dir
+
+
+@pytest.fixture
+def REAL(tmp_path):
+    return load_real_spec("demo", write_real(tmp_path / "real", real_good()))
+
+
+@pytest.fixture
+def REAL_PMC(tmp_path):
+    d = real_good()
+    d.update(source="pmc", query="hypertension AND open access[filter]")
+    return load_real_spec("demo", write_real(tmp_path / "real_pmc", d))
+
+
+_VOCAB = ("patients trial therapy outcome group measured baseline follow clinic dose weeks result blood pressure "
+          "daily visit record sample change average measure study report across period higher lower between "
+          "during after before each total central local stable regular observed reported adjusted matched "
+          "enrolled assigned treated monitored compared analysed collected reviewed recorded balanced").split()
+
+
+def _para(rng, n: int) -> str:
+    ws = [rng.choice(_VOCAB) for _ in range(n)]
+    sentences = [" ".join(ws[k:k + 12]).capitalize() + "." for k in range(0, n, 12)]
+    return " ".join(sentences)
+
+
+def fake_paper(i: int) -> str:
+    """A markdown paper of about 1,500 words in paragraphs of 60-100 words; the text varies with `i`."""
+    import random
+    rng = random.Random(i)
+    intro = [_para(rng, 80) for _ in range(7)]
+    intro[0] = f"Lisinopril is widely used for blood pressure in Brightford. {intro[0]}"
+    intro[1] = f"The HOPE-{i} trial compared lisinopril/amlodipine with usual care. {intro[1]}"
+    table = "| Outcome | Drug | Placebo |\n| --- | --- | --- |\n| Events | 12 | 20 |"
+    parts = [
+        f"# HOPE-{i} trial of blood pressure care", "## Abstract", _para(rng, 70), "## Introduction", *intro,
+        "## Methods", *[_para(rng, 90) for _ in range(3)],
+        "## Results", _para(rng, 90), "Fewer events occurred than in the placebo group. " + _para(rng, 70),
+        "Table 1. Outcomes by group.", table, _para(rng, 90),
+        "## Discussion", *[_para(rng, 90) for _ in range(3)],
+    ]
+    return "\n\n".join(parts) + "\n"
+
+
+def make_pool(root, n: int, rs):
+    """A pool of `n` fake papers with ids P001... added through `add_paper`."""
+    from synth3.pmc import PoolPaper
+    from synth3.pool import add_paper, save_index
+    rows = []
+    for i in range(1, n + 1):
+        text = fake_paper(i)
+        paper = PoolPaper(id=f"P{i:03d}", title=f"HOPE-{i} trial of blood pressure care", year=2015,
+                          journal="Demo Journal", license="CC-BY", article_type="research-article", text=text)
+        rows.append(add_paper(root, paper, rs))
+    save_index(root, rows)
+    return root
+
+
+@pytest.fixture
+def pool(tmp_path, REAL):
+    """A split pool of 50 fake papers: 5 test papers and 45 sources."""
+    from synth3.pool import split_pool
+    root = make_pool(tmp_path / "pool", 50, REAL)
+    split_pool(root, REAL)
+    return root
+
+
+@pytest.fixture
+def real_dir(tmp_path):
+    return write_real(tmp_path / "real_cli", real_good())
+
+
+@pytest.fixture
+def pool_root(tmp_path, REAL):
+    """A pools folder holding a split `demo` pool."""
+    from synth3.pool import split_pool
+    root = tmp_path / "pools"
+    split_pool(make_pool(root / "demo", 50, REAL), REAL)
+    return root
+
+
+@pytest.fixture
+def folder(tmp_path, SPEC):
+    from synth3.corpus import build_folder
+    out = tmp_path / "f" / "s1"
+    build_folder(out, SPEC, approved(SPEC, 1), 40, "table")
+    return out
+
+
+def built(tmp_path, SPEC, seed):
+    """Build the template folder of one seed under `tmp_path / "b" / f"s{seed}"` and return it."""
+    from synth3.corpus import build_folder
+    out = tmp_path / "b" / f"s{seed}"
+    build_folder(out, SPEC, approved(SPEC, seed), 40, "table")
+    return out
+
+
+def q(text, **kw):
+    from synth3.questions import Question
+    return Question(id="x", question=text, **kw)
+
+
+def label(SPEC, arm_id):
+    return next(a.label for a in SPEC.arms if a.id == arm_id)
+
+
+def seed_with(SPEC, pred):
+    """The first seed in 1..30 whose in-memory truth satisfies `pred`; no folder is written."""
+    from synth3.reference import reference_facts
+    for seed in range(1, 31):
+        world = draw_world(SPEC, seed)
+        try:
+            studies, _ = draw_supported_studies(SPEC, world, seed, 40)
+        except ValueError:
+            continue
+        if pred({"world": world.json(), "facts": reference_facts(SPEC, world, studies)}):
+            return seed
+    raise AssertionError("no seed in 1..30 fits")

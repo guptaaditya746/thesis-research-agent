@@ -1,0 +1,17 @@
+source: pmc
+query: '"open access"[filter] AND (randomized[Title/Abstract] OR randomised[Title/Abstract]) AND ("hypertension/drug therapy"[MeSH Terms] OR "antihypertensive agents"[MeSH Terms] OR (hypertension[MeSH Terms] AND antihypertensive[Title/Abstract]))'
+max_fetch: 3000
+article_types: [research-article]
+exclude_title: protocol|review|meta-analys|rationale and design|erratum|correction
+min_words: 2000
+max_words: 9000
+min_tables: 1
+results_heading: ^results?\b|^findings\b
+conclusion_heading: conclu|discussion|summary
+drop_sections: acknowledg|funding|conflicts? of interest|competing interests?|declarations?|author.{0,3}contributions?|abbreviations|supplementary|data availability|availability of data|ethics approval|consent for publication
+control_words: placebos?|(?-i:PLB|PBO|SoC)|sham|vehicles?|usual (?:care|treatments?)|(?:treatment|care) as usual|standard (?:care|treatments?|therap(?:y|ies)|arms?|groups?)|standard of care|conventional (?:care|treatments?|therap(?:y|ies)|arms?|groups?)|control (?:groups?|arms?|treatments?)|comparator (?:groups?|arms?)|active[- ]control(?:led)?|(?:versus|vs\.?|or|by|to) no (?:intervention|treatment)\b(?![- ]related)|no[- ](?:intervention|treatment) (?:groups?|arms?|periods?|phases?)|untreated
+keep: [BP, SBP, DBP, HR, CI, OR, RR, SD, SE, SEM, IQR, BMI, eGFR, CKD, HbA1c, LDL, HDL, ACE, ARB, ARBs, CCB, CCBs, RAAS, ECG, ICU, RCT, ITT, ANOVA, SAS, SPSS, Stata, WHO, FDA, NIH, ESC, ESH, ACC, AHA, JNC, NICE, MRI, CT, ABPM, NYHA, NCT, COVID-19, Kaplan, Meier, Cox, HF, HFpEF, HFrEF, LV, LVEF, EF, AE, SAE, TEAE, QD, BID, ULN, RAS, FDC, SPC, MI, AF, CVD, CAD, NCD, LMIC, Helsinki, Mann, Whitney, Fig, Figs, ANCOVA, CONSORT, cystatin, Cystatin]
+name_stems: [pril, sartan, olol, alol, dipine, thiazide, azosin, semide, tanide, tiazem, pamil, kiren, statin, gliflozin, gliptin, formin, glutide, parin, xaban, gatran, prazole, erenone, drostat, ilol, tinib, fenib, afil, mab, navir, limus, zolamide, glinide, nidine]
+name_words: [chlorthalidone, indapamide, spironolactone, eplerenone, clonidine, hydralazine, minoxidil, methyldopa, moxonidine, sacubitril, amiloride, glibenclamide, gliclazide, glipizide, glimepiride, reserpine, guanfacine, ivabradine, digoxin, warfarin]
+min_names: 10
+n_test: 30

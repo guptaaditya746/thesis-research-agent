@@ -1,0 +1,104 @@
+Task: for each point of the checklist, say whether the answer makes that point. When it does, copy a short quote from the answer that makes it. You only compare the answer with the points. You do not judge whether a point is true, and you do not add knowledge of your own.
+
+Input:
+- Question: the question the answer replies to.
+- Measures: every measure of this folder, one per line, as "<measure>: higher is better" or "<measure>: lower is better". Use these lines to read better and worse: on a measure where lower is better, "better" means a lower number and "worse" a higher one.
+- Points: the checklist, one point per line, as "<id>: <text>". Each point is one statement a right answer makes.
+- Answer: the text to mark.
+
+Output fields:
+- ticks: one entry per point, in the order of the points. Fields:
+  - point: the point id, copied exactly from the input (p1, p2, ...).
+  - met: true when the answer makes the point, else false.
+  - quote: when met is true, a short piece of the answer, copied word for word, that makes the point (one sentence or less). When met is false, null.
+  - reason: one short sentence saying why.
+
+Example 1 (a normal case).
+Input:
+Question: How does Method K compare with the Usual method on Yield and Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Points:
+p1: Method K gives a lower Yield than the Usual method.
+p2: Method K and the Usual method show no real difference in Error count.
+
+Answer:
+Yield fell with Method K compared with the usual method. On error count the two methods came out about the same.
+Output:
+{"ticks": [{"point": "p1", "met": true, "quote": "Yield fell with Method K compared with the usual method", "reason": "A Yield that fell with Method K is a lower Yield than the Usual method."}, {"point": "p2", "met": true, "quote": "On error count the two methods came out about the same", "reason": "Coming out about the same on error count is no real difference."}]}
+
+Example 2a (a confusing case: other words for the same direction, on a measure where lower is better).
+Input:
+Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Points:
+p1: Method P gives fewer errors than the Usual method.
+
+Answer:
+Method P reduced the error count.
+Output:
+{"ticks": [{"point": "p1", "met": true, "quote": "Method P reduced the error count", "reason": "Error count: lower is better, and a reduced error count is fewer errors, as the point says."}]}
+
+Example 2b (a confusing case: the answer leaves out the group split).
+Input:
+Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Points:
+p1: It depends on batch size: better in Small batches, no real difference in Large batches.
+
+Answer:
+Method P helps.
+Output:
+{"ticks": [{"point": "p1", "met": false, "quote": null, "reason": "The answer says Method P helps overall and does not split Small batches from Large batches."}]}
+
+Example 2c (a confusing case: the answer makes the group split in other words).
+Input:
+Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Points:
+p1: It depends on batch size: better in Small batches, no real difference in Large batches.
+
+Answer:
+In small batches Method P gave fewer errors; in large batches it made no real difference.
+Output:
+{"ticks": [{"point": "p1", "met": true, "quote": "In small batches Method P gave fewer errors; in large batches it made no real difference", "reason": "Error count: lower is better, so fewer errors in Small batches is better there, and Large batches show no real difference."}]}
+
+Example 3 (a missing case: the papers cannot answer one part, and the answer never mentions the other part).
+Input:
+Question: Does Method K change the Yield or the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Points:
+p1: Method K and the Usual method show no real difference in Yield.
+p2: No study in these papers compares Method K with the Usual method on Error count, so that part cannot be answered.
+
+Answer:
+No study in these papers compares Method K with the usual method on error count.
+Output:
+{"ticks": [{"point": "p1", "met": false, "quote": null, "reason": "The answer never mentions Yield."}, {"point": "p2", "met": true, "quote": "No study in these papers compares Method K with the usual method on error count", "reason": "The answer says the papers cannot compare the two on Error count."}]}
+
+Rules (code checks the first two; a reply that breaks one is sent back once with the problems):
+- Give exactly one tick for every point id in the input, and no other ids.
+- When met is true, the quote is copied word for word from the answer. Spaces and capital letters may differ; nothing else may.
+- When met is false, the quote is null.
+- A point is met only when the answer states it with the same direction (better, worse, or no real difference) and the same split by group. Other words for the same thing count. Read better and worse from the Measures lines, never from your own idea of the measure.
+- A vague or hedged statement that does not commit to a direction does not meet a point. A point the answer never mentions is not met.
+- Mark each point on its own. Anything else the answer says does not change the tick.

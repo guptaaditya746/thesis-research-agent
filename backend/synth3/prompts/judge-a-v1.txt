@@ -1,0 +1,120 @@
+Task: for each planted fact of one paper, say whether one of the facts a system pulled from that paper states it (found), states it with something different (wrong), or none states it (missing). Cite the number of the pulled fact you mean. You only compare the pulled facts with the planted facts. You do not judge whether a fact is true, and you do not add knowledge of your own.
+
+Input:
+- Measures: every measure of this folder, one per line, as "<measure>: higher is better" or "<measure>: lower is better". Use these lines to read better and worse: on a measure where lower is better, "better" means a lower number and "worse" a higher one.
+- Planted facts: what the paper really says, one per line, as "<id>: <text>". There are three kinds:
+  - a result row: "<arm>, <measure>, <group>: <k> of <n> (<percentage>)" for a count, or "<arm>, <measure>, <group>: mean <mean>, SD <sd>, n <n>" for a value. The group is the level of every condition, for example "Small batches, Day shift".
+  - an authors' claim: "The authors say <arm> does better than / does worse than / shows no real difference from <arm> on <measure>".
+  - the setting: "The study ran at <setting>".
+- Pulled facts: what the system pulled from the same paper, numbered from 1, as "<number>. <kind> <fields as JSON> quote: "<quote>"". The fields are what the system pulled; field names differ from system to system, so read them by their meaning. The quote is the paper text the fact came from: use it only for a part the fields leave out.
+
+Output fields:
+- marks: one entry per planted fact, in the order of the planted facts. Fields:
+  - fact: the planted fact id, copied exactly from the input.
+  - verdict: "found", "wrong" or "missing".
+    - found: a pulled fact states the planted fact: the same arm, measure, group and numbers, or the same direction for a claim, or the same setting.
+    - wrong: a pulled fact tries to state this planted fact but gets one part different: the same arm, measure and group with another number or the opposite direction, or this fact's own numbers put on another group, measure or arm.
+    - missing: no pulled fact states this planted fact or tries to. A pulled fact that correctly states another planted fact (another group, the control's row, another measure) is about that fact, not this one: it does not make this one wrong.
+  - pulled: the number of the pulled fact that is found or wrong. When the verdict is missing, null.
+  - reason: one short sentence saying why.
+
+Example 1 (a normal case).
+Input:
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Planted facts:
+S201.c0.k: Method K, Yield, Small batches, Day shift: 45 of 100 (45.0%)
+S201.c0.usual: Usual method, Yield, Small batches, Day shift: 38 of 100 (38.0%)
+S201.claim.k.usual.yield: The authors say Method K does better than Usual method on Yield
+S201.setting: The study ran at Harbor works
+
+Pulled facts:
+1. measurement {"arm":"Method K","count":45,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "| Small batches, Day shift | Method K | Yield | 45 | 100 |"
+2. measurement {"arm":"Usual method","count":38,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "| Small batches, Day shift | Usual method | Yield | 38 | 100 |"
+3. author_claim {"claim":"Method K improves yield compared with Usual method"} quote: "Overall, Method K improves yield compared with Usual method."
+4. condition {"setting":"Harbor works"} quote: "Harbor works"
+Output:
+{"marks": [{"fact": "S201.c0.k", "verdict": "found", "pulled": 1, "reason": "Same arm, measure and group, and 45 of 100 as planted."}, {"fact": "S201.c0.usual", "verdict": "found", "pulled": 2, "reason": "Same arm, measure and group, and 38 of 100 as planted."}, {"fact": "S201.claim.k.usual.yield", "verdict": "found", "pulled": 3, "reason": "Yield: higher is better, so improving yield is doing better, as planted."}, {"fact": "S201.setting", "verdict": "found", "pulled": 4, "reason": "The same setting."}]}
+
+Example 2a (a confusing case: a fraction for a percentage, another group, and worse on a measure where lower is better).
+Input:
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Planted facts:
+S305.c0.p: Method P, Yield, Small batches, Day shift: 45 of 100 (45.0%)
+S305.c1.p: Method P, Error count, Small batches, Day shift: mean 3.2, SD 1.1, n 80
+S305.claim.p.usual.errors: The authors say Method P does worse than Usual method on Error count
+
+Pulled facts:
+1. measurement {"arm":"Method P","group":"Small batches, Day shift","measure":"Yield","value":0.45} quote: "45"
+2. measurement {"arm":"Method P","group":"Large batches, Day shift","mean":3.2,"measure":"Error count","n":80,"sd":1.1} quote: "3.2"
+3. author_claim {"claim":"Method P increases error count compared with Usual method"} quote: "Overall, Method P increases error count compared with Usual method."
+Output:
+{"marks": [{"fact": "S305.c0.p", "verdict": "found", "pulled": 1, "reason": "A share of 0.45 is 45.0%, the same as 45 of 100, for the same arm, measure and group."}, {"fact": "S305.c1.p", "verdict": "wrong", "pulled": 2, "reason": "The numbers match but the pulled fact puts them in Large batches, not Small batches."}, {"fact": "S305.claim.p.usual.errors", "verdict": "found", "pulled": 3, "reason": "Error count: lower is better, so increasing the error count is doing worse, as planted."}]}
+
+Example 2b (a confusing case: the right numbers on another measure, other words for no real difference, and the opposite direction).
+Input:
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Planted facts:
+S318.c2.k: Method K, Error count, Large batches, Night shift: mean 2.4, SD 0.9, n 50
+S318.claim.k.usual.yield: The authors say Method K shows no real difference from Usual method on Yield
+S318.claim.k.usual.errors: The authors say Method K does better than Usual method on Error count
+
+Pulled facts:
+1. measurement {"arm":"Method K","group":"Large batches, Night shift","mean":2.4,"measure":"Yield","n":50,"sd":0.9} quote: "2.4"
+2. author_claim {"claim":"Method K and Usual method reach about the same yield"} quote: "Overall, Method K and Usual method reach about the same yield."
+3. author_claim {"claim":"Method K increases error count compared with Usual method"} quote: "Overall, Method K reduces error count compared with Usual method."
+Output:
+{"marks": [{"fact": "S318.c2.k", "verdict": "wrong", "pulled": 1, "reason": "The numbers match but the pulled fact puts them on Yield, not Error count."}, {"fact": "S318.claim.k.usual.yield", "verdict": "found", "pulled": 2, "reason": "About the same yield is no real difference on Yield."}, {"fact": "S318.claim.k.usual.errors", "verdict": "wrong", "pulled": 3, "reason": "The fields say Method K increases error count; Error count: lower is better, so that is worse, the opposite of the planted claim."}]}
+
+Example 3 (a missing case: nothing pulled for the authors' claim or the setting).
+Input:
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Planted facts:
+S410.c0.usual: Usual method, Yield, Large batches, Night shift: 52 of 120 (43.3%)
+S410.claim.p.usual.yield: The authors say Method P does worse than Usual method on Yield
+S410.setting: The study ran at Harbor works
+
+Pulled facts:
+1. measurement {"arm":"Usual method","count":52,"group":"Large batches, Night shift","measure":"Yield","total":120} quote: "| Large batches, Night shift | Usual method | Yield | 52 | 120 |"
+Output:
+{"marks": [{"fact": "S410.c0.usual", "verdict": "found", "pulled": 1, "reason": "Same arm, measure and group, and 52 of 120 as planted."}, {"fact": "S410.claim.p.usual.yield", "verdict": "missing", "pulled": null, "reason": "No pulled fact gives the authors' claim."}, {"fact": "S410.setting", "verdict": "missing", "pulled": null, "reason": "No pulled fact names the setting."}]}
+
+Example 4 (a missing case beside a found one: the row of one group is pulled, the rows next to it are not, and a no-real-difference claim is pulled with the wrong direction).
+Input:
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Planted facts:
+S522.c0.p: Method P, Error count, Small batches, Day shift: mean 3.0, SD 0.8, n 60
+S522.c0.usual: Usual method, Error count, Small batches, Day shift: mean 3.1, SD 0.9, n 60
+S522.c1.p: Method P, Error count, Large batches, Day shift: mean 4.1, SD 1.1, n 60
+S522.c1.usual: Usual method, Error count, Large batches, Day shift: mean 4.1, SD 1.0, n 60
+S522.claim.p.usual.errors: The authors say Method P shows no real difference from Usual method on Error count
+
+Pulled facts:
+1. measurement {"arm":"Method P","group":"Small batches, Day shift","mean":3.0,"measure":"Error count","n":60,"sd":0.8} quote: "3.0"
+2. author_claim {"claim":"Method P reduces error count compared with Usual method"} quote: "Overall, Method P and Usual method reach about the same error count."
+Output:
+{"marks": [{"fact": "S522.c0.p", "verdict": "found", "pulled": 1, "reason": "Same arm, measure and group, and a mean of 3.0 as planted."}, {"fact": "S522.c0.usual", "verdict": "missing", "pulled": null, "reason": "No pulled fact gives the Usual method's row; pulled fact 1 is the Method P row."}, {"fact": "S522.c1.p", "verdict": "missing", "pulled": null, "reason": "No pulled fact gives the Large batches row; pulled fact 1 correctly states the Small batches row, so it is about that fact."}, {"fact": "S522.c1.usual", "verdict": "missing", "pulled": null, "reason": "No pulled fact gives this row."}, {"fact": "S522.claim.p.usual.errors", "verdict": "wrong", "pulled": 2, "reason": "The fields say Method P reduces error count, which is better on Error count, but the planted claim is no real difference."}]}
+
+Rules (code checks the first four; a reply that breaks one is sent back once with the problems):
+- Give exactly one mark for every planted fact id in the input, and no other ids.
+- A found or wrong mark gives the number of one pulled fact from the list.
+- A missing mark gives null as the pulled number.
+- A pulled fact you mark found for one planted fact cannot be the wrong version of another planted fact: that other fact is missing unless another pulled fact tries to state it.
+- A count matches when it gives the same k and n, or the same share: 45 of 100, 45%, 45.0% and 0.45 are the same. A value matches when the mean matches; a missing SD or n does not make it wrong.
+- Other words for the same thing count: names may differ in capital letters, and a claim may say improves, reduces, raises or about the same. Read better and worse from the Measures lines, never from your own idea of the measure.
+- When one pulled fact states the planted fact and another gets it wrong, the mark is found. One pulled fact may be found for more than one planted fact when it states each of them, for example one fact that gives the rows of both arms.
+- Mark each planted fact on its own.

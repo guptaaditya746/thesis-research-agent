@@ -787,6 +787,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/plan/batch/{domain}/{qid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Batch */
+        post: operations["open_batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/plan/{pid}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Answer */
+        post: operations["set_answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/plan/{pid}/clarify": {
         parameters: {
             query?: never;
@@ -923,6 +957,207 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Overview */
+        get: operations["review_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/review/{domain}/worlds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Worlds */
+        get: operations["review_worlds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/review/{domain}/worlds/{seed}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Review Approve World */
+        put: operations["review_approve_world"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/review/{domain}/sheets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Sheets */
+        get: operations["review_sheets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/review/{domain}/sheets/{seed}/{qid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Sheet */
+        get: operations["review_sheet"];
+        /** Review Save Sheet */
+        put: operations["review_save_sheet"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/review/judge-test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Judge Test */
+        get: operations["review_judge_test"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/review/judge-test/{n}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Review Judge Item
+         * @description Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or
+         *     scores, and never the system that answered. `marked` is None with a `note` when the hand mark was made on
+         *     another answer or sheet.
+         */
+        get: operations["review_judge_item"];
+        /**
+         * Review Hand Mark
+         * @description Saved with the marks file's answer and sheet hashes: what the hand mark was made on.
+         */
+        put: operations["review_hand_mark"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/system/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Domains */
+        get: operations["system_domains"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/system/runs/{rid}/steps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Steps */
+        get: operations["system_steps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/system/runs/{rid}/program": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * System Program
+         * @description The run's readable program as a download; 409 with the refusal text when the run cannot be rebuilt.
+         *     Nothing is written into the run folder.
+         */
+        get: operations["system_program"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/system/runs/{rid}/papers/{doc}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Paper */
+        get: operations["system_paper"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1015,6 +1250,13 @@ export interface components {
             /** Answer */
             answer: string;
         };
+        /** AnswerRequest */
+        AnswerRequest: {
+            /** Answer By */
+            answer_by: string;
+            /** Target */
+            target?: string | null;
+        };
         /** AnswerResult */
         AnswerResult: {
             /** Text */
@@ -1033,6 +1275,22 @@ export interface components {
              * @default []
              */
             missing?: string[];
+        };
+        /** AnswerRow */
+        AnswerRow: {
+            /** Text */
+            text: string;
+            /** Status */
+            status: string;
+            /** Problems */
+            problems: string[];
+            /** Lines */
+            lines: components["schemas"]["CombineLine"][];
+        };
+        /** Approve */
+        Approve: {
+            /** Approved */
+            approved: boolean;
         };
         /** BenchmarkView */
         BenchmarkView: {
@@ -1573,6 +1831,22 @@ export interface components {
         ClarifyRequest: {
             /** Answers */
             answers: components["schemas"]["Answer"][];
+        };
+        /** CombineLine */
+        CombineLine: {
+            /** Text */
+            text: string;
+            /** Facts */
+            facts: number[];
+        };
+        /** CombineRow */
+        CombineRow: {
+            /** Rule */
+            rule: string;
+            /** Count */
+            count: number;
+            /** Rows */
+            rows: components["schemas"]["CombineLine"][];
         };
         /**
          * Compare
@@ -2660,6 +2934,22 @@ export interface components {
              */
             name?: string | null;
         };
+        /** FindPaper */
+        FindPaper: {
+            /** Paper */
+            paper: string;
+            /** Kept */
+            kept: boolean;
+            /** Why */
+            why: string;
+        };
+        /** FindRow */
+        FindRow: {
+            /** Count */
+            count: number;
+            /** Papers */
+            papers: components["schemas"]["FindPaper"][];
+        };
         /** Flags */
         Flags: {
             /**
@@ -2741,6 +3031,15 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HandMarkIn */
+        HandMarkIn: {
+            /** Points */
+            points: {
+                [key: string]: boolean;
+            };
+            /** Faithful */
+            faithful?: boolean | null;
         };
         /** Health */
         Health: {
@@ -3223,6 +3522,43 @@ export interface components {
             [key: string]: unknown;
         };
         /**
+         * Moderator
+         * @description A candidate condition the effect may depend on: `id` is the field of the measured-value type that holds a
+         *     value's level, `levels` its two levels (their ids are that field's enum).
+         */
+        Moderator: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Levels */
+            levels: [
+                components["schemas"]["ModeratorLevel"],
+                components["schemas"]["ModeratorLevel"]
+            ];
+        };
+        /** ModeratorLevel */
+        ModeratorLevel: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * Moderators
+         * @description Subsets (evidence/rules.py `moderated`): the candidate conditions, the field of the measured-value type with
+         *     the number of cases behind a value (`total`; None: no such field, every cell weighs the same) and the gap two
+         *     levels' pooled effects need for a "depends" answer.
+         */
+        Moderators: {
+            /** Conditions */
+            conditions: components["schemas"]["Moderator"][];
+            /** Total */
+            total?: string | null;
+            /** Min Gap */
+            min_gap: number;
+        };
+        /**
          * Pairing
          * @description How a study's treatment and control measurements are chosen (evidence/synthesis.py): on the same
          *     dataset (the first dataset in document order that has both), preferring, in order, a value in a table
@@ -3287,6 +3623,21 @@ export interface components {
             }[];
             /** Measures */
             measures?: string[];
+            /** Sub Questions */
+            sub_questions?: string[];
+            /**
+             * Answer By
+             * @default lines
+             * @enum {string}
+             */
+            answer_by?: "lines" | "written" | "effect" | "consistency" | "inventory" | "best";
+            /** Target */
+            target?: ("condition" | "metric") | null;
+            /**
+             * Writer Try
+             * @default 0
+             */
+            writer_try?: number;
         };
         /**
          * PlanResult
@@ -3324,10 +3675,29 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** PlanRunRequest */
+        PlanRunRequest: {
+            /** Domain */
+            domain?: string | null;
+            /** Seed */
+            seed?: number | null;
+        };
         /** PlanStart */
         PlanStart: {
             /** Question */
             question: string;
+            /**
+             * Sub Questions
+             * @default []
+             */
+            sub_questions?: string[];
+            /**
+             * Answer By
+             * @default lines
+             */
+            answer_by?: string;
+            /** Target */
+            target?: string | null;
         };
         /** PlanView */
         PlanView: {
@@ -3364,6 +3734,23 @@ export interface components {
             frozen?: boolean;
             /** Run */
             run?: string | null;
+            /**
+             * Sub Questions
+             * @default []
+             */
+            sub_questions?: string[];
+            /** Batch */
+            batch?: string | null;
+        };
+        /** PointIn */
+        PointIn: {
+            /** Text */
+            text: string;
+            /**
+             * Facts
+             * @default []
+             */
+            facts?: string[];
         };
         /** PreviewHit */
         PreviewHit: {
@@ -3627,6 +4014,28 @@ export interface components {
             protocol: components["schemas"]["Protocol"] | null;
             /** Error */
             error: string | null;
+        };
+        /** PullFact */
+        PullFact: {
+            /** N */
+            n: number;
+            /** Item */
+            item: string;
+            /** Paper */
+            paper: string;
+            /** Type */
+            type: string;
+            /** Text */
+            text: string;
+        };
+        /** PullRow */
+        PullRow: {
+            /** Count */
+            count: number;
+            /** Left Out */
+            left_out: number;
+            /** Facts */
+            facts: components["schemas"]["PullFact"][];
         };
         /** Question */
         Question: {
@@ -4007,6 +4416,11 @@ export interface components {
              */
             roles: string[];
         };
+        /** SheetIn */
+        SheetIn: {
+            /** Points */
+            points: components["schemas"]["PointIn"][];
+        };
         /** ShiftView */
         ShiftView: {
             ref: components["schemas"]["ScoreRef"];
@@ -4225,6 +4639,7 @@ export interface components {
              *     }
              */
             flags?: components["schemas"]["Flags"];
+            moderators?: components["schemas"]["Moderators"] | null;
         };
         /** SynthesisScore */
         SynthesisScore: {
@@ -4264,6 +4679,32 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** SysDomain */
+        SysDomain: {
+            /** Domain */
+            domain: string;
+            /** Seeds */
+            seeds: number[];
+            /** Questions */
+            questions: components["schemas"]["SysQuestion"][];
+            /** Error */
+            error: string | null;
+        };
+        /** SysQuestion */
+        SysQuestion: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Sub Questions */
+            sub_questions: string[];
+            /** Kind */
+            kind: string;
+            /** Target */
+            target: string | null;
+            /** Plan */
+            plan: string;
+        };
         /**
          * SystemCost
          * @description One system's cost on a question (evaluation/score.py `system_cost`): model calls and tokens; a count the
@@ -4280,6 +4721,38 @@ export interface components {
             tokens: number | null;
         } & {
             [key: string]: unknown;
+        };
+        /** SystemPaper */
+        SystemPaper: {
+            /** Paper */
+            paper: string;
+            /** Text */
+            text: string;
+            /** Segments */
+            segments: components["schemas"]["Segment"][];
+        };
+        /**
+         * SystemSteps
+         * @description The four rows of a plan run (find, pull, combine, answer).
+         */
+        SystemSteps: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "failed" | "done";
+            /** Error */
+            error: string | null;
+            /** Answer By */
+            answer_by: string;
+            /** Question */
+            question: string;
+            find: components["schemas"]["FindRow"];
+            pull: components["schemas"]["PullRow"];
+            combine: components["schemas"]["CombineRow"];
+            answer: components["schemas"]["AnswerRow"];
+            /** Program Refused */
+            program_refused: string | null;
         };
         /** TracePage */
         TracePage: {
@@ -5882,6 +6355,73 @@ export interface operations {
             };
         };
     };
+    open_batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     answer: {
         parameters: {
             query?: never;
@@ -6060,7 +6600,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PlanRunRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -6137,6 +6681,412 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    review_worlds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_approve_world: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+                seed: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Approve"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_sheets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+                seed: number;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_save_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                domain: string;
+                seed: number;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SheetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_judge_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    review_judge_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                n: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_hand_mark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                n: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HandMarkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_domains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SysDomain"][];
+                };
+            };
+        };
+    };
+    system_steps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSteps"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/x-python": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_paper: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rid: string;
+                doc: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemPaper"];
                 };
             };
             /** @description Validation Error */

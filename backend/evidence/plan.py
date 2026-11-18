@@ -3,13 +3,14 @@ the decisions). Its sha256 and the word list's go into the protocol lock (lockfi
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from pydantic import Field, model_validator
 
 from .contract import Frozen, digest
 
-__all__ = ["DIRECTION", "MAIN_RULE", "Decision", "EvidenceLine", "Plan", "WordList", "load_plan", "write_plan"]
+__all__ = ["ANSWER_BY", "DIRECTION", "MAIN_RULE", "TARGETS", "AnswerBy", "Decision", "EvidenceLine", "Plan", "WordList",
+           "load_plan", "with_answer", "write_plan"]
 
 
 class WordList(Frozen):
@@ -57,6 +58,11 @@ class EvidenceLine(Frozen):
     removable: bool = True
     how: list[str] = Field(default_factory=list)
 
+AnswerBy = Literal["lines", "written", "effect", "consistency", "inventory", "best"]
+ANSWER_BY: tuple[str, ...] = get_args(AnswerBy)
+# The same two as synth3.questions.TARGETS (evidence may not import synth3; a synth3 test keeps them equal).
+TARGETS = ("condition", "metric")
+
 
 class Plan(Frozen):
     """`measures`: the thing ids (keys of `words.things`) that are measures (a score, a rate); the other things are
@@ -69,6 +75,18 @@ class Plan(Frozen):
     decisions: list[Decision]
     clarifications: list[dict[str, str]]
     measures: list[str] = Field(default_factory=list)
+    sub_questions: list[str] = Field(default_factory=list, exclude_if=lambda v: not v)
+    answer_by: AnswerBy = Field("lines", exclude_if=lambda v: v == "lines")
+    target: Literal["condition", "metric"] | None = Field(None, exclude_if=lambda v: v is None)
+    writer_try: int = Field(0, ge=0, exclude_if=lambda v: v == 0)
+
+    @model_validator(mode="after")
+    def _check_answer(self) -> Plan:
+        if self.target is not None and self.answer_by != "inventory":
+            raise ValueError("target is only for an inventory answer")
+        if any(not q.strip() for q in self.sub_questions):
+            raise ValueError("a sub-question is empty")
+        return self
 
     @model_validator(mode="before")
     @classmethod
@@ -95,3 +113,10 @@ def load_plan(path: Path | str) -> Plan:
 
 def write_plan(plan: Plan, path: Path | str) -> None:
     Path(path).write_text(plan.model_dump_json(indent=2), encoding="utf-8")
+
+
+def with_answer(plan: Plan, answer_by: str, target: str | None) -> Plan:
+    """A validated copy of the plan with its answer kind (and inventory target) set; `model_copy` would skip the checks."""
+    if answer_by not in ANSWER_BY:
+        raise ValueError(f"unknown answer_by {answer_by!r}")
+    return Plan.model_validate({**plan.model_dump(mode="json"), "answer_by": answer_by, "target": target})

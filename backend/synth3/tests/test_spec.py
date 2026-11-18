@@ -33,3 +33,9 @@ def test_refuses_bad_specs(tmp_path, change, words):
 def test_crlf_and_lf_hash_the_same(tmp_path):
     assert load_spec("demo", write(tmp_path / "lf", good())).sha256 == \
            load_spec("demo", write(tmp_path / "crlf", good(), newline="\r\n")).sha256
+
+
+def test_a_yaml_typo_is_a_value_error_naming_the_file(tmp_path):
+    (tmp_path / "demo.yaml").write_text("a: [unclosed\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="demo.yaml: not valid YAML"):
+        load_spec("demo", tmp_path)

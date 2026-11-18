@@ -69,7 +69,10 @@ def _names(plan: Plan, thing: str, n: int = 6) -> str:
 
 def protocol_for(plan: Plan) -> bytes:
     """The plan run's protocol (YAML), written by code from the plan: types and extractors as the default pack's
-    effect protocol, the roles, metric names and descriptions from the plan, every extractor word from compile_words."""
+    effect protocol, the roles, metric names and descriptions from the plan, every extractor word from compile_words.
+    The protocol is made from the plan at writer try 0: a later writer try (Plan.writer_try) keeps the protocol's id and
+    bytes, so its extraction tasks hit the record cache of the first try and only the writer is asked again."""
+    plan = plan.model_copy(update={"writer_try": 0})
     words = compiled(plan)
     things = sides(plan)
     measures = list(plan.measures) or [OTHER]
@@ -255,7 +258,7 @@ def stage_entries(plan: Plan, *, reason: str = "on", links: str = "on",
     from .claims import claim_stage
     from .extractors.recheck import recheck, recheck_report
     from .ontology.fill import ontology_stage
-    from . import unchecked
+    from . import unchecked, written
     return [
         *([("map-experiments", "before_extract", experiments.before_extract)] if version == "v1" else []),
         ("recheck", "after_type", recheck),
@@ -266,6 +269,7 @@ def stage_entries(plan: Plan, *, reason: str = "on", links: str = "on",
         (RECHECK_REPORT, "after_run", recheck_report),
         (unchecked.NAME, "after_run", unchecked.report),   # the items the per-item stages could not read
         ("ontology", "after_run", ontology_stage if reason == "on" else no_tree),
+        *([(written.STAGE, "after_run", written.written_stage)] if plan.answer_by == "written" else []),
     ]
 
 
@@ -355,13 +359,19 @@ class PlanNotRunnable(ValueError):
 
 
 def check_runnable(plan: Plan) -> None:
-    """Refuse an unconfirmed plan, and a word list another model wrote ("word list by the pinned orch-model")."""
+    """Refuse an unconfirmed plan, a word list another model wrote ("word list by the pinned orch-model"), and a plan
+    whose answer kind cannot run (plankinds.answer_problems: a best answer with no measure or one compared thing)."""
     from modelcall.pins import ORCH_ALIAS
+
+    from .plankinds import answer_problems
     if not plan.ready():
         raise PlanNotRunnable("the plan is not confirmed: confirm every decision before the run")
     if plan.words.written_by not in (ORCH_ALIAS, "none"):
         raise PlanNotRunnable(f"the word list was written by {plan.words.written_by!r}; a plan run needs one written "
                               f"by {ORCH_ALIAS!r}")
+    problems = answer_problems(plan)
+    if problems:
+        raise PlanNotRunnable(f"the plan's answer kind cannot run: {'; '.join(problems)}")
 
 
 def check_request(plan_path: Path | str, **settings: Any) -> None:
@@ -401,7 +411,8 @@ def run(plan_path: Path | str, corpus: Path | str, out_dir: Path | str, *, reaso
         raise ValueError(f"reason and links are 'on' or 'off', not {reason!r} / {links!r}")
     plan = load_plan(plan_path)
     check_runnable(plan)
-    return engine.run_plan(plan_path, protocol_for(plan), corpus, out_dir, reason=reason, links=links, **kw)
+    from .plankinds import kind_protocol
+    return engine.run_plan(plan_path, kind_protocol(plan), corpus, out_dir, reason=reason, links=links, **kw)
 
 
 # --- after a human reviews the LLM's ontology links -----------------------------------------------------------------

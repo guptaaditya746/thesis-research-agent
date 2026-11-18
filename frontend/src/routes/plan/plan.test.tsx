@@ -137,3 +137,58 @@ describe("plan page", () => {
     expect(run).toBe("r1")
   })
 })
+
+describe("sub-questions and batch plans", () => {
+  it("sends the sub-questions with the question", async () => {
+    const bodies: unknown[] = []
+    server.use(http.post("/api/ev/plan", async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json(view([decision("d1")])) }))
+    const user = userEvent.setup()
+    renderWithProviders(<PlanPage />)
+    await user.type(screen.getByRole("textbox", { name: "Question" }), "Does it help?")
+    await user.type(screen.getByRole("textbox", { name: /Sub-questions/ }), "A?{Enter}{Enter}  B?  ")
+    await user.click(screen.getByRole("button", { name: "Plan" }))
+    await screen.findByRole("button", { name: "Run" }, T)
+    expect(bodies).toEqual([{ question: "Does it help?", sub_questions: ["A?", "B?"] }])
+  })
+
+  it("opens a batch plan from the address and says where edits go", async () => {
+    let opened = 0
+    let confirmed = 0
+    server.use(
+      http.post("/api/ev/plan/batch/demo/d01", () => { opened += 1; return HttpResponse.json(view([decision("d1")], { id: "b1", batch: "demo/d01", sub_questions: ["S1?"] })) }),
+      http.post("/api/ev/plan/b1/confirm-all", () => { confirmed += 1; return HttpResponse.json(view([decision("d1", { confirmed_by: "ada" })], { id: "b1", batch: "demo/d01" })) }),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<PlanPage />, { route: "/plan?batch=demo/d01" })
+    expect(await screen.findByText("Batch plan demo/d01: your changes are saved to its file.", {}, T)).toBeInTheDocument()
+    expect(screen.getByText("S1?")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Confirm all" }))
+    await waitFor(() => expect(confirmed).toBe(1), T)
+    expect(opened).toBe(1)
+  })
+
+  it("hides the question form in batch mode", async () => {
+    server.use(http.post("/api/ev/plan/batch/demo/d01", () => HttpResponse.json(view([decision("d1")], { id: "b1", batch: "demo/d01" }))))
+    renderWithProviders(<PlanPage />, { route: "/plan?batch=demo/d01" })
+    await screen.findByText("Batch plan demo/d01: your changes are saved to its file.", {}, T)
+    expect(screen.queryByRole("textbox", { name: "Question" })).toBeNull()
+    expect(screen.queryByRole("textbox", { name: /Sub-questions/ })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Plan" })).toBeNull()
+  })
+
+  it("says so when the batch address is malformed and sends nothing", async () => {
+    let posts = 0
+    server.use(http.post("/api/ev/plan/*", () => { posts += 1; return HttpResponse.json(view([])) }))
+    renderWithProviders(<PlanPage />, { route: "/plan?batch=demo" })
+    expect(await screen.findByText("The batch address must look like domain/question-id.", {}, T)).toBeInTheDocument()
+    expect(posts).toBe(0)
+  })
+
+  it.each(["demo/", "/d01"])("says so when a part of the batch address is empty (%s) and sends nothing", async (batch) => {
+    let posts = 0
+    server.use(http.post("/api/ev/plan/*", () => { posts += 1; return HttpResponse.json(view([])) }))
+    renderWithProviders(<PlanPage />, { route: `/plan?batch=${batch}` })
+    expect(await screen.findByText("The batch address must look like domain/question-id.", {}, T)).toBeInTheDocument()
+    expect(posts).toBe(0)
+  })
+})

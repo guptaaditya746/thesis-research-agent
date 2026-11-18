@@ -13,6 +13,7 @@ The evidence-level directories (docs/runbook-slurm.md); `$EV` alone is enough, e
 | `EV_AGENT_WORK`  | `agent_work`  | `$EVIDENCE_AGENT_WORK_DIR` (the agentic extractor's own), else `$EV/agent-work` |
 | `EV_PROTOCOLS`   | `protocols`   | `<repo>/domains/rag/protocols`       |
 | `EV_QUESTIONS`   | `questions`   | `<repo>/domains/rag/questions.yaml`  |
+| `SYNTH3_DATA`    | `synth3_data` | `<repo>/data/synth3` (the review page, webapp/evreview.py) |
 
 The jobs the app starts (webapp/jobs.py, webapp/evjobs.py) keep their state and logs in `$EV/.jobs/` (no
 jobs without `$EV`) and write into the directories above:
@@ -94,6 +95,9 @@ class Settings(BaseSettings):
     extractor_agent_work: Path | None = Field(None, validation_alias="EVIDENCE_AGENT_WORK_DIR")
     protocols: Path = Field(DOMAINS / "rag" / "protocols", validation_alias="EV_PROTOCOLS")
     questions: Path = Field(questions_path("rag"), validation_alias="EV_QUESTIONS")
+    # the synth3 data the review page reads and writes (webapp/evreview.py): <domain>.yaml, worlds/, questions/,
+    # sheets/, built/, results/, judge-test/
+    synth3_data: Path = Field(repo_paths.DATA / "synth3", validation_alias="SYNTH3_DATA")
 
     @property
     def hosts(self) -> list[str]:
@@ -114,7 +118,7 @@ class Settings(BaseSettings):
         return value
 
     @field_validator("agent_root", "web_dist", "ev", "corpora", "ev_runs", "scores", "proposals", "ev_cache",
-                     "agent_work", "extractor_agent_work", "protocols", "questions")
+                     "agent_work", "extractor_agent_work", "protocols", "questions", "synth3_data")
     @classmethod
     def _absolute(cls, value: Path | None) -> Path | None:
         return None if value is None else Path(value).expanduser().resolve()

@@ -1,0 +1,120 @@
+Task: split the answer into its factual claims and mark each claim as supported by the numbered facts, contradicted by them, or invented (no fact speaks to it). Copy each claim word for word from the answer and cite the numbers of the facts you used. You only compare the answer with the facts. You do not judge whether a fact is true, and you do not add knowledge of your own.
+
+Input:
+- Question: the question the answer replies to.
+- Measures: every measure of this folder, one per line, as "<measure>: higher is better" or "<measure>: lower is better". Use these lines to read better and worse: on a measure where lower is better, "better" means a lower number and "worse" a higher one.
+- Facts: the facts the answer was written from, numbered from 1, as "<number>. <paper> <kind> <fields as JSON> quote: "<quote>"". Field names differ from fact to fact; read them by their meaning. A passage has no fields; read its quote. "(none)" means the answer was written from no facts.
+- Answer: the text to check.
+
+Output fields:
+- claims: one entry per factual claim, in the order they appear in the answer. Fields:
+  - claim: the claim, copied word for word from the answer (one sentence or part of one).
+  - verdict: "supported", "contradicted" or "invented".
+    - supported: the facts state the claim: the same arms, measure, group, numbers and direction.
+    - contradicted: the facts speak to the claim and say something different: another number, another arm, another group or the opposite direction.
+    - invented: no fact speaks to the claim.
+  - facts: the numbers of the facts that support or contradict the claim. When the verdict is invented, an empty list.
+  - reason: one short sentence saying why.
+
+Example 1 (a normal case).
+Input:
+Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Facts:
+1. S201 measurement {"arm":"Method P","count":48,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "48"
+2. S201 measurement {"arm":"Method P","group":"Small batches, Day shift","mean":3.0,"measure":"Error count","n":100,"sd":0.9} quote: "3.0"
+3. S201 measurement {"arm":"Usual method","group":"Small batches, Day shift","mean":4.1,"measure":"Error count","n":100,"sd":1.0} quote: "4.1"
+
+Answer:
+Method P gave fewer errors than the usual method (S201).
+Output:
+{"claims": [{"claim": "Method P gave fewer errors than the usual method", "verdict": "supported", "facts": [2, 3], "reason": "A mean error count of 3.0 with Method P against 4.1 with the Usual method is fewer errors."}]}
+
+Example 2a (a confusing case: the right number on the wrong method).
+Input:
+Question: How does Method K compare with the Usual method?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Facts:
+1. S305 measurement {"arm":"Method K","count":52,"group":"Large batches, Night shift","measure":"Yield","total":100} quote: "52"
+2. S305 measurement {"arm":"Usual method","count":44,"group":"Large batches, Night shift","measure":"Yield","total":100} quote: "44"
+3. S305 measurement {"arm":"Method K","group":"Large batches, Night shift","mean":3.4,"measure":"Error count","n":100,"sd":1.2} quote: "3.4"
+4. S305 measurement {"arm":"Usual method","group":"Large batches, Night shift","mean":2.9,"measure":"Error count","n":100,"sd":1.0} quote: "2.9"
+
+Answer:
+The usual method reached a yield of 52%, ahead of Method K. Method K made more errors than the usual method.
+Output:
+{"claims": [{"claim": "The usual method reached a yield of 52%, ahead of Method K", "verdict": "contradicted", "facts": [1, 2], "reason": "52 of 100 is the Yield of Method K, not of the Usual method, which reached 44 of 100."}, {"claim": "Method K made more errors than the usual method", "verdict": "supported", "facts": [3, 4], "reason": "Error count: lower is better; 3.4 against 2.9 is more errors, so Method K does worse."}]}
+
+Example 2b (a confusing case: other words for no real difference, and a split by group).
+Input:
+Question: Does Method P cut the Error count?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Facts:
+1. S318 author_claim {"claim":"Method P and Usual method reach about the same yield"} quote: "Overall, Method P and Usual method reach about the same yield."
+2. S318 measurement {"arm":"Method P","group":"Small batches, Day shift","mean":3.0,"measure":"Error count","n":60,"sd":0.8} quote: "3.0"
+3. S318 measurement {"arm":"Usual method","group":"Small batches, Day shift","mean":4.1,"measure":"Error count","n":60,"sd":1.1} quote: "4.1"
+4. S318 measurement {"arm":"Method P","group":"Large batches, Day shift","mean":4.1,"measure":"Error count","n":60,"sd":1.1} quote: "4.1"
+5. S318 measurement {"arm":"Usual method","group":"Large batches, Day shift","mean":4.1,"measure":"Error count","n":60,"sd":1.0} quote: "4.1"
+
+Answer:
+Yield stayed the same with Method P. In small batches Method P cut errors; in large batches it made no difference.
+Output:
+{"claims": [{"claim": "Yield stayed the same with Method P", "verdict": "supported", "facts": [1], "reason": "The authors say Method P and the Usual method reach about the same yield, which is no real difference."}, {"claim": "In small batches Method P cut errors; in large batches it made no difference", "verdict": "supported", "facts": [2, 3, 4, 5], "reason": "Fewer errors with Method P in Small batches (3.0 against 4.1) and the same mean in Large batches (4.1 and 4.1)."}]}
+
+Example 2c (a confusing case: no real difference and a split by group, both against the facts).
+Input:
+Question: Does Method P raise the Yield?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Facts:
+1. S522 measurement {"arm":"Method P","count":58,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "58"
+2. S522 measurement {"arm":"Usual method","count":41,"group":"Small batches, Day shift","measure":"Yield","total":100} quote: "41"
+3. S522 measurement {"arm":"Method P","count":42,"group":"Large batches, Day shift","measure":"Yield","total":100} quote: "42"
+4. S522 measurement {"arm":"Usual method","count":42,"group":"Large batches, Day shift","measure":"Yield","total":100} quote: "42"
+
+Answer:
+Method P and the usual method reached about the same yield. In large batches Method P raised the yield; in small batches it made no difference.
+Output:
+{"claims": [{"claim": "Method P and the usual method reached about the same yield", "verdict": "contradicted", "facts": [1, 2], "reason": "In Small batches Method P reached 58 of 100 against 41 of 100, a clear gap, so the Yield is not about the same."}, {"claim": "In large batches Method P raised the yield; in small batches it made no difference", "verdict": "contradicted", "facts": [1, 2, 3, 4], "reason": "The facts show the split the other way: a higher Yield in Small batches (58 against 41) and the same Yield in Large batches (42 and 42)."}]}
+
+Example 3 (a missing case: a claim about a measure no fact mentions).
+Input:
+Question: Does Method K change the Yield?
+
+Measures:
+Yield: higher is better
+Error count: lower is better
+
+Facts:
+1. S410 measurement {"arm":"Method K","count":61,"group":"Large batches, Night shift","measure":"Yield","total":120} quote: "61"
+2. S410 measurement {"arm":"Usual method","count":52,"group":"Large batches, Night shift","measure":"Yield","total":120} quote: "52"
+
+Answer:
+Method K raised the yield (S410). It also lowered the error count. The papers cannot tell whether Method K works in small batches.
+Output:
+{"claims": [{"claim": "Method K raised the yield", "verdict": "supported", "facts": [1, 2], "reason": "61 of 120 with Method K against 52 of 120 with the Usual method is a higher Yield."}, {"claim": "It also lowered the error count", "verdict": "invented", "facts": [], "reason": "No fact mentions Error count."}]}
+(The last sentence says the papers cannot tell something. It is not a factual claim, so it is not listed.)
+
+Rules (code checks the first three; a reply that breaks one is sent back once with the problems):
+- Each claim is copied word for word from the answer. Spaces and capital letters may differ; nothing else may.
+- A supported or contradicted claim gives at least one fact number from the list.
+- An invented claim gives an empty list of fact numbers.
+- List every factual claim: a statement about arms, measures, groups, numbers, directions, settings or papers. Do not list a sentence that says the papers cannot tell something or that no study compares two arms; do not list questions or advice.
+- Only the listed facts can support a claim. A number attached to the wrong arm, group or measure contradicts the claim. Shares match across forms: 45 of 100, 45% and 0.45 are the same.
+- Other words for the same thing count. Read better and worse from the Measures lines, never from your own idea of the measure.
+- Mark each claim on its own.

@@ -3,41 +3,30 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
+import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 
+import httpx
+
+from evidence.arxiv import FetchError
+from synth3.cliargs import BadArgument, _Parser, _seeds, _spec
 from synth3.corpus import build_folder
-from synth3.spec import SPECS, load_spec
+from synth3.pmc import Polite, fetch_pool
+from synth3.pool import folder_sources, import_files, load_index, load_split, source_order, split_pool
+from synth3.reader import read_folder
+from synth3.realcorpus import build_real_folder
+from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
+from synth3.qcli import add_question_commands
+from synth3.rcli import add_replay_commands
+from synth3.scli import add_system_commands
+from synth3.spec import SPECS
 from synth3.world import describe, draw_world, load_world, save_world
 from synth3.write import TEXT_LEVELS
 
 WORLDS = Path(__file__).resolve().parents[2] / "data" / "synth3" / "worlds"
-
-
-class BadArgument(Exception):
-    pass
-
-
-class _Parser(argparse.ArgumentParser):
-    def error(self, message: str):
-        raise BadArgument(message)
-
-
-def _seeds(text: str) -> list[int]:
-    try:
-        seeds = [int(x) for x in text.split(",") if x.strip()]
-    except ValueError as err:
-        raise BadArgument(f"--seeds must be whole numbers separated by commas, got '{text}'") from err
-    if not seeds:
-        raise BadArgument("--seeds needs at least one seed")
-    return list(dict.fromkeys(seeds))
-
-
-def _spec(args: argparse.Namespace):
-    try:
-        return load_spec(args.domain, args.spec_root)
-    except (OSError, ValueError) as err:
-        raise BadArgument(str(err)) from err
 
 
 def draw(args: argparse.Namespace) -> int:
@@ -53,11 +42,13 @@ def draw(args: argparse.Namespace) -> int:
     return 0
 
 
-def build(args: argparse.Namespace) -> int:
-    spec, seeds = _spec(args), _seeds(args.seeds)
+def _approved_worlds(args: argparse.Namespace, spec, problems: list[str]) -> dict:
+    """The approved world of every seed; each missing, broken or unapproved world and each non-empty target
+    folder adds a problem, and any problem stops the command before a folder is written."""
+    seeds = _seeds(args.seeds)
     if args.text_level not in TEXT_LEVELS:
         raise BadArgument(f"unknown text level '{args.text_level}'; choose from {', '.join(TEXT_LEVELS)}")
-    worlds, problems = {}, []
+    worlds = {}
     for seed in seeds:
         path = args.worlds / args.domain / f"s{seed}.json"
         folder = args.out / f"s{seed}"
@@ -76,6 +67,12 @@ def build(args: argparse.Namespace) -> int:
         worlds[seed] = world
     if problems:
         raise BadArgument("; ".join(problems))
+    return worlds
+
+
+def build(args: argparse.Namespace) -> int:
+    spec = _spec(args)
+    worlds = _approved_worlds(args, spec, [])
     for seed, world in worlds.items():
         folder = args.out / f"s{seed}"
         try:
@@ -87,21 +84,171 @@ def build(args: argparse.Namespace) -> int:
     return 0
 
 
+def _real_spec(args: argparse.Namespace):
+    try:
+        return load_real_spec(args.domain, args.real_root)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+
+
+def build_real(args: argparse.Namespace) -> int:
+    spec, rs = _spec(args), _real_spec(args)
+    pool, problems = args.pools / args.domain, []
+    try:
+        folder_sources(source_order(load_split(pool), rs.domain), 1, args.studies)
+    except (OSError, ValueError) as err:
+        problems.append(str(err))
+    worlds = _approved_worlds(args, spec, problems)
+    for seed, world in worlds.items():
+        folder = args.out / f"s{seed}"
+        try:
+            cid = build_real_folder(folder, spec, world, args.studies, args.text_level, rs, pool)
+        except ValueError as err:
+            raise BadArgument(f"s{seed}: {err}") from err
+        attempt = json.loads((folder / "corpus.json").read_text(encoding="utf-8"))["settings"]["attempt"]
+        rejected = json.loads((folder / "ground_truth.json").read_text(encoding="utf-8"))["real"]["rejected"]
+        print(f"s{seed}: {cid} (attempt {attempt}, {sum(map(len, rejected.values()))} sources rejected) -> {folder}")
+    return 0
+
+
+_CC = re.compile(r"creativecommons\.org/(?:licenses/([a-z-]+)|publicdomain/(zero))", re.I)
+
+
+def licence_name(text: str) -> str:
+    """A short ASCII name for a licence text: "CC BY-NC-ND", "CC0", "other" or "none". The full text is long and
+    may hold characters a Windows console cannot print."""
+    if not text.strip():
+        return "none"
+    m = _CC.search(text)
+    if not m:
+        return "other"
+    return "CC0" if m.group(2) else f"CC {m.group(1).upper()}"
+
+
+def _report(out: dict, pool: Path) -> None:
+    rows = load_index(pool)
+    print(f"kept {out['kept']} of {len(rows)}")
+    for why, n in sorted(out["unfit"].items(), key=lambda kv: -kv[1]):
+        print(f"  unfit: {why}: {n}".encode("ascii", "replace").decode("ascii"))
+    for lic, n in Counter(licence_name(r["license"] or "") for r in rows if r["kept"]).most_common():
+        print(f"  licence: {lic}: {n}")
+
+
+def pool_fetch(args: argparse.Namespace) -> int:
+    rs = _real_spec(args)
+    if rs.source != "pmc":
+        raise BadArgument(f"{args.domain}: the config source is '{rs.source}', not 'pmc'; use pool-import")
+    pool = args.pools / args.domain
+    try:
+        out = fetch_pool(rs, pool, Polite())
+    except (httpx.HTTPError, ET.ParseError) as err:
+        raise BadArgument(f"fetch failed ({err}); run again to resume") from err
+    print(f"found {out['found']}, fetched {out['fetched']}, already saved {out['cached']} -> {pool}")
+    _report(out, pool)
+    return 0
+
+
+def pool_import(args: argparse.Namespace) -> int:
+    rs = _real_spec(args)
+    if not args.src.is_dir():
+        raise BadArgument(f"{args.src}: not a folder")
+    pool = args.pools / args.domain
+    try:
+        out = import_files(args.src, pool, rs)
+    except FetchError as err:
+        raise BadArgument(f"{err}; for PDFs run `uv sync --group fetch`") from err
+    _report(out, pool)
+    return 0
+
+
+def pool_split(args: argparse.Namespace) -> int:
+    rs = _real_spec(args)
+    try:
+        out = split_pool(args.pools / args.domain, rs)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    print(f"test {out['counts']['test']}, sources {out['counts']['sources']}")
+    return 0
+
+
+def realism(args: argparse.Namespace) -> int:
+    from synth2 import realism as r2   # scikit-learn is heavy; load it only here
+    from synth3.realism import realism_report
+    spec, rs = _spec(args), _real_spec(args)
+    progress = lambda m: print(m, file=sys.stderr, flush=True)  # noqa: E731
+    try:
+        out = realism_report(args.folder, args.pools / args.domain, rs, spec, args.pools / args.domain / "realism-work",
+                             c2st=lambda a, b, log=None: r2.c2st(a, b, log=progress), style_gap=r2.style_gap)
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    args.out.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    for view in ("raw", "masked"):
+        print(f"{view} (real {out['pieces']['real']}, synthetic {out['pieces']['synthetic']} pieces)")
+        for name, auc in out[view]["auc"].items():
+            print(f"  {name}: {auc}")
+    print(f"style gap: {out['style gap']['folder']['mean |gap|']} -> {args.out}")
+    return 0
+
+
+def reader(args: argparse.Namespace) -> int:
+    from modelcall.gateway import openai_model   # pydantic-ai is heavy; load it only here
+    spec = _spec(args)
+    try:
+        out = read_folder(args.folder, spec, openai_model(args.model), args.folder / "real" / "reader-calls.jsonl")
+    except (OSError, ValueError) as err:
+        raise BadArgument(str(err)) from err
+    print(f"ok {out['ok']} of {out['papers']}, {out['other_results']} other results")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     top = _Parser(prog="synth3", description=__doc__)
     sub = top.add_subparsers(dest="command", required=True, parser_class=_Parser)
     d = sub.add_parser("draw", help="draw one world file per seed for a domain")
     b = sub.add_parser("build", help="build one folder per seed from approved world files")
-    for p in (d, b):
+    br = sub.add_parser("build-real", help="build one folder per seed from approved worlds and renamed real papers")
+    for p in (d, b, br):
         p.add_argument("--domain", required=True)
         p.add_argument("--seeds", required=True, help="comma-separated, e.g. 1,2,3,4,5")
         p.add_argument("--spec-root", type=Path, default=SPECS)
         p.add_argument("--worlds", type=Path, default=WORLDS)
     d.set_defaults(run=draw)
-    b.add_argument("--studies", type=int, default=40)
-    b.add_argument("--text-level", default="table", help=" | ".join(TEXT_LEVELS))
-    b.add_argument("--out", type=Path, required=True)
+    for p in (b, br):
+        p.add_argument("--studies", type=int, default=40)
+        p.add_argument("--text-level", default="table", help=" | ".join(TEXT_LEVELS))
+        p.add_argument("--out", type=Path, required=True)
     b.set_defaults(run=build)
+    br.add_argument("--real-root", type=Path, default=REAL_SPECS)
+    br.add_argument("--pools", type=Path, default=POOLS)
+    br.set_defaults(run=build_real)
+    rl = sub.add_parser("realism", help="real-vs-synthetic classifier on a built real folder, raw and masked")
+    rl.add_argument("--domain", required=True)
+    rl.add_argument("--folder", type=Path, required=True)
+    rl.add_argument("--out", type=Path, required=True)
+    rl.add_argument("--pools", type=Path, default=POOLS)
+    rl.add_argument("--real-root", type=Path, default=REAL_SPECS)
+    rl.add_argument("--spec-root", type=Path, default=SPECS)
+    rl.set_defaults(run=realism)
+    rd = sub.add_parser("reader", help="a sub-model reads each paper of a built real folder; code checks the notes")
+    rd.add_argument("--domain", required=True)
+    rd.add_argument("--folder", type=Path, required=True)
+    rd.add_argument("--model", default="sub-model-1")
+    rd.add_argument("--spec-root", type=Path, default=SPECS)
+    rd.set_defaults(run=reader)
+    pf = sub.add_parser("pool-fetch", help="fetch real papers from PubMed Central into a domain's pool")
+    pi = sub.add_parser("pool-import", help="add .md, .xml and .pdf files to a domain's pool")
+    ps = sub.add_parser("pool-split", help="split a pool into test papers and source papers, once")
+    for p in (pf, pi, ps):
+        p.add_argument("--domain", required=True)
+        p.add_argument("--real-root", type=Path, default=REAL_SPECS)
+        p.add_argument("--pools", type=Path, default=POOLS)
+    pi.add_argument("--from", dest="src", type=Path, required=True, help="folder of papers")
+    pf.set_defaults(run=pool_fetch)
+    pi.set_defaults(run=pool_import)
+    ps.set_defaults(run=pool_split)
+    add_question_commands(sub)
+    add_system_commands(sub)
+    add_replay_commands(sub)
     return top
 
 

@@ -8,7 +8,8 @@ its file hashes.
     evidence estimate --protocol P --corpus DIR [--strategy gaps|all] [--extractors regex-only|llm-only|cascade]
                       [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
-    evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
+    evidence reexec RUN [--extractor NAME | --all-calls [--times N]] [--cache DIR] [--corpus DIR] [--out DIR]
+    evidence program RUN --out FILE [--corpus DIR]
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
@@ -64,6 +65,7 @@ from typing import Any
 import yaml
 
 from agent.chain import verify
+from jsonio import write_json
 from modelcall.pins import ORCH_ALIAS
 
 from . import arxiv
@@ -132,7 +134,15 @@ def _parser() -> argparse.ArgumentParser:
         s.add_argument("--corpus", type=Path)
         s.add_argument("--out", type=Path)
         if name == "reexec":
-            s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+            pick = s.add_mutually_exclusive_group()
+            pick.add_argument("--extractor", help="extractor name or id (default: every extractor)")
+            pick.add_argument("--all-calls", action="store_true",
+                              help="every extractor, and the names check's and the stages' model calls, asked again")
+            s.add_argument("--times", type=int, help="with --all-calls and --out: N re-runs, then the re-run measure")
+    g = sub.add_parser("program", help="the run's answer as one readable Python program (standard library only)")
+    g.add_argument("run", type=Path)
+    g.add_argument("--out", required=True, type=Path)
+    g.add_argument("--corpus", type=Path)
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
     sub.add_parser("verify", help="check the run's hash chain and file hashes").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
@@ -311,10 +321,15 @@ def _dispatch(args: argparse.Namespace) -> int:
         return 0 if report["ok"] else 1
     if args.command == "reexec":
         from .replay import reexec
-        new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out)
+        if args.times is not None:
+            return _reexec_times(args)
+        new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out,
+                     all_calls=args.all_calls)
         report = read_json(new / "reexec.json")
         print(json.dumps({"run": str(new), "summary": report["summary"], "totals": report["totals"]}, indent=1))
         return 0
+    if args.command == "program":
+        return _program(args)
     if args.command == "prov":
         from .prov import export
         path = export(args.run)
@@ -331,6 +346,40 @@ def _dispatch(args: argparse.Namespace) -> int:
     if args.command == "fetch":
         return arxiv.run(args)
     return _verify(args.run)
+
+
+def _reexec_times(args: argparse.Namespace) -> int:
+    """`reexec --all-calls --times N --out DIR`: N re-runs with no cache, then the re-run measure (stability.py)."""
+    from . import stability
+    from .readable import read_refusal
+    from .rundir import RUN_CALLS_FILE
+    from .replay import reexec
+    problem = ("--times needs --all-calls" if not args.all_calls else "--times needs --out" if args.out is None
+               else "the run folder is sealed; write the re-runs elsewhere"
+               if args.out.resolve().is_relative_to(args.run.resolve())
+               else "--times must be at least 1" if args.times < 1 else None)
+    if problem:
+        print(f"error: {problem}", file=sys.stderr)
+        return 2
+    if not (args.run / RUN_CALLS_FILE).is_file():
+        print(f"error: {args.run} has no calls.jsonl: its model calls cannot be compared", file=sys.stderr)
+        return 2
+    try:
+        why = read_refusal(args.run, args.corpus)
+    except Exception as exc:   # any reason the answer cannot be read is a note; the other measures go on
+        why = str(exc) or type(exc).__name__
+    if why:
+        print(f"note: the final answer of {args.run.name} cannot be compared ({why}); the call and item measures go on")
+    news = [reexec(args.run, cache=args.cache, corpus=args.corpus, out_dir=args.out, all_calls=True)
+            for _ in range(args.times)]
+    try:
+        report = stability.measure(args.run, news)
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print("\n".join(stability.render(report)))
+    write_json(args.out / "stability.json", report)
+    return 0
 
 
 def _verify(run: Path) -> int:
@@ -371,6 +420,42 @@ def pack_check(name: str, root: Path | None = None) -> dict[str, Any]:
             raise ValueError(f"{path}: its domain is not {name!r}")
     return {"pack": p.name, "sha256": p.sha256, "types": {t: d.role.value for t, d in p.types.items()},
             "kinds": kinds, "protocols": len(files), "question_protocols": len(named)}
+
+
+def _program(args: argparse.Namespace) -> int:
+    """`evidence program RUN --out FILE`: write the run's readable program (UTF-8, LF); exit 2 when it cannot be made."""
+    import subprocess
+
+    import repo_paths
+
+    from .readable import NotRebuilt, program_of_run
+    out = args.out.resolve()
+    if out.is_relative_to(args.run.resolve()):
+        print("error: the run folder is sealed; write the program elsewhere", file=sys.stderr)
+        return 2
+    if out.is_relative_to(repo_paths.REPO.resolve()):   # a program quotes papers: inside the repo only when ignored
+        try:
+            ignored = subprocess.run(["git", "-C", str(repo_paths.REPO), "check-ignore", "-q", str(out)],
+                                     capture_output=True).returncode
+        except OSError:
+            ignored = None
+        if ignored == 1:
+            print(f"error: {args.out} is in the repository and not git-ignored; a program quotes papers and stays "
+                  "local", file=sys.stderr)
+            return 2
+        if ignored != 0:
+            print(f"error: git could not {'be run' if ignored is None else 'check .gitignore'}, so {args.out} may "
+                  "not be git-ignored; write the program outside the repository", file=sys.stderr)
+            return 2
+    try:
+        text = program_of_run(args.run, args.corpus)
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(text, encoding="utf-8", newline="\n")
+    except (NotRebuilt, ValueError, OSError) as exc:   # UnicodeError is a ValueError
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(args.out)
+    return 0
 
 
 def _pack_check(name: str) -> int:

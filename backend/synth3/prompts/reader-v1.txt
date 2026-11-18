@@ -1,0 +1,45 @@
+Task: read one research paper and write down what it reports, as notes. List every result row the paper gives for each treatment group, and every overall claim it makes that compares two groups. Copy a short verbatim quote for each row and each claim. You only read and copy. You do not add, average, or correct anything.
+
+Input: the measures to look for (name and unit), then the paper text.
+
+Output fields:
+- label: the short citation line under the title, for example "Rowan et al. (2014)". null if there is none.
+- setting: the named place, network or service where the study was run, as written. null if the paper names none.
+- results: a list of rows. One row per treatment group, per measure, per subgroup. Fields:
+  - arm: the treatment group's name as the paper writes it.
+  - subgroup: the subgroup names that the row is for, as written, in the order printed. Use [] when the row is for the whole group.
+  - measure: the measure name as the paper writes it. Use the name from the measure list when the paper's wording matches it.
+  - k: the count of people (or items) with the outcome. null when the measure is a mean.
+  - n: the number of people (or items) in the group.
+  - mean: the mean value. null when the measure is a count.
+  - sd: the standard deviation. null when the paper does not print one.
+  - quote: the shortest verbatim piece of the paper that shows the row, such as one table row or one sentence.
+- claims: a list of overall statements that compare one group against another on one measure. Fields:
+  - arm: the group that the statement is about.
+  - against: the group it is compared with.
+  - measure: the measure, worded as in the measure list when it matches.
+  - direction: "helps" when the arm does better on that measure (a higher number for a measure where more is better, a lower number for a measure where less is better), "hurts" when it does worse, "no_effect" when the statement says they are about the same.
+  - quote: the verbatim sentence.
+
+Rules:
+- Copy numbers as printed. When a percentage is printed next to a count, report the count as k.
+- Put null in any field the paper does not give. Do not guess.
+- A quote must be copied exactly from the paper.
+- Skip results about measures that are not in the measure list.
+
+Example 1 (a normal count row).
+Measures: Headache relief (patients)
+Paper line: | Older patients, Clinic A | Veltrazine | Headache relief | 41 | 90 |
+Row: {"arm": "Veltrazine", "subgroup": ["Older patients", "Clinic A"], "measure": "Headache relief", "k": 41, "n": 90, "mean": null, "sd": null, "quote": "| Older patients, Clinic A | Veltrazine | Headache relief | 41 | 90 |"}
+
+Example 2 (a confusing case: lower is better, and a percentage next to the count).
+Measures: Side effects (patients)
+Paper lines: "Side effects occurred in 12 of 80 patients (15.0%) with Norvex." and "Overall, Norvex reduces side effects compared with Dulcet."
+Row: {"arm": "Norvex", "subgroup": [], "measure": "Side effects", "k": 12, "n": 80, "mean": null, "sd": null, "quote": "Side effects occurred in 12 of 80 patients (15.0%) with Norvex."}
+Claim: {"arm": "Norvex", "against": "Dulcet", "measure": "Side effects", "direction": "helps", "quote": "Overall, Norvex reduces side effects compared with Dulcet."}
+(Fewer side effects is better, so "reduces" means helps.)
+
+Example 3 (a missing case: no SD is printed).
+Measures: Resting pulse (beats per minute)
+Paper line: "Patients on Dulcet had a mean resting pulse of 71.4 beats per minute (n = 60)."
+Row: {"arm": "Dulcet", "subgroup": [], "measure": "Resting pulse", "k": null, "n": 60, "mean": 71.4, "sd": null, "quote": "Patients on Dulcet had a mean resting pulse of 71.4 beats per minute (n = 60)."}

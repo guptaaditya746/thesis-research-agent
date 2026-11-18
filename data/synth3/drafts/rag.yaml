@@ -1,0 +1,118 @@
+field: retrieval-augmented question answering
+arms:
+- id: closedbook
+  label: Closed-book model
+  description: the language model answers from memory alone, with no documents shown to it
+  control: true
+- id: lanterra
+  label: Lanterra Retrieval
+  description: a set-up that fetches the top passages by word match and adds them to the question
+- id: mervane
+  label: Mervane Retrieval
+  description: a set-up that fetches passages by meaning and rewrites the question before searching
+- id: quillfern
+  label: Quillfern Retrieval
+  description: a set-up that fetches passages, then ranks them again with a second model before answering
+measures:
+- id: correct
+  name: Correct answers
+  kind: count
+  higher_is_better: true
+  effect: [0.08, 0.14]
+  min_effect: 0.04
+  min_gap: 0.08
+  unit: questions
+  outcome: were answered correctly
+  base_rate: [0.35, 0.55]
+- id: invented_fact
+  name: Invented facts
+  kind: count
+  higher_is_better: false
+  effect: [0.06, 0.10]
+  min_effect: 0.03
+  min_gap: 0.06
+  unit: answers
+  outcome: contained an invented fact
+  base_rate: [0.15, 0.30]
+- id: answer_time
+  name: Answer time
+  kind: value
+  higher_is_better: false
+  effect: [0.15, 0.30]
+  min_effect: 0.075
+  min_gap: 0.15
+  unit: ms
+  base_value: [400.0, 1200.0]
+  spread: 0.4
+  decimals: 0
+conditions:
+- id: qtype
+  name: Question type
+  levels:
+  - {id: simple, name: Single-step questions}
+  - {id: multi, name: Multi-step questions}
+- id: corpus
+  name: Document collection
+  levels:
+  - {id: small, name: Small collection}
+  - {id: large, name: Large collection}
+- id: deploy
+  name: Deployment
+  from_setting: true
+  levels:
+  - {id: cloud, name: Cloud servers}
+  - {id: device, name: On-device}
+settings:
+- {name: Northgate Answer Bench, levels: {deploy: cloud}}
+- {name: Riverside Query Suite, levels: {deploy: cloud}}
+- {name: Maplewood Retrieval Trial, levels: {deploy: cloud}}
+- {name: Harbor Street Handheld Bench, levels: {deploy: device}}
+- {name: Oakfield Edge Suite, levels: {deploy: device}}
+- {name: Willow Lane Pocket Trial, levels: {deploy: device}}
+n_range: [200, 800]
+n_step: 50
+head_to_head_rate: 0.15
+overclaim_rate: 0.15
+uncovered_rate: 0.4
+authors:
+- Anders Holmquist
+- Beatriz Calderon
+- Chidi Okafor
+- Dara Lindqvist
+- Elias Varga
+- Farah Nasseri
+- Gideon Marlowe
+- Hana Kobayashi
+- Ivor Petrescu
+- Junia Delacroix
+- Kofi Mensah
+- Livia Santoro
+- Mateo Brandt
+- Nadia Rosenthal
+- Osei Bannerman
+- Petra Voss
+- Quentin Aldridge
+- Rhea Castellan
+- Soren Thackeray
+- Talia Ben-David
+- Ulrich Feldman
+- Vera Montclair
+- Wendell Achterberg
+- Ximena Ortega
+- Yusuf Karimov
+- Zofia Wierzbicka
+- Amara Oyelaran
+- Bruno Ferreira
+- Camille Dubois
+- Dmitri Volkov
+- Esme Whitlock
+- Fabian Strand
+- Greta Halvorsen
+- Hugo Tanaka
+- Ines Almeida
+- Jonas Eklund
+- Katya Morozova
+- Lars Nygaard
+- Mira Pillai
+- Niall Corrigan
+years: [2016, 2025]

@@ -1,0 +1,11 @@
+domain: demo
+questions:
+  - id: d01
+    question: Does Targeted therapy improve the Response rate compared with Standard care?
+  - id: d02
+    question: Which treatment is best for Relapse rate, and does it depend on the patients' age?
+    sub_questions: ["Which studies measured Relapse rate?", "Do older and younger patients differ?"]
+  - id: d03
+    question: How well do patients tolerate each treatment?
+    about: [Targeted therapy, Combined therapy]
+    kind: open

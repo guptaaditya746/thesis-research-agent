@@ -34,6 +34,9 @@ export interface PlanData {
   decisions: PlanDecision[]
   clarifications: Record<string, string>[]
   measures?: string[]
+  sub_questions?: string[]
+  answer_by?: string
+  target?: string | null
 }
 
 /** A measure's direction decision: id "direction:<measure>", value "higher" | "lower" (better when). */
@@ -57,6 +60,9 @@ export interface PlanView {
   ready: boolean
   frozen: boolean
   run: string | null
+  sub_questions?: string[]
+  /** "<domain>/<qid>" for a batch plan (edits are saved to its file). */
+  batch?: string | null
 }
 
 export interface LineResult {
@@ -103,12 +109,15 @@ export interface PlanResult {
 
 const base = (id: string) => `/api/ev/plan/${encodeURIComponent(id)}`
 
-export const startPlan = (question: string) => postJson<PlanView>("/api/ev/plan", { question })
+export const startPlan = (question: string, subQuestions: string[] = [], answer?: { answer_by: string; target: string | null }) =>
+  postJson<PlanView>("/api/ev/plan", { question, ...(subQuestions.length ? { sub_questions: subQuestions } : {}), ...(answer ?? {}) })
+export const openBatchPlan = (domain: string, qid: string) => postJson<PlanView>(`/api/ev/plan/batch/${encodeURIComponent(domain)}/${encodeURIComponent(qid)}`, {})
+export const setAnswer = (id: string, answerBy: string, target: string | null) => postJson<PlanView>(`${base(id)}/answer`, { answer_by: answerBy, target })
 export const sendAnswers = (id: string, answers: { question: string; answer: string }[]) => postJson<PlanView>(`${base(id)}/clarify`, { answers })
 export const decide = (id: string, did: string, body: { confirm: true } | { change: unknown }) => postJson<PlanView>(`${base(id)}/decision/${encodeURIComponent(did)}`, body)
 export const confirmAll = (id: string) => postJson<PlanView>(`${base(id)}/confirm-all`, {})
 export const setMainRule = (id: string, rule: string) => postJson<PlanView>(`${base(id)}/main-rule`, { rule })
-export const startRun = (id: string) => postJson<{ run: string }>(`${base(id)}/run`, {})
+export const startRun = (id: string, folder?: { domain: string; seed: number }) => postJson<{ run: string }>(`${base(id)}/run`, folder ?? {})
 
 /** DELETE with the header the backend's guard asks of a write that has no JSON body. */
 export async function deleteLine(id: string, lid: string): Promise<PlanView> {

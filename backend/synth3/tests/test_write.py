@@ -76,3 +76,16 @@ def test_missing_facts_detects_each_kind_of_damage(SPEC, level):
     }
     for name, (damaged, fact) in cases.items():
         assert fact in missing_facts(damaged, s, SPEC), name
+
+
+@pytest.mark.parametrize("level", TEXT_LEVELS)
+def test_an_arm_label_never_follows_the(SPEC, level):
+    # "Overall, the Cardivel lowers ... compared with the Standard care" was the clearest synthetic cue
+    from synth3.realwrite import claims_block, planted_section
+    studies = draw_supported_studies(SPEC, draw_world(SPEC, 1), 1, 40)[0]
+    labels = "|".join(re.escape(a.label) for a in SPEC.arms)
+    for s in studies[:10]:
+        texts = [write_paper(s, SPEC, level, 1).text, planted_section(s, SPEC, level, "x", 3).text,
+                 *(claims_block(s, SPEC, p, "x").text for p in ("abstract", "conclusion"))]
+        for t in texts:
+            assert not re.search(rf"\bthe ({labels})\b", t, re.I), t

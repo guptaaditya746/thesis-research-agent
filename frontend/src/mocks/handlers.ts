@@ -36,6 +36,8 @@ import type {
 import { baselineName, isName } from "@/lib/jobs"
 
 import { EV_FIXTURES, evHandlers } from "./ev"
+import { reviewHandlers } from "./review"
+import { systemHandlers } from "./system"
 
 const FROZEN = "rag-factuality"
 
@@ -405,5 +407,7 @@ export const handlers = [
       ? HttpResponse.json(EV_FIXTURES[key] as Record<string, unknown>)
       : HttpResponse.json({ detail: `not in the mock fixtures: ${key}` }, { status: 404 })
   }),
+  ...systemHandlers,
   ...evHandlers,
+  ...reviewHandlers,
 ]

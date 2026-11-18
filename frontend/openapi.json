@@ -1863,6 +1863,109 @@
         }
       }
     },
+    "/api/ev/plan/batch/{domain}/{qid}": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Open Batch",
+        "operationId": "open_batch",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/plan/{pid}/answer": {
+      "post": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Set Answer",
+        "operationId": "set_answer",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ev/plan/{pid}/clarify": {
       "post": {
         "tags": [
@@ -2139,6 +2242,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PlanRunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Req"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2242,6 +2362,599 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Links"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Overview",
+        "operationId": "review_overview",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Review Overview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/worlds": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Worlds",
+        "operationId": "review_worlds",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Review Worlds"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/worlds/{seed}": {
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Approve World",
+        "operationId": "review_approve_world",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Seed"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Approve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Approve World"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/sheets": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Sheets",
+        "operationId": "review_sheets",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Review Sheets"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/{domain}/sheets/{seed}/{qid}": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Sheet",
+        "operationId": "review_sheet",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Seed"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Sheet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Save Sheet",
+        "operationId": "review_save_sheet",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "seed",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Seed"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SheetIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Save Sheet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/judge-test": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Judge Test",
+        "operationId": "review_judge_test",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Review Judge Test"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/review/judge-test/{n}": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Judge Item",
+        "description": "Blind: the answer, the points the judge saw and the facts the answer used; never the judge's ticks or\nscores, and never the system that answered. `marked` is None with a `note` when the hand mark was made on\nanother answer or sheet.",
+        "operationId": "review_judge_item",
+        "parameters": [
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Judge Item"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Review Hand Mark",
+        "description": "Saved with the marks file's answer and sheet hashes: what the hand mark was made on.",
+        "operationId": "review_hand_mark",
+        "parameters": [
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "N"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandMarkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Review Hand Mark"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/system/domains": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "System Domains",
+        "operationId": "system_domains",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SysDomain"
+                  },
+                  "type": "array",
+                  "title": "Response System Domains"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/system/runs/{rid}/steps": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "System Steps",
+        "operationId": "system_steps",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSteps"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/system/runs/{rid}/program": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "System Program",
+        "description": "The run's readable program as a download; 409 with the refusal text when the run cannot be rebuilt.\nNothing is written into the run folder.",
+        "operationId": "system_program",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/x-python": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/system/runs/{rid}/papers/{doc}": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "System Paper",
+        "operationId": "system_paper",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          },
+          {
+            "name": "doc",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemPaper"
                 }
               }
             }
@@ -2483,6 +3196,30 @@
         ],
         "title": "Answer"
       },
+      "AnswerRequest": {
+        "properties": {
+          "answer_by": {
+            "type": "string",
+            "title": "Answer By"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer_by"
+        ],
+        "title": "AnswerRequest"
+      },
       "AnswerResult": {
         "properties": {
           "text": {
@@ -2533,6 +3270,53 @@
           "text"
         ],
         "title": "AnswerResult"
+      },
+      "AnswerRow": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CombineLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "status",
+          "problems",
+          "lines"
+        ],
+        "title": "AnswerRow"
+      },
+      "Approve": {
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "Approve"
       },
       "BenchmarkView": {
         "properties": {
@@ -3850,6 +4634,53 @@
           "answers"
         ],
         "title": "ClarifyRequest"
+      },
+      "CombineLine": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "facts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Facts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "facts"
+        ],
+        "title": "CombineLine"
+      },
+      "CombineRow": {
+        "properties": {
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CombineLine"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule",
+          "count",
+          "rows"
+        ],
+        "title": "CombineRow"
       },
       "Compare": {
         "properties": {
@@ -6475,6 +7306,50 @@
         "title": "FetchRequest",
         "description": "`evidence fetch` (evidence/arxiv.py): real papers from the arXiv API into `$EV/corpora/<name>`, a\ndemonstration corpus with no ground truth. The name defaults to `arxiv-<slug of the query>-<yyyymmdd>`."
       },
+      "FindPaper": {
+        "properties": {
+          "paper": {
+            "type": "string",
+            "title": "Paper"
+          },
+          "kept": {
+            "type": "boolean",
+            "title": "Kept"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paper",
+          "kept",
+          "why"
+        ],
+        "title": "FindPaper"
+      },
+      "FindRow": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "papers": {
+            "items": {
+              "$ref": "#/components/schemas/FindPaper"
+            },
+            "type": "array",
+            "title": "Papers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "papers"
+        ],
+        "title": "FindRow"
+      },
       "Flags": {
         "properties": {
           "duplicates": {
@@ -6673,6 +7548,33 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HandMarkIn": {
+        "properties": {
+          "points": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Points"
+          },
+          "faithful": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faithful"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "HandMarkIn"
       },
       "Health": {
         "properties": {
@@ -7736,6 +8638,100 @@
         "title": "ModelCallRecord",
         "description": "One record of the engine's record cache (evidence/recording.py): request, response, usage, error."
       },
+      "Moderator": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "levels": {
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/ModeratorLevel"
+              },
+              {
+                "$ref": "#/components/schemas/ModeratorLevel"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Levels"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "levels"
+        ],
+        "title": "Moderator",
+        "description": "A candidate condition the effect may depend on: `id` is the field of the measured-value type that holds a\nvalue's level, `levels` its two levels (their ids are that field's enum)."
+      },
+      "ModeratorLevel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ModeratorLevel"
+      },
+      "Moderators": {
+        "properties": {
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/Moderator"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Conditions"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "min_gap": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Min Gap"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "conditions",
+          "min_gap"
+        ],
+        "title": "Moderators",
+        "description": "Subsets (evidence/rules.py `moderated`): the candidate conditions, the field of the measured-value type with\nthe number of cases behind a value (`total`; None: no such field, every cell weighs the same) and the gap two\nlevels' pooled effects need for a \"depends\" answer."
+      },
       "Pairing": {
         "properties": {
           "rule": {
@@ -7857,6 +8853,47 @@
             },
             "type": "array",
             "title": "Measures"
+          },
+          "sub_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sub Questions"
+          },
+          "answer_by": {
+            "type": "string",
+            "enum": [
+              "lines",
+              "written",
+              "effect",
+              "consistency",
+              "inventory",
+              "best"
+            ],
+            "title": "Answer By",
+            "default": "lines"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "condition",
+                  "metric"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "writer_try": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Writer Try",
+            "default": 0
           }
         },
         "additionalProperties": false,
@@ -7929,11 +8966,63 @@
         "title": "PlanResult",
         "description": "The run's result: W4's after_run output (evidence.planner.lines.run_lines) with the reruns."
       },
+      "PlanRunRequest": {
+        "properties": {
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "type": "object",
+        "title": "PlanRunRequest"
+      },
       "PlanStart": {
         "properties": {
           "question": {
             "type": "string",
             "title": "Question"
+          },
+          "sub_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sub Questions",
+            "default": []
+          },
+          "answer_by": {
+            "type": "string",
+            "title": "Answer By",
+            "default": "lines"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
           }
         },
         "type": "object",
@@ -8009,6 +9098,25 @@
               }
             ],
             "title": "Run"
+          },
+          "sub_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sub Questions",
+            "default": []
+          },
+          "batch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch"
           }
         },
         "type": "object",
@@ -8019,6 +9127,27 @@
           "plan"
         ],
         "title": "PlanView"
+      },
+      "PointIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "facts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Facts",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "PointIn"
       },
       "PreviewHit": {
         "properties": {
@@ -8758,6 +9887,65 @@
           "error"
         ],
         "title": "ProtocolView"
+      },
+      "PullFact": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "item": {
+            "type": "string",
+            "title": "Item"
+          },
+          "paper": {
+            "type": "string",
+            "title": "Paper"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "item",
+          "paper",
+          "type",
+          "text"
+        ],
+        "title": "PullFact"
+      },
+      "PullRow": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "left_out": {
+            "type": "integer",
+            "title": "Left Out"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/PullFact"
+            },
+            "type": "array",
+            "title": "Facts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "left_out",
+          "facts"
+        ],
+        "title": "PullRow"
       },
       "Question": {
         "properties": {
@@ -9602,6 +10790,22 @@
         "title": "Segment",
         "description": "A piece of a paper's text: `marks` are the ids (items, facts) whose spans cover it, `roles` their roles.\nCut on the server, in code points, so the page never converts offsets."
       },
+      "SheetIn": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/PointIn"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points"
+        ],
+        "title": "SheetIn"
+      },
       "ShiftView": {
         "properties": {
           "ref": {
@@ -10166,6 +11370,16 @@
                 "min_studies": 3
               }
             }
+          },
+          "moderators": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Moderators"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -10272,6 +11486,95 @@
         ],
         "title": "SynthesisScore"
       },
+      "SysDomain": {
+        "properties": {
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          },
+          "seeds": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Seeds"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/SysQuestion"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "domain",
+          "seeds",
+          "questions",
+          "error"
+        ],
+        "title": "SysDomain"
+      },
+      "SysQuestion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "sub_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sub Questions"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "sub_questions",
+          "kind",
+          "target",
+          "plan"
+        ],
+        "title": "SysQuestion"
+      },
       "SystemCost": {
         "properties": {
           "model_calls": {
@@ -10329,6 +11632,101 @@
         ],
         "title": "SystemCost",
         "description": "One system's cost on a question (evaluation/score.py `system_cost`): model calls and tokens; a count the\nsystem does not report is null (the agent baseline does not split input and output tokens)."
+      },
+      "SystemPaper": {
+        "properties": {
+          "paper": {
+            "type": "string",
+            "title": "Paper"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            },
+            "type": "array",
+            "title": "Segments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paper",
+          "text",
+          "segments"
+        ],
+        "title": "SystemPaper"
+      },
+      "SystemSteps": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "failed",
+              "done"
+            ],
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "answer_by": {
+            "type": "string",
+            "title": "Answer By"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "find": {
+            "$ref": "#/components/schemas/FindRow"
+          },
+          "pull": {
+            "$ref": "#/components/schemas/PullRow"
+          },
+          "combine": {
+            "$ref": "#/components/schemas/CombineRow"
+          },
+          "answer": {
+            "$ref": "#/components/schemas/AnswerRow"
+          },
+          "program_refused": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Refused"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "error",
+          "answer_by",
+          "question",
+          "find",
+          "pull",
+          "combine",
+          "answer",
+          "program_refused"
+        ],
+        "title": "SystemSteps",
+        "description": "The four rows of a plan run (find, pull, combine, answer)."
       },
       "TracePage": {
         "properties": {

@@ -85,6 +85,7 @@ class StageContext:
     extra: StageSet = field(default_factory=dict)  # the run's own stages (a plan run's), after the registered ones
     _texts: Callable[[], Mapping[str, str]] | None = None   # the corpus texts (lazy)
     _bad_reply: Callable[..., None] | None = None   # the engine's stage_bad_reply: a recorded reply did not parse
+    corpus: Path | None = None                      # the run's corpus folder (a stage that reads papers by id)
 
     def texts(self) -> Mapping[str, str]:
         """{paper id: text} of every paper of the run's corpus (empty when the engine gave none)."""

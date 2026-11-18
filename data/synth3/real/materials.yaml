@@ -1,0 +1,17 @@
+source: pmc
+query: '"open access"[filter] AND ("Materials (Basel)"[Journal] OR "Sci Rep"[Journal] OR "Polymers (Basel)"[Journal] OR "Nanomaterials (Basel)"[Journal]) AND (alloy[Title/Abstract] OR steel[Title/Abstract] OR titanium[Title/Abstract] OR aluminium[Title/Abstract] OR aluminum[Title/Abstract]) AND ("tensile strength"[Title/Abstract] OR hardness[Title/Abstract]) AND (treatment[Title/Abstract] OR coating[Title/Abstract] OR annealing[Title/Abstract] OR peening[Title/Abstract])'
+max_fetch: 3000
+article_types: [research-article]
+exclude_title: review|meta-analys|erratum|correction|retraction|perspective|editorial
+min_words: 2500
+max_words: 12000
+min_tables: 1
+results_heading: ^results?\b|^findings\b|^results and discussion
+conclusion_heading: conclu|discussion|summary
+drop_sections: acknowledg|funding|conflicts? of interest|competing interests?|declarations?|author.{0,3}contributions?|abbreviations|supplementary|data availability|availability of data|institutional review|informed consent|patents?
+control_words: untreated|as[- ]cast|as[- ]received|as[- ]built|as[- ]deposited|as[- ]printed|uncoated|unpeened|non[- ]treated|reference (?:samples?|specimens?|alloys?|materials?|groups?)|base (?:alloys?|metals?|materials?)|control (?:samples?|specimens?|groups?)|baseline (?:samples?|specimens?|alloys?)|standard (?:samples?|specimens?|alloys?|processing|treatments?)
+keep: [SD, SE, CI, HV, HRC, HRB, HB, MPa, GPa, UTS, YS, TS, XRD, SEM, TEM, EDS, EDX, EBSD, XPS, DSC, TGA, FTIR, AFM, DIC, ASTM, ISO, DIN, ANOVA, HAZ, HIP, CNC, CVD, PVD, FCC, BCC, HCP, SLM, DED, LPBF, AM, FSW, TIG, MIG, EN, AISI, SAE, UNS, ID, CT, US, UK, EU, NIH, WHO, COVID-19, Vickers, Rockwell, Brinell, Charpy, Izod, Weibull]
+name_stems: []
+name_words: [inconel, hastelloy, nitinol, zircaloy, invar, monel, stellite, nimonic, waspaloy, duralumin]
+min_names: 0
+n_test: 30
