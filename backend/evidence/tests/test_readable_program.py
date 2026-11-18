@@ -179,8 +179,11 @@ def test_odd_text_stays_on_one_line_and_prints_anywhere(tmp_path):
     inv = case_answer(case_protocol("inventory", "condition"), {"S001": items}, "inventory")
     done = run_program(case_program(tmp_path, inv, "odd_inventory"))   # inventory lines print labels as written
     assert done.returncode == 0 and odd in done.stdout.decode("utf-8")
+    inputs = inputs_of(ra)
+    want = [f"#   {s['role']}: {json.dumps(s['exact'], ensure_ascii=False)}" for key in inputs.facts
+            for s in inputs.spans[key]]
     comments = [l for l in (tmp_path / "odd.py").read_text(encoding="utf-8").splitlines() if l.startswith("#   ")]
-    assert comments and all(l.startswith("#   ") for l in comments)
+    assert want and comments == want   # each quote, newline and triple quotes included, is one comment line
     assert not any(l.startswith('b\\c') for l in (tmp_path / "odd.py").read_text(encoding="utf-8").splitlines())
 
 
@@ -257,7 +260,7 @@ def test_the_command_writes_or_refuses(tmp_path, capsys):
     root = written_run(tmp_path / "w", lambda p: GOOD)
     assert cli.main(["program", str(root), "--out", str(tmp_path / "p.py")]) == 0
     assert (tmp_path / "p.py").read_bytes() == program_of_run(root).encode("utf-8")
-    assert cli.main(["program", str(root), "--out", str(root / "p.py")]) == 2
+    assert cli.main(["program", str(root), "--out", str(root / "p.py")]) == 2 and not (root / "p.py").exists()
     assert "sealed" in capsys.readouterr().err
     lines = plan_run(tmp_path / "l")
     assert cli.main(["program", str(lines), "--out", str(tmp_path / "q.py")]) == 2
