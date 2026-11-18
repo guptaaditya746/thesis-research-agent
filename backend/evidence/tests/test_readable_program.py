@@ -219,6 +219,27 @@ def test_the_command_writes_or_refuses(tmp_path, capsys):
         tracked.unlink(missing_ok=True)
 
 
+@pytest.mark.parametrize("git", ["missing", "fails"])
+def test_without_git_the_command_writes_nothing_inside_the_repo(tmp_path, capsys, monkeypatch, git):
+    """M8: when git cannot say the file is ignored, a program (it quotes papers) is not written into the repository;
+    outside the repository git is not asked."""
+    root = written_run(tmp_path / "w", lambda p: GOOD)
+
+    def no_git(cmd, *args, **kwargs):
+        if git == "missing":
+            raise FileNotFoundError("git")
+        return subprocess.CompletedProcess(cmd, 128)
+
+    monkeypatch.setattr(subprocess, "run", no_git)
+    inside = repo_paths.REPO / "backend" / "zz-no-git-answer.py"
+    try:
+        assert cli.main(["program", str(root), "--out", str(inside)]) == 2 and not inside.exists()
+        assert "git could not" in capsys.readouterr().err
+    finally:
+        inside.unlink(missing_ok=True)
+    assert cli.main(["program", str(root), "--out", str(tmp_path / "p.py")]) == 0 and (tmp_path / "p.py").is_file()
+
+
 def test_the_command_refuses_an_answer_changed_after_the_run(tmp_path, capsys):
     """I1: the edited answer is never written out as "the answer the run recorded"."""
     root = written_run(tmp_path / "w", lambda p: GOOD)

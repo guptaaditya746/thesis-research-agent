@@ -433,19 +433,20 @@ def _program(args: argparse.Namespace) -> int:
     if out.is_relative_to(args.run.resolve()):
         print("error: the run folder is sealed; write the program elsewhere", file=sys.stderr)
         return 2
-    warn = None
-    if out.is_relative_to(repo_paths.REPO.resolve()):
+    if out.is_relative_to(repo_paths.REPO.resolve()):   # a program quotes papers: inside the repo only when ignored
         try:
             ignored = subprocess.run(["git", "-C", str(repo_paths.REPO), "check-ignore", "-q", str(out)],
                                      capture_output=True).returncode
         except OSError:
-            ignored, warn = 0, "warning: git could not be run, so the program was not checked against .gitignore"
+            ignored = None
         if ignored == 1:
             print(f"error: {args.out} is in the repository and not git-ignored; a program quotes papers and stays "
                   "local", file=sys.stderr)
             return 2
-        if ignored not in (0, 1):
-            warn = "warning: git could not check .gitignore, so the program was written without that check"
+        if ignored != 0:
+            print(f"error: git could not {'be run' if ignored is None else 'check .gitignore'}, so {args.out} may "
+                  "not be git-ignored; write the program outside the repository", file=sys.stderr)
+            return 2
     try:
         text = program_of_run(args.run, args.corpus)
     except (NotRebuilt, ValueError, OSError) as exc:
@@ -453,8 +454,6 @@ def _program(args: argparse.Namespace) -> int:
         return 2
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(text, encoding="utf-8", newline="\n")
-    if warn:
-        print(warn, file=sys.stderr)
     print(args.out)
     return 0
 
