@@ -5,6 +5,8 @@ from typing import Any
 
 import pytest
 
+from evidence.kinds.best import REASONS as BEST_REASONS
+from evidence.kinds.best import reason as best_reason
 from evidence.kindtext import CANT_TELL_LINE, MAX_KIND_LINES, RULE_TEXT, kind_lines, plan_names
 from evidence.plan import with_answer
 from evidence.plankinds import kind_protocol
@@ -72,7 +74,7 @@ def best_answer(winner: str | None = "rag", comparisons: int = 3) -> dict[str, A
     base = {"kind": "best", "system": "evidence-engine", "metric": "accuracy"}
     if comparisons == 0:
         studies = [{"document": doc(1), "winner": None, "tied": [], "values": {},
-                    "reason": {"code": "no_comparison", "text": "no dataset has values of two kinds"}}]
+                    "reason": best_reason("no_comparison", best_protocol().best)}]
         return {**base, "studies": studies, "wins": {}, "winner": None, "tied": []}
     if winner is None:
         studies = [{"document": doc(n), "winner": ("rag", "closed_book")[n % 2], "tied": [], "values": values,
@@ -187,7 +189,7 @@ def test_best_tie_and_no_comparison_lines():
     assert lines[0].text == ("On answer accuracy, no single kind is best: closed-book model, "
                              "retrieval-augmented model tie.")
     texts = [l.text for l in kind_lines(best_protocol(), best_answer(winner=None, comparisons=0), NAMES)]
-    assert texts == [CANT_TELL_LINE, "S001: no comparison (no dataset has values of two kinds)."]
+    assert texts == [CANT_TELL_LINE, "S001: no comparison (no dataset with values of two method kinds on answer accuracy)."]
     tied = best_answer()
     tied["studies"][0].update(winner=None, tied=["rag", "closed_book"])
     assert kind_lines(best_protocol(), tied, NAMES)[1].text == (
@@ -214,3 +216,14 @@ def test_an_effect_reason_of_a_known_code_names_the_thing_not_its_id():
                           "reason": {"code": "no_treatment_condition", "text": "no rag condition found"}}]
     texts = [l.text for l in kind_lines(effect_protocol(), answer, NAMES)]
     assert "S004: could not be read (no retrieval-augmented model condition found)." in texts
+
+
+@pytest.mark.parametrize("code", sorted(BEST_REASONS))
+def test_a_best_reason_names_the_measure_not_its_id(code):
+    protocol = best_protocol()
+    answer = best_answer(winner=None, comparisons=0)
+    answer["studies"][0]["reason"] = best_reason(code, protocol.best)   # the kind's own reason, as a run writes it
+    line = kind_lines(protocol, answer, NAMES)[1].text
+    want = BEST_REASONS[code].format(metric="answer accuracy")
+    assert line == f"S001: no comparison ({want})."
+    assert "accuracy" not in line.replace("answer accuracy", "")   # the id "accuracy" never stands alone

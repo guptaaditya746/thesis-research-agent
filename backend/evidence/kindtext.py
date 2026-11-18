@@ -11,6 +11,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from .kinds.best import REASONS as BEST_REASONS
 from .plan import Plan
 from .protocol import Protocol
 from .synthesis import REASONS
@@ -82,11 +83,16 @@ def _join(words: list[str]) -> str:
 def _reason(reason: Mapping[str, Any] | None, protocol: Protocol | None = None,
             names: Mapping[str, str] | None = None) -> str:
     """The reason's text; a reason with no text is written as a fixed phrase, never its code. A code of the engine's
-    REASONS is rebuilt from its template with the names of the compared things, so no thing id reaches the text."""
+    REASONS is rebuilt from its template with the names of the compared things, and a code of the best kind's REASONS
+    (a best protocol) with the measure's name, so no thing id reaches the text."""
     code = (reason or {}).get("code") if (reason or {}).get("text") else None
     synthesis = protocol.synthesis if protocol is not None else None
+    look = names or {}
+    best = protocol.best if protocol is not None and protocol.kind == "best" else None
+    if best is not None and code in BEST_REASONS:
+        metric = best.metric.canonical
+        return BEST_REASONS[code].format(metric=look.get(metric, metric))
     if code in REASONS and synthesis is not None:
-        look = names or {}
         t, c = synthesis.compare.treatment, synthesis.compare.control
         return REASONS[code].format(treatment=look.get(t, t), control=look.get(c, c))
     return str((reason or {}).get("text") or "no reason given")
