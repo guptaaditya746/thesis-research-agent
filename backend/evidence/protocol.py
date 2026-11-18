@@ -455,9 +455,10 @@ class Protocol(Strict):
             thing = roles.type_in(Role.COMPARED_THING, self.evidence_types)
             field = roles.field_or_none(thing, "kind") if thing is not None else None
             enum = self.evidence_types[thing].enum_of(field) if thing is not None and field is not None else None
-            if enum is None or set(self.best.kinds) != set(enum):
+            # null in the enum: a condition that is none of the kinds (a plan run's best protocol, plankinds.py)
+            if enum is None or set(self.best.kinds) != {v for v in enum if v is not None}:
                 where = f"{thing}.{field}" if thing and field else f"the kind field of the {Role.COMPARED_THING.value} type"
-                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal {where} enum {enum}")
+                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal {where} enum {enum} (null apart)")
 
     def pack(self) -> Pack:
         """The protocol's domain pack (from its `domains` folder, else domains/), its types registered."""

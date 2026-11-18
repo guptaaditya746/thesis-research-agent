@@ -58,8 +58,16 @@ def kind_protocol(plan: Plan) -> bytes:
         protocol.pop("synthesis")
         ids = _kind_ids(plan)
         condition = protocol["evidence_types"]["condition"]
-        condition["fields"]["properties"]["kind"] = {"type": "string", "enum": ids}
-        condition["description"] += f" kind is the id of the thing the condition is: {', '.join(ids)}"
+        # `kind` may be null: a paper's further methods are none of the compared things, and the LLM extractor's
+        # reply type requires every key, so without null the model had to file them under a compared thing.
+        # kinds/best.py leaves a condition out when its kind is null and its name is none of the kinds' names.
+        listed = " or ".join([", ".join(ids[:-1]), ids[-1]]) if len(ids) > 1 else ids[0]
+        none = "neither" if len(ids) == 2 else "none of them"
+        condition["fields"]["properties"]["kind"] = {
+            "type": ["string", "null"], "enum": [*ids, None],
+            "description": f"{listed} when the condition is that compared thing; null when it is {none}"}
+        condition["description"] += (f" kind is the id of the compared thing this condition is ({listed}), or null "
+                                     f"when it is {none}; a condition with kind null is left out of the comparison.")
         metric = plan.measures[0] if plan.measures else OTHER
         protocol["best"] = {"metric": {"canonical": metric,
                                        "higher_is_better": directions(plan).get(metric) is not False},

@@ -72,3 +72,57 @@ def test_an_inventory_plan_run_answers_by_the_inventory_rule(tmp_path):
     answer = json.loads((root / "answer.json").read_text(encoding="utf-8"))
     assert answer["synthesis"]["kind"] == "inventory" and answer["synthesis"]["target"] == "condition"
     assert yaml.safe_load((root / "protocol.yaml").read_text(encoding="utf-8"))["kind"] == "inventory"
+
+
+def _best_condition() -> dict:
+    raw = yaml.safe_load(kind_protocol(with_answer(make_plan(), "best", None)).decode("utf-8"))
+    return raw["evidence_types"]["condition"]
+
+
+def test_a_best_condition_may_be_none_of_the_compared_things():
+    """Review round 1, engine-C2: `kind` was a required string of the compared ids, so the LLM extractor had to
+    file a paper's third method under one of them."""
+    from evidence.extractors.llm_schema import output_model
+    condition = _best_condition()
+    kind = condition["fields"]["properties"]["kind"]
+    assert kind["type"] == ["string", "null"] and kind["enum"] == ["rag", "closed_book", None]
+    protocol = parse(kind_protocol(with_answer(make_plan(), "best", None)).decode("utf-8"))
+    et = protocol.evidence_types["condition"]
+    model = output_model("condition", condition["fields"], {}, list(et.roles))
+
+    def reply(value):
+        fields = dict.fromkeys(condition["fields"]["properties"]) | {"label": "Method Z", "role": "other",
+                                                                      "kind": value}
+        return {"items": [{"fields": fields, "quotes": dict.fromkeys(et.roles, "Method Z")}]}
+
+    assert model.model_validate(reply(None)).items[0].fields.kind is None
+    assert model.model_validate(reply("rag")).items[0].fields.kind == "rag"
+    with pytest.raises(ValueError):
+        model.model_validate(reply("other"))   # one way to say it: null
+
+
+def test_the_best_condition_type_tells_the_model_about_null():
+    """The text the model reads (docs/prompt-writing.md: allowed values and the missing case stated)."""
+    condition = _best_condition()
+    said = "kind is the id of the compared thing this condition is (rag or closed_book), or null when it is neither"
+    assert condition["description"].endswith(said + "; a condition with kind null is left out of the comparison.")
+    assert condition["fields"]["properties"]["kind"]["description"] == (
+        "rag or closed_book when the condition is that compared thing; null when it is neither")
+
+
+def test_a_condition_of_no_compared_kind_is_left_out_of_the_best_answer():
+    """A third method (kind null) with the lowest value must not stand in for a compared thing."""
+    from evidence import kinds
+    from evidence.tests.readable_cases import item
+    protocol = parse(kind_protocol(with_answer(make_plan(), "best", None)).decode("utf-8"))
+    metric = item("metric", {"name": "Accuracy", "canonical": "accuracy", "higher_is_better": True},
+                  exact="Accuracy", start=20)
+    items = [metric]
+    for label, role, kind, value, start in (("Method Z", "other", None, 0.2, 100), ("RAG model", "rag", "rag", 0.9, 200),
+                                            ("Closed-book", "closed_book", "closed_book", 0.6, 300)):
+        thing = item("condition", {"label": label, "role": role, "kind": kind}, exact=label, start=start)
+        items += [thing, item("measurement", {"value": value, "dataset": "NQ"},
+                              {"condition": thing.item_id, "metric": metric.item_id}, exact=str(value),
+                              start=start + 30)]
+    answer, _ = kinds.of(protocol).answer(protocol, ["S001"], {"S001": items}, roles=protocol.roles())
+    assert answer["studies"][0]["values"] == {"rag": 0.9, "closed_book": 0.6} and answer["winner"] == "rag"
