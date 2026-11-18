@@ -20,6 +20,7 @@ from synth3.reader import read_folder
 from synth3.realcorpus import build_real_folder
 from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
 from synth3.qcli import add_question_commands
+from synth3.rcli import add_replay_commands
 from synth3.scli import add_system_commands
 from synth3.spec import SPECS
 from synth3.world import describe, draw_world, load_world, save_world
@@ -247,6 +248,7 @@ def parser() -> argparse.ArgumentParser:
     ps.set_defaults(run=pool_split)
     add_question_commands(sub)
     add_system_commands(sub)
+    add_replay_commands(sub)
     return top
 
 
