@@ -286,7 +286,7 @@ def test_report_leaves_a_pending_answer_out_of_its_means_and_counts_unchecked_ma
 
 def test_the_report_counts_who_confirmed_the_plans(folder, tmp_path, spec_dir, SPEC):
     """Counted for every saved answer, also one whose marks are not current (saving the answer again changes it)."""
-    judged(tmp_path, folder, SPEC, systems=("system", BASELINE))
+    judged(tmp_path, folder, SPEC, systems=("system", "engine", BASELINE))   # the engine's answers are not counted
     for rec_ in load_answers(tmp_path / "res", "demo"):
         if rec_.system == "system":
             by = "person" if rec_.question_id == "d01" else "system"

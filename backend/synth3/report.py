@@ -33,6 +33,7 @@ from synth3.questions import QUESTIONS, QuestionSet, load_questions
 from synth3.sheetfacts import Folder
 from synth3.sheets import folders_of, load_sheet, stale
 from synth3.spec import SPECS, load_spec
+from synth3.system import SYSTEM
 
 JUDGE_TEST = SPECS / "judge-test"
 FLAG_BELOW = 0.80
@@ -413,7 +414,7 @@ def render_report(r: dict) -> str:
                          f"{x['plans_person']} / {x['plans_system']} | {x['facts_left_out']} |")
         by_system = sum(x["plans_system"] for x in d["systems"].values())
         if by_system:
-            of = sum(x["answers"] for n, x in d["systems"].items() if n != BASELINE)
+            of = (d["systems"].get(SYSTEM) or {}).get("answers", 0)   # the system's answers only, not the engine's
             lines += ["", f"{by_system} of {of} system answers ran on plans the system confirmed, not a person "
                           f"(spec §8 puts a person's edit in the system): reported as a limitation."]
         lines += ["", f"Sheets: {s['checked']} checked, {s['drafted']} drafted, {s['stale']} stale, "
