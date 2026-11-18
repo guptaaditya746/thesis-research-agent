@@ -60,6 +60,7 @@ uv run synth3 questions --domain D   # check Aditya's question file and show wha
 uv run synth3 draft-sheets --domain D [--redraft QID]   # orch-model drafts the answer sheets (cluster); can't-tell sheets by code; --redraft skips the call cache for those questions
 uv run synth3 collect --domain D --seed N --question QID --run RUN [--system engine]   # put one engine run's answer into the judge's shape (data/synth3/results, git-ignored)
 uv run synth3 baseline --domain D   # evaluate rag-baseline on every question and folder (orch-model, cluster; 2 calls per question and folder)
+uv run synth3 system-plan --domain D [--redo QID]   # orch-model drafts one plan per question from the question and its sub-questions (cluster); data/synth3/plans/D/<qid>.json, to be confirmed on /plan
 uv run synth3 judge --domain D   # sub-model-1 marks every saved answer: A, B, C into <results>/D/s<n>/<system>/<qid>.marks.json (cluster)
 uv run synth3 judge-sample --domains D   # the ~30 answers Aditya hand-marks on the review page
 uv run synth3 report --domains D --out FILE.json   # A, B, C per system with the baseline, judge agreement (flag below 80%)

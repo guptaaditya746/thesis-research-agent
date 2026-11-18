@@ -1,0 +1,88 @@
+"""synth3.system planning: one plan per question, drafted with its sub-questions, kept on a second run."""
+from pathlib import Path
+
+import pytest
+
+from evidence import steps
+from evidence.plan import load_plan, with_answer
+from evidence.tests.test_planner_subq import flags, line, lm, script, words  # noqa: F401  (lm is a fixture)
+from modelcall import ModelCallError
+from synth3 import system
+from synth3.cli import main
+from synth3.questions import Question, answer_by_of, load_questions, target_of
+from synth3.spec import load_spec
+from synth3.system import draft_plan, plan_domain, plan_path
+from synth3.tests.systemrun import demo_plan
+
+FIX = Path(__file__).parent / "fixtures" / "questions"
+
+
+def use_fake_draft(monkeypatch, SPEC, fail=()):
+    calls: list[tuple] = []
+
+    def fake_draft(q, lm, templates):
+        calls.append((q.id, lm))
+        if q.id in fail:
+            raise ModelCallError("down", None, [])
+        return with_answer(demo_plan(SPEC, q, confirmed=None), answer_by_of(q), target_of(q))
+
+    monkeypatch.setattr(system, "draft_plan", fake_draft)
+    return calls
+
+
+def test_draft_plan_passes_the_sub_questions_and_the_kind(lm, monkeypatch):  # noqa: F811
+    replies, seen = lm
+    monkeypatch.setattr(system, "write_words", lambda text, things, lm=None: words(text, things))
+    script(replies, [line()]); replies.append(flags("d1"))
+    qq = Question(id="d01", question="Does Targeted therapy raise the Response rate?", kind="inventory",
+                  sub_questions=["Which papers measured it?"])
+    plan = draft_plan(qq, steps.current(), {})
+    assert plan.sub_questions == ["Which papers measured it?"] and plan.answer_by == "inventory"
+    assert plan.target == "condition" and any("Which papers measured it?" in p for p in seen)
+    assert not plan.ready()
+
+
+def test_a_second_run_keeps_plans_and_a_changed_question_is_replanned(tmp_path, SPEC, monkeypatch):
+    qs = load_questions("demo", SPEC, FIX); calls = use_fake_draft(monkeypatch, SPEC)
+    assert sorted(plan_domain("demo", qs, tmp_path, "lm", {})["drafted"]) == ["d01", "d02", "d03"]
+    assert len(plan_domain("demo", qs, tmp_path, "lm", {})["kept"]) == 3 and len(calls) == 3
+    edited = qs.model_copy(update={"questions": [qs.get("d01").model_copy(update={"question": "Changed?"}),
+                                                 *qs.questions[1:]]})
+    out = plan_domain("demo", edited, tmp_path, "lm", {})
+    assert out["drafted"] == ["d01"] and (tmp_path / "demo" / "d01.stale-1.json").is_file()
+
+
+def test_redo_drafts_with_a_fresh_model(tmp_path, SPEC, monkeypatch):
+    qs = load_questions("demo", SPEC, FIX); calls = use_fake_draft(monkeypatch, SPEC)
+    plan_domain("demo", qs, tmp_path, "lm", {})
+    out = plan_domain("demo", qs, tmp_path, "lm", {}, redo={"d02"}, redo_lm="fresh-lm")
+    assert out["drafted"] == ["d02"] and calls[-1] == ("d02", "fresh-lm")
+    assert (tmp_path / "demo" / "d02.stale-1.json").is_file()
+
+
+def test_a_changed_kind_is_set_in_place(tmp_path, SPEC, monkeypatch):
+    qs = load_questions("demo", SPEC, FIX); calls = use_fake_draft(monkeypatch, SPEC)
+    plan_domain("demo", qs, tmp_path, "lm", {})
+    edited = qs.model_copy(update={"questions": [qs.get("d01").model_copy(update={"kind": "effect"}),
+                                                 *qs.questions[1:]]})
+    out = plan_domain("demo", edited, tmp_path, "lm", {})
+    assert out["rekinded"] == ["d01"] and len(calls) == 3
+    assert load_plan(plan_path(tmp_path, "demo", "d01")).answer_by == "effect"
+
+
+def test_a_failing_draft_is_listed_and_the_rest_go_on(tmp_path, SPEC, monkeypatch):
+    use_fake_draft(monkeypatch, SPEC, fail={"d02"})
+    out = plan_domain("demo", load_questions("demo", SPEC, FIX), tmp_path, "lm", {})
+    assert list(out["failed"]) == ["d02"] and "down" in out["failed"]["d02"]
+    assert sorted(out["drafted"]) == ["d01", "d03"]
+
+
+def test_system_plan_by_command(tmp_path, spec_dir, monkeypatch, capsys):
+    use_fake_draft(monkeypatch, SPEC := load_spec("demo", spec_dir))
+    monkeypatch.setattr(system, "orch_lm", lambda path: f"lm:{path.name}")
+    args = ["system-plan", "--domain", "demo", "--plans", str(tmp_path / "p"), "--questions-root", str(FIX),
+            "--spec-root", str(spec_dir), "--results", str(tmp_path / "r")]
+    assert main(args) == 0
+    out = capsys.readouterr().out
+    assert "drafted 3, kept 0, rekinded 0, failed 0" in out and "--confirm-as-system" in out
+    assert main([*args, "--redo", "zz"]) == 2

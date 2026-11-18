@@ -20,6 +20,7 @@ from synth3.reader import read_folder
 from synth3.realcorpus import build_real_folder
 from synth3.realspec import POOLS, REAL_SPECS, load_real_spec
 from synth3.qcli import add_question_commands
+from synth3.scli import add_system_commands
 from synth3.spec import SPECS
 from synth3.world import describe, draw_world, load_world, save_world
 from synth3.write import TEXT_LEVELS
@@ -245,6 +246,7 @@ def parser() -> argparse.ArgumentParser:
     pi.set_defaults(run=pool_import)
     ps.set_defaults(run=pool_split)
     add_question_commands(sub)
+    add_system_commands(sub)
     return top
 
 
