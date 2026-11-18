@@ -72,3 +72,6 @@ tests/EV2/ui-case/** text eol=lf
 tests/EV4/** text eol=lf
 # Run folders are hashed byte for byte (manifest.json); `evidence verify` must pass on every checkout.
 reports/** -text
+
+# synth3 built folders and world files: papers are hashed into manifest.json and placements are offsets.
+data/synth3/** text eol=lf

@@ -12,7 +12,6 @@ frontend/node_modules/
 .propose-exchange/
 .helper-exchange/
 
-# synth3 built folders (world files under data/synth3/worlds/ are committed)
-data/synth3/built/
+# synth3: built folders and world files are committed (private repo, Aditya 18 Nov); real-paper pools stay local
 data/synth3/pools/
 data/synth3/results/

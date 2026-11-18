@@ -1,0 +1,177 @@
+{
+ "pieces": {
+  "real": 72,
+  "synthetic": 101
+ },
+ "raw": {
+  "real": 72,
+  "synthetic": 101,
+  "auc": {
+   "1 full words": 0.816,
+   "2 masked words": 0.799,
+   "3 function words": 0.667,
+   "4 surface only": 0.481,
+   "5 masked + surface": 0.569
+  },
+  "cues masked words": {
+   "real": [
+    "placebo",
+    "amlodipine",
+    "esaxerenone",
+    "chlorthalidone",
+    "valsartan",
+    "control group",
+    "therapy",
+    "the control",
+    "of esaxerenone",
+    "essential"
+   ],
+   "synthetic": [
+    "standard care",
+    "care",
+    "alvenor",
+    "comparison",
+    "adults",
+    "cardivel",
+    "side",
+    "measure",
+    "side effects",
+    "systolic drop"
+   ]
+  },
+  "cues function words": {
+   "real": [
+    "between",
+    "both",
+    "co",
+    "full",
+    "after",
+    "whose",
+    "other",
+    "their",
+    "in",
+    "ltd"
+   ],
+   "synthetic": [
+    "side",
+    "about",
+    "same",
+    "are",
+    "every",
+    "these",
+    "less",
+    "who",
+    "here",
+    "third"
+   ]
+  },
+  "surface strongest (+ = real)": {
+   "paragraphs": -0.84,
+   "sent len sd": -0.64,
+   "headings": 0.57,
+   "sent len": 0.53,
+   "table lines": 0.38,
+   "dashes": -0.31,
+   "type-token": -0.26,
+   "we/our": -0.26
+  }
+ },
+ "masked": {
+  "real": 72,
+  "synthetic": 101,
+  "auc": {
+   "1 full words": 0.741,
+   "2 masked words": 0.696,
+   "3 function words": 0.667,
+   "4 surface only": 0.497,
+   "5 masked + surface": 0.551
+  },
+  "cues masked words": {
+   "real": [
+    "therapy",
+    "essential",
+    "essential hypertension",
+    "supplementary",
+    "combination therapy",
+    "significantly",
+    "randomized double",
+    "sex",
+    "test group",
+    "mssbp"
+   ],
+   "synthetic": [
+    "overall acro",
+    "comparison",
+    "adults",
+    "side",
+    "measure",
+    "side effects",
+    "systolic drop",
+    "hospital acro",
+    "function university",
+    "subset"
+   ]
+  },
+  "cues function words": {
+   "real": [
+    "between",
+    "both",
+    "co",
+    "full",
+    "after",
+    "whose",
+    "other",
+    "their",
+    "in",
+    "ltd"
+   ],
+   "synthetic": [
+    "side",
+    "about",
+    "same",
+    "are",
+    "every",
+    "these",
+    "less",
+    "who",
+    "here",
+    "third"
+   ]
+  },
+  "surface strongest (+ = real)": {
+   "paragraphs": -0.8,
+   "sent len sd": -0.69,
+   "headings": 0.54,
+   "sent len": 0.53,
+   "dashes": -0.37,
+   "table lines": 0.31,
+   "capitals": 0.3,
+   "we/our": -0.25
+  }
+ },
+ "style gap": {
+  "folder": {
+   "mean |gap|": 0.22,
+   "biggest": {
+    "'so'": 0.7,
+    "we/our": 0.6,
+    "'same'": 0.6,
+    "'we'": 0.6,
+    "'our'": 0.4,
+    "paragraphs": 0.4,
+    "para len": -0.3,
+    "parens": -0.3
+   }
+  }
+ },
+ "synth2 template v2": {
+  "auc": {
+   "1 full words": 0.913,
+   "2 masked words": 0.742,
+   "3 function words": 0.572,
+   "4 surface only": 0.575,
+   "5 masked + surface": 0.606
+  },
+  "style gap": 0.12
+ }
+}
