@@ -8,7 +8,7 @@ its file hashes.
     evidence estimate --protocol P --corpus DIR [--strategy gaps|all] [--extractors regex-only|llm-only|cascade]
                       [--from-run RUN]
     evidence replay RUN [--cache DIR] [--corpus DIR]
-    evidence reexec RUN [--extractor NAME | --all-calls] [--cache DIR] [--corpus DIR] [--out DIR]
+    evidence reexec RUN [--extractor NAME | --all-calls [--times N]] [--cache DIR] [--corpus DIR] [--out DIR]
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
@@ -64,6 +64,7 @@ from typing import Any
 import yaml
 
 from agent.chain import verify
+from jsonio import write_json
 from modelcall.pins import ORCH_ALIAS
 
 from . import arxiv
@@ -136,6 +137,7 @@ def _parser() -> argparse.ArgumentParser:
             pick.add_argument("--extractor", help="extractor name or id (default: every extractor)")
             pick.add_argument("--all-calls", action="store_true",
                               help="every extractor, and the names check's and the stages' model calls, asked again")
+            s.add_argument("--times", type=int, help="with --all-calls and --out: N re-runs, then the re-run measure")
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
     sub.add_parser("verify", help="check the run's hash chain and file hashes").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
@@ -314,6 +316,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         return 0 if report["ok"] else 1
     if args.command == "reexec":
         from .replay import reexec
+        if args.times is not None:
+            return _reexec_times(args)
         new = reexec(args.run, args.extractor, cache=args.cache, corpus=args.corpus, out_dir=args.out,
                      all_calls=args.all_calls)
         report = read_json(new / "reexec.json")
@@ -335,6 +339,29 @@ def _dispatch(args: argparse.Namespace) -> int:
     if args.command == "fetch":
         return arxiv.run(args)
     return _verify(args.run)
+
+
+def _reexec_times(args: argparse.Namespace) -> int:
+    """`reexec --all-calls --times N --out DIR`: N re-runs with no cache, then the re-run measure (stability.py)."""
+    from . import stability
+    from .replay import reexec
+    problem = ("--times needs --all-calls" if not args.all_calls else "--times needs --out" if args.out is None
+               else "the run folder is sealed; write the re-runs elsewhere"
+               if args.out.resolve().is_relative_to(args.run.resolve())
+               else "--times must be at least 1" if args.times < 1 else None)
+    if problem:
+        print(f"error: {problem}", file=sys.stderr)
+        return 2
+    news = [reexec(args.run, cache=args.cache, corpus=args.corpus, out_dir=args.out, all_calls=True)
+            for _ in range(args.times)]
+    try:
+        report = stability.measure(args.run, news)
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print("\n".join(stability.render(report)))
+    write_json(args.out / "stability.json", report)
+    return 0
 
 
 def _verify(run: Path) -> int:
