@@ -5,11 +5,14 @@ read-only GETs over the files the commands write: corpora, protocols and proposa
 evidence graph and answer, scores A/B/C with the baselines beside the engine) and what the app starts and
 writes (webapp/evjobs.py: the questions to select from, jobs that run the same commands as the runbook, a
 proposal's decisions.yaml) and the review page (webapp/evreview.py: worlds, answer sheets and the judge-test
-hand marks of synth3). `/api/health` says the server is up. The built frontend (frontend/dist) is served
+hand marks of synth3) and the plan page (webapp/evplan.py, which also opens and writes back the batch plan files
+`<synth3>/plans/<domain>/<qid>.json`) and the system API (webapp/evsystem.py: read-only; the domains with their plan
+states, the four rows of a plan run, a run's paper with its items marked). `/api/health` says the server is up. The built frontend (frontend/dist) is served
 at / with every other path falling back to index.html (client-side routes), when that directory exists.
 
 The server writes only job state and logs ($EV/.jobs/), decisions.yaml of a proposal, and under $SYNTH3_DATA the
-world files, answer sheets and judge-test hand marks (webapp/evreview.py); the jobs it starts write what their
+world files, answer sheets, judge-test hand marks (webapp/evreview.py) and the batch plan files a plan page edits
+(webapp/evplan.py); the jobs it starts write what their
 commands write, into the $EV layout. It has no authentication: it binds to 127.0.0.1 and is
 reached through an SSH tunnel (README, "Web app"); webapp/guard.py answers only loopback Host names and takes
 a write only from a loopback client as a same-origin JSON request, so neither other hosts nor other web pages
@@ -34,6 +37,7 @@ from .evjobs import evjobs_router
 from .evplan import NotWired, PlanBackend, evplan_router
 from .evquestions import Questions
 from .evreview import evreview_router
+from .evsystem import evsystem_router
 from .files import BadRequest, Conflict, Damaged, NotFound, inside
 from .guard import Guard
 from .jobs import JobManager
@@ -104,6 +108,7 @@ def create_app(settings: Settings | None = None, plan_backend: PlanBackend | Non
         plan_backend = default_backend(s)
     app.include_router(evplan_router(s, plan_backend), prefix="/api/ev")  # the plan page (webapp/evplan.py)
     app.include_router(evreview_router(s), prefix="/api/ev")  # the review page (webapp/evreview.py)
+    app.include_router(evsystem_router(s), prefix="/api/ev")  # the system API, read-only (webapp/evsystem.py)
     if s.web_dist.is_dir():
         add_frontend(app, s)
     return app

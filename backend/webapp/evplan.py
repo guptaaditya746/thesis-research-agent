@@ -9,8 +9,18 @@
     POST   /plan/{id}/confirm-all         -> the plan with every decision confirmed (flagged ones too)
     POST   /plan/{id}/main-rule           {rule} -> the main-answer rule (one of evidence.planner.RULES), confirmed
     DELETE /plan/{id}/line/{lid}          -> the plan (409 for the oversell line)
-    POST   /plan/{id}/run                 -> {run}; 409 until ready (every decision confirmed and no problem found by
-                                                          the code checks) and while a run is starting or done
+    POST   /plan/{id}/answer              {answer_by, target?} -> the plan with that answer kind (the kind is chosen on
+                                                          /system; 400 for a bad one, 409 for a batch plan, whose kind
+                                                          comes from the question file, and, with no plan yet, until
+                                                          the clarifying questions are answered: the kind is kept and
+                                                          applied when the plan is made)
+    POST   /plan/batch/{domain}/{qid}     -> the plan view of the batch plan file `<synth3>/plans/<domain>/<qid>.json`
+                                                          (404 with no file); every later change is written back to
+                                                          that file as well as to `$EV/plans/<id>/`
+    POST   /plan/{id}/run                 {domain?, seed?} -> {run}; 409 until ready (every decision confirmed and no
+                                                          problem found by the code checks, answer kind included) and
+                                                          while a run is starting or done; with a domain and a seed the
+                                                          run is on that built synth3 folder
     GET    /plan/{id}/result              -> the run's lines and answer (W4's after_run result, with the reruns)
     POST   /run/{rid}/links               {accepted, rejected} -> W2's review, then W4's rerun
 
@@ -20,7 +30,9 @@ without an `lm` the endpoints that need a model answer 501. create_app wires the
 and the links review (W2) are wired by the integration; a missing one answers 501. A request that plans (clarify,
 propose, critic, word writer) runs inside one HTTP request and can take minutes: put a long proxy timeout in front.
 
-Plans are kept in memory and, with `$EV`, saved under `$EV/plans/<id>/` (`plan.json`; at run time
+A plan can also be started with sub-questions and an answer kind (`answer_by`, `target`; see evidence.plan). A
+`written` plan's result shows the written answer's text. Plans are kept in memory and, with `$EV`, saved under
+`$EV/plans/<id>/` (a batch plan also in its batch plan file; `plan.json`; at run time
 `plan.frozen.json` and `protocol.json`: decisions, who, when, clarifications), written BEFORE the run starts. Every
 change of a plan is made under that plan's lock; a plan is `open`, then `running` (a second run is a 409), then
 `frozen`."""
@@ -29,7 +41,7 @@ from __future__ import annotations
 import json
 import threading
 import uuid
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -40,11 +52,16 @@ import dspy
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from evidence.plan import Plan, WordList, write_plan
+from evidence.plan import ANSWER_BY, TARGETS, Plan, WordList, load_plan, with_answer, write_plan
+from evidence.plankinds import answer_problems
 from evidence.planner import MAIN_RULE_ID, OVERSELL_ID, check_plan, clarify, confirm_all, critic, how_sentences
 from evidence.planner import propose, set_rule, using
 from jsonio import write_text_atomic
 
+from synth3.system import plan_path, plan_stale
+
+from .evreview import ReviewFiles
+from .evsystem import synth3_folder
 from .files import BadRequest, Conflict, NotFound, check_id
 from .settings import Settings
 
@@ -78,9 +95,9 @@ class PlanBackend:
     templates: Mapping[str, str] = field(default_factory=dict)   # saved SPARQL template name -> text (W4)
     write_words: Callable[..., WordList] | None = None            # (question, things, *, lm) -> WordList (W1)
     clarify: Callable[[str], list[dict[str, Any]]] | None = None
-    propose: Callable[[str, list[dict[str, str]]], tuple[Plan, dict[str, list[str]]]] | None = None
+    propose: Callable[..., tuple[Plan, dict[str, list[str]]]] | None = None   # (question, answers[, sub_questions=])
     critic: Callable[[Plan], Plan] | None = None
-    run: Callable[[Plan, Path | None], str] = field(default_factory=lambda: _not_wired("the run (W4)"))
+    run: Callable[..., str] = field(default_factory=lambda: _not_wired("the run (W4)"))   # (plan, folder[, corpus=])
     result: Callable[[str], dict[str, Any]] = field(default_factory=lambda: _not_wired("the run's result (W4)"))
     links: Callable[[str, list[str], list[str]], dict[str, Any]] = field(
         default_factory=lambda: _not_wired("the links review and rerun (W2, W4)"))
@@ -96,14 +113,17 @@ class PlanBackend:
         with using(self.model()):
             return clarify(question)
 
-    def do_propose(self, question: str, answers: list[dict[str, str]]) -> tuple[Plan, dict[str, list[str]]]:
+    def do_propose(self, question: str, answers: list[dict[str, str]],
+                   sub_questions: Sequence[str] = ()) -> tuple[Plan, dict[str, list[str]]]:
         if self.propose is not None:
+            if sub_questions:
+                return self.propose(question, answers, sub_questions=list(sub_questions))
             return self.propose(question, answers)
         lm = self.model()
         words = self.write_words or _w1_words
         with using(lm):
             return propose(question, answers, write_words=lambda q, things: words(q, things, lm=lm),
-                           templates=self.templates)
+                           templates=self.templates, sub_questions=list(sub_questions))
 
     def do_critic(self, plan: Plan) -> Plan:
         if self.critic is not None:
@@ -112,8 +132,31 @@ class PlanBackend:
             return critic(plan)
 
 
+def check_kind(answer_by: str, target: str | None) -> None:
+    """The checks `with_answer` makes, for a kind given before there is a plan (ValueError with its text)."""
+    if answer_by not in ANSWER_BY:
+        raise ValueError(f"unknown answer_by {answer_by!r}")
+    if target is not None and target not in TARGETS:
+        raise ValueError(f"unknown target {target!r}")
+    if target is not None and answer_by != "inventory":
+        raise ValueError("target is only for an inventory answer")
+
+
 class PlanStart(BaseModel):
     question: str
+    sub_questions: list[str] = []
+    answer_by: str = "lines"
+    target: str | None = None
+
+
+class AnswerRequest(BaseModel):
+    answer_by: str
+    target: str | None = None
+
+
+class PlanRunRequest(BaseModel):
+    domain: str | None = None
+    seed: int | None = None
 
 
 class Answer(BaseModel):
@@ -149,6 +192,8 @@ class PlanView(BaseModel):
     ready: bool = False              # every decision confirmed and no problem
     frozen: bool = False
     run: str | None = None
+    sub_questions: list[str] = []
+    batch: str | None = None         # "<domain>/<qid>" for a batch plan
 
 
 class RunStarted(BaseModel):
@@ -190,6 +235,11 @@ class Entry:
     fresh: dict[str, list[str]] = field(default_factory=dict)
     state: Literal["open", "running", "frozen"] = "open"
     run: str | None = None
+    sub_questions: list[str] = field(default_factory=list)
+    answer_by: str = "lines"
+    target: str | None = None
+    batch: tuple[str, str] | None = None   # (domain, question id) of a batch plan, bound to its file
+    batch_file: Path | None = None
     lock: threading.Lock = field(default_factory=threading.Lock)
 
 
@@ -217,19 +267,36 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
         return None if settings.ev is None else Path(settings.ev) / "plans" / pid
 
     def save(e: Entry) -> None:
+        if e.plan is None or e.state != "open":
+            return
         d = folder(e.id)
-        if d is not None and e.plan is not None and e.state == "open":
+        if d is not None:
             d.mkdir(parents=True, exist_ok=True)
             write_plan(e.plan, d / "plan.json")
+        if e.batch_file is not None:
+            write_text_atomic(e.batch_file, e.plan.model_dump_json(indent=2))
+
+    def stale(e: Entry) -> list[str]:
+        if e.batch is None or e.plan is None:
+            return []
+        rf = ReviewFiles(settings)
+        try:
+            qs = rf.questions(e.batch[0], rf.spec(e.batch[0]))
+            why = plan_stale(e.plan, rf.question(qs, e.batch[1]))
+        except (NotFound, Conflict) as exc:
+            return [f"the question file cannot be read: {exc}"]
+        return [why] if why else []
 
     def view(e: Entry) -> PlanView:
         if e.plan is None:
             return PlanView(id=e.id, question=e.question, clarifications=e.asked, plan=None)
-        problems = check_plan(e.plan, known)
+        problems = [*check_plan(e.plan, known), *answer_problems(e.plan), *stale(e)]
         how = {x.id: how_sentences(x, e.plan, be.templates.get(x.template) if x.template else None, e.fresh.get(x.id))
                for x in e.plan.lines}
         return PlanView(id=e.id, question=e.question, clarifications=e.asked, plan=e.plan, how=how, problems=problems,
-                        ready=e.plan.ready() and not problems, frozen=e.state != "open", run=e.run)
+                        ready=e.plan.ready() and not problems, frozen=e.state != "open", run=e.run,
+                        sub_questions=list(e.plan.sub_questions),
+                        batch=None if e.batch is None else "/".join(e.batch))
 
     def get(pid: str) -> Entry:
         check_id(pid, "plan")
@@ -252,8 +319,13 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
         return e.plan
 
     def make(e: Entry, answers: list[dict[str, str]]) -> None:
-        plan, fresh = be.do_propose(e.question, answers)
-        e.plan, e.fresh = be.do_critic(plan), fresh
+        plan, fresh = be.do_propose(e.question, answers, e.sub_questions)
+        plan = be.do_critic(plan)
+        try:
+            e.plan = with_answer(plan, e.answer_by, e.target)
+        except ValueError as exc:
+            raise BadRequest(str(exc)) from exc
+        e.fresh = fresh
         save(e)
 
     @api.post("/plan", response_model=PlanView, tags=["plan"])
@@ -261,12 +333,56 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
         question = req.question.strip()
         if not question:
             raise BadRequest("the question is empty")
-        e = Entry(uuid.uuid4().hex[:8], question, be.do_clarify(question))
+        subs = [q.strip() for q in req.sub_questions]
+        if any(not q for q in subs):
+            raise BadRequest("a sub-question is empty")
+        try:
+            check_kind(req.answer_by, req.target)
+        except ValueError as exc:
+            raise BadRequest(str(exc)) from exc
+        e = Entry(uuid.uuid4().hex[:8], question, be.do_clarify(question), sub_questions=subs,
+                  answer_by=req.answer_by, target=req.target)
         with e.lock:
             with index_lock:
                 entries[e.id] = e
             if not e.asked:
                 make(e, [])
+            return view(e)
+
+    @api.post("/plan/batch/{domain}/{qid}", response_model=PlanView, tags=["plan"])
+    def open_batch(domain: str, qid: str) -> PlanView:
+        check_id(domain, "domain")
+        check_id(qid, "question")
+        path = plan_path(Path(settings.synth3_data) / "plans", domain, qid)
+        if not path.is_file():
+            raise NotFound(f"no batch plan for {domain}/{qid}")
+        try:
+            plan = load_plan(path)
+        except ValueError as exc:
+            raise Conflict(f"{domain}/{qid}: the plan file is damaged ({exc})") from exc
+        e = Entry(uuid.uuid4().hex[:8], plan.question, [], plan=plan, sub_questions=list(plan.sub_questions),
+                  answer_by=plan.answer_by, target=plan.target, batch=(domain, qid), batch_file=path)
+        with index_lock:
+            entries[e.id] = e
+        with e.lock:
+            return view(e)
+
+    @api.post("/plan/{pid}/answer", response_model=PlanView, tags=["plan"])
+    def set_answer(pid: str, req: AnswerRequest) -> PlanView:
+        with editing(pid) as e:
+            if e.batch is not None:
+                raise Conflict("a batch plan's answer kind comes from the question file")
+            try:
+                if e.plan is None:
+                    check_kind(req.answer_by, req.target)
+                else:
+                    e.plan = with_answer(e.plan, req.answer_by, req.target)
+            except ValueError as exc:
+                raise BadRequest(str(exc)) from exc
+            e.answer_by, e.target = req.answer_by, req.target
+            if e.plan is None:
+                raise Conflict("answer the clarifying questions first")
+            save(e)
             return view(e)
 
     @api.post("/plan/{pid}/clarify", response_model=PlanView, tags=["plan"])
@@ -335,14 +451,17 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
             return view(e)
 
     @api.post("/plan/{pid}/run", response_model=RunStarted, tags=["plan"])
-    def run(pid: str) -> RunStarted:
+    def run(pid: str, req: PlanRunRequest | None = None) -> RunStarted:
+        req = req or PlanRunRequest()
+        if (req.domain is None) != (req.seed is None):
+            raise BadRequest("give both domain and seed, or neither")
         e = get(pid)
         with e.lock:   # check, freeze and mark in one step: a second run (or a late edit) sees "running"
             if e.state != "open":
                 raise Conflict("the plan is already running or was run")
             if e.plan is None:
                 raise Conflict("answer the clarifying questions first")
-            problems = check_plan(e.plan, known)
+            problems = [*check_plan(e.plan, known), *answer_problems(e.plan), *stale(e)]
             if problems:
                 raise Conflict(f"the plan has problems: {'; '.join(problems)}")
             if not e.plan.ready():
@@ -355,7 +474,10 @@ def evplan_router(settings: Settings, backend: PlanBackend | None = None) -> API
                 d.mkdir(parents=True, exist_ok=True)
                 write_plan(plan, d / "plan.frozen.json")
                 write_text_atomic(d / "protocol.json", json.dumps(protocol_record(plan, ""), indent=2))
-            rid = be.run(plan, d)
+            if req.domain is None:
+                rid = be.run(plan, d)
+            else:
+                rid = be.run(plan, d, corpus=synth3_folder(settings, req.domain, int(req.seed or 0)))
             if d is not None:
                 write_text_atomic(d / "protocol.json", json.dumps(protocol_record(plan, rid), indent=2))
         except BaseException:

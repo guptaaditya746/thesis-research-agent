@@ -3,7 +3,7 @@
 - `lm`: a factory of `RecordedLM("orch-model")` (the pinned orchestrator alias, W1's word writer requires it), every
   call recorded in `$EV/cache/planner.jsonl`: one plain model call through `modelcall.ask_sync` (LiteLLM gateway).
 - `templates`: the saved SPARQL templates (evidence/kg/templates), name -> text.
-- `run(plan, folder)`: a plan run (evidence/planrun.py) of the frozen plan over the corpus `$EV_PLAN_CORPUS` (a path,
+- `run(plan, folder, corpus=None)`: a plan run (evidence/planrun.py) of the frozen plan over the corpus `$EV_PLAN_CORPUS` (a path,
   or a corpus id under the corpora folder) into the runs folder, in a background thread; returns the run id at once.
 - `result(run id)`: {status running|done, lines, answer, reruns} from the run's answer.json ("failed: <reason>" as the
   answer text when the run failed).
@@ -24,6 +24,7 @@ from .files import NotFound
 from .settings import Settings
 
 PLAN_CORPUS = "EV_PLAN_CORPUS"
+WRITTEN_FILE = "written-answer.json"
 
 
 def lm_factory(settings: Settings):
@@ -61,10 +62,15 @@ class PlanRuns:
             raise NotWired("no runs folder for plan runs: set EV")
         return self.settings.ev_runs_dir
 
-    def run(self, plan: Plan, folder: Path | None) -> str:
+    def run(self, plan: Plan, folder: Path | None, corpus: Path | None = None) -> str:
         from evidence import planrun
         from evidence.rundir import new_run_id
-        corpus, out = self._corpus(), self._out()
+        kw: dict[str, Any] = {}
+        if corpus is None:
+            corpus = self._corpus()
+        else:   # a synth3 folder: no reasoner and no links (nothing outside the folder is asked)
+            kw = {"reason": "off", "links": "off"}
+        out = self._out()
         out.mkdir(parents=True, exist_ok=True)
         path = (folder / "plan.frozen.json") if folder is not None else out / f".plan-{plan.sha256[:12]}.json"
         if not path.is_file():
@@ -74,7 +80,7 @@ class PlanRuns:
 
         def work() -> None:
             try:
-                planrun.run(path, corpus, out, cache=cache, run_id=rid)
+                planrun.run(path, corpus, out, cache=cache, run_id=rid, **kw)
             except BaseException as exc:   # noqa: BLE001 - the page shows it as the answer
                 self.errors[rid] = f"{type(exc).__name__}: {str(exc)[:300]}"
 
@@ -101,8 +107,21 @@ class PlanRuns:
             if thread is None or not thread.is_alive():   # e.g. the server restarted during the run
                 return {"status": "done", "lines": [], "answer": {"text": "failed: run stopped"}, "reruns": []}
             return {"status": "running", "lines": [], "answer": {"text": "Running..."}, "reruns": []}
-        return {"status": "done", "lines": answer["lines"], "answer": answer["answer"], "reruns": answer["reruns"],
+        shown = self._written(run, answer["answer"])
+        return {"status": "done", "lines": answer["lines"], "answer": shown, "reruns": answer["reruns"],
                 "labels": answer.get("labels", {}), "links": answer.get("links", [])}
+
+    @staticmethod
+    def _written(run: Any, answer: dict[str, Any]) -> dict[str, Any]:
+        """The answer, with the written answer's text when the run has one (a failed one says why)."""
+        written = run.try_json(WRITTEN_FILE)
+        if not isinstance(written, dict):
+            return answer
+        if written.get("status") == "failed":
+            problems = "; ".join(str(p) for p in written.get("problems") or [])
+            return {**answer, "text": f"The model's answer failed its checks: {problems}"}
+        text = written.get("answer_text")
+        return {**answer, "text": text} if isinstance(text, str) and text else answer
 
     def links(self, rid: str, accepted: list[str], rejected: list[str]) -> dict[str, Any]:
         from evidence import planrun
