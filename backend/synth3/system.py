@@ -6,16 +6,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from evaluation.planbatch import PLANNER_CACHE, orch_lm, saved_templates  # noqa: F401  (tests replace orch_lm)
+from evaluation.planbatch import (PLANNER_CACHE, has_unchecked, orch_lm, saved_templates,  # noqa: F401  (tests replace orch_lm)
+                                  sealed_complete, set_aside)
 from evidence.kindtext import kind_lines, plan_names
 from evidence.plan import Plan, load_plan, with_answer, write_plan
 from evidence.plankinds import answer_problems
-from evidence.planner import check_plan, critic, propose, using
+from evidence.planner import check_plan, confirm_all, critic, propose, using
+from evidence.planrun import run as planrun_run
 from evidence.words.write import write_words
 from modelcall import ModelCallError, redact
 from evidence.protocol import parse
 from evidence.rundir import ANSWER_FILE, PLAN_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
-from synth3.answers import MAX_TEXT, AnswerRecord, PaperIndex, cited_papers, pulled_facts
+from synth3.answers import MAX_TEXT, AnswerRecord, PaperIndex, cited_papers, pulled_facts, save_answer
 from synth3.questions import Question, answer_by_of, asked_sha256, question_sha256, target_of
 from synth3.questions import QuestionSet
 from synth3.sheetfacts import Folder
@@ -24,6 +26,7 @@ from synth3.spec import SPECS
 SYSTEM = "system"
 WRITTEN_FILE = "written-answer.json"
 PLANS = SPECS / "plans"
+MAX_WRITER_TRIES = 3
 
 
 def plan_path(root: Path, domain: str, qid: str) -> Path:
@@ -151,3 +154,125 @@ def from_system_run(run: Path, folder: Folder, q: Question, system: str = SYSTEM
                         facts=pulled_facts(run, folder), passages=[], source=str(run),
                         asked_sha256=asked_sha256(q), plan_confirmed_by=confirmed_by(plan),
                         facts_left_out=left_out)
+
+
+def run_path(results: Path, domain: str, seed: int, qid: str) -> Path:
+    return results / domain / "runs" / f"s{seed}" / qid
+
+
+def _without_system_stamps(plan: Plan) -> Plan:
+    return plan.model_copy(update={"decisions": [
+        d.model_copy(update={"confirmed_by": None, "confirmed_at": None}) if d.confirmed_by == SYSTEM else d
+        for d in plan.decisions]})
+
+
+def plan_to_run(draft: Plan, root: Path, domain: str, qid: str, *, as_system: bool) -> tuple[Plan | None, str | None]:
+    """The plan to run, or the reason to skip. A system copy (kept at `auto_path`) is never the draft file."""
+    open_ids = [d.id for d in draft.decisions if d.confirmed_by is None]
+    if not open_ids:
+        return draft, None
+    if not as_system:
+        return None, (f"decisions not confirmed by a person: {', '.join(open_ids)}; confirm the plan on /plan "
+                      "or pass --confirm-as-system")
+    path = auto_path(root, domain, qid)
+    try:
+        kept = load_plan(path) if path.is_file() else None
+    except ValueError:
+        kept = None
+    if kept is not None and _without_system_stamps(kept) == draft:
+        return kept, None
+    want = confirm_all(draft, SYSTEM)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_plan(want, path)
+    return want, None
+
+
+def _fresh(plan: Plan) -> Plan:
+    return plan.model_copy(update={"writer_try": 0})
+
+
+def _decide(run: Path, plan: Plan) -> tuple[str, int, bool]:
+    """What to do with the run folder: (what, writer_try, retry_errors); what is keep, new, redo, old or failed."""
+    if not run.exists():
+        return "new", 0, False
+    if not sealed_complete(run):
+        return "failed", 0, True
+    try:
+        had = load_plan(RunDir(run).file(PLAN_FILE))
+    except (ValueError, OSError):
+        return "failed", 0, True
+    if _fresh(had) != _fresh(plan):
+        return "old", 0, False
+    if plan.answer_by != "written":
+        return ("redo", had.writer_try, True) if has_unchecked(run) else ("keep", had.writer_try, False)
+    written = RunDir(run).try_json(WRITTEN_FILE)
+    if not isinstance(written, dict) or "failed" in written or has_unchecked(run):
+        return "redo", had.writer_try, True
+    if written.get("status") == "failed" and had.writer_try < MAX_WRITER_TRIES - 1:
+        return "redo", had.writer_try + 1, False
+    return "keep", had.writer_try, False
+
+
+def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, as_system: bool = False,
+               provider=None, workers: int = 3, runner=None) -> dict:
+    """Every question's confirmed plan run on the folder and collected for the judge. A finished run is kept;
+    failed, unsealed, changed or unchecked runs are set aside (never deleted) and run again."""
+    runner = runner or planrun_run
+    domain, seed = folder.spec.domain, folder.seed
+    out: dict = {"ran": [], "rerun": [], "kept": [], "skipped": {}, "failed": {}, "empty": [], "by_system": []}
+    templates = saved_templates()
+    for q in qs.questions:
+        path = plan_path(plans, domain, q.id)
+        if not path.is_file():
+            out["skipped"][q.id] = "no plan; run synth3 system-plan first"
+            continue
+        try:
+            draft = load_plan(path)
+        except ValueError as err:
+            out["skipped"][q.id] = redact(str(err))
+            continue
+        if (why := plan_stale(draft, q)) is not None:
+            out["skipped"][q.id] = why
+            continue
+        want = (answer_by_of(q), target_of(q))
+        if (draft.answer_by, draft.target) != want:
+            out["skipped"][q.id] = (f"the plan answers by {draft.answer_by}, the question asks for {want[0]}; "
+                                    "run synth3 system-plan")
+            continue
+        # answer_problems runs before anything that calls kind_protocol (the run does)
+        if found := [*check_plan(draft, templates), *answer_problems(draft)]:
+            out["skipped"][q.id] = "; ".join(found)
+            continue
+        plan, why = plan_to_run(draft, plans, domain, q.id, as_system=as_system)
+        if plan is None:
+            out["skipped"][q.id] = why
+            continue
+        run = run_path(results, domain, seed, q.id)
+        what, tries, retry = _decide(run, plan)
+        try:
+            if what == "keep":
+                out["kept"].append(q.id)
+            else:
+                if what != "new":
+                    set_aside(run, what)
+                file = run.with_suffix(".plan.json")
+                file.parent.mkdir(parents=True, exist_ok=True)
+                write_plan(plan.model_copy(update={"writer_try": tries}), file)
+                runner(file, folder.path, run.parent, cache=results / domain / "run-cache", run_id=q.id,
+                       reason="off", links="off", workers=workers, retry_errors=retry,
+                       **({"provider": provider} if provider else {}))
+                out["rerun" if what == "redo" else "ran"].append(q.id)
+        except Exception as err:  # noqa: BLE001  (one question's failure must not stop the next)
+            out["failed"][q.id] = redact(str(err))
+            continue
+        try:
+            rec = from_system_run(run, folder, q)
+        except ValueError as err:
+            out["failed"][q.id] = redact(str(err))
+            continue
+        save_answer(results, rec)
+        if not rec.text:
+            out["empty"].append(q.id)
+        if rec.plan_confirmed_by == SYSTEM:
+            out["by_system"].append(q.id)
+    return out
