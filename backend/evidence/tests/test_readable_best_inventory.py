@@ -39,6 +39,19 @@ def test_best_rebuilds_wins_ties_and_reasons():
     assert view["studies"][3]["reason"]["code"] == "too_few_kinds"
 
 
+def test_best_where_lower_is_better_rebuilds_and_prints_as_the_engine():
+    """M10: a measure where lower is better: the lower value wins, in the rebuild as in the engine."""
+    from evidence.kinds import best as best_kind
+    p = case_protocol("best", direction="lower")
+    assert best_kind.spec(p).metric.higher_is_better is False
+    ra = case_answer(p, {"S001": best_items("S001", {"rag": 0.7, "closed_book": 0.6}),
+                         "S002": best_items("S002", {"rag": 0.3, "closed_book": 0.5})}, "best")
+    view, lines = rebuilt(ra)
+    assert view == checked_view(ra) and "\n".join(lines) == answer_text(ra)
+    assert [s["winner"] for s in view["studies"]] == ["closed_book", "rag"]
+    assert inputs_of(ra).settings["higher_is_better"] is False
+
+
 def test_best_whole_number_values_are_compared_as_the_engine_stores_them():
     ra = case_answer(case_protocol("best"), {"S001": best_items("S001", {"rag": 45, "closed_book": 5})}, "best")
     view, lines = rebuilt(ra)
