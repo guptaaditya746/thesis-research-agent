@@ -15,6 +15,12 @@ def test_an_old_plan_keeps_its_dump_and_sha256():
     assert not {"sub_questions", "answer_by", "target", "writer_try"} & set(dumped)
     assert Plan.model_validate_json(old.model_dump_json()).answer_by == "lines"
 
+def test_explicit_defaults_stay_out_of_the_dump_and_the_sha256():
+    """m5: answer_by "lines" and writer_try 0 given on purpose are dumped and hashed as an old plan."""
+    explicit = Plan.model_validate({**make_plan().model_dump(mode="json"), "answer_by": "lines", "writer_try": 0})
+    assert not {"answer_by", "writer_try"} & set(explicit.model_dump(mode="json"))
+    assert explicit.sha256 == OLD_SHA and explicit.model_dump_json() == make_plan().model_dump_json()
+
 def test_new_fields_change_the_sha256_and_round_trip(tmp_path):
     p = with_answer(make_plan().model_copy(update={"sub_questions": ["Which papers measured it?"]}), "inventory", "metric")
     write_plan(p, tmp_path / "p.json")
