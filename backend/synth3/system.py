@@ -9,11 +9,12 @@ from pathlib import Path
 from evaluation.planbatch import (PLANNER_CACHE, has_unchecked, orch_lm, saved_templates,  # noqa: F401  (tests replace orch_lm)
                                   sealed_complete, set_aside)
 from evidence.kindtext import kind_lines, plan_names
-from evidence.plan import Plan, load_plan, with_answer, write_plan
+from evidence.plan import Plan, load_plan, with_answer
 from evidence.plankinds import answer_problems
 from evidence.planner import check_plan, confirm_all, critic, propose, using
 from evidence.planrun import run as planrun_run
 from evidence.words.write import write_words
+from jsonio import write_text_atomic
 from modelcall import ModelCallError, redact
 from evidence.protocol import parse
 from evidence.rundir import ANSWER_FILE, PLAN_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
@@ -35,6 +36,12 @@ def plan_path(root: Path, domain: str, qid: str) -> Path:
 
 def auto_path(root: Path, domain: str, qid: str) -> Path:
     return root / domain / "auto" / f"{qid}.json"
+
+
+def save_plan(plan: Plan, path: Path) -> None:
+    """The plan file, written atomically with the bytes the plan page writes (webapp/evplan.py)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_text_atomic(path, plan.model_dump_json(indent=2))
 
 
 def draft_plan(q: Question, lm, templates: Mapping[str, str]) -> Plan:
@@ -75,11 +82,10 @@ def plan_domain(domain: str, qs: QuestionSet, root: Path, lm, templates: Mapping
                 if old is not None:
                     _move_aside(path)
                 plan = draft_plan(q, redo_lm if q.id in redo else lm, templates)
-                path.parent.mkdir(parents=True, exist_ok=True)
-                write_plan(plan, path)
+                save_plan(plan, path)
                 out["drafted"].append(q.id)
             elif (old.answer_by, old.target) != (answer_by_of(q), target_of(q)):
-                write_plan(with_answer(old, answer_by_of(q), target_of(q)), path)
+                save_plan(with_answer(old, answer_by_of(q), target_of(q)), path)
                 out["rekinded"].append(q.id)
             else:
                 out["kept"].append(q.id)
@@ -182,8 +188,7 @@ def plan_to_run(draft: Plan, root: Path, domain: str, qid: str, *, as_system: bo
     if kept is not None and _without_system_stamps(kept) == draft:
         return kept, None
     want = confirm_all(draft, SYSTEM)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    write_plan(want, path)
+    save_plan(want, path)
     return want, None
 
 
@@ -256,8 +261,7 @@ def run_folder(folder: Folder, qs: QuestionSet, plans: Path, results: Path, *, a
                 if what != "new":
                     set_aside(run, what)
                 file = run.with_suffix(".plan.json")
-                file.parent.mkdir(parents=True, exist_ok=True)
-                write_plan(plan.model_copy(update={"writer_try": tries}), file)
+                save_plan(plan.model_copy(update={"writer_try": tries}), file)
                 runner(file, folder.path, run.parent, cache=results / domain / "run-cache", run_id=q.id,
                        reason="off", links="off", workers=workers, retry_errors=retry,
                        **({"provider": provider} if provider else {}))

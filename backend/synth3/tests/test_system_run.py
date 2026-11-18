@@ -68,6 +68,19 @@ def test_confirm_as_system_runs_a_copy_and_leaves_the_draft(folder, tmp_path, SP
     assert len(calls) == 3   # the copy is kept when the draft did not change, so the runs are kept
 
 
+def test_the_system_copy_and_the_run_plan_are_written_atomically(folder, tmp_path, SPEC, monkeypatch):
+    from synth3.tests.test_system_plan import atomic_writes
+    f, qs = setup(folder, tmp_path, SPEC, confirmed=None)
+    written = atomic_writes(monkeypatch)
+    out = run_folder(f, qs, tmp_path / "plans", tmp_path / "res", as_system=True, workers=1,
+                     runner=counting_runner([]))
+    assert sorted(out["ran"]) == ["d01", "d02", "d03"]
+    auto = auto_path(tmp_path / "plans", "demo", "d01")
+    ran = run_path(tmp_path / "res", "demo", 1, "d01").with_suffix(".plan.json")
+    assert auto in written and ran in written and len(written) == 6
+    assert auto.read_text(encoding="utf-8") == load_plan(auto).model_dump_json(indent=2)
+
+
 def test_a_second_run_keeps_complete_runs(folder, tmp_path, SPEC):
     f, qs = setup(folder, tmp_path, SPEC); calls = []
     run_folder(f, qs, tmp_path / "plans", tmp_path / "res", workers=1, runner=counting_runner(calls))

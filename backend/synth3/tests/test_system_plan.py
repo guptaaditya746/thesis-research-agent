@@ -70,6 +70,34 @@ def test_a_changed_kind_is_set_in_place(tmp_path, SPEC, monkeypatch):
     assert load_plan(plan_path(tmp_path, "demo", "d01")).answer_by == "effect"
 
 
+def atomic_writes(monkeypatch) -> list[Path]:
+    """Every plan file system.py writes, through jsonio.write_text_atomic; write_plan (not atomic) refuses."""
+    from jsonio import write_text_atomic
+    written: list[Path] = []
+
+    def record(path, text):
+        written.append(Path(path))
+        write_text_atomic(path, text)
+
+    def refuse(plan, path):
+        raise AssertionError(f"write_plan is not atomic: {path}")
+    monkeypatch.setattr(system, "write_text_atomic", record, raising=False)
+    monkeypatch.setattr(system, "write_plan", refuse, raising=False)
+    return written
+
+
+def test_drafted_and_rekinded_plans_are_written_atomically(tmp_path, SPEC, monkeypatch):
+    qs = load_questions("demo", SPEC, FIX); use_fake_draft(monkeypatch, SPEC)
+    written = atomic_writes(monkeypatch)
+    plan_domain("demo", qs, tmp_path, "lm", {})
+    edited = qs.model_copy(update={"questions": [qs.get("d01").model_copy(update={"kind": "effect"}),
+                                                 *qs.questions[1:]]})
+    assert plan_domain("demo", edited, tmp_path, "lm", {})["rekinded"] == ["d01"]
+    d01 = plan_path(tmp_path, "demo", "d01")
+    assert written.count(d01) == 2 and len(written) == 4
+    assert d01.read_text(encoding="utf-8") == load_plan(d01).model_dump_json(indent=2)   # the bytes evplan writes
+
+
 def test_a_failing_draft_is_listed_and_the_rest_go_on(tmp_path, SPEC, monkeypatch):
     use_fake_draft(monkeypatch, SPEC, fail={"d02"})
     out = plan_domain("demo", load_questions("demo", SPEC, FIX), tmp_path, "lm", {})
