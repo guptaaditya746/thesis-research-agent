@@ -62,3 +62,12 @@ def test_world_agent_prompt_does_not_change() -> None:
     old_f = packs.Field(json.loads(old))
     keys = ("setting", "kinds", "relations", "conflict_pairs", "world_notes")
     assert world._pack_text(LAW) == json.dumps({k: old_f.raw[k] for k in keys if k in old_f.raw}, indent=1)
+
+
+def test_a_paper_planned_twice_is_an_error() -> None:
+    """Review finding 9."""
+    w = copy.deepcopy(PILOT)
+    w["papers"]["L-04"] = copy.deepcopy(w["papers"]["L-01"])
+    errs = world.check(w, LAW, ARG)
+    assert "L-04: same claims as L-01 (a paper planned twice)" in errs
+    assert "L-04: same title as L-01 (a paper planned twice)" in errs

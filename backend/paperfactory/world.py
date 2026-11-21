@@ -81,6 +81,14 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
                 err.append(f"{pid}: conflict facts must be planted facts of the paper")
             if o1 != o2 or s1 == s2 or ((r1, r2) not in f.conflict_pairs and (r2, r1) not in f.conflict_pairs):
                 err.append(f"{pid}: conflict must be two subjects, one object, a conflict pair of relations")
+    # no paper twice (review finding 9: a paper the agent adds to fill a short batch may repeat an earlier one)
+    first: dict[tuple[str, str], str] = {}
+    for pid, p in papers.items():
+        claims = json.dumps(sorted(map(list, p.get("claims", []))))
+        for what, v in (("claims", claims), ("title", norm(str(p.get("title_hint", ""))).strip()),
+                        ("thesis", norm(str(p.get("thesis", ""))).strip())):
+            if v and v != "[]" and (other := first.setdefault((what, v), pid)) != pid:
+                err.append(f"{pid}: same {what} as {other} (a paper planned twice)")
     # the same pair must not get different relations in different papers (one world, one truth)
     seen: dict[tuple[str, str], str] = {}
     for pid, p in papers.items():
