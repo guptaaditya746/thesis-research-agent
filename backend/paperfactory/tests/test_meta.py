@@ -124,3 +124,41 @@ def test_check_redo_keeps_the_writers_meta(tmp_path: Path) -> None:
     meta.check_done(p, {"world": 2})
     assert not meta.write_stale(p, {"writer": "a"}, False, "w")
     assert meta.read(p)["inputs"]                                  # eval's same_settings still sees the writer part
+
+
+def test_each_paper_gets_its_meta_as_soon_as_it_is_written(tmp_path: Path, monkeypatch) -> None:
+    """Review finding 2: a run stopped in the middle of the write step keeps the papers already written."""
+    from paperfactory import write
+    s = law(tmp_path)
+    cli.run(s, ["world", "seed", "materials"])
+    first, *rest = list(PILOT["papers"])
+
+    def fake_write(s_, pid, template, attempt=1):
+        if pid != first:
+            raise KeyboardInterrupt                                     # the run stops here
+        p = s_.out_dir / "work" / pid / "paper.md"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("written")
+        return {"pid": pid, "status": "ok"}
+    monkeypatch.setattr(write, "write_one", fake_write)
+    monkeypatch.setattr(write, "pmap_papers", lambda fn, pids: [fn(p) for p in pids])
+    with pytest.raises(KeyboardInterrupt):
+        cli.run(s, ["write"])
+    paper = s.out_dir / "work" / first / "paper.md"
+    assert meta.read(paper)["inputs"]
+    assert not meta.write_stale(paper, cli.write_inputs(s, first, s.out_dir / "template_argument_6p"), False, "w")
+
+
+def test_a_kept_legacy_paper_is_not_rewritten_after_its_check(tmp_path: Path) -> None:
+    """Review finding 2b: --allow-mixed keeps a paper without meta; its check meta must not make it look changed."""
+    work = tmp_path / "work" / "P1"
+    p = work / "paper.md"
+    work.mkdir(parents=True)
+    p.write_text("legacy")
+    assert not meta.write_stale(p, {"writer": "a"}, True, "w")
+    (work / "paper.raw.md").write_text("legacy")
+    (work / "paper.repairs.json").write_text("{}")
+    meta.check_done(p, {"world": 1})
+    assert not meta.write_stale(p, {"writer": "a"}, True, "w")              # still legacy: kept, not rewritten
+    with pytest.raises(meta.MixedSettings):
+        meta.write_stale(p, {"writer": "a"}, False, "w")                    # and without the flag: a clear stop

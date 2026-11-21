@@ -151,7 +151,7 @@ def write_stale(paper: Path, inputs: dict[str, Any], allow_mixed: bool, what: st
     if not paper.is_file():
         return False
     m = read(paper)
-    if m is None:
+    if m is None or "inputs" not in m:     # no meta, or only a check part (a legacy paper kept with allow_mixed)
         legacy(what, paper, allow_mixed)
         return False
     why = diff(m.get("inputs"), inputs)

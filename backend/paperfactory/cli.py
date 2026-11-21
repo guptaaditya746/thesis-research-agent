@@ -101,11 +101,12 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                 print(f"write {pid}: old paper kept as", meta.set_aside(out / "work" / pid).name)
                 for log in (out / "work").glob(f"{pid}.*"):       # its call logs go too (cost report, #13)
                     meta.set_aside(log)
-        res = write.write_all(s, w, f, g)
-        for r in res:
-            if r["status"] == "ok":
-                meta.write_done(paper(r["pid"]), write_inputs(s, r["pid"], template))
-        print("write:", json.dumps(res))
+        def write_paper(pid: str) -> dict[str, Any]:
+            r = write.write_one(s, pid, template)
+            if r["status"] == "ok":              # saved per paper at once: a stop later in the step keeps it
+                meta.write_done(paper(pid), write_inputs(s, pid, template))
+            return r
+        print("write:", json.dumps(write.pmap_papers(write_paper, list(w["papers"]))))
     if "check" in steps:                 # papers must agree with the world (repair.py)
         def redo(pid: str) -> str | None:
             r = write.write_one(s, pid, template, attempt=2)

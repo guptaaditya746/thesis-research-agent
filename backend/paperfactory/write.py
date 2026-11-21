@@ -17,7 +17,6 @@ from typing import Any
 from repo_paths import REPO
 
 from paperfactory.llm import slot_dir
-from paperfactory.packs import Field, Genre, render_template
 
 PO = REPO / "external" / "paperorchestra"
 
@@ -48,12 +47,6 @@ def write_one(s, pid: str, template: Path, attempt: int = 1) -> dict[str, Any]:
         code = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, cwd=REPO).returncode
     ok = code == 0 and (out / "paper.md").is_file()
     return {"pid": pid, "status": "ok" if ok else f"failed (exit {code}, see work/{pid}{tag}.out)"}
-
-
-def write_all(s, w: dict[str, Any], f: Field, g: Genre) -> list[dict[str, Any]]:
-    template = render_template(f, g, s.pages, s.out_dir / f"template_{g.name}_{s.pages}p")
-    with ThreadPoolExecutor(3) as ex:
-        return list(ex.map(lambda pid: write_one(s, pid, template), w["papers"]))
 
 
 def pmap_papers(fn, pids: list[str]) -> list[Any]:
