@@ -182,13 +182,29 @@ every name (people, parties, places, products, institutions), and do not reuse n
 companies or laws. Real concepts (areas of law, diseases, properties, methods) are fine. Follow the field notes.
 Return entities with ids (short, unique, upper-case letters and digits), kind, label (full name), alt (short names a
 paper would use; each must be unique across all entities) and attrs (exactly the listed attributes)."""
-PAPER_SYS = """You plan papers for a fictional research world. Each paper argues one thesis about the entities given.
+# v1 (until 22 Nov 2026): allowed a decoy with "same entities, other relation", which world.check rejects (one pair,
+# one relation); in the Qwen smoke runs medicine and materials failed on exactly that, twice each
+PAPER_SYS_V1 = """You plan papers for a fictional research world. Each paper argues one thesis about the entities given.
 For each paper give a title hint, the issue, the thesis, the claims (facts the paper is about) and the decoys
 (other true facts of the same world it also states, near-misses of the claims: same entities, other relation, or
 same relation, other entity). Facts are [subject id, relation, object id] using ONLY the given ids and relations,
 and must respect each relation's allowed object kinds and the time order. A pair (subject, object) has ONE relation
 in the whole world: reuse the relation if a pair already appears. When asked, add a conflict: two planted facts of
 the paper, different subjects, the same object, relations from a conflict pair."""
+PAPER_SYS = """You plan papers for a fictional research world. Each paper argues one thesis about the entities given.
+For each paper give a title hint, the issue, the thesis, the claims (facts the paper is about) and the decoys (other
+true facts of the same world that the paper also states).
+Facts are [subject id, relation, object id], using ONLY the given ids and relations; each must respect the
+relation's allowed object kinds and the time order (a subject relates only to an earlier one).
+Rules:
+1. One pair, one relation: a pair (subject, object) gets ONE relation in the whole world. Within a paper, every fact
+   has a different pair. If a pair is in FACTS ALREADY USED, reuse its relation or do not use the pair.
+2. A decoy is a near miss of a claim: the SAME relation and exactly ONE entity different (another subject of the same
+   kind, or another object of the same kind). Never the same two entities with another relation (that breaks rule 1).
+3. When asked, add a conflict: two planted facts of the paper with different subjects, the SAME object, and the two
+   relations of a conflict pair.
+Example (ids only): claim [A1, r1, B1] -> decoy [A2, r1, B1] or [A1, r1, B2]; never [A1, r2, B1].
+Conflict: [A1, r1, B1] and [A3, r2, B1] where (r1, r2) is a conflict pair."""
 
 
 def _schema_entities(f: Field) -> dict[str, Any]:
@@ -219,8 +235,11 @@ def _pack_text(f: Field) -> str:
                        if k in f.raw}, indent=1)
 
 
+PAPER_REPAIRS = 2      # repair calls per batch of papers (each gets the errors of the last answer)
+
+
 def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
-    """World agent: entities (1 call + 1 repair), then papers in batches of 5 (1 call + 1 repair each)."""
+    """World agent: entities (1 call + 1 repair), then papers in batches of 5 (1 call + PAPER_REPAIRS repairs)."""
     n_subj = max(8, s.papers * 2)
     user = (f"FIELD PACK:\n{_pack_text(f)}\n\nMake about {n_subj} entities of kind "
             f"{'/'.join(f.subject_kinds)} and enough of the other kinds (see the notes). Random seed: {s.seed}.")
@@ -246,7 +265,7 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
                 f"different entities and issues.")
         step = f"world:papers:{b}"
         got = _top_up(_need(call("world", step, PAPER_SYS, user, PAPERS_SCHEMA), step), n, user, call, step)
-        for attempt in range(2):
+        for attempt in range(1 + PAPER_REPAIRS):
             trial = dict(w, papers=dict(w["papers"]))
             for i, p in enumerate(got["papers"][:n]):
                 trial["papers"][f"{prefix}-{b + i + 1:02d}"] = {k: v for k, v in p.items() if v or k != "conflict"}
@@ -254,9 +273,10 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
             if not errs:
                 w = trial
                 break
-            if attempt:
-                raise ValueError(f"papers {b + 1}-{b + n} failed the checks after one repair:\n" + "\n".join(errs[:40]))
-            rstep = f"{step}:repair"
+            if attempt == PAPER_REPAIRS:
+                raise ValueError(f"papers {b + 1}-{b + n} failed the checks after {PAPER_REPAIRS} repairs:\n"
+                                 + "\n".join(errs[:40]))
+            rstep = f"{step}:repair" + (f":{attempt + 1}" if attempt else "")
             got = _top_up(_need(call("world", rstep, PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
                                      + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA), rstep),
                           n, user, call, rstep)

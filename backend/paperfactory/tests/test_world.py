@@ -46,3 +46,19 @@ def test_still_missing_after_two_tries_is_a_clear_error(tmp_path: Path) -> None:
 
 def test_check_counts_papers() -> None:
     assert any("need 4" in e for e in world.check(PILOT, LAW, ARG, n_papers=4))
+
+
+def test_two_repairs_for_a_batch_and_the_decoy_rule_in_the_prompt(tmp_path: Path) -> None:
+    """Qwen smoke medicine/materials: decoys with the same pair and another relation failed after one repair."""
+    assert "Never the same two entities with another relation" in world.PAPER_SYS
+    bad = copy.deepcopy(PAPERS)
+    bad[0]["decoys"][0] = [bad[0]["claims"][0][0], "rejects", bad[0]["claims"][0][2]]   # same pair, other relation
+    answers = [{"papers": copy.deepcopy(bad)}, {"papers": copy.deepcopy(bad)}, {"papers": copy.deepcopy(PAPERS)}]
+    seen: list[str] = []
+
+    def call(role, step, system, user, schema, check=None):
+        seen.append(step)
+        return copy.deepcopy(ENTS) if step == "world:entities" else answers.pop(0)
+    w = world.draft(config.Settings("law", "argument", papers=3, out=str(tmp_path)), LAW, ARG, call)
+    assert world.check(w, LAW, ARG, n_papers=3) == []
+    assert seen == ["world:entities", "world:papers:0", "world:papers:0:repair", "world:papers:0:repair:2"]
