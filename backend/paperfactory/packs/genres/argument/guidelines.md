@@ -10,10 +10,10 @@
 - Abstract: one paragraph of 150 to 250 words.
 - Sources: name each {SUBJECT_KIND} in full the first time (as `experimental_log.md` gives it), later by a short
   name. Name every source exactly as `experimental_log.md` does.
-- Holdings: state what each {SUBJECT_KIND} did with each source with exactly the meaning `experimental_log.md`
-  gives, but in your own, varied words. Never reuse one fixed phrase for several holdings and never copy the
-  log's wording. Never invent a {SUBJECT_KIND}, a source or a holding, and never change who did what.
-- Every holding listed in `experimental_log.md` must be stated at least once and at most
+- {FACTS_CAP}: state what each {SUBJECT_KIND} did with each source with exactly the meaning `experimental_log.md`
+  gives, but in your own, varied words. Never reuse one fixed phrase for several {FACTS} and never copy the
+  log's wording. Never invent a {SUBJECT_KIND}, a source or a {FACT}, and never change who did what.
+- Every {FACT} listed in `experimental_log.md` must be stated at least once and at most
   {MAX_MENTIONS} times, in prose.
 - References: no reference list, no citations of scholarly work, no author names, no `[1]`.
 - Anonymity: no author names, affiliations, funding or acknowledgements.

@@ -10,7 +10,7 @@ import textwrap
 from pathlib import Path
 from typing import Any
 
-from paperfactory.packs import Field, Genre, fill
+from paperfactory.packs import Field, Genre, fill, word_values
 
 
 def _name(w: dict[str, Any], eid: str) -> str:
@@ -28,7 +28,6 @@ def _attrs(w: dict[str, Any], f: Field, eid: str) -> str:
 
 def materials(w: dict[str, Any], f: Field, g: Genre, pid: str) -> tuple[str, str]:
     p = w["papers"][pid]
-    words = f.words
     fact, facts_w, action = f.word("fact"), f.word("facts"), f.word("action")
     facts = p["claims"] + p["decoys"]
     ents = sorted({x for s, _, o in facts for x in (s, o)})
@@ -66,7 +65,7 @@ An analysis of the {f.word('subject_plural')} listed in the log, read against th
         (s1, r1, o1), (s2, r2, _) = p["conflict"]
         lines += ["", "## 4. Conflict", f"* {_name(w, s1)} ({f.rel_words(r1)}) and {_name(w, s2)} ({f.rel_words(r2)}) "
                   f"disagree about {_name(w, o1)}."]
-    plan = [fill(x, {k.upper(): v for k, v in words.items()}) for x in g.raw.get("argument_plan", [])]
+    plan = [fill(x, word_values(f)) for x in g.raw.get("argument_plan", [])]
     lines += ["", "## 5. Argument Plan"] + [f"* {x}" for x in plan] + [
         "", "## 6. Rules",
         f"* Do not invent {f.word('source_kinds')}, {facts_w}, dates or quotations.",

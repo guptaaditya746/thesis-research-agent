@@ -10,6 +10,6 @@
  "argument_plan": [
   "Set out the issue and the relevant sources.",
   "Analyse the {SUBJECT_PLURAL} in time order and what each did with each source.",
-  "Defend the thesis; then state the strongest counter-argument and answer it from the holdings."
+  "Defend the thesis; then state the strongest counter-argument and answer it from the {FACTS}."
  ]
 }

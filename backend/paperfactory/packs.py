@@ -58,11 +58,17 @@ def fill(text: str, values: dict[str, Any]) -> str:
     return text
 
 
+def word_values(f: Field) -> dict[str, str]:
+    """{KEY: word, KEY_CAP: Word} for every field word, for {PLACEHOLDERS} in genre texts."""
+    return {k.upper(): v for k, v in f.words.items()} | {k.upper() + "_CAP": v[:1].upper() + v[1:]
+                                                          for k, v in f.words.items()}
+
+
 def render_template(f: Field, g: Genre, pages: int, dest: Path) -> Path:
     """Genre template + guidelines with the field's words and the page length filled in -> dest (PaperOrchestra's
     --template_dir). {TITLE} stays for PaperOrchestra."""
     lo, hi = g.raw["words_per_page"]
-    values = {k.upper(): v for k, v in f.words.items()} | {
+    values = word_values(f) | {
         "PAGES": pages, "WORDS_LO": pages * lo, "WORDS_HI": pages * hi,
         "MAX_MENTIONS": g.raw.get("max_mentions_per_fact", 3)}
     dest.mkdir(parents=True, exist_ok=True)

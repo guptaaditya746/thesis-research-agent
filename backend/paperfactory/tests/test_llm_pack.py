@@ -1,6 +1,8 @@
 """The llm field pack (DRAFT) on a tiny hand-written world: checks, seed + gold, materials. No model calls."""
 from __future__ import annotations
 
+import pytest
+
 from paperfactory import materials, packs, seed, world
 from paperfactory.tests.test_field_words import LAW_TERMS
 from paperfactory.tests.test_offline import ARG
@@ -69,9 +71,17 @@ def test_tiny_llm_world_materials_use_field_words() -> None:
     assert not LAW_TERMS.search(str(LLM.words)), LAW_TERMS.findall(str(LLM.words))
     for pid in WORLD["papers"]:
         idea, log = materials.materials(WORLD, LLM, ARG, pid)
-        own = idea + log.split("## 5. Argument Plan")[0]    # section 5 is the genre pack's plan (it says "holdings")
+        own = idea + log                                    # the genre pack's plan too (it now uses {FACTS})
         assert "{" not in log and not LAW_TERMS.search(own), LAW_TERMS.findall(own)
     _, log = materials.materials(WORLD, LLM, ARG, "LLM-01")
     assert "| the Orlen 2021 study | reported a gain from | Lattice Echo prompting |" in log
     assert "model: Tamsel-13B; benchmark: the Corvane-QA benchmark" in log
     assert "## 4. Conflict" in log
+
+
+@pytest.mark.parametrize("name", ["medicine", "materials", "llm"])
+def test_genre_texts_carry_no_law_words(name: str, tmp_path) -> None:
+    """The genre pack's guidelines and plan use field words ({FACTS}), not "holdings"."""
+    d = packs.render_template(packs.field(name), ARG, 6, tmp_path)
+    text = (d / "guidelines.md").read_text() + (d / "template.md").read_text()
+    assert "olding" not in text and "{" not in text.replace("{TITLE}", "")
