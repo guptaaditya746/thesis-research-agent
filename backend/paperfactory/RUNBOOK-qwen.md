@@ -65,15 +65,18 @@ srun --jobid <JOB> --overlap ops/injob.sh bash -c \
 
 `orch-model` must be in the list; otherwise STOP.
 
-## 2. Smoke test: 3 law papers (about 1-2 hours)
+## 2. Smoke tests: 3 papers in each field (about 1-2 hours per field)
+
+One field at a time, in this order: law, llm, medicine, materials (llm, medicine and materials packs are DRAFTS:
+they have never run). For each FIELD:
 
 ```bash
-CFG=backend/paperfactory/configs/qwen/smoke-law.json
+CFG=backend/paperfactory/configs/qwen/smoke-FIELD.json
 srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory run --config $CFG --steps world
 srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory check-world --config $CFG \
-     --world runs/paperfactory/qwen-smoke-law/world.json
+     --world runs/paperfactory/qwen-smoke-FIELD/world.json > runs/paperfactory/qwen-smoke-FIELD.world-check.txt
 nohup srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory run --config $CFG \
-     > runs/paperfactory/qwen-smoke-law.log 2>&1 &
+     > runs/paperfactory/qwen-smoke-FIELD.log 2>&1 &
 ```
 
 Expected and fine: "warning: writer, rewriter, judge, verifier share the model orch-model". Decoy warnings from
@@ -81,25 +84,29 @@ check-world are fine (write them in the log).
 
 Pass when all hold: report.json exists; `papers_written` = 3; no paper in `papers_failed_world_check`;
 `qa_summary.parse_errors` = 0; in calls.jsonl fewer than 10% of rows have `"parse_error": true`; no row has
-`"skipped": "context_window"`. Otherwise STOP and log the numbers and the first three error messages.
+`"skipped": "context_window"`.
+
+A field that fails: log the numbers, the first three error messages and, for each failed paper, its open flags
+(`python3 -c "import json;print(json.dumps(json.load(open('runs/paperfactory/qwen-smoke-FIELD/work/PAPER/paper.repairs.json'))['open_flags'],indent=1))"`),
+then go on with the next field (do not rerun it). After all four fields, STOP and wait for Aditya: the 20-paper runs
+(section 3) start only when he says so.
 
 Useful checks:
 
 ```bash
-python3 -c "import json;r=[json.loads(l) for l in open('runs/paperfactory/qwen-smoke-law/calls.jsonl')];print(len(r),'calls',sum(x['parse_error'] for x in r),'parse errors',sum(bool(x.get('skipped')) for x in r),'skipped')"
-python3 -c "import json;r=json.load(open('runs/paperfactory/qwen-smoke-law/report.json'));print(json.dumps({k:r[k] for k in ('papers_written','papers_planned','papers_failed_world_check','verifier_test','judge_validation','qa_summary','bm25_baseline','style_leak')},indent=1)[:3000])"
+python3 -c "import json;r=[json.loads(l) for l in open('runs/paperfactory/qwen-smoke-FIELD/calls.jsonl')];print(len(r),'calls',sum(x['parse_error'] for x in r),'parse errors',sum(bool(x.get('skipped')) for x in r),'skipped')"
+python3 -c "import json;r=json.load(open('runs/paperfactory/qwen-smoke-FIELD/report.json'));print(json.dumps({k:r[k] for k in ('papers_written','papers_planned','papers_failed_world_check','verifier_test','judge_validation','qa_summary','bm25_baseline','style_leak')},indent=1)[:3000])"
 ```
 
-### 2a. Rerun after the 22 Nov fix (first smoke run stopped at LAW-01)
+### 2a. Law: rerun after the 22 Nov fix (first smoke run stopped at LAW-01)
 
-The first smoke run lost LAW-01 to a false alarm: the check flagged the ordinary opening "This paper examines ...".
-That rule is gone (and "The notes ..." is now caught at a sentence start too). Run the smoke test again with the same
-`nohup srun ... run --config $CFG` command from section 2 (git pull first). It prints "world: settings changed
+The first law smoke run lost LAW-01 to a false alarm: the check flagged the ordinary opening "This paper examines
+...". That rule is gone (and "The notes ..." is now caught at a sentence start too). Run the law smoke test again
+with the same `nohup srun ... run --config $CFG` command (git pull first). It prints "world: settings changed
 (field_pack, genre_pack); doing it again" once: the way the world's inputs are recorded changed, so this one rerun
-makes a new world and new papers (the old ones are kept as *.stale-1). That is expected; apply the section 2 pass
-rules to the new report.
+makes a new world and new papers (the old ones are kept as *.stale-1). That is expected.
 
-## 3. The four pilot datasets (20 papers each, one field at a time)
+## 3. The four pilot datasets (20 papers each, one field at a time): ONLY when Aditya says so
 
 Order: law, llm, medicine, materials (llm, medicine and materials packs are DRAFTS: they have never run). For each
 FIELD:
