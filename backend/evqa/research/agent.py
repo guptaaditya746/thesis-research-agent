@@ -46,37 +46,6 @@ class Pick(BaseModel):
     why: str = ""
 
 
-class ResearchStepR1(dspy.Signature):
-    # r1 (first real run, 21 Nov): Qwen copied the Normal example query verbatim for both briefs and searched
-    # once, also for a drug-naive brief (wrong population). Kept for the record; r2 below is used.
-    """Decide the next step of a literature search for a trial report: search once more, or finish and pick papers.
-
-    Inputs: study describes the trial (the drug is called "the study drug"). queries_tried lists earlier queries.
-    results lists papers found so far: id, title, year, venue, license, abstract_start. searches_left is how many
-    searches remain. feedback is empty, or says why the previous step was rejected; fix that in this step.
-    Output: action "search" with query (at most 12 words, new, about the drug class, design, population or
-    outcomes; never a drug name) and picks []; or action "done" with query "" and picks. Each pick is {id, use,
-    why}: id copied from results; use "style" for an open-licensed (cc by / cc0) trial report whose abstract is a
-    good model of how to write such a report, "reference" for a paper the Introduction or Related Work can cite
-    (same disease, similar add-on design or outcomes). At most 2 style and 4 reference picks; why is one sentence.
-
-    Normal: results empty -> action "search", query "placebo-controlled add-on to metformin type 2 diabetes HbA1c
-    randomized trial".
-    Confusing: results hold a meta-analysis and an unrelated obesity trial only -> action "search" with a different
-    query (e.g. "dose-ranging trial glucose-lowering drug metformin background"); a style pick needs a licence.
-    Missing: searches_left 0 or nothing relevant after several searches -> action "done" with the relevant picks
-    found so far, or picks [] when none is relevant.
-    """
-    study: str = dspy.InputField()
-    queries_tried: str = dspy.InputField()
-    results: str = dspy.InputField()
-    searches_left: int = dspy.InputField()
-    feedback: str = dspy.InputField()
-    action: Literal["search", "done"] = dspy.OutputField()
-    query: str = dspy.OutputField()
-    picks: list[Pick] = dspy.OutputField()
-
-
 class ResearchStep(dspy.Signature):
     """Decide the next step of a literature search for a trial report: search once more, or finish and pick papers.
 

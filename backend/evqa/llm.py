@@ -15,7 +15,7 @@ import time
 import urllib.error
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Protocol, TypeVar
+from typing import Any, TypeVar
 
 from evqa.paths import CACHE, LLM_LOG
 from evqa import slots
@@ -44,12 +44,6 @@ def service_failed(exc: BaseException) -> bool:
     if isinstance(exc, urllib.error.HTTPError):
         return exc.code not in (400, 413)
     return isinstance(exc, (OSError, http.client.HTTPException, subprocess.SubprocessError, LLMError, LMError))
-
-
-class JsonLM(Protocol):
-    model: str
-
-    def __call__(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]: ...
 
 
 def call_key(model: str, system: str, user: str, schema: dict[str, Any]) -> str:

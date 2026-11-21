@@ -221,11 +221,6 @@ def best_by(qtype: str, subjects: list[str], question: str) -> str | None:
     raise SpecError(f"best question with one subject and no dose to compare: {question!r}")
 
 
-# ---------------------------------------------------------------- 2. open points
-def open_point_ids(fixed: dict[str, str], by: str | None) -> list[str]:
-    return [p for p in POINTS if p not in fixed and not (by == "dose" and p == "dose")]
-
-
 # ---------------------------------------------------------------- 3 + 4. names
 def _clean(names: list[Any], label: str) -> list[str]:
     seen, out = {label.lower()}, []
