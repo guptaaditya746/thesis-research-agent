@@ -481,20 +481,30 @@ Use the whole paper to decide. Pick exactly one number."""
             pool = self.rng.sample(two, min(k - 1, len(two)))
             pool += one[:k - 1 - len(pool)] + [gi]
             self.rng.shuffle(pool)
-            trials.append((n, pid, [S[j][2] for j in pool], pool.index(gi), len(pool)))
+            trials.append((n, pid, [S[j][2] for j in pool], pool.index(gi), len(pool), i))
 
         def run(tr: tuple) -> tuple[bool, float] | None:
-            n, pid, texts, gold, size = tr
+            n, pid, texts, gold, size, _ = tr
             lst = "\n".join(f"{j}. {s}" for j, s in enumerate(texts))
             check = lambda out: None if 0 <= out["pick"] < size else f"pick a number from 0 to {size - 1}"  # noqa: E731
             got = self.call("leak", f"leak:{n}", self.LEAK_SYS, f"PAPER:\n{self.paper(pid)}\n\nSENTENCES:\n{lst}",
                             LeakOut, check)
-            return (got["pick"] == gold, 1 / size) if got else None
+            return (got["pick"] == gold, 1 / size, got["pick"]) if got else None
         every = pmap(run, trials, self.s.parallel)
         res = [x for x in every if x is not None]
-        h, n = sum(x for x, _ in res), len(res)
+        h, n = sum(x[0] for x in res), len(res)
+        # for diagnosis: what the model picked in each hit, and how often a planted sentence copies the pack's
+        # relation words (e.g. "reported a gain from") word for word
+        hits = [{"trial": tr[0], "paper": tr[1], "fact": tr[5], "planted": tr[2][tr[3]][:300]}
+                for tr, x in zip(trials, every) if x and x[0]]
+        spans = [(pid, i, s_[2]) for pid, t in tagged.items() for i, sp in t["spans"].items()
+                 for s_ in t["sentences"] if [s_[0], s_[1]] in sp]
+        verbatim = [x for x in spans if self.f.rel_words(self.facts[x[1]]["r"]).lower() in x[2].lower()]
         return {"trials": n, "parse_errors": len(every) - n, "hits": h, "rate": round(h / max(1, n), 3),
-                "ci95": wilson(h, n), "chance": round(sum(c for _, c in res) / max(1, n), 3), "bar": 0.10}
+                "ci95": wilson(h, n), "chance": round(sum(x[1] for x in res) / max(1, n), 3), "bar": 0.10,
+                "hit_sentences": hits,
+                "planted_with_pack_words": {"sentences": len(spans), "verbatim": len(verbatim),
+                                            "share": round(len(verbatim) / max(1, len(spans)), 3)}}
 
     # -------------------------------------------------------------- all
     def run(self) -> dict[str, Any]:

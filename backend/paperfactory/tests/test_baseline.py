@@ -50,3 +50,22 @@ def test_a_failed_paper_is_cut_from_questions_not_the_questions_dropped() -> Non
     assert [(q["id"], q["papers"], q["gold"]) for q in out] == [("P1:t", ["P1"], ["A"]), ("P3:t", ["P3"], ["C"])]
     assert rescoped[0] == {"id": "P1:t", "papers_removed": ["P2"], "gold_removed": ["B"]}
     assert {d["id"]: d["reason"] for d in dropped} == {"P2:t": "own paper left out", "P1:u": "no gold left"}
+
+
+def test_leak_report_shows_hit_sentences_and_copied_pack_words(tmp_path) -> None:
+    from paperfactory import config
+    from paperfactory.evaluate import Eval
+    _, gold = seed.make(PILOT, LAW, per_question=3, seed=1)
+    sents = ["Rusk relied on section 14 of the Act.", "Marrin v. Tolst Media and Rusk are cited.",
+             "The court in Rusk discussed Marrin at length."]
+    t = tagged(sents, {"K5-relies_on-S14": [0]})
+    s = config.Settings("law", "argument", out=str(tmp_path), leak_trials=2)
+    (tmp_path / "work" / "L-01").mkdir(parents=True)
+    (tmp_path / "work" / "L-01" / "paper.md").write_text(" ".join(sents))
+
+    def call(role, step, system, user, out, check=None):
+        lines = user.split("SENTENCES:\n")[1].splitlines()
+        return {"pick": next(int(x.split(".")[0]) for x in lines if "section 14" in x)}
+    r = Eval(s, PILOT, LAW, gold, call).leak({"L-01": t})
+    assert r["hits"] == 2 and r["hit_sentences"][0]["planted"] == sents[0]
+    assert r["planted_with_pack_words"] == {"sentences": 1, "verbatim": 1, "share": 1.0}     # "relied on"
