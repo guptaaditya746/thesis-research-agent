@@ -340,5 +340,7 @@ def po_runner(fields: dict[str, Any]) -> tuple[Callable[[str, str, dict[str, Any
         return {"output": got.get("raw"), "reject_reason": got.get("reject_reason"), "cost_usd": got["cost_usd"],
                 "cost_source": got["cost_source"], "served_model": got.get("served_model"),
                 "input_tokens": got.get("input_tokens"), "output_tokens": got.get("output_tokens")}
-    label = rm.model if rm.backend == "claude_cli" else f"{rm.backend}:{rm.model}@{rm.url}"
+    # the label is PaperOrchestra's cache key: it must change whenever the answers can (review finding 3); claude_cli
+    # gets no max_tokens (run_claude does not pass it), the openai backend does
+    label = rm.model if rm.backend == "claude_cli" else f"{rm.backend}:{rm.model}@{rm.url}#max_tokens={rm.max_tokens}"
     return runner, label

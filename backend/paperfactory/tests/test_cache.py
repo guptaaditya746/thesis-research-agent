@@ -70,3 +70,18 @@ def test_no_cache_and_clear_one_step(tmp_path: Path) -> None:
     assert c.clear("verify:") == 1 and len(files_in(s)) == 1
     c("judge", "qa:Q1", "sys", "u2", SCHEMA)
     assert len(b.seen) == 3                                               # the other step is still cached
+
+
+def test_writer_cache_follows_the_writer_settings(tmp_path: Path) -> None:
+    """Review finding 3: a changed writer setting must not give back PaperOrchestra's old cached paper."""
+    from paperfactory import meta, write
+    lab = lambda **kw: llm.po_runner({"model": "m", "backend": "openai", "base_url": "http://x", **kw})[1]  # noqa: E731
+    assert lab(max_tokens=100) != lab(max_tokens=200)
+    assert llm.po_runner({"model": "claude-haiku-5-5"})[1] == "claude-haiku-5-5"      # old claude cache stays valid
+    s = settings(tmp_path)
+    assert write.po_cache(s, 1, True).name == "po"
+    fresh = write.po_cache(s, 1, False)
+    assert fresh.name == "po-nocache-1" and not fresh.exists()
+    a = settings(tmp_path, writer={"model": "claude-haiku-5-5", "max_tokens": 100})
+    b = settings(tmp_path, writer={"model": "claude-haiku-5-5", "max_tokens": 200})
+    assert meta.role(a, "writer") == meta.role(b, "writer")          # claude_cli ignores max_tokens: no paid redo

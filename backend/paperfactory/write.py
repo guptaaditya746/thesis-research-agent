@@ -24,7 +24,7 @@ PO = REPO / "external" / "paperorchestra"
 PROMPT_VERSION = "v1n"     # PaperOrchestra's v1 + the rule that the materials are not a source (C10)
 
 
-def write_one(s, pid: str, template: Path, attempt: int = 1) -> dict[str, Any]:
+def write_one(s, pid: str, template: Path, attempt: int = 1, use_cache: bool = True) -> dict[str, Any]:
     """attempt 1 -> work/<pid>; attempt n > 1 (a whole-paper redo, repair.py) -> work/<pid>/redo-<n> with a fresh
     PaperOrchestra cache, so the redo is a new paper and not the cached one."""
     out = s.out_dir / "work" / pid if attempt == 1 else s.out_dir / "work" / pid / f"redo-{attempt}"
@@ -37,7 +37,7 @@ def write_one(s, pid: str, template: Path, attempt: int = 1) -> dict[str, Any]:
            "--raw_materials_dir", str(s.out_dir / "papers" / pid), "--output_dir", str(out),
            "--template_dir", str(template), "--writer_model_name", rm.model,
            "--backend_json", json.dumps(asdict(rm)), "--prompt_version", PROMPT_VERSION,
-           "--cache_dir", str(s.out_dir / "cache" / ("po" if attempt == 1 else f"po-attempt-{attempt}")),
+           "--cache_dir", str(po_cache(s, attempt, use_cache)),
            "--lock_dir", str(slot_dir(s.slots, rm)),
            "--max_parallel", str(rm.max_parallel),
            "--log_path", str(s.out_dir / "work" / f"{pid}{tag}.log.jsonl"), "--max_reflections", "1",
@@ -47,6 +47,17 @@ def write_one(s, pid: str, template: Path, attempt: int = 1) -> dict[str, Any]:
         code = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, cwd=REPO).returncode
     ok = code == 0 and (out / "paper.md").is_file()
     return {"pid": pid, "status": "ok" if ok else f"failed (exit {code}, see work/{pid}{tag}.out)"}
+
+
+def po_cache(s, attempt: int, use_cache: bool) -> Path:
+    """PaperOrchestra's cache folder. use_cache=False (--no-cache): a new empty folder, so nothing old is read."""
+    base = s.out_dir / "cache" / ("po" if attempt == 1 else f"po-attempt-{attempt}")
+    if use_cache:
+        return base
+    n = 1
+    while (fresh := base.with_name(f"{base.name}-nocache-{n}")).exists():
+        n += 1
+    return fresh
 
 
 def pmap_papers(fn, pids: list[str]) -> list[Any]:

@@ -133,7 +133,7 @@ def test_each_paper_gets_its_meta_as_soon_as_it_is_written(tmp_path: Path, monke
     cli.run(s, ["world", "seed", "materials"])
     first, *rest = list(PILOT["papers"])
 
-    def fake_write(s_, pid, template, attempt=1):
+    def fake_write(s_, pid, template, attempt=1, use_cache=True):
         if pid != first:
             raise KeyboardInterrupt                                     # the run stops here
         p = s_.out_dir / "work" / pid / "paper.md"

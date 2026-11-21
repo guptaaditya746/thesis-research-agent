@@ -54,7 +54,8 @@ def dir_hash(d: Path) -> str | None:
 def role(s, name: str) -> dict[str, Any]:
     """The fields of a role that shape its answers (not timeout, slots or prices)."""
     rm = s.role(name)
-    return {"backend": rm.backend, "model": rm.model, "url": rm.url, "max_tokens": rm.max_tokens}
+    d = {"backend": rm.backend, "model": rm.model}
+    return d if rm.backend == "claude_cli" else d | {"url": rm.url, "max_tokens": rm.max_tokens}   # what it uses
 
 
 def git_commit() -> str:
