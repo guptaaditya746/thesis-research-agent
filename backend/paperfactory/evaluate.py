@@ -95,6 +95,7 @@ class Eval:
     def __init__(self, s, w: dict[str, Any], f: Field, gold: dict[str, Any], call, max_mentions: int = 3):
         self.s, self.w, self.f, self.G, self.call = s, w, f, gold, call
         self.max_mentions = max_mentions
+        self.skip: set[str] = set()             # papers left out (e.g. their world check did not finish)
         self.facts = gold["facts"]
         self.rng = random.Random(s.seed)
         self.options = list(f.relations) + ["none"]        # the judge answers with one of these
@@ -466,6 +467,9 @@ Use the whole paper to decide. Pick exactly one number."""
 
     def leak(self, tagged: dict[str, Any], k: int = 20) -> dict[str, Any]:
         items = [(pid, i) for pid, t in tagged.items() for i, sp in t["spans"].items() if sp]
+        if not items:            # no paper left, or tagging found nothing: nothing to hide, nothing to test
+            return {"trials": 0, "skipped": "no tagged planted sentences", "parse_errors": 0, "hits": 0,
+                    "rate": None, "ci95": None, "chance": None, "bar": 0.10}
         trials = []
         for n in range(self.s.leak_trials):
             pid, i = items[n % len(items)] if n < len(items) else self.rng.choice(items)
@@ -525,7 +529,7 @@ Use the whole paper to decide. Pick exactly one number."""
     def run(self) -> dict[str, Any]:
         from paperfactory.repair import failed      # a paper that still disagrees with the world is left out
         pids = [p for p in self.w["papers"] if (self.s.out_dir / "work" / p / "paper.md").is_file()
-                and not failed(self.s.out_dir, p)]
+                and not failed(self.s.out_dir, p) and p not in self.skip]
         tagged = dict(zip(pids, pmap(self.tag_paper, pids, self.s.parallel)))
         (self.s.out_dir / "tagged.json").write_text(json.dumps({"scoring_version": SCORING_VERSION, "papers": tagged},
                                                                indent=1), encoding="utf-8")
@@ -534,6 +538,7 @@ Use the whole paper to decide. Pick exactly one number."""
                                "papers_written": len(pids), "papers_planned": len(self.w["papers"]),
                                "papers_failed_world_check": [p for p in self.w["papers"] if failed(self.s.out_dir, p)],
                                "questions_rescoped": rescoped, "questions_dropped": dropped,
+                               "papers_left_out_unchecked": sorted(self.skip),
                                "tagging": {p: {k: v for k, v in t.items() if k not in ("sentences", "spans")}
                                            | {"spans_per_fact": {i: len(x) for i, x in t["spans"].items()}}
                                            for p, t in tagged.items()}}

@@ -49,6 +49,13 @@ class LLMError(RuntimeError):
     """The backend gave no answer (twice)."""
 
 
+class GatewayDown(LLMError):
+    """Many calls in a row failed: the model server is not answering. The one error that stops a run."""
+
+
+TRANSPORT_FAILS_TO_STOP = 5
+
+
 class Rejected(Exception):
     """The backend answered, but not in the required form."""
 
@@ -221,6 +228,7 @@ class Caller:
         self.backend = backend or run_backend
         self.use_cache = use_cache
         self._log_lock = threading.Lock()
+        self._fails = 0                      # transport failures in a row (any thread)
 
     def key(self, rm: RoleModel, system: str, user: str, schema: dict[str, Any]) -> str:
         # the configured base_url, not rm.url: $LITELLM_BASE_URL differs between shells (review finding 8); claude_cli
@@ -249,11 +257,14 @@ class Caller:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
     def __call__(self, role: str, step: str, system: str, user: str, out: type[BaseModel] | dict[str, Any],
-                 check: Callable[[dict[str, Any]], str | None] | None = None) -> dict[str, Any] | None:
+                 check: Callable[[dict[str, Any]], str | None] | None = None,
+                 cache: bool = True) -> dict[str, Any] | None:
+        """cache=False: never read the cache for this call (a repair asked again after a failed run must be a new
+        answer, not the cached one that failed). The answer is still written to the cache."""
         rm = self.s.role(role)
         schema = json_schema(out)
         path = self.cache / f"{self.key(rm, system, user, schema)}.json"
-        if (hit := self.cached(path, out, check)) is not None:
+        if cache and (hit := self.cached(path, out, check)) is not None:
             self._io(role, step, user, hit, cached=True)
             return hit
         self.log.parent.mkdir(parents=True, exist_ok=True)
@@ -267,8 +278,25 @@ class Caller:
         output: dict[str, Any] | None = None
         got: dict[str, Any] = {}
         for _ in range(1 + RETRIES_ON_REJECT):
-            with slot(slot_dir(self.s.slots, rm), rm.max_parallel):
-                got = self.backend(rm, system, prompt, schema)
+            try:
+                with slot(slot_dir(self.s.slots, rm), rm.max_parallel):
+                    got = self.backend(rm, system, prompt, schema)
+            except LLMError as e:
+                # one call that fails twice (timeout, error reply) is skipped and logged, never fatal; only a run of
+                # TRANSPORT_FAILS_TO_STOP failures in a row (gateway down) stops the run
+                self._write_log({"role": role, "step": step, "key": path.stem, "backend": rm.backend,
+                                 "model": rm.model, "cost_usd": None if not rm.local else 0.0,
+                                 "cost_source": "unknown" if not rm.local else "local", "attempts": len(costs) + 1,
+                                 "rejections": errors, "parse_error": True, "transport_error": str(e)[:500],
+                                 "seconds": round(time.time() - start, 1)})
+                with self._log_lock:
+                    self._fails += 1
+                    down = self._fails >= TRANSPORT_FAILS_TO_STOP
+                if down:
+                    raise GatewayDown(f"{self._fails} model calls in a row failed; last: {str(e)[:300]}") from e
+                return None
+            with self._log_lock:
+                self._fails = 0
             costs.append(got.get("cost_usd"))
             try:
                 if got.get("raw") is None:

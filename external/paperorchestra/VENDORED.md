@@ -129,3 +129,10 @@ the paper does not fail. v1 makes no such call (its prompts and cache keys are u
 - `methods/agents/literature_stub_agent.py`: the intro step fills the template's first two numbered sections,
   whatever the genre calls them (was hard-coded "Introduction" + "Related Work").
 - Genre templates live in `backend/paperfactory/packs/genres/`, not here.
+
+C11 (22 Nov 2026): paper.md is written to a temp file and renamed (a stopped run never leaves half a paper); a
+transport error from paperfactory's model layer (LLMError, a RuntimeError) is retried and logged as a `call_error`
+like ClaudeCodeError.
+
+C12 (22 Nov 2026): `--max_parallel` is honoured up to HARD_CAP = 9 (was always lowered to 3); the default stays 3.
+paperfactory passes the writer role's max_parallel (9 in configs/qwen/*.json, three per Qwen replica).

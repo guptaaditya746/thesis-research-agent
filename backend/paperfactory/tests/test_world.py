@@ -20,7 +20,7 @@ def fake_world(per_call: list[int], seen: list[str]):
     """Answers the entity call with the pilot entities and each paper call with the next per_call[i] pilot papers."""
     left = list(PAPERS)
 
-    def call(role, step, system, user, schema, check=None):
+    def call(role, step, system, user, schema, check=None, cache=True):
         seen.append(step)
         if step == "world:entities":
             return copy.deepcopy(ENTS)
@@ -56,7 +56,7 @@ def test_two_repairs_for_a_batch_and_the_decoy_rule_in_the_prompt(tmp_path: Path
     answers = [{"papers": copy.deepcopy(bad)}, {"papers": copy.deepcopy(bad)}, {"papers": copy.deepcopy(PAPERS)}]
     seen: list[str] = []
 
-    def call(role, step, system, user, schema, check=None):
+    def call(role, step, system, user, schema, check=None, cache=True):
         seen.append(step)
         return copy.deepcopy(ENTS) if step == "world:entities" else answers.pop(0)
     w = world.draft(config.Settings("law", "argument", papers=3, out=str(tmp_path)), LAW, ARG, call)

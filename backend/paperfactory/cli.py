@@ -20,7 +20,7 @@ from repo_paths import REPO
 
 from paperfactory import SCORING_VERSION, config, cost, files, labels, materials, meta, packs, repair, seed, world, write
 from paperfactory.evaluate import Eval
-from paperfactory.llm import Caller
+from paperfactory.llm import Caller, GatewayDown
 
 STEPS = ("world", "seed", "materials", "write", "check", "eval", "deepeval")
 
@@ -82,8 +82,12 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
             if s.world_file:
                 w = json.loads((REPO / s.world_file).read_text(encoding="utf-8"))
             else:
-                w = world.draft(s, f, g, call)
-            errs = world.check(w, f, g, n_papers=s.papers)
+                try:
+                    w = world.draft(s, f, g, call)
+                except ValueError as e:          # recorded for the morning; a rerun asks the model afresh
+                    files.write_json(out / "world.failed.json", {"error": str(e)})
+                    sys.exit(f"world failed (details in world.failed.json):\n{str(e)[:2000]}")
+            errs = world.check(w, f, g, n_papers=s.papers - len(w.get("dropped_papers", {})))
             if errs:
                 sys.exit("world failed the checks:\n" + "\n".join(errs[:40]))
             for x in world.decoy_warnings(w, f):
@@ -108,9 +112,15 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                 for log in (out / "work").glob(f"{pid}.*"):       # its call logs go too (cost report, #13)
                     meta.set_aside(log)
         def write_paper(pid: str) -> dict[str, Any]:
-            r = write.write_one(s, pid, template, use_cache=use_cache)
+            try:
+                r = write.write_one(s, pid, template, use_cache=use_cache)
+            except Exception as e:  # noqa: BLE001 - one paper never stops the step
+                r = {"pid": pid, "status": f"failed ({type(e).__name__}: {str(e)[:200]})"}
             if r["status"] == "ok":              # saved per paper at once: a stop later in the step keeps it
                 meta.write_done(paper(pid), write_inputs(s, pid, template))
+            elif r["status"] != "exists" and paper(pid).is_file():
+                # PaperOrchestra failed after writing paper.md: never keep a paper of unknown quality
+                print(f"write {pid}: failed but left a paper.md; kept aside as", meta.set_aside(out / "work" / pid).name)
             return r
         print("write:", json.dumps(write.pmap_papers(write_paper, list(w["papers"]), s.parallel)))
     if "check" in steps:                 # papers must agree with the world (repair.py)
@@ -136,7 +146,12 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                 todo.append(pid)
 
         def check_one(pid: str) -> dict[str, Any]:
-            r = chk.repair_paper(pid, redo)
+            try:
+                r = chk.repair_paper(pid, redo)
+            except GatewayDown:
+                raise
+            except Exception as e:  # noqa: BLE001 - one paper never stops the step; no check_done: a rerun retries
+                return {"pid": pid, "status": f"error ({type(e).__name__}: {str(e)[:200]})"}
             meta.check_done(paper(pid), check_inputs(s, w, f, chk, pid, template))
             return r
         print("check:", json.dumps(write.pmap_papers(check_one, todo, s.parallel)))
@@ -144,10 +159,17 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
         gold = json.loads((out / "gold.json").read_text(encoding="utf-8"))
         from paperfactory.repair import failed
         pids = [p for p in w["papers"] if paper(p).is_file() and not failed(out, p)]
+        # a paper whose world check did not finish (error, stopped run) was never compared with the world: out
+        unchecked = {p for p in pids if (m := meta.read(paper(p))) is not None and "check" not in m}
+        if unchecked:
+            print("eval: left out, world check not finished:", sorted(unchecked))
+        pids = [p for p in pids if p not in unchecked]
         allowed = meta.same_settings({p: meta.read(paper(p)) for p in pids}, SHARED, allow_mixed, "eval")
-        rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
+        ev = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3))
+        ev.skip = unchecked
+        rep = ev.run()
         rep["cost"] = cost.report(out, list(w["papers"]), sorted({s.papers, 100}), s.role("writer").local)
-        rep["mixed_settings_allowed"] = allowed
+        rep["mixed_settings"] = allowed
         rep["model_warnings"] = config.shared_models(s)
         rep["judge_validation"]["about"] = REWRITE_NOTE
         files.write_json(out / "report.json", rep)
@@ -250,7 +272,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:
         w, f, g = json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre)
-        errs = world.check(w, f, g, n_papers=s.papers)
+        errs = world.check(w, f, g, n_papers=s.papers - len(w.get("dropped_papers", {})))
         print(json.dumps(world.shape(w, f, g, s.pages), indent=1))
         print("\n".join(f"warning: {x}" for x in world.decoy_warnings(w, f)))
         print("\n".join(errs) or "ok")

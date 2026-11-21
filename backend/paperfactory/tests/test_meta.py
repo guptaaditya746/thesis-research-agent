@@ -32,14 +32,15 @@ def test_world_is_made_again_when_its_inputs_change(tmp_path: Path, capsys) -> N
     assert "(v2)" in (s.out_dir / "world.json").read_text()
 
 
-def test_output_without_meta_stops_the_run_unless_allow_mixed(tmp_path: Path) -> None:
+def test_output_without_meta_is_made_again_unless_allow_mixed(tmp_path: Path) -> None:
+    """Nothing soft stops a run (22 Nov 2026): an output of unknown settings is set aside and made again."""
     s = law(tmp_path)
     cli.run(s, ["world"])
     meta.path_of(s.out_dir / "world.json").unlink()
-    with pytest.raises(meta.MixedSettings, match="no meta file"):
-        cli.run(s, ["world"])
     cli.run(s, ["world"], allow_mixed=True)
-    assert not list(s.out_dir.glob("*.stale-*"))
+    assert not list(s.out_dir.glob("*.stale-*"))                           # kept
+    cli.run(s, ["world"])
+    assert (s.out_dir / "world.json.stale-1").is_file() and meta.read(s.out_dir / "world.json")
 
 
 def test_paper_written_then_checked(tmp_path: Path) -> None:
@@ -93,16 +94,13 @@ def test_check_step_restarts_from_the_paper_as_written(tmp_path: Path, monkeypat
     assert (work / "paper.repairs.json.stale-1").is_file()
 
 
-def test_papers_with_different_settings_are_not_mixed(tmp_path: Path) -> None:
+def test_papers_with_different_settings_are_reported_not_fatal(tmp_path: Path) -> None:
     a = {"inputs": {"writer": "x"}, "check": {"world": "1"}}
     b = {"inputs": {"writer": "y"}, "check": {"world": "1"}}
     keys = {"inputs": ["writer"], "check": ["world"]}
     assert meta.same_settings({"P1": a, "P2": dict(a)}, keys, False, "eval") == []
-    with pytest.raises(meta.MixedSettings, match="2 different settings"):
-        meta.same_settings({"P1": a, "P2": b}, keys, False, "eval")
-    with pytest.raises(meta.MixedSettings, match="no meta"):
-        meta.same_settings({"P1": a, "P2": None}, keys, False, "eval")
-    assert len(meta.same_settings({"P1": a, "P2": b, "P3": None}, keys, True, "eval")) == 2
+    assert "2 different settings" in meta.same_settings({"P1": a, "P2": b}, keys, False, "eval")[0]
+    assert any("no meta" in x for x in meta.same_settings({"P1": a, "P2": None}, keys, False, "eval"))
 
 
 def test_check_redo_keeps_the_writers_meta(tmp_path: Path) -> None:
@@ -160,8 +158,7 @@ def test_a_kept_legacy_paper_is_not_rewritten_after_its_check(tmp_path: Path) ->
     (work / "paper.repairs.json").write_text("{}")
     meta.check_done(p, {"world": 1})
     assert not meta.write_stale(p, {"writer": "a"}, True, "w")              # still legacy: kept, not rewritten
-    with pytest.raises(meta.MixedSettings):
-        meta.write_stale(p, {"writer": "a"}, False, "w")                    # and without the flag: a clear stop
+    assert meta.write_stale(p, {"writer": "a"}, False, "w")                 # without the flag: made again
 
 
 def test_check_patterns_do_not_make_a_new_world(tmp_path: Path) -> None:

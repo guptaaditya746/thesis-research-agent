@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 MAX_PARALLEL = 3
+HARD_CAP = 9                 # C12: the most a caller may ask for (Aditya, 22 Nov 2026: 9 calls on Qwen)
 DEFAULT_MODEL = "claude-haiku-5-5"
 
 
@@ -55,7 +56,9 @@ class ClaudeCodeLM:
         self.log_path = Path(log_path) if log_path else None
         self.timeout = timeout
         self.claude_bin = claude_bin or os.environ.get("PO_CLAUDE_BIN", "claude")
-        self.max_parallel = min(max_parallel, MAX_PARALLEL)   # never more than 3, whatever the caller asks
+        # C12: the caller's cap up to HARD_CAP (paperfactory passes the role's max_parallel, e.g. 9 on three Qwen
+        # replicas); the default stays MAX_PARALLEL
+        self.max_parallel = max(1, min(max_parallel, HARD_CAP))
         self.poll = poll
         self._log_lock = threading.Lock()
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -154,7 +157,7 @@ class ClaudeCodeLM:
                 with self.slot() as slot:
                     got = self._run_claude(system, user, schema)
                 break
-            except (ClaudeCodeError, subprocess.TimeoutExpired) as e:
+            except (ClaudeCodeError, subprocess.TimeoutExpired, RuntimeError) as e:   # C11: + paperfactory's LLMError
                 last = e
                 self.log({"event": "call_error", "step": step, "key": key, "attempt": attempt,
                           "error": str(e)[:500], "seconds": round(time.time() - start, 2)})

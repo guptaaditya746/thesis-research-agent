@@ -193,8 +193,10 @@ def write_single_paper(
     }
     if citations and citations["cited"]:
         final = final.rstrip() + "\n\n" + fact_check.references_section(references, citations["cited"])
-    with open(osp.join(base_dir, "paper.md"), "w", encoding="utf-8") as f:
+    tmp = osp.join(base_dir, f".paper.md.{os.getpid()}.tmp")    # C11: written whole or not at all
+    with open(tmp, "w", encoding="utf-8") as f:
         f.write(final)
+    os.replace(tmp, osp.join(base_dir, "paper.md"))
     with open(osp.join(base_dir, "facts_check.json"), "w", encoding="utf-8") as f:
         json.dump({"summary": summary, "facts": results, "repairs": attempts,
                    **({"number_repair": number_fix} if number_fix else {})}, f, indent=2, ensure_ascii=False)

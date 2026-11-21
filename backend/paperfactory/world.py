@@ -254,7 +254,8 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
     errs = check(w, f, g)
     if errs:
         got = _need(call("world", "world:entities:repair", ENT_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
-                         + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), sch), "world:entities:repair")
+                         + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), sch, cache=False),
+                    "world:entities:repair")
         w["entities"] = _ents(got)
         errs = check(w, f, g)
         if errs:
@@ -274,16 +275,29 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
             trial = dict(w, papers=dict(w["papers"]))
             for i, p in enumerate(got["papers"][:n]):
                 trial["papers"][f"{prefix}-{b + i + 1:02d}"] = {k: v for k, v in p.items() if v or k != "conflict"}
-            errs = check(trial, f, g, n_papers=b + n)
+            errs = check(trial, f, g, n_papers=len(trial["papers"]))
             if not errs:
                 w = trial
                 break
             if attempt == PAPER_REPAIRS:
-                raise ValueError(f"papers {b + 1}-{b + n} failed the checks after {PAPER_REPAIRS} repairs:\n"
-                                 + "\n".join(errs[:40]))
+                # keep the papers of this batch that pass on their own; drop the rest (recorded), never the field
+                new = [pid for pid in trial["papers"] if pid not in w["papers"]]
+                bad = {pid for pid in new if any(re.search(rf"(?<![\w-]){re.escape(pid)}(?![\w-])", e) for e in errs)}
+                kept = dict(w, papers={k: v for k, v in trial["papers"].items() if k not in bad})
+                still = check(kept, f, g, n_papers=len(kept["papers"]))
+                if still or len(kept["papers"]) == len(w["papers"]):
+                    raise ValueError(f"papers {b + 1}-{b + n} failed the checks after {PAPER_REPAIRS} repairs:\n"
+                                     + "\n".join(errs[:40]))
+                kept["dropped_papers"] = dict(w.get("dropped_papers", {})) | {
+                    pid: [e for e in errs if pid in e][:10] for pid in sorted(bad)}
+                print(f"world: dropped {sorted(bad)} (failed the checks after {PAPER_REPAIRS} repairs), kept "
+                      f"{len(kept['papers']) - len(w['papers'])} of {n}")
+                w = kept
+                break
             rstep = f"{step}:repair" + (f":{attempt + 1}" if attempt else "")
             got = _top_up(_need(call("world", rstep, PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
-                                     + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA), rstep),
+                                     + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA,
+                                     cache=False), rstep),
                           n, user, call, rstep)
     return w
 
@@ -297,7 +311,7 @@ def _top_up(got: dict[str, Any], n: int, user: str, call, step: str, tries: int 
             break
         more = _need(call("world", f"{step}:more:{t + 1}", PAPER_SYS, user + "\n\nPAPERS ALREADY PLANNED:\n"
                           + json.dumps(got["papers"]) + f"\n\nPlan only {missing} more papers, different from these.",
-                          PAPERS_SCHEMA), f"{step}:more:{t + 1}")
+                          PAPERS_SCHEMA, cache=False), f"{step}:more:{t + 1}")
         got = {"papers": got["papers"] + more["papers"][:missing]}
     if len(got["papers"]) < n:
         raise ValueError(f"{step}: the world model planned {len(got['papers'])} of {n} papers after {tries} "

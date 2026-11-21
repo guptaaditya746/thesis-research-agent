@@ -55,8 +55,11 @@ def test_confusions_are_relations_and_go_both_ways(name: str) -> None:
 
 
 def test_world_agent_prompt_does_not_change() -> None:
-    old = subprocess.run(["git", "show", "a6b7cad:backend/paperfactory/packs/fields/law.json"], capture_output=True,
-                         text=True, cwd=packs.PACKS).stdout
+    try:                       # needs git and that commit (a shallow clone or a machine without git: skip)
+        old = subprocess.run(["git", "show", "a6b7cad:backend/paperfactory/packs/fields/law.json"],
+                             capture_output=True, text=True, cwd=packs.PACKS, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        old = ""
     if not old:
         pytest.skip("commit a6b7cad not in this clone")
     old_f = packs.Field(json.loads(old))

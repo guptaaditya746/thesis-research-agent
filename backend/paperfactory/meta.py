@@ -9,8 +9,8 @@ A meta file holds:
 paper.meta.json has two parts: "inputs"/"written" (the writer's inputs, hash of the paper as written) and, after the
 check step, "check"/"output" (the check's inputs, hash of the repaired paper). A run stopped in the middle of a
 repair therefore redoes the check, never the (paid) writing.
-An output with no meta file was made before #8 ("legacy"). Its settings are unknown: the run stops unless
---allow-mixed, and then keeps it.
+An output with no meta file (made before #8, or by a run stopped at the wrong moment) has unknown settings: it is
+made again (the old one kept as *.stale-N), or kept with --allow-mixed. Nothing here stops a run.
 """
 from __future__ import annotations
 
@@ -114,12 +114,14 @@ def set_aside(p: Path) -> Path:
     return dest
 
 
-def legacy(what: str, output: Path, allow_mixed: bool) -> None:
-    """An output without meta: stop, or (allow_mixed) say that it is kept."""
-    if not allow_mixed:
-        raise MixedSettings(f"{what}: {output} has no meta file, so the settings it was made with are unknown. Move "
-                            "it away to make it again, or pass --allow-mixed to keep it.")
-    print(f"{what}: no meta file (made before settings were recorded); kept because of --allow-mixed")
+def legacy(what: str, output: Path, allow_mixed: bool) -> bool:
+    """An output without meta: its settings are unknown. -> True: make it again (the old one is kept as
+    *.stale-N); False with allow_mixed: keep it. Never stops the run (Aditya, 22 Nov 2026: nothing soft stops)."""
+    if allow_mixed:
+        print(f"{what}: no meta file (made before settings were recorded); kept because of --allow-mixed")
+        return False
+    print(f"{what}: no meta file, so its settings are unknown; making it again (old one kept as *.stale-N)")
+    return True
 
 
 # ------------------------------------------------------------------ one output with one set of inputs
@@ -129,8 +131,7 @@ def stale(output: Path, inputs: dict[str, Any], allow_mixed: bool, what: str) ->
         return False
     m = read(output)
     if m is None:
-        legacy(what, output, allow_mixed)
-        return False
+        return legacy(what, output, allow_mixed)
     why = diff(m.get("inputs"), inputs) + (["output (edited by hand)"] if m.get("output") != file_hash(output)
                                            else [])
     if why:
@@ -154,8 +155,7 @@ def write_stale(paper: Path, inputs: dict[str, Any], allow_mixed: bool, what: st
         return False
     m = read(paper)
     if m is None or "inputs" not in m:     # no meta, or only a check part (a legacy paper kept with allow_mixed)
-        legacy(what, paper, allow_mixed)
-        return False
+        return legacy(what, paper, allow_mixed)
     why = diff(m.get("inputs"), inputs)
     if m.get("written") != file_hash(paper_written(paper)):
         why.append("paper as written (edited by hand)")
@@ -176,8 +176,7 @@ def check_state(paper: Path, inputs: dict[str, Any], allow_mixed: bool, what: st
         return "todo", []
     m = read(paper)
     if m is None:
-        legacy(what, repairs, allow_mixed)
-        return "legacy_kept", []
+        return ("redo", ["no meta file"]) if legacy(what, repairs, allow_mixed) else ("legacy_kept", [])
     if "check" not in m:                  # written under #8, stopped before the check's meta was saved
         print(f"{what}: the last check did not finish; checking it again")
         return "redo", ["unfinished"]
@@ -208,6 +207,6 @@ def same_settings(metas: dict[str, dict[str, Any] | None], keys: dict[str, list[
             groups.setdefault(h(sig), []).append(k)
     problems = ([f"made under {len(groups)} different settings: {sorted(groups.values())}"]
                 if len(groups) > 1 else []) + ([f"no meta file (settings unknown): {legacy_}"] if legacy_ else [])
-    if problems and not allow_mixed:
-        raise MixedSettings(f"{what}: " + "; ".join(problems) + ". Pass --allow-mixed to go on anyway.")
+    if problems:                       # recorded in the report, never a stop
+        print(f"{what}: warning: " + "; ".join(problems))
     return problems

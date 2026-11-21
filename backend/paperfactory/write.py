@@ -21,7 +21,8 @@ from paperfactory.llm import slot_dir
 PO = REPO / "external" / "paperorchestra"
 
 
-PROMPT_VERSION = "v1n"     # PaperOrchestra's v1 + the rule that the materials are not a source (C10)
+PROMPT_VERSION = "v1n"
+WRITER_CALLS = 12          # the writer's time limit is this many call timeouts (about 10 calls per paper)     # PaperOrchestra's v1 + the rule that the materials are not a source (C10)
 
 
 def write_one(s, pid: str, template: Path, attempt: int = 1, use_cache: bool = True) -> dict[str, Any]:
@@ -44,7 +45,11 @@ def write_one(s, pid: str, template: Path, attempt: int = 1, use_cache: bool = T
            "--timeout", str(rm.timeout)]
     out.parent.mkdir(parents=True, exist_ok=True)
     with (s.out_dir / "work" / f"{pid}{tag}.out").open("w") as log:
-        code = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, cwd=REPO).returncode
+        try:            # a hung writer must not block the field forever
+            code = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, cwd=REPO,
+                                  timeout=WRITER_CALLS * rm.timeout).returncode
+        except subprocess.TimeoutExpired:
+            return {"pid": pid, "status": f"failed (timeout after {WRITER_CALLS * rm.timeout} s)"}
     ok = code == 0 and (out / "paper.md").is_file()
     return {"pid": pid, "status": "ok" if ok else f"failed (exit {code}, see work/{pid}{tag}.out)"}
 

@@ -14,9 +14,9 @@ reached even after a relaunch, or the key is missing).
    allowed). Do not edit code or packs. The only file edits allowed are the two numbers in section 2.1.
 2. Never print or log LITELLM_MASTER_KEY or anything from llm-setup/.env.
 3. At most 9 LLM calls at once (Aditya, 22 Nov 2026: three per Qwen replica); paperfactory enforces it with lock
-   files (`max_parallel` 9 in configs/qwen/*.json). Run ONE field at a time. Before a field, check
-   `pgrep -af "evqa run|evqa paper"`: if another LLM job runs, wait for it at most 30 minutes (check every 5), then
-   log "started next to <job>" and start anyway.
+   files (`max_parallel` 9 in configs/qwen/*.json). Run ONE field at a time. Before a field, check for another LLM
+   job with `pgrep -af 'bin/evqa (run|paper)'` (this pattern does not match its own shell): if one runs, wait for it
+   at most 30 minutes (check every 5), then log "started next to <job>" and start anyway.
 4. Run everything from the repo root through the GPU job:
    `srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory ...` (ops/injob.sh sets LITELLM_BASE_URL to the
    gateway on 127.0.0.1:4000 and loads the key without printing it).
@@ -26,7 +26,7 @@ reached even after a relaunch, or the key is missing).
 ## 1. Setup (no LLM)
 
 ```bash
-git pull origin main
+git pull --autostash origin main                     # keeps your local log/config edits
 git submodule update --init llm-setup                # the Qwen stack (thesis-llm-setup), read-only
 uv sync --extra deepeval                             # deepeval: the last step's metrics (optional extra)
 uv run pytest backend/paperfactory/tests -q          # log the result; failures do NOT stop the night
@@ -87,27 +87,35 @@ Order: law, llm, medicine, materials (llm, medicine and materials packs are DRAF
 
 ```bash
 CFG=backend/paperfactory/configs/qwen/FIELD.json
-nohup srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory run --config $CFG \
-     > runs/paperfactory/qwen-FIELD.log 2>&1 ; echo "exit $?" >> runs/paperfactory/qwen-FIELD.log
+LOG=runs/paperfactory/qwen-FIELD.log
+mkdir -p runs/paperfactory
+setsid nohup bash -c "srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory run --config $CFG; \
+  echo exit \$?" > $LOG 2>&1 < /dev/null &
+# it runs for hours, detached (a command timeout of yours cannot kill it); check every 10 minutes:
+tail -n 5 $LOG; grep -q '^exit ' $LOG && echo DONE
+# when DONE:
 srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory check-world --config $CFG \
      --world runs/paperfactory/qwen-FIELD/world.json > runs/paperfactory/qwen-FIELD.world-check.txt
 ```
 
-(Run the first command in the background with `&` if you want to watch it; wait for it to end before the next
-field.) It runs every step: world, seed (gold by SPARQL), materials, write (PaperOrchestra, 9 papers at once),
+Wait for the `exit N` line before the next field. It runs every step: world, seed (gold by SPARQL), materials, write (PaperOrchestra, 9 papers at once),
 check (repairs), eval (tagging, verifier test, judge, QA, BM25, style leak), deepeval (deepeval.json).
 Progress: `tail -f runs/paperfactory/qwen-FIELD.log`.
 
 When it ends:
 - exit 0: log the field (section 5), go to the next field.
-- exit not 0: look at the last 30 lines of the log. Run the SAME command once more (finished work is reused). If it
-  fails again, log both errors and go to the next field. If the error says the gateway cannot be reached, do 1b
+- exit not 0: look at the last 30 lines of the log. Start the SAME command once more (with a new log name, e.g.
+  qwen-FIELD.2.log; finished work is reused). If it fails again, log both errors and go to the next field.
+  `GatewayDown` ("N model calls in a row failed") means the server stopped answering: do 1b (and 1a if needed)
+  first. A world failure leaves runs/paperfactory/qwen-FIELD/world.failed.json with the errors. If the error says the gateway cannot be reached, do 1b
   first (and 1a if needed), then run it again.
 - World step failed ("failed the checks after 2 repairs", "planned N of M papers", "gave no answer in the required
   form"): the same: one more try, then log and go to the next field.
 
 Expected and fine: "warning: writer, rewriter, judge, verifier share the model orch-model", decoy warnings,
-papers marked failed by the check (they are left out of the evaluation), questions rescoped or dropped.
+"world: dropped [...]" (a batch kept its good papers), papers marked failed by the check or left out unchecked
+(they are left out of the evaluation), questions rescoped or dropped, "no meta file ... making it again", single
+calls with `transport_error` in calls.jsonl (skipped and counted).
 
 Quality notes to log (not gates): `papers_written` below 18, more than 2 papers in `papers_failed_world_check`,
 `qa_summary.parse_errors` above 2, more than 10% parse errors in calls.jsonl, any `"skipped": "context_window"`.
