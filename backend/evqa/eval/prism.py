@@ -5,10 +5,23 @@
 Per question, for each gold fact (the seed rows behind the gold answer, gold `row_ids`):
   L0  kept     the fact has an L0 span in its paper.md (data/seed/<domain>/l0/<paper>.json)
   L1  find     the fact's paper is in find.jsonl and one of its passages [start, end) overlaps an L0 span of the fact
+               (fact-span recall, "l1"). Paper recall ("l1_paper"): per question, the distinct papers of its gold facts
+               that Find passed to Extract (a hit with screen != "no" and at least one passage, as extract/core.py
+               reads it), whatever the passage; / distinct gold papers. No L0 needed. A question with no gold facts
+               (not-reported types) has no gold papers: None, left out of the mean, counted in l1_paper_na_questions.
   L2  extract  a non-dropped row of the same paper whose quote [quote_start, quote_end) overlaps an L0 span of the
                fact and whose std value equals the seed value (norm.same: half a unit of the last printed decimal).
                name_ok (subject, measure, time, dose, patient group in canonical form) and quote_ok are kept apart.
                precision = non-dropped rows matching some gold fact / non-dropped rows.
+               Complete-fact recall ("l2_complete"): one value-matched row must also pass, on its own fields, every
+               check of COMPLETE_FIELDS: quote_ok (code found the quote in the paper with the value), subject,
+               measure, comparator, dose and time point (when the seed fact has them), population. Population is
+               read from the row's own labels (patient_group, patient_group_raw, its setting set's population value),
+               never from provenance: "pass" when a label equals the fact's seed context (case and spaces aside),
+               "fail" when it equals another seed context or no label is given, else "unverified" (other words: a
+               judge or a person must decide). Denominator = all gold facts, as for l2_recall. l2_complete counts
+               unverified as a miss (lower bound); l2_complete_upper counts it as a pass (upper bound); the counts of
+               each are in totals "counts".
   L3  answer   lookup: answer rows vs gold rows on (canonical cells, value): recall, precision, exact.
                best:   per gold group, the answer group with the same cells must have the same status and winner.
                effect: per gold row, an effect entry with the same cells whose difference A - B equals the gold value
@@ -36,13 +49,17 @@ Totals: answerable L3 (mean over in-corpus types), per type, and the not-reporte
 rate, near-miss trap rate).
 Intervals: eval.json "intervals" holds a 95% bootstrap interval (resampling questions, eval/bootstrap.py) for each
 headline total; every headline total is a mean over questions. The other keys of eval.json are unchanged.
+Scorer: eval.json "scorer" holds the sha256 of this file and the git commit, so scores of one comparison can be
+checked to come from one scorer revision.
 Data: eval.json "data" holds the hashes of the papers, questions and gold files the score was made on (datahash.py).
 Eval may read data/seed; the pipeline steps may not (seed wall test).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+import subprocess
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from pathlib import Path
@@ -113,12 +130,24 @@ def measure_names(domain: str, key: str) -> dict[str, Any]:
 
 
 @lru_cache(maxsize=32)
-def l0_spans(domain: str, paper: str) -> dict[str, tuple[tuple[int, int], ...]]:
+def l0_facts(domain: str, paper: str) -> dict[str, dict[str, Any]]:
+    """Fact id -> the fact's L0 record (spans, status, in_planned_place) from data/seed/<domain>/l0/<paper>.json."""
     path = domain_dir(domain) / "l0" / f"{paper}.json"
     if not path.is_file():
         return {}
     data = json.loads(path.read_text(encoding="utf-8"))
-    return {f["id"]: tuple((s["start"], s["end"]) for s in f.get("spans", [])) for f in data.get("facts", [])}
+    return {f["id"]: f for f in data.get("facts", [])}
+
+
+@lru_cache(maxsize=32)
+def l0_spans(domain: str, paper: str) -> dict[str, tuple[tuple[int, int], ...]]:
+    return {fid: tuple((s["start"], s["end"]) for s in f.get("spans", [])) for fid, f in l0_facts(domain, paper).items()}
+
+
+def l0_ambiguous(domain: str, paper: str, fid: str) -> bool:
+    """Every L0 span of the fact was a tie with another fact of the same value (L0 could not tell them apart)."""
+    spans = l0_facts(domain, paper).get(fid, {}).get("spans", [])
+    return bool(spans) and all(s.get("ambiguous") for s in spans)
 
 
 def _symbol(iri: str | None) -> str:
@@ -209,6 +238,49 @@ def row_names(row: Row, fact: dict[str, Any], domain: str) -> dict[str, bool]:
         if k in want:
             out[k] = slot_value(k, getattr(row, k), domain) == want[k]
     return out
+
+
+COMPLETE_FIELDS = ("quote_ok", "subject", "measure", "comparator", "dose", "time_point", "population")
+
+
+def _label(text: str | None) -> str:
+    return re.sub(r"\s+", " ", (text or "").strip().lower())
+
+
+def population_check(row: Row, fact: dict[str, Any], domain: str) -> str:
+    """'pass' | 'fail' | 'unverified' from the row's own population labels (module doc); provenance is not read."""
+    labels = [row.patient_group, row.patient_group_raw]
+    if row.setting_set is not None:
+        labels += [s.value for s in row.setting_set.settings if s.dimension in ("population", "patient_group")]
+    got = {_label(x) for x in labels} - {"", "not stated"}
+    if not got:
+        return "fail"
+    if _label(fact["context"]) in got:
+        return "pass"
+    others = {_label(c) for c in contexts(domain)} - {_label(fact["context"])}
+    return "fail" if got & others else "unverified"
+
+
+def complete_checks(row: Row, fact: dict[str, Any], domain: str) -> dict[str, str]:
+    """Each COMPLETE_FIELDS check of one value-matched row: 'pass', 'fail', 'unverified', or 'n/a' (the seed fact
+    has no such qualifier)."""
+    names = row_names(row, fact, domain)
+    comp = (fact.get("comparator") or "").lower()
+    out = {"quote_ok": "pass" if row.quote_ok else "fail",
+           "subject": "pass" if names["subject"] else "fail",
+           "measure": "pass" if names["measure"] else "fail",
+           "comparator": "n/a" if not comp else "pass" if comp in (row.comparator or "").lower() else "fail"}
+    for k in ("dose", "time_point"):
+        out[k] = "n/a" if k not in names else "pass" if names[k] else "fail"
+    out["population"] = population_check(row, fact, domain)
+    return out
+
+
+def complete_status(checks: dict[str, str]) -> str:
+    """'complete' (all pass), 'pending' (only unverified left), or 'incomplete' (a check failed)."""
+    if "fail" in checks.values():
+        return "incomplete"
+    return "pending" if "unverified" in checks.values() else "complete"
 
 
 def _gold_key(grow: dict[str, Any], columns: list[dict[str, str]], domain: str) -> dict[str, str]:
@@ -567,6 +639,9 @@ def score_question(qdir: Path, g: dict[str, Any], domain: str) -> dict[str, Any]
     ans = _load(qdir / "answer.json", Answer)
     live = [(i, r) for i, r in enumerate(rows) if not r.dropped]
     l3 = l3_layer(g, ans, rows, facts, domain)
+    passed = {h.paper for h in hits.values() if h.screen != "no" and h.passages}   # what Extract reads
+    gold_papers = sorted({f["paper"] for f in facts.values()})
+    papers = {"gold": gold_papers, "found": [p for p in gold_papers if p in passed]}
 
     per_fact, good_rows = [], set()
     for rid, f in facts.items():
@@ -578,20 +653,29 @@ def score_question(qdir: Path, g: dict[str, Any], domain: str) -> dict[str, Any]
         good_rows.update(matched)
         names = {i: row_names(rows[i], f, domain) for i in matched}
         usable = [i for i in matched if rows[i].quote_ok and all(names[i].values())]
+        rank = {"complete": 2, "pending": 1, "incomplete": 0}
+        checks = {i: complete_checks(rows[i], f, domain) for i in matched}
+        best = max(matched, key=lambda i: (rank[complete_status(checks[i])],
+                                          sum(v == "pass" for v in checks[i].values())), default=None)
+        status = complete_status(checks[best]) if best is not None else "incomplete"
         in_answer = l3["in_answer"].get(rid, False)
         blame = ("L0" if not spans else "find" if not l1 else "extract" if not matched else
                  "none" if in_answer else "extract" if not usable else "answer")
         per_fact.append({"id": rid, "paper": f["paper"], "l0": bool(spans), "l1": l1, "l2": bool(matched),
                          "name_ok": bool(matched) and any(all(n.values()) for n in names.values()),
                          "quote_ok": any(rows[i].quote_ok for i in matched), "rows": matched,
-                         "names": {str(i): n for i, n in names.items()}, "in_answer": in_answer, "blame": blame})
+                         "names": {str(i): n for i, n in names.items()}, "in_answer": in_answer, "blame": blame,
+                         "l0_ambiguous": l0_ambiguous(domain, f["paper"], rid), "complete": status,
+                         "complete_row": best, "complete_checks": checks.get(best, {}) if best is not None else {}})
     l3.pop("in_answer")
     base = {"qid": g["qid"], "type": g["type"], "answerable": g["type"] not in NOT_REPORTED_TYPES,
-            "missing_files": missing, "facts": per_fact, "l3": l3, "advisor": advisor(g, spec, facts, domain)}
+            "missing_files": missing, "facts": per_fact, "l3": l3, "advisor": advisor(g, spec, facts, domain),
+            "papers": papers}
     if not per_fact:                                      # no gold facts (not reported): fact layers do not apply
-        return {**base, "l0": None, "l1": None,
+        return {**base, "l0": None, "l1": None, "l1_paper": None,
                 "l2": {"recall": None, "precision": None, "name_ok": None, "rows": len(live),
-                       "dropped": len(rows) - len(live), "matched_rows": 0},
+                       "dropped": len(rows) - len(live), "matched_rows": 0, "complete": None,
+                       "complete_upper": None},
                 "blame": {k: 0 for k in (*LAYERS, "none")}}
     n = len(per_fact)
     blame_counts = {k: sum(p["blame"] == k for p in per_fact) for k in (*LAYERS, "none")}
@@ -599,9 +683,12 @@ def score_question(qdir: Path, g: dict[str, Any], domain: str) -> dict[str, Any]
     l2_precision = len(good_rows) / len(live) if live else 0.0
     return {**base, "l0": round(sum(p["l0"] for p in per_fact) / n, 4),
             "l1": round(sum(p["l1"] for p in per_fact) / n, 4),
+            "l1_paper": round(len(papers["found"]) / len(gold_papers), 4),
             "l2": {"recall": round(l2_recall, 4), "precision": round(l2_precision, 4),
                    "name_ok": round(sum(p["name_ok"] for p in per_fact) / n, 4),
-                   "rows": len(live), "dropped": len(rows) - len(live), "matched_rows": len(good_rows)},
+                   "rows": len(live), "dropped": len(rows) - len(live), "matched_rows": len(good_rows),
+                   "complete": round(sum(p["complete"] == "complete" for p in per_fact) / n, 4),
+                   "complete_upper": round(sum(p["complete"] != "incomplete" for p in per_fact) / n, 4)},
             "blame": blame_counts}
 
 
@@ -631,7 +718,9 @@ def type_totals(qs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 row["near_miss_trap"] = _rate([q["l3"]["near_miss_trap"] for q in mine])
         else:
             row.update({"l1": _mean([q["l1"] for q in mine]), "l2_recall": _mean([q["l2"]["recall"] for q in mine]),
-                        "said_not_reported": sum(bool(q["l3"].get("said_not_reported")) for q in mine)})
+                        "said_not_reported": sum(bool(q["l3"].get("said_not_reported")) for q in mine),
+                        "l1_paper": _mean([q["l1_paper"] for q in mine]),
+                        "l2_complete": _mean([q["l2"]["complete"] for q in mine])})
         out[t] = row
     return out
 
@@ -646,13 +735,45 @@ def run_intervals(qs: list[dict[str, Any]]) -> dict[str, Any]:
              "l2_name_ok": [q["l2"]["name_ok"] for q in qs], "l3": [q["l3"]["score"] for q in ans_q],
              "advisor": [q["advisor"]["score"] for q in qs],
              "not_reported_accuracy": [float(q["l3"]["score"] == 1.0) for q in nr_q],
-             "not_reported_hallucination": [float(bool(q["l3"]["hallucination"])) for q in nr_q]}
+             "not_reported_hallucination": [float(bool(q["l3"]["hallucination"])) for q in nr_q],
+             "l1_paper": [q.get("l1_paper") for q in qs], "l2_complete": [q["l2"].get("complete") for q in qs],
+             "l2_complete_upper": [q["l2"].get("complete_upper") for q in qs]}
     return {"method": bootstrap.METHOD, **{k: bootstrap.mean_interval(v) for k, v in per_q.items()}}
 
 
-def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = None) -> dict[str, Any]:
+def fact_counts(qs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pooled counts behind the new totals (the totals themselves are means over questions)."""
+    facts = [f for q in qs for f in q["facts"]]
+    checks = [f["complete_checks"] for f in facts if f["complete_row"] is not None]
+    return {"facts": len(facts), "l0_missing": sum(not f["l0"] for f in facts),
+            "l0_ambiguous": sum(f.get("l0_ambiguous", False) for f in facts),
+            "l1_span_hits": sum(f["l1"] for f in facts), "l2_value_hits": sum(f["l2"] for f in facts),
+            "l2_complete": sum(f["complete"] == "complete" for f in facts),
+            "l2_complete_pending": sum(f["complete"] == "pending" for f in facts),
+            "gold_papers": sum(len(q["papers"]["gold"]) for q in qs),
+            "gold_papers_found": sum(len(q["papers"]["found"]) for q in qs),
+            "l1_paper_na_questions": sum(q["l1_paper"] is None for q in qs),
+            # per field, over the value-matched facts (their best row): how often it failed or is unverified
+            "complete_field_fail": {k: sum(c.get(k) == "fail" for c in checks) for k in COMPLETE_FIELDS},
+            "complete_field_unverified": {k: sum(c.get(k) == "unverified" for c in checks) for k in COMPLETE_FIELDS}}
+
+
+def scorer_revision() -> dict[str, str | None]:
+    """The scorer that made eval.json: sha256 of prism.py and the git commit (None outside a git checkout)."""
+    here = Path(__file__)
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=here.parent, capture_output=True, text=True,
+                                timeout=10).stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        commit = None
+    return {"prism_sha256": hashlib.sha256(here.read_bytes()).hexdigest(), "git_commit": commit}
+
+
+def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = None,
+              write: bool = True) -> dict[str, Any]:
     """Score every question of the run's config (its list, else every gold question of its split; `only` narrows
-    it, e.g. for an old run made when the split had fewer questions); write eval.json."""
+    it, e.g. for an old run made when the split had fewer questions); write eval.json unless write=False (to
+    rescore a saved run without replacing its historical eval.json)."""
     run_dir = Path(run_dir)
     cfg_path = run_dir / "config.yaml"
     cfg = RunConfig.load(cfg_path) if cfg_path.is_file() else RunConfig(domain=domain)
@@ -681,12 +802,20 @@ def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = N
                                "hallucination": _rate([q["l3"]["hallucination"] for q in nr_q]),
                                "near_miss_trap": _rate([q["l3"]["near_miss_trap"] for q in near_q]),
                                "near_miss_questions": len(near_q)},
-              "per_type": type_totals(qs)}
+              "per_type": type_totals(qs),
+              # added 21 Nov 2026; the keys above keep their meaning
+              "l1_paper": _mean([q["l1_paper"] for q in qs]),
+              "l2_complete": _mean([q["l2"]["complete"] for q in qs]),
+              "l2_complete_upper": _mean([q["l2"]["complete_upper"] for q in qs]),
+              "l0_missing_facts": sum(not f["l0"] for q in qs for f in q["facts"]),
+              "counts": fact_counts(qs)}
     out = {"run_id": run_dir.name, "domain": domain, "config_name": cfg.name, "closed_book": cfg.closed_book,
            "unknown_questions": [q for q in qids if q not in golds], "totals": totals, "questions": questions}
     out["intervals"] = run_intervals(qs)
     out["data"] = datahash.data_hashes(domain, cfg.split)   # the data this score was made on (evqa/datahash.py)
-    (run_dir / "eval.json").write_text(json.dumps(out, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    out["scorer"] = scorer_revision()
+    if write:
+        (run_dir / "eval.json").write_text(json.dumps(out, indent=2, sort_keys=False) + "\n", encoding="utf-8")
     return out
 
 

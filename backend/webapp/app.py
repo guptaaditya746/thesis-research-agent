@@ -1,7 +1,8 @@
 """The FastAPI backend: `webapp.app:create_app()`.
 
 The Workbench API under /api/evqa (read-only GETs over data/seed, data/dataset and runs/evqa: webapp/evqa_api.py,
-evqa_questions_api.py, evqa_papers_api.py, evqa_runs_api.py) and `/api/health`. The built frontend (frontend/dist)
+evqa_questions_api.py, evqa_papers_api.py, evqa_runs_api.py), the optional review queue (evqa_review_api.py: its
+POST saves a human label under data/reviews) and `/api/health`. The built frontend (frontend/dist)
 is served at / with every other path falling back to index.html (client-side routes), when that directory exists.
 
 No authentication: it binds to 127.0.0.1 and is reached through an SSH tunnel; webapp/guard.py answers only
@@ -19,6 +20,7 @@ from pydantic import BaseModel
 from .evqa_api import router as evqa_router
 from .evqa_papers_api import router as evqa_papers_router
 from .evqa_questions_api import router as evqa_questions_router
+from .evqa_review_api import router as evqa_review_router
 from .evqa_runs_api import router as evqa_runs_router
 from .guard import Guard
 from .settings import Settings
@@ -43,7 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = s
     app.add_middleware(Guard, allowed_hosts=s.hosts, write_clients=s.writers)  # webapp/guard.py
     app.include_router(health_router(), prefix="/api")
-    for router in (evqa_router, evqa_questions_router, evqa_papers_router, evqa_runs_router):
+    for router in (evqa_router, evqa_questions_router, evqa_papers_router, evqa_runs_router, evqa_review_router):
         app.include_router(router, prefix="/api")
     if s.web_dist.is_dir():
         add_frontend(app, s.web_dist)

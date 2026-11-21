@@ -64,7 +64,9 @@ export type NotReportedTotals = { questions: number; accuracy: number | null; ha
 export type EvalTotals = { questions: number; answerable?: number; facts: number; l0: number | null
   l1: number | null; l2_recall: number | null; l2_precision: number | null; l2_name_ok?: number | null
   l3: number | null; l3_exact?: number; advisor: number | null; blame: Record<Blame, number>
-  not_reported?: NotReportedTotals; per_type?: Record<string, TypeTotals> }
+  not_reported?: NotReportedTotals; per_type?: Record<string, TypeTotals>
+  l1_paper?: number | null; l2_complete?: number | null; l2_complete_upper?: number | null
+  l0_missing_facts?: number; counts?: Record<string, unknown> }
 export type RunEval = { run_id: string; domain?: string; config_name?: string; closed_book?: boolean
   unknown_questions?: string[]; totals: EvalTotals; questions: Record<string, QuestionScore> }
 

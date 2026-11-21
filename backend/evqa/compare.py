@@ -33,7 +33,8 @@ from evqa.eval import bootstrap
 from evqa.paths import REPO
 
 LAYERS = ["questions", "answerable", "facts", "l0", "l1", "l2_recall", "l2_precision", "l2_name_ok", "l3",
-          "l3_exact", "advisor"]
+          "l3_exact", "advisor", "l0_missing_facts", "l1_paper", "l2_complete", "l2_complete_upper"]   # last 4: n/a
+# for an eval.json made before 21 Nov 2026
 NOT_REPORTED = ["accuracy", "hallucination", "near_miss_trap"]
 TYPE_KEYS = ["questions", "l3", "exact", "advisor"]
 PER_Q = [("l3", ("l3", "score")), ("l2 recall", ("l2", "recall")), ("l2 precision", ("l2", "precision")),

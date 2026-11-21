@@ -53,7 +53,7 @@ export default function WorkbenchPage() {
       {pane === "questions" && current && <QuestionsPane domain={current} />}
       {pane === "paper" && current && <PaperPane domain={current} />}
       {pane === "run" && <RunPane domain={current} runId={runId} qid={qid} onPick={pick} />}
-      {pane === "eval" && <EvalPane runId={runId} onRun={(r) => pick(r, "")}
+      {pane === "eval" && <EvalPane domain={current} runId={runId} onRun={(r) => pick(r, "")}
         onOpen={(r, q) => { pick(r, q); setPane("run") }} />}
       {domains.data?.length === 0 && <p className="text-sm">No seed yet: run <code>evqa seed build medical</code>.</p>}
     </div>

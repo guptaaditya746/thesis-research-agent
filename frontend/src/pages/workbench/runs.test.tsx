@@ -81,6 +81,7 @@ function mockApi() {
     http.get("/api/evqa/runs/slice1-aaa/explain/Q-med-01", () => HttpResponse.json(why)),
     http.get("/api/evqa/papers/medical/P-med-01", () => HttpResponse.json({ id: "P-med-01", title: "Brenoxalin trial",
       split: "test", role: "hub", folder: "x", briefs: {}, paper: PAPER, l0: null })),
+    http.get("/api/evqa/review/tasks", () => HttpResponse.json([])),     // review.test.tsx covers the queue
   )
 }
 
