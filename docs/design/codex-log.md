@@ -75,3 +75,8 @@ Try 4 (row_field, `spec/dimensions_v3.py`): Spec marks a per-row dimension (time
 | Qwen `practice-qwen-q2-7f186e5217` | 1.00 | 0.7436 | 0.7436 | 0.89 / 1.00 |
 | Haiku `practice-haiku-aa35f2cf32` | 0.955 | 0.7308 | 0.7308 | 0.89 / 1.00 |
 Old Qwen baseline (before today's code): L3 0.62. Fixed since the handoff: `settings_v2.assign` by-code pick keeps only the settings all sets share (another arm's extra had labelled the row; test updated, 12 pass). Lookups p1/p16 and list p3 now right (time fix). Open: Haiku p11 still names "ORD-399 25 mg daily" as best dose: Answer labels a row from the linked component's representative setting set (with its extras), not from the row's own set (answer/core.py cell()). Qwen trend 0.0 (p6, p8) not yet looked at.
+
+## 2026-11-21 PaperFactory Qwen runbook preflight
+Pull: `git fetch origin` + fast-forward `main` to `9ef3c6207`; preserved existing local worktree edits.
+Setup: `git submodule update --init llm-setup` (already at pinned commit); `uv sync` completed; `uv run pytest backend/paperfactory/tests -q`: 141 passed in 130.59s.
+Stack: submitted job 9877 with `LLM_SETUP_PROFILE=profiles/orch-3x40-gliner.yaml`, `LLM_SETUP_BOOTSTRAP_COMPILER=1`, and `slurm/llm-stack.sbatch` (3 Ampere GPUs, 48h). At 21:49 it was pending, forecast start 2026-11-22 09:05 on gammaweb09. Previous one-GPU job 9857 is CANCELLED by user. No PaperFactory inference started; continue when 9877 starts, then check readiness and gateway before smoke-law.
