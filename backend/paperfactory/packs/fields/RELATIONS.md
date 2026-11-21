@@ -1,6 +1,6 @@
 # Relations per field (D5)
 
-Made with `uv run paperfactory relation-table --field law --field medicine --field materials`; edit the packs, not this file.
+Made with `uv run paperfactory relation-table --field law --field medicine --field materials --field llm`; edit the packs, not this file.
 
 ### law (tested in the law pilot (21 Nov 2026, 3 papers))
 
@@ -33,4 +33,15 @@ DRAFT for review: a trend that is not significant is often written as a benefit;
 | fails_to_replicate | failed to replicate | the study repeated an earlier study and did not get its result | study | study | - |
 
 DRAFT for review: for a property where lower is better (wear, creep) a fall is an improvement; small changes are written as improvement or as no change.
+
+### llm (DRAFT, not yet run: Aditya reviews before use)
+
+| Relation | Words | Definition | Subject kinds | Object kinds | Easily confused with |
+|---|---|---|---|---|---|
+| reports_gain | reported a gain from | the study reports that the method raised the model's score on the benchmark over the baseline | study | method | reports_no_gain, reports_drop |
+| reports_no_gain | reported no gain from | the study reports no clear difference from the baseline score on the benchmark for the method | study | method | reports_gain, reports_drop |
+| reports_drop | reported a drop with | the study reports that the method lowered the model's score on the benchmark below the baseline | study | method | reports_gain, reports_no_gain |
+| fails_to_replicate | failed to replicate | the study re-ran an earlier study's setup and did not get its reported result | study | study | - |
+
+DRAFT for review: a gain within run-to-run noise (one seed, no error bars) is often written as a gain; for a metric where lower is better (error rate, perplexity) a fall is a gain; a gain on one benchmark split with a drop on another reads as gain, drop or no gain.
 

@@ -43,7 +43,7 @@ def test_shape_report() -> None:
     assert sh["per_paper"]["L-01"]["words"] == [2700, 3300]
 
 
-@pytest.mark.parametrize("name", ["law", "medicine", "materials"])
+@pytest.mark.parametrize("name", ["law", "medicine", "materials", "llm"])
 def test_confusions_are_relations_and_go_both_ways(name: str) -> None:
     f = packs.field(name)
     for r, d in f.relations.items():
