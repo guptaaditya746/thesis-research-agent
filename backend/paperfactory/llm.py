@@ -24,6 +24,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import warnings
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -33,11 +34,13 @@ from typing import Any, TypeVar
 import jsonschema
 from pydantic import BaseModel, ValidationError
 
+from paperfactory import files
 from paperfactory.config import RoleModel
 
 T, R = TypeVar("T"), TypeVar("R")
 MAX_SLOTS = 3          # default parallel calls (pmap threads); per endpoint the role's max_parallel applies
 RETRIES_ON_REJECT = 2
+CACHE_VERSION = 2      # raise when the call protocol changes (retry prompt, parsing); part of the cache key
 
 
 class LLMError(RuntimeError):
@@ -191,15 +194,39 @@ def run_backend(rm: RoleModel, system: str, user: str, schema: dict[str, Any]) -
 
 # ------------------------------------------------------------------ the caller
 class Caller:
-    """call(role, step, system, user, out, check=None) -> output dict or None. Cache key = backend, model, server,
-    prompt, input and schema; only checked outputs are cached."""
+    """call(role, step, system, user, out, check=None) -> output dict or None.
 
-    def __init__(self, settings, backend: Callable[..., dict[str, Any]] | None = None):
+    Cache (#7): key = CACHE_VERSION, backend, model, server, output params (max_tokens), prompt, input and schema.
+    Only checked outputs are cached, and a cached output is checked again on reading (the caller's rules may have
+    changed). Writes are atomic; a broken cache file gives a warning and the call is made again.
+    use_cache=False: never read the cache (the new answers still replace the old ones)."""
+
+    def __init__(self, settings, backend: Callable[..., dict[str, Any]] | None = None, use_cache: bool = True):
         self.s = settings
         self.cache = settings.out_dir / "cache" / "llm"
         self.log = settings.out_dir / "calls.jsonl"
         self.backend = backend or run_backend
+        self.use_cache = use_cache
         self._log_lock = threading.Lock()
+
+    def key(self, rm: RoleModel, system: str, user: str, schema: dict[str, Any]) -> str:
+        return hashlib.sha256(json.dumps([CACHE_VERSION, rm.backend, rm.model, rm.url, rm.max_tokens, system, user,
+                                          schema], sort_keys=True).encode()).hexdigest()
+
+    def cached(self, path: Path, out: type[BaseModel] | dict[str, Any],
+               check: Callable[[dict[str, Any]], str | None] | None) -> dict[str, Any] | None:
+        """The cached output, or None (no file, broken file, or the output fails today's checks)."""
+        if not self.use_cache or not path.is_file():
+            return None
+        try:
+            output = parse(out, json.loads(path.read_text(encoding="utf-8"))["output"])
+            if check and (msg := check(output)):
+                raise Rejected(msg)
+            return output
+        except (json.JSONDecodeError, KeyError, TypeError, UnicodeDecodeError, Rejected) as e:
+            warnings.warn(f"cache file {path.name} unusable ({type(e).__name__}: {str(e)[:120]}); calling again",
+                          stacklevel=3)
+            return None
 
     def _write_log(self, rec: dict[str, Any]) -> None:
         with self._log_lock, self.log.open("a", encoding="utf-8") as f:
@@ -209,11 +236,9 @@ class Caller:
                  check: Callable[[dict[str, Any]], str | None] | None = None) -> dict[str, Any] | None:
         rm = self.s.role(role)
         schema = json_schema(out)
-        key = hashlib.sha256(json.dumps([rm.backend, rm.model, rm.url, system, user, schema],
-                                        sort_keys=True).encode()).hexdigest()
-        path = self.cache / f"{key}.json"
-        if path.is_file():
-            return json.loads(path.read_text(encoding="utf-8"))["output"]
+        path = self.cache / f"{self.key(rm, system, user, schema)}.json"
+        if (hit := self.cached(path, out, check)) is not None:
+            return hit
         self.log.parent.mkdir(parents=True, exist_ok=True)
         start, prompt, errors, costs = time.time(), user, [], []
         output: dict[str, Any] | None = None
@@ -242,10 +267,22 @@ class Caller:
                "attempts": len(costs), "rejections": errors, "parse_error": output is None,
                "seconds": round(time.time() - start, 1)}
         if output is not None:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(rec | {"output": output}, ensure_ascii=False, indent=1), encoding="utf-8")
+            files.write_json(path, rec | {"output": output})
         self._write_log(rec)
         return output
+
+    def clear(self, step_prefix: str) -> int:
+        """Delete the cached answers of every step starting with step_prefix; returns how many."""
+        n = 0
+        for p in self.cache.glob("*.json") if self.cache.is_dir() else []:
+            try:
+                step = json.loads(p.read_text(encoding="utf-8")).get("step", "")
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                step = step_prefix                    # a broken file goes too
+            if step.startswith(step_prefix):
+                p.unlink()
+                n += 1
+        return n
 
     def cost(self, prefix: str = "") -> dict[str, Any]:
         """{"usd": total, or "unknown" if any call's cost is unknown; "usd_known"; "calls"; "calls_unknown_cost"}."""

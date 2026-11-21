@@ -22,6 +22,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from paperfactory import files
 from paperfactory.evaluate import ids_check
 from paperfactory.packs import Field
 from paperfactory.text import alias_table, defined_terms, find_mentions, normalize_paper, split_rules, split_sents
@@ -195,7 +196,7 @@ Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop t
         md = (work / "paper.md").read_text(encoding="utf-8")
         raw = work / "paper.raw.md"
         if not raw.is_file():
-            raw.write_text(md, encoding="utf-8")
+            files.write_text(raw, md)
         log: list[dict[str, Any]] = []
         md, left = self.fix_round(pid, md, log, "first")
         status = "clean" if len(log) == 1 else "repaired"     # one log entry: the first check found nothing
@@ -205,7 +206,7 @@ Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop t
             if new is not None:
                 md, left = self.fix_round(pid, new, log, "after_redo")
             status = "failed" if left or new is None else "redone"
-        (work / "paper.md").write_text(md, encoding="utf-8")
+        files.write_text(work / "paper.md", md)
         rec = {"pid": pid, "status": status, "open_flags": left, "log": log}
-        (work / "paper.repairs.json").write_text(json.dumps(rec, indent=1, ensure_ascii=False), encoding="utf-8")
+        files.write_json(work / "paper.repairs.json", rec)
         return {"pid": pid, "status": status, "open_flags": len(left)}

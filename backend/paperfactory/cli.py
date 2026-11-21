@@ -15,18 +15,18 @@ from pathlib import Path
 
 from repo_paths import REPO
 
-from paperfactory import SCORING_VERSION, config, materials, packs, repair, seed, world, write
+from paperfactory import SCORING_VERSION, config, files, materials, packs, repair, seed, world, write
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
 STEPS = ("world", "seed", "materials", "write", "check", "eval")
 
 
-def run(s: config.Settings, steps: list[str]) -> None:
+def run(s: config.Settings, steps: list[str], use_cache: bool = True) -> None:
     f, g = packs.field(s.field), packs.genre(s.genre)
     out = s.out_dir
     out.mkdir(parents=True, exist_ok=True)
-    call = Caller(s)
+    call = Caller(s, use_cache=use_cache)
     wfile = out / "world.json"
     if "world" in steps and not wfile.is_file():
         if s.world_file:
@@ -36,14 +36,13 @@ def run(s: config.Settings, steps: list[str]) -> None:
         errs = world.check(w, f, g)
         if errs:
             sys.exit("world failed the checks:\n" + "\n".join(errs[:40]))
-        wfile.write_text(json.dumps(w, indent=1, ensure_ascii=False), encoding="utf-8")
+        files.write_json(wfile, w)
         print(f"world: {len(w['entities'])} entities, {len(w['papers'])} papers")
     w = json.loads(wfile.read_text(encoding="utf-8"))
     if "seed" in steps:
         graph, gold = seed.make(w, f, s.qa_papers_per_question, s.seed)
         graph.serialize(out / "seed.ttl", format="turtle")
-        (out / "gold.json").write_text(json.dumps({"scoring_version": SCORING_VERSION} | gold, indent=1),
-                                       encoding="utf-8")
+        files.write_json(out / "gold.json", {"scoring_version": SCORING_VERSION} | gold)
         print(f"seed: SHACL ok, {len(gold['facts'])} facts, {len(gold['questions'])} questions")
     if "materials" in steps:
         print("materials:", len(materials.write_all(w, f, g, out)), "papers")
@@ -65,7 +64,7 @@ def run(s: config.Settings, steps: list[str]) -> None:
         gold = json.loads((out / "gold.json").read_text(encoding="utf-8"))
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
         rep["cost"] = call.cost()
-        (out / "report.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False), encoding="utf-8")
+        files.write_json(out / "report.json", rep)
         print(json.dumps({k: rep[k] for k in ("papers_written", "verifier_test", "judge_validation", "qa_summary",
                                                "style_leak", "cost")}, indent=1))
 
@@ -76,6 +75,10 @@ def main(argv: list[str] | None = None) -> None:
     r = sub.add_parser("run")
     r.add_argument("--config", required=True)
     r.add_argument("--steps", default=",".join(STEPS))
+    r.add_argument("--no-cache", action="store_true", help="never read cached model answers (they are replaced)")
+    cc = sub.add_parser("clear-cache", help="delete the cached model answers of one step")
+    cc.add_argument("--config", required=True)
+    cc.add_argument("--step", required=True, help="step prefix as in calls.jsonl, e.g. 'verify:' or 'qa:LAW-01'")
     c = sub.add_parser("check-world")
     c.add_argument("--config", required=True)
     c.add_argument("--world", required=True)
@@ -86,7 +89,9 @@ def main(argv: list[str] | None = None) -> None:
         unknown = set(steps) - set(STEPS)
         if unknown:
             sys.exit(f"unknown steps {sorted(unknown)}; steps: {STEPS}")
-        run(s, steps)
+        run(s, steps, use_cache=not a.no_cache)
+    elif a.cmd == "clear-cache":
+        print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:
         errs = world.check(json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre))
         print("\n".join(errs) or "ok")
