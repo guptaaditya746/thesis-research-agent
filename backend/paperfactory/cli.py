@@ -35,7 +35,7 @@ def run(s: config.Settings, steps: list[str]) -> None:
             w = json.loads((REPO / s.world_file).read_text(encoding="utf-8"))
         else:
             w = world.draft(s, f, g, call)
-        errs = world.check(w, f, g)
+        errs = world.check(w, f, g, n_papers=s.papers)
         if errs:
             sys.exit("world failed the checks:\n" + "\n".join(errs[:40]))
         wfile.write_text(json.dumps(w, indent=1, ensure_ascii=False), encoding="utf-8")
@@ -117,7 +117,8 @@ def main(argv: list[str] | None = None) -> None:
             sys.exit(f"unknown steps {sorted(unknown)}; steps: {STEPS}")
         run(s, steps)
     else:
-        errs = world.check(json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre))
+        errs = world.check(json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre),
+                           n_papers=s.papers)
         print("\n".join(errs) or "ok")
         sys.exit(1 if errs else 0)
 

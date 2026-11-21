@@ -6,7 +6,8 @@ Format (same for every field):
    "papers": {pid: {"title_hint", "issue", "thesis", "claims": [[s, r, o]], "decoys": [[s, r, o]],
                     "conflict": [[s, r, o], [s, r, o]] (optional)}}}
 A world comes from a file (hand-written) or from the world agent (draft), and is always checked by `check` in code.
-The agent works in two calls: entities, then papers in batches; each gets one repair call with the errors.
+The agent works in two calls: entities, then papers in batches; each gets one repair call with the errors. A batch
+with fewer papers than asked gets up to 2 calls for the missing papers only, then stops with an error.
 """
 from __future__ import annotations
 
@@ -172,21 +173,40 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
                 f"Plan {n} papers. Each has exactly {g.raw['claims_per_paper']} claims and "
                 f"{g.raw['decoys_per_paper']} decoys. Give a conflict in at least one of them. Spread the papers over "
                 f"different entities and issues.")
-        got = _need(call("world", f"world:papers:{b}", PAPER_SYS, user, PAPERS_SCHEMA), f"world:papers:{b}")
+        step = f"world:papers:{b}"
+        got = _top_up(_need(call("world", step, PAPER_SYS, user, PAPERS_SCHEMA), step), n, user, call, step)
         for attempt in range(2):
             trial = dict(w, papers=dict(w["papers"]))
             for i, p in enumerate(got["papers"][:n]):
                 trial["papers"][f"{prefix}-{b + i + 1:02d}"] = {k: v for k, v in p.items() if v or k != "conflict"}
-            errs = check(trial, f, g)
+            errs = check(trial, f, g, n_papers=b + n)
             if not errs:
                 w = trial
                 break
             if attempt:
                 raise ValueError(f"papers {b + 1}-{b + n} failed the checks after one repair:\n" + "\n".join(errs[:40]))
-            got = _need(call("world", f"world:papers:{b}:repair", PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n"
-                             + json.dumps(got) + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA),
-                        f"world:papers:{b}:repair")
+            rstep = f"{step}:repair"
+            got = _top_up(_need(call("world", rstep, PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
+                                     + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA), rstep),
+                          n, user, call, rstep)
     return w
+
+
+def _top_up(got: dict[str, Any], n: int, user: str, call, step: str, tries: int = 2) -> dict[str, Any]:
+    """The model may plan fewer papers than asked: ask only for the missing ones (up to `tries` more calls), then
+    stop with a clear error."""
+    for t in range(tries):
+        missing = n - len(got["papers"])
+        if missing <= 0:
+            break
+        more = _need(call("world", f"{step}:more:{t + 1}", PAPER_SYS, user + "\n\nPAPERS ALREADY PLANNED:\n"
+                          + json.dumps(got["papers"]) + f"\n\nPlan only {missing} more papers, different from these.",
+                          PAPERS_SCHEMA), f"{step}:more:{t + 1}")
+        got = {"papers": got["papers"] + more["papers"][:missing]}
+    if len(got["papers"]) < n:
+        raise ValueError(f"{step}: the world model planned {len(got['papers'])} of {n} papers after {tries} "
+                         "requests for the missing ones")
+    return got
 
 
 def _need(got: dict[str, Any] | None, step: str) -> dict[str, Any]:

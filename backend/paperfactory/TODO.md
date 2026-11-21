@@ -16,7 +16,7 @@ Order for the rest: re-score → #11 → #6 → #7 → #8 → #13 → #9 → "Do
       id, field, paper, sentence, context, subject, relation, object, label (empty), notes. Metrics script:
       precision, recall, false accept/reject, Cohen's kappa, Wilson 95% intervals, by relation and field,
       agreement between two labelers. Take the 98% out of README.md.
-- [ ] **#6 World agent can return fewer papers.** Pass n_papers and the per-paper counts to `world.check`. Generate
+- [x] **#6 World agent can return fewer papers.** Pass n_papers and the per-paper counts to `world.check`. Generate
       only the missing parts, up to 2 tries, then stop with a clear error.
 - [ ] **#7 Cache.** Atomic writes (temp file, fsync, os.replace). A broken cache file → warning and recompute. Key
       also covers params and prompt template version (backend, model and server are in it since #12). Only checked
