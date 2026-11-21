@@ -36,7 +36,7 @@ were made under different settings.
 
 Heavy runs go through Slurm (`srun --jobid=<job> --overlap ...`). Output goes to the run folder (`out`, under
 `runs/`, not committed): world.json, seed.ttl, gold.json, papers/, work/<paper>/paper.md, tagged.json,
-report.json, calls.jsonl (every model call with its cost). Steps reuse what exists, so a stopped run restarts.
+report.json, calls.jsonl (every model call with its cost; the writer's calls are in work/<paper>.log.jsonl). Steps reuse what exists, so a stopped run restarts.
 All result and cache files are written atomically (temp file, fsync, rename).
 
 ## Settings (configs/*.json)
@@ -68,7 +68,12 @@ All result and cache files are written atomically (temp file, fsync, rename).
 - Facts are flat (subject, relation, source). Who holds a view and the author's stance are not modelled yet.
 - 3 papers is a smoke test only; comparisons between systems need tens of papers per field.
 
-## Law pilot on this system (21 Nov 2026, Haiku for every job, $0.42)
+## Law pilot on this system (21 Nov 2026, Haiku for every job, about $0.54)
+
+Cost: $0.42 for every job except the writer, plus $0.119 for the writer (PaperOrchestra's own logs), so about $0.54
+for 3 papers. Not yet recomputed by `uv run paperfactory cost --config configs/law-pilot.json` (the run folder is on
+the cluster); report.json now has the cost per role and per paper, and a projection for N papers.
+
 
 3 papers (2,700-3,200 words), 18 planted facts, all found in the papers (49 spans). Verifier 98% (146/147).
 Meaning judge 89.8% on paper wording and on answer wording (bar 90%: just under). QA over 7 questions: right

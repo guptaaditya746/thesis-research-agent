@@ -16,7 +16,7 @@ from typing import Any
 
 from repo_paths import REPO
 
-from paperfactory import SCORING_VERSION, config, files, meta, materials, packs, repair, seed, world, write
+from paperfactory import SCORING_VERSION, config, cost, files, meta, materials, packs, repair, seed, world, write
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
@@ -123,7 +123,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
         pids = [p for p in w["papers"] if paper(p).is_file() and not failed(out, p)]
         allowed = meta.same_settings({p: meta.read(paper(p)) for p in pids}, SHARED, allow_mixed, "eval")
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
-        rep["cost"] = call.cost()
+        rep["cost"] = cost.report(out, list(w["papers"]), sorted({s.papers, 100}))
         rep["mixed_settings_allowed"] = allowed
         files.write_json(out / "report.json", rep)
         meta.write(out / "report.json", {
@@ -133,7 +133,9 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
             "qa_papers_per_question": s.qa_papers_per_question, "scoring_version": SCORING_VERSION,
             "code": {m: meta.file_hash(Path(__file__).with_name(m)) for m in ("evaluate.py", "text.py")}})
         print(json.dumps({k: rep[k] for k in ("papers_written", "verifier_test", "judge_validation", "qa_summary",
-                                               "style_leak", "cost")}, indent=1))
+                                               "style_leak")}
+                         | {"cost": {k: rep["cost"][k] for k in ("usd", "usd_known", "calls", "mean_per_paper_usd",
+                                                                 "projection")}}, indent=1))
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -145,6 +147,9 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--allow-mixed", action="store_true",
                    help="keep outputs made under other or unknown settings (no meta file) instead of stopping")
     r.add_argument("--no-cache", action="store_true", help="never read cached model answers (they are replaced)")
+    co = sub.add_parser("cost", help="cost per role, per paper and total, from the run's call logs")
+    co.add_argument("--config", required=True)
+    co.add_argument("--project", type=int, nargs="*", default=[100], help="papers to project the cost for")
     cc = sub.add_parser("clear-cache", help="delete the cached model answers of one step")
     cc.add_argument("--config", required=True)
     cc.add_argument("--step", required=True, help="step prefix as in calls.jsonl, e.g. 'verify:' or 'qa:LAW-01'")
@@ -162,6 +167,9 @@ def main(argv: list[str] | None = None) -> None:
             run(s, steps, use_cache=not a.no_cache, allow_mixed=a.allow_mixed)
         except meta.MixedSettings as e:
             sys.exit(str(e))
+    elif a.cmd == "cost":
+        w = json.loads((s.out_dir / "world.json").read_text(encoding="utf-8"))
+        print(json.dumps(cost.report(s.out_dir, list(w["papers"]), sorted({s.papers, *a.project})), indent=1))
     elif a.cmd == "clear-cache":
         print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:
