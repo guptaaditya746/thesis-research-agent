@@ -20,7 +20,7 @@ from typing import Any
 
 from paperfactory.llm import pmap
 from paperfactory.packs import Field
-from paperfactory.text import mentions, names, norm, split_sents
+from paperfactory.text import mentions, names, norm, normalize_paper, split_rules, split_sents
 from paperfactory.write import repeated_phrases
 
 
@@ -31,6 +31,7 @@ class Eval:
         self.facts = gold["facts"]
         self.rng = random.Random(s.seed)
         self.letters = {chr(65 + i): r for i, r in enumerate(f.relations)} | {chr(65 + len(f.relations)): "none"}
+        self.rules = split_rules(f, w)
 
     # -------------------------------------------------------------- helpers
     def label(self, e: str) -> str:
@@ -83,7 +84,7 @@ is "no"."""
         return out
 
     def tag_paper(self, pid: str) -> dict[str, Any]:
-        sents = split_sents(self.paper(pid))
+        sents = split_sents(self.paper(pid), self.rules)
         facts = [fa for fa in self.facts.values() if pid in fa["papers"]]
         user = json.dumps({"sentences": [{"n": i, "text": s[2]} for i, s in enumerate(sents)],
                            "holdings": [{"id": fa["id"], "holding": self.fact_text(fa)} for fa in facts]}, indent=1)
@@ -218,8 +219,9 @@ question and nothing else. If the papers do not answer it, return no items."""
         return max(hits, key=lambda e: max(len(n) for n in names(self.w, e) if norm(n) in norm(text)))
 
     def qa_one(self, q: dict[str, Any], tagged: dict[str, Any]) -> dict[str, Any]:
-        papers = {pid: self.paper(pid) for pid in q["papers"]}
-        blob = "\n\n".join(f"=== paper {pid} ===\n{md}" for pid, md in papers.items())
+        raw = {pid: self.paper(pid) for pid in q["papers"]}
+        blob = "\n\n".join(f"=== paper {pid} ===\n{md}" for pid, md in raw.items())
+        papers = {pid: normalize_paper(md).text for pid, md in raw.items()}   # same normalization as the sentences
         user = f"Question: {q['text']}\n\n{blob}"
         got = self.call("qa", f"qa:{q['id']}", self.qa_sys(), user, self.QA_SCHEMA)
         locate = lambda it: it["paper"] if it["paper"] in papers else next(  # noqa: E731

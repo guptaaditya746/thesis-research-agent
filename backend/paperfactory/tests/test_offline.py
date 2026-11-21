@@ -9,7 +9,7 @@ import pytest
 
 from paperfactory import config, materials, packs, seed, world
 from paperfactory.evaluate import Eval
-from paperfactory.text import split_sents
+from paperfactory.text import split_rules, split_sents
 from paperfactory.write import repeated_phrases
 
 HERE = Path(__file__).resolve().parents[1]
@@ -104,7 +104,8 @@ def test_judge_options_come_from_the_field() -> None:
 
 
 def test_split_and_repeats() -> None:
-    s = split_sents("In Marrin v. Tolst Media the court held so. Then s. 9 applied to it here.\n")
+    s = split_sents("In Marrin v. Tolst Media the court held so. Then s. 9 applied to it here.\n",
+                    split_rules(LAW, PILOT))
     assert [x[2] for x in s] == ["In Marrin v. Tolst Media the court held so.", "Then s. 9 applied to it here."]
     text = "In Rusk the court relied on it as a basis for its ruling. " * 3
     assert repeated_phrases(text, ["Rusk"])
