@@ -52,6 +52,10 @@ Order for the rest: re-score → #11 → #6 → #7 → #8 → #13 → #9 → "Do
 - D5: review the `confusable_with` drafts (packs/fields/RELATIONS.md). Proposed, not built: report terms a paper
   defines (e.g. "the Act") that mean different entities in different papers of one question.
 
+- Adversarial review (21 Nov 2026): 9 findings, all fixed on paperfactory-todo (one commit each, "review fix N").
+- Pilot datasets on Qwen (law, llm, medicine, materials; 20 papers each): RUNBOOK-qwen.md, for Codex on Slurm.
+  The llm, medicine and materials packs are DRAFTS (review the packs and RELATIONS.md).
+
 ## Notes from the work so far
 - PaperOrchestra's v1 prompts stay frozen (the committed benchmark papers were written with them); paperfactory
   writes with `v1n` (VENDORED.md C10).

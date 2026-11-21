@@ -1,0 +1,13 @@
+{
+ "_note": "Pilot dataset on Qwen in the Slurm GPU job (ops/injob.sh sets LITELLM_BASE_URL). 20 papers, world agent. Every job uses orch-model (one set of weights: the shared-model warning is expected; final numbers need a different model family for judge and verifier). local=true: cost 0, not unknown.",
+ "field": "medicine",
+ "genre": "argument",
+ "papers": 20,
+ "pages": 6,
+ "models": {"default": {"model": "orch-model", "backend": "openai", "context_window": 65536, "max_tokens": 8192,
+                        "max_parallel": 3, "timeout": 1800, "local": true}},
+ "out": "runs/paperfactory/qwen-medicine",
+ "qa_papers_per_question": 3,
+ "leak_trials": 150,
+ "seed": 1
+}

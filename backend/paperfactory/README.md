@@ -41,6 +41,8 @@ Heavy runs go through Slurm (`srun --jobid=<job> --overlap ...`). Output goes to
 report.json, calls.jsonl (every model call with its cost; the writer's calls are in work/<paper>.log.jsonl). Steps reuse what exists, so a stopped run restarts.
 All result and cache files are written atomically (temp file, fsync, rename).
 
+Qwen on Slurm (pilot datasets, 20 papers per field): configs/qwen/*.json and RUNBOOK-qwen.md.
+
 ## Settings (configs/*.json)
 
 | Key | Meaning |
