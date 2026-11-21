@@ -52,6 +52,25 @@ const run = { run_id: "slice1-aaa", config: { name: "slice1", domain: "medical",
 const closed = { run_id: "closed-bbb", config: { name: "closed", closed_book: true }, questions: {}, events: [],
   eval: evalOf("closed-bbb", "closed", true, "find") }
 
+// a PaperQA2 baseline run: find + answer text + claims, no structured L2/L3/advisor (null = does not apply)
+const bfact = { ...fact("R-med-01-02", "none", false), l2: null }
+const bscore = { qid: "Q-med-01", type: "lookup", missing_files: [], facts: [bfact], l0: 1, l1: 1, l1_paper: 1,
+  l2: { recall: null, precision: null }, l3: { score: null, exact: false }, advisor: { score: null, checks: 0, mismatches: ["n/a: baseline run"] },
+  l3_text: { score: 0.75, exact: false, claims: 1 }, blame: { L0: 0, find: 0, extract: 0, answer: 0, none: 1, unscored: 0 } }
+const baseline = { run_id: "practice-pqa-rag-ddd", config: { name: "practice-pqa-rag", domain: "medical", system: "paperqa2-rag",
+  questions: ["Q-med-01"] }, events: [],
+  questions: { "Q-med-01": { spec: null, answer: null, rows: [], find: [{ ...hit, sources: ["paperqa2"] }],
+    answer_text: { qid: "Q-med-01", system: "paperqa2-rag", text: "At week 24, brenoxalin 20 mg lowered HbA1c by 0.57 pp (P-med-01).",
+      cannot_answer: false, citations: ["P-med-01"], tokens: { prompt: 900, completion: 100 }, seconds: 4.2 },
+    claims: { qid: "Q-med-01", text_sha256: "x", model: "qwen:orch-model",
+      claims: [{ value_text: "lowered by 0.57 pp", subject: "brenoxalin", measure: "HbA1c", time_point: "week 24", dose: "20 mg", paper: "P-med-01" }],
+      dropped: [{ claim: { value_text: "about half a point" }, why: "no number in the quote" }] } } },
+  eval: { run_id: "practice-pqa-rag-ddd", config_name: "practice-pqa-rag", system: "paperqa2-rag", unknown_questions: [],
+    questions: { "Q-med-01": bscore },
+    totals: { questions: 1, facts: 1, l0: 1, l1: 1, l1_paper: 1, l2_recall: null, l2_precision: null, l3: null, l3_exact: 0,
+      advisor: null, l3_text: 0.75, l3_text_exact: 0, blame: { L0: 0, find: 0, extract: 0, answer: 0, none: 1, unscored: 0 },
+      per_type: { lookup: { questions: 1, l3: null, exact: 0, l3_text: 0.75 } } } } }
+
 const why = { run_id: "slice1-aaa", qid: "Q-med-01", question: spec.question, type: "lookup", scored: true, score: 0.67,
   exact: false, right: 1, spec_mismatches: ["fixed dose"], facts: [
     { id: "R-med-01-02", paper: "P-med-01", truth: "brenoxalin 20 mg, week 24: -0.57 pp", right: true, blame: "none", lost_at: "",
@@ -70,7 +89,10 @@ function mockApi() {
     http.get("/api/evqa/runs", () => HttpResponse.json([
       { run_id: "slice1-aaa", name: "slice1", domain: "medical", closed_book: false, mtime: 2, has_eval: true },
       { run_id: "closed-bbb", name: "closed", domain: "medical", closed_book: true, mtime: 1, has_eval: true },
-      { run_id: "holdout-ccc", name: "holdout-qwen", domain: "medical_holdout", closed_book: false, mtime: 0, has_eval: true }])),
+      { run_id: "holdout-ccc", name: "holdout-qwen", domain: "medical_holdout", closed_book: false, mtime: 0, has_eval: true },
+      { run_id: "practice-pqa-rag-ddd", name: "practice-pqa-rag", domain: "medical", system: "paperqa2-rag", closed_book: false,
+        mtime: -1, has_eval: true }])),
+    http.get("/api/evqa/runs/practice-pqa-rag-ddd", () => HttpResponse.json(baseline)),
     http.get("/api/evqa/runs/holdout-ccc", () => HttpResponse.json({ run_id: "holdout-ccc",
       config: { name: "holdout-qwen", domain: "medical_holdout", questions: ["Q-mho-001"] }, questions: {}, events: [],
       eval: null, closed: "holdout-ccc is a hold-out run: score only." })),
@@ -159,5 +181,36 @@ describe("workbench run and evaluation panes", () => {
     fireEvent.click(screen.getByText("holdout-ccc"))
     expect(await screen.findByText("holdout-ccc is a hold-out run: score only.", undefined, T)).toBeInTheDocument()
     expect(screen.queryByText("Q-mho-001")).not.toBeInTheDocument()
+  }, 60_000)
+
+  it("shows a baseline run as question, what it read, answer text and claims", async () => {
+    mockApi()
+    renderRoutes(routes, "/workbench")
+    fireEvent.click(await screen.findByRole("tab", { name: "2 · Run" }, FIRST))
+    expect(await screen.findByText("Every time point.", undefined, T)).toBeInTheDocument()
+    fireEvent.click(screen.getByText("practice-pqa-rag-ddd"))
+    expect(await screen.findByText(/lowered HbA1c by 0.57 pp \(P-med-01\)/, undefined, T)).toBeInTheDocument()
+    expect(screen.getByRole("group", { name: "Step 2: What it read: papers and passages" })).toBeInTheDocument()
+    expect(screen.queryByRole("group", { name: /Spec: what exactly is asked/ })).not.toBeInTheDocument()
+    expect(within(screen.getByRole("table", { name: "Claims" })).getByText("lowered by 0.57 pp")).toBeInTheDocument()
+    expect(screen.getByText(/no number in the quote/)).toBeInTheDocument()
+    expect(screen.getByText("1000 tokens · 4.2 s")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Why: Q-med-01" })).not.toBeInTheDocument()   // 409 for baselines
+    const facts = screen.getByRole("table", { name: "True facts of Q-med-01" })
+    expect(within(facts).getByLabelText("L2: does not apply")).toBeInTheDocument()
+  }, 60_000)
+
+  it("scores a baseline run on L3 text, with the structured scores shown as —", async () => {
+    mockApi()
+    renderRoutes(routes, "/workbench")
+    fireEvent.click(await screen.findByRole("tab", { name: "3 · Evaluation" }, FIRST))
+    await screen.findByRole("table", { name: "Totals" }, T)
+    fireEvent.change(screen.getByLabelText("Compare with"), { target: { value: "practice-pqa-rag-ddd" } })
+    const totals = screen.getByRole("table", { name: "Totals" })
+    expect(await within(totals).findByText("paperqa2-rag", undefined, T)).toBeInTheDocument()
+    const textRow = within(totals).getByText("L3 text").closest("tr")!
+    expect(within(textRow).getByText("0.75")).toBeInTheDocument()
+    const l3Row = within(totals).getByText("L3 answer").closest("tr")!
+    expect(within(l3Row).getByText("—")).toBeInTheDocument()
   }, 60_000)
 })

@@ -7,8 +7,10 @@ import { useQuery } from "@tanstack/react-query"
 
 import { getJson } from "./client"
 
-export type RunItem = { run_id: string; name: string | null; domain: string | null; closed_book: boolean
-  mtime: number; has_eval: boolean }
+/** system: "evqa" or a baseline (evqa/baselines): "paperqa2-rag", "paperqa2-agent", "long-context". */
+export type RunItem = { run_id: string; name: string | null; domain: string | null; system?: string
+  closed_book: boolean; mtime: number; has_eval: boolean }
+export const isBaseline = (system: unknown): boolean => typeof system === "string" && system !== "" && system !== "evqa"
 
 export type Name = { label: string; synonyms?: string[]; definition?: string; known?: boolean }
 export type OpenPoint = { id: string; question: string; choice: string; source?: string }
@@ -37,11 +39,20 @@ export type Answer = { qid: string; type: string; columns?: string[]; table?: An
 export type RunEvent = { ts: number; qid?: string | null; step: string; kind: string; data?: Record<string, unknown> }
 
 export type Broken = { _error: string }
+/** A baseline run's answer_text.json and claims.json (backend/evqa/contracts.py TextAnswer, TextClaims). */
+export type TextAnswer = { qid: string; system: string; text: string; cannot_answer?: boolean; citations?: string[]
+  tokens?: Record<string, number>; seconds?: number; error?: string | null }
+export type TextClaim = { value_text: string; subject?: string; comparator?: string; measure?: string
+  time_point?: string; dose?: string; patient_group?: string; paper?: string; quote?: string }
+export type TextClaims = { qid: string; text_sha256: string; model: string; claims: TextClaim[]
+  dropped: { claim: TextClaim; why: string }[] }
 export type RunQuestion = { spec: Spec | Broken | null; answer: Answer | Broken | null
-  find: (FindHit | Broken)[]; rows: (Row | Broken)[] }
+  find: (FindHit | Broken)[]; rows: (Row | Broken)[]
+  answer_text?: TextAnswer | Broken | null; claims?: TextClaims | Broken | null }
 
-export type Blame = "L0" | "find" | "extract" | "answer" | "none"
-export type FactScore = { id: string; paper: string; l0: boolean; l1: boolean; l2: boolean; name_ok?: boolean
+/** unscored: a baseline fact Find found, before `evqa eval --text` says whether the answer states it. */
+export type Blame = "L0" | "find" | "extract" | "answer" | "none" | "unscored"
+export type FactScore = { id: string; paper: string; l0: boolean; l1: boolean; l2: boolean | null; name_ok?: boolean
   quote_ok?: boolean; rows?: number[]; in_answer: boolean; blame: Blame }
 /** null = does not apply (a question the papers cannot answer has no true facts). */
 export type QuestionScore = {
@@ -49,16 +60,18 @@ export type QuestionScore = {
   l0: number | null; l1: number | null
   l2: { recall: number | null; precision: number | null; name_ok?: number | null; rows?: number; dropped?: number
     matched_rows?: number }
-  l3: { recall?: number; precision?: number; exact?: boolean; score: number; answer_rows?: number; gold_rows?: number
+  l3: { recall?: number; precision?: number; exact?: boolean; score: number | null; answer_rows?: number; gold_rows?: number
     groups?: { cells: Record<string, string>; gold_status: string; gold_winner?: string | null; found: boolean
       status?: string; winner?: string | null; ok: boolean }[]
-    said_not_reported?: boolean; hallucination?: boolean; near_miss_trap?: boolean }
-  advisor: { score: number; checks: number; mismatches: string[] }
+    said_not_reported?: boolean | null; hallucination?: boolean | null; near_miss_trap?: boolean | null }
+  advisor: { score: number | null; checks: number; mismatches: string[] }
+  /** the answer text, scored the same way for every system (`evqa eval --text`); claims = how many were kept */
+  l3_text?: { score: number | null; exact?: boolean; claims?: number }
   blame: Record<Blame, number>
 }
 export type TypeTotals = { questions: number; l3: number | null; exact: number; advisor?: number | null
   l1?: number | null; l2_recall?: number | null; said_not_reported?: number; hallucination?: number | null
-  near_miss_trap?: number | null }
+  near_miss_trap?: number | null; l3_text?: number | null }
 export type NotReportedTotals = { questions: number; accuracy: number | null; hallucination: number | null
   near_miss_trap: number | null; near_miss_questions?: number }
 export type EvalTotals = { questions: number; answerable?: number; facts: number; l0: number | null
@@ -66,8 +79,12 @@ export type EvalTotals = { questions: number; answerable?: number; facts: number
   l3: number | null; l3_exact?: number; advisor: number | null; blame: Record<Blame, number>
   not_reported?: NotReportedTotals; per_type?: Record<string, TypeTotals>
   l1_paper?: number | null; l2_complete?: number | null; l2_complete_upper?: number | null
-  l0_missing_facts?: number; counts?: Record<string, unknown> }
+  l0_missing_facts?: number; counts?: Record<string, unknown>
+  l3_text?: number | null; l3_text_exact?: number
+  text_not_reported?: { questions: number; accuracy: number | null; hallucination: number | null } }
 export type RunEval = { run_id: string; domain?: string; config_name?: string; closed_book?: boolean
+  system?: string; text_eval?: { version?: string; reader?: string; judge?: string }
+  intervals?: Record<string, unknown>
   unknown_questions?: string[]; totals: EvalTotals; questions: Record<string, QuestionScore> }
 
 /** closed: why a hold-out run shows only its totals (questions, per-question events and scores are left out). */

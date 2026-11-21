@@ -1,8 +1,8 @@
 # Workbench: showing baseline runs (PaperQA2, long context) next to evqa
 
-Status: plan only (21 Nov 2026). The backend is done: `evqa/baselines`, `evqa/eval/text_answer.py`,
-`webapp/evqa_runs_api.py`. Nothing in `frontend/` changed yet, and nothing breaks without these changes
-(baseline runs already load; their missing scores show as "—").
+Status: built 21 Nov 2026 (steps 1–4; step 5 "systems" table not yet). The backend is done: `evqa/baselines`, `evqa/eval/text_answer.py`,
+`webapp/evqa_runs_api.py`. The frontend now follows sections 2–4 below; structured scores a baseline lacks
+show as "—".
 
 ## 1. What the API now sends
 

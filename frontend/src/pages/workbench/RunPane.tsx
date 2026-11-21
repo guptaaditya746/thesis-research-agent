@@ -6,12 +6,14 @@
  * "not written yet", so a half-written run still opens. Clicking a quote or a passage opens the paper with it marked.
  * Each question has a "why" link: per true fact, right or wrong, the step that lost it, the passage, the row and its
  * quote, in plain words (GET .../explain/{qid}, backend/evqa/explain.py; practice runs only).
+ * A baseline run (PaperQA2, long context; evqa/baselines) has no Spec, Extract or structured Answer: its steps are the
+ * question, what it read (find.jsonl), its answer text with citations, and the claims read from that text.
  */
 import { type ReactNode, useState } from "react"
 
 import { useQuestion } from "@/api/evqaQuestions"
 import { type Answer, type ExplainFact, type FindHit, type Passage, type Row, type RunDetail, type RunEvent, type Spec,
-  isBroken, ok, useExplain, useRun, useRuns } from "@/api/evqaRuns"
+  type TextAnswer, type TextClaims, isBaseline, isBroken, ok, useExplain, useRun, useRuns } from "@/api/evqaRuns"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -175,11 +177,12 @@ function PassageItem({ p, paper, open }: { p: Passage; paper: string; open: Open
   )
 }
 
-function FindStep({ hits, closedBook, open }: { hits: (FindHit | { _error: string })[]; closedBook: boolean; open: Open }) {
+function FindStep({ hits, closedBook, open, n = 3, title = "Find: papers and passages" }: {
+  hits: (FindHit | { _error: string })[]; closedBook: boolean; open: Open; n?: number; title?: string }) {
   const good = hits.filter((h): h is FindHit => !isBroken(h))
   const kept = good.filter((h) => h.screen !== "no").length
   return (
-    <Step n={3} title="Find: papers and passages" status={`${good.length} papers, ${kept} not screened out`}>
+    <Step n={n} title={title} status={`${good.length} papers, ${kept} not screened out`}>
       {good.length === 0 && <p className="text-sm text-muted-foreground">
         {closedBook ? "Closed book run: Find reads no papers." : "No papers found (or find.jsonl is not written yet)."}</p>}
       {hits.length > good.length && <p className="text-sm text-destructive">{hits.length - good.length} lines could not be read.</p>}
@@ -272,10 +275,70 @@ function AnswerStep({ ans, broken }: { ans: Answer | null; broken: string | null
   )
 }
 
+// ---------------------------------------------------------------- baseline: answer text and claims
+function TextAnswerStep({ n, ta, broken, domain, open }: { n: number; ta: TextAnswer | null; broken: string | null
+  domain: string; open: Open }) {
+  const tokens = Object.values(ta?.tokens ?? {}).reduce((a, b) => a + b, 0)
+  return (
+    <Step n={n} title="Answer text" status={ta ? `${ta.citations?.length ?? 0} papers cited` : "missing"}>
+      {!ta ? <Missing file="answer_text.json" broken={broken} /> : <>
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          {ta.cannot_answer && <Badge variant="outline" className={SCREEN.unsure}>said it cannot answer</Badge>}
+          {ta.error && <Badge variant="destructive">error: {ta.error}</Badge>}
+          <span className="text-muted-foreground">{tokens} tokens · {(ta.seconds ?? 0).toFixed(1)} s</span>
+        </div>
+        <p className="whitespace-pre-wrap text-sm">{ta.text || "(empty)"}</p>
+        {(ta.citations?.length ?? 0) > 0 && (
+          <p className="flex flex-wrap items-center gap-1 text-sm"><span className="text-muted-foreground">Cites:</span>
+            {ta.citations!.map((c) => <button key={c} type="button" title={`Open ${c} (${domain})`}
+              onClick={() => open({ paper: c, start: -1, end: -1, label: "Cited by the answer" })}
+              className="rounded-md border px-2 py-0.5 font-mono text-xs hover:bg-muted">{c}</button>)}</p>
+        )}
+      </>}
+    </Step>
+  )
+}
+
+const CLAIM_COLS = ["value", "subject", "measure", "time", "dose", "patient group", "paper"] as const
+
+function ClaimsStep({ n, tc, broken }: { n: number; tc: TextClaims | null; broken: string | null }) {
+  return (
+    <Step n={n} title="Claims read from the answer text" status={tc ? `${tc.claims.length} kept, ${tc.dropped.length} dropped` : "not read yet"}>
+      {!tc ? (broken ? <Missing file="claims.json" broken={broken} />
+        : <p className="text-sm text-muted-foreground">Not read yet: run <code>evqa eval --text</code> on this run.</p>) : <>
+        <p className="text-xs text-muted-foreground">Read by {tc.model}. Each claim is one value the answer states.</p>
+        {tc.claims.length > 0 && (
+          <Table label="Claims" head={[...CLAIM_COLS]}>
+            {tc.claims.map((c, i) => (
+              <tr key={i} className="border-t align-top" title={c.quote}>
+                <td className="px-2 py-1 font-mono">{c.value_text}</td>
+                <td className="px-2 py-1">{c.subject || "—"}</td>
+                <td className="px-2 py-1">{c.measure || "—"}</td>
+                <td className="px-2 py-1 whitespace-nowrap">{c.time_point || "—"}</td>
+                <td className="px-2 py-1 whitespace-nowrap">{c.dose || "—"}</td>
+                <td className="px-2 py-1 text-xs">{c.patient_group || "—"}</td>
+                <td className="px-2 py-1 font-mono text-xs">{c.paper || "—"}</td>
+              </tr>
+            ))}
+          </Table>
+        )}
+        {tc.dropped.length > 0 && (
+          <details className="text-sm">
+            <summary className="cursor-pointer text-muted-foreground">Dropped claims ({tc.dropped.length})</summary>
+            <ul className="mt-1 list-disc pl-5 text-xs">
+              {tc.dropped.map((d, i) => <li key={i}><span className="font-mono">{d.claim?.value_text}</span>: {d.why}</li>)}
+            </ul>
+          </details>
+        )}
+      </>}
+    </Step>
+  )
+}
+
 // ---------------------------------------------------------------- 6 events
 const num = (x: unknown) => (typeof x === "number" ? x : 0)
 
-function EventsStep({ events }: { events: RunEvent[] }) {
+function EventsStep({ events, n = 6 }: { events: RunEvent[]; n?: number }) {
   const ends = events.filter((e) => e.kind === "end")
   const llm = ends.reduce((acc, e) => {
     const l = (e.data?.llm ?? {}) as Record<string, unknown>
@@ -283,7 +346,7 @@ function EventsStep({ events }: { events: RunEvent[] }) {
   }, { requests: 0, hits: 0 })
   const problems = events.filter((e) => e.kind === "problem")
   return (
-    <Step n={6} title="Events and LLM calls" status={`${llm.requests} LLM calls (${llm.hits} from cache), ${problems.length} problems`}>
+    <Step n={n} title="Events and LLM calls" status={`${llm.requests} LLM calls (${llm.hits} from cache), ${problems.length} problems`}>
       {events.length === 0 ? <p className="text-sm text-muted-foreground">No events for this question (the API sends only the last 200 lines).</p> : (
         <Table label="Events" head={["step", "what", "seconds", "count", "LLM calls", "from cache", "more"]}>
           {events.map((e, i) => {
@@ -399,6 +462,28 @@ function QuestionView({ run, qid, domain, open, why, onCloseWhy }: { run: RunDet
   const ans = ok<Answer>(item.answer)
   const ev = ok(run.eval)
   const score = ev?.questions?.[qid]
+  const scoreStep = (n: number) => (
+    <Step n={n} title="Score against the true answer" status={score ? (score.l3_text
+      ? `L3 text ${score.l3_text.score ?? 0}` : `L3 ${score.l3?.score ?? 0}`) : "no score"}>
+      {score ? <><QuestionScores q={score} /><FactTable q={score} /></>
+        : <p className="text-sm text-muted-foreground">
+          {run.eval && isBroken(run.eval) ? `eval.json could not be read: ${run.eval._error}`
+            : run.eval ? "This question is not scored in eval.json." : "This run has no eval.json yet."}</p>}
+    </Step>
+  )
+  if (isBaseline(run.config.system)) return (
+    <div className="min-w-0 space-y-3">
+      <p className="text-sm text-muted-foreground">Baseline run: <Badge variant="outline">{String(run.config.system)}</Badge>.
+        It has no Spec, Extract or structured answer, only the papers it read and its answer text.</p>
+      <QuestionStep domain={domain} qid={qid} spec={null} />
+      <FindStep n={2} title="What it read: papers and passages" hits={item.find ?? []} closedBook={false} open={open} />
+      <TextAnswerStep n={3} ta={ok<TextAnswer>(item.answer_text)} domain={domain} open={open}
+        broken={isBroken(item.answer_text) ? item.answer_text._error : null} />
+      <ClaimsStep n={4} tc={ok<TextClaims>(item.claims)} broken={isBroken(item.claims) ? item.claims._error : null} />
+      <EventsStep n={5} events={(run.events ?? []).filter((e) => e.qid === qid)} />
+      {scoreStep(6)}
+    </div>
+  )
   return (
     <div className="min-w-0 space-y-3">
       {why && <WhyBox runId={run.run_id} qid={qid} open={open} onClose={onCloseWhy} />}
@@ -408,12 +493,7 @@ function QuestionView({ run, qid, domain, open, why, onCloseWhy }: { run: RunDet
       <ExtractStep rows={item.rows ?? []} open={open} />
       <AnswerStep ans={ans} broken={isBroken(item.answer) ? item.answer._error : null} />
       <EventsStep events={(run.events ?? []).filter((e) => e.qid === qid)} />
-      <Step n={7} title="Score against the true answer" status={score ? `L3 ${score.l3?.score ?? 0}` : "no score"}>
-        {score ? <><QuestionScores q={score} /><FactTable q={score} /></>
-          : <p className="text-sm text-muted-foreground">
-            {run.eval && isBroken(run.eval) ? `eval.json could not be read: ${run.eval._error}`
-              : run.eval ? "This question is not scored in eval.json." : "This run has no eval.json yet."}</p>}
-      </Step>
+      {scoreStep(7)}
       <GraphStep key={`${run.run_id}/${qid}`} runId={run.run_id} qid={qid} open={open} />
     </div>
   )
@@ -446,6 +526,7 @@ export function RunPane({ domain, runId, qid, onPick }: { domain: string; runId:
                 r.run_id === current ? "border-primary bg-primary/5" : "hover:bg-muted")}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="font-medium">{r.name ?? "(no config)"}</span>
+                {isBaseline(r.system) && <Badge variant="outline">{r.system}</Badge>}
                 {r.closed_book && <Badge variant="outline">closed book</Badge>}
                 {r.has_eval ? <Badge variant="secondary">scored</Badge> : <Badge variant="outline">not scored</Badge>}
               </div>
@@ -464,7 +545,7 @@ export function RunPane({ domain, runId, qid, onPick }: { domain: string; runId:
                     x === q ? "border-primary bg-primary/5" : "hover:bg-muted")}>
                   {x}{!run.data.questions[x] && <span className="ml-2 font-sans text-xs text-muted-foreground">not started</span>}
                 </button>
-                {run.data.questions[x] && (
+                {run.data.questions[x] && !isBaseline(cfg.system) && (
                   <button type="button" aria-label={`Why: ${x}`} title="Why is this answer right or wrong?"
                     onClick={() => { onPick(current, x); setWhy(`${current}/${x}`) }}
                     className="min-h-11 rounded-md border px-2 text-xs underline hover:bg-muted">why</button>

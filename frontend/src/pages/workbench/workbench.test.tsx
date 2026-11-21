@@ -7,7 +7,7 @@ import { routes } from "@/app/routes"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
-import { groupDomains } from "./WorkbenchPage"
+import { groupDomains } from "./domains"
 
 // jsdom has no canvas: a stub stands in for Cytoscape (the graph itself is checked in the browser).
 vi.mock("cytoscape", () => {

@@ -4,12 +4,15 @@
  * the true facts with a tick per layer. Clicking a fact opens that question in the Run pane. A table per question
  * type, and a block for the questions the papers cannot answer (should say "not reported"). The optional human
  * review (ReviewPane): coverage per task next to the scores, and a button that opens the one-item-at-a-time queue.
+ * Baseline runs (PaperQA2, long context; evqa/baselines) have no structured L2/L3/advisor ("—", does not apply);
+ * they are compared on L1 and "L3 text", the answer text scored the same way for every system (`evqa eval --text`).
  */
 import { Check, X } from "lucide-react"
 import { useState } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
-import { type Blame, type FactScore, type QuestionScore, type RunEval, type RunItem, isBroken, useRun, useRuns }
+import { type Blame, type FactScore, type QuestionScore, type RunEval, type RunItem, isBaseline, isBroken, useRun,
+  useRuns }
   from "@/api/evqaRuns"
 import { type ReviewTask, useReviewSummary, useReviewTasks } from "@/api/evqaReview"
 import { CardsSkeleton, ErrorState } from "@/components/states"
@@ -24,6 +27,7 @@ import { ReviewPane } from "./ReviewPane"
 const BLAME: { key: Blame; label: string }[] = [
   { key: "L0", label: "not in paper" }, { key: "find", label: "Find" }, { key: "extract", label: "Extract" },
   { key: "answer", label: "Answer" }, { key: "none", label: "in answer" },
+  { key: "unscored", label: "not scored yet" },
 ]
 const BLAME_LABEL = Object.fromEntries(BLAME.map((b) => [b.key, b.label])) as Record<Blame, string>
 const METRICS: { key: string; label: string; help: string }[] = [
@@ -35,6 +39,8 @@ const METRICS: { key: string; label: string; help: string }[] = [
     help: "share of facts read with the right value and every label (drug, measure, comparator, dose, time, patients); patient labels in other words count as misses until checked" },
   { key: "l2_precision", label: "L2 right (precision)", help: "share of read rows that are true facts" },
   { key: "l3", label: "L3 answer", help: "how well the final answer matches the true answer (answerable questions)" },
+  { key: "l3_text", label: "L3 text",
+    help: "the answer text, scored the same way for every system (evqa and baselines); needs evqa eval --text" },
   { key: "advisor", label: "Advisor", help: "share of spec checks the advisor got right" },
 ]
 
@@ -45,7 +51,9 @@ const TYPE_LABEL: Record<string, string> = {
   out_of_scope: "off topic",
 }
 
-export function Tick({ on, label }: { on: boolean; label: string }) {
+/** null / undefined: the layer does not apply (a baseline run has no Extract step). */
+export function Tick({ on, label }: { on: boolean | null | undefined; label: string }) {
+  if (on === null || on === undefined) return <span aria-label={`${label}: does not apply`} className="text-muted-foreground">—</span>
   return on
     ? <Check aria-label={`${label}: yes`} className="size-4 text-emerald-600" />
     : <X aria-label={`${label}: no`} className="size-4 text-destructive" />
@@ -54,7 +62,7 @@ export function Tick({ on, label }: { on: boolean; label: string }) {
 export function BlameBadge({ blame }: { blame: Blame }) {
   return <Badge variant={blame === "none" ? "secondary" : "outline"}
     className={cn(blame !== "none" && "border-amber-600/60 text-amber-800 dark:text-amber-300")}>
-    {blame === "none" ? "in answer" : `lost at ${BLAME_LABEL[blame] ?? blame}`}
+    {blame === "none" ? "in answer" : blame === "unscored" ? "not scored yet" : `lost at ${BLAME_LABEL[blame] ?? blame}`}
   </Badge>
 }
 
@@ -95,7 +103,8 @@ export function QuestionScores({ q }: { q: QuestionScore }) {
     <div className="space-y-1 text-sm">
       <div className="flex flex-wrap gap-2">
         {[["L0", q.l0], ["L1", q.l1], ["L2 recall", q.l2?.recall], ["L2 precision", q.l2?.precision],
-          ["L3", q.l3?.score], ["advisor", q.advisor?.score]].map(([k, v]) => (
+          ["L3", q.l3?.score], ["advisor", q.advisor?.score],
+          ...(q.l3_text ? [["L3 text", q.l3_text.score]] : [])].map(([k, v]) => (
           <span key={k as string} className="rounded-md border px-2 py-0.5"><b>{k}</b> {share(v as number)}</span>
         ))}
         {q.l3?.exact && <Badge>{q.answerable === false ? "said not reported" : "exact answer"}</Badge>}
@@ -117,7 +126,8 @@ function BlameChart({ evals }: { evals: RunEval[] }) {
   const keys = evals.map((_, i) => `run${i}`)
   const config = Object.fromEntries(evals.map((e, i) => [keys[i],
     { label: e.config_name ?? e.run_id, color: `var(--chart-${i + 1})` }])) satisfies ChartConfig
-  const data = BLAME.map((b) => ({ layer: b.label,
+  const used = BLAME.filter((b) => b.key !== "unscored" || evals.some((e) => (e.totals?.blame?.unscored ?? 0) > 0))
+  const data = used.map((b) => ({ layer: b.label,
     ...Object.fromEntries(evals.map((e, i) => [keys[i], e.totals?.blame?.[b.key] ?? 0])) }))
   return (
     <ChartContainer config={config} className="aspect-auto h-56 w-full max-w-xl" role="figure"
@@ -142,7 +152,8 @@ function Totals({ evals }: { evals: RunEval[] }) {
         <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
           <tr><th className="px-2 py-1.5 font-medium">score</th>
             {evals.map((e) => <th key={e.run_id} className="px-2 py-1.5 font-medium">
-              {e.config_name ?? e.run_id}{e.closed_book ? " (closed book)" : ""}</th>)}</tr>
+              {e.config_name ?? e.run_id}{e.closed_book ? " (closed book)" : ""}
+              {isBaseline(e.system) && <Badge variant="outline" className="ml-1">{e.system}</Badge>}</th>)}</tr>
         </thead>
         <tbody>
           {METRICS.map((m) => (
@@ -178,11 +189,12 @@ function Totals({ evals }: { evals: RunEval[] }) {
 function TypeTable({ ev }: { ev: RunEval }) {
   const rows = Object.entries(ev.totals?.per_type ?? {})
   if (rows.length === 0) return null
+  const text = rows.some(([, r]) => r.l3_text !== undefined)
   return (
     <div className="overflow-x-auto rounded-md border">
       <table aria-label="Scores per question type" className="w-full text-sm">
         <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-          <tr>{["type", "questions", "L3", "exact", "made up a value"].map((h) =>
+          <tr>{["type", "questions", "L3", ...(text ? ["L3 text"] : []), "exact", "made up a value"].map((h) =>
             <th key={h} className="px-2 py-1.5 font-medium">{h}</th>)}</tr>
         </thead>
         <tbody>
@@ -192,6 +204,7 @@ function TypeTable({ ev }: { ev: RunEval }) {
                 <div className="text-xs text-muted-foreground">{TYPE_LABEL[t] ?? ""}</div></td>
               <td className="px-2 py-1 font-mono">{r.questions}</td>
               <td className="px-2 py-1 font-mono">{share(r.l3)}</td>
+              {text && <td className="px-2 py-1 font-mono">{share(r.l3_text)}</td>}
               <td className="px-2 py-1 font-mono">{r.exact}</td>
               <td className="px-2 py-1 font-mono">{r.hallucination === undefined ? "" : share(r.hallucination)}</td>
             </tr>
@@ -220,6 +233,23 @@ function NotReportedBlock({ ev }: { ev: RunEval }) {
       </div>
       <p className="text-xs text-muted-foreground">These questions have no true facts, so the fact steps (L1, L2) do
         not apply and are left out of the scores above.</p>
+    </section>
+  )
+}
+
+/** The same check on the answer text (`evqa eval --text`): the only one a baseline run has. */
+function TextNotReportedBlock({ ev }: { ev: RunEval }) {
+  const nr = ev.totals?.text_not_reported
+  if (!nr || nr.questions === 0) return null
+  return (
+    <section aria-label="Not in the papers, answer text" className="space-y-1 rounded-md border p-3">
+      <h3 className="text-sm font-semibold">Same questions, judged on the answer text ({nr.questions})</h3>
+      <div className="flex flex-wrap gap-2 text-sm">
+        <span title="higher is better" className="rounded-md border px-2 py-0.5">
+          said “not reported” <b className="font-mono">{share(nr.accuracy)}</b></span>
+        <span title="lower is better" className="rounded-md border px-2 py-0.5">
+          made up a value <b className="font-mono">{share(nr.hallucination)}</b></span>
+      </div>
     </section>
   )
 }
@@ -285,7 +315,7 @@ function RunSelect({ runs, value, onChange, label, empty }: { runs: RunItem[]; v
         onChange={(e) => onChange(e.target.value)}>
         {empty !== undefined && <option value="">{empty}</option>}
         {runs.map((r) => <option key={r.run_id} value={r.run_id}>
-          {r.name ?? r.run_id}{r.closed_book ? " (closed book)" : ""}{r.has_eval ? "" : " (no eval yet)"} · {r.run_id}
+          {isBaseline(r.system) ? `[${r.system}] ` : ""}{r.name ?? r.run_id}{r.closed_book ? " (closed book)" : ""}{r.has_eval ? "" : " (no eval yet)"} · {r.run_id}
         </option>)}
       </select>
     </label>
@@ -317,6 +347,9 @@ export function EvalPane({ runId, onRun, onOpen, domain = "" }: { runId: string;
       {a.q.isPending && <CardsSkeleton count={1} />}
       {a.q.isError && <ErrorState error={a.q.error} />}
       {a.broken && <p className="text-sm text-destructive">eval.json could not be read: {a.broken}</p>}
+      {a.ev && isBaseline(a.ev.system) && a.ev.totals?.l3_text === undefined &&
+        <p className="rounded-md border border-dashed p-3 text-sm">This baseline run has no answer-text score yet, so its
+          facts show “not scored yet”. Make one with <code>evqa eval --text runs/evqa/{current}</code>.</p>}
       {a.q.data && !a.ev && !a.broken && <p className="rounded-md border border-dashed p-3 text-sm">
         This run has no score yet. Make one with <code>python -m evqa.eval.prism runs/evqa/{current}</code>.</p>}
       {other && b.q.data && !b.ev && <p className="text-sm text-muted-foreground">The run to compare has no score yet.</p>}
@@ -326,6 +359,7 @@ export function EvalPane({ runId, onRun, onOpen, domain = "" }: { runId: string;
             <h2 className="text-base font-semibold">Scores (0 = none, 1 = all)</h2>
             <Totals evals={evals} />
             <NotReportedBlock ev={a.ev} />
+            <TextNotReportedBlock ev={a.ev} />
             <TypeTable ev={a.ev} />
             <ReviewBlock domain={a.ev.domain ?? domain} runId={current}
               onOpen={(task, scope) => setReviewing({ task, scope })} />
