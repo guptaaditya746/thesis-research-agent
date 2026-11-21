@@ -10,13 +10,13 @@ Order for the rest: re-score → #11 → #6 → #7 → #8 → #13 → #9 → "Do
 - [ ] **#11 how many sentences per field** to export for hand labeling (target about 200).
 
 ## Items
-- [ ] **#11 Verifier score is circular.** The 98% is tested on sentences this verifier already accepted, and 29/98
+- [x] **#11 Verifier score is circular.** The 98% is tested on sentences this verifier already accepted, and 29/98
       negatives are impossible pairs. Build a test set without the verifier (all candidate sentences; negatives:
       decoys, other relation, "not recorded" wording; impossible pairs reported apart). Export CSV with columns
       id, field, paper, sentence, context, subject, relation, object, label (empty), notes. Metrics script:
       precision, recall, false accept/reject, Cohen's kappa, Wilson 95% intervals, by relation and field,
       agreement between two labelers. Take the 98% out of README.md.
-- [ ] **#6 World agent can return fewer papers.** Pass n_papers and the per-paper counts to `world.check`. Generate
+- [x] **#6 World agent can return fewer papers.** Pass n_papers and the per-paper counts to `world.check`. Generate
       only the missing parts, up to 2 tries, then stop with a clear error.
 - [ ] **#7 Cache.** Atomic writes (temp file, fsync, os.replace). A broken cache file → warning and recompute. Key
       also covers params and prompt template version (backend, model and server are in it since #12). Only checked
@@ -28,7 +28,7 @@ Order for the rest: re-score → #11 → #6 → #7 → #8 → #13 → #9 → "Do
 - [ ] **#13 Writer cost missing from the report.** Add PaperOrchestra's call logs. Report cost per paper and per
       role, the total, and a projection for N papers. Unknown cost shows "unknown". Recompute the README figure
       from the logs ($0.42 was the whole 3-paper pilot without the writer; the writer added $0.119).
-- [ ] **#9 Law wording in shared code.** Move field words into the packs: materials.py ("line of authority",
+- [x] **#9 Law wording in shared code.** Move field words into the packs: materials.py ("line of authority",
       "Holdings", "Action | Source"), prompts in evaluate.py ("holding"). A missing pack key is a clear error.
       Add a test that searches the shared modules for law terms.
 

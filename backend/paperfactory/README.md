@@ -26,6 +26,8 @@ uv run paperfactory run --config ... --steps seed,materials                     
 uv run paperfactory check-world --config ... --world my-world.json
 uv run paperfactory run --config ... --no-cache                                 # never read cached model answers
 uv run paperfactory clear-cache --config ... --step verify:                     # drop one step's cached answers
+uv run paperfactory export-labels --config ... --out labels.csv --per-field 200   # hand labels for the verifier
+uv run paperfactory label-metrics --labels a.csv --labels b.csv --answers verifier.json [--run-verifier --config ...]
 ```
 
 Restarts: world.json, work/<paper>/paper.md and report.json each get a `<name>.meta.json` (hashes of the settings,
@@ -75,7 +77,9 @@ for 3 papers. Not yet recomputed by `uv run paperfactory cost --config configs/l
 the cluster); report.json now has the cost per role and per paper, and a projection for N papers.
 
 
-3 papers (2,700-3,200 words), 18 planted facts, all found in the papers (49 spans). Verifier 98% (146/147).
+3 papers (2,700-3,200 words), 18 planted facts, all found in the papers (49 spans). The verifier has no
+precision estimate yet: the old verifier test only reuses sentences the verifier itself accepted (circular); the
+hand-labeled test is `export-labels` / `label-metrics` (labels.py).
 Meaning judge 89.8% on paper wording and on answer wording (bar 90%: just under). QA over 7 questions: right
 answer 100%, right answer with right evidence 93%, precision 57% (extra items: repeats and neighbouring facts).
 Style leak 4.7% (7/150, 95% range 2-9%; chance 5%): passes, down from 19% when holdings were given as sentences.

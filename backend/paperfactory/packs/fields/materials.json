@@ -10,7 +10,12 @@
   "source_kinds": "lab studies and the materials and earlier studies they assess",
   "actor": "the authors",
   "framework_section": "Background on the Materials",
-  "analysis_section": "Analysis of the Reported Evidence"
+  "analysis_section": "Analysis of the Reported Evidence",
+  "fact": "finding",
+  "facts": "findings",
+  "action": "result",
+  "actions": "results",
+  "line_of_authority": "line of experimental evidence"
  },
  "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "Eq.", "Ref.", "vs.", "approx.", "ca.", "wt.", "Dr.", "No.", "Co.", "Ltd.", "Inc."], "lowercase_starts": [], "name_variants": [], "citation_tail": "", "defined_terms": [" ?\\((?:the )?[\"'](?P<t>[^\"']{2,40})[\"']\\)", " ?\\((?P<t>[A-Z][A-Z0-9-]*[A-Z0-9])\\)", ",? hereinafter (?:the )?[\"']?(?P<t>[A-Z][^\"',.;)]{1,39}?)[\"']?(?=[\\s,.;)])"], "absence_patterns": ["\\b[Tt]his (analysis|article|paper|review|note)\\b", "\\brecords? no\\b", "\\bno (recorded )?treatment\\b", "\\bnot (recorded|addressed|stated|documented)\\b", "\\bdoes not address\\b", "\\bis silent on\\b", "\\b(the|our) (notes|records|log|materials)\\b", "\\bno data (on|for)\\b"]},
  "kinds": {

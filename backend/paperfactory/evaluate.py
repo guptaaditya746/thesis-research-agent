@@ -3,7 +3,8 @@
 Steps (each LLM call is a separate fresh call; the model per job comes from the settings):
   tag       tagger marks sentences per fact; code checks names; verifier (separate call) confirms each tag;
             a sweep sends untagged sentences that name both ends of a fact to the verifier too.
-  verifier  test: accepted tags must get "yes"; the same sentence with another relation (made by code) "no".
+  verifier  test (circular, accepted tags only): accepted tags must get "yes"; the same sentence with another
+            possible relation (made by code) "no"; impossible pairs apart. The real test is labels.py (hand labels).
   judge     multiple-choice meaning judge, validated on paper wording and on reworded answer wording.
   qa        one call per question over its papers; each item quotes the paper; provenance by code (gold span,
             distractor span, no planted span, made-up quote); the relation by the judge; quotes must be unique
@@ -127,7 +128,7 @@ class Eval:
         return self.w["entities"][e]["label"]
 
     def fact_text(self, fa: dict[str, Any]) -> str:
-        return f"{self.label(fa['s'])}: {self.f.words['actor']} {self.f.rel_words(fa['r'])} {self.label(fa['o'])}."
+        return f"{self.label(fa['s'])}: {self.f.word('actor')} {self.f.rel_words(fa['r'])} {self.label(fa['o'])}."
 
     def paper(self, pid: str) -> str:
         return (self.s.out_dir / "work" / pid / "paper.md").read_text(encoding="utf-8")
@@ -137,21 +138,22 @@ class Eval:
 
     # -------------------------------------------------------------- tagging
     def tag_sys(self) -> str:
-        sk, actor = self.f.words["subject_kind"], self.f.words["actor"]
-        return f"""You mark which sentences of a paper state given holdings.
-Input: numbered sentences of one paper, and a list of holdings, each with an id. A holding says what was done
-with a source in one {sk}. Possible actions: {self.rel_list()}.
-For each holding, list the numbers of ALL sentences that state that holding (the {sk}, the source and the action).
-A sentence that only names the {sk} or the source, or states a different holding, does not count. A sentence may
+        sk, actor = self.f.word("subject_kind"), self.f.word("actor")
+        fa, fas, ac, acs = self.f.word("fact"), self.f.word("facts"), self.f.word("action"), self.f.word("actions")
+        return f"""You mark which sentences of a paper state given {fas}.
+Input: numbered sentences of one paper, and a list of {fas}, each with an id. A {fa} says what was done
+with a source in one {sk}. Possible {acs}: {self.rel_list()}.
+For each {fa}, list the numbers of ALL sentences that state that {fa} (the {sk}, the source and the {ac}).
+A sentence that only names the {sk} or the source, or states a different {fa}, does not count. A sentence may
 refer to the {sk} by a short name, as "{actor}" or "it" when the previous sentence names it. Use only numbers from
-the list. If no sentence states a holding, give an empty list."""
+the list. If no sentence states a {fa}, give an empty list."""
 
     def ver_sys(self) -> str:
-        sk = self.f.words["subject_kind"]
+        sk, fa, ac, acs = (self.f.word(k) for k in ("subject_kind", "fact", "action", "actions"))
         return f"""You check single claims. For each item you get a sentence (with the sentence before it as context)
-and one holding: what was done with a source in one {sk}. Possible actions: {self.rel_list()}.
-Answer "yes" only if the sentence itself states exactly this holding: the same {sk}, the same source and the same
-action. A different action, a different {sk}, a view the paper only reports from someone else, or a mere mention
+and one {fa}: what was done with a source in one {sk}. Possible {acs}: {self.rel_list()}.
+Answer "yes" only if the sentence itself states exactly this {fa}: the same {sk}, the same source and the same
+{ac}. A different {ac}, a different {sk}, a view the paper only reports from someone else, or a mere mention
 is "no"."""
 
     def verify(self, pairs: list[tuple[str, str, dict]], step: str) -> list[bool | None]:
@@ -160,7 +162,7 @@ is "no"."""
         for i in range(0, len(pairs), 25):
             chunk = pairs[i:i + 25]
             ids = [f"V{j + 1}" for j in range(len(chunk))]
-            items = [{"id": k, "context": c, "sentence": s, "holding": self.fact_text(fa)}
+            items = [{"id": k, "context": c, "sentence": s, self.f.word("fact"): self.fact_text(fa)}
                      for k, (c, s, fa) in zip(ids, chunk)]
             got = self.call("verifier", step, self.ver_sys(), json.dumps(items, indent=1), VerOut, ids_check(ids))
             by = {a["id"]: a["verdict"] == "yes" for a in got["answers"]} if got else {}
@@ -171,11 +173,12 @@ is "no"."""
         sents = split_sents(self.paper(pid), self.rules)
         facts = [fa for fa in self.facts.values() if pid in fa["papers"]]
         user = json.dumps({"sentences": [{"n": i, "text": s[2]} for i, s in enumerate(sents)],
-                           "holdings": [{"id": fa["id"], "holding": self.fact_text(fa)} for fa in facts]}, indent=1)
+                           self.f.word("facts"): [{"id": fa["id"], self.f.word("fact"): self.fact_text(fa)}
+                                                  for fa in facts]}, indent=1)
         got = self.call("tagger", f"tag:{pid}", self.tag_sys(), user, TagOut)
         notes, tags = [] if got else ["tagger parse_error: no tags; only the sweep can find spans"], \
             {fa["id"]: set() for fa in facts}
-        actor = self.f.words["actor"].split()[-1].lower()
+        actor = self.f.word("actor").split()[-1].lower()
         for t in got["tags"] if got else []:
             if t["id"] not in tags:
                 notes.append(f"unknown id {t['id']}")
@@ -190,7 +193,7 @@ is "no"."""
                 subj_ok = (self.mentions(ctx + sent, fa["s"], pid) or actor in sent.lower()
                            or " it " in f" {sent.lower()}")
                 if not self.mentions(sent, fa["o"], pid) or not subj_ok:     # kept: the verifier decides
-                    who = "the source" if subj_ok else "the " + self.f.words["subject_kind"]
+                    who = "the source" if subj_ok else "the " + self.f.word("subject_kind")
                     notes.append(f"{t['id']} s{n}: unknown_name (no known name of {who}; sent to verifier)")
                 tags[t["id"]].add(n)
         pairs = [(n, i) for i, ns in tags.items() for n in sorted(ns)]
@@ -240,15 +243,24 @@ is "no"."""
                     items.append((ctx, S[j][2], fa, True))
                     items += [(ctx, S[j][2], {**fa, "r": r}, False) for r in self.f.relations if r != fa["r"]]
         got = self.verify([(c, s, fa) for c, s, fa, _ in items], "verifier_test")
+        ents = self.w["entities"]
+        imp = [bool(fact_errors((fa["s"], fa["r"], fa["o"]), ents, self.f)) for _, _, fa, _ in items]
         pos = [g for g, it in zip(got, items) if it[3]]
-        neg = [g for g, it in zip(got, items) if not it[3]]
+        neg = [g for g, it, x in zip(got, items, imp) if not it[3] and not x]
+        neg_imp = [g for g, it, x in zip(got, items, imp) if not it[3] and x]
         right = sum(bool(g) for g in pos) + sum(g is False for g in neg)
-        return {"positives": len(pos), "pos_yes": sum(bool(g) for g in pos), "negatives": len(neg),
-                "neg_no": sum(g is False for g in neg), "accuracy": round(right / max(1, len(items)), 3)}
+        return {"note": "circular: positives are sentences this verifier already accepted while tagging; not a "
+                        "precision estimate. The hand-labeled test is labels.py (export-labels, label-metrics)",
+                "positives": len(pos), "pos_yes": sum(bool(g) for g in pos),
+                "negatives": len(neg), "neg_no": sum(g is False for g in neg),
+                "accuracy_accepted_tags_only": round(right / max(1, len(pos) + len(neg)), 3),
+                "impossible_pair_negatives": {"n": len(neg_imp), "no": sum(g is False for g in neg_imp),
+                                              "note": "relations the pack does not allow for the pair; left out of "
+                                                      "the accuracy"}}
 
     # -------------------------------------------------------------- meaning judge
     def judge_sys(self) -> str:
-        sk = self.f.words["subject_kind"]
+        sk = self.f.word("subject_kind")
         opts = "\n".join(f"{r} = {d['words']} ({d['meaning']})" for r, d in self.f.relations.items())
         return (f"Read the sentence. It is about what one {sk} did with a source. Choose what the sentence says, "
                 f"answering with one of these labels exactly:\n{opts}\nnone = none of these / the sentence does not "
@@ -258,15 +270,17 @@ is "no"."""
         """A relation of the pack, "none", or "parse_error" (the judge's answer was not one of the labels)."""
         schema = {"type": "object", "required": ["choice"],
                   "properties": {"choice": {"type": "string", "enum": self.options}}}
-        user = json.dumps({self.f.words["subject_kind"]: self.label(s), "source": self.label(o),
+        user = json.dumps({self.f.word("subject_kind"): self.label(s), "source": self.label(o),
                            "sentence": sentence}, indent=1)
         def check(out: dict[str, Any]) -> str | None:
             return None if out["choice"] in self.options else f"choice must be one of {self.options}"
         got = self.call("judge", step, self.judge_sys(), user, schema, check)
         return got["choice"] if got else "parse_error"
 
-    REWORD_SYS = """Rewrite each sentence as a short plain answer sentence, as a question-answering system would
-write it. Keep its meaning exactly: same subject, same source, same action. Do not add facts. Return one per input."""
+    def reword_sys(self) -> str:
+        return f"""Rewrite each sentence as a short plain answer sentence, as a question-answering system would
+write it. Keep its meaning exactly: same subject, same source, same {self.f.word('action')}. Do not add facts. Return \
+one per input."""
 
     def judge_validation(self, tagged: dict[str, Any]) -> dict[str, Any]:
         items = []
@@ -280,7 +294,7 @@ write it. Keep its meaning exactly: same subject, same source, same action. Do n
             ns = list(range(b, min(b + 40, len(items))))
             check = lambda out, ns=ns: None if sorted(r["n"] for r in out["rewritten"]) == ns else \
                 f"return exactly one rewrite for each n in {ns}"  # noqa: E731
-            got = self.call("rewriter", f"reword:{b}", self.REWORD_SYS, json.dumps(
+            got = self.call("rewriter", f"reword:{b}", self.reword_sys(), json.dumps(
                 [{"n": n, "text": items[n][1]} for n in ns], indent=1), RewordOut, check)
             rew |= {r["n"]: r["text"] for r in got["rewritten"]} if got else {}
 
@@ -301,11 +315,11 @@ write it. Keep its meaning exactly: same subject, same source, same action. Do n
 
     # -------------------------------------------------------------- QA
     def qa_sys(self) -> str:
-        sk = self.f.words["subject_kind"]
-        return f"""You answer a question using ONLY the papers given. Return items. Each item is one holding: the
+        sk, fa = self.f.word("subject_kind"), self.f.word("fact")
+        return f"""You answer a question using ONLY the papers given. Return items. Each item is one {fa}: the
 {sk} (subject), what was done (relation, in your own words), the source (object), an exact quote copied character
 for character from one paper that states it, and a short answer sentence. The quote must occur only ONCE in that
-paper: if the sentence is repeated, quote a longer stretch around it. List every holding that answers the
+paper: if the sentence is repeated, quote a longer stretch around it. List every {fa} that answers the
 question and nothing else. If the papers do not answer it, return no items."""
 
 

@@ -2,6 +2,8 @@
 
   uv run paperfactory run --config backend/paperfactory/configs/law.json [--steps world,seed,materials,write,eval]
   uv run paperfactory check-world --config ... --world FILE
+  uv run paperfactory export-labels --config ... --out labels.csv [--per-field 200]
+  uv run paperfactory label-metrics --labels a.csv [--labels b.csv] --answers answers.json [--run-verifier --config ...]
 
 Every step writes into the run folder (settings "out") and reuses what is already there, so a stopped run can be
 started again. Model calls are cached; their costs are in calls.jsonl.
@@ -16,7 +18,7 @@ from typing import Any
 
 from repo_paths import REPO
 
-from paperfactory import SCORING_VERSION, config, cost, files, meta, materials, packs, repair, seed, world, write
+from paperfactory import SCORING_VERSION, config, cost, files, labels, materials, meta, packs, repair, seed, world, write
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
@@ -75,7 +77,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                 w = json.loads((REPO / s.world_file).read_text(encoding="utf-8"))
             else:
                 w = world.draft(s, f, g, call)
-            errs = world.check(w, f, g)
+            errs = world.check(w, f, g, n_papers=s.papers)
             if errs:
                 sys.exit("world failed the checks:\n" + "\n".join(errs[:40]))
             files.write_json(wfile, w)
@@ -168,8 +170,35 @@ def main(argv: list[str] | None = None) -> None:
     c = sub.add_parser("check-world")
     c.add_argument("--config", required=True)
     c.add_argument("--world", required=True)
+    x = sub.add_parser("export-labels", help="hand-labeling test set for the verifier (labels.py)")
+    x.add_argument("--config", required=True)
+    x.add_argument("--out", required=True)
+    x.add_argument("--per-field", type=int, default=200,
+                   help="items per field (default 200; the final number is not decided yet)")
+    x.add_argument("--seed", type=int, default=0)
+    m = sub.add_parser("label-metrics", help="verifier precision/recall on hand labels (labels.py)")
+    m.add_argument("--labels", action="append", required=True, help="labeled CSV; give twice for two labelers")
+    m.add_argument("--key", help="key file (default: <first labels>.key.json, as written by export-labels)")
+    m.add_argument("--answers", required=True, help="verifier answers JSON {id: yes|no|null}")
+    m.add_argument("--run-verifier", action="store_true",
+                   help="make the answers file with the verifier first (model calls; needs --config)")
+    m.add_argument("--config")
     a = ap.parse_args(argv)
+    if a.cmd == "label-metrics":
+        def make_eval() -> Eval:
+            if not a.config:
+                sys.exit("--run-verifier needs --config")
+            s = config.load(a.config)
+            w = json.loads((s.out_dir / "world.json").read_text(encoding="utf-8"))
+            gold = json.loads((s.out_dir / "gold.json").read_text(encoding="utf-8"))
+            return Eval(s, w, packs.field(s.field), gold, Caller(s))
+        print(json.dumps(labels.metrics_files([Path(p) for p in a.labels], Path(a.key) if a.key else None,
+                                              Path(a.answers), make_eval if a.run_verifier else None), indent=1))
+        return
     s = config.load(a.config)
+    if a.cmd == "export-labels":
+        print(json.dumps(labels.export_run(s.out_dir, packs.field(s.field), Path(a.out), a.per_field, a.seed)))
+        return
     if a.cmd == "run":
         steps = [x.strip() for x in a.steps.split(",") if x.strip()]
         unknown = set(steps) - set(STEPS)
@@ -185,7 +214,8 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "clear-cache":
         print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:
-        errs = world.check(json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre))
+        errs = world.check(json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre),
+                           n_papers=s.papers)
         print("\n".join(errs) or "ok")
         sys.exit(1 if errs else 0)
 
