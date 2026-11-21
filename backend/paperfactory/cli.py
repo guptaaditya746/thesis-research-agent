@@ -22,7 +22,7 @@ from paperfactory import SCORING_VERSION, config, cost, files, labels, materials
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
-STEPS = ("world", "seed", "materials", "write", "check", "eval")
+STEPS = ("world", "seed", "materials", "write", "check", "eval", "deepeval")
 
 
 # ------------------------------------------------------------------ inputs of each step (#8, meta.py)
@@ -162,6 +162,21 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                          | {"bm25_baseline": rep["bm25_baseline"]["all"]}
                          | {"cost": {k: rep["cost"][k] for k in ("usd", "usd_known", "calls", "mean_per_paper_usd",
                                                                  "projection")}}, indent=1))
+    if "deepeval" in steps:
+        deepeval_run(s, w, f, call)
+
+
+def deepeval_run(s: config.Settings, w: dict[str, Any], f: packs.Field, call: Caller) -> None:
+    """Optional DeepEval metrics on the finished evaluation (deepeval_step.py); never stops the run."""
+    from paperfactory import deepeval_step
+    gold = json.loads((s.out_dir / "gold.json").read_text(encoding="utf-8"))
+    lab = lambda e: w["entities"][e]["label"]  # noqa: E731
+
+    def fact_text(i: str) -> str:
+        fa = gold["facts"][i]
+        return f"{lab(fa['s'])}: {f.word('actor')} {f.rel_words(fa['r'])} {lab(fa['o'])}."
+    res = deepeval_step.run(s, call, fact_text)
+    print("deepeval:", json.dumps(res.get("summary") or res, indent=1)[:2000])
 
 
 def main(argv: list[str] | None = None) -> None:

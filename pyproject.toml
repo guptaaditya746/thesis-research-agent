@@ -24,6 +24,11 @@ webapp = "webapp.cli:main"
 evqa = "evqa.cli:main"
 paperfactory = "paperfactory.cli:main"
 
+[project.optional-dependencies]
+deepeval = [
+    "deepeval>=3",
+]
+
 [dependency-groups]
 dev = [
     "pytest==8.4.2",

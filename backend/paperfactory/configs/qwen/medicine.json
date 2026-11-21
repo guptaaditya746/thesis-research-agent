@@ -1,8 +1,8 @@
 {
- "_note": "Pilot dataset on Qwen in the Slurm GPU job (ops/injob.sh sets LITELLM_BASE_URL). 10 papers, world agent. 9 model calls at once (Aditya, 22 Nov 2026: three per GPU replica), 9 papers at once. Every job uses orch-model (one set of weights: the shared-model warning is expected; final numbers need a different model family for judge and verifier). local=true: cost 0, not unknown.",
+ "_note": "Pilot dataset on Qwen in the Slurm GPU job (ops/injob.sh sets LITELLM_BASE_URL). 20 papers, world agent. 9 model calls at once (Aditya, 22 Nov 2026: three per GPU replica), 9 papers at once. Every job uses orch-model (one set of weights: the shared-model warning is expected; final numbers need a different model family for judge and verifier). local=true: cost 0, not unknown.",
  "field": "medicine",
  "genre": "argument",
- "papers": 10,
+ "papers": 20,
  "pages": 6,
  "models": {"default": {"model": "orch-model", "backend": "openai", "context_window": 65536, "max_tokens": 8192,
                         "max_parallel": 9, "timeout": 1800, "local": true}},

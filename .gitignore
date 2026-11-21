@@ -20,3 +20,6 @@ data/cache/
 
 # local secrets (Semantic Scholar key etc.), never commit
 .env
+
+# deepeval (paperfactory deepeval step) makes an empty key folder in the working directory
+.deepeval/
