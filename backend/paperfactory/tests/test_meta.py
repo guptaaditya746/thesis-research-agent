@@ -103,3 +103,24 @@ def test_papers_with_different_settings_are_not_mixed(tmp_path: Path) -> None:
     with pytest.raises(meta.MixedSettings, match="no meta"):
         meta.same_settings({"P1": a, "P2": None}, keys, False, "eval")
     assert len(meta.same_settings({"P1": a, "P2": b, "P3": None}, keys, True, "eval")) == 2
+
+
+def test_check_redo_keeps_the_writers_meta(tmp_path: Path) -> None:
+    """Review finding 1: setting paper.repairs.json aside must not take paper.meta.json along (paid rewrite)."""
+    work = tmp_path / "work" / "P1"
+    p = work / "paper.md"
+    work.mkdir(parents=True)
+    p.write_text("as written")
+    meta.write_done(p, {"writer": "a"})
+    (work / "paper.raw.md").write_text("as written")
+    p.write_text("repaired")
+    (work / "paper.repairs.json").write_text("{}")
+    meta.check_done(p, {"world": 1})
+    assert meta.check_state(p, {"world": 2}, False, "c")[0] == "redo"
+    meta.set_aside(work / "paper.repairs.json")
+    assert (work / "paper.meta.json").is_file() and not list(work.glob("paper.meta.json.stale-*"))
+    p.write_text("as written")
+    (work / "paper.repairs.json").write_text("{}")
+    meta.check_done(p, {"world": 2})
+    assert not meta.write_stale(p, {"writer": "a"}, False, "w")
+    assert meta.read(p)["inputs"]                                  # eval's same_settings still sees the writer part

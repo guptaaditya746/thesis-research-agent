@@ -104,7 +104,8 @@ def set_aside(p: Path) -> Path:
     n = 1
     while (dest := p.with_name(f"{p.name}.stale-{n}")).exists():
         n += 1
-    m = path_of(p) if p.is_file() else None
+    m = path_of(p) if p.is_file() and path_of(p).name == f"{p.stem}.meta.json" else None   # its own meta only
+                                                       # (paper.repairs.json must not take paper.meta.json along)
     p.rename(dest)
     if m is not None and m.is_file():
         m.rename(m.with_name(f"{m.name}.stale-{n}"))
