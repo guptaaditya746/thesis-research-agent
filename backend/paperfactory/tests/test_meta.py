@@ -141,7 +141,7 @@ def test_each_paper_gets_its_meta_as_soon_as_it_is_written(tmp_path: Path, monke
         p.write_text("written")
         return {"pid": pid, "status": "ok"}
     monkeypatch.setattr(write, "write_one", fake_write)
-    monkeypatch.setattr(write, "pmap_papers", lambda fn, pids: [fn(p) for p in pids])
+    monkeypatch.setattr(write, "pmap_papers", lambda fn, pids, workers=3: [fn(p) for p in pids])
     with pytest.raises(KeyboardInterrupt):
         cli.run(s, ["write"])
     paper = s.out_dir / "work" / first / "paper.md"

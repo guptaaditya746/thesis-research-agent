@@ -60,9 +60,9 @@ def po_cache(s, attempt: int, use_cache: bool) -> Path:
     return fresh
 
 
-def pmap_papers(fn, pids: list[str]) -> list[Any]:
-    """At most 3 papers at once (each holds its own model slots)."""
-    with ThreadPoolExecutor(3) as ex:
+def pmap_papers(fn, pids: list[str], workers: int = 3) -> list[Any]:
+    """`workers` papers at once (settings "parallel"); each holds its own model slots."""
+    with ThreadPoolExecutor(max(1, workers)) as ex:
         return list(ex.map(fn, pids))
 
 

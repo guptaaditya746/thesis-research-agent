@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+
+import pytest
 from pathlib import Path
 
 from paperfactory import config, packs, repair
@@ -106,3 +108,49 @@ def test_an_ordinary_opening_sentence_is_not_flagged(tmp_path: Path) -> None:
         assert not any(re.search(p, md) for p in packs.field(name).raw["text"]["absence_patterns"]), name
     flags, _ = repair.Checker(setup(tmp_path, md), PILOT, LAW, fake(GOOD, [])).check("L-02", md)
     assert flags == []
+
+
+def no_repair(seen: list):
+    """The repair model never gives an acceptable paragraph (as in the Qwen smoke run, LLM-02)."""
+    base = fake(GOOD)
+
+    def call(role, step, system, user, out, check=None):
+        seen.append((role, json.loads(user) if role == "repair" else None))
+        return None if role == "repair" else base(role, step, system, user, out, check)
+    return call
+
+
+def test_code_drops_the_flagged_sentence_when_the_repair_model_fails(tmp_path: Path) -> None:
+    s = setup(tmp_path)
+    seen: list = []
+    res = repair.Checker(s, PILOT, LAW, no_repair(seen)).repair_paper("L-02", redo=lambda pid: pytest.fail("redo"))
+    assert res["status"] == "repaired" and res["open_flags"] == 0
+    md = (tmp_path / "work" / "L-02" / "paper.md").read_text()
+    assert "records no treatment" not in md and GOOD in md and "Pell v. Vantor Systems relied on Halden" in md
+    log = json.loads((tmp_path / "work" / "L-02" / "paper.repairs.json").read_text())["log"]
+    assert any(x["step"] == "first:drop_sentences" and x["new"] == GOOD for x in log)
+
+
+def test_dropping_is_refused_when_it_would_lose_a_fact(tmp_path: Path) -> None:
+    """The flagged sentence also carries the only mention of a true fact: no drop, the paper is written again."""
+    bad = "Pell v. Vantor Systems relied on Halden Mobile, and it records no treatment of section 9."
+    s = setup(tmp_path, f"# Title\n\n{bad} {GOOD}\n")
+    redone: list = []
+    res = repair.Checker(s, PILOT, LAW, no_repair([])).repair_paper("L-02", redo=lambda pid: redone.append(pid))
+    assert redone == ["L-02"] and res["status"] == "failed"
+
+
+def test_the_repair_gets_the_names_to_keep_and_short_names_count(tmp_path: Path) -> None:
+    md = (f'# Title\n\nPell v. Vantor Systems ("Vantor") relied on Halden Mobile in its reasoning here.\n\n'
+          f"Vantor relied on Halden Mobile again. {BAD}\n")
+    s = setup(tmp_path, md)
+    seen: list = []
+    fixed = "Vantor relied on Halden Mobile again."             # the paper's own short name for Pell v. Vantor
+    base = fake(fixed, seen)
+
+    def call(role, step, system, user, out, check=None):
+        if role == "repair":
+            assert json.loads(user)["names_to_keep"] == ["Data Commissioner v. Halden Mobile", "Pell v. Vantor Systems"]
+        return base(role, step, system, user, out, check)        # fake() asserts the check accepts it
+    res = repair.Checker(s, PILOT, LAW, call).repair_paper("L-02", redo=lambda pid: pytest.fail("redo"))
+    assert res["status"] == "repaired"

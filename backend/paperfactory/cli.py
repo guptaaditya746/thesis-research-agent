@@ -111,7 +111,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
             if r["status"] == "ok":              # saved per paper at once: a stop later in the step keeps it
                 meta.write_done(paper(pid), write_inputs(s, pid, template))
             return r
-        print("write:", json.dumps(write.pmap_papers(write_paper, list(w["papers"]))))
+        print("write:", json.dumps(write.pmap_papers(write_paper, list(w["papers"]), s.parallel)))
     if "check" in steps:                 # papers must agree with the world (repair.py)
         def redo(pid: str) -> str | None:
             r = write.write_one(s, pid, template, attempt=2, use_cache=use_cache)
@@ -138,7 +138,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
             r = chk.repair_paper(pid, redo)
             meta.check_done(paper(pid), check_inputs(s, w, f, chk, pid, template))
             return r
-        print("check:", json.dumps(write.pmap_papers(check_one, todo)))
+        print("check:", json.dumps(write.pmap_papers(check_one, todo, s.parallel)))
     if "eval" in steps:
         gold = json.loads((out / "gold.json").read_text(encoding="utf-8"))
         from paperfactory.repair import failed

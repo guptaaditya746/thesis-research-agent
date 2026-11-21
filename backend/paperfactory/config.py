@@ -74,7 +74,10 @@ class Settings:
     # strict evidence rule (#2): share of the quote inside gold spans; share of a gold sentence a quote must cover
     # when it does not name both the subject and the object. Saved in report.json with SCORING_VERSION.
     evidence: dict[str, float] = field(default_factory=lambda: {"min_inside": 0.9, "min_sentence_cover": 0.5})
-    slot_dir: str = "data/cache/claude-slots"   # shared with other tools: at most 3 model calls at once
+    slot_dir: str = "data/cache/claude-slots"   # shared with other tools: lock files cap the calls per server
+    # papers written / checked at once, and threads for the evaluation's model calls (the role's max_parallel still
+    # caps the calls per server across all processes)
+    parallel: int = 3
     timeout: int = 900
 
     def role(self, role: str) -> RoleModel:
@@ -115,6 +118,8 @@ def load(path: str | Path) -> Settings:
     if unknown:
         raise ValueError(f"unknown model roles {sorted(unknown)}; roles: {ROLES}")
     s = Settings(**raw)
+    if s.parallel < 1:
+        raise ValueError("parallel must be at least 1")
     for r in ROLES:
         s.role(r)                                     # every role's model settings are valid
     return s

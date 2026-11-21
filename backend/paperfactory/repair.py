@@ -134,31 +134,70 @@ ABSENCE_CLAIM.  "X and Y are discussed together in this section." -> NEUTRAL."""
         return flags, notes
 
     # ------------------------------------------------------------ repair
-    REPAIR_SYS = """You fix one paragraph of a paper. You get the paragraph, the problems found in it, and the facts
+    # v1 (until 22 Nov 2026): the model was not told which names to keep, and the check knew only full names and
+    # pack variants; in the Qwen smoke run (llm, LLM-02) six repairs in a row dropped a name and the paper failed
+    REPAIR_SYS_V1 = """You fix one paragraph of a paper. You get the paragraph, the problems found in it, and the facts
 this paper states. Return the paragraph rewritten so that every problem is gone.
 Rules: keep every other statement, name and fact as it is; keep the meaning of each listed fact exactly; add no new
 facts. Never mention the materials, notes or records the paper was written from, and never say that how one source
 treated another is unknown, unrecorded, unaddressed or absent: if a sentence only says that, drop it. Return only the
 paragraph text (no heading).
 Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop that sentence, keep the rest."""
+    REPAIR_SYS = """You fix one paragraph of a paper. You get the paragraph, the problems found in it, the facts this
+paper states, and names_to_keep. Return the paragraph rewritten so that every problem is gone.
+Rules: keep every other statement, name and fact as it is; keep the meaning of each listed fact exactly; add no new
+facts. Every name in names_to_keep must still appear in the paragraph (the full name or the short name the paragraph
+already uses). Never mention the materials, notes or records the paper was written from, and never say that how one
+source treated another is unknown, unrecorded, unaddressed or absent: if a sentence only says that, drop it. The
+simplest fix is often to drop the flagged sentence or the wrong part of it. Return only the paragraph text (no
+heading).
+Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop that sentence, keep the rest.
+Example. Problem: "CONTRADICTS: the world says: no relation between X and Y. Sentence: X and Z relied on Y." with
+names_to_keep ["Z", "Y"] -> "Z relied on Y." """
 
-    def repair_unit(self, pid: str, para: str, problems: list[str], facts: list[list[str]]) -> str | None:
+    def must_keep(self, para: str, facts: list[list[str]], table) -> list[tuple[str, str]]:
+        """(subject, object) of each fact of the paper whose two names appear together in one sentence of the
+        paragraph (names in two different sentences do not state a fact, so they need not stay together)."""
+        sents = [{m.eid for m in find_mentions(t, table)} for _, _, t in split_sents(para, self.rules)]
+        return [(s_, o) for s_, _, o in facts if any({s_, o} <= named for named in sents)]
+
+    def lost(self, new: str, must: list[tuple[str, str]], table) -> list[str]:
         ents = self.w["entities"]
-        must = [(s, o) for s, _, o in facts if all(any(m.eid == e for m in find_mentions(para, self.base))
-                                                   for e in (s, o))]
+        named = {m.eid for m in find_mentions(new, table)}
+        return [f"{ents[s_]['label']} / {ents[o]['label']}" for s_, o in must if not {s_, o} <= named]
+
+    def repair_unit(self, pid: str, para: str, problems: list[str], facts: list[list[str]],
+                    table=None) -> str | None:
+        """One rewrite call. table: the paper's alias table (its own short names count as names)."""
+        table = table or self.base
+        must = self.must_keep(para, facts, table)
 
         def check(out: dict[str, Any]) -> str | None:
             new = out["paragraph"].strip()
             if not new:
                 return "the paragraph is empty"
-            named = {m.eid for m in find_mentions(new, self.base)}
-            lost = [f"{ents[s]['label']} / {ents[o]['label']}" for s, o in must if not {s, o} <= named]
-            return f"keep the names of these facts: {lost}" if lost else None
+            gone = self.lost(new, must, table)
+            return f"keep the names of these facts: {gone}" if gone else None
+        keep = sorted({self.label(e) for pair in must for e in pair})
         user = json.dumps({"paragraph": para, "problems": problems, "facts_of_this_paper": [
-            f"{self.label(s)}: {self.f.word('actor')} {self.f.rel_words(r)} {self.label(o)}." for s, r, o in facts]},
-            indent=1, ensure_ascii=False)
+            f"{self.label(s_)}: {self.f.word('actor')} {self.f.rel_words(r)} {self.label(o)}." for s_, r, o in facts],
+            "names_to_keep": keep}, indent=1, ensure_ascii=False)
         got = self.call("repair", f"repair:{pid}", self.REPAIR_SYS, user, RepairOut, check)
         return got["paragraph"].strip() if got else None
+
+    def drop_flagged(self, md: str, a: int, b: int, flags: list[dict[str, Any]], p,
+                     must: list[tuple[str, str]], table) -> str | None:
+        """Fallback by code: the paragraph md[a:b] without its flagged sentences, if every fact named in it before
+        is still named; else None. A flagged sentence states something the world does not (or talks about the
+        notes), so dropping it never adds an error."""
+        para = md[a:b]
+        cuts = sorted(((p.back[fl["start"]] - a, p.back[fl["end"] - 1] + 1 - a) for fl in flags), reverse=True)
+        for x, y in cuts:
+            while y < len(para) and para[y] == " ":
+                y += 1
+            para = para[:x] + para[y:]
+        para = para.strip()
+        return para if not self.lost(para, must, table) else None
 
     def fix_round(self, pid: str, md: str, log: list[dict[str, Any]], label: str) -> tuple[str, list[dict]]:
         """Check md; rewrite each flagged paragraph once; check the new sentences. -> (md, flags still open)."""
@@ -167,6 +206,7 @@ Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop t
         if not flags:
             return md, []
         p = normalize_paper(md)
+        table = alias_table(self.w, self.f, defined_terms(p.text, self.base, self.f))
         facts = self.w["papers"][pid]["claims"] + self.w["papers"][pid]["decoys"]
         by_unit: dict[int, list[dict[str, Any]]] = {}
         for fl in flags:
@@ -178,8 +218,11 @@ Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop t
             u = p.units[ui]
             a, b = p.back[u.start], p.back[u.end - 1] + 1
             problems = [f"{fl['reason']} Sentence: {fl['text']}" for fl in by_unit[ui]]
-            new = self.repair_unit(pid, md[a:b], problems, facts)
+            new = self.repair_unit(pid, md[a:b], problems, facts, table)
             log.append({"step": f"{label}:repair", "unit": ui, "old": md[a:b], "new": new, "problems": problems})
+            if new is None:                   # the model could not do it: drop the flagged sentences by code
+                new = self.drop_flagged(md, a, b, by_unit[ui], p, self.must_keep(md[a:b], facts, table), table)
+                log.append({"step": f"{label}:drop_sentences", "unit": ui, "new": new})
             if new is None:
                 still += by_unit[ui]
                 continue

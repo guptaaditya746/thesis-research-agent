@@ -326,8 +326,8 @@ class Caller:
                 "calls_unknown_cost": unknown}
 
 
-def pmap(fn: Callable[[T], R], items: Iterable[T]) -> list[R]:
-    with ThreadPoolExecutor(MAX_SLOTS) as ex:
+def pmap(fn: Callable[[T], R], items: Iterable[T], workers: int = MAX_SLOTS) -> list[R]:
+    with ThreadPoolExecutor(max(1, workers)) as ex:
         return list(ex.map(fn, items))
 
 

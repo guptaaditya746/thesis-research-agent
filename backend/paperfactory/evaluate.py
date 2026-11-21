@@ -302,9 +302,9 @@ one per input."""
             fa = self.facts[it[0]]
             got = self.judge(it[1], fa["s"], fa["o"], step)
             return None if got == "parse_error" else got == fa["r"]
-        paper = pmap(lambda it: ok(it, "judge:paper"), items)
+        paper = pmap(lambda it: ok(it, "judge:paper"), items, self.s.parallel)
         ans_items = [(i, rew[n]) for n, (i, _) in enumerate(items) if n in rew]
-        answer = pmap(lambda it: ok(it, "judge:answer"), ans_items)
+        answer = pmap(lambda it: ok(it, "judge:answer"), ans_items, self.s.parallel)
 
         def summary(xs: list[bool | None]) -> dict[str, Any]:
             done = [x for x in xs if x is not None]
@@ -490,7 +490,7 @@ Use the whole paper to decide. Pick exactly one number."""
             got = self.call("leak", f"leak:{n}", self.LEAK_SYS, f"PAPER:\n{self.paper(pid)}\n\nSENTENCES:\n{lst}",
                             LeakOut, check)
             return (got["pick"] == gold, 1 / size) if got else None
-        every = pmap(run, trials)
+        every = pmap(run, trials, self.s.parallel)
         res = [x for x in every if x is not None]
         h, n = sum(x for x, _ in res), len(res)
         return {"trials": n, "parse_errors": len(every) - n, "hits": h, "rate": round(h / max(1, n), 3),
@@ -501,7 +501,7 @@ Use the whole paper to decide. Pick exactly one number."""
         from paperfactory.repair import failed      # a paper that still disagrees with the world is left out
         pids = [p for p in self.w["papers"] if (self.s.out_dir / "work" / p / "paper.md").is_file()
                 and not failed(self.s.out_dir, p)]
-        tagged = dict(zip(pids, pmap(self.tag_paper, pids)))
+        tagged = dict(zip(pids, pmap(self.tag_paper, pids, self.s.parallel)))
         (self.s.out_dir / "tagged.json").write_text(json.dumps({"scoring_version": SCORING_VERSION, "papers": tagged},
                                                                indent=1), encoding="utf-8")
         qs = [q for q in self.G["questions"] if all(p in tagged for p in q["papers"])]
@@ -513,7 +513,7 @@ Use the whole paper to decide. Pick exactly one number."""
                                            for p, t in tagged.items()}}
         rep["verifier_test"] = self.verifier_test(tagged)
         rep["judge_validation"] = self.judge_validation(tagged)
-        rep["qa"] = pmap(lambda q: self.qa_one(q, tagged), qs)
+        rep["qa"] = pmap(lambda q: self.qa_one(q, tagged), qs, self.s.parallel)
         qa = rep["qa"]
         mean = lambda xs: round(sum(xs) / max(1, len(xs)), 3)  # noqa: E731
         rep["qa_summary"] = {"questions": len(qa), "recall": mean([q["recall"] for q in qa]),
