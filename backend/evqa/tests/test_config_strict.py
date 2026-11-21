@@ -23,8 +23,6 @@ RUN_IDS = {
     "ablations/practice-ablate-verifier-off.yaml": "practice-ablate-verifier-off-f1f9b97dcc",
     "bench-closed-book.yaml": "bench-closed-book-3ce8afcf3d",
     "bench-qwen.yaml": "bench-qwen-9a17e6f98c",
-    "holdout-closed-book.yaml": "holdout-closed-book-2b0ec92a57",
-    "holdout-qwen.yaml": "holdout-qwen-f0017feacf",
     "practice-haiku.yaml": "practice-haiku-aa35f2cf32",
     "practice-qwen-q2.yaml": "practice-qwen-q2-7f186e5217",
     "practice-qwen.yaml": "practice-qwen-9ac6c1fd8f",

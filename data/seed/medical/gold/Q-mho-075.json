@@ -1,0 +1,122 @@
+{
+  "qid": "Q-mho-075",
+  "domain": "medical",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:pomitral }\n  VALUES ?context { d:t2d-hypertension }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:ldl-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "ldl_change",
+    "context": "t2d_hypertension",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [
+    "R-mho-15-05",
+    "R-mho-15-06",
+    "R-mho-15-07",
+    "R-mho-15-08"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-15-05",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "3 mg",
+          "time_point": "12 wk"
+        },
+        "value": "-0.26",
+        "unit": "mmol/L"
+      },
+      {
+        "row": "R-mho-15-06",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "3 mg",
+          "time_point": "24 wk"
+        },
+        "value": "-0.22",
+        "unit": "mmol/L"
+      },
+      {
+        "row": "R-mho-15-07",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "6 mg",
+          "time_point": "12 wk"
+        },
+        "value": "-0.29",
+        "unit": "mmol/L"
+      },
+      {
+        "row": "R-mho-15-08",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "6 mg",
+          "time_point": "24 wk"
+        },
+        "value": "-0.32",
+        "unit": "mmol/L"
+      }
+    ],
+    "text": "4 value(s): 3 mg, 12 wk, -0.26 mmol/L; 3 mg, 24 wk, -0.22 mmol/L; 6 mg, 12 wk, -0.29 mmol/L; 6 mg, 24 wk, -0.32 mmol/L"
+  },
+  "rows_without_card": 4,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "lookup",
+    "split": "test",
+    "template": "How much does pomitral change LDL cholesterol in adults with type 2 diabetes and high blood pressure on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_f"
+      ],
+      "measure": "ldl_change",
+      "context": "t2d_hypertension"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group"
+    }
+  },
+  "wording": {
+    "template": "How much does pomitral change LDL cholesterol in adults with type 2 diabetes and high blood pressure on metformin?",
+    "source": "llm",
+    "text": "In adults with type 2 diabetes and high blood pressure on metformin, how much does pomitral change LDL cholesterol?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "In adults with type 2 diabetes and high blood pressure on metformin, how much does pomitral change LDL cholesterol?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

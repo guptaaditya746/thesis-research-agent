@@ -1,0 +1,83 @@
+{
+  "qid": "Q-mho-020",
+  "domain": "medical",
+  "type": "absent",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:sorvelin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:ldl-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "comparator": "placebo",
+    "measure": "ldl_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports sorvelin on LDL cholesterol (its papers report: HbA1c, body weight, fasting plasma glucose)",
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports sorvelin on LDL cholesterol (its papers report: HbA1c, body weight, fasting plasma glucose)"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "absent",
+    "split": "test",
+    "template": "What does sorvelin do to LDL cholesterol?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "measure": "ldl_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "measure",
+      "why": "no paper reports sorvelin on LDL cholesterol (its papers report: HbA1c, body weight, fasting plasma glucose)"
+    }
+  },
+  "wording": {
+    "template": "What does sorvelin do to LDL cholesterol?",
+    "source": "llm",
+    "text": "What effect does sorvelin have on LDL cholesterol?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "What effect does sorvelin have on LDL cholesterol?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

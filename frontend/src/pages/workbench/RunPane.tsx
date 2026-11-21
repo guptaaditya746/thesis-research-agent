@@ -511,7 +511,7 @@ export function RunPane({ domain, runId, qid, onPick }: { domain: string; runId:
   if (runs.isError) return <ErrorState error={runs.error} />
   if (list.length === 0) return <p className="text-sm">No runs yet: start one with <code>evqa run</code>.</p>
   const cfg = run.data?.config ?? {}
-  const qids = run.data && !run.data.closed ? [...new Set([...Object.keys(run.data.questions),
+  const qids = run.data ? [...new Set([...Object.keys(run.data.questions),
     ...((Array.isArray(cfg.questions) ? cfg.questions : []) as string[])])].sort() : []
   const q = qid && qids.includes(qid) ? qid : qids[0] ?? ""
   const runDomain = typeof cfg.domain === "string" && cfg.domain ? cfg.domain : domain
@@ -558,9 +558,8 @@ export function RunPane({ domain, runId, qid, onPick }: { domain: string; runId:
       <div className="min-w-0">
         {run.isPending && <CardsSkeleton count={2} />}
         {run.isError && <ErrorState error={run.error} />}
-        {run.data?.closed && <p role="status" className="text-sm text-muted-foreground">{run.data.closed}</p>}
-        {run.data && !run.data.closed && !q && <p className="text-sm text-muted-foreground">This run has no questions yet.</p>}
-        {run.data && !run.data.closed && q && <QuestionView run={run.data} qid={q} domain={runDomain} open={setSpan}
+        {run.data && !q && <p className="text-sm text-muted-foreground">This run has no questions yet.</p>}
+        {run.data && q && <QuestionView run={run.data} qid={q} domain={runDomain} open={setSpan}
           why={why === `${current}/${q}`} onCloseWhy={() => setWhy("")} />}
       </div>
       <PaperDrawer domain={runDomain} span={span} onClose={() => setSpan(null)} />

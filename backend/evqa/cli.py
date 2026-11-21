@@ -57,7 +57,7 @@ def seed_names(a: argparse.Namespace) -> int:
             print(f"{path} has every slot (use --force to make new names)")
             return 0
     keep = [s["name"] for s in old["slots"].values()] if old else []
-    for other in bp.get("avoid_names_from", []):   # e.g. the hold-out seed must not reuse the medical seed's names
+    for other in bp.get("avoid_names_from", []):   # e.g. a second seed must not reuse the medical seed's names
         keep += [s["name"] for s in json.loads((domain_dir(other) / "names.json").read_text("utf-8"))["slots"].values()]
     result = names.invent(llm.ClaudeCode(a.model), slots, vocab.label_index(), keep=keep)
     if old is not None:

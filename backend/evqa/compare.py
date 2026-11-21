@@ -8,7 +8,7 @@ hits / tokens / seconds per question (from events.jsonl: the "end" event of each
 prompt + completion tokens of real calls; runs made before lm.py counted them print "n/a".
 
 Part 2, the per-question differences: practice runs only. A run whose config.yaml split is not "practice", or
-whose name (config name or folder name) starts with bench- or holdout-, is left out of part 2, and none of its
+whose name (config name or folder name) starts with bench-, is left out of part 2, and none of its
 per-question data is read: from eval.json only "totals" and "intervals" are used, from events.jsonl only sums over
 all questions.
 
@@ -40,7 +40,7 @@ TEXT_NOT_REPORTED = ["accuracy", "hallucination"]
 TYPE_KEYS = ["questions", "l3", "exact", "advisor", "l3_text"]
 PER_Q = [("l3", ("l3", "score")), ("l2 recall", ("l2", "recall")), ("l2 precision", ("l2", "precision")),
          ("advisor", ("advisor", "score")), ("l3_text", ("l3_text", "score"))]
-LOCKED_PREFIXES = ("bench-", "holdout-")
+LOCKED_PREFIXES = ("bench-",)
 NA = "n/a"
 
 
@@ -58,7 +58,7 @@ class Run:
         """Practice runs only. No config.yaml = unknown split = not allowed."""
         for n in (self.name, self.path.name):
             if n.startswith(LOCKED_PREFIXES):
-                return False, f"name {n!r} is a test/hold-out run"
+                return False, f"name {n!r} is a test run"
         split = self.config.get("split")
         if split != "practice":
             return False, f"split is {split!r}, not 'practice'"

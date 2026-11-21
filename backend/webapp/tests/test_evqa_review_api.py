@@ -65,10 +65,9 @@ def test_bad_labels_are_refused(c: TestClient) -> None:
     assert c.post("/api/evqa/review/fidelity/labels", json={**body, "item_version": "old"}).status_code == 409
     assert c.post("/api/evqa/review/fidelity/labels", json={**body, "item_id": "nope"}).status_code == 404
     assert c.get("/api/evqa/review/nope/items", params={"scope": "medical"}).status_code == 404
-    assert c.get("/api/evqa/review/fidelity/items", params={"scope": "medical_holdout"}).status_code == 403
 
 
-def test_population_pairs_come_from_the_judge_file_and_holdout_runs_stay_closed(c: TestClient) -> None:
+def test_population_pairs_come_from_the_judge_file(c: TestClient) -> None:
     run = review.RUNS / "practice-x"
     run.mkdir(parents=True)
     (run / "config.yaml").write_text("name: practice-x\nsplit: practice\ndomain: medical\n")
@@ -82,8 +81,4 @@ def test_population_pairs_come_from_the_judge_file_and_holdout_runs_stay_closed(
     assert r["automated"]["judge"] == "matches"
     s = c.get("/api/evqa/review/population/summary", params={"scope": "practice-x"}).json()
     assert s["by_automated"] == {"matches": {"different": 1}}
-    closed = review.RUNS / "holdout-y"
-    closed.mkdir()
-    (closed / "config.yaml").write_text("name: holdout-y\n")
-    assert c.get("/api/evqa/review/population/items", params={"scope": "holdout-y"}).status_code == 403
     assert c.get("/api/evqa/review/population/items", params={"scope": "../x"}).status_code == 404

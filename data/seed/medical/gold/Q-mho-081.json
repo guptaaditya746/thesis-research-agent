@@ -1,0 +1,94 @@
+{
+  "qid": "Q-mho-081",
+  "domain": "medical",
+  "type": "out_of_scope",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:losartan }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:ldl-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "losartan"
+    ],
+    "comparator": "placebo",
+    "measure": "ldl_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "losartan appears in no paper and nowhere in the seed",
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: losartan appears in no paper and nowhere in the seed"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "out_of_scope",
+    "split": "test",
+    "template": "What does losartan do to LDL cholesterol?",
+    "fixed": {
+      "subject": [
+        "losartan"
+      ],
+      "measure": "ldl_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug",
+      "terms": [
+        "losartan"
+      ],
+      "why": "losartan appears in no paper and nowhere in the seed"
+    }
+  },
+  "absence_check": {
+    "terms": [
+      "losartan"
+    ],
+    "papers_checked": 40,
+    "seed_checked": true,
+    "hits": 0
+  },
+  "wording": {
+    "template": "What does losartan do to LDL cholesterol?",
+    "source": "llm",
+    "text": "How does losartan affect LDL cholesterol?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does losartan affect LDL cholesterol?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

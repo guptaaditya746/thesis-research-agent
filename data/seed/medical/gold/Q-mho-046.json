@@ -1,0 +1,134 @@
+{
+  "qid": "Q-mho-046",
+  "domain": "medical",
+  "type": "best",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:parvelinor }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:fpg-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?week = 26)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_b"
+    ],
+    "comparator": "placebo",
+    "measure": "fpg_change",
+    "statistic": "MeanDifference",
+    "week": 26
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-03-10",
+    "R-mho-03-12"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "candidate",
+        "label": "dose"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-03-10",
+        "paper": "P-mho-03",
+        "cells": {
+          "candidate": "25 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.64",
+        "unit": "mmol/L"
+      },
+      {
+        "row": "R-mho-03-12",
+        "paper": "P-mho-03",
+        "cells": {
+          "candidate": "50 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.83",
+        "unit": "mmol/L"
+      }
+    ],
+    "split_by": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "own": [],
+    "groups": [
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "ranking": [
+          {
+            "candidate": "50 mg",
+            "row": "R-mho-03-12",
+            "value": "-0.83",
+            "unit": "mmol/L",
+            "cells": {}
+          },
+          {
+            "candidate": "25 mg",
+            "row": "R-mho-03-10",
+            "value": "-0.64",
+            "unit": "mmol/L",
+            "cells": {}
+          }
+        ],
+        "missing": [],
+        "status": "winner",
+        "winner": "50 mg",
+        "margin": "0.19"
+      }
+    ],
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "text": "adults with type 2 diabetes on metformin: 50 mg (ahead by 0.19)"
+  },
+  "rows_without_card": 2,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "best",
+    "split": "test",
+    "template": "Which parvelinor dose reduces fasting plasma glucose the most at 26 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_b"
+      ],
+      "measure": "fpg_change",
+      "week": 26
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": "dose",
+    "extra": {
+      "kind": "dose_any_group"
+    }
+  },
+  "wording": {
+    "template": "Which parvelinor dose reduces fasting plasma glucose the most at 26 weeks?",
+    "source": "llm",
+    "text": "Which parvelinor dose lowers fasting plasma glucose the most at 26 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which parvelinor dose lowers fasting plasma glucose the most at 26 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

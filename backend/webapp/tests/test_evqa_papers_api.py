@@ -39,7 +39,7 @@ def test_paper_list_and_briefs(dataset_copy: Path) -> None:
     c = client()
     rows = {p["id"]: p for p in c.get("/api/evqa/papers/medical").json()}
     seed = {p["id"] for p in seed_questions._blueprint("medical")["papers"]}     # every paper the seed plans
-    assert set(rows) == seed and len(rows) >= 5 and all(p["has_brief"] for p in rows.values())
+    assert seed <= set(rows) and len(rows) >= 5 and all(p["has_brief"] for p in rows.values())
     assert rows["P-med-01"]["has_paper"] and rows["P-med-01"]["l0"]["found"] == 18
     assert not rows["P-med-02"]["has_paper"] and rows["P-med-02"]["l0"] is None
     p2 = c.get("/api/evqa/papers/medical/P-med-02").json()

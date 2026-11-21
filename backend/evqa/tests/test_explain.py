@@ -95,7 +95,7 @@ def test_missing_eval_and_unknown_fields_are_tolerated(tmp_path: Path) -> None:
     assert "no score in eval.json" in ex.render(d)
 
 
-@pytest.mark.parametrize(("name", "split"), [("bench-qwen-1", "practice"), ("holdout-a", "practice"),
+@pytest.mark.parametrize(("name", "split"), [("bench-qwen-1", "practice"),
                                              ("practice-z", "test"), ("x", "")])
 def test_refuses_runs_that_are_not_practice(tmp_path: Path, name: str, split: str) -> None:
     run = make_run(tmp_path, name, split)

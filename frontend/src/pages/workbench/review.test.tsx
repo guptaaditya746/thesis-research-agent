@@ -36,7 +36,7 @@ function mockApi() {
     http.get("/api/evqa/runs", () => HttpResponse.json([
       { run_id: "practice-a", name: "practice", domain: "medical", closed_book: false, mtime: 1, has_eval: true }])),
     http.get("/api/evqa/runs/practice-a", () => HttpResponse.json({ run_id: "practice-a", config: {}, questions: {},
-      events: [], eval: evalJson, closed: null })),
+      events: [], eval: evalJson })),
     http.get("/api/evqa/review/tasks", () => HttpResponse.json([task])),
     http.get("/api/evqa/review/fidelity/summary", () => HttpResponse.json(summary())),
     http.get("/api/evqa/review/fidelity/items", () => HttpResponse.json([saved.length

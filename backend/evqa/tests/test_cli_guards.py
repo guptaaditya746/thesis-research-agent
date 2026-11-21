@@ -68,7 +68,7 @@ def _no_write(monkeypatch):
 
 def test_paper_write_refuses_frozen_domain(monkeypatch, capsys):
     called = _no_write(monkeypatch)
-    for d in ("medical", "medical_holdout"):
+    for d in ("medical",):
         assert (paths.domain_dir(d) / "FROZEN").is_file()
         assert cli.main(["paper", "write", d]) == 1
     assert called == [] and "--force" in capsys.readouterr().err
@@ -97,11 +97,11 @@ def test_eval_domain_comes_from_config(tmp_path, monkeypatch):
     from evqa.eval import prism
     got = []
     monkeypatch.setattr(prism, "score_run", lambda run_dir, domain: got.append(domain) or {"totals": {}})
-    (tmp_path / "config.yaml").write_text(yaml.safe_dump({"domain": "medical_holdout"}))
+    (tmp_path / "config.yaml").write_text(yaml.safe_dump({"domain": "materials"}))
     assert cli.main(["eval", str(tmp_path)]) == 0
-    assert cli.main(["eval", str(tmp_path), "--domain", "medical_holdout"]) == 0
+    assert cli.main(["eval", str(tmp_path), "--domain", "materials"]) == 0
     with pytest.raises(SystemExit, match="disagrees"):
         cli.main(["eval", str(tmp_path), "--domain", "medical"])
-    assert got == ["medical_holdout", "medical_holdout"]
+    assert got == ["materials", "materials"]
     with pytest.raises(SystemExit, match="pass --domain"):
         cli.main(["eval", str(tmp_path / "nope")])
