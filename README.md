@@ -17,6 +17,7 @@ against the seed. The Workbench (web UI) shows each step. See `docs/architecture
 | `tests/`, `reports/` | recorded results of the earlier system; never edited |
 | `ops/`, `scripts/` | cluster helpers, tunnels (`scripts/omen-tunnels`) |
 | `llm-setup/` | submodule [`thesis-llm-setup`](https://github.com/guptaaditya746/thesis-llm-setup): vLLM + LiteLLM on Slurm |
+| `baselines/` | submodule [`thesis-baselines`](https://github.com/guptaaditya746/thesis-baselines): answering baselines (PaperQA2, ...) to compare with evqa |
 
 ## Setup
 
