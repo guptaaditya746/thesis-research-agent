@@ -20,6 +20,13 @@ const PANES = [
   { id: "eval", label: "3 · Evaluation", ready: true },
 ] as const
 
+const HOLDOUT = "_holdout"
+/** One menu entry per field: "medical_holdout" is the locked test set of "medical", so it is a set choice, not a domain. */
+export function groupDomains(all: string[]): { base: string; holdout: string | null }[] {
+  return all.filter((d) => !(d.endsWith(HOLDOUT) && all.includes(d.slice(0, -HOLDOUT.length))))
+    .map((d) => ({ base: d, holdout: all.includes(d + HOLDOUT) ? d + HOLDOUT : null }))
+}
+
 export default function WorkbenchPage() {
   const domains = useDomains()
   const [pane, setPane] = useState<string>("dataset")
@@ -27,7 +34,9 @@ export default function WorkbenchPage() {
   const [runId, setRunId] = useState("")
   const [qid, setQid] = useState("")
   const pick = (r: string, q: string) => { setRunId(r); setQid(q) }
-  const current = domain || domains.data?.[0] || ""
+  const groups = groupDomains(domains.data ?? [])
+  const current = domain || groups[0]?.base || ""
+  const group = groups.find((g) => g.base === current || g.holdout === current)
   return (
     <div className="space-y-4">
       <PageHeader title="Workbench" description="Made-up papers with a known truth: the seed graph, the run, the layered evaluation." />
@@ -40,13 +49,25 @@ export default function WorkbenchPage() {
             {p.label}
           </button>
         ))}
-        {(domains.data?.length ?? 0) > 1 && (
-          <label className="ml-auto text-sm">Domain{" "}
-            <select className="rounded border bg-background p-2" value={current} onChange={(e) => setDomain(e.target.value)}>
-              {domains.data!.map((d) => <option key={d}>{d}</option>)}
-            </select>
-          </label>
-        )}
+        <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+          {groups.length > 1 && (
+            <label>Domain{" "}
+              <select className="rounded border bg-background p-2" value={group?.base ?? current}
+                onChange={(e) => setDomain(e.target.value)}>
+                {groups.map((g) => <option key={g.base}>{g.base}</option>)}
+              </select>
+            </label>
+          )}
+          {group?.holdout && (
+            <label>Set{" "}
+              <select aria-label="Set" className="rounded border bg-background p-2" value={current}
+                onChange={(e) => setDomain(e.target.value)}>
+                <option value={group.base}>practice</option>
+                <option value={group.holdout}>holdout (locked)</option>
+              </select>
+            </label>
+          )}
+        </div>
       </div>
       {domains.isError && <ErrorState error={domains.error} />}
       {pane === "dataset" && current && <DatasetPane domain={current} />}
