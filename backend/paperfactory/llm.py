@@ -280,7 +280,7 @@ class Caller:
                 prompt = (user + "\n\nYOUR LAST ANSWER WAS REJECTED: " + str(e)
                           + "\nAnswer again, in the required form.")
         cost = None if any(c is None for c in costs) else round(sum(costs), 6)
-        rec = {"role": role, "step": step, "backend": rm.backend, "model": rm.model,
+        rec = {"role": role, "step": step, "key": path.stem, "backend": rm.backend, "model": rm.model,
                "served_model": got.get("served_model"), "cost_usd": cost,
                "cost_source": got.get("cost_source") if cost is not None else "unknown",
                "input_tokens": got.get("input_tokens"), "output_tokens": got.get("output_tokens"),

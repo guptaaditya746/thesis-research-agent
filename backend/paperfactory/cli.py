@@ -124,6 +124,8 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                     files.write_text(paper(pid), (work / "paper.raw.md").read_text(encoding="utf-8"))
                 if "redo_writer" in why and (work / "redo-2").exists():
                     meta.set_aside(work / "redo-2")
+                    for log in (out / "work").glob(f"{pid}.redo-2.*"):   # its call logs too (cost report)
+                        meta.set_aside(log)
             if state in ("todo", "redo"):
                 todo.append(pid)
 
@@ -138,7 +140,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
         pids = [p for p in w["papers"] if paper(p).is_file() and not failed(out, p)]
         allowed = meta.same_settings({p: meta.read(paper(p)) for p in pids}, SHARED, allow_mixed, "eval")
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
-        rep["cost"] = cost.report(out, list(w["papers"]), sorted({s.papers, 100}))
+        rep["cost"] = cost.report(out, list(w["papers"]), sorted({s.papers, 100}), s.role("writer").local)
         rep["mixed_settings_allowed"] = allowed
         rep["model_warnings"] = config.shared_models(s)
         rep["judge_validation"]["about"] = REWRITE_NOTE
@@ -219,7 +221,8 @@ def main(argv: list[str] | None = None) -> None:
             sys.exit(str(e))
     elif a.cmd == "cost":
         w = json.loads((s.out_dir / "world.json").read_text(encoding="utf-8"))
-        print(json.dumps(cost.report(s.out_dir, list(w["papers"]), sorted({s.papers, *a.project})), indent=1))
+        print(json.dumps(cost.report(s.out_dir, list(w["papers"]), sorted({s.papers, *a.project}),
+                                     s.role("writer").local), indent=1))
     elif a.cmd == "clear-cache":
         print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:

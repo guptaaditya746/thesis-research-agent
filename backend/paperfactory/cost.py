@@ -8,6 +8,14 @@ Per role, per paper, total, and a straight-line projection for N papers. Rules:
   * A step is charged to a paper when its name has the paper id as a part (tag:P, verify:P, qa:P:t, repair:P,
     worldcheck:P); everything else (world, judge validation, verifier test, leak test) is shared.
 Logs renamed *.stale-N (outputs made under old settings, meta.py) are left out.
+
+Two views (review finding 4):
+  spent     every logged paid call of every run in this folder: the money really spent.
+  one_pass  each distinct call (cache key) once, at what it cost when it was made: what one clean run of the
+            current outputs costs. Per paper, per role and the projection use this view. Rows without a key (logs
+            from before) count as distinct calls.
+A failed writer attempt (review finding 5) has no cost in PaperOrchestra's log: it is unknown, unless the writer is
+a local model (cost 0).
 """
 from __future__ import annotations
 
@@ -56,54 +64,65 @@ def paper_of(step: str, pids: set[str]) -> str | None:
     return next((p for p in parts[1:] if p in pids), None)
 
 
-def report(out_dir: Path, pids: list[str], project: list[int]) -> dict[str, Any]:
+def report(out_dir: Path, pids: list[str], project: list[int], writer_local: bool = False) -> dict[str, Any]:
     pidset = set(pids)
-    by_role: dict[str, Sum] = {}
-    by_paper: dict[str, dict[str, Sum]] = {p: {} for p in pids}
-    shared, total = Sum(), Sum()
+    rows: list[tuple[str, str | None, str | None, float | None]] = []      # (role, paper, key, cost)
     cached_original, failed_attempts = 0.0, 0
-
-    def add(role: str, pid: str | None, usd: float | None) -> None:
-        by_role.setdefault(role, Sum()).add(usd)
-        total.add(usd)
-        if pid is None:
-            shared.add(usd)
-        else:
-            by_paper[pid].setdefault(role, Sum()).add(usd)
     for r in _rows(out_dir / "calls.jsonl"):
-        add(r.get("role", "?"), paper_of(r.get("step", ""), pidset), r.get("cost_usd"))
+        rows.append((r.get("role", "?"), paper_of(r.get("step", ""), pidset), r.get("key"), r.get("cost_usd")))
     for pid in pids:
         for r in writer_calls(out_dir / "work", pid):
             if r["event"] == "call_error":
                 failed_attempts += 1
+                rows.append(("writer", pid, None, 0.0 if writer_local else None))
             elif r.get("cached"):
                 cached_original += r.get("original_cost_usd") or 0.0
+                # not spent in this run; in one_pass it stands for the call that made the cached answer
+                rows.append(("writer-cached", pid, "po:" + r["key"] if r.get("key") else None,
+                             r.get("original_cost_usd")))
             else:
-                add("writer", pid, r.get("cost_usd"))
-    papers = {}
-    for pid, roles in by_paper.items():
-        s = Sum()
-        for x in roles.values():
-            s.known += x.known
-            s.calls += x.calls
-            s.unknown += x.unknown
-        papers[pid] = s.out() | {"by_role": {k: v.out() for k, v in sorted(roles.items())}}
-    t = total.out()
+                rows.append(("writer", pid, "po:" + str(r.get("key")) if r.get("key") else None, r.get("cost_usd")))
+
+    def view(rs: list[tuple[str, str | None, str | None, float | None]]) -> dict[str, Any]:
+        by_role: dict[str, Sum] = {}
+        by_paper: dict[str, dict[str, Sum]] = {p: {} for p in pids}
+        shared, total = Sum(), Sum()
+        for role, pid, _, usd in rs:
+            by_role.setdefault(role, Sum()).add(usd)
+            total.add(usd)
+            (shared if pid is None else by_paper[pid].setdefault(role, Sum())).add(usd)
+        papers = {}
+        for pid, roles in by_paper.items():
+            s_ = Sum()
+            for x in roles.values():
+                s_.known, s_.calls, s_.unknown = s_.known + x.known, s_.calls + x.calls, s_.unknown + x.unknown
+            papers[pid] = s_.out() | {"by_role": {k: v.out() for k, v in sorted(roles.items())}}
+        return {"total": total.out(), "by_role": {k: v.out() for k, v in sorted(by_role.items())},
+                "per_paper": papers, "shared": shared.out()}
+
+    spent = view([r for r in rows if r[0] != "writer-cached"])
+    seen: dict[str, tuple] = {}
+    distinct = []
+    for r in rows:
+        role = "writer" if r[0] == "writer-cached" else r[0]
+        if r[2] is None:
+            distinct.append((role, *r[1:]))
+        elif r[2] not in seen or (seen[r[2]][3] is None and r[3] is not None):
+            seen[r[2]] = (role, *r[1:])
+    one = view(distinct + list(seen.values()))
     n = len(pids)
+    known_pp = [p["usd_known"] for p in one["per_paper"].values()]
+    unknown = one["total"]["usd"] == "unknown"
 
     def proj(k: int) -> Any:
-        if not n:
+        if not n or unknown:
             return "unknown"
-        per = sum(p["usd_known"] for p in papers.values()) / n
-        if t["usd"] == "unknown":
-            return "unknown"
-        return round(per * k + shared.known * max(1.0, k / n), 2)
+        return round(sum(known_pp) / n * k + one["shared"]["usd_known"] * max(1.0, k / n), 2)
+    t = spent["total"]
     return {"usd": t["usd"], "usd_known": t["usd_known"], "calls": t["calls"],
-            "calls_unknown_cost": t["calls_unknown_cost"],
-            "by_role": {k: v.out() for k, v in sorted(by_role.items())},
-            "per_paper": papers, "shared": shared.out(),
-            "mean_per_paper_usd": round(sum(p["usd_known"] for p in papers.values()) / n, 4) if n else "unknown",
-            "writer_failed_attempts_unpriced": failed_attempts,
-            "usd_cached_original": round(cached_original, 4),
-            "projection": {"rule": "per-paper mean x N, shared part scaled by N / papers in this run (straight line)",
-                           **{str(k): proj(k) for k in project}}}
+            "calls_unknown_cost": t["calls_unknown_cost"], "spent": spent, "one_pass": one,
+            "by_role": one["by_role"], "per_paper": one["per_paper"], "shared": one["shared"],
+            "mean_per_paper_usd": round(sum(known_pp) / n, 4) if n and not unknown else "unknown",
+            "writer_failed_attempts": failed_attempts, "usd_cached_original": round(cached_original, 4),
+            "projection": {"rule": "one_pass: per-paper mean x N, shared part scaled by N / papers in this run "
+                                   "(straight line)", **{str(k): proj(k) for k in project}}}
