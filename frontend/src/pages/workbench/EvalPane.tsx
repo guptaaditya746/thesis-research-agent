@@ -2,7 +2,8 @@
  * Workbench pane: the evaluation (S5). Read-only over a run's eval.json (evqa/eval/prism.py). Totals per run (one
  * column per run when two are compared), where facts were lost (blame per layer, as a bar chart), and per question
  * the true facts with a tick per layer. Clicking a fact opens that question in the Run pane. A table per question
- * type, and a block for the questions the papers cannot answer (should say "not reported").
+ * type, and a block for the questions the papers cannot answer (should say "not reported"). The optional human
+ * review (ReviewPane): coverage per task next to the scores, and a button that opens the one-item-at-a-time queue.
  */
 import { Check, X } from "lucide-react"
 import { useState } from "react"
@@ -10,11 +11,15 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { type Blame, type FactScore, type QuestionScore, type RunEval, type RunItem, isBroken, useRun, useRuns }
   from "@/api/evqaRuns"
+import { type ReviewTask, useReviewSummary, useReviewTasks } from "@/api/evqaReview"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig }
   from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+
+import { ReviewPane } from "./ReviewPane"
 
 const BLAME: { key: Blame; label: string }[] = [
   { key: "L0", label: "not in paper" }, { key: "find", label: "Find" }, { key: "extract", label: "Extract" },
@@ -23,8 +28,11 @@ const BLAME: { key: Blame; label: string }[] = [
 const BLAME_LABEL = Object.fromEntries(BLAME.map((b) => [b.key, b.label])) as Record<Blame, string>
 const METRICS: { key: string; label: string; help: string }[] = [
   { key: "l0", label: "L0 in paper", help: "share of true facts the paper really states" },
+  { key: "l1_paper", label: "L1 right papers", help: "share of the papers holding the answer that Find passed on" },
   { key: "l1", label: "L1 found", help: "share of facts whose passage Find kept" },
   { key: "l2_recall", label: "L2 read (recall)", help: "share of facts Extract read with the right value" },
+  { key: "l2_complete", label: "L2 whole fact",
+    help: "share of facts read with the right value and every label (drug, measure, comparator, dose, time, patients); patient labels in other words count as misses until checked" },
   { key: "l2_precision", label: "L2 right (precision)", help: "share of read rows that are true facts" },
   { key: "l3", label: "L3 answer", help: "how well the final answer matches the true answer (answerable questions)" },
   { key: "advisor", label: "Advisor", help: "share of spec checks the advisor got right" },
@@ -216,6 +224,53 @@ function NotReportedBlock({ ev }: { ev: RunEval }) {
   )
 }
 
+/** One review task: how much a person has checked so far ("awaiting optional review" before any label). */
+function ReviewRow({ task, scope, onOpen }: { task: ReviewTask; scope: string; onOpen: () => void }) {
+  const s = useReviewSummary(task.task, scope)
+  const closed = s.isError
+  const empty = s.data && s.data.items === 0
+  const counts = s.data && s.data.labels > 0 ? task.choices.map((c) => `${c.label} ${s.data!.counts[c.id] ?? 0}`)
+    .join(" · ") : ""
+  return (
+    <li className="flex flex-wrap items-center gap-3 border-t py-2 first:border-t-0">
+      <div className="min-w-56 flex-1">
+        <p className="text-sm font-medium">{task.title} <span className="font-normal text-muted-foreground">
+          ({task.scope === "run" ? "this run" : "papers"})</span></p>
+        <p className="text-xs text-muted-foreground">{task.question}</p>
+      </div>
+      <div className="text-sm">
+        {closed && <span className="text-muted-foreground">not open for this {task.scope}</span>}
+        {empty && <span className="text-muted-foreground">nothing to review{task.task === "population"
+          ? " (run evqa eval --judge-population first)" : ""}</span>}
+        {s.data && !empty && <>
+          <span className="font-medium">{s.data.status}</span>
+          {counts && <span className="block text-xs text-muted-foreground">{counts}
+            {s.data.reviewers.length > 1 ? ` · ${s.data.reviewers.length} reviewers, ${s.data.disagreements} disagree` : ""}</span>}
+        </>}
+      </div>
+      <Button variant="outline" size="sm" disabled={!s.data || !!empty} onClick={onOpen}>
+        {s.data && s.data.labels > 0 ? "Continue review" : "Start review"}</Button>
+    </li>
+  )
+}
+
+function ReviewBlock({ domain, runId, onOpen }: { domain: string; runId: string
+  onOpen: (task: ReviewTask, scope: string) => void }) {
+  const tasks = useReviewTasks()
+  if (!tasks.data) return null
+  return (
+    <section aria-label="Human review" className="space-y-1 rounded-md border p-3">
+      <h2 className="text-base font-semibold">Human review (optional)</h2>
+      <p className="text-xs text-muted-foreground">A person checks a small sample, one item at a time, whenever they
+        have time. The scores above never wait for it; labels show up here as they arrive.</p>
+      <ul>{tasks.data.map((t) => {
+        const scope = t.scope === "run" ? runId : domain
+        return scope ? <ReviewRow key={t.task} task={t} scope={scope} onOpen={() => onOpen(t, scope)} /> : null
+      })}</ul>
+    </section>
+  )
+}
+
 function useEval(runId: string) {
   const q = useRun(runId)
   const ev = q.data?.eval
@@ -237,10 +292,11 @@ function RunSelect({ runs, value, onChange, label, empty }: { runs: RunItem[]; v
   )
 }
 
-export function EvalPane({ runId, onRun, onOpen }: { runId: string; onRun: (runId: string) => void
-  onOpen: (runId: string, qid: string) => void }) {
+export function EvalPane({ runId, onRun, onOpen, domain = "" }: { runId: string; onRun: (runId: string) => void
+  onOpen: (runId: string, qid: string) => void; domain?: string }) {
   const runs = useRuns()
   const [other, setOther] = useState("")
+  const [reviewing, setReviewing] = useState<{ task: ReviewTask; scope: string } | null>(null)
   const list = runs.data ?? []
   const current = runId && list.some((r) => r.run_id === runId) ? runId
     : list.find((r) => r.has_eval)?.run_id ?? list[0]?.run_id ?? ""
@@ -250,6 +306,7 @@ export function EvalPane({ runId, onRun, onOpen }: { runId: string; onRun: (runI
   if (runs.isError) return <ErrorState error={runs.error} />
   if (list.length === 0) return <p className="text-sm">No runs yet: start one with <code>evqa run</code>.</p>
   const evals = [a.ev, other ? b.ev : null].filter((e): e is RunEval => !!e)
+  if (reviewing) return <ReviewPane task={reviewing.task} scope={reviewing.scope} onBack={() => setReviewing(null)} />
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -270,6 +327,8 @@ export function EvalPane({ runId, onRun, onOpen }: { runId: string; onRun: (runI
             <Totals evals={evals} />
             <NotReportedBlock ev={a.ev} />
             <TypeTable ev={a.ev} />
+            <ReviewBlock domain={a.ev.domain ?? domain} runId={current}
+              onOpen={(task, scope) => setReviewing({ task, scope })} />
           </div>
           <div className="space-y-2">
             <h2 className="text-base font-semibold">Where the true facts got lost</h2>

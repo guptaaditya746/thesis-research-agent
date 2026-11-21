@@ -7,6 +7,14 @@ facts of exactly one seed context (prism.Provenance), one blind LLM call (JudgeL
 cells other than subject) and the context description: no run verdicts, no ids, no scores. Code checks the verdict is
 on the list; an unreadable reply is retried once, then counted "unreadable". Items without one provenance context are
 counted, not judged.
+
+Population judge (judge_population, `evqa eval --judge-population`): Prism marks a value-matched row's population
+"unverified" when its own label names the patients in other words than the seed context (prism.population_check).
+The same blind JudgeLabel call gets that label and the seed context only. "matches" -> pass, "does not match" ->
+fail, "unclear"/unreadable -> stays unverified. l2_complete_judged = per question, facts complete by code or pending
+with only the population left and judged "matches", / gold facts; mean over questions (as prism l2_complete).
+Written to run_dir/population_judge.json; eval.json is not changed. Use a judge model other than the run's Extract
+model (docs/prompt-writing.md); the file records both.
 """
 from __future__ import annotations
 
@@ -98,4 +106,53 @@ def judge_run(run_dir: Path, lm: dspy.BaseLM | None = None) -> dict[str, Any]:
            "details": items}
     ev["label_judge"] = out
     eval_path.write_text(json.dumps(ev, indent=2) + "\n", encoding="utf-8")
+    return out
+
+
+def judge_population(run_dir: Path, lm: dspy.BaseLM | None = None, judge_model: str | None = None,
+                     write: bool = True) -> dict[str, Any]:
+    """Settle Prism's unverified populations with the blind label judge (module doc)."""
+    run_dir = Path(run_dir)
+    cfg = RunConfig.load(run_dir / "config.yaml")
+    if lm is None:
+        from evqa.lm import make_lm
+        step = cfg.llm_for("judge")
+        lm = make_lm(step)
+        judge_model = judge_model or f"{step.backend}:{step.model}"
+    ev = prism.score_run(run_dir, domain=cfg.domain, write=False)     # current scorer, saved eval.json untouched
+    facts_all = prism.seed_facts(cfg.domain)
+    seen: dict[tuple[str, str], LabelVerdict | None] = {}
+    items: list[dict[str, Any]] = []
+    per_q: list[float] = []
+    for qid, q in ev["questions"].items():
+        if not q["facts"]:
+            continue
+        rows: list[Row] = read_jsonl(run_dir / qid / "rows.jsonl", Row) if q["facts"] else []
+        good = 0
+        for f in q["facts"]:
+            if f["complete"] == "complete":
+                good += 1
+                continue
+            checks = f["complete_checks"]
+            if f["complete"] != "pending" or [k for k, v in checks.items() if v == "unverified"] != ["population"]:
+                continue
+            row = rows[f["complete_row"]]
+            label = row.patient_group or row.patient_group_raw or "not stated"
+            context = facts_all[f["id"]]["context"]
+            if (label, context) not in seen:
+                seen[(label, context)] = ask(label, context, lm)
+            got = seen[(label, context)]
+            verdict = got.verdict if got else "unreadable"
+            good += verdict == "matches"
+            items.append({"qid": qid, "fact": f["id"], "row": f["complete_row"], "label": label,
+                          "conditions": context, "verdict": verdict, "reason": got.reason if got else ""})
+        per_q.append(good / len(q["facts"]))
+    counts = {v: sum(i["verdict"] == v for i in items) for v in (*VERDICTS, "unreadable")}
+    out = {"run_id": ev["run_id"], "scorer": ev["scorer"], "judge_model": judge_model,
+           "extract_model": f"{cfg.llm_for('extract').backend}:{cfg.llm_for('extract').model}",
+           "items": len(items), "calls": len(seen), "counts": counts,
+           "l2_complete": ev["totals"]["l2_complete"], "l2_complete_upper": ev["totals"]["l2_complete_upper"],
+           "l2_complete_judged": round(sum(per_q) / len(per_q), 4) if per_q else None, "details": items}
+    if write:
+        (run_dir / "population_judge.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     return out

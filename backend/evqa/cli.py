@@ -216,6 +216,8 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("run_dir", type=Path)
     e.add_argument("--domain", default=None, help="default: domain in <run_dir>/config.yaml (must agree)")
     e.add_argument("--judge", action="store_true", help="also run the blind LLM label judge (eval/judge.py)")
+    e.add_argument("--judge-population", action="store_true",
+                   help="settle unverified patient groups with the blind LLM judge -> population_judge.json")
     e.set_defaults(fn=eval_run)
     x = sub.add_parser("explain", help="why one question of a practice run is right or wrong, in plain words")
     x.add_argument("run_dir", type=Path)
@@ -288,6 +290,10 @@ def eval_run(a: argparse.Namespace) -> int:
     if getattr(a, "judge", False):
         from evqa.eval.judge import judge_run
         got = judge_run(a.run_dir)
+        print(json.dumps({k: v for k, v in got.items() if k != "details"}, indent=2))
+    if getattr(a, "judge_population", False):
+        from evqa.eval.judge import judge_population
+        got = judge_population(a.run_dir)
         print(json.dumps({k: v for k, v in got.items() if k != "details"}, indent=2))
     return 0
 

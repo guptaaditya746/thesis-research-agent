@@ -89,7 +89,8 @@ def test_perfect_run_scores_one(tmp_path: Path) -> None:
     res = prism.score_run(make_run(tmp_path))
     t = res["totals"]
     assert (tmp_path / res["run_id"] / "eval.json").is_file()
-    for k in ("l0", "l1", "l2_recall", "l2_precision", "l2_name_ok", "l3", "advisor"):
+    for k in ("l0", "l1", "l1_paper", "l2_recall", "l2_precision", "l2_name_ok", "l2_complete", "l2_complete_upper",
+              "l3", "advisor"):
         assert t[k] == 1.0, (k, t, {q: v["advisor"]["mismatches"] for q, v in res["questions"].items()})
     assert t["l3_exact"] == 4 and t["blame"]["none"] == t["facts"] > 0 and not res["closed_book"]
 
@@ -203,9 +204,10 @@ def test_perfect_run_of_every_type_scores_one(tmp_path: Path) -> None:
     assert nr["l0"] is None and nr["l1"] is None and nr["l2"]["recall"] is None and nr["facts"] == []
     assert t["l1"] == 1.0                                  # n/a questions stay out of the means
     assert res["intervals"]["l3"] == [1.0, 1.0] and res["intervals"]["l0"] == [1.0, 1.0]   # eval.json "intervals"
-    assert list(res)[:-2] == ["run_id", "domain", "config_name", "closed_book", "unknown_questions", "totals",
-                              "questions"]                 # the older keys are unchanged; intervals, data come last
-    assert list(res)[-2:] == ["intervals", "data"]
+    assert list(res)[:-3] == ["run_id", "domain", "config_name", "closed_book", "unknown_questions", "totals",
+                              "questions"]                 # the older keys are unchanged; intervals, data, scorer last
+    assert list(res)[-3:] == ["intervals", "data", "scorer"]
+    assert len(res["scorer"]["prism_sha256"]) == 64
     assert set(res["data"]) == {"data_hash", "papers", "questions", "gold"}   # the data the score was made on
 
 
@@ -292,4 +294,103 @@ def test_label_judge_is_blind_and_reported_apart(tmp_path: Path) -> None:
     ev = _json.loads((run / "eval.json").read_text())
     assert ev["label_judge"]["items"] == out["items"] > 0 and out["counts"]["matches"] == out["items"]
     assert ev["totals"]["l3"] == 1.0                                   # provenance scores untouched
+    assert seen and all("R-med" not in p and "eval" not in p.lower() for p in seen)   # no ids, no scores
+
+
+# ---------------------------------------------------------------- paper recall, complete facts, L0 gaps (21 Nov 2026)
+def test_right_paper_wrong_passage_gets_paper_recall_not_span_recall(tmp_path: Path) -> None:
+    def edit(qid, spec, hits, rows):
+        if qid == "Q-med-01":
+            hits["P-med-04"].passages = [Passage(start=0, end=10, text="title")]   # right paper, wrong passage
+    q = prism.score_run(make_run(tmp_path, qids=["Q-med-01"], edit=edit))["questions"]["Q-med-01"]
+    blame = {f["id"]: f["blame"] for f in q["facts"]}
+    assert blame["R-med-04-01"] == "find" and q["l1"] == 0.8
+    assert "P-med-04" in q["papers"]["found"] and q["l1_paper"] == 1.0
+
+
+def test_paper_recall_counts_distinct_papers_and_skips_screened_out_hits(tmp_path: Path) -> None:
+    golds = prism.gold(DOMAIN)
+
+    def edit(qid, spec, hits, rows):
+        if hits:
+            hits[sorted(hits)[0]].screen = "no"           # Extract does not read a screened-out paper
+    res = prism.score_run(make_run(tmp_path, qids=["Q-med-01", "Q-med-07"], edit=edit))
+    q = res["questions"]["Q-med-01"]
+    n = len({prism.seed_facts(DOMAIN)[r]["paper"] for r in golds["Q-med-01"]["row_ids"]})
+    assert len(q["papers"]["gold"]) == n and q["l1_paper"] == round((n - 1) / n, 4)
+    nr = res["questions"]["Q-med-07"]                     # not reported: no gold papers, n/a, out of the mean
+    assert nr["l1_paper"] is None and res["totals"]["counts"]["l1_paper_na_questions"] == 1
+    assert res["totals"]["l1_paper"] == q["l1_paper"]
+
+
+def test_right_number_wrong_qualifier_is_not_a_complete_fact(tmp_path: Path) -> None:
+    def edit(qid, spec, hits, rows):
+        if qid == "Q-med-02":
+            rows[0].time_point = "week 52"                # value, quote and paper right; time point wrong
+            rows[1].comparator = None                     # comparator not extracted
+    q = prism.score_run(make_run(tmp_path, qids=["Q-med-02"], edit=edit))["questions"]["Q-med-02"]
+    f0, f1 = q["facts"][0], q["facts"][1]
+    assert f0["l2"] and f0["complete"] == "incomplete" and f0["complete_checks"]["time_point"] == "fail"
+    assert f1["l2"] and f1["complete"] == "incomplete" and f1["complete_checks"]["comparator"] == "fail"
+    assert q["l2"]["recall"] == 1.0 and q["l2"]["complete"] == q["l2"]["complete_upper"] == 0.5
+
+
+def test_population_is_read_from_the_row_not_from_provenance(tmp_path: Path) -> None:
+    ctxs = prism.contexts(DOMAIN)
+
+    def edit(qid, spec, hits, rows):
+        if qid == "Q-med-02":
+            other = next(c for c in ctxs if c != rows[0].patient_group)
+            rows[0].patient_group = rows[0].patient_group_raw = other          # another seed group: fail
+            rows[1].patient_group = "study cohort A"                           # other words: unverified
+            rows[2].patient_group = None                                       # no group: fail
+    res = prism.score_run(make_run(tmp_path, qids=["Q-med-02"], edit=edit))
+    q = res["questions"]["Q-med-02"]
+    pop = [f["complete_checks"]["population"] for f in q["facts"]]
+    assert pop == ["fail", "unverified", "fail", "pass"]
+    assert [f["complete"] for f in q["facts"]] == ["incomplete", "pending", "incomplete", "complete"]
+    assert q["l2"]["recall"] == 1.0 and q["l2"]["complete"] == 0.25 and q["l2"]["complete_upper"] == 0.5
+    c = res["totals"]["counts"]
+    assert c["l2_complete"] == 1 and c["l2_complete_pending"] == 1
+    assert c["complete_field_fail"]["population"] == 2 and c["complete_field_unverified"]["population"] == 1
+
+
+def test_facts_without_an_l0_span_are_counted(tmp_path: Path, monkeypatch) -> None:
+    real = prism.l0_spans
+
+    def no_span(domain, paper):
+        return {k: (() if k == "R-med-04-01" else v) for k, v in real(domain, paper).items()}
+    run = make_run(tmp_path, qids=["Q-med-01"])
+    monkeypatch.setattr(prism, "l0_spans", no_span)
+    res = prism.score_run(run, write=False)
+    assert not (run / "eval.json").exists()               # write=False keeps a saved eval.json untouched
+    t = res["totals"]
+    assert t["l0_missing_facts"] == t["counts"]["l0_missing"] == t["blame"]["L0"] == 1
+    q = res["questions"]["Q-med-01"]
+    assert q["l1"] == 0.8 and q["l1_paper"] == 1.0          # paper recall does not need L0
+
+
+def test_population_judge_settles_only_unverified_and_is_blind(tmp_path: Path) -> None:
+    import json as _json
+
+    from modelcall.dspy_lm import RecordedLM
+
+    from evqa.eval import judge
+
+    def edit(qid, spec, hits, rows):
+        rows[0].patient_group = rows[0].patient_group_raw = "study cohort A"   # other words: unverified
+        rows[1].patient_group = rows[1].patient_group_raw = "study cohort B"
+    run = make_run(tmp_path, qids=["Q-med-02"], edit=edit)
+    prism.score_run(run)
+    before = (run / "eval.json").read_text()
+    seen: list[str] = []
+
+    def ask(prompt: str) -> str:
+        seen.append(prompt)
+        verdict = "matches" if "cohort A" in prompt else "does not match"
+        return _json.dumps({"judgement": {"verdict": verdict, "reason": "r"}})
+    out = judge.judge_population(run, lm=RecordedLM("fake", ask), judge_model="fake")
+    assert out["items"] == 2 and out["counts"]["matches"] == 1 and out["counts"]["does not match"] == 1
+    assert out["l2_complete"] == 0.5 and out["l2_complete_upper"] == 1.0 and out["l2_complete_judged"] == 0.75
+    assert (run / "eval.json").read_text() == before and (run / "population_judge.json").is_file()
     assert seen and all("R-med" not in p and "eval" not in p.lower() for p in seen)   # no ids, no scores
