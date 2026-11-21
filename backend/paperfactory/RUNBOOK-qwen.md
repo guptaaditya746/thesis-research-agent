@@ -1,6 +1,6 @@
 # Runbook: paperfactory pilot datasets on Qwen (Slurm), for Codex
 
-Written 21 Nov 2026. Goal: a pilot dataset of 20 papers for each of four fields (law, llm, medicine, materials),
+Written 21 Nov 2026. Goal: a pilot dataset of 10 papers for each of four fields (law, llm, medicine, materials),
 every model job on Qwen `orch-model` in the Slurm GPU job. Work through the steps in order. Keep a short log in
 docs/design/codex-log.md (date, step, command, result, numbers). Aditya reads that log.
 
@@ -10,9 +10,10 @@ docs/design/codex-log.md (date, step, command, result, numbers). Aditya reads th
    allowed). Do not edit code, packs or
    configs. If something needs a change, STOP (section 6).
 2. Never print or log LITELLM_MASTER_KEY or anything from llm-setup/.env.
-3. At most 3 LLM calls at once across ALL processes. paperfactory enforces 3 per server with lock files, so run ONE
-   field at a time, and before starting check `pgrep -af "paperfactory|evqa run|evqa paper|paper_writing_cli"`.
-   If another LLM job runs, wait (check every 5 minutes).
+3. At most 9 LLM calls at once (Aditya, 22 Nov 2026: three per Qwen replica). paperfactory enforces this per server
+   with lock files (`max_parallel` 9 in configs/qwen/*.json). Run ONE field at a time, and no other LLM job (evqa)
+   at the same time: before starting check `pgrep -af "paperfactory|evqa run|evqa paper|paper_writing_cli"`; if
+   another LLM job runs, wait (check every 5 minutes).
 4. Run everything from the repo root through the GPU job:
    `srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory ...` (ops/injob.sh sets LITELLM_BASE_URL to the
    gateway on 127.0.0.1:4000 and loads the key without printing it).
@@ -65,7 +66,7 @@ srun --jobid <JOB> --overlap ops/injob.sh bash -c \
 
 `orch-model` must be in the list; otherwise STOP.
 
-## 2. Smoke tests: 3 papers in each field (about 1-2 hours per field)
+## 2. Smoke tests: 3 papers in each field (done 21-22 Nov; skip unless Aditya asks)
 
 One field at a time, in this order: law, llm, medicine, materials (llm, medicine and materials packs are DRAFTS:
 they have never run). For each FIELD:
@@ -106,10 +107,10 @@ with the same `nohup srun ... run --config $CFG` command (git pull first). It pr
 (field_pack, genre_pack); doing it again" once: the way the world's inputs are recorded changed, so this one rerun
 makes a new world and new papers (the old ones are kept as *.stale-1). That is expected.
 
-## 3. The four pilot datasets (20 papers each, one field at a time): ONLY when Aditya says so
+## 3. The four pilot datasets: 10 papers each, one field at a time (Aditya approved, 22 Nov 2026)
 
-Order: law, llm, medicine, materials (llm, medicine and materials packs are DRAFTS: they have never run). For each
-FIELD:
+`git pull origin main` first (repair, question, world-agent and speed fixes after the smoke runs). Order: law, llm,
+medicine, materials (llm, medicine and materials packs are DRAFTS). For each FIELD:
 
 ```bash
 CFG=backend/paperfactory/configs/qwen/FIELD.json
@@ -120,8 +121,17 @@ nohup srun --jobid <JOB> --overlap ops/injob.sh uv run paperfactory run --config
      > runs/paperfactory/qwen-FIELD.log 2>&1 &
 ```
 
-Same pass rules as the smoke test, with these limits for 20 papers: `papers_written` >= 18; at most 2 papers in
-`papers_failed_world_check`; `qa_summary.parse_errors` <= 2. Then start the next field.
+The full run does every step: world, seed (gold by SPARQL), materials (the notes PaperOrchestra writes from),
+write (PaperOrchestra, 9 papers at once), check (repairs), eval (tagging, verifier test, judge, QA, BM25, style
+leak). Watch progress with `tail -f runs/paperfactory/qwen-FIELD.log`.
+
+Pass rules for 10 papers: report.json exists; `papers_written` >= 9; at most 1 paper in `papers_failed_world_check`;
+`qa_summary.parse_errors` <= 1; in calls.jsonl fewer than 10% of rows have `"parse_error": true`; no row has
+`"skipped": "context_window"`.
+
+A field that fails a pass rule, or whose world step fails twice: log it (section 5, plus the open flags of each failed
+paper and the first three error messages) and go on with the next field; do not rerun it. After all four fields,
+STOP and wait for Aditya.
 
 ## 4. If a run stops (job ended, timeout, crash)
 
@@ -136,15 +146,16 @@ max_tokens; that is a config change for Aditya).
 
 One short entry per field: run folder; start and end time; papers planned / written / failed the world check;
 world-check warnings (count, first three); repairs (statuses in work/*/paper.repairs.json: clean / repaired /
-redone / failed); verifier_test; judge_validation (paper and answer wording); qa_summary (recall, answer_recall,
-precision, parse_errors); bm25_baseline.all (rank1_share, median_rank); style_leak (rate, ci95, chance);
-parse-error count from calls.jsonl. Copy numbers; do not interpret them.
+redone / failed, and how many log steps are `drop_sentences`); verifier_test; judge_validation (paper and answer
+wording); qa_summary (questions, recall, answer_recall, precision, parse_errors); `questions_rescoped` and
+`questions_dropped` (counts); bm25_baseline.all (rank1_share, median_rank); style_leak (rate, ci95, chance,
+`planted_with_pack_words.share`, and the first three `hit_sentences`); parse-error count from calls.jsonl.
+Copy numbers; do not interpret them.
 
 ## 6. STOP rules (write the reason in codex-log.md, then wait for Aditya)
 
 - Tests fail, llm-setup/.env is missing, the Qwen job does not become ready, or the gateway does not list
   orch-model.
-- A pass rule in section 2 or 3 fails.
-- The world step fails twice, or check-world prints errors (not warnings).
-- Any step would need a change to code, packs, configs or llm-setup/, or more than 3 parallel LLM calls.
+- check-world prints errors (not warnings) for a world the run then uses.
+- Any step would need a change to code, packs, configs or llm-setup/, or more than 9 parallel LLM calls.
 - A run prints "MixedSettings".
