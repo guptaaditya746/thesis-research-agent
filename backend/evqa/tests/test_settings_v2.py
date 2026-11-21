@@ -1,7 +1,7 @@
 import json
 from modelcall.dspy_lm import RecordedLM
 from evqa.contracts import Dimension, Row
-from evqa.spec.dimensions_v2 import DraftDimension, checked
+from evqa.spec.dimensions_v3 import DraftDimension, checked
 from evqa.extract.settings_v2 import DraftSet, check, read, assign
 
 

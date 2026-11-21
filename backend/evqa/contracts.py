@@ -111,29 +111,6 @@ class RunConfig(BaseModel):
         return cls.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
 
 
-# ---------------------------------------------------------------- population
-class Facet(BaseModel):
-    """A checked population field and its source; unresolved terms remain visible."""
-    value: str | int | float = "not stated"
-    quote: str = ""
-    unresolved: bool = False
-
-
-class Population(BaseModel):
-    id: str = ""
-    paper: str = ""
-    condition: Facet = Field(default_factory=Facet)
-    background_drugs: list[Facet] = Field(default_factory=list)
-    drug_naive: Facet = Field(default_factory=Facet)
-    age_min: Facet = Field(default_factory=Facet)
-    age_max: Facet = Field(default_factory=Facet)
-    comorbidities: list[Facet] = Field(default_factory=list)
-    ethnicity_region: list[Facet] = Field(default_factory=list)
-    label: str = ""
-    facets_ok: bool = False
-    notes: list[str] = Field(default_factory=list)
-
-
 # ---------------------------------------------------------------- domain-free settings
 class Dimension(BaseModel):
     key: str

@@ -60,8 +60,8 @@ or canonical ids. The pipeline must run and be scored without any plug-in; a plu
 groups.py `harmonise`, `cluster`, `guard`, `QUALIFIERS`, `ON_DRUG`; GroupClusters prompt; prism `group_of`;
 answer/canon.py FILLER/SPELL for patient groups; the fixed medical open-point list in Spec (seed/questions.INTENT
 stays only as the benchmark's intent cards = simulated user answers).
-Plan v1 code (backend/evqa/population.py MeSH facets, data/vocab/mesh-*.tsv.gz) becomes the optional medical
-plug-in or is removed.
+Plan v1 code (backend/evqa/population.py MeSH facets, data/vocab/mesh-*.tsv.gz, Facet/Population contracts) was
+never wired in; removed 21 Nov (dead-code audit). Restore from git at 60672e59 if the medical plug-in is wanted.
 
 ## Order and checks
 
