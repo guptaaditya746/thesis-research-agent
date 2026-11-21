@@ -504,10 +504,11 @@ Use the whole paper to decide. Pick exactly one number."""
         tagged = dict(zip(pids, pmap(self.tag_paper, pids, self.s.parallel)))
         (self.s.out_dir / "tagged.json").write_text(json.dumps({"scoring_version": SCORING_VERSION, "papers": tagged},
                                                                indent=1), encoding="utf-8")
-        qs = [q for q in self.G["questions"] if all(p in tagged for p in q["papers"])]
+        qs, rescoped, dropped = scope_questions(self.G["questions"], self.facts, set(tagged))
         rep: dict[str, Any] = {"scoring_version": SCORING_VERSION, "settings": dict(vars(self.s)),
                                "papers_written": len(pids), "papers_planned": len(self.w["papers"]),
                                "papers_failed_world_check": [p for p in self.w["papers"] if failed(self.s.out_dir, p)],
+                               "questions_rescoped": rescoped, "questions_dropped": dropped,
                                "tagging": {p: {k: v for k, v in t.items() if k not in ("sentences", "spans")}
                                            | {"spans_per_fact": {i: len(x) for i, x in t["spans"].items()}}
                                            for p, t in tagged.items()}}
@@ -535,6 +536,28 @@ Use the whole paper to decide. Pick exactly one number."""
         rep["bm25_baseline"] = baseline.report(qs, tagged)          # D1: code only, no model calls
         rep["style_leak"] = self.leak(tagged) if self.s.leak_trials else None
         return rep
+
+
+def scope_questions(questions: list[dict[str, Any]], facts: dict[str, Any], ok: set[str]
+                    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Questions over the papers that are in the evaluation (ok). A paper left out (failed the world check, not
+    written) is taken out of each question's papers, and the gold is cut to the facts planted in the papers that
+    remain (the gold query's filters do not change, so this equals running it again on fewer papers). A question is
+    dropped only when its own paper is out or no gold remains. -> (questions, rescoped, dropped)."""
+    out, rescoped, dropped = [], [], []
+    for q in questions:
+        own = q["id"].split(":")[0]
+        papers = [p for p in q["papers"] if p in ok]
+        gold = [i for i in q["gold"] if any(p in papers for p in facts[i]["papers"])]
+        if own not in ok or not gold:
+            dropped.append({"id": q["id"], "reason": "own paper left out" if own not in ok else "no gold left"})
+            continue
+        if papers != q["papers"]:
+            rescoped.append({"id": q["id"], "papers_removed": [p for p in q["papers"] if p not in ok],
+                             "gold_removed": [i for i in q["gold"] if i not in gold]})
+            q = q | {"papers": papers, "gold": gold, "sparql": q["sparql"] + f"  # then cut to papers {papers}"}
+        out.append(q)
+    return out, rescoped, dropped
 
 
 def _find_all(text: str, sub: str) -> list[int]:

@@ -35,3 +35,18 @@ def test_every_question_has_a_type() -> None:
     _, gold = seed.make(PILOT, LAW, per_question=3, seed=1)
     assert {q["question_type"] for q in gold["questions"]} <= set(seed.QUESTION_TYPES.values())
     assert all("question_type" in q for q in gold["questions"])
+
+
+def test_a_failed_paper_is_cut_from_questions_not_the_questions_dropped() -> None:
+    """Qwen smoke llm: one failed paper of three removed every question; now only that paper goes."""
+    from paperfactory.evaluate import scope_questions
+    facts = {"A": {"papers": {"P1": "claim"}}, "B": {"papers": {"P2": "decoy"}}, "C": {"papers": {"P2": "claim",
+                                                                                                    "P3": "claim"}}}
+    qs = [{"id": "P1:t", "papers": ["P1", "P2"], "gold": ["A", "B"], "sparql": "q"},
+          {"id": "P2:t", "papers": ["P2", "P1"], "gold": ["B"], "sparql": "q"},
+          {"id": "P3:t", "papers": ["P3", "P2"], "gold": ["C"], "sparql": "q"},
+          {"id": "P1:u", "papers": ["P1", "P2"], "gold": ["B"], "sparql": "q"}]
+    out, rescoped, dropped = scope_questions(qs, facts, {"P1", "P3"})
+    assert [(q["id"], q["papers"], q["gold"]) for q in out] == [("P1:t", ["P1"], ["A"]), ("P3:t", ["P3"], ["C"])]
+    assert rescoped[0] == {"id": "P1:t", "papers_removed": ["P2"], "gold_removed": ["B"]}
+    assert {d["id"]: d["reason"] for d in dropped} == {"P2:t": "own paper left out", "P1:u": "no gold left"}

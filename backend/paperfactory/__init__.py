@@ -3,5 +3,5 @@ pack, PaperOrchestra), planted facts are located, and question answering is scor
 
 # Raise whenever tagging, matching or scoring rules change; written into gold.json, tagged.json and report.json so
 # numbers made under different rules are never compared by mistake.
-SCORING_VERSION = 2
+SCORING_VERSION = 3   # 3: a paper left out is cut from each question's papers instead of dropping the question
 
