@@ -206,11 +206,79 @@ def split_sents(md: str, rules: SplitRules) -> list[tuple[int, int, str]]:
 
 
 # ------------------------------------------------------------------ names
+@dataclass(frozen=True)
+class Mention:
+    start: int
+    end: int
+    eid: str
+    surface: str
+    subsection: str | None = None     # "(1)" when the name is followed by a subsection mark: counts as the entity
+
+
+@dataclass(frozen=True)
+class AliasTable:
+    by_key: dict[str, str]            # surface with lower-cased first char -> entity id
+    regex: re.Pattern[str] | None
+
+
+SUBSECTION = re.compile(r"\([0-9A-Za-z]{1,4}\)")
+
+
+def _key(name: str) -> str:
+    name = norm_text(name)
+    return name[:1].lower() + name[1:]
+
+
+def name_variants(f: Any, kind: str, label: str) -> list[str]:
+    """Extra names from the pack's patterns ("text"."name_variants"), e.g. "s. 9" for "section 9 of the ... Act"."""
+    out = []
+    for v in f.raw.get("text", {}).get("name_variants", []):
+        if v["kind"] == kind and (m := re.search(v["match"], label)):
+            out += [x.format(**m.groupdict()) for x in v["variants"]]
+    return out
+
+
+def all_names(w: dict[str, Any], f: Any, eid: str) -> list[str]:
+    e = w["entities"][eid]
+    return list(dict.fromkeys([e["label"]] + e.get("alt", []) + name_variants(f, e["kind"], e["label"])))
+
+
+def alias_table(w: dict[str, Any], f: Any, extra: dict[str, str] | None = None) -> AliasTable:
+    """Every name of every entity (label, alt, pack variants, plus `extra` surface -> id). A name used by two
+    entities is dropped here; world.check reports it."""
+    by_key: dict[str, str] = {}
+    clash: set[str] = set()
+    pairs = [(n, eid) for eid in w["entities"] for n in all_names(w, f, eid)] + list((extra or {}).items())
+    for n, eid in pairs:
+        k = _key(n)
+        if not k:
+            continue
+        if by_key.get(k, eid) != eid:
+            clash.add(k)
+        by_key[k] = eid
+    for k in clash:
+        del by_key[k]
+    if not by_key:
+        return AliasTable({}, None)
+    alts = "|".join("[" + re.escape(k[0]) + re.escape(k[0].upper()) + "]" + re.escape(k[1:]) if k[0].isalpha()
+                    else re.escape(k) for k in sorted(by_key, key=len, reverse=True))
+    return AliasTable(by_key, re.compile(rf"(?<!\w)(?:{alts})(?!\w)(?![-.]\d)"))
+
+
+def find_mentions(text: str, table: AliasTable) -> list[Mention]:
+    """Leftmost-longest whole-name matches in norm_text(text). A name must not touch a letter, digit or "_", and
+    must not be followed by "-" or "." plus a digit ("section 9" never matches "section 91" or "section 9.1").
+    Case is exact except for the first character. "section 9(1)" is section 9, with subsection "(1)"."""
+    if table.regex is None:
+        return []
+    t = norm_text(text)
+    out = []
+    for m in table.regex.finditer(t):
+        sub = SUBSECTION.match(t, m.end())
+        out.append(Mention(m.start(), m.end(), table.by_key[_key(m.group())], m.group(), sub.group() if sub else None))
+    return out
+
+
 def names(w: dict[str, Any], eid: str) -> list[str]:
     e = w["entities"][eid]
     return [e["label"]] + e.get("alt", [])
-
-
-def mentions(w: dict[str, Any], text: str, eid: str) -> bool:
-    t = norm(text)
-    return any(norm(n) in t for n in names(w, eid))

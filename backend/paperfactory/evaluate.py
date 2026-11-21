@@ -21,7 +21,7 @@ from typing import Any
 from paperfactory import SCORING_VERSION
 from paperfactory.llm import pmap
 from paperfactory.packs import Field
-from paperfactory.text import mentions, names, norm, normalize_paper, split_rules, split_sents
+from paperfactory.text import alias_table, find_mentions, names, norm, normalize_paper, split_rules, split_sents
 from paperfactory.write import repeated_phrases
 
 
@@ -33,8 +33,12 @@ class Eval:
         self.rng = random.Random(s.seed)
         self.letters = {chr(65 + i): r for i, r in enumerate(f.relations)} | {chr(65 + len(f.relations)): "none"}
         self.rules = split_rules(f, w)
+        self.table = alias_table(w, f)
 
     # -------------------------------------------------------------- helpers
+    def mentions(self, text: str, eid: str) -> bool:
+        return any(m.eid == eid for m in find_mentions(text, self.table))
+
     def label(self, e: str) -> str:
         return self.w["entities"][e]["label"]
 
@@ -103,14 +107,14 @@ is "no"."""
                     continue
                 ctx = sents[n - 1][2] + " " if n else ""
                 sent = sents[n][2]
-                subj_ok = mentions(self.w, ctx + sent, fa["s"]) or actor in sent.lower() or " it " in f" {sent.lower()}"
-                if not mentions(self.w, sent, fa["o"]) or not subj_ok:
+                subj_ok = self.mentions(ctx + sent, fa["s"]) or actor in sent.lower() or " it " in f" {sent.lower()}"
+                if not self.mentions(sent, fa["o"]) or not subj_ok:
                     notes.append(f"{t['id']} s{n}: names missing (code)")
                     continue
                 tags[t["id"]].add(n)
         pairs = [(n, i) for i, ns in tags.items() for n in sorted(ns)]
         sweep = [(n, fa["id"]) for fa in facts for n, s in enumerate(sents)
-                 if n not in tags[fa["id"]] and mentions(self.w, s[2], fa["o"]) and mentions(self.w, s[2], fa["s"])]
+                 if n not in tags[fa["id"]] and self.mentions(s[2], fa["o"]) and self.mentions(s[2], fa["s"])]
         ok = self.verify([(sents[n - 1][2] if n else "", sents[n][2], self.facts[i]) for n, i in pairs + sweep],
                          f"verify:{pid}")
         kept: dict[str, set[int]] = {i: set() for i in tags}
@@ -123,10 +127,13 @@ is "no"."""
             elif v:
                 kept[i].add(n)
                 added.append((i, n))
+        subsections = [f"s{n}: {m.surface}{m.subsection}" for n, st in enumerate(sents)
+                       for m in find_mentions(st[2], self.table) if m.subsection]
         text = self.paper(pid)
         all_names = [x for e in self.w["entities"] for x in names(self.w, e)]
         return {"pid": pid, "words": len(text.split()), "n_sentences": len(sents), "tags_proposed": len(pairs),
                 "tags_rejected_by_verifier": rejected, "tags_added_by_sweep": added, "code_notes": notes,
+                "subsection_mentions": subsections,
                 "facts_without_tag": [i for i, ns in kept.items() if not ns],
                 "over_mention_budget": [i for i, ns in kept.items() if len(ns) > self.max_mentions],
                 "repeated_phrases": repeated_phrases(text, all_names)[:10],
@@ -214,10 +221,8 @@ question and nothing else. If the papers do not answer it, return no items."""
                        ("paper", "subject", "relation", "object", "quote", "answer_sentence")}}}}}
 
     def entity_of(self, text: str, ids: list[str]) -> str | None:
-        hits = [e for e in ids if mentions(self.w, text, e)]
-        if not hits:
-            return None
-        return max(hits, key=lambda e: max(len(n) for n in names(self.w, e) if norm(n) in norm(text)))
+        hits = [m for m in find_mentions(text, self.table) if m.eid in ids]
+        return max(hits, key=lambda m: len(m.surface)).eid if hits else None
 
     def qa_one(self, q: dict[str, Any], tagged: dict[str, Any]) -> dict[str, Any]:
         raw = {pid: self.paper(pid) for pid in q["papers"]}
@@ -283,7 +288,7 @@ Use the whole paper to decide. Pick exactly one number."""
             tagged_idx = {j for sp in t["spans"].values() for j, s in enumerate(S) if [s[0], s[1]] in sp}
             span = self.rng.choice(t["spans"][i])
             gi = next(j for j, s in enumerate(S) if [s[0], s[1]] == span)
-            n_names = lambda txt: sum(mentions(self.w, txt, e) for e in self.w["entities"])  # noqa: E731
+            n_names = lambda txt: len({m.eid for m in find_mentions(txt, self.table)})  # noqa: E731
             two = [j for j in range(len(S)) if j not in tagged_idx and n_names(S[j][2]) >= 2]
             one = sorted((j for j in range(len(S)) if j not in tagged_idx and n_names(S[j][2]) == 1),
                          key=lambda j: abs(len(S[j][2].split()) - len(S[gi][2].split())))

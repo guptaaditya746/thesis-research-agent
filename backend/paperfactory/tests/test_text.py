@@ -76,3 +76,49 @@ def test_missing_text_rules_in_a_pack_is_a_clear_error() -> None:
     f = packs.Field({k: v for k, v in LAW.raw.items() if k != "text"})
     with pytest.raises(KeyError, match="text"):
         text.split_rules(f, PILOT)
+
+
+# ------------------------------------------------------------------ #5 whole-name matching
+def _with_s91(w: dict) -> dict:
+    import copy
+    w = copy.deepcopy(w)
+    w["entities"]["S91"] = {"kind": "provision", "label": "section 91 of the Veldra Personal Data Act 2016",
+                            "alt": ["section 91"], "attrs": {"topic": "x"}}
+    return w
+
+
+def ids(t: str, f=LAW, w=PILOT) -> list[str]:
+    return [m.eid for m in text.find_mentions(t, text.alias_table(w, f))]
+
+
+def test_a_name_inside_a_longer_number_does_not_match() -> None:
+    w = _with_s91(PILOT)
+    assert ids("The court relied on section 91.", w=w) == ["S91"]
+    assert ids("The court relied on s. 91 and on section 9-1 or section 9.1.", w=w) == ["S91"]
+    med = {"entities": {"T1": {"kind": "trial", "label": "the CORVA-2 trial", "alt": ["CORVA-2"], "attrs": {}},
+                        "T2": {"kind": "trial", "label": "the CORVA-21 trial", "alt": ["CORVA-21"], "attrs": {}}}}
+    assert ids("CORVA-21 found no effect, unlike CORVA-2.", MED, med) == ["T2", "T1"]
+
+
+def test_subsection_counts_as_the_section_and_is_logged() -> None:
+    ms = text.find_mentions("Pell rejected section 9(1) of the Act.", text.alias_table(PILOT, LAW))
+    assert [(m.eid, m.subsection) for m in ms] == [("K4", None), ("S9", "(1)")]
+
+
+def test_pack_variants_and_leftmost_longest() -> None:
+    assert ids("Under Section 14 and s 21 and § 9 the Supreme Court of Veldra ruled.") == [
+        "S14", "S21", "S9", "CT1"]
+    assert ids("the supreme court ruled") == []              # case is exact after the first character
+    assert ids("Rusk v. Oberline Health relied on it") == ["K5"]
+
+
+def test_world_check_rejects_a_name_nested_in_another_entity_name() -> None:
+    import copy
+    from paperfactory import world
+    w = copy.deepcopy(PILOT)
+    w["entities"]["CT2"]["alt"].append("Veldra Court")
+    w["entities"]["CT4"] = {"kind": "court", "label": "Veldra Court", "alt": [], "attrs": {"level": 1}}
+    w["entities"]["CT2"]["alt"].remove("Veldra Court")
+    errs = world.check(w, LAW, packs.genre("argument"))
+    assert any("'Veldra Court' (CT4) inside" in e and "CT2" in e for e in errs), errs
+    assert world.check(_with_s91(PILOT), LAW, packs.genre("argument")) == []   # section 9 / 91: told apart

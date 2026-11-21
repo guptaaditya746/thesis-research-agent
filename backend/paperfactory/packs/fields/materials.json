@@ -12,7 +12,7 @@
   "framework_section": "Background on the Materials",
   "analysis_section": "Analysis of the Reported Evidence"
  },
- "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "Eq.", "Ref.", "vs.", "approx.", "ca.", "wt.", "Dr.", "No.", "Co.", "Ltd.", "Inc."], "lowercase_starts": []},
+ "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "Eq.", "Ref.", "vs.", "approx.", "ca.", "wt.", "Dr.", "No.", "Co.", "Ltd.", "Inc."], "lowercase_starts": [], "name_variants": []},
  "kinds": {
   "material": {"about": "an invented material with a plausible code name (e.g. 'alloy TK-7', 'coating Veral-3')", "attrs": {"family": "text"}},
   "study": {"about": "an invented lab study named by lab and year (e.g. 'the Hollis Lab 2019 study')", "attrs": {"property": "text", "year": "int", "method": "text"}}
