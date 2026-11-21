@@ -1,3 +1,6 @@
 [submodule "related/final-final-llm-setup"]
 	path = llm-setup
 	url = https://github.com/guptaaditya746/thesis-llm-setup.git
+[submodule "baselines"]
+	path = baselines
+	url = https://github.com/guptaaditya746/thesis-baselines.git
