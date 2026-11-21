@@ -53,10 +53,10 @@ def run(s: config.Settings, steps: list[str]) -> None:
     if "eval" in steps:
         gold = json.loads((out / "gold.json").read_text(encoding="utf-8"))
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
-        rep["cost_usd_total"] = call.cost()
+        rep["cost"] = call.cost()
         (out / "report.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False), encoding="utf-8")
         print(json.dumps({k: rep[k] for k in ("papers_written", "verifier_test", "judge_validation", "qa_summary",
-                                               "style_leak", "cost_usd_total")}, indent=1))
+                                               "style_leak", "cost")}, indent=1))
 
 
 def main(argv: list[str] | None = None) -> None:

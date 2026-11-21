@@ -5,15 +5,18 @@ Model and page count come from the settings. Afterwards code counts phrases of 6
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from repo_paths import REPO
 
+from paperfactory.llm import slot_dir
 from paperfactory.packs import Field, Genre, render_template
 
 PO = REPO / "external" / "paperorchestra"
@@ -23,15 +26,19 @@ def write_one(s, pid: str, template: Path) -> dict[str, Any]:
     out = s.out_dir / "work" / pid
     if (out / "paper.md").is_file():
         return {"pid": pid, "status": "exists"}
-    cmd = ["uv", "run", "--quiet", "--project", str(PO), "python", str(PO / "paper_writing_cli.py"),
+    rm = s.role("writer")
+    # PaperOrchestra runs in the main environment so that its calls go through paperfactory's model layer (C9)
+    cmd = ["uv", "run", "--quiet", "--project", str(REPO), "python", str(PO / "paper_writing_cli.py"),
            "--raw_materials_dir", str(s.out_dir / "papers" / pid), "--output_dir", str(out),
-           "--template_dir", str(template), "--writer_model_name", s.model("writer"),
-           "--cache_dir", str(s.out_dir / "cache" / "po"), "--lock_dir", str(s.slots),
+           "--template_dir", str(template), "--writer_model_name", rm.model,
+           "--backend_json", json.dumps(asdict(rm)),
+           "--cache_dir", str(s.out_dir / "cache" / "po"), "--lock_dir", str(slot_dir(s.slots, rm)),
+           "--max_parallel", str(rm.max_parallel),
            "--log_path", str(s.out_dir / "work" / f"{pid}.log.jsonl"), "--max_reflections", "1",
-           "--timeout", str(s.timeout)]
+           "--timeout", str(rm.timeout)]
     out.parent.mkdir(parents=True, exist_ok=True)
     with (s.out_dir / "work" / f"{pid}.out").open("w") as log:
-        code = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT).returncode
+        code = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, cwd=REPO).returncode
     ok = code == 0 and (out / "paper.md").is_file()
     return {"pid": pid, "status": "ok" if ok else f"failed (exit {code}, see work/{pid}.out)"}
 

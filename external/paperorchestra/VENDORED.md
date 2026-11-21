@@ -83,6 +83,11 @@ Unchanged and unused: `methods/paper_writer_with_plotting.py`, `methods/agents/{
 C2 (21 Nov 2026): `utils/claude_code_utils.py` can also call Qwen: `--writer_model_name qwen:<alias>` sends each call
 to the llm-setup LiteLLM gateway (thinking off, JSON schema enforced by the server). Same cache, log and 3 slot locks.
 
+C9 (21 Nov 2026): `--backend_json` (paperfactory RoleModel fields) sends every call through paperfactory's model
+layer (`paperfactory.llm.po_runner`: claude_cli or any OpenAI-compatible server, cost reported / priced / local /
+unknown, never 0 for unknown); `ClaudeCodeLM(runner=...)` takes an outside backend; `--max_parallel` sets the slot
+count (still at most 3). With `--backend_json` the CLI runs in the main project environment (paperfactory/write.py).
+
 C7 (21 Nov 2026): named writer prompt sets, `--prompt_version v1|v2` (default v1 = the prompts of the frozen
 benchmark papers, unchanged). v2 (`methods/prompts/writer_v2.py`, `methods/prompts/versions.py`,
 `templates/markdown/guidelines_v2.md`) replaces the Introduction/Related Work and section-writing prompts, adds a

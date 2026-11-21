@@ -153,12 +153,12 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
     user = (f"FIELD PACK:\n{_pack_text(f)}\n\nMake about {n_subj} entities of kind "
             f"{'/'.join(f.subject_kinds)} and enough of the other kinds (see the notes). Random seed: {s.seed}.")
     sch = _schema_entities(f)
-    got = call("world", "world:entities", ENT_SYS, user, sch)
+    got = _need(call("world", "world:entities", ENT_SYS, user, sch), "world:entities")
     w = {"field": f.name, "genre": g.name, "entities": _ents(got), "papers": {}}
     errs = check(w, f, g)
     if errs:
-        got = call("world", "world:entities:repair", ENT_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
-                   + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), sch)
+        got = _need(call("world", "world:entities:repair", ENT_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
+                         + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), sch), "world:entities:repair")
         w["entities"] = _ents(got)
         errs = check(w, f, g)
         if errs:
@@ -172,7 +172,7 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
                 f"Plan {n} papers. Each has exactly {g.raw['claims_per_paper']} claims and "
                 f"{g.raw['decoys_per_paper']} decoys. Give a conflict in at least one of them. Spread the papers over "
                 f"different entities and issues.")
-        got = call("world", f"world:papers:{b}", PAPER_SYS, user, PAPERS_SCHEMA)
+        got = _need(call("world", f"world:papers:{b}", PAPER_SYS, user, PAPERS_SCHEMA), f"world:papers:{b}")
         for attempt in range(2):
             trial = dict(w, papers=dict(w["papers"]))
             for i, p in enumerate(got["papers"][:n]):
@@ -183,9 +183,17 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
                 break
             if attempt:
                 raise ValueError(f"papers {b + 1}-{b + n} failed the checks after one repair:\n" + "\n".join(errs[:40]))
-            got = call("world", f"world:papers:{b}:repair", PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n"
-                       + json.dumps(got) + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA)
+            got = _need(call("world", f"world:papers:{b}:repair", PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n"
+                             + json.dumps(got) + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA),
+                        f"world:papers:{b}:repair")
     return w
+
+
+def _need(got: dict[str, Any] | None, step: str) -> dict[str, Any]:
+    """The world agent cannot go on without an answer: stop with a clear error (calls.jsonl has the reasons)."""
+    if got is None:
+        raise ValueError(f"{step}: the world model gave no answer in the required form (parse_error, see calls.jsonl)")
+    return got
 
 
 def _ents(got: dict[str, Any]) -> dict[str, Any]:

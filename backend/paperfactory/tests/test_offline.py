@@ -97,10 +97,10 @@ def test_settings_model_per_role(tmp_path: Path) -> None:
 def test_judge_options_come_from_the_field() -> None:
     _, gold = seed.make(PILOT, LAW, per_question=3, seed=1)
     e = Eval(config.Settings("law", "argument"), PILOT, LAW, gold, call=None)
-    assert list(e.letters.values()) == ["relies_on", "distinguishes", "rejects", "none"]
+    assert e.options == ["relies_on", "distinguishes", "rejects", "none"]
     med = packs.field("medicine")
     e2 = Eval(config.Settings("medicine", "argument"), PILOT, med, gold, call=None)
-    assert len(e2.letters) == len(med.relations) + 1
+    assert len(e2.options) == len(med.relations) + 1
 
 
 def test_split_and_repeats() -> None:
@@ -123,9 +123,9 @@ def test_scoring_version_is_written_into_every_result_file(tmp_path: Path) -> No
         (tmp_path / "run" / "work" / pid).mkdir(parents=True)
         (tmp_path / "run" / "work" / pid / "paper.md").write_text(md)
 
-    def fake(role, step, system, user, schema):
+    def fake(role, step, system, user, schema, check=None):
         return {"tags": []} if role == "tagger" else {"answers": []} if role == "verifier" else \
-            {"rewritten": []} if step.startswith("reword") else {"items": []} if role == "qa" else {"choice": "A"}
+            {"rewritten": []} if step.startswith("reword") else {"items": []} if role == "qa" else {"choice": "none"}
     gold = json.loads((tmp_path / "run" / "gold.json").read_text())
     rep = Eval(s, PILOT, LAW, gold, fake).run()
     assert rep["scoring_version"] == SCORING_VERSION

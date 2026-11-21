@@ -13,7 +13,7 @@ from paperfactory.text import split_rules, split_sents
 HERE = Path(__file__).resolve().parents[1]
 PILOT = json.loads((HERE / "worlds" / "law-pilot.json").read_text())
 LAW = packs.field("law")
-LETTER = {"relies_on": "A", "distinguishes": "B", "rejects": "C", "none": "D"}
+LETTER = {"relies_on": "relies_on", "distinguishes": "distinguishes", "rejects": "rejects", "none": "none"}
 PAPER = ("Rusk v. Oberline Health distinguished Marrin v. Tolst Media on its facts in this case.\n\n"
          "The Supreme Court took section 14 as the basis of its ruling in Rusk.\n")
 
@@ -25,7 +25,7 @@ def run_qa(tmp_path: Path, item: dict, judge: str = "distinguishes", gold=("K5-d
     _, g = seed.make(PILOT, LAW, per_question=3, seed=1)
     judged: list[str] = []
 
-    def fake(role, step, system, user, schema):
+    def fake(role, step, system, user, schema, check=None):
         if role == "qa":
             return {"items": [{"paper": "L-01", "relation": "x", "answer_sentence": "Rusk distinguished it.",
                                "quote": "Rusk v. Oberline Health distinguished Marrin v. Tolst Media", **item}]}
@@ -120,11 +120,11 @@ def test_ordinance_tag_is_kept_and_the_answer_scores_correct(tmp_path: Path) -> 
     _, g = seed.make(PILOT, LAW, per_question=3, seed=1)
     sents = split_sents(ORD_PAPER, split_rules(LAW, PILOT))
 
-    def fake(role, step, system, user, schema):
+    def fake(role, step, system, user, schema, check=None):
         if role == "tagger":
             return {"tags": [{"id": "K3-relies_on-WMO", "sentences": [1]}]}
         if role == "verifier":
-            return {"answers": [{"n": i, "verdict": "yes"} for i in range(len(json.loads(user)))]}
+            return {"answers": [{"id": x["id"], "verdict": "yes"} for x in json.loads(user)]}
         if role == "qa":
             return {"items": [{"paper": "L-03", "subject": "Ostra Bank v. Kelvig", "relation": "relied on",
                                "object": "Workplace Monitoring Ordinance 2018", "quote": sents[1][2],
@@ -145,11 +145,11 @@ def test_a_tag_with_an_unknown_name_goes_to_the_verifier_not_the_bin(tmp_path: P
     (tmp_path / "work" / "L-03" / "paper.md").write_text(md)
     sent_to_verifier: list[str] = []
 
-    def fake(role, step, system, user, schema):
+    def fake(role, step, system, user, schema, check=None):
         if role == "tagger":
             return {"tags": [{"id": "K3-relies_on-WMO", "sentences": [1]}]}
         sent_to_verifier.extend(x["sentence"] for x in json.loads(user))
-        return {"answers": [{"n": i, "verdict": "yes"} for i in range(len(json.loads(user)))]}
+        return {"answers": [{"id": x["id"], "verdict": "yes"} for x in json.loads(user)]}
     _, g = seed.make(PILOT, LAW, per_question=3, seed=1)
     t = Eval(config.Settings("law", "argument", out=str(tmp_path)), PILOT, LAW, g, fake).tag_paper("L-03")
     assert "The bank's rulebook was its basis for the ruling." in sent_to_verifier
