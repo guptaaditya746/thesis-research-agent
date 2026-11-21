@@ -55,7 +55,8 @@ def role(s, name: str) -> dict[str, Any]:
     """The fields of a role that shape its answers (not timeout, slots or prices)."""
     rm = s.role(name)
     d = {"backend": rm.backend, "model": rm.model}
-    return d if rm.backend == "claude_cli" else d | {"url": rm.url, "max_tokens": rm.max_tokens}   # what it uses
+    # what the backend uses; the configured base_url, never $LITELLM_BASE_URL (differs between shells)
+    return d if rm.backend == "claude_cli" else d | {"base_url": rm.base_url, "max_tokens": rm.max_tokens}
 
 
 def git_commit() -> str:

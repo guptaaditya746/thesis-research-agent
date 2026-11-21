@@ -85,3 +85,15 @@ def test_writer_cache_follows_the_writer_settings(tmp_path: Path) -> None:
     a = settings(tmp_path, writer={"model": "claude-haiku-5-5", "max_tokens": 100})
     b = settings(tmp_path, writer={"model": "claude-haiku-5-5", "max_tokens": 200})
     assert meta.role(a, "writer") == meta.role(b, "writer")          # claude_cli ignores max_tokens: no paid redo
+
+
+def test_a_shell_variable_does_not_change_cache_keys_or_meta(tmp_path: Path, monkeypatch) -> None:
+    """Review finding 8: $LITELLM_BASE_URL differs between shells; it must not cause cache misses or paid redo."""
+    from paperfactory import meta
+    s = settings(tmp_path, default="qwen:orch-model")
+    c = llm.Caller(s, backend=scripted({"choice": "a"}))
+    rm = s.role("judge")
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://127.0.0.1:4000/v1")
+    k1, m1 = c.key(rm, "s", "u", SCHEMA), meta.role(s, "judge")
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://localhost:4000/v1/")
+    assert c.key(s.role("judge"), "s", "u", SCHEMA) == k1 and meta.role(s, "judge") == m1

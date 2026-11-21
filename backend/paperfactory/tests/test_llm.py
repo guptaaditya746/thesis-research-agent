@@ -168,7 +168,7 @@ def test_paperorchestra_calls_go_through_the_layer(tmp_path: Path, monkeypatch) 
                           runner=runner)
     assert lm("sys", "user", {"type": "object"}, step="outline") == {"markdown": "# T"}
     rec = json.loads((tmp_path / "log.jsonl").read_text().splitlines()[-1])
-    assert rec["cost_usd"] is None and rec["model"] == "openai:sub-model-1@http://h:1/v1#max_tokens=8192"
+    assert rec["cost_usd"] is None and rec["model"].startswith("openai:sub-model-1@") and rec["model"].endswith("#max_tokens=8192")
 
 
 def test_write_passes_the_writer_role_to_paperorchestra(tmp_path: Path, monkeypatch) -> None:

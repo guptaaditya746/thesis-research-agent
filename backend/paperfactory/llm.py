@@ -223,7 +223,10 @@ class Caller:
         self._log_lock = threading.Lock()
 
     def key(self, rm: RoleModel, system: str, user: str, schema: dict[str, Any]) -> str:
-        return hashlib.sha256(json.dumps([CACHE_VERSION, rm.backend, rm.model, rm.url, rm.max_tokens, system, user,
+        # the configured base_url, not rm.url: $LITELLM_BASE_URL differs between shells (review finding 8); claude_cli
+        # ignores max_tokens
+        mt = rm.max_tokens if rm.backend != "claude_cli" else None
+        return hashlib.sha256(json.dumps([CACHE_VERSION, rm.backend, rm.model, rm.base_url, mt, system, user,
                                           schema], sort_keys=True).encode()).hexdigest()
 
     def cached(self, path: Path, out: type[BaseModel] | dict[str, Any],
@@ -342,5 +345,6 @@ def po_runner(fields: dict[str, Any]) -> tuple[Callable[[str, str, dict[str, Any
                 "input_tokens": got.get("input_tokens"), "output_tokens": got.get("output_tokens")}
     # the label is PaperOrchestra's cache key: it must change whenever the answers can (review finding 3); claude_cli
     # gets no max_tokens (run_claude does not pass it), the openai backend does
-    label = rm.model if rm.backend == "claude_cli" else f"{rm.backend}:{rm.model}@{rm.url}#max_tokens={rm.max_tokens}"
+    label = rm.model if rm.backend == "claude_cli" else \
+        f"{rm.backend}:{rm.model}@{rm.base_url or 'gateway'}#max_tokens={rm.max_tokens}"
     return runner, label
