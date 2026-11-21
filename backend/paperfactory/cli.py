@@ -80,6 +80,8 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
             errs = world.check(w, f, g, n_papers=s.papers)
             if errs:
                 sys.exit("world failed the checks:\n" + "\n".join(errs[:40]))
+            for x in world.decoy_warnings(w, f):
+                print("world: warning:", x)
             files.write_json(wfile, w)
             meta.write(wfile, wi)
             print(f"world: {len(w['entities'])} entities, {len(w['papers'])} papers")
@@ -162,6 +164,8 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--allow-mixed", action="store_true",
                    help="keep outputs made under other or unknown settings (no meta file) instead of stopping")
     r.add_argument("--no-cache", action="store_true", help="never read cached model answers (they are replaced)")
+    pt = sub.add_parser("relation-table", help="Markdown table of a field pack's relations (D5)")
+    pt.add_argument("--field", action="append", required=True)
     co = sub.add_parser("cost", help="cost per role, per paper and total, from the run's call logs")
     co.add_argument("--config", required=True)
     co.add_argument("--project", type=int, nargs="*", default=[100], help="papers to project the cost for")
@@ -185,6 +189,9 @@ def main(argv: list[str] | None = None) -> None:
                    help="make the answers file with the verifier first (model calls; needs --config)")
     m.add_argument("--config")
     a = ap.parse_args(argv)
+    if a.cmd == "relation-table":
+        print("\n".join(packs.relation_table(packs.field(x)) for x in a.field))
+        return
     if a.cmd == "label-metrics":
         def make_eval() -> Eval:
             if not a.config:
@@ -215,8 +222,10 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "clear-cache":
         print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:
-        errs = world.check(json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre),
-                           n_papers=s.papers)
+        w, f, g = json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre)
+        errs = world.check(w, f, g, n_papers=s.papers)
+        print(json.dumps(world.shape(w, f, g, s.pages), indent=1))
+        print("\n".join(f"warning: {x}" for x in world.decoy_warnings(w, f)))
         print("\n".join(errs) or "ok")
         sys.exit(1 if errs else 0)
 

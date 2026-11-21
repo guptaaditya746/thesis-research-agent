@@ -26,11 +26,14 @@
  "subject_kinds": ["decision"],
  "order_attr": "year",
  "relations": {
-  "relies_on": {"words": "relied on", "meaning": "the decision uses the source as a basis for its ruling", "object_kinds": ["provision", "decision"]},
-  "distinguishes": {"words": "distinguished", "meaning": "the decision says an earlier decision does not apply because the facts differ", "object_kinds": ["decision"]},
-  "rejects": {"words": "rejected", "meaning": "the decision refuses to accept the source as a basis for its ruling", "object_kinds": ["provision", "decision"]}
+  "relies_on": {"words": "relied on", "meaning": "the decision uses the source as a basis for its ruling", "object_kinds": ["provision", "decision"], "confusable_with": ["rejects"]},
+  "distinguishes": {"words": "distinguished", "meaning": "the decision says an earlier decision does not apply because the facts differ", "object_kinds": ["decision"], "confusable_with": ["rejects"]},
+  "rejects": {"words": "rejected", "meaning": "the decision refuses to accept the source as a basis for its ruling", "object_kinds": ["provision", "decision"], "confusable_with": ["relies_on", "distinguishes"]}
  },
  "conflict_pairs": [["relies_on", "rejects"]],
+ "confusable_note": "DRAFT for review: distinguishing an earlier decision is easily written as rejecting it; a decision that relied on a source only to reject an argument reads as both.",
+ "real_names": [],
+ "real_names_note": "Real names that invented entities must not use (whole words, any case; world.check). Empty until Aditya approves the sources for this list. To check by hand: 'Vantor' in the law pilot ('Pell v. Vantor Systems') may be a real company name.",
  "questions": [
   {"id": "treat", "text": "How did {s} treat {o}?", "filter": ["subject", "object"]},
   {"id": "relied", "text": "Which sources did the court rely on in {s}?", "filter": ["subject"], "relation": "relies_on"},

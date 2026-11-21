@@ -25,12 +25,15 @@
  "subject_kinds": ["trial"],
  "order_attr": "year",
  "relations": {
-  "finds_benefit": {"words": "found a benefit of", "meaning": "the trial reports that the treatment improved the main outcome", "object_kinds": ["treatment"]},
-  "finds_no_effect": {"words": "found no effect of", "meaning": "the trial reports no clear difference on the main outcome for the treatment", "object_kinds": ["treatment"]},
-  "finds_harm": {"words": "found harm from", "meaning": "the trial reports that the treatment made the main outcome or safety worse", "object_kinds": ["treatment"]},
-  "contradicts": {"words": "contradicted", "meaning": "the trial reports a result that disagrees with an earlier trial", "object_kinds": ["trial"]}
+  "finds_benefit": {"words": "found a benefit of", "meaning": "the trial reports that the treatment improved the main outcome", "object_kinds": ["treatment"], "confusable_with": ["finds_no_effect", "finds_harm"]},
+  "finds_no_effect": {"words": "found no effect of", "meaning": "the trial reports no clear difference on the main outcome for the treatment", "object_kinds": ["treatment"], "confusable_with": ["finds_benefit", "finds_harm"]},
+  "finds_harm": {"words": "found harm from", "meaning": "the trial reports that the treatment made the main outcome or safety worse", "object_kinds": ["treatment"], "confusable_with": ["finds_benefit", "finds_no_effect"]},
+  "contradicts": {"words": "contradicted", "meaning": "the trial reports a result that disagrees with an earlier trial", "object_kinds": ["trial"], "confusable_with": []}
  },
  "conflict_pairs": [["finds_benefit", "finds_no_effect"], ["finds_benefit", "finds_harm"]],
+ "confusable_note": "DRAFT for review: a trend that is not significant is often written as a benefit; a safety signal with no difference on the main outcome reads as harm or as no effect.",
+ "real_names": [],
+ "real_names_note": "Real names that invented entities must not use (whole words, any case; world.check). Empty until Aditya approves the sources for this list.",
  "questions": [
   {"id": "treat", "text": "What did {s} find about {o}?", "filter": ["subject", "object"]},
   {"id": "benefit", "text": "Which treatments showed a benefit in {s}?", "filter": ["subject"], "relation": "finds_benefit"},

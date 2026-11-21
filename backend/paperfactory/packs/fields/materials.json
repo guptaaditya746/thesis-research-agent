@@ -25,12 +25,15 @@
  "subject_kinds": ["study"],
  "order_attr": "year",
  "relations": {
-  "reports_improvement": {"words": "reported an improvement with", "meaning": "the study reports that the material improved the property it tested", "object_kinds": ["material"]},
-  "reports_no_change": {"words": "reported no change with", "meaning": "the study reports no clear change in the tested property for the material", "object_kinds": ["material"]},
-  "reports_degradation": {"words": "reported degradation with", "meaning": "the study reports that the material worsened the tested property", "object_kinds": ["material"]},
-  "fails_to_replicate": {"words": "failed to replicate", "meaning": "the study repeated an earlier study and did not get its result", "object_kinds": ["study"]}
+  "reports_improvement": {"words": "reported an improvement with", "meaning": "the study reports that the material improved the property it tested", "object_kinds": ["material"], "confusable_with": ["reports_no_change", "reports_degradation"]},
+  "reports_no_change": {"words": "reported no change with", "meaning": "the study reports no clear change in the tested property for the material", "object_kinds": ["material"], "confusable_with": ["reports_improvement", "reports_degradation"]},
+  "reports_degradation": {"words": "reported degradation with", "meaning": "the study reports that the material worsened the tested property", "object_kinds": ["material"], "confusable_with": ["reports_improvement", "reports_no_change"]},
+  "fails_to_replicate": {"words": "failed to replicate", "meaning": "the study repeated an earlier study and did not get its result", "object_kinds": ["study"], "confusable_with": []}
  },
  "conflict_pairs": [["reports_improvement", "reports_no_change"], ["reports_improvement", "reports_degradation"]],
+ "confusable_note": "DRAFT for review: for a property where lower is better (wear, creep) a fall is an improvement; small changes are written as improvement or as no change.",
+ "real_names": [],
+ "real_names_note": "Real names that invented entities must not use (whole words, any case; world.check). Empty until Aditya approves the sources for this list.",
  "questions": [
   {"id": "treat", "text": "What did {s} report about {o}?", "filter": ["subject", "object"]},
   {"id": "improved", "text": "Which materials improved the tested property in {s}?", "filter": ["subject"], "relation": "reports_improvement"},

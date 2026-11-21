@@ -70,3 +70,14 @@ def render_template(f: Field, g: Genre, pages: int, dest: Path) -> Path:
         (dest / name).write_text(fill((g.folder / name).read_text(encoding="utf-8"), values), encoding="utf-8")
     shutil.copy(g.folder / "genre.json", dest / "genre.json")
     return dest
+
+
+def relation_table(f: Field) -> str:
+    """D5: one Markdown table per field: relation, words, definition, allowed kinds, likely confusions."""
+    rows = [f"### {f.name} ({f.raw.get('status', 'tested')})", "",
+            "| Relation | Words | Definition | Subject kinds | Object kinds | Easily confused with |",
+            "|---|---|---|---|---|---|"]
+    rows += [f"| {r} | {d['words']} | {d['meaning']} | {', '.join(f.subject_kinds)} | {', '.join(d['object_kinds'])} | "
+             f"{', '.join(d.get('confusable_with', [])) or '-'} |" for r, d in f.relations.items()]
+    return "\n".join(rows + ["", f.raw.get("confusable_note", ""), ""])
+

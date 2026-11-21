@@ -12,10 +12,11 @@ with fewer papers than asked gets up to 2 calls for the missing papers only, the
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from paperfactory.packs import Field, Genre
-from paperfactory.text import alias_table, find_mentions
+from paperfactory.text import alias_table, find_mentions, name_variants, norm
 
 Fact = tuple[str, str, str]
 
@@ -53,6 +54,7 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
         for other, ons in named.items():
             for on in ons if other != eid else []:
                 err += [f"name {m.surface!r} ({eid}) inside {on!r} ({other})" for m in find_mentions(on, tab)]
+    err += name_errors(ents, f)
     papers = w.get("papers", {})
     if n_papers is not None and len(papers) != n_papers:
         err.append(f"{len(papers)} papers, need {n_papers}")
@@ -86,6 +88,64 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
             if seen.setdefault((s, o), r) != r:
                 err.append(f"{s}->{o}: relation {seen[(s, o)]} in one paper, {r} in {pid}")
     return err
+
+
+def _k(name: str) -> str:
+    return norm(name).strip()
+
+
+def name_errors(ents: dict[str, Any], f: Field) -> list[str]:
+    """D4: no name may match the pack's list of real names (whole words, any case).
+    D5: a label or short name of one entity must not equal a name the pack derives for another entity (e.g. the
+    first party of a decision title): papers would use it for both."""
+    err: list[str] = []
+    ok = {eid: e for eid, e in ents.items() if e.get("kind") in f.kinds and e.get("label")}
+    own = {eid: [e["label"]] + e.get("alt", []) for eid, e in ok.items()}
+    derived = {eid: name_variants(f, e["kind"], e["label"]) for eid, e in ok.items()}
+    real = [(r, re.compile(rf"(?<!\w){re.escape(_k(r))}(?!\w)")) for r in f.raw.get("real_names", [])]
+    for eid, ns in own.items():
+        for n in ns + derived[eid]:
+            err += [f"{eid}: name {n!r} contains the real name {r!r}" for r, rx in real if rx.search(_k(n))]
+    by_derived: dict[str, set[str]] = {}
+    for eid, ns in derived.items():
+        for n in ns:
+            by_derived.setdefault(_k(n), set()).add(eid)
+    for eid, ns in own.items():
+        for n in ns:
+            err += [f"name {n!r} ({eid}) is also a derived name of {other}" for other in
+                    sorted(by_derived.get(_k(n), set()) - {eid})]
+    return sorted(set(err))
+
+
+def decoy_warnings(w: dict[str, Any], f: Field) -> list[str]:
+    """D4: a decoy should be a near miss of one of its paper's claims: the same relation, the same kinds, exactly one
+    entity different (the time order is already a rule for every fact, fact_errors). Warnings, not errors: the law
+    pilot has decoys that only share an entity with a claim."""
+    ents, out = w.get("entities", {}), []
+    kind = lambda e: ents.get(e, {}).get("kind")  # noqa: E731
+    for pid, p in w.get("papers", {}).items():
+        for d in p.get("decoys", []):
+            near = [c for c in p.get("claims", []) if c[1] == d[1] and (c[0] == d[0]) != (c[2] == d[2])
+                    and kind(c[0]) == kind(d[0]) and kind(c[2]) == kind(d[2])]
+            if not near:
+                out.append(f"{pid} decoy {d}: not a near miss of any claim (same relation and kinds, one entity "
+                           "different)")
+    return out
+
+
+def shape(w: dict[str, Any], f: Field, g: Genre, pages: int) -> dict[str, Any]:
+    """D4: what each paper will contain (facts, decoys, conflict, plan, sections, length)."""
+    lo, hi = g.raw["words_per_page"]
+    sections = sum(1 for line in (g.folder / "template.md").read_text(encoding="utf-8").splitlines()
+                   if line.startswith("#"))
+    return {"papers": len(w.get("papers", {})), "entities": len(w.get("entities", {})),
+            "per_paper": {pid: {"claims": len(p.get("claims", [])), "decoys": len(p.get("decoys", [])),
+                                "facts": len(p.get("claims", [])) + len(p.get("decoys", [])),
+                                "conflict": bool(p.get("conflict")),
+                                "relations": sorted({x[1] for x in p.get("claims", []) + p.get("decoys", [])}),
+                                "plan_points": len(g.raw.get("argument_plan", [])), "template_sections": sections,
+                                "words": [pages * lo, pages * hi]}
+                          for pid, p in w.get("papers", {}).items()}}
 
 
 def fact_errors(fact: Fact, ents: dict[str, Any], f: Field) -> list[str]:
@@ -144,7 +204,10 @@ PAPERS_SCHEMA = {"type": "object", "required": ["papers"], "properties": {"paper
 
 
 def _pack_text(f: Field) -> str:
-    return json.dumps({k: f.raw[k] for k in ("setting", "kinds", "relations", "conflict_pairs", "world_notes")
+    """The pack as the world agent sees it ("confusable_with" is for reviewers and checks, not for this prompt)."""
+    rels = {r: {k: v for k, v in d.items() if k != "confusable_with"} for r, d in f.relations.items()}
+    return json.dumps({k: rels if k == "relations" else f.raw[k] for k in ("setting", "kinds", "relations",
+                                                                           "conflict_pairs", "world_notes")
                        if k in f.raw}, indent=1)
 
 
