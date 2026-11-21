@@ -86,7 +86,11 @@ def write_single_paper(
     log_md = load_md_file(experimental_log_file_path)
     guidelines_md = load_md_file(guidelines_path)
     facts = fact_check.parse_facts(log_md)
-    if not facts:
+    # paperfactory: a genre whose template folder has genre.json with "numeric_facts": false (e.g. argument papers)
+    # has no number facts; its claims are checked after writing (tagging step in backend/paperfactory)
+    genre_file = os.path.join(template_dir, "genre.json")
+    numeric = not os.path.isfile(genre_file) or json.load(open(genre_file)).get("numeric_facts", True)
+    if not facts and numeric:
         raise ValueError(f"no facts (row ids) found in {experimental_log_file_path}")
     lm.log({"event": "prompt_version", "version": prompt_version, "guidelines": prompts["guidelines"],
             "style_examples": [e.get("id") for e in style_examples] if prompts["style"] else []})

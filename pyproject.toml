@@ -20,6 +20,7 @@ dependencies = [
 [project.scripts]
 webapp = "webapp.cli:main"
 evqa = "evqa.cli:main"
+paperfactory = "paperfactory.cli:main"
 
 [dependency-groups]
 dev = [

@@ -12,7 +12,8 @@
 - Own environment: `pyproject.toml` + `uv.lock` here (no third-party dependencies: the adapted path needs only the
   standard library and the `claude` CLI). The upstream `requirements.txt` is kept for reference, not installed.
 - Run: `uv run --project external/paperorchestra python external/paperorchestra/paper_writing_cli.py --help`;
-  normally through `backend/evqa/paperwriter.py` (`write_paper(paper_dir)`).
+  normally through `backend/evqa/paperwriter.py` (`write_paper(paper_dir)`) or `backend/paperfactory/write.py`
+  (`uv run paperfactory run ...`).
 
 To see every change against upstream: clone the upstream at the pinned commit and
 `diff -ru --exclude=.git --exclude=assets <upstream> external/paperorchestra`.
@@ -103,3 +104,11 @@ refinement calls get `CITATION_KEEP_V2R` instead of `NO_CITATION_PROMPT` (keep c
 citation (author + year) against the list; `citation_map.json` holds the cited references; a `## References`
 section with only the cited ones is appended to paper.md (after all checks, so titles of other studies are not
 counted as paper numbers). Reference abstracts count as exemplars for `exemplar_leaks`. v1 and v2 unchanged.
+
+## paperfactory changes (21 Nov 2026)
+
+- `methods/paper_writer.py`: the number-fact gate is skipped when the template folder has `genre.json` with
+  `"numeric_facts": false` (argument papers have holdings, not numbers; they are checked after writing).
+- `methods/agents/literature_stub_agent.py`: the intro step fills the template's first two numbered sections,
+  whatever the genre calls them (was hard-coded "Introduction" + "Related Work").
+- Genre templates live in `backend/paperfactory/packs/genres/`, not here.

@@ -1,0 +1,11 @@
+{
+ "_note": "The 3-paper law pilot on the new system: hand-written world, every job on the cheapest Claude model.",
+ "field": "law",
+ "genre": "argument",
+ "papers": 3,
+ "pages": 6,
+ "world_file": "backend/paperfactory/worlds/law-pilot.json",
+ "models": {"default": "claude-haiku-5-5"},
+ "out": "runs/paperfactory/law-pilot",
+ "leak_trials": 150
+}

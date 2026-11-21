@@ -1,0 +1,11 @@
+{
+ "_note": "Full medicine run (field pack is a DRAFT: review first): the world agent invents the world. Set a model per job in models (roles: world, writer, tagger, verifier, judge, qa, leak); 'default' covers the rest.",
+ "field": "medicine",
+ "genre": "argument",
+ "papers": 20,
+ "pages": 6,
+ "models": {"default": "claude-haiku-5-5"},
+ "out": "runs/paperfactory/medicine",
+ "qa_papers_per_question": 3,
+ "leak_trials": 300
+}

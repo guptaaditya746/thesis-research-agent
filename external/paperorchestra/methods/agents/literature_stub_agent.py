@@ -40,11 +40,16 @@ class StubLiteratureAgent:
         }
         if self.references is not None:
             payload["references"] = self.references
-        user = "Generate the Markdown for the Introduction and Related Work sections.\n\n" + json.dumps(
+        # paperfactory (genre-general): the step fills the first two numbered sections of the template, whatever
+        # the genre calls them (IMRaD: Introduction + Related Work; argument: Introduction + Legal Framework)
+        numbered = [t for t, _ in split_sections(load_md_file(self.template_path)) if t[:1].isdigit()]
+        first, second = numbered[0], numbered[1]
+        user = (f"Generate the Markdown for the sections '{first}' (key: introduction) and '{second}' "
+                f"(key: related_work). Write '{second}' as that section title asks.\n\n") + json.dumps(
             payload, ensure_ascii=False, indent=1)
         out = self.lm(self.system_prompt, user, literature_stub_writer_schema, step="intro_related_work")
         parts = split_sections(load_md_file(self.template_path))
-        for title, body in (("Introduction", out["introduction"]), ("Related Work", out["related_work"])):
+        for title, body in ((first, out["introduction"]), (second, out["related_work"])):
             i = find_section(parts, title)
             if i is None:
                 raise ValueError(f"template.md has no '{title}' section")

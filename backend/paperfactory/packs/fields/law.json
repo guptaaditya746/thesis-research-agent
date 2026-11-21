@@ -1,0 +1,34 @@
+{
+ "field": "law",
+ "status": "tested in the law pilot (21 Nov 2026, 3 papers)",
+ "setting": "An invented country with its own courts and statutes. No real legal system is assumed: courts have a level, decisions relate to sources by three generic relations. All names are invented.",
+ "words": {
+  "paper_kind": "a doctrinal law article",
+  "venue": "law journal",
+  "subject_kind": "decision",
+  "subject_plural": "decisions",
+  "source_kinds": "decisions and statutory provisions",
+  "actor": "the court",
+  "framework_section": "Legal Framework",
+  "analysis_section": "Analysis of the Case Law"
+ },
+ "kinds": {
+  "court": {"about": "a court of the invented country", "attrs": {"level": "int"}},
+  "provision": {"about": "a statutory provision, e.g. 'section 9 of the <Name> Act <year>'; alt names like 'section 9', 's. 9'", "attrs": {"topic": "text"}},
+  "decision": {"about": "a court decision named '<Party> v. <Party>'", "attrs": {"court": "ref:court", "year": "int", "facts": "text"}}
+ },
+ "subject_kinds": ["decision"],
+ "order_attr": "year",
+ "relations": {
+  "relies_on": {"words": "relied on", "meaning": "the decision uses the source as a basis for its ruling", "object_kinds": ["provision", "decision"]},
+  "distinguishes": {"words": "distinguished", "meaning": "the decision says an earlier decision does not apply because the facts differ", "object_kinds": ["decision"]},
+  "rejects": {"words": "rejected", "meaning": "the decision refuses to accept the source as a basis for its ruling", "object_kinds": ["provision", "decision"]}
+ },
+ "conflict_pairs": [["relies_on", "rejects"]],
+ "questions": [
+  {"id": "treat", "text": "How did {s} treat {o}?", "filter": ["subject", "object"]},
+  {"id": "relied", "text": "Which sources did the court rely on in {s}?", "filter": ["subject"], "relation": "relies_on"},
+  {"id": "conflict", "text": "Which decisions treated {o} as a valid basis, and which did not?", "filter": ["object"], "relation_in": ["relies_on", "rejects"]}
+ ],
+ "world_notes": "Make 3 courts at different levels, 4-8 provisions of 1-2 invented statutes on one area of law, and enough decisions (years 2010-2025) that each paper has its own mix. A decision may only rely on, distinguish or reject EARLIER decisions. Plant disagreements: two decisions that treat the same provision in opposite ways (one relies on it, one rejects it)."
+}
