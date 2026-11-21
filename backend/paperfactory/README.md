@@ -24,11 +24,20 @@ uv run paperfactory run --config backend/paperfactory/configs/law-pilot.json    
 uv run paperfactory run --config backend/paperfactory/configs/law.json          # 20 papers, world agent
 uv run paperfactory run --config ... --steps seed,materials                     # some steps only
 uv run paperfactory check-world --config ... --world my-world.json
+uv run paperfactory run --config ... --no-cache                                 # never read cached model answers
+uv run paperfactory clear-cache --config ... --step verify:                     # drop one step's cached answers
 ```
+
+Restarts: world.json, work/<paper>/paper.md and report.json each get a `<name>.meta.json` (hashes of the settings,
+packs, notes, upstream outputs and prompts they were made from, plus git commit and SCORING_VERSION). A step whose
+inputs changed is done again and the run prints which inputs changed; the old output is kept as `*.stale-N`. Outputs
+with no meta file (made before this) stop the run unless `--allow-mixed`; the eval step also stops when its papers
+were made under different settings.
 
 Heavy runs go through Slurm (`srun --jobid=<job> --overlap ...`). Output goes to the run folder (`out`, under
 `runs/`, not committed): world.json, seed.ttl, gold.json, papers/, work/<paper>/paper.md, tagged.json,
 report.json, calls.jsonl (every model call with its cost). Steps reuse what exists, so a stopped run restarts.
+All result and cache files are written atomically (temp file, fsync, rename).
 
 ## Settings (configs/*.json)
 
