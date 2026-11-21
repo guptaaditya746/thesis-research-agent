@@ -356,6 +356,38 @@ question and nothing else. If the papers do not answer it, return no items."""
             return out | {"resolution": "resolved_by_judge", "as_fact": f"{s}-{r}-{o}"}
         return out | {"resolution": "ambiguous_object", "judged": judged}
 
+    def evidence(self, it: dict[str, Any], papers: dict[str, str], tagged: dict[str, Any]) -> dict[str, Any]:
+        """The strict evidence rule (#2). The quote, normalized like the paper, must occur exactly once across the
+        papers given (not_found / ambiguous_quote otherwise). Then, for the item's fact (or, for a wrong answer,
+        all gold facts): at least min_inside of the quote's characters lie in sentences tagged for that fact
+        (outside_gold if none, too_long if some), and the quote names both the subject and the object or covers
+        at least min_sentence_cover of one tagged sentence (too_short otherwise). Returns {"pid", "ok"}, where
+        ok(fact or None, gold) -> (bool, reason)."""
+        qn = norm(it["quote"])
+        hits = [(p, i) for p, t in papers.items() for i in _find_all(t.lower(), qn)] if qn else []
+        if len(hits) != 1:
+            reason = "not_found" if not hits else "ambiguous_quote"
+            return {"pid": None, "ok": lambda fact, gold: (False, reason)}
+        pid, a = hits[0]
+        b = a + len(qn)
+        cfg = self.s.evidence
+
+        def ok(fact: str | None, gold: list[str]) -> tuple[bool, str]:
+            spans = [sp for i in ([fact] if fact else gold) for sp in tagged[pid]["spans"].get(i, [])]
+            inside = sum(max(0, min(b, e) - max(a, s_)) for s_, e in spans) / max(1, b - a)
+            if inside == 0:
+                return False, "outside_gold"
+            if inside < cfg["min_inside"]:
+                return False, "too_long"
+            facts = [self.facts[i] for i in ([fact] if fact else gold)]
+            named = {m.eid for m in find_mentions(papers[pid][a:b], self.table_for(pid))}
+            both = any({fa["s"], fa["o"]} <= named for fa in facts)
+            cover = max((max(0, min(b, e) - max(a, s_)) / max(1, e - s_) for s_, e in spans), default=0)
+            if not both and cover < cfg["min_sentence_cover"]:
+                return False, "too_short"
+            return True, "ok"
+        return {"pid": pid, "ok": ok}
+
     def qa_one(self, q: dict[str, Any], tagged: dict[str, Any]) -> dict[str, Any]:
         raw = {pid: self.paper(pid) for pid in q["papers"]}
         blob = "\n\n".join(f"=== paper {pid} ===\n{md}" for pid, md in raw.items())
@@ -379,6 +411,7 @@ question and nothing else. If the papers do not answer it, return no items."""
         scored = []
         for it in got["items"]:
             pid = locate(it)
+            ev = self.evidence(it, papers, tagged)
             qn = norm(it["quote"])
             prov, span_fact, ambiguous = "made_up_quote", None, False
             if pid and qn in norm(papers[pid]):
@@ -391,18 +424,26 @@ question and nothing else. If the papers do not answer it, return no items."""
                 hit = over & set(q["gold"])
                 prov, span_fact = (("gold_span", sorted(hit)[0]) if hit else ("distractor_span", sorted(over)[0])
                                    if over else ("no_planted_span", None))
-            res = self.resolve(it, f"judge:qa:{q['id']}", pid)
+            res = self.resolve(it, f"judge:qa:{q['id']}", ev["pid"] or pid)
             as_fact = res["as_fact"]
+            right = as_fact in q["gold"]
+            strict = ev["ok"](as_fact if right else None, q["gold"])
             scored.append({**it, "provenance": prov, "ambiguous_quote": ambiguous, "span_fact": span_fact,
-                           **res, "answer_right": as_fact in q["gold"],
-                           "correct": prov == "gold_span" and as_fact in q["gold"]})
+                           **res, "answer_right": right,
+                           "evidence_ok": strict[0], "evidence_reason": strict[1],
+                           "evidence_ok_legacy": prov == "gold_span",
+                           "correct": right and strict[0], "correct_legacy": right and prov == "gold_span"})
         found = {x["as_fact"] for x in scored if x["correct"]}
+        found_legacy = {x["as_fact"] for x in scored if x["correct_legacy"]}
         answered = {x["as_fact"] for x in scored if x["answer_right"]}
         n = len(q["gold"])
         return {"id": q["id"], "question": q["text"], "papers": q["papers"], "gold": q["gold"], "items": scored,
                 "parse_error": False, "quote_repair": repaired, "recall": round(len(found) / n, 3),
                 "answer_recall": round(len(answered) / n, 3),     # right answer, whatever the evidence
-                "precision": round(sum(x["correct"] for x in scored) / len(scored), 3) if scored else None}
+                "precision": round(sum(x["correct"] for x in scored) / len(scored), 3) if scored else None,
+                "recall_legacy": round(len(found_legacy) / n, 3),
+                "precision_legacy": round(sum(x["correct_legacy"] for x in scored) / len(scored), 3)
+                if scored else None}
 
     # -------------------------------------------------------------- style-leak
     LEAK_SYS = """A test builder took the paper below and planted benchmark facts in it. After the paper is a list of
@@ -465,9 +506,28 @@ Use the whole paper to decide. Pick exactly one number."""
                              "answer_recall": mean([q["answer_recall"] for q in qa]),
                              "precision": mean([q["precision"] for q in qa if q["precision"] is not None]),
                              "quote_repairs": sum(q["quote_repair"] for q in qa),
-                             "parse_errors": sum(q["parse_error"] for q in qa)}
+                             "parse_errors": sum(q["parse_error"] for q in qa),
+                             "recall_legacy": mean([q["recall_legacy"] for q in qa if "recall_legacy" in q]),
+                             "precision_legacy": mean([q["precision_legacy"] for q in qa
+                                                       if q.get("precision_legacy") is not None])}
+        right = [it for q in qa for it in q["items"] if it["answer_right"]]
+        rep["evidence"] = {
+            "thresholds": self.s.evidence, "right_answers": len(right),
+            "strict_accuracy": mean([it["evidence_ok"] for it in right]),
+            "legacy_accuracy": mean([it["evidence_ok_legacy"] for it in right]),
+            "legacy_only": [{"question": q["id"], "as_fact": it["as_fact"], "reason": it["evidence_reason"],
+                             "quote": it["quote"][:200]} for q in qa for it in q["items"]
+                            if it["evidence_ok_legacy"] and not it["evidence_ok"]]}
         rep["style_leak"] = self.leak(tagged) if self.s.leak_trials else None
         return rep
+
+
+def _find_all(text: str, sub: str) -> list[int]:
+    out, i = [], text.find(sub)
+    while i >= 0:
+        out.append(i)
+        i = text.find(sub, i + 1)
+    return out
 
 
 def wilson(h: int, n: int, z: float = 1.96) -> list[float]:

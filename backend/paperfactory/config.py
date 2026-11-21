@@ -71,6 +71,9 @@ class Settings:
     qa_papers_per_question: int = 3
     leak_trials: int = 150
     world_file: str | None = None        # use a hand-written world instead of the world agent
+    # strict evidence rule (#2): share of the quote inside gold spans; share of a gold sentence a quote must cover
+    # when it does not name both the subject and the object. Saved in report.json with SCORING_VERSION.
+    evidence: dict[str, float] = field(default_factory=lambda: {"min_inside": 0.9, "min_sentence_cover": 0.5})
     slot_dir: str = "data/cache/claude-slots"   # shared with other tools: at most 3 model calls at once
     timeout: int = 900
 
