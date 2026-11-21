@@ -30,7 +30,7 @@ def test_shared_code_has_no_law_words(path: str) -> None:
     assert hits == [], f"{path}: field words belong in the field pack: {hits}"
 
 
-@pytest.mark.parametrize("name", ["law", "medicine", "materials"])
+@pytest.mark.parametrize("name", ["law", "medicine", "materials", "llm"])
 def test_every_pack_has_the_prompt_words(name: str) -> None:
     f = packs.field(name)
     for key in ("fact", "facts", "action", "actions", "line_of_authority"):

@@ -1,0 +1,45 @@
+{
+ "field": "llm",
+ "status": "DRAFT, not yet run: Aditya reviews before use",
+ "setting": "Invented methods for large language models, tested on invented models and invented benchmarks in invented evaluation studies. Tasks, metrics and evaluation settings (zero-shot, few-shot, fine-tuned) are real concepts; model names, method names, benchmark names, authors and results are invented.",
+ "words": {
+  "paper_kind": "a critical survey of language model research",
+  "venue": "machine learning venue",
+  "subject_kind": "study",
+  "subject_plural": "studies",
+  "source_kinds": "evaluation studies and the methods and earlier studies they assess",
+  "actor": "the authors",
+  "framework_section": "Background on the Methods and Benchmarks",
+  "analysis_section": "Analysis of the Reported Results",
+  "fact": "finding",
+  "facts": "findings",
+  "action": "result",
+  "actions": "results",
+  "line_of_authority": "line of empirical evidence"
+ },
+ "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "Figs.", "Tab.", "Eq.", "Sec.", "Ref.", "App.", "vs.", "approx.", "resp.", "No.", "Inc."], "lowercase_starts": [], "name_variants": [], "citation_tail": "", "defined_terms": [" ?\\((?:the )?[\"'](?P<t>[^\"']{2,40})[\"']\\)", " ?\\((?P<t>[A-Z][A-Z0-9-]*[A-Z0-9])\\)", ",? hereinafter (?:the )?[\"']?(?P<t>[A-Z][^\"',.;)]{1,39}?)[\"']?(?=[\\s,.;)])"], "absence_patterns": ["\\b[Tt]his (analysis|article|paper|review|note)\\b", "\\brecords? no\\b", "\\bno (recorded )?treatment\\b", "\\bnot (recorded|addressed|stated|documented)\\b", "\\bdoes not address\\b", "\\bis silent on\\b", "\\b(the|our) (notes|records|log|materials)\\b", "\\bno data (on|for)\\b", "\\bnot reported\\b", "\\bno results (on|for)\\b"]},
+ "kinds": {
+  "method": {"about": "an invented method for language models with a short name (e.g. 'Lattice Echo prompting', 'the Brindle adapter')", "attrs": {"family": "text"}},
+  "model": {"about": "an invented language model with a name and size (e.g. 'Tamsel-13B')", "attrs": {"size": "text"}},
+  "benchmark": {"about": "an invented benchmark with a code name (e.g. 'the Corvane-QA benchmark')", "attrs": {"task": "text"}},
+  "study": {"about": "an invented evaluation study named by first author and year (e.g. 'the Orlen 2023 study'; short name 'Orlen 2023')", "attrs": {"year": "int", "model": "ref:model", "benchmark": "ref:benchmark", "setting": "text"}}
+ },
+ "subject_kinds": ["study"],
+ "order_attr": "year",
+ "relations": {
+  "reports_gain": {"words": "reported a gain from", "meaning": "the study reports that the method raised the model's score on the benchmark over the baseline", "object_kinds": ["method"], "confusable_with": ["reports_no_gain", "reports_drop"]},
+  "reports_no_gain": {"words": "reported no gain from", "meaning": "the study reports no clear difference from the baseline score on the benchmark for the method", "object_kinds": ["method"], "confusable_with": ["reports_gain", "reports_drop"]},
+  "reports_drop": {"words": "reported a drop with", "meaning": "the study reports that the method lowered the model's score on the benchmark below the baseline", "object_kinds": ["method"], "confusable_with": ["reports_gain", "reports_no_gain"]},
+  "fails_to_replicate": {"words": "failed to replicate", "meaning": "the study re-ran an earlier study's setup and did not get its reported result", "object_kinds": ["study"], "confusable_with": []}
+ },
+ "conflict_pairs": [["reports_gain", "reports_no_gain"], ["reports_gain", "reports_drop"]],
+ "confusable_note": "DRAFT for review: a gain within run-to-run noise (one seed, no error bars) is often written as a gain; for a metric where lower is better (error rate, perplexity) a fall is a gain; a gain on one benchmark split with a drop on another reads as gain, drop or no gain.",
+ "real_names": [],
+ "real_names_note": "Real names that invented entities must not use (whole words, any case; world.check). Empty until Aditya approves the sources for this list.",
+ "questions": [
+  {"id": "treat", "text": "What did {s} report about {o}?", "filter": ["subject", "object"]},
+  {"id": "gain", "text": "Which methods raised the benchmark score in {s}?", "filter": ["subject"], "relation": "reports_gain"},
+  {"id": "conflict", "text": "Which studies found that {o} raised the benchmark score, and which did not?", "filter": ["object"], "relation_in": ["reports_gain", "reports_no_gain", "reports_drop"]}
+ ],
+ "world_notes": "Make 4-6 invented methods in 1-3 families (e.g. prompting, fine-tuning, retrieval, decoding), 2-3 invented models, 2-3 invented benchmarks, and enough studies (years 2019-2026) that each paper has its own mix. Every name is invented: no real model, benchmark, dataset, lab or company names (no GPT, Llama, Qwen, Claude, Gemini, Mistral, BERT, T5, MMLU, GSM8K, HumanEval, BIG-bench, HellaSwag, SQuAD, ImageNet, OpenAI, Anthropic, Google, Meta etc.); do not reuse one name inside another (a method and a benchmark must not share a word). Each study evaluates on one model and one benchmark (attrs). A study may only fail to replicate an EARLIER study. Plant disagreements: two studies on the same benchmark with opposite findings for the same method."
+}

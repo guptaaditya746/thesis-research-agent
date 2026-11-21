@@ -17,7 +17,7 @@ PILOT = json.loads((HERE / "worlds" / "law-pilot.json").read_text())
 LAW, ARG = packs.field("law"), packs.genre("argument")
 
 
-@pytest.mark.parametrize("name", ["law", "medicine", "materials"])
+@pytest.mark.parametrize("name", ["law", "medicine", "materials", "llm"])
 def test_every_field_pack_is_complete(name: str) -> None:
     f = packs.field(name)
     for key in ("paper_kind", "venue", "subject_kind", "subject_plural", "source_kinds", "actor",
