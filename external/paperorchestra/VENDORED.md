@@ -134,5 +134,6 @@ C11 (22 Nov 2026): paper.md is written to a temp file and renamed (a stopped run
 transport error from paperfactory's model layer (LLMError, a RuntimeError) is retried and logged as a `call_error`
 like ClaudeCodeError.
 
-C12 (22 Nov 2026): `--max_parallel` is honoured up to HARD_CAP = 9 (was always lowered to 3); the default stays 3.
+C12 (22 Nov 2026): with paperfactory's backend (`--backend_json`), `--max_parallel` is honoured up to HARD_CAP = 9;
+without it (claude CLI, built-in Qwen path) the cap stays 3.
 paperfactory passes the writer role's max_parallel (9 in configs/qwen/*.json, three per Qwen replica).

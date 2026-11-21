@@ -86,3 +86,14 @@ def test_one_paper_that_breaks_the_check_does_not_stop_the_step(tmp_path: Path, 
     monkeypatch.setattr(repair.Checker, "repair_paper", fake)
     cli.run(s, ["check"])
     assert [(s.out_dir / "work" / p / "paper.repairs.json").is_file() for p in pids] == [True, False, True]
+
+
+def test_paperorchestra_takes_9_calls_with_paperfactorys_backend_and_3_without(tmp_path: Path) -> None:
+    import importlib.util          # load the file by path: no "utils" package on sys.path for other tests
+    src = Path(__file__).resolve().parents[3] / "external" / "paperorchestra" / "utils" / "claude_code_utils.py"
+    spec = importlib.util.spec_from_file_location("po_claude_code_utils_test", src)
+    cc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc)
+    kw = {"cache_dir": tmp_path / "c", "lock_dir": tmp_path / "l"}
+    assert cc.ClaudeCodeLM("m", max_parallel=9, runner=lambda *a: {}, **kw).max_parallel == 9
+    assert cc.ClaudeCodeLM("m", max_parallel=9, **kw).max_parallel == 3

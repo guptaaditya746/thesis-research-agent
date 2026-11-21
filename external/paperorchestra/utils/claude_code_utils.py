@@ -56,9 +56,9 @@ class ClaudeCodeLM:
         self.log_path = Path(log_path) if log_path else None
         self.timeout = timeout
         self.claude_bin = claude_bin or os.environ.get("PO_CLAUDE_BIN", "claude")
-        # C12: the caller's cap up to HARD_CAP (paperfactory passes the role's max_parallel, e.g. 9 on three Qwen
-        # replicas); the default stays MAX_PARALLEL
-        self.max_parallel = max(1, min(max_parallel, HARD_CAP))
+        # C12: with paperfactory's backend (runner) the caller's cap up to HARD_CAP (the role's max_parallel, e.g. 9 on
+        # three Qwen replicas); the claude CLI and the built-in Qwen path stay at MAX_PARALLEL (3)
+        self.max_parallel = max(1, min(max_parallel, HARD_CAP if runner is not None else MAX_PARALLEL))
         self.poll = poll
         self._log_lock = threading.Lock()
         self.cache_dir.mkdir(parents=True, exist_ok=True)
