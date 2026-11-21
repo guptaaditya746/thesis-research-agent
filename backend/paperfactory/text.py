@@ -219,6 +219,7 @@ class Mention:
 class AliasTable:
     by_key: dict[str, str]            # surface with lower-cased first char -> entity id
     regex: re.Pattern[str] | None
+    ambiguous: dict[str, list[str]]   # names that could mean several entities: never matched
 
 
 SUBSECTION = re.compile(r"\([0-9A-Za-z]{1,4}\)")
@@ -244,25 +245,39 @@ def all_names(w: dict[str, Any], f: Any, eid: str) -> list[str]:
 
 
 def alias_table(w: dict[str, Any], f: Any, extra: dict[str, str] | None = None) -> AliasTable:
-    """Every name of every entity (label, alt, pack variants, plus `extra` surface -> id). A name used by two
-    entities is dropped here; world.check reports it."""
+    """Every name of every entity, in three layers: the world (label, alt, which may come from the world agent),
+    the pack's name_variants (e.g. "s. 9", first party "Pell", head noun "the Ordinance"), and `extra` (surface ->
+    id, e.g. terms a paper defines). A name that could mean two entities goes to `ambiguous` and is never
+    matched (world.check rejects such clashes among label and alt)."""
     by_key: dict[str, str] = {}
-    clash: set[str] = set()
+    seen: dict[str, set[str]] = {}
     pairs = [(n, eid) for eid in w["entities"] for n in all_names(w, f, eid)] + list((extra or {}).items())
     for n, eid in pairs:
         k = _key(n)
-        if not k:
-            continue
-        if by_key.get(k, eid) != eid:
-            clash.add(k)
-        by_key[k] = eid
-    for k in clash:
+        if k:
+            seen.setdefault(k, set()).add(eid)
+            by_key[k] = eid
+    ambiguous = {k: sorted(v) for k, v in seen.items() if len(v) > 1}
+    for k in ambiguous:
         del by_key[k]
     if not by_key:
-        return AliasTable({}, None)
+        return AliasTable({}, None, ambiguous)
     alts = "|".join("[" + re.escape(k[0]) + re.escape(k[0].upper()) + "]" + re.escape(k[1:]) if k[0].isalpha()
                     else re.escape(k) for k in sorted(by_key, key=len, reverse=True))
-    return AliasTable(by_key, re.compile(rf"(?<!\w)(?:{alts})(?!\w)(?![-.]\d)"))
+    return AliasTable(by_key, re.compile(rf"(?<!\w)(?:{alts})(?!\w)(?![-.]\d)"), ambiguous)
+
+
+def defined_terms(text: str, table: AliasTable, f: Any) -> dict[str, str]:
+    """Short names a paper defines right after a full name, by the pack's patterns ("text"."defined_terms", group
+    "t"): Workplace Monitoring Ordinance 2018 (the "Rules") / (WMO) / , hereinafter "the Rules". text is
+    normalized."""
+    pats = [re.compile(p) for p in f.raw["text"]["defined_terms"]]
+    out: dict[str, str] = {}
+    for m in find_mentions(text, table):
+        for p in pats:
+            if (x := p.match(text, m.end)) and _key(x.group("t")) not in table.by_key:
+                out.setdefault(x.group("t").strip(), m.eid)
+    return out
 
 
 def find_mentions(text: str, table: AliasTable) -> list[Mention]:

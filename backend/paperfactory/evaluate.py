@@ -22,7 +22,8 @@ from typing import Any
 from paperfactory import SCORING_VERSION
 from paperfactory.llm import pmap
 from paperfactory.packs import Field
-from paperfactory.text import (alias_table, find_mentions, names, norm, norm_text, normalize_paper, split_rules,
+from paperfactory.text import (AliasTable, alias_table, defined_terms, find_mentions, names, norm, norm_text,
+                                normalize_paper, split_rules,
                                 split_sents)
 from paperfactory.world import fact_errors
 from paperfactory.write import repeated_phrases
@@ -36,13 +37,30 @@ class Eval:
         self.rng = random.Random(s.seed)
         self.letters = {chr(65 + i): r for i, r in enumerate(f.relations)} | {chr(65 + len(f.relations)): "none"}
         self.rules = split_rules(f, w)
-        self.table = alias_table(w, f)
+        self.table = alias_table(w, f)          # world + pack names; per paper: table_for(pid)
+        self._tables: dict[str, tuple[AliasTable, dict[str, str]]] = {}
         tail = f.raw["text"]["citation_tail"]
         self.citation_tail = re.compile(tail) if tail else None
 
     # -------------------------------------------------------------- helpers
-    def mentions(self, text: str, eid: str) -> bool:
-        return any(m.eid == eid for m in find_mentions(text, self.table))
+    def table_for(self, pid: str | None) -> AliasTable:
+        """Alias table of one paper: the world table plus the terms the paper itself defines."""
+        if pid is None:
+            return self.table
+        if pid not in self._tables:
+            extra = defined_terms(normalize_paper(self.paper(pid)).text, self.table, self.f)
+            self._tables[pid] = (alias_table(self.w, self.f, extra), extra)
+        return self._tables[pid][0]
+
+    def save_aliases(self, pid: str) -> dict[str, Any]:
+        tab, extra = self.table_for(pid), self._tables[pid][1]
+        rec = {"aliases": dict(sorted(tab.by_key.items())), "defined_in_paper": extra, "ambiguous": tab.ambiguous}
+        (self.s.out_dir / "work" / pid / "paper.aliases.json").write_text(json.dumps(rec, indent=1, ensure_ascii=False),
+                                                                          encoding="utf-8")
+        return rec
+
+    def mentions(self, text: str, eid: str, pid: str | None = None) -> bool:
+        return any(m.eid == eid for m in find_mentions(text, self.table_for(pid)))
 
     def label(self, e: str) -> str:
         return self.w["entities"][e]["label"]
@@ -112,14 +130,15 @@ is "no"."""
                     continue
                 ctx = sents[n - 1][2] + " " if n else ""
                 sent = sents[n][2]
-                subj_ok = self.mentions(ctx + sent, fa["s"]) or actor in sent.lower() or " it " in f" {sent.lower()}"
-                if not self.mentions(sent, fa["o"]) or not subj_ok:
-                    notes.append(f"{t['id']} s{n}: names missing (code)")
-                    continue
+                subj_ok = (self.mentions(ctx + sent, fa["s"], pid) or actor in sent.lower()
+                           or " it " in f" {sent.lower()}")
+                if not self.mentions(sent, fa["o"], pid) or not subj_ok:     # kept: the verifier decides
+                    who = "the source" if subj_ok else "the " + self.f.words["subject_kind"]
+                    notes.append(f"{t['id']} s{n}: unknown_name (no known name of {who}; sent to verifier)")
                 tags[t["id"]].add(n)
         pairs = [(n, i) for i, ns in tags.items() for n in sorted(ns)]
         sweep = [(n, fa["id"]) for fa in facts for n, s in enumerate(sents)
-                 if n not in tags[fa["id"]] and self.mentions(s[2], fa["o"]) and self.mentions(s[2], fa["s"])]
+                 if n not in tags[fa["id"]] and self.mentions(s[2], fa["o"], pid) and self.mentions(s[2], fa["s"], pid)]
         ok = self.verify([(sents[n - 1][2] if n else "", sents[n][2], self.facts[i]) for n, i in pairs + sweep],
                          f"verify:{pid}")
         kept: dict[str, set[int]] = {i: set() for i in tags}
@@ -133,12 +152,14 @@ is "no"."""
                 kept[i].add(n)
                 added.append((i, n))
         subsections = [f"s{n}: {m.surface}{m.subsection}" for n, st in enumerate(sents)
-                       for m in find_mentions(st[2], self.table) if m.subsection]
+                       for m in find_mentions(st[2], self.table_for(pid)) if m.subsection]
+        aliases = self.save_aliases(pid)
         text = self.paper(pid)
         all_names = [x for e in self.w["entities"] for x in names(self.w, e)]
         return {"pid": pid, "words": len(text.split()), "n_sentences": len(sents), "tags_proposed": len(pairs),
                 "tags_rejected_by_verifier": rejected, "tags_added_by_sweep": added, "code_notes": notes,
-                "subsection_mentions": subsections,
+                "subsection_mentions": subsections, "ambiguous_names": len(aliases["ambiguous"]),
+                "names_defined_in_paper": aliases["defined_in_paper"],
                 "facts_without_tag": [i for i, ns in kept.items() if not ns],
                 "over_mention_budget": [i for i, ns in kept.items() if len(ns) > self.max_mentions],
                 "repeated_phrases": repeated_phrases(text, all_names)[:10],
@@ -225,11 +246,11 @@ question and nothing else. If the papers do not answer it, return no items."""
         "properties": {k: {"type": "string"} for k in
                        ("paper", "subject", "relation", "object", "quote", "answer_sentence")}}}}}
 
-    def entities_in(self, text: str) -> list[str]:
+    def entities_in(self, text: str, pid: str | None = None) -> list[str]:
         """Entity ids named in text, in order. A citation tail after a subject, e.g. "Marrin v. Tolst Media
         (Veldra Court of Appeal, 2019)", belongs to that subject: names inside it are not separate mentions."""
         t = norm_text(text)
-        ms = find_mentions(t, self.table)
+        ms = find_mentions(t, self.table_for(pid))
         ents = self.w["entities"]
         skip: set[int] = set()
         for m in ms if self.citation_tail else []:
@@ -237,19 +258,19 @@ question and nothing else. If the papers do not answer it, return no items."""
                 skip |= {k for k, n in enumerate(ms) if m.end <= n.start < x.end()}
         return list(dict.fromkeys(m.eid for k, m in enumerate(ms) if k not in skip))
 
-    def resolve(self, it: dict[str, Any], step: str) -> dict[str, Any]:
+    def resolve(self, it: dict[str, Any], step: str, pid: str | None = None) -> dict[str, Any]:
         """QA item -> fact id, by the pack's rules (world.fact_errors: allowed kinds, time order), never by name
         length. Status: resolved | resolved_by_judge | no_valid_subject | ambiguous_subject | no_valid_object |
         relation_none | invalid_fact | ambiguous_object."""
         ents = self.w["entities"]
-        subj = [e for e in self.entities_in(it["subject"]) if ents[e]["kind"] in self.f.subject_kinds]
+        subj = [e for e in self.entities_in(it["subject"], pid) if ents[e]["kind"] in self.f.subject_kinds]
         if len(subj) != 1:
             return {"resolution": "ambiguous_subject" if subj else "no_valid_subject", "as_fact": None,
                     "object_candidates": []}
         s = subj[0]
 
         def cands(text: str) -> list[str]:
-            return [o for o in self.entities_in(text) if o != s
+            return [o for o in self.entities_in(text, pid) if o != s
                     and any(not fact_errors((s, r, o), ents, self.f) for r in self.f.relations)]
         objs = cands(it["object"]) or cands(it["quote"])
         out: dict[str, Any] = {"object_candidates": objs, "as_fact": None}
@@ -299,7 +320,7 @@ question and nothing else. If the papers do not answer it, return no items."""
                 hit = over & set(q["gold"])
                 prov, span_fact = (("gold_span", sorted(hit)[0]) if hit else ("distractor_span", sorted(over)[0])
                                    if over else ("no_planted_span", None))
-            res = self.resolve(it, f"judge:qa:{q['id']}")
+            res = self.resolve(it, f"judge:qa:{q['id']}", pid)
             as_fact = res["as_fact"]
             scored.append({**it, "provenance": prov, "ambiguous_quote": ambiguous, "span_fact": span_fact,
                            **res, "answer_right": as_fact in q["gold"],
@@ -328,7 +349,7 @@ Use the whole paper to decide. Pick exactly one number."""
             tagged_idx = {j for sp in t["spans"].values() for j, s in enumerate(S) if [s[0], s[1]] in sp}
             span = self.rng.choice(t["spans"][i])
             gi = next(j for j, s in enumerate(S) if [s[0], s[1]] == span)
-            n_names = lambda txt: len({m.eid for m in find_mentions(txt, self.table)})  # noqa: E731
+            n_names = lambda txt: len({m.eid for m in find_mentions(txt, self.table_for(pid))})  # noqa: E731
             two = [j for j in range(len(S)) if j not in tagged_idx and n_names(S[j][2]) >= 2]
             one = sorted((j for j in range(len(S)) if j not in tagged_idx and n_names(S[j][2]) == 1),
                          key=lambda j: abs(len(S[j][2].split()) - len(S[gi][2].split())))

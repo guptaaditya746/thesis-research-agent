@@ -14,7 +14,7 @@ import json
 from typing import Any
 
 from paperfactory.packs import Field, Genre
-from paperfactory.text import alias_table, all_names, find_mentions
+from paperfactory.text import alias_table, find_mentions
 
 Fact = tuple[str, str, str]
 
@@ -28,7 +28,7 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
         if e.get("kind") not in f.kinds:
             err.append(f"{eid}: unknown kind {e.get('kind')!r}")
             continue
-        for name in [e.get("label", "")] + e.get("alt", []) + (all_names(w, f, eid)[1:] if e.get("label") else []):
+        for name in [e.get("label", "")] + e.get("alt", []):
             k = name.strip().lower()
             if not k:
                 err.append(f"{eid}: empty name")
@@ -44,9 +44,11 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
             elif typ.startswith("ref:") and (v not in ents or ents[v].get("kind") != typ[4:]):
                 err.append(f"{eid}: attr {a} must name a {typ[4:]}")
     # a name inside another entity's name (whole words): papers could not tell the two apart
-    named = {eid: all_names(w, f, eid) for eid, e in ents.items() if e.get("kind") in f.kinds and e.get("label")}
+    # (label and alt only: names the pack derives, e.g. a first party, are marked ambiguous at scoring instead)
+    named = {eid: [e["label"]] + e.get("alt", []) for eid, e in ents.items() if e.get("kind") in f.kinds
+             and e.get("label")}
     for eid in named:
-        tab = alias_table({"entities": {eid: ents[eid]}}, f)
+        tab = alias_table({"entities": {eid: {**ents[eid], "kind": "-"}}}, f)
         for other, ons in named.items():
             for on in ons if other != eid else []:
                 err += [f"name {m.surface!r} ({eid}) inside {on!r} ({other})" for m in find_mentions(on, tab)]
