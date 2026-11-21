@@ -557,6 +557,35 @@ def l3_layer(g: dict[str, Any], ans: Answer | None, rows: list[Row], facts: dict
     return out
 
 
+def baseline_question(qdir: Path, g: dict[str, Any], domain: str) -> dict[str, Any]:
+    """A baseline run (evqa/baselines) has find.jsonl and answer_text.json only: L0 and L1 are scored as for evqa;
+    L2, the structured L3 and advisor do not apply (None). A fact found by Find gets blame "unscored" until
+    `evqa eval --text` (eval/text_answer.py) says whether the answer text states it ("none") or not ("answer")."""
+    facts_all = seed_facts(domain)
+    facts = {rid: facts_all[rid] for rid in g["row_ids"]}
+    missing = [n for n in ("find.jsonl", "answer_text.json") if not (qdir / n).is_file()]
+    hits = {h.paper: h for h in _jsonl(qdir / "find.jsonl", FindHit)}
+    per_fact = []
+    for rid, f in facts.items():
+        spans = l0_spans(domain, f["paper"]).get(rid, ())
+        hit = hits.get(f["paper"])
+        l1 = bool(spans) and hit is not None and any(_overlaps((p.start, p.end), spans) for p in hit.passages)
+        per_fact.append({"id": rid, "paper": f["paper"], "l0": bool(spans), "l1": l1, "l2": None, "name_ok": None,
+                         "quote_ok": None, "rows": [], "names": {}, "in_answer": None,
+                         "blame": "L0" if not spans else "find" if not l1 else "unscored"})
+    answerable = g["type"] not in NOT_REPORTED_TYPES
+    l3: dict[str, Any] = {"score": None, "exact": False, "n/a": "baseline run: structured answer layers do not apply"}
+    if not answerable:
+        l3.update({"said_not_reported": None, "hallucination": None, "near_miss_trap": None})
+    n = len(per_fact)
+    return {"qid": g["qid"], "type": g["type"], "answerable": answerable, "missing_files": missing,
+            "facts": per_fact, "l3": l3, "advisor": {"score": None, "checks": 0, "mismatches": ["n/a: baseline run"]},
+            "l0": round(sum(p["l0"] for p in per_fact) / n, 4) if n else None,
+            "l1": round(sum(p["l1"] for p in per_fact) / n, 4) if n else None,
+            "l2": {"recall": None, "precision": None, "name_ok": None, "rows": 0, "dropped": 0, "matched_rows": 0},
+            "blame": {k: sum(p["blame"] == k for p in per_fact) for k in (*LAYERS, "none", "unscored")}}
+
+
 def score_question(qdir: Path, g: dict[str, Any], domain: str) -> dict[str, Any]:
     facts_all = seed_facts(domain)
     facts = {rid: facts_all[rid] for rid in g["row_ids"]}
@@ -611,8 +640,10 @@ def _mean(xs: list[float | None]) -> float | None:
     return round(sum(got) / len(got), 4) if got else None
 
 
-def _rate(flags: list[bool]) -> float | None:
-    return round(sum(flags) / len(flags), 4) if flags else None
+def _rate(flags: list[bool | None]) -> float | None:
+    """Share of True among the flags that apply (None = n/a, e.g. a baseline run's structured layers)."""
+    got = [f for f in flags if f is not None]
+    return round(sum(got) / len(got), 4) if got else None
 
 
 def type_totals(qs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -645,8 +676,10 @@ def run_intervals(qs: list[dict[str, Any]]) -> dict[str, Any]:
              "l2_recall": [q["l2"]["recall"] for q in qs], "l2_precision": [q["l2"]["precision"] for q in qs],
              "l2_name_ok": [q["l2"]["name_ok"] for q in qs], "l3": [q["l3"]["score"] for q in ans_q],
              "advisor": [q["advisor"]["score"] for q in qs],
-             "not_reported_accuracy": [float(q["l3"]["score"] == 1.0) for q in nr_q],
-             "not_reported_hallucination": [float(bool(q["l3"]["hallucination"])) for q in nr_q]}
+             "not_reported_accuracy": [None if q["l3"]["score"] is None else float(q["l3"]["score"] == 1.0)
+                                       for q in nr_q],
+             "not_reported_hallucination": [None if q["l3"]["hallucination"] is None
+                                            else float(bool(q["l3"]["hallucination"])) for q in nr_q]}
     return {"method": bootstrap.METHOD, **{k: bootstrap.mean_interval(v) for k, v in per_q.items()}}
 
 
@@ -661,7 +694,8 @@ def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = N
     qids = list(cfg.questions) or [q for q, g in golds.items() if g.get("split") == cfg.split]
     if only:
         qids = [q for q in qids if q in only]
-    questions = {q: score_question(run_dir / q, golds[q], domain) for q in qids if q in golds}
+    scorer = baseline_question if cfg.is_baseline() else score_question
+    questions = {q: scorer(run_dir / q, golds[q], domain) for q in qids if q in golds}
     qs = list(questions.values())
     ans_q = [q for q in qs if q["answerable"]]
     nr_q = [q for q in qs if not q["answerable"]]
@@ -675,17 +709,26 @@ def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = N
               "l3": _mean([q["l3"]["score"] for q in ans_q]),          # answerable questions only
               "l3_exact": sum(bool(q["l3"]["exact"]) for q in ans_q),
               "advisor": _mean([q["advisor"]["score"] for q in qs]),
-              "blame": {k: sum(q["blame"][k] for q in qs) for k in (*LAYERS, "none")},
+              "blame": {k: sum(q["blame"].get(k, 0) for q in qs) for k in (*LAYERS, "none")},
               "not_reported": {"questions": len(nr_q),
-                               "accuracy": _rate([q["l3"]["score"] == 1.0 for q in nr_q]),
+                               "accuracy": _rate([None if q["l3"]["score"] is None else q["l3"]["score"] == 1.0
+                                                  for q in nr_q]),
                                "hallucination": _rate([q["l3"]["hallucination"] for q in nr_q]),
                                "near_miss_trap": _rate([q["l3"]["near_miss_trap"] for q in near_q]),
                                "near_miss_questions": len(near_q)},
               "per_type": type_totals(qs)}
+    if cfg.is_baseline():
+        totals["blame"]["unscored"] = sum(q["blame"].get("unscored", 0) for q in qs)
     out = {"run_id": run_dir.name, "domain": domain, "config_name": cfg.name, "closed_book": cfg.closed_book,
            "unknown_questions": [q for q in qids if q not in golds], "totals": totals, "questions": questions}
     out["intervals"] = run_intervals(qs)
     out["data"] = datahash.data_hashes(domain, cfg.split)   # the data this score was made on (evqa/datahash.py)
+    if cfg.system:                                          # baseline runs (evqa/baselines); evqa runs keep the old keys
+        out["system"] = cfg.system
+    text_path = run_dir / "eval_text.json"                   # `evqa eval --text` (eval/text_answer.py), if made
+    if text_path.is_file():
+        from evqa.eval import text_answer
+        text_answer.merge(out, json.loads(text_path.read_text(encoding="utf-8")))
     (run_dir / "eval.json").write_text(json.dumps(out, indent=2, sort_keys=False) + "\n", encoding="utf-8")
     return out
 

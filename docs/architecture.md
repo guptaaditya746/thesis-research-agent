@@ -25,6 +25,25 @@ data/dataset/<domain>/<paper>/paper.md  -- all the QA system may read
 runs/evqa/<run>/  --  evqa eval (scores against data/seed)  -->  Workbench
 ```
 
+## Baselines (compare with other answering systems)
+
+```
+configs/evqa/practice-pqa-rag.yaml (system: paperqa2-rag | paperqa2-agent | long-context)
+        |  evqa run --config ... --text
+        v
+evqa/baselines  --subprocess-->  baselines/ (submodule thesis-baselines, own uv env: PaperQA2, long context)
+        |  same questions (corpus.py), same papers, same Qwen gateway alias
+        v
+runs/evqa/<run>/<qid>/find.jsonl + answer_text.json  --  prism (L0, L1)  +  eval/text_answer.py (L3-text)
+        |
+        v
+evqa compare evqa-run baseline-run   (l3_text is the score every system has)
+```
+
+L3-text grades the answer text of every run the same way (evqa answers are written out as text first): an LLM
+lists the values the text states, code checks each against the text and against the gold rows. Frontend plan:
+`docs/design/frontend-baselines.md`.
+
 ## Repo layout
 
 | Path | What |
@@ -37,3 +56,4 @@ runs/evqa/<run>/  --  evqa eval (scores against data/seed)  -->  Workbench
 | `ops/`, `scripts/` | cluster helpers, tunnels |
 | `tests/`, `reports/` | recorded results of the earlier system; never edited |
 | `llm-setup/` | submodule: vLLM + LiteLLM stack on Slurm |
+| `baselines/` | submodule thesis-baselines: PaperQA2 and long-context baselines (own uv env) |

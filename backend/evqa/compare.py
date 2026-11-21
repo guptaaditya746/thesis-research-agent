@@ -33,11 +33,12 @@ from evqa.eval import bootstrap
 from evqa.paths import REPO
 
 LAYERS = ["questions", "answerable", "facts", "l0", "l1", "l2_recall", "l2_precision", "l2_name_ok", "l3",
-          "l3_exact", "advisor"]
+          "l3_exact", "advisor", "l3_text", "l3_text_exact"]
 NOT_REPORTED = ["accuracy", "hallucination", "near_miss_trap"]
-TYPE_KEYS = ["questions", "l3", "exact", "advisor"]
+TEXT_NOT_REPORTED = ["accuracy", "hallucination"]
+TYPE_KEYS = ["questions", "l3", "exact", "advisor", "l3_text"]
 PER_Q = [("l3", ("l3", "score")), ("l2 recall", ("l2", "recall")), ("l2 precision", ("l2", "precision")),
-         ("advisor", ("advisor", "score"))]
+         ("advisor", ("advisor", "score")), ("l3_text", ("l3_text", "score"))]
 LOCKED_PREFIXES = ("bench-", "holdout-")
 NA = "n/a"
 
@@ -49,6 +50,7 @@ class Run:
         self.config: dict[str, Any] = (yaml.safe_load(conf.read_text(encoding="utf-8")) or {}) if conf.is_file() else {}
         self.name = str(self.config.get("name") or path.name)
         self.label = path.name
+        self.system = str(self.config.get("system") or "evqa")
         self._questions: dict[str, Any] | None = None
 
     def per_question_allowed(self) -> tuple[bool, str]:
@@ -144,12 +146,16 @@ def _table(header: list[str], rows: list[list[str]]) -> list[str]:
 def totals_table(runs: list[Run]) -> list[str]:
     tots = [r.totals() for r in runs]
     costs = [r.cost() for r in runs]
-    rows: list[list[str]] = [["config", *[r.name for r in runs]], ["split", *[_fmt(r.config.get("split")) for r in runs]]]
+    rows: list[list[str]] = [["config", *[r.name for r in runs]], ["system", *[r.system for r in runs]],
+                             ["split", *[_fmt(r.config.get("split")) for r in runs]]]
     rows += [[k, *[_fmt(t.get(k)) for t in tots]] for k in LAYERS]
-    ivs = [r.intervals().get("l3") for r in runs]
-    at = next(i for i, row in enumerate(rows) if row[0] == "l3") + 1
-    rows.insert(at, ["l3 95% interval", *[_interval(iv) for iv in ivs]])
+    for key in ("l3", "l3_text"):
+        ivs = [r.intervals().get(key) for r in runs]
+        at = next(i for i, row in enumerate(rows) if row[0] == key) + 1
+        rows.insert(at, [f"{key} 95% interval", *[_interval(iv) for iv in ivs]])
     rows += [[f"not_reported {k}", *[_fmt(_dig(t, ("not_reported", k))) for t in tots]] for k in NOT_REPORTED]
+    rows += [[f"text not_reported {k}", *[_fmt(_dig(t, ("text_not_reported", k))) for t in tots]]
+             for k in TEXT_NOT_REPORTED]
     types = list(dict.fromkeys(ty for t in tots for ty in (t.get("per_type") or {})))
     for ty in types:
         rows += [[f"{ty} {k}", *[_fmt(_dig(t, ("per_type", ty, k))) for t in tots]] for k in TYPE_KEYS]
@@ -167,34 +173,36 @@ def _interval(iv: list[float] | None, signed: bool = False) -> str:
     return f"{f.format(iv[0])} to {f.format(iv[1])}"
 
 
-def paired_l3(base: dict[str, Any], other: dict[str, Any]) -> tuple[float, list[float] | None, int] | None:
-    """Mean l3 difference (other - base) over the questions both runs scored, its paired bootstrap interval and
-    the number of those questions; None when they share no scored question."""
-    common = [q for q in base if q in other and _dig(base[q], ("l3", "score")) is not None
-              and _dig(other[q], ("l3", "score")) is not None and base[q].get("answerable", True)]
+def paired_l3(base: dict[str, Any], other: dict[str, Any], key: str = "l3"
+              ) -> tuple[float, list[float] | None, int] | None:
+    """Mean `key` difference (other - base; "l3" or "l3_text") over the questions both runs scored, its paired
+    bootstrap interval and the number of those questions; None when they share no scored question."""
+    common = [q for q in base if q in other and _dig(base[q], (key, "score")) is not None
+              and _dig(other[q], (key, "score")) is not None and base[q].get("answerable", True)]
     if not common:
         return None
-    a = [float(base[q]["l3"]["score"]) for q in common]
-    b = [float(other[q]["l3"]["score"]) for q in common]
+    a = [float(base[q][key]["score"]) for q in common]
+    b = [float(other[q][key]["score"]) for q in common]
     return round(sum(b) / len(b) - sum(a) / len(a), 4), bootstrap.paired_interval(a, b), len(common)
 
 
-def noise_lines(runs: list[Run]) -> list[str]:
-    """Part 3 (module doc): each practice run's l3 against the first practice run, with a paired interval."""
+def noise_lines(runs: list[Run], key: str = "l3") -> list[str]:
+    """Part 3 (module doc): each practice run's `key` score against the first practice run, with a paired
+    interval. key "l3_text" compares answer texts, the score every system has (baselines have no structured l3)."""
     allowed = [r for r in runs if r.per_question_allowed()[0]]
     if len(allowed) < 2:
-        return ["The paired l3 difference needs at least two practice runs."]
+        return [f"The paired {key} difference needs at least two practice runs."]
     base, base_q = allowed[0], allowed[0].questions()
     out = [f"Baseline `{base.label}`; {bootstrap.METHOD}."]
     for r in allowed[1:]:
-        got = paired_l3(base_q, r.questions())
+        got = paired_l3(base_q, r.questions(), key)
         if got is None:
-            out.append(f"- `{r.label}`: no question scored in both runs.")
+            out.append(f"- `{r.label}`: no question has {key} in both runs.")
             continue
         diff, iv, n = got
         verdict = ("the interval contains 0, so this difference may be noise" if bootstrap.contains_zero(iv)
                    else "the interval does not contain 0")
-        out.append(f"- `{r.label}` minus `{base.label}`: l3 {diff:+.4f} (95% interval {_interval(iv, True)}, "
+        out.append(f"- `{r.label}` minus `{base.label}`: {key} {diff:+.4f} (95% interval {_interval(iv, True)}, "
                    f"{n} questions in both): {verdict}.")
     return out
 
@@ -231,7 +239,11 @@ def report(run_dirs: list[Path]) -> str:
              "## Per-question differences (practice runs only)", "",
              *diff_table(runs), "",
              "## Is the l3 difference more than noise? (practice runs only)", "",
-             *noise_lines(runs), ""]
+             *noise_lines(runs), "",
+             "## Is the l3_text difference more than noise? (practice runs only; every system has l3_text)", "",
+             *noise_lines(runs, "l3_text"), "",
+             "l3_text: the answer text scored the same way for every system (`evqa eval --text`); l3 and l2 are "
+             "n/a for baseline systems (no structured answer).", ""]
     return "\n".join(lines)
 
 

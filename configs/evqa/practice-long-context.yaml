@@ -1,0 +1,12 @@
+# Baseline: every paper in one prompt, one call per question (no retrieval), every practice question (22).
+# The corpus is ~75k tokens: needs a gateway context window of at least ~85k tokens; a too-long prompt is recorded
+# as that question's error, nothing is cut.
+name: practice-long-context
+domain: medical
+split: practice
+questions: []
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+system: long-context

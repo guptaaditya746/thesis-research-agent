@@ -9,6 +9,9 @@ Run folder (runs/evqa/<run_id>/):
   <qid>/settings.jsonl   audit of Extract's setting reading (attempts, failed checks)
   <qid>/links.jsonl      Link           (Link: setting sets judged same/different/unknown, generator + verifier)
   <qid>/answer.json      Answer         (Answer: code only)
+  <qid>/answer_text.json TextAnswer     (baseline runs only: the system's own answer text, evqa/baselines)
+  <qid>/claims.json      TextClaims     (`evqa eval --text`: the values the answer text states, eval/text_answer.py)
+  baseline/              the baseline system's own files (questions it was given, raw answers, run_info.json)
 Pipeline steps read ONLY: data/dataset/<domain>/questions/*.jsonl (question + intent card) and
 data/dataset/<domain>/*/paper.md. Never data/seed (seed wall test).
 """
@@ -20,9 +23,12 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, field_validator, model_serializer
+from pydantic import (BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, field_validator, model_serializer,
+                      model_validator)
 
 Backend = Literal["qwen", "claude", "openrouter"]
+System = Literal["evqa", "paperqa2-rag", "paperqa2-agent", "long-context"]   # who answers (baselines: evqa/baselines)
+BASELINE_SYSTEMS = ("paperqa2-rag", "paperqa2-agent", "long-context")
 QuestionType = Literal["lookup", "best", "effect", "trend", "list"]   # what the user asks (Spec decides it from the
                                                                        # question text; dataset labels such as
                                                                        # absent/near_miss are not question types)
@@ -76,6 +82,13 @@ class LinkConfig(BaseModel):
     max_pairs: int = 40                # code cap on setting-set pairs judged per question
 
 
+class BaselineConfig(BaseModel):
+    """Settings handed to the baseline system unchanged (the thesis-baselines repo checks them: each system's
+    DEFAULTS). The model and think flag come from RunConfig.llm, so every system runs on the same model."""
+    model_config = _STRICT
+    settings: dict[str, Any] = Field(default_factory=dict)
+
+
 class RunConfig(BaseModel):
     model_config = _STRICT
     name: str = "slice1"
@@ -89,6 +102,24 @@ class RunConfig(BaseModel):
     closed_book: bool = False          # no papers: Find returns nothing (the ~0 sanity run)
     extract: ExtractConfig | None = None   # None = defaults; left out of run_id while None (old run ids stay)
     links: LinkConfig | None = None
+    system: System | None = None       # None = evqa (left out of run_id while None, so old run ids stay)
+    baseline: BaselineConfig | None = None
+
+    @model_validator(mode="after")
+    def _baseline_fits(self) -> RunConfig:
+        """A baseline answers with its own method: evqa's step settings would be silently unused, so they are
+        refused; a baseline runs on the Qwen gateway (the thesis-baselines repo calls it through LiteLLM)."""
+        if self.is_baseline():
+            if self.steps or self.extract or self.links or self.closed_book:
+                raise ValueError("a baseline system takes no evqa steps/extract/links/closed_book settings")
+            if self.llm.backend != "qwen":
+                raise ValueError("baseline systems run on the qwen gateway (llm.backend: qwen)")
+        elif self.baseline is not None:
+            raise ValueError("baseline settings need a baseline system (system: paperqa2-rag, ...)")
+        return self
+
+    def is_baseline(self) -> bool:
+        return self.system in BASELINE_SYSTEMS
 
     @field_validator("steps")
     @classmethod
@@ -349,6 +380,42 @@ class Answer(_DropEmpty):
     cant_tell: list[CantTell] = []     # rows whose fit could not be decided by accepted links (shown, not used)
 
     _drop_when_empty = ("effects", "trend", "papers", "conflicts", "cant_tell")
+
+
+# ---------------------------------------------------------------- baseline answers and text claims
+class TextAnswer(BaseModel):
+    """answer_text.json of a baseline run: what the system answered, as text (thesis-baselines contract.py)."""
+    qid: str
+    system: str
+    text: str = ""
+    cannot_answer: bool = False        # the system said it cannot answer
+    citations: list[str] = []          # paper ids the answer cites
+    tokens: dict[str, int] = {}        # {"prompt", "completion"}
+    seconds: float = 0.0
+    error: str | None = None
+
+
+class TextClaim(BaseModel):
+    """One value an answer text states (eval/text_answer.py). Every text field is copied from the answer; "" when
+    the answer does not say it."""
+    value_text: str                    # the value as written, with its unit and direction words ("fell by 0.8 %")
+    subject: str = ""                  # drug (or other subject) the value is for
+    comparator: str = ""
+    measure: str = ""
+    time_point: str = ""
+    dose: str = ""
+    patient_group: str = ""
+    paper: str = ""                    # paper id the answer gives for it
+    quote: str = ""                    # the sentence or line of the answer that states it (verbatim)
+
+
+class TextClaims(BaseModel):
+    """claims.json: the claims kept (code checks passed) and the ones dropped, with why."""
+    qid: str
+    text_sha256: str                   # of the answer text the claims were read from
+    model: str                         # the model that read them
+    claims: list[TextClaim] = []
+    dropped: list[dict[str, Any]] = [] # {"claim": TextClaim, "why": str}
 
 
 # ---------------------------------------------------------------- events

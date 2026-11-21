@@ -1,0 +1,16 @@
+# Baseline: PaperQA2 agent (the model picks tools: paper search, gather evidence, answer), every medical test question (78), benchmark mode.
+# Needs tool calling on the gateway (vLLM --enable-auto-tool-choice with the Qwen tool parser); without it every
+# question ends in "I cannot answer": use bench-pqa-agent-fixed.yaml then.
+name: bench-pqa-agent
+domain: medical
+split: test
+questions: []
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+system: paperqa2-agent
+baseline:
+  settings:
+    embedding: sparse
+    agent_type: ToolSelector   # PaperQA2 default
