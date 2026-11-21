@@ -77,6 +77,17 @@ def make_run(root: Path, name: str, split: str, l3: float, questions: dict | Non
     return d
 
 
+def test_tokens_are_summed_when_recorded(tmp_path: Path) -> None:
+    d = make_run(tmp_path, "practice-tok", "practice", 0.5, {})
+    lines = (d / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    rows = [json.loads(x) for x in lines]
+    for e in rows:
+        if e["kind"] == "end" and e["step"] == "extract":
+            e["data"]["llm"].update(prompt_tokens=100, completion_tokens=20)
+    (d / "events.jsonl").write_text("".join(json.dumps(e) + "\n" for e in rows), encoding="utf-8")
+    assert compare.Run(d).cost()["tokens"] == 120   # 2 questions x 120 / 2 questions
+
+
 def test_compare_practice_runs(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     a = make_run(tmp_path, "practice-qwen", "practice", 0.5,
                  {"Q1": _q("Q1", "lookup", 0.0, 0.7), "Q2": _q("Q2", "absent", 1.0, 0.5, None)})

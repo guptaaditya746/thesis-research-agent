@@ -32,7 +32,7 @@ from evqa.answer import canon
 from evqa.contracts import FindHit, Passage, Row, RunConfig, Spec, StdValue
 from evqa.extract import anchor, settings_v2
 from evqa.extract.prompt import ExtractRows, RowDraft
-from evqa.llm import MAX_WORKERS
+from evqa.llm import MAX_WORKERS, service_failed
 
 log = logging.getLogger(__name__)
 ATTEMPTS = 3
@@ -258,7 +258,9 @@ def merge(rows: list[Row]) -> list[Row]:
 
 # ---------------------------------------------------------------- run
 def read_passage(spec_lines: str, context: str, passage: Passage, lm: dspy.BaseLM) -> list[RowDraft]:
-    """One LLM call (retried once with a new recorded attempt when the reply does not parse)."""
+    """One LLM call (asked again with a new recorded attempt when the reply does not parse; after ATTEMPTS bad
+    replies the passage is skipped). A failed model service raises: skipping would write a short rows.jsonl that a
+    rerun takes as done."""
     for attempt in range(ATTEMPTS):
         try:
             with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
@@ -266,6 +268,8 @@ def read_passage(spec_lines: str, context: str, passage: Passage, lm: dspy.BaseL
                                                 config={"attempt": attempt})
             return [d if isinstance(d, RowDraft) else RowDraft.model_validate(d) for d in (out.rows or [])]
         except Exception as exc:   # noqa: BLE001 - a bad reply is logged and retried, then the passage is skipped
+            if service_failed(exc):
+                raise
             log.warning("extract: passage %s-%s attempt %d failed: %s", passage.start, passage.end, attempt, exc)
     return []
 

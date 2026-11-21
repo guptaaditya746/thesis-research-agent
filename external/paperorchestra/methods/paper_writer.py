@@ -31,7 +31,7 @@ from methods.agents.content_refinement_agent import ContentRefinementAgent
 from methods.prompts.content_refinement_agent import fact_repair_prompt
 
 from methods.prompts.versions import prompt_set
-from methods.prompts.writer_v2 import style_examples_block
+from methods.prompts.writer_v2 import style_examples_block, number_repair_schema
 from utils.claude_code_utils import markdown_schema
 from utils.common_utils import load_md_file
 from utils import fact_check
@@ -46,6 +46,16 @@ def make_repair_fn(lm, facts):
         user = ("'failed_values':\n" + json.dumps(failed_values, indent=1, ensure_ascii=False)
                 + "\n\n'section':\n" + section_text)
         return lm(fact_repair_prompt, user, markdown_schema(), step=f"repair:{section_title}")["markdown"]
+
+    return repair
+
+
+def make_number_repair_fn(lm, system_prompt):
+    """C9: one call; items in, {id: new sentence} out (code validates each, fact_check.number_repair)."""
+    def repair(items):
+        user = "'items':\n" + json.dumps(items, indent=1, ensure_ascii=False)
+        out = lm(system_prompt, user, number_repair_schema(), step="repair:numbers")
+        return {int(f["id"]): str(f["sentence"]) for f in out.get("fixes", [])}
 
     return repair
 
@@ -146,6 +156,12 @@ def write_single_paper(
     final, attempts = fact_check.repair_round(refined, facts, fact_sections(outline), make_repair_fn(lm, facts))
     for a in attempts:
         lm.log({"event": "repair", **a})
+    number_fix = None
+    if prompts.get("number_repair"):
+        # C9 (v2, v2r): ONE repair call for numbers found in no input text; what is left is recorded, not fatal
+        final, number_fix = fact_check.number_repair(final, [idea_md, log_md], facts,
+                                                     make_number_repair_fn(lm, prompts["number_repair"]))
+        lm.log({"event": "number_repair", **number_fix})
     citations = None
     if prompts.get("references"):
         # C8: every citation must match a provided reference; only cited references are listed
@@ -162,6 +178,8 @@ def write_single_paper(
         "extra_numbers": fact_check.extra_numbers(final, idea_md, log_md),
         "leaked_row_ids": fact_check.leaked_row_ids(final),
         "unsupported_numbers": fact_check.unsupported_numbers(final, idea_md, log_md),
+        **({"unsupported_numbers_before_repair": [n for i in number_fix["items"] for n in i["numbers"]],
+            "unsupported_numbers_after_repair": number_fix["after"]} if number_fix else {}),
         "citations": citations,
         "exemplar_leaks": fact_check.exemplar_leaks(
             final, [json.dumps(e.get("sections", {}), ensure_ascii=False) for e in style_examples]
@@ -178,6 +196,7 @@ def write_single_paper(
     with open(osp.join(base_dir, "paper.md"), "w", encoding="utf-8") as f:
         f.write(final)
     with open(osp.join(base_dir, "facts_check.json"), "w", encoding="utf-8") as f:
-        json.dump({"summary": summary, "facts": results, "repairs": attempts}, f, indent=2, ensure_ascii=False)
+        json.dump({"summary": summary, "facts": results, "repairs": attempts,
+                   **({"number_repair": number_fix} if number_fix else {})}, f, indent=2, ensure_ascii=False)
     lm.log({"event": "check", "stage": "final", **summary})
     return summary

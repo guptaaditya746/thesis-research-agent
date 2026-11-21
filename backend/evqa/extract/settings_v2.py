@@ -7,6 +7,8 @@ import dspy
 from pydantic import BaseModel, Field
 from evqa.contracts import Dimension, Row, Setting, SettingSet
 from evqa.extract import anchor
+from evqa.extract.prompt import field_first
+from evqa.llm import service_failed
 
 
 class DraftSetting(BaseModel):
@@ -40,11 +42,14 @@ class ReadSettings(dspy.Signature):
     ML: dimensions [{"key":"dataset"}], text "The dataset was not reported." ->
     [{"settings":[{"dimension":"dataset","value":"not stated","quote":"","source":"paper"}]}].
     """
-    dimensions: str = dspy.InputField()
-    context: str = dspy.InputField()
+    context: str = dspy.InputField()        # paper text first, question last: vLLM prefix caching reuses the paper
     passages: str = dspy.InputField()
+    dimensions: str = dspy.InputField()
     feedback: str = dspy.InputField()
     setting_sets: list[DraftSet] = dspy.OutputField()
+
+
+ReadSettingsV1 = field_first(ReadSettings, "dimensions")   # predecessor (before 21 Nov 2026): dimensions first
 
 
 class SettingVerdict(BaseModel):
@@ -178,6 +183,8 @@ def read(paper: str, dimensions: list[Dimension], context: str, passages: str, t
                                             "verdicts": [v.model_dump() for v in verdicts]}
                         failures = [f"{k}: verifier did not support value" for k, _ in candidates if not by_id[k]]
                     except Exception as exc:
+                        if service_failed(exc):
+                            raise
                         step["verifier"] = step["verifier"] or {"candidates": [{"id": k, **v.model_dump()}
                                                                               for k, v in candidates], "verdicts": []}
                         step["error"] = f"verifier: {type(exc).__name__}: {exc}"[:500]
@@ -193,6 +200,8 @@ def read(paper: str, dimensions: list[Dimension], context: str, passages: str, t
                     return result
             feedback = "Rejected output: " + json.dumps([d.model_dump() for d in drafts]) + "\nFailed checks: " + "; ".join(failures)
         except Exception as exc:
+            if service_failed(exc):
+                raise
             step["error"] = f"{type(exc).__name__}: {exc}"[:500]
             feedback = f"Unreadable output: {type(exc).__name__}"
     return result or [SettingSet(id=f"{paper}/setting1", paper=paper,
@@ -221,8 +230,9 @@ def assign(row: Row, sets: list[SettingSet], section: str, lm: dspy.BaseLM) -> N
                 out = dspy.Predict(SelectSetting)(setting_sets=json.dumps([s.model_dump() for s in sets]),
                     row_quote=row.quote, section=section)
             picked = next((s for s in sets if s.id == out.setting_id.strip()), None)
-        except Exception:
-            pass
+        except Exception as exc:
+            if service_failed(exc):
+                raise
     if picked is None:
         row.note = "; ".join(filter(None, (row.note, "setting set could not be assigned")))
         return

@@ -1,0 +1,1 @@
+Frozen on 2026-11-21: the paper.md files of this domain are the benchmark set; their questions, gold and L0 spans point into them. `evqa paper write medical` refuses while this file exists (--force overrides).

@@ -260,6 +260,70 @@ def unsupported_numbers(md: str, *allowed_texts: str) -> list[str]:
     return sorted(out)
 
 
+# Added 21 Nov 2026 (VENDORED.md, C9): one bounded repair of unsupported numbers, prompt versions v2 / v2r only.
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z(\"'])")
+
+
+def number_sentences(md: str, *allowed_texts: str) -> list[dict[str, Any]]:
+    """[{id, sentence, numbers}]: every distinct sentence (a table row counts as one) that holds a number found in
+    none of the input texts (same rule as unsupported_numbers). Headings are skipped."""
+    out: list[dict[str, Any]] = []
+    for line in md.splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        for piece in [s] if s.startswith("|") else SENTENCE_END.split(s):
+            nums = unsupported_numbers(piece, *allowed_texts)
+            if nums and all(piece != o["sentence"] for o in out):
+                out.append({"id": len(out) + 1, "sentence": piece, "numbers": nums})
+    return out
+
+
+def check_number_fix(item: dict[str, Any], new: str) -> str | None:
+    """Why `new` may not replace item["sentence"], or None. Accepted: no flagged number and no number that the old
+    sentence did not have; a table row stays a row with the same number of cells; "" deletes a prose sentence."""
+    old = item["sentence"]
+    if old.startswith("|") and (not new.strip().startswith("|") or new.count("|") != old.count("|")):
+        return "a table row must stay a row with the same cells"
+    keep = {m.group(0).lstrip("+-−") for m in NUMBER.finditer(old)} - {n.lstrip("+-−") for n in item["numbers"]}
+    bad = sorted({m.group(0) for m in NUMBER.finditer(new) if m.group(0).lstrip("+-−") not in keep})
+    return f"flagged or new numbers: {bad}" if bad else None
+
+
+NumberRepairFn = Callable[[list[dict[str, Any]]], dict[int, str]]
+
+
+def number_repair(md: str, allowed_texts: list[str], facts: list[dict[str, str]],
+                  repair: NumberRepairFn) -> tuple[str, dict[str, Any]]:
+    """ONE repair call for the unsupported numbers: it gets every flagged sentence and returns a replacement per id.
+    Code keeps a replacement only if check_number_fix passes, and keeps the whole repair only if no value fact
+    that passed before now fails. No second round. Returns (paper, entry); entry["after"] = what is still
+    unsupported (the caller records it as unsupported_numbers_after_repair)."""
+    items = number_sentences(md, *allowed_texts)
+    entry: dict[str, Any] = {"items": items, "error": None, "fixes": [], "newly_broken": [], "accepted": False}
+    if not items:
+        entry["after"] = unsupported_numbers(md, *allowed_texts)
+        return md, entry
+    try:
+        got = repair(items)
+    except Exception as e:  # a failed repair call keeps the paper as it was
+        got, entry["error"] = {}, f"{type(e).__name__}: {e}"
+    by_id = {i["id"]: i for i in items}
+    new_md = md
+    for fid, new in got.items():
+        why = "unknown id" if fid not in by_id else check_number_fix(by_id[fid], new)
+        entry["fixes"].append({"id": fid, "sentence": new, "rejected": why})
+        if why is None:
+            old = by_id[fid]["sentence"]
+            new_md = new_md.replace(old + " ", "").replace(old, "") if not new.strip() else new_md.replace(old, new)
+    ok_before = {r["id"] for r in check_facts(md, facts) if r["ok"]}
+    entry["newly_broken"] = sorted(r["id"] for r in check_facts(new_md, facts) if not r["ok"] and r["id"] in ok_before)
+    entry["accepted"] = new_md != md and not entry["newly_broken"]
+    final = new_md if entry["accepted"] else md
+    entry["after"] = unsupported_numbers(final, *allowed_texts)
+    return final, entry
+
+
 def exemplar_leaks(md: str, exemplar_texts: list[str], brief_texts: list[str], names: list[str] = ()) -> dict:
     """What the paper took from a style example: numbers that occur in an example but in no brief text, and
     example drug names (`names`) that the paper uses. Both lists should be empty."""

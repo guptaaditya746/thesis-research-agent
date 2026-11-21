@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 
 from evqa.contracts import QUESTION, Dimension, Link, LinkConfig, Row, RunConfig, Setting, SettingSet, Spec
 from evqa.extract import anchor
+from evqa.llm import service_failed
 
 log = logging.getLogger(__name__)
 NOT_STATED = "not stated"
@@ -201,6 +202,8 @@ def judge(a: SettingSet, b: SettingSet, dims: list[Dimension], question: str, lm
             draft = out.link if isinstance(out.link, LinkDraft) else LinkDraft.model_validate(out.link)
             fails = check(draft, a, b, dims, question)
         except Exception as exc:   # noqa: BLE001 - an unreadable reply is one failed attempt
+            if service_failed(exc):
+                raise
             draft, fails = None, [f"unreadable reply: {type(exc).__name__}"]
         if not fails:
             break
@@ -221,6 +224,8 @@ def judge(a: SettingSet, b: SettingSet, dims: list[Dimension], question: str, lm
         ver = out.verdict if isinstance(out.verdict, VerifyVerdict) else VerifyVerdict.model_validate(out.verdict)
         link.verifier = ver.verdict
     except Exception as exc:   # noqa: BLE001
+        if service_failed(exc):
+            raise
         link.verdict, link.note = "unknown", f"verifier failed: {type(exc).__name__}"
         return link
     if ver.verdict == draft.verdict:

@@ -12,13 +12,15 @@ PROMPT_SETS = {
     "v2": {"literature": writer_v2.literature_stub_writer_prompt_v2,
            "section": writer_v2.section_writing_agent_prompt_v2,
            "refine": content_refinement_agent_system_prompt + "\n" + writer_v2.REFINE_STYLE_V2,
-           "guidelines": "guidelines_v2.md", "style": True},
+           "guidelines": "guidelines_v2.md", "style": True,
+           "number_repair": writer_v2.NUMBER_REPAIR_V2},      # C9: one repair call for unsupported numbers
     # C8: v2 + references from the research tool; only the citation rules differ from v2
     "v2r": {"literature": writer_v2.literature_stub_writer_prompt_v2r,
             "section": writer_v2.section_writing_agent_prompt_v2r,
             "refine": (content_refinement_agent_system_prompt + "\n" + writer_v2.REFINE_STYLE_V2).replace(
                 "\n" + writer_v2.NO_CITATION_PROMPT, "\n" + writer_v2.CITATION_KEEP_V2R),
-            "guidelines": "guidelines_v2.md", "style": True, "references": True},
+            "guidelines": "guidelines_v2.md", "style": True, "references": True,
+            "number_repair": writer_v2.NUMBER_REPAIR_V2},
 }
 
 

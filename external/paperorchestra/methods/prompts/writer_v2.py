@@ -157,3 +157,43 @@ def references_block(refs: list) -> list:
     """The 'references' input for the model: no abstracts, only a one-line gist (fewer numbers to copy)."""
     return [{"first_author": r["first_author"], "year": r["year"], "venue": r.get("venue") or "",
              "title": r["title"], "gist": r.get("gist") or ""} for r in refs]
+
+
+# Added 21 Nov 2026 (VENDORED.md, C9): one bounded repair call for numbers that occur in no input text
+# (fact_check.unsupported_numbers). Used by v2 and v2r only; v1 makes no such call.
+NUMBER_REPAIR_V2 = """Task: Rewrite each listed sentence of a paper so that it no longer holds the flagged numbers.
+
+INPUT 'items': a JSON list. Each item has
+- "id": the item number;
+- "sentence": one sentence of the paper, or one Markdown table row (starts and ends with "|");
+- "numbers": the numbers in it that occur in no input text (idea.md, experimental_log.md). They are not facts of
+  this study, so they must go.
+
+OUTPUT (JSON matching the schema): "fixes", one entry per item: {"id": <item id>, "sentence": <new text>}.
+
+RULES (code checks every fix; a fix that breaks a rule is thrown away):
+1. Remove each flagged number, or replace it with words that hold no number. Never put in another number.
+2. Keep every other number of the sentence exactly as written (same digits, sign and unit).
+3. Keep the meaning that does not depend on the flagged number. Keep the sentence's language and tone.
+4. A table row stays a table row with the same number of "|" cells; write "not reported" in a cell whose number
+   you remove.
+5. When nothing true remains without the number, return "" for that sentence (a table row may not be "").
+
+EXAMPLES
+- Normal. {"id": 1, "sentence": "A total of 312 patients were randomised to Drug X or placebo.", "numbers": ["312"]}
+  -> {"id": 1, "sentence": "Patients were randomised to Drug X or placebo."}
+- Confusing (a correct value next to an invented interval). {"id": 2, "sentence": "HbA1c fell by -0.57 pp
+  (95% CI -0.71 to -0.43).", "numbers": ["-0.71", "-0.43"]} -> {"id": 2, "sentence": "HbA1c fell by -0.57 pp."}
+  Wrong: dropping -0.57, or writing "about -0.7".
+- Table row. {"id": 3, "sentence": "| Placebo | 120 | -0.10 |", "numbers": ["120"]}
+  -> {"id": 3, "sentence": "| Placebo | not reported | -0.10 |"}
+- Nothing left. {"id": 4, "sentence": "Retention was 94% at week 24.", "numbers": ["94"]} where the inputs give
+  no retention figure -> {"id": 4, "sentence": ""}
+"""
+
+
+def number_repair_schema() -> dict:
+    fix = {"type": "object", "properties": {"id": {"type": "integer"}, "sentence": {"type": "string"}},
+           "required": ["id", "sentence"], "additionalProperties": False}
+    return {"type": "object", "properties": {"fixes": {"type": "array", "items": fix}}, "required": ["fixes"],
+            "additionalProperties": False}

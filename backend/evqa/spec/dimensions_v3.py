@@ -13,6 +13,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 from evqa.contracts import Dimension
+from evqa.llm import service_failed
 
 ROW_FIELDS = ("dose", "time_point")    # Row fields (contracts.Row) every value row carries itself
 
@@ -87,6 +88,8 @@ def select(question: str, lm: dspy.BaseLM) -> list[Dimension]:
                 return accepted
             feedback = "Failed checks: " + "; ".join(failures)
         except Exception as exc:
+            if service_failed(exc):
+                raise
             feedback = f"Output unreadable: {type(exc).__name__}"
     return accepted
 

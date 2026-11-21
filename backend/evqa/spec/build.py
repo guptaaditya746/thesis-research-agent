@@ -26,6 +26,7 @@ from typing import Any
 import dspy
 
 from evqa.contracts import Name, OpenPoint, RunConfig, Spec
+from evqa.llm import service_failed
 from evqa.lm import make_lm
 from evqa.spec import prompts as P
 from evqa.spec.dimensions_v3 import ReadQuestionCore, select as select_dimensions
@@ -72,7 +73,7 @@ def _predict(sig: type[dspy.Signature], **inputs: Any) -> dspy.Prediction:
         try:
             return dspy.Predict(sig)(**inputs, config={"attempt": attempt} if attempt else {})
         except Exception as e:   # noqa: BLE001 - DSPy raises several parse error types
-            if attempt == ATTEMPTS - 1:
+            if attempt == ATTEMPTS - 1 or service_failed(e):
                 raise
             log.warning("spec: %s attempt %d did not parse (%s); asking again", sig.__name__, attempt,
                         str(e).splitlines()[0])

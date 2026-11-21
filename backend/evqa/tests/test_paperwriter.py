@@ -59,6 +59,9 @@ elif "Overall" in props:
 elif "worklog" in props:  # refinement: returns the paper unchanged (taken from the prompt)
     paper = user.split("--- CURRENT PAPER (paper.md) ---", 1)[1].split("INSTRUCTION:", 1)[0].strip()
     out = {"worklog": {"addressed_weaknesses": [], "integrated_answers": [], "actions_taken": []}, "markdown": paper}
+elif "fixes" in props:  # number repair (v2): deletes each flagged sentence, keeps table rows as they are
+    items = json.loads(user.split("'items':\n", 1)[1])
+    out = {"fixes": [{"id": i["id"], "sentence": i["sentence"] if i["sentence"].startswith("|") else ""} for i in items]}
 elif system.startswith("Task: Fix one section"):  # repair: writes every failed value into a sentence
     failed = json.loads(user.split("'failed_values':", 1)[1].split("'section':", 1)[0])
     section = user.split("'section':\n", 1)[1]
@@ -67,6 +70,7 @@ else:  # section writing: every table fact in a table, every sentence fact in a 
     drop = os.environ.get("FAKE_DROP", "")
     tab = [f["value"] for f in facts if f["placement"] == "table" and f["id"] != drop]
     txt = " ".join(f"It changed by {f['value']} {f['unit']}." for f in facts if f["placement"] == "text" and f["id"] != drop)
+    txt += os.environ.get("FAKE_EXTRA", "")   # e.g. an invented number for the v2 number repair
     related = ("## 2. Related Work\n\n" + os.environ["FAKE_RELATED"] + "\n\n") if os.environ.get("FAKE_RELATED") else ""
     out = {"markdown": "# Paper\n\n## Abstract\n\nA.\n\n## 1. Introduction\n\nIntro text.\n\n" + related + "## 4. Results\n\n"
                        + table(tab) + "\n" + txt + "\n\n## 6. Conclusion\n\nDone.\n"}

@@ -5,6 +5,7 @@ import re
 import dspy
 from pydantic import BaseModel
 from evqa.contracts import Dimension
+from evqa.llm import service_failed
 
 
 class DraftDimension(BaseModel):
@@ -68,6 +69,8 @@ def select(question: str, lm: dspy.BaseLM) -> list[Dimension]:
                 return accepted
             feedback = "Failed checks: " + "; ".join(failures)
         except Exception as exc:
+            if service_failed(exc):
+                raise
             feedback = f"Output unreadable: {type(exc).__name__}"
     return accepted
 

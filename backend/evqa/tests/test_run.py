@@ -165,3 +165,44 @@ def test_dataset_questions_carry_only_allowed_keys() -> None:
         for q in corpus.questions("medical", split):
             assert set(q) == set(corpus.QUESTION_KEYS)
             assert all(set(c) <= set(corpus.CARD_KEYS) for c in q["intent_card"])
+
+
+def test_manifest_is_written_and_changed_code_stops_a_resume(stubs, tmp_path, monkeypatch) -> None:
+    cfg = RunConfig(name="t", questions=["Q1"])
+    out = runner.run(cfg, root=tmp_path / "runs")
+    first = json.loads((out / "manifest.json").read_text())
+    assert first["code_hash"] == runner.code_hash() and set(first) == {"git_sha", "git_dirty", "code_hash"}
+    runner.run(cfg, root=tmp_path / "runs")                                  # same code: resumes
+    monkeypatch.setattr(runner, "code_hash", lambda dirs=None: "other")
+    monkeypatch.delenv("EVQA_ALLOW_CODE_CHANGE", raising=False)
+    with pytest.raises(RuntimeError, match="code changed"):
+        runner.run(cfg, root=tmp_path / "runs")
+    monkeypatch.setenv("EVQA_ALLOW_CODE_CHANGE", "1")
+    assert runner.run(cfg, root=tmp_path / "runs").name == cfg.run_id()      # run id unchanged
+    assert any(e["data"].get("message") == "code changed" for e in events(out))
+    assert json.loads((out / "manifest.json").read_text()) == first          # the first start stays on record
+
+
+def test_manifest_without_git(stubs, tmp_path, monkeypatch) -> None:
+    def no_git(*a, **k):
+        raise FileNotFoundError("git")
+    monkeypatch.setattr(runner.subprocess, "run", no_git)
+    out = runner.run(RunConfig(name="t", questions=["Q1"]), root=tmp_path / "runs")
+    m = json.loads((out / "manifest.json").read_text())
+    assert m["git_sha"] is None and m["git_dirty"] is None and len(m["code_hash"]) == 64
+
+
+def test_step_end_event_carries_token_counts(stubs, tmp_path, monkeypatch) -> None:
+    def spec_with_tokens(q, cfg):
+        m = lm.make_lm(RunConfig().llm, ask=lambda t: lm._reply(json.dumps({"y": "hi"}),
+                                                                 {"prompt_tokens": 11, "completion_tokens": 2}))
+        with dspy.context(lm=m, adapter=dspy.JSONAdapter()):
+            dspy.Predict(Sig)(x="tokens")
+        return Spec(qid=q["qid"], question=q["question"], type="lookup", subjects=[Name(label="d")],
+                    measure=Name(label="m")).seal()
+    steps = {"spec": spec_with_tokens}
+    old = runner._step
+    monkeypatch.setattr(runner, "_step", lambda name: steps.get(name) or old(name))
+    out = runner.run(RunConfig(name="t", questions=["Q1"]), root=tmp_path / "runs")
+    end = next(e for e in events(out) if e["step"] == "spec" and e["kind"] == "end")
+    assert end["data"]["llm"]["prompt_tokens"] == 11 and end["data"]["llm"]["completion_tokens"] == 2

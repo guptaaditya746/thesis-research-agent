@@ -7,10 +7,12 @@ every output can be traced. At most `MAX_WORKERS` calls run at once (Aditya, 20 
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import subprocess
 import tempfile
 import time
+import urllib.error
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Protocol, TypeVar
@@ -26,6 +28,21 @@ R = TypeVar("R")
 
 class LLMError(RuntimeError):
     pass
+
+
+class ServiceError(LLMError):
+    """The model service failed (no reply, or a reply that is not the service's JSON): not the model's answer."""
+
+
+def service_failed(exc: BaseException) -> bool:
+    """True when `exc` means the model service failed (connection, timeout, HTTP error, `claude` failed), not that
+    the model's reply did not parse. A step must then fail (run.py redoes the question on resume), not skip the
+    input: a skip would leave a short output file that a rerun takes as done. HTTP 400 and 413 stay a bad input
+    (e.g. one passage too long for the model), so that one input is skipped as before."""
+    from dspy.utils.exceptions import LMError
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code not in (400, 413)
+    return isinstance(exc, (OSError, http.client.HTTPException, subprocess.SubprocessError, LLMError, LMError))
 
 
 class JsonLM(Protocol):

@@ -1,10 +1,10 @@
 """The one LLM task of Extract: read one passage and write one row per reported value of the asked measure.
 
 Contract (docs/prompt-writing.md):
-  in   question_spec  what is asked, as plain lines made by code from the Spec (subjects, comparator, measure,
-                      fixed slots, open columns)
-       paper_context  the paper's title and abstract (who the patients are is usually stated there, not in Results)
+  in   paper_context  the paper's title and abstract (who the patients are is usually stated there, not in Results)
        passage        the marked passage (a table or text) to read
+       question_spec  what is asked, as plain lines made by code from the Spec (subjects, comparator, measure,
+                      fixed slots, open columns)
   out  rows           list of RowDraft; [] when the passage reports no value of the measure for the subjects
   accepted by code    quote anchored in paper.md and holding the value (quote_ok); subject and measure in the spec
                       (else the row is kept with a `dropped` reason); value read by norm.py, never by the model.
@@ -13,6 +13,11 @@ from __future__ import annotations
 
 import dspy
 from pydantic import BaseModel, Field
+
+# v2 (21 Nov 2026): inputs in the order paper_context, passage, question_spec, so the part shared by many calls
+# (instructions, then the paper) comes first and vLLM prefix caching can reuse it. Same words as v1; the new order
+# changes the prompt text, so Extract's LLM cache misses once. v1 (question_spec first) is kept as ExtractRowsV1.
+PROMPT_VERSION = "extract-rows-v2"
 
 
 class RowDraft(BaseModel):
@@ -51,8 +56,16 @@ class ExtractRows(dspy.Signature):
     quote "| 10 mg daily | week 8 | −6.1 |"; no row for heart rate.
     Example (nothing to extract): passage "Blood pressure was measured with a validated cuff at each visit." ->
     rows []."""
-    question_spec: str = dspy.InputField(desc="what the question asks: subjects, comparator, measure, fixed slots")
     paper_context: str = dspy.InputField(desc="title and abstract of the paper")
     passage: str = dspy.InputField(desc="the passage to read (text or a Markdown table)")
+    question_spec: str = dspy.InputField(desc="what the question asks: subjects, comparator, measure, fixed slots")
     rows: list[RowDraft] = dspy.OutputField(desc="one row per value; [] when there is none")
 
+
+def field_first(sig: type[dspy.Signature], name: str) -> type[dspy.Signature]:
+    """The same signature (instructions and fields) with field `name` moved to the front."""
+    order = [name, *(n for n in sig.fields if n != name)]
+    return dspy.Signature({n: (sig.fields[n].annotation, sig.fields[n]) for n in order}, sig.instructions)
+
+
+ExtractRowsV1 = field_first(ExtractRows, "question_spec")   # the predecessor (v1 field order)

@@ -5,7 +5,7 @@
 * `evqa paper write ... --model qwen:orch-model --prompt-version v2` reaches write_domain with those settings;
 * the S2 research tool: shared throttle, 429 retry, cache keyed by URL without the key, CC BY / CC0 filter, and
   a query that never names the brief's made-up drug;
-* the v2 number audit (unsupported_numbers, exemplar_leaks).
+* the v2 number audit (unsupported_numbers, exemplar_leaks) and its one bounded repair call (v1: none).
 """
 from __future__ import annotations
 
@@ -117,7 +117,8 @@ def test_cli_passes_model_and_prompt_version(monkeypatch):
     got = {}
     monkeypatch.setattr(paperwriter, "write_domain", lambda domain, paper, **kw: got.update(domain=domain, **kw)
                         or [{"paper": "P", "status": "ok"}])
-    assert cli.main(["paper", "write", "medical", "--model", "qwen:orch-model", "--prompt-version", "v2"]) == 0
+    assert cli.main(["paper", "write", "medical", "--model", "qwen:orch-model", "--prompt-version", "v2",
+                     "--force"]) == 0
     assert got == {"domain": "medical", "model": "qwen:orch-model", "prompt_version": "v2"}
 
 
@@ -199,3 +200,67 @@ def test_unsupported_numbers_and_exemplar_leaks():
     leaks = fc.exemplar_leaks(paper + " realdrugin", ["701 patients, 0.83% (95% CI 0.71 to 0.95)"], [brief],
                               ["realdrugin"])
     assert leaks == {"numbers": ["0.83", "701"], "names": ["realdrugin"]}
+
+
+# ---------- v2 number repair (one bounded call; v1 makes none) ----------
+
+def test_number_repair_validates_each_fix_and_records_what_is_left():
+    brief = "Value -0.57 pp at week 24. Value -0.46 pp."
+    facts = [{"id": "R-1", "value": "-0.57", "unit": "pp", "placement": "text"}]
+    paper = ("## 4. Results\n\nHbA1c fell by -0.57 pp (95% CI -0.71 to -0.43). A total of 312 patients took part. "
+             "Retention was 94%.\n\n| Arm | N | Change (pp) |\n|---|---|---|\n| Placebo | 120 | -0.46 |\n")
+    items = fc.number_sentences(paper, brief)
+    assert [(i["id"], i["numbers"]) for i in items] == [(1, ["-0.43", "-0.71", "95"]), (2, ["312"]), (3, ["94"]),
+                                                       (4, ["120"])]
+    calls = []
+
+    def repair(got):
+        calls.append(got)
+        return {1: "HbA1c fell by -0.57 pp.", 2: "Patients took part in 3 centres.",   # 2 adds a number: rejected
+                3: "", 4: "| Placebo | -0.46 |", 9: "x"}                              # 4 drops a cell: rejected
+    out, entry = fc.number_repair(paper, [brief], facts, repair)
+    assert len(calls) == 1 and entry["accepted"] and entry["newly_broken"] == []
+    assert [f["id"] for f in entry["fixes"] if f["rejected"] is None] == [1, 3]
+    assert "-0.71" not in out and "94%" not in out and "312 patients" in out and "| 120 |" in out
+    assert entry["after"] == ["120", "312"]
+
+
+def test_number_repair_keeps_paper_when_a_fact_breaks_or_the_call_fails():
+    brief, facts = "-0.57 pp", [{"id": "R-1", "value": "-0.57", "unit": "pp", "placement": "text"}]
+    paper = "## 4. Results\n\nHbA1c fell by -0.57 pp in 312 patients.\n"
+    out, entry = fc.number_repair(paper, [brief], facts, lambda items: {1: ""})       # deletes the fact sentence
+    assert out == paper and not entry["accepted"] and entry["newly_broken"] == ["R-1"] and entry["after"] == ["312"]
+
+    def boom(items):
+        raise TimeoutError("slow")
+    out, entry = fc.number_repair(paper, [brief], facts, boom)
+    assert out == paper and entry["error"].startswith("TimeoutError") and entry["after"] == ["312"]
+    clean = "## 4. Results\n\nHbA1c fell by -0.57 pp.\n"
+    assert fc.number_repair(clean, [brief], facts, boom)[1]["items"] == []           # nothing flagged: no call
+
+
+def test_v2_runs_one_number_repair_and_v1_none(tmp_path, fake_gateway, monkeypatch):
+    facts = [{"id": "R-med-01-01", "value": "-0.46", "unit": "pp", "placement": "table"},
+             {"id": "R-med-01-02", "value": "-0.57", "unit": "pp", "placement": "text"}]
+    monkeypatch.setenv("FAKE_FACTS", json.dumps(facts))
+    monkeypatch.setenv("FAKE_EXTRA", " A total of 312 patients took part.")
+    d = _brief(tmp_path, facts)
+    monkeypatch.setattr(paperwriter, "CACHE", tmp_path / "cache")
+    monkeypatch.setattr(paperwriter, "WORK", tmp_path / "work")
+
+    paper = paperwriter.write_paper(d, model="qwen:orch-model", prompt_version="v2", style_examples=STYLE_EX)
+    assert "312" not in paper.read_text() and "-0.57 pp" in paper.read_text()
+    log = [json.loads(x) for x in (d / "writer_log.jsonl").read_text().splitlines()]
+    assert sum(r.get("step") == "repair:numbers" for r in log if r["event"] == "call") == 1
+    final = next(r for r in log if r.get("stage") == "final")
+    assert final["unsupported_numbers_before_repair"] == ["312"] and final["unsupported_numbers_after_repair"] == []
+    check = json.loads((paperwriter.work_dir(d) / "facts_check.json").read_text())
+    assert check["number_repair"]["accepted"] and check["summary"]["unsupported_numbers"] == []
+
+    n_calls = len(fake_gateway)
+    paperwriter.write_paper(d, model="qwen:orch-model")                       # v1: no number repair call
+    log = [json.loads(x) for x in (d / "writer_log.jsonl").read_text().splitlines()]
+    assert not any(r.get("step") == "repair:numbers" for r in log)
+    final = next(r for r in log if r.get("stage") == "final")
+    assert "unsupported_numbers_after_repair" not in final and final["unsupported_numbers"] == ["312"]
+    assert not any("'items':" in s["user"] for s in fake_gateway[n_calls:])

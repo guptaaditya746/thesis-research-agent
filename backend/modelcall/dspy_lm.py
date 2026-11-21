@@ -7,7 +7,10 @@ makes no new model call and gets the same outputs. DSPy's own disk and memory ca
 depends only on our recorder, never on ~/.dspy_cache.
 
 Without `cache` nothing is recorded: production must pass one. `attempt` (a call setting, default 0) is part of the
-key, so a retry after an unparseable reply is a new recorded call and the bad reply stays on file."""
+key, so a retry after an unparseable reply is a new recorded call and the bad reply stays on file. `model_revision`
+(optional: which weights serve the alias) joins the key only when set, so keys made without it still hit.
+An `ask` may return a `str` with a `usage` dict attribute (token counts); it is stored in the record and returned as
+the response usage, never part of the key or the text."""
 from __future__ import annotations
 
 import json
@@ -33,7 +36,7 @@ class RecordedLM(dspy.BaseLM):
     then keys on the retry number and the call settings too, so a retry is a new recorded call."""
 
     def __init__(self, alias: str, ask: Callable[..., str], cache: JsonlCache | None = None, *, with_call: bool = False,
-                 on_bad: Callable[..., None] | None = None, **kwargs: Any) -> None:
+                 on_bad: Callable[..., None] | None = None, model_revision: str | None = None, **kwargs: Any) -> None:
         super().__init__(model=alias, model_type="chat", cache=False, **kwargs)
         self.alias = alias
         self._ask = ask
@@ -42,6 +45,7 @@ class RecordedLM(dspy.BaseLM):
         # on_bad(text, attempt=..., settings=...): told when the reply of the last call did not parse (`bad_reply`)
         self._on_bad = on_bad
         self._last = threading.local()
+        self.model_revision = model_revision   # in the cache key only when set (old keys stay the same)
 
     def bad_reply(self) -> None:
         """The reply of this thread's last call did not parse: tell `on_bad` (the engine marks the recorded call, so
@@ -63,17 +67,24 @@ class RecordedLM(dspy.BaseLM):
         msgs = messages if messages is not None else [{"role": "user", "content": prompt or ""}]
         settings = {k: v for k, v in {**self.kwargs, **kwargs}.items() if not k.startswith("api_") and k != "cache"}
         attempt = settings.pop("attempt", 0)
-        key = cache_key({"alias": self.alias, "messages": msgs, "attempt": attempt,
-                         "settings": json.loads(json.dumps(settings, default=repr))})
+        payload = {"alias": self.alias, "messages": msgs, "attempt": attempt,
+                   "settings": json.loads(json.dumps(settings, default=repr))}
+        if self.model_revision:
+            payload["model_revision"] = self.model_revision
+        key = cache_key(payload)
         hit = self._recorder.get(key) if self._recorder is not None else None
         self._last.call = (render(msgs), attempt, json.loads(json.dumps(settings, default=repr)))
         if hit is not None:
-            text = hit["output"]
+            text, usage = hit["output"], dict(hit.get("usage") or {})
         else:
-            text = (self._ask(render(msgs), attempt=attempt, settings=json.loads(json.dumps(settings, default=repr)))
-                    if self._with_call else self._ask(render(msgs)))
+            reply = (self._ask(render(msgs), attempt=attempt, settings=json.loads(json.dumps(settings, default=repr)))
+                     if self._with_call else self._ask(render(msgs)))
+            text, usage = str(reply), dict(getattr(reply, "usage", None) or {})
             if self._recorder is not None:
-                self._recorder.put(key, {"output": text, "model": self.alias, "messages": msgs})
+                record = {"output": text, "model": self.alias, "messages": msgs}
+                if usage:
+                    record["usage"] = usage
+                self._recorder.put(key, record)
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text, tool_calls=None),
                                                         finish_reason="stop")],
-                               usage={}, model=self.alias, cache_hit=hit is not None)
+                               usage=usage, model=self.alias, cache_hit=hit is not None)

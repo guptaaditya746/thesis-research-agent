@@ -14,7 +14,10 @@ from typing import Literal
 import dspy
 from pydantic import BaseModel
 
-PROMPTS_VERSION = "find-prompts-v2"
+# v3 (21 Nov 2026): ScreenPaper and MarkPassages take the paper first and the spec last, so vLLM prefix caching
+# reuses the paper part across questions. Same words as v2; the v2 field order is kept as ScreenPaperV2 and
+# MarkPassagesV2 (defined at the end). The changed prompt text makes the LLM cache miss once for these calls.
+PROMPTS_VERSION = "find-prompts-v3"
 
 
 class ScreenPaper(dspy.Signature):
@@ -39,10 +42,10 @@ class ScreenPaper(dspy.Signature):
     Example: spec fixes time point "24 weeks"; paper on drugA reports HbA1c only at weeks 36 and 52 -> no,
     "drugA HbA1c only at weeks 36 and 52, spec fixes 24 weeks".
     Example: spec subject "drugA"; abstract names drugA but does not say which measures were taken -> unsure."""
-    spec: str = dspy.InputField(desc="the question's spec in plain text")
     title: str = dspy.InputField()
     abstract: str = dspy.InputField()
     passages: str = dspy.InputField(desc="passages of the paper that the search matched")
+    spec: str = dspy.InputField(desc="the question's spec in plain text")
     decision: Literal["yes", "no", "unsure"] = dspy.OutputField()
     reason: str = dspy.OutputField(desc="one short line")
 
@@ -82,8 +85,8 @@ class MarkPassages(dspy.Signature):
     patient group -> {"id": 3, "role": "context", "quote": "Adults with newly diagnosed type 2 diabetes",
     "subjects": [], "columns": ["patient group"]}.
     Example: a table of body weight when the measure is HbA1c -> not marked."""
-    spec: str = dspy.InputField(desc="the question's spec in plain text")
     passages: str = dspy.InputField(desc="numbered passages of one paper")
+    spec: str = dspy.InputField(desc="the question's spec in plain text")
     marks: list[Mark] = dspy.OutputField(desc="one entry per useful passage; [] when none")
 
 
@@ -144,3 +147,14 @@ class SearchTerms(dspy.Signature):
     "term": "bodyweight"}]; nothing for zelvoran."""
     spec: str = dspy.InputField(desc="the question's spec in plain text")
     terms: list[Term] = dspy.OutputField(desc="at most 12 {target, term}; [] when none")
+
+
+# ---------------------------------------------------------------- predecessors (find-prompts-v2 field order)
+def _first(sig: type[dspy.Signature], name: str) -> type[dspy.Signature]:
+    """The same signature (instructions and fields) with field `name` moved to the front."""
+    order = [name, *(n for n in sig.fields if n != name)]
+    return dspy.Signature({n: (sig.fields[n].annotation, sig.fields[n]) for n in order}, sig.instructions)
+
+
+ScreenPaperV2 = _first(ScreenPaper, "spec")
+MarkPassagesV2 = _first(MarkPassages, "spec")

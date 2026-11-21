@@ -105,6 +105,14 @@ citation (author + year) against the list; `citation_map.json` holds the cited r
 section with only the cited ones is appended to paper.md (after all checks, so titles of other studies are not
 counted as paper numbers). Reference abstracts count as exemplars for `exemplar_leaks`. v1 and v2 unchanged.
 
+C9 (21 Nov 2026): v2 and v2r only, after the value repair round: ONE repair call for numbers found in no input
+text (`unsupported_numbers`). `fact_check.number_repair` lists each flagged sentence (or table row) with its
+numbers; the prompt `writer_v2.NUMBER_REPAIR_V2` asks for a replacement without them (never a new number; "" deletes
+a sentence). Code keeps a replacement only if it holds no flagged or new number and a table row keeps its cells,
+and keeps the whole repair only if no value fact that passed now fails. No second round; what is left goes to
+`unsupported_numbers_after_repair` in the final check (writer_log) and facts_check.json (`number_repair` entry);
+the paper does not fail. v1 makes no such call (its prompts and cache keys are unchanged).
+
 ## paperfactory changes (21 Nov 2026)
 
 - `methods/paper_writer.py`: the number-fact gate is skipped when the template folder has `genre.json` with

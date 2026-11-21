@@ -57,8 +57,8 @@ def test_qwen_and_claude_adapters_take_shared_slot(monkeypatch):
 
     entered = []
     @contextmanager
-    def fake_slot():
-        entered.append("acquired")
+    def fake_slot(limit=None):
+        entered.append("acquired" if limit in (None, lm.MAX_SLOTS_QWEN) else limit)
         yield
 
     class Response:

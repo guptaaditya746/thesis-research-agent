@@ -4,8 +4,8 @@
 
 Part 1, every run: the eval.json totals per layer and per question type, plus LLM requests / real calls / cache
 hits / tokens / seconds per question (from events.jsonl: the "end" event of each step carries
-`seconds` and `llm = {requests, calls, cache_hits}`, see run.py `_do`). Tokens are not recorded anywhere yet
-(lm.py keeps only the reply text, the LLM cache stores no usage), so they print as "n/a".
+`seconds` and `llm = {requests, calls, cache_hits, prompt_tokens, completion_tokens}`, see run.py `_do`). Tokens =
+prompt + completion tokens of real calls; runs made before lm.py counted them print "n/a".
 
 Part 2, the per-question differences: practice runs only. A run whose config.yaml split is not "practice", or
 whose name (config name or folder name) starts with bench- or holdout-, is left out of part 2, and none of its
@@ -89,8 +89,9 @@ class Run:
                 sums["seconds"] += float(d.get("seconds") or 0)
                 for k in ("requests", "calls", "cache_hits"):
                     sums[k] += float((d.get("llm") or {}).get(k) or 0)
-                if "tokens" in (d.get("llm") or {}):    # not recorded yet (see module doc); used once lm.py counts them
-                    sums["tokens"] += float(d["llm"]["tokens"] or 0)
+                llm = d.get("llm") or {}
+                if "prompt_tokens" in llm or "completion_tokens" in llm:   # older runs have none (module doc)
+                    sums["tokens"] += float(llm.get("prompt_tokens") or 0) + float(llm.get("completion_tokens") or 0)
         n = self.totals().get("questions") or len(qids)
         out: dict[str, Any] = {"n": n}
         for k in ("requests", "calls", "cache_hits", "seconds", "tokens"):
@@ -167,7 +168,7 @@ def report(run_dirs: list[Path]) -> str:
              "Runs: " + ", ".join(f"`{p}`" for p in run_dirs), "",
              "## Totals per layer and per question type", "",
              *totals_table(runs), "",
-             "Tokens: n/a = not recorded (lm.py keeps only the reply text).", "",
+             "Tokens: prompt + completion tokens of real calls; n/a = not recorded (older runs).", "",
              "## Per-question differences (practice runs only)", "",
              *diff_table(runs), ""]
     return "\n".join(lines)

@@ -9,12 +9,18 @@ Event (seconds, output count, LLM requests / real calls / cache hits) to events.
 exists is skipped, so a rerun resumes; after a step that ran, the later steps run again. A failing step logs a "problem" Event and stops that question only.
 Questions run in a pool of QUESTION_WORKERS; LLM calls are capped at 3 at once (EVQA_MAX_CALLS) by evqa.lm anyway.
 closed_book: Find is not called (no papers) and Extract is skipped, so Answer says "not reported".
+manifest.json (written on first start): git commit, dirty flag and a hash of the code (evqa + modelcall sources,
+tests left out). A resume whose code hash differs stops with an error, unless EVQA_ALLOW_CODE_CHANGE=1 (then an
+info Event "code changed" is logged): a run's outputs should all come from the same code.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
+import os
+import subprocess
 import threading
 import time
 import traceback
@@ -31,6 +37,7 @@ from evqa.llm import MAX_WORKERS
 from evqa.paths import REPO
 
 ROOT = REPO / "runs" / "evqa"
+CODE_DIRS = [Path(__file__).resolve().parent, Path(__file__).resolve().parents[1] / "modelcall"]
 QUESTION_WORKERS = MAX_WORKERS     # 3 unless EVQA_MAX_CALLS is set
 _event_lock = threading.Lock()
 
@@ -53,6 +60,50 @@ def _dump(path: Path, out: BaseModel | list[BaseModel]) -> None:
         _write_atomic(path, "".join(m.model_dump_json() + "\n" for m in out))
     else:
         _write_atomic(path, out.model_dump_json(indent=2) + "\n")
+
+
+def code_hash(dirs: list[Path] = CODE_DIRS) -> str:
+    """sha256 over the path and text of every .py file under `dirs` (the prompts and signature docstrings are in
+    them), tests left out."""
+    h = hashlib.sha256()
+    for d in dirs:
+        for f in sorted(d.rglob("*.py")):
+            rel = f.relative_to(d)
+            if "tests" in rel.parts or "__pycache__" in rel.parts:
+                continue
+            h.update(f"{d.name}/{rel.as_posix()}\n".encode())
+            h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def _git(*args: str) -> str | None:
+    """Output of a git command in the repo, or None when git is missing or fails (no repo, shallow clone)."""
+    try:
+        done = subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True, timeout=30, check=True)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return done.stdout.strip()
+
+
+def manifest() -> dict[str, Any]:
+    status = _git("status", "--porcelain")
+    return {"git_sha": _git("rev-parse", "HEAD") or None, "git_dirty": None if status is None else bool(status),
+            "code_hash": code_hash()}
+
+
+def check_manifest(out: Path, events: "Events") -> None:
+    """Write <run>/manifest.json on first start; on resume refuse changed code (module doc)."""
+    path, now = out / "manifest.json", manifest()
+    if not path.is_file():
+        _write_atomic(path, json.dumps(now, indent=2) + "\n")
+        return
+    old = json.loads(path.read_text(encoding="utf-8"))
+    if old.get("code_hash") == now["code_hash"]:
+        return
+    if os.environ.get("EVQA_ALLOW_CODE_CHANGE") != "1":
+        raise RuntimeError(f"{out.name}: the code changed since this run started (code hash {old.get('code_hash')} "
+                           f"-> {now['code_hash']}). Start a new run, or set EVQA_ALLOW_CODE_CHANGE=1 to resume anyway.")
+    events.log("run", "info", message="code changed", old=old, new=now)
 
 
 class Events:
@@ -122,6 +173,7 @@ def run(cfg: RunConfig, *, root: Path = ROOT) -> Path:
     if not conf.is_file():
         _write_atomic(conf, text)
     events = Events(out / "events.jsonl")
+    check_manifest(out, events)
     questions = corpus.questions(cfg.domain, cfg.split)
     if cfg.questions:
         unknown = set(cfg.questions) - {q["qid"] for q in questions}

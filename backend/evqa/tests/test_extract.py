@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from evqa import extract
 from evqa.contracts import FindHit, Name, Passage, RunConfig, Spec
 from evqa.extract import anchor
@@ -121,6 +123,19 @@ def test_bad_reply_is_retried_then_skipped():
     hit = FindHit(paper="P-t", passages=[PASSAGE])
     rows = extract.run(SPEC, [hit], "medical", RunConfig(), lm=RecordedLM("fake", ask), texts={"P-t": PAPER})
     assert rows == [] and len(calls) >= 2
+
+
+def test_a_failed_model_service_fails_the_step_instead_of_skipping_the_passage():
+    # a skipped passage would leave a short rows.jsonl that a rerun takes as done (silent data loss)
+    calls = []
+
+    def ask(prompt):
+        calls.append(prompt)
+        raise ConnectionRefusedError(111, "Connection refused")
+    hit = FindHit(paper="P-t", passages=[PASSAGE])
+    with pytest.raises(ConnectionRefusedError):
+        extract.run(SPEC, [hit], "medical", RunConfig(), lm=RecordedLM("fake", ask), texts={"P-t": PAPER})
+    assert len(calls) == 1   # not asked again as if the reply were bad
 
 
 def test_spec_text_names_fixed_slots_and_columns():

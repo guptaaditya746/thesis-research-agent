@@ -13,16 +13,22 @@ from evqa.paths import CACHE
 # at most 3 model calls at once (Aditya, 20 Nov; Qwen GPU). EVQA_MAX_CALLS raises it for Claude-plan runs
 # (Aditya, 21 Nov: "use 10"); keep 3 for Qwen.
 MAX_SLOTS = int(os.environ.get("EVQA_MAX_CALLS", "3"))
+# EVQA_MAX_CALLS_QWEN raises the cap for Qwen calls only (vLLM serves 3 replicas x 8 sequences = 24); default: the
+# same as EVQA_MAX_CALLS. Qwen calls use slot files 0..MAX_SLOTS_QWEN-1 of the same folder, so a writer call holding
+# slot 0-2 still counts against them.
+MAX_SLOTS_QWEN = int(os.environ.get("EVQA_MAX_CALLS_QWEN") or MAX_SLOTS)
 SLOT_DIR = CACHE / "claude-slots"  # paperwriter uses these exact files for both backends
 
 
 @contextmanager
-def model_slot(directory: Path | None = None, *, poll: float = 0.1) -> Iterator[int]:
-    """Hold one writer-compatible slot until the model call completes or raises."""
+def model_slot(directory: Path | None = None, *, poll: float = 0.1, limit: int | None = None) -> Iterator[int]:
+    """Hold one writer-compatible slot until the model call completes or raises. `limit`: how many slots this
+    kind of call may use (default MAX_SLOTS; Qwen calls pass MAX_SLOTS_QWEN)."""
     directory = SLOT_DIR if directory is None else directory
+    limit = MAX_SLOTS if limit is None else limit
     directory.mkdir(parents=True, exist_ok=True)
     while True:
-        for index in range(MAX_SLOTS):
+        for index in range(limit):
             with (directory / f"slot-{index}.lock").open("a+") as slot:
                 try:
                     fcntl.flock(slot, fcntl.LOCK_EX | fcntl.LOCK_NB)

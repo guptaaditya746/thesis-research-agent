@@ -31,7 +31,7 @@ from pydantic import BaseModel
 
 from evqa import corpus
 from evqa.contracts import FindHit, Passage, RunConfig, Spec
-from evqa.llm import pmap
+from evqa.llm import pmap, service_failed
 from evqa.find import passages as P
 from evqa.find.prompts import PROMPTS_VERSION, MarkPassages, NextSearch, ScreenPaper, SearchTerms
 from evqa.find.search import find_term, rank_passages
@@ -131,6 +131,8 @@ class _Find:
             with dspy.context(lm=self.lm(), adapter=dspy.JSONAdapter()):
                 return dspy.Predict(sig)(**inputs)
         except Exception as e:  # noqa: BLE001 - an unreadable reply is recorded, the run goes on
+            if service_failed(e):   # a failed service is not an unreadable reply: the step fails, resume redoes it
+                raise
             first = " ".join(str(e).split("\n\n")[0].split())
             self.problem(f"{sig.__name__}: {type(e).__name__}: {first[:300]}")
             return None
