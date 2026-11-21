@@ -9,7 +9,13 @@ prompt + completion tokens of real calls; runs made before lm.py counted them pr
 
 Part 2, the per-question differences: practice runs only. A run whose config.yaml split is not "practice", or
 whose name (config name or folder name) starts with bench- or holdout-, is left out of part 2, and none of its
-per-question data is read: from eval.json only "totals" is used, from events.jsonl only sums over all questions.
+per-question data is read: from eval.json only "totals" and "intervals" are used, from events.jsonl only sums over
+all questions.
+
+Noise: every run's l3 row is followed by its 95% interval (eval.json "intervals", made by prism; "n/a" for an
+eval.json written before intervals existed). Part 3, practice runs only: each run's l3 against the first practice
+run, over the questions both scored, with a paired bootstrap interval for the difference (eval/bootstrap.py). When
+that interval contains 0 the report says so: the difference may be chance.
 """
 from __future__ import annotations
 
@@ -23,6 +29,7 @@ from typing import Any
 
 import yaml
 
+from evqa.eval import bootstrap
 from evqa.paths import REPO
 
 LAYERS = ["questions", "answerable", "facts", "l0", "l1", "l2_recall", "l2_precision", "l2_name_ok", "l3",
@@ -42,6 +49,7 @@ class Run:
         self.config: dict[str, Any] = (yaml.safe_load(conf.read_text(encoding="utf-8")) or {}) if conf.is_file() else {}
         self.name = str(self.config.get("name") or path.name)
         self.label = path.name
+        self._questions: dict[str, Any] | None = None
 
     def per_question_allowed(self) -> tuple[bool, str]:
         """Practice runs only. No config.yaml = unknown split = not allowed."""
@@ -59,13 +67,22 @@ class Run:
             return {}
         return json.loads(f.read_text(encoding="utf-8")).get("totals") or {}
 
+    def intervals(self) -> dict[str, Any]:
+        """The run's bootstrap intervals per total (prism.run_intervals); {} for an older eval.json."""
+        f = self.path / "eval.json"
+        if not f.is_file():
+            return {}
+        return json.loads(f.read_text(encoding="utf-8")).get("intervals") or {}
+
     def questions(self) -> dict[str, Any]:
         """Per-question scores; only called after per_question_allowed()."""
         ok, why = self.per_question_allowed()
         if not ok:
             raise PermissionError(f"{self.path}: per-question data refused ({why})")
-        f = self.path / "eval.json"
-        return (json.loads(f.read_text(encoding="utf-8")).get("questions") or {}) if f.is_file() else {}
+        if self._questions is None:   # read once; part 2 and part 3 both use it
+            f = self.path / "eval.json"
+            self._questions = (json.loads(f.read_text(encoding="utf-8")).get("questions") or {}) if f.is_file() else {}
+        return self._questions
 
     def cost(self) -> dict[str, Any]:
         """Sums over every step "end" event (all resumes included) and the run wall time, per question."""
@@ -129,6 +146,9 @@ def totals_table(runs: list[Run]) -> list[str]:
     costs = [r.cost() for r in runs]
     rows: list[list[str]] = [["config", *[r.name for r in runs]], ["split", *[_fmt(r.config.get("split")) for r in runs]]]
     rows += [[k, *[_fmt(t.get(k)) for t in tots]] for k in LAYERS]
+    ivs = [r.intervals().get("l3") for r in runs]
+    at = next(i for i, row in enumerate(rows) if row[0] == "l3") + 1
+    rows.insert(at, ["l3 95% interval", *[_interval(iv) for iv in ivs]])
     rows += [[f"not_reported {k}", *[_fmt(_dig(t, ("not_reported", k))) for t in tots]] for k in NOT_REPORTED]
     types = list(dict.fromkeys(ty for t in tots for ty in (t.get("per_type") or {})))
     for ty in types:
@@ -138,6 +158,45 @@ def totals_table(runs: list[Run]) -> list[str]:
                        ("seconds", "step seconds / q"), ("wall", "wall seconds / q")]:
         rows.append([label, *[_fmt(round(c[key], 2) if c[key] is not None else None) for c in costs]])
     return _table(["", *[r.label for r in runs]], rows)
+
+
+def _interval(iv: list[float] | None, signed: bool = False) -> str:
+    if not iv:
+        return NA
+    f = "{:+.4f}" if signed else "{:.4f}"
+    return f"{f.format(iv[0])} to {f.format(iv[1])}"
+
+
+def paired_l3(base: dict[str, Any], other: dict[str, Any]) -> tuple[float, list[float] | None, int] | None:
+    """Mean l3 difference (other - base) over the questions both runs scored, its paired bootstrap interval and
+    the number of those questions; None when they share no scored question."""
+    common = [q for q in base if q in other and _dig(base[q], ("l3", "score")) is not None
+              and _dig(other[q], ("l3", "score")) is not None and base[q].get("answerable", True)]
+    if not common:
+        return None
+    a = [float(base[q]["l3"]["score"]) for q in common]
+    b = [float(other[q]["l3"]["score"]) for q in common]
+    return round(sum(b) / len(b) - sum(a) / len(a), 4), bootstrap.paired_interval(a, b), len(common)
+
+
+def noise_lines(runs: list[Run]) -> list[str]:
+    """Part 3 (module doc): each practice run's l3 against the first practice run, with a paired interval."""
+    allowed = [r for r in runs if r.per_question_allowed()[0]]
+    if len(allowed) < 2:
+        return ["The paired l3 difference needs at least two practice runs."]
+    base, base_q = allowed[0], allowed[0].questions()
+    out = [f"Baseline `{base.label}`; {bootstrap.METHOD}."]
+    for r in allowed[1:]:
+        got = paired_l3(base_q, r.questions())
+        if got is None:
+            out.append(f"- `{r.label}`: no question scored in both runs.")
+            continue
+        diff, iv, n = got
+        verdict = ("the interval contains 0, so this difference may be noise" if bootstrap.contains_zero(iv)
+                   else "the interval does not contain 0")
+        out.append(f"- `{r.label}` minus `{base.label}`: l3 {diff:+.4f} (95% interval {_interval(iv, True)}, "
+                   f"{n} questions in both): {verdict}.")
+    return out
 
 
 def diff_table(runs: list[Run]) -> list[str]:
@@ -170,7 +229,9 @@ def report(run_dirs: list[Path]) -> str:
              *totals_table(runs), "",
              "Tokens: prompt + completion tokens of real calls; n/a = not recorded (older runs).", "",
              "## Per-question differences (practice runs only)", "",
-             *diff_table(runs), ""]
+             *diff_table(runs), "",
+             "## Is the l3 difference more than noise? (practice runs only)", "",
+             *noise_lines(runs), ""]
     return "\n".join(lines)
 
 

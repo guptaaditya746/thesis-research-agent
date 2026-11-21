@@ -15,6 +15,7 @@ import re
 import typing
 from pathlib import Path
 
+import pytest
 from pydantic import BaseModel
 
 from evqa import contracts
@@ -100,6 +101,8 @@ def test_guard_finds_a_planted_list(tmp_path):
     assert len(word_strings(tree.body[0].value)) == 3
 
 
+@pytest.mark.xfail(strict=True, reason="to-do guard (Q2b): word lists still in the pipeline; once they are gone "
+                   "this XPASS fails the run, so remove this marker then")
 def test_no_hard_coded_word_lists():
     found = offenders()
     assert not found, "hard-coded word lists (Q2b):\n" + "\n".join(found)

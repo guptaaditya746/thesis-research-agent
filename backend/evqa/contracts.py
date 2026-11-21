@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, Field, SerializerFunctionWrapHandler, model_serializer
+from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, field_validator, model_serializer
 
 Backend = Literal["qwen", "claude", "openrouter"]
 QuestionType = Literal["lookup", "best", "effect", "trend", "list"]   # what the user asks (Spec decides it from the
@@ -43,7 +43,14 @@ class _DropEmpty(BaseModel):
 
 
 # ---------------------------------------------------------------- run config
+# The config models refuse unknown keys (extra="forbid"): a typo in a config file (`search_term: false`) stops the
+# load instead of being dropped while the run quietly uses the default. Refusing keys does not change run_id.
+_STRICT = ConfigDict(extra="forbid")
+STEP_NAMES = ("spec", "spec_check", "find", "extract", "link", "judge")   # every name the code passes to llm_for
+
+
 class StepLLM(BaseModel):
+    model_config = _STRICT
     backend: Backend = "qwen"
     model: str = "orch-model"          # qwen: LiteLLM alias; claude: full model id (claude-haiku-5-5)
     think: bool = False                # qwen: False (default, Aditya 21 Nov) sends enable_thinking=false (no reasoning trace, no reasoning
@@ -51,6 +58,7 @@ class StepLLM(BaseModel):
 
 
 class FindConfig(BaseModel):
+    model_config = _STRICT
     search_terms: bool = True          # the model lists other wordings to search exactly (off for the ablation)
     screen_max_papers: int = 20        # papers the LLM screen reads
     agent_max_steps: int = 6           # gap-filling agent cap (code-enforced)
@@ -58,26 +66,38 @@ class FindConfig(BaseModel):
 
 
 class ExtractConfig(BaseModel):
+    model_config = _STRICT
     extras: bool = True                # extra settings the paper varies but Spec did not list (off for the ablation)
 
 
 class LinkConfig(BaseModel):
+    model_config = _STRICT
     verifier: bool = True              # False: the generator's verdict is accepted unverified (ablation)
     max_pairs: int = 40                # code cap on setting-set pairs judged per question
 
 
 class RunConfig(BaseModel):
+    model_config = _STRICT
     name: str = "slice1"
     domain: str = "medical"
     mode: Literal["benchmark", "presentation"] = "benchmark"
     split: Literal["practice", "test"] = "test"
     questions: list[str] = Field(default_factory=list)   # empty = every question of the split
     llm: StepLLM = StepLLM()
-    steps: dict[str, StepLLM] = Field(default_factory=dict)   # per-step override: spec, find, extract
+    steps: dict[str, StepLLM] = Field(default_factory=dict)   # per-step override; keys from STEP_NAMES
     find: FindConfig = FindConfig()
     closed_book: bool = False          # no papers: Find returns nothing (the ~0 sanity run)
     extract: ExtractConfig | None = None   # None = defaults; left out of run_id while None (old run ids stay)
     links: LinkConfig | None = None
+
+    @field_validator("steps")
+    @classmethod
+    def _known_steps(cls, v: dict[str, StepLLM]) -> dict[str, StepLLM]:
+        """A step override under a name no step asks for would never be used, so it is refused."""
+        unknown = sorted(set(v) - set(STEP_NAMES))
+        if unknown:
+            raise ValueError(f"unknown step(s) {unknown}; known steps: {list(STEP_NAMES)}")
+        return v
 
     def llm_for(self, step: str) -> StepLLM:
         return self.steps.get(step, self.llm)

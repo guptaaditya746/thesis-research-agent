@@ -27,6 +27,7 @@ dev = [
     "pytest==8.4.2",
     "pytest-timeout>=2.4.0",
     "pytest-xdist>=3.8.0",
+    "ruff==0.14.5",
 ]
 frontend = ["nodejs-wheel==22.20.0"]
 
@@ -42,3 +43,13 @@ module-root = "backend"
 addopts = "-n auto --timeout 600"
 testpaths = ["backend"]
 filterwarnings = ["ignore::DeprecationWarning:pyshacl.*", "ignore::DeprecationWarning:rdflib.*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+extend-exclude = ["external", "frontend", "llm-setup"]
+
+[tool.ruff.lint]
+# pyflakes (undefined names, unused imports/variables) and syntax errors only; the `# noqa: BLE001/S310/...`
+# comments in the code name rules that are not selected yet.
+select = ["F", "E9"]

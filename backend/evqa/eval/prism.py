@@ -34,6 +34,8 @@ no seed fact, matches no gold context. The label the user sees is checked separa
 (or a synonym) must contain one another as whole normalised phrases.
 Totals: answerable L3 (mean over in-corpus types), per type, and the not-reported block (accuracy, hallucination
 rate, near-miss trap rate).
+Intervals: eval.json "intervals" holds a 95% bootstrap interval (resampling questions, eval/bootstrap.py) for each
+headline total; every headline total is a mean over questions. The other keys of eval.json are unchanged.
 Eval may read data/seed; the pipeline steps may not (seed wall test).
 """
 from __future__ import annotations
@@ -50,6 +52,7 @@ from pydantic import ValidationError
 from evqa import norm
 from evqa.answer import canon
 from evqa.contracts import Answer, FindHit, Row, RunConfig, Spec, read_jsonl
+from evqa.eval import bootstrap
 from evqa.paths import domain_dir
 from evqa.seed import brief
 from evqa.seed import questions as seed_questions
@@ -632,6 +635,20 @@ def type_totals(qs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return out
 
 
+def run_intervals(qs: list[dict[str, Any]]) -> dict[str, Any]:
+    """95% bootstrap intervals (eval/bootstrap.py) for the headline totals. Every one of them is a mean over
+    questions (no total pools facts across questions), so each interval resamples the questions the total averages."""
+    ans_q = [q for q in qs if q["answerable"]]
+    nr_q = [q for q in qs if not q["answerable"]]
+    per_q = {"l0": [q["l0"] for q in qs], "l1": [q["l1"] for q in qs],
+             "l2_recall": [q["l2"]["recall"] for q in qs], "l2_precision": [q["l2"]["precision"] for q in qs],
+             "l2_name_ok": [q["l2"]["name_ok"] for q in qs], "l3": [q["l3"]["score"] for q in ans_q],
+             "advisor": [q["advisor"]["score"] for q in qs],
+             "not_reported_accuracy": [float(q["l3"]["score"] == 1.0) for q in nr_q],
+             "not_reported_hallucination": [float(bool(q["l3"]["hallucination"])) for q in nr_q]}
+    return {"method": bootstrap.METHOD, **{k: bootstrap.mean_interval(v) for k, v in per_q.items()}}
+
+
 def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = None) -> dict[str, Any]:
     """Score every question of the run's config (its list, else every gold question of its split; `only` narrows
     it, e.g. for an old run made when the split had fewer questions); write eval.json."""
@@ -666,6 +683,7 @@ def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = N
               "per_type": type_totals(qs)}
     out = {"run_id": run_dir.name, "domain": domain, "config_name": cfg.name, "closed_book": cfg.closed_book,
            "unknown_questions": [q for q in qids if q not in golds], "totals": totals, "questions": questions}
+    out["intervals"] = run_intervals(qs)
     (run_dir / "eval.json").write_text(json.dumps(out, indent=2, sort_keys=False) + "\n", encoding="utf-8")
     return out
 

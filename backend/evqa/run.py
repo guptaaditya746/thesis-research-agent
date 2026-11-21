@@ -12,6 +12,8 @@ closed_book: Find is not called (no papers) and Extract is skipped, so Answer sa
 manifest.json (written on first start): git commit, dirty flag and a hash of the code (evqa + modelcall sources,
 tests left out). A resume whose code hash differs stops with an error, unless EVQA_ALLOW_CODE_CHANGE=1 (then an
 info Event "code changed" is logged): a run's outputs should all come from the same code.
+Progress: one line on stderr per finished question, e.g. `[12/78] Q-med-05 ok 34.2s  eta 41m` (or
+`problem: <error type>`); EVQA_QUIET=1 turns it off. events.jsonl stays as it is.
 """
 from __future__ import annotations
 
@@ -21,6 +23,7 @@ import importlib
 import json
 import os
 import subprocess
+import sys
 import threading
 import time
 import traceback
@@ -116,6 +119,37 @@ class Events:
             fh.write(line)
 
 
+class Progress:
+    """Prints one line on stderr per finished question. The time left is a plain guess: seconds so far / questions
+    done x questions left (the pool size is already inside the seconds so far)."""
+
+    def __init__(self, total: int, out=None, clock=time.monotonic) -> None:
+        self.total, self.done, self.clock = total, 0, clock
+        self.out = out if out is not None else sys.stderr
+        self.quiet = os.environ.get("EVQA_QUIET") == "1"
+        self.t0 = clock()
+        self._lock = threading.Lock()
+
+    def finished(self, qid: str, seconds: float, problem: str | None = None) -> None:
+        with self._lock:
+            self.done += 1
+            if self.quiet:
+                return
+            left = self.total - self.done
+            eta = (self.clock() - self.t0) / self.done * left
+            status = f"problem: {problem}" if problem else "ok"
+            print(f"[{self.done}/{self.total}] {qid} {status} {seconds:.1f}s  eta {_minutes(eta)}",
+                  file=self.out, flush=True)
+
+
+def _minutes(seconds: float) -> str:
+    """Time left in short words: 45s, 41m, 2h05m."""
+    if seconds < 60:
+        return f"{seconds:.0f}s"
+    m = round(seconds / 60)
+    return f"{m}m" if m < 60 else f"{m // 60}h{m % 60:02d}m"
+
+
 def _do(step: str, qid: str, path: Path, events: Events, fn, load, redo: list[bool]):
     """Run one step unless its output exists; returns the output (loaded from disk when skipped). Once a step has
     run, every later step of the question runs again too (`redo`), so no output is built on a stale input."""
@@ -133,11 +167,12 @@ def _do(step: str, qid: str, path: Path, events: Events, fn, load, redo: list[bo
     return out
 
 
-def run_question(q: dict[str, Any], cfg: RunConfig, qdir: Path, events: Events) -> bool:
+def run_question(q: dict[str, Any], cfg: RunConfig, qdir: Path, events: Events,
+                 progress: Progress | None = None) -> bool:
     """The four steps for one question. True when answer.json exists at the end. The steps see only the
     pipeline-facing part of the record (corpus.pipeline_record: qid, question, intent card answers)."""
     q = corpus.pipeline_record(q)
-    qid, redo = q["qid"], [False]
+    qid, redo, t0 = q["qid"], [False], time.monotonic()
     try:
         spec = _do("spec", qid, qdir / "spec.json", events,
                    lambda: _step("spec")(q, cfg), lambda p: Spec.model_validate_json(p.read_text(encoding="utf-8")), redo)
@@ -158,10 +193,14 @@ def run_question(q: dict[str, Any], cfg: RunConfig, qdir: Path, events: Events) 
         _do("answer", qid, qdir / "answer.json", events,
             lambda: _step("answer")(spec, rows, links),
             lambda p: Answer.model_validate_json(p.read_text(encoding="utf-8")), redo)
-        return True
     except Exception as e:   # noqa: BLE001 - one question's failure must not stop the others
         events.log("run", "problem", qid, error=f"{type(e).__name__}: {e}", trace=traceback.format_exc()[-4000:])
+        if progress:
+            progress.finished(qid, time.monotonic() - t0, problem=type(e).__name__)
         return False
+    if progress:
+        progress.finished(qid, time.monotonic() - t0)
+    return True
 
 
 def run(cfg: RunConfig, *, root: Path = ROOT) -> Path:
@@ -181,9 +220,9 @@ def run(cfg: RunConfig, *, root: Path = ROOT) -> Path:
             raise ValueError(f"questions not in {cfg.domain}/{cfg.split}: {sorted(unknown)}")
         questions = [q for q in questions if q["qid"] in cfg.questions]
     events.log("run", "start", run_id=cfg.run_id(), questions=[q["qid"] for q in questions])
-    t0 = time.monotonic()
+    t0, progress = time.monotonic(), Progress(len(questions))
     with ThreadPoolExecutor(QUESTION_WORKERS) as pool:
-        done = list(pool.map(lambda q: run_question(q, cfg, out / q["qid"], events), questions))
+        done = list(pool.map(lambda q: run_question(q, cfg, out / q["qid"], events, progress), questions))
     events.log("run", "end", seconds=round(time.monotonic() - t0, 3), questions=len(questions),
                answered=sum(done), failed=[q["qid"] for q, ok in zip(questions, done, strict=True) if not ok])
     return out

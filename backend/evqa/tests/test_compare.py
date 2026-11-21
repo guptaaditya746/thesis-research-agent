@@ -123,7 +123,7 @@ def test_compare_refuses_per_question_for_bench_and_holdout(tmp_path: Path, monk
         return orig(self)
     monkeypatch.setattr(compare.Run, "questions", spy)
     text = compare.report([p1, bench, hold, test_split, p2])
-    assert opened == [p1, p2]
+    assert list(dict.fromkeys(opened)) == [p1, p2]      # parts 2 and 3 open only the practice runs
     head, per_q = text.split("## Per-question")
     assert "| question | type | measure | practice-qwen-abc | practice-b-abc |" in per_q
     assert "| l3 | 0.5 | 0.9 | 0.8 | 0.7 | 0.6 |" in head      # totals of every run are still shown

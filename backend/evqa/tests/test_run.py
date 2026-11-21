@@ -206,3 +206,33 @@ def test_step_end_event_carries_token_counts(stubs, tmp_path, monkeypatch) -> No
     out = runner.run(RunConfig(name="t", questions=["Q1"]), root=tmp_path / "runs")
     end = next(e for e in events(out) if e["step"] == "spec" and e["kind"] == "end")
     assert end["data"]["llm"]["prompt_tokens"] == 11 and end["data"]["llm"]["completion_tokens"] == 2
+
+
+def test_progress_prints_one_line_per_finished_question(stubs, tmp_path, capsys, monkeypatch) -> None:
+    monkeypatch.delenv("EVQA_QUIET", raising=False)
+    _, fail = stubs
+    fail.add("Q2")
+    runner.run(RunConfig(name="p"), root=tmp_path)
+    lines = capsys.readouterr().err.strip().splitlines()
+    assert len(lines) == 4 and sorted(int(x[1]) for x in lines) == [1, 2, 3, 4]
+    assert all(x.startswith("[") and "/4] Q" in x and " eta " in x for x in lines)
+    assert any("Q2 problem: RuntimeError" in x for x in lines)
+    assert sum(" ok " in x for x in lines) == 3
+
+
+def test_progress_eta_and_quiet(monkeypatch) -> None:
+    import io
+    now = [0.0]
+    buf = io.StringIO()
+    monkeypatch.delenv("EVQA_QUIET", raising=False)
+    p = runner.Progress(78, out=buf, clock=lambda: now[0])
+    for i in range(12):
+        now[0] += 40.0
+        p.finished(f"Q{i}", 34.2)
+    assert buf.getvalue().splitlines()[-1] == "[12/78] Q11 ok 34.2s  eta 44m"   # 480s/12 x 66 left = 2640s
+    assert runner._minutes(7500) == "2h05m" and runner._minutes(30) == "30s"
+    monkeypatch.setenv("EVQA_QUIET", "1")
+    quiet = io.StringIO()
+    q = runner.Progress(2, out=quiet)
+    q.finished("Q1", 1.0)
+    assert quiet.getvalue() == "" and q.done == 1

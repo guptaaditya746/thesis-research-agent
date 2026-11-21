@@ -40,7 +40,7 @@ ex:FactShape a sh:NodeShape ; sh:targetClass ex:Fact ;
     for kind, k in f.kinds.items():
         props = []
         for a, typ in k.get("attrs", {}).items():
-            c = (f"sh:datatype xsd:integer" if typ == "int" else f"sh:class ex:{kind_class(typ[4:])}"
+            c = ("sh:datatype xsd:integer" if typ == "int" else f"sh:class ex:{kind_class(typ[4:])}"
                  if typ.startswith("ref:") else "sh:datatype xsd:string")
             props.append(f"sh:property [ sh:path ex:{a} ; sh:minCount 1 ; sh:maxCount 1 ; {c} ]")
         if props:

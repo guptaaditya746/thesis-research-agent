@@ -6,7 +6,6 @@ PaperOrchestra run goes through the fake LiteLLM gateway of test_qwen_writer.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
