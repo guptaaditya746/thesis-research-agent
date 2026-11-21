@@ -94,6 +94,20 @@ class Settings:
         return REPO / self.slot_dir
 
 
+# roles that should not share a model: a model can favour its own writing (D2)
+INDEPENDENT = ("writer", "rewriter", "judge", "verifier")
+
+
+def shared_models(s: Settings) -> list[str]:
+    """Warnings for roles in INDEPENDENT that use the same model (same backend, model and server)."""
+    by: dict[tuple[str, str, str | None], list[str]] = {}
+    for r in INDEPENDENT:
+        rm = s.role(r)
+        by.setdefault((rm.backend, rm.model, rm.url), []).append(r)
+    return [f"{', '.join(rs)} share the model {m} ({b}); a model can favour its own wording, so set a different "
+            f"model family per job in 'models' for final numbers" for (b, m, _), rs in by.items() if len(rs) > 1]
+
+
 def load(path: str | Path) -> Settings:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     raw.pop("_note", None)

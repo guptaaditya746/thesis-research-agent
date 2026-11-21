@@ -40,7 +40,9 @@ from paperfactory.config import RoleModel
 T, R = TypeVar("T"), TypeVar("R")
 MAX_SLOTS = 3          # default parallel calls (pmap threads); per endpoint the role's max_parallel applies
 RETRIES_ON_REJECT = 2
-CACHE_VERSION = 2      # raise when the call protocol changes (retry prompt, parsing); part of the cache key
+CHARS_PER_TOKEN = 3.0  # preflight estimate (D3); low on purpose, so long prompts are caught early
+CACHE_VERSION = 2
+IO_LOG_ROLES = ("judge",)      # raise when the call protocol changes (retry prompt, parsing); part of the cache key
 
 
 class LLMError(RuntimeError):
@@ -178,6 +180,17 @@ def price(rm: RoleModel, got: dict[str, Any]) -> tuple[float | None, str]:
     return None, "unknown"
 
 
+def preflight(rm: RoleModel, system: str, user: str, schema: dict[str, Any]) -> str | None:
+    """None, or why the request would not fit the role's context_window (estimated tokens in + max_tokens out)."""
+    if not rm.context_window:
+        return None
+    est = int((len(system) + len(user) + len(json.dumps(schema))) / CHARS_PER_TOKEN)
+    if est + rm.max_tokens > rm.context_window:
+        return (f"about {est} input tokens + {rm.max_tokens} output tokens > context_window {rm.context_window} of "
+                f"{rm.model}: skipped (shorten the input or use a model with a larger window)")
+    return None
+
+
 def run_backend(rm: RoleModel, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
     """One raw call, retried once on a transport failure. Also PaperOrchestra's backend (write.py), which holds
     its own slot while calling."""
@@ -238,8 +251,15 @@ class Caller:
         schema = json_schema(out)
         path = self.cache / f"{self.key(rm, system, user, schema)}.json"
         if (hit := self.cached(path, out, check)) is not None:
+            self._io(role, step, user, hit, cached=True)
             return hit
         self.log.parent.mkdir(parents=True, exist_ok=True)
+        if too_long := preflight(rm, system, user, schema):
+            warnings.warn(f"{step}: {too_long}", stacklevel=2)
+            self._write_log({"role": role, "step": step, "backend": rm.backend, "model": rm.model, "cost_usd": 0.0,
+                             "cost_source": "skipped", "attempts": 0, "rejections": [too_long],
+                             "parse_error": True, "skipped": "context_window", "seconds": 0.0})
+            return None
         start, prompt, errors, costs = time.time(), user, [], []
         output: dict[str, Any] | None = None
         got: dict[str, Any] = {}
@@ -269,7 +289,15 @@ class Caller:
         if output is not None:
             files.write_json(path, rec | {"output": output})
         self._write_log(rec)
+        self._io(role, step, user, output, cached=False)
         return output
+
+    def _io(self, role: str, step: str, user: str, output: dict[str, Any] | None, cached: bool) -> None:
+        """Inputs and outputs of the roles in IO_LOG_ROLES (D2: the judge) -> <role>.jsonl in the run folder."""
+        if role in IO_LOG_ROLES:
+            with self._log_lock, (self.s.out_dir / f"{role}.jsonl").open("a", encoding="utf-8") as f:
+                f.write(json.dumps({"step": step, "input": user, "output": output, "cached": cached},
+                                   ensure_ascii=False) + "\n")
 
     def clear(self, step_prefix: str) -> int:
         """Delete the cached answers of every step starting with step_prefix; returns how many."""
@@ -306,6 +334,8 @@ def po_runner(fields: dict[str, Any]) -> tuple[Callable[[str, str, dict[str, Any
     rm = RoleModel(**fields)
 
     def runner(system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
+        if too_long := preflight(rm, system, user, schema):
+            raise LLMError(too_long)
         got = run_backend(rm, system, user, schema)
         return {"output": got.get("raw"), "reject_reason": got.get("reject_reason"), "cost_usd": got["cost_usd"],
                 "cost_source": got["cost_source"], "served_model": got.get("served_model"),

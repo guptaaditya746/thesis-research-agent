@@ -45,6 +45,14 @@ def check_inputs(s: config.Settings, w: dict[str, Any], f: packs.Field, chk: rep
             "prompts": [chk.system(), chk.REPAIR_SYS], "redo_writer": write_inputs(s, pid, template)}
 
 
+REWRITE_NOTE = (
+    "The judge reads one sentence and says which relation it states. paper_wording: the judge on the tagged paper "
+    "sentences. answer_wording: the same sentences first reworded by the rewriter role into short answer-style "
+    "sentences (as a QA system would write them), then judged. The rewrite step exists because in QA the judge reads "
+    "the system's answer sentences, not paper sentences; it checks that the judge also works on that wording. Its "
+    "limit: the rewriter is a model, so a rewrite that changes the meaning counts against the judge. Judge inputs "
+    "and outputs are in judge.jsonl.")
+
 # the inputs that every paper of one evaluation must share (paper-specific ones, like the notes, are left out)
 SHARED = {"inputs": ["template", "pages", "writer", "po_prompts", "po_prompt_version"],
           "check": ["world", "field_pack", "verifier", "repair", "prompts"]}
@@ -55,6 +63,8 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
     out = s.out_dir
     out.mkdir(parents=True, exist_ok=True)
     call = Caller(s, use_cache=use_cache)
+    for warn in config.shared_models(s):
+        print("warning:", warn)
     wfile = out / "world.json"
     if "world" in steps:
         wi = world_inputs(s, f, g)
@@ -125,6 +135,8 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
         rep["cost"] = cost.report(out, list(w["papers"]), sorted({s.papers, 100}))
         rep["mixed_settings_allowed"] = allowed
+        rep["model_warnings"] = config.shared_models(s)
+        rep["judge_validation"]["about"] = REWRITE_NOTE
         files.write_json(out / "report.json", rep)
         meta.write(out / "report.json", {
             "gold": meta.file_hash(out / "gold.json"), "papers": {p: meta.file_hash(paper(p)) for p in pids},
