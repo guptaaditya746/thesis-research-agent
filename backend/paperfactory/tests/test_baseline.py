@@ -68,4 +68,8 @@ def test_leak_report_shows_hit_sentences_and_copied_pack_words(tmp_path) -> None
         return {"pick": next(int(x.split(".")[0]) for x in lines if "section 14" in x)}
     r = Eval(s, PILOT, LAW, gold, call).leak({"L-01": t})
     assert r["hits"] == 2 and r["hit_sentences"][0]["planted"] == sents[0]
-    assert r["planted_with_pack_words"] == {"sentences": 1, "verbatim": 1, "share": 1.0}     # "relied on"
+    assert r["planted_with_pack_words"]["own_relation"] == 1 and r["planted_with_pack_words"]["share"] == 1.0
+    assert r["other_pool_sentences_with_pack_words"]["sentences"] == 4      # 2 trials x 2 other sentences
+    e = Eval(s, PILOT, LAW, gold, call)
+    assert e.pack_words_in("Rusk relies on section 14.", "relies_on")       # stems: present tense counts too
+    assert not e.pack_words_in("Rusk cited section 14.", "relies_on")

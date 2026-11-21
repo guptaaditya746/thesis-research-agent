@@ -499,12 +499,27 @@ Use the whole paper to decide. Pick exactly one number."""
                 for tr, x in zip(trials, every) if x and x[0]]
         spans = [(pid, i, s_[2]) for pid, t in tagged.items() for i, sp in t["spans"].items()
                  for s_ in t["sentences"] if [s_[0], s_[1]] in sp]
-        verbatim = [x for x in spans if self.f.rel_words(self.facts[x[1]]["r"]).lower() in x[2].lower()]
+        verbatim = [x for x in spans if self.pack_words_in(x[2], self.facts[x[1]]["r"])]
+        others = [x for tr in trials for j, x in enumerate(tr[2]) if j != tr[3]]
+        any_rel = [x for x in others if any(self.pack_words_in(x, r) for r in self.f.relations)]
+        planted_any = [x for x in spans if any(self.pack_words_in(x[2], r) for r in self.f.relations)]
         return {"trials": n, "parse_errors": len(every) - n, "hits": h, "rate": round(h / max(1, n), 3),
                 "ci95": wilson(h, n), "chance": round(sum(x[1] for x in res) / max(1, n), 3), "bar": 0.10,
                 "hit_sentences": hits,
-                "planted_with_pack_words": {"sentences": len(spans), "verbatim": len(verbatim),
-                                            "share": round(len(verbatim) / max(1, len(spans)), 3)}}
+                "planted_with_pack_words": {"sentences": len(spans), "own_relation": len(verbatim),
+                                            "share": round(len(verbatim) / max(1, len(spans)), 3),
+                                            "share_any_relation": round(len(planted_any) / max(1, len(spans)), 3)},
+                "other_pool_sentences_with_pack_words": {"sentences": len(others), "any_relation": len(any_rel),
+                                                         "share": round(len(any_rel) / max(1, len(others)), 3)},
+                "about_pack_words": "word stems (first 4 letters) of the relation's pack words, all present; compare "
+                                    "the planted share with the other pool sentences' share"}
+
+    def pack_words_in(self, sentence: str, r: str) -> bool:
+        """All content words of relation r's pack words ("reported a gain from" -> repo, gain) start a word of
+        the sentence (stems, so "reports a gain" and "reported gains" both count)."""
+        stems = [w[:4] for w in re.findall(r"[a-z]+", self.f.rel_words(r).lower()) if len(w) > 3]
+        words = re.findall(r"[a-z]+", sentence.lower())
+        return bool(stems) and all(any(x.startswith(st) for x in words) for st in stems)
 
     # -------------------------------------------------------------- all
     def run(self) -> dict[str, Any]:
@@ -527,6 +542,15 @@ Use the whole paper to decide. Pick exactly one number."""
         rep["qa"] = pmap(lambda q: self.qa_one(q, tagged), qs, self.s.parallel)
         qa = rep["qa"]
         mean = lambda xs: round(sum(xs) / max(1, len(xs)), 3)  # noqa: E731
+        rescoped_ids = {r["id"] for r in rescoped}
+
+        def qa_part(xs: list[dict[str, Any]]) -> dict[str, Any]:
+            return {"questions": len(xs), "recall": mean([q["recall"] for q in xs]),
+                    "answer_recall": mean([q["answer_recall"] for q in xs]),
+                    "precision": mean([q["precision"] for q in xs if q["precision"] is not None])}
+        # questions that lost a paper have fewer papers to search and less gold: easier, so reported apart too
+        rep["qa_by_scope"] = {"full": qa_part([q for q in qa if q["id"] not in rescoped_ids]),
+                              "rescoped": qa_part([q for q in qa if q["id"] in rescoped_ids])}
         rep["qa_summary"] = {"questions": len(qa), "recall": mean([q["recall"] for q in qa]),
                              "answer_recall": mean([q["answer_recall"] for q in qa]),
                              "precision": mean([q["precision"] for q in qa if q["precision"] is not None]),

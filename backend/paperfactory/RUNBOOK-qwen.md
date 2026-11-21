@@ -89,7 +89,7 @@ Pass when all hold: report.json exists; `papers_written` = 3; no paper in `paper
 
 A field that fails: log the numbers, the first three error messages and, for each failed paper, its open flags
 (`python3 -c "import json;print(json.dumps(json.load(open('runs/paperfactory/qwen-smoke-FIELD/work/PAPER/paper.repairs.json'))['open_flags'],indent=1))"`),
-then go on with the next field (do not rerun it). After all four fields, STOP and wait for Aditya: the 20-paper runs
+then go on with the next field (do not rerun it). After all four fields, STOP and wait for Aditya: the 10-paper runs
 (section 3) start only when he says so.
 
 Useful checks:
@@ -109,7 +109,21 @@ makes a new world and new papers (the old ones are kept as *.stale-1). That is e
 
 ## 3. The four pilot datasets: 10 papers each, one field at a time (Aditya approved, 22 Nov 2026)
 
-`git pull origin main` first (repair, question, world-agent and speed fixes after the smoke runs). Order: law, llm,
+`git pull origin main` first (repair, question, world-agent and speed fixes after the smoke runs).
+
+### 3.0 Before the 10-paper runs (about 30 minutes)
+
+1. GPU memory for 9 calls at once: in the Qwen job's vLLM logs (`grep -h "Maximum concurrency" -r
+   llm-setup/runtime/` and the job's `runtime/slurm-<JOB>.out`), read "Maximum concurrency for 65536 tokens per
+   request" for each replica. Log the numbers. If any is below 3, STOP: Aditya lowers `max_parallel` (configs).
+2. The new prompts on the cases that failed (Qwen, fast):
+   - LLM-02 repair: `... paperfactory run --config backend/paperfactory/configs/qwen/smoke-llm.json --steps check`.
+     It prints "check settings changed" and checks the three smoke papers again from their first version. Log the
+     statuses in work/*/paper.repairs.json and any `drop_sentences` steps.
+   - World agent: `... run --config backend/paperfactory/configs/qwen/smoke-medicine.json --steps world`, then
+     check-world on it; the same for smoke-materials. Log pass/fail and the errors.
+   Whatever the result, go on with the 10-paper runs and log it; these results tell Aditya whether the fixes work.
+ Order: law, llm,
 medicine, materials (llm, medicine and materials packs are DRAFTS). For each FIELD:
 
 ```bash
@@ -137,19 +151,21 @@ STOP and wait for Aditya.
 
 Run the SAME command again. Finished work is reused; every output has a `<name>.meta.json` with the settings it was
 made with, and anything made under other settings is made again (the run prints why). Never pass `--allow-mixed`
-or `--no-cache` unless Aditya says so. If the world step fails ("failed the checks after one repair" or "gave no
-answer in the required form"), run the world step once more; a second failure: STOP.
-If calls.jsonl shows `world:entities` with parse_error and a cut-off answer, STOP (the world role needs a larger
-max_tokens; that is a config change for Aditya).
+or `--no-cache` unless Aditya says so. If the world step fails ("failed the checks after 2 repairs", "planned N of
+M papers" or "gave no answer in the required form"), run the world step once more; a second failure: log it (the
+errors are listed with the pair they are about) and go on with the next field (section 3).
+If calls.jsonl shows `world:entities` with parse_error and a cut-off answer, log it and go on with the next field
+(the world role needs a larger max_tokens; that is a config change for Aditya).
 
 ## 5. What to log per field (codex-log.md)
 
 One short entry per field: run folder; start and end time; papers planned / written / failed the world check;
 world-check warnings (count, first three); repairs (statuses in work/*/paper.repairs.json: clean / repaired /
 redone / failed, and how many log steps are `drop_sentences`); verifier_test; judge_validation (paper and answer
-wording); qa_summary (questions, recall, answer_recall, precision, parse_errors); `questions_rescoped` and
+wording); qa_summary (questions, recall, answer_recall, precision, parse_errors) and `qa_by_scope` (full / rescoped); `questions_rescoped` and
 `questions_dropped` (counts); bm25_baseline.all (rank1_share, median_rank); style_leak (rate, ci95, chance,
-`planted_with_pack_words.share`, and the first three `hit_sentences`); parse-error count from calls.jsonl.
+`planted_with_pack_words.share` next to `other_pool_sentences_with_pack_words.share`, and the first three
+`hit_sentences`); parse-error count from calls.jsonl.
 Copy numbers; do not interpret them.
 
 ## 6. STOP rules (write the reason in codex-log.md, then wait for Aditya)

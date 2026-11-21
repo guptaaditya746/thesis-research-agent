@@ -62,3 +62,15 @@ def test_two_repairs_for_a_batch_and_the_decoy_rule_in_the_prompt(tmp_path: Path
     w = world.draft(config.Settings("law", "argument", papers=3, out=str(tmp_path)), LAW, ARG, call)
     assert world.check(w, LAW, ARG, n_papers=3) == []
     assert seen == ["world:entities", "world:papers:0", "world:papers:0:repair", "world:papers:0:repair:2"]
+
+
+def test_world_check_names_the_pair_and_never_crashes_on_a_bad_conflict() -> None:
+    """Review 22 Nov: the pair error said which pair; a conflict of 1 or 3 facts crashed world.check."""
+    w = copy.deepcopy(PILOT)
+    p = w["papers"]["L-01"]
+    p["decoys"][0] = [p["claims"][0][0], "rejects", p["claims"][0][2]]
+    assert any("same pair K5->S14 (relies_on, rejects)" in e for e in world.check(w, LAW, ARG))
+    w = copy.deepcopy(PILOT)
+    w["papers"]["L-03"]["conflict"] = w["papers"]["L-03"]["conflict"][:1]
+    assert "L-03: a conflict is exactly two facts [subject, relation, object]" in world.check(w, LAW, ARG)
+    assert world.PAPERS_SCHEMA["properties"]["papers"]["items"]["properties"]["conflict"]["maxItems"] == 2

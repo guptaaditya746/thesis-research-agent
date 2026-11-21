@@ -95,7 +95,8 @@ def test_repair_may_not_drop_a_planted_fact(tmp_path: Path) -> None:
         got.append(check({"paragraph": "Something else entirely about the case."}))
         return None
     chk.call = call
-    assert chk.repair_unit("L-03", md, ["x"], PILOT["papers"]["L-03"]["claims"]) is None
+    assert chk.repair_unit("L-03", md, 0, len(md) - 1, ["x"], PILOT["papers"]["L-03"]["claims"],
+                           chk.table_of(md)) is None
     assert "keep the names of these facts" in got[0]
 
 
@@ -154,3 +155,53 @@ def test_the_repair_gets_the_names_to_keep_and_short_names_count(tmp_path: Path)
         return base(role, step, system, user, out, check)        # fake() asserts the check accepts it
     res = repair.Checker(s, PILOT, LAW, call).repair_paper("L-02", redo=lambda pid: pytest.fail("redo"))
     assert res["status"] == "repaired"
+
+
+# ---------------------------------------------------------------- review 22 Nov 2026 (drop_flagged)
+def flag_if(cond):
+    def call(role, step, system, user, out, check=None):
+        if role == "verifier":
+            return {"answers": [{"id": x["id"], "verdict": "ABSENCE_CLAIM" if cond(x["pair"]) else "SUPPORTS"}
+                                for x in json.loads(user)]}
+        return None                                                   # the repair model fails
+    return call
+
+
+def run_l02(tmp_path: Path, md: str, call) -> tuple[str, dict, list]:
+    redone: list = []
+    res = repair.Checker(setup(tmp_path, md), PILOT, LAW, call).repair_paper("L-02", redo=lambda p: redone.append(p))
+    return (tmp_path / "work" / "L-02" / "paper.md").read_text(), res, redone
+
+
+def test_two_flags_on_one_sentence_cut_it_once(tmp_path: Path) -> None:
+    double = "Neither Pell nor Marrin is recorded as treating section 9 at all."
+    out, res, redone = run_l02(tmp_path, f"# Title\n\nPell v. Vantor Systems relied on Halden Mobile. {double} {GOOD}\n",
+                               flag_if(lambda pr: any("section 9" in x for x in pr)))
+    assert double not in out and GOOD in out and "relied on Halden Mobile." in out and not redone
+    assert res["open_flags"] == 0
+
+
+def test_a_drop_that_loses_a_stated_fact_is_refused(tmp_path: Path) -> None:
+    bad = "Pell v. Vantor Systems relied on Halden Mobile, and it records no treatment of section 14."
+    out, res, redone = run_l02(tmp_path, f"# Title\n\n{bad} Pell was decided later. Halden Mobile was older.\n",
+                               flag_if(lambda pr: pr[0].startswith("Pell") and "section 14" in pr[1]))
+    assert redone == ["L-02"] and res["status"] == "failed"         # written again, never silently thinned
+
+
+def test_a_drop_that_orphans_a_defined_short_name_is_refused(tmp_path: Path) -> None:
+    md = ('# Title\n\nPell v. Vantor Systems ("Vantor") records no treatment of section 14 at all.\n\n'
+          "Vantor relied on Halden Mobile in that later dispute.\n")
+    _, _, redone = run_l02(tmp_path, md, flag_if(lambda pr: "section 14" in pr[1]))
+    assert redone == ["L-02"]
+
+
+def test_a_drop_takes_emphasis_and_line_breaks_along(tmp_path: Path) -> None:
+    md = "# Title\n\nPell v. Vantor Systems relied on Halden Mobile. **It records no treatment of the notes.** " + GOOD
+    out, _, _ = run_l02(tmp_path, md + "\n", no_repair([]))
+    assert "**" not in out and GOOD in out
+    md = "# Title\n\nPell v. Vantor Systems relied on Halden Mobile.\nIt records no treatment of the notes here.\n" + GOOD
+    out, _, _ = run_l02(tmp_path / "b", md + "\n", no_repair([]))
+    assert "\n\n" + GOOD not in out and len(repair.normalize_paper(out).units) == 2
+    md = "# Title\n\n- Pell v. Vantor Systems relied on Halden Mobile.\n- The notes record no treatment here.\n- " + GOOD
+    out, _, _ = run_l02(tmp_path / "c", md + "\n", no_repair([]))
+    assert out == "# Title\n\n- Pell v. Vantor Systems relied on Halden Mobile.\n- " + GOOD + "\n"

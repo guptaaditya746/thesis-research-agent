@@ -25,7 +25,8 @@ from pydantic import BaseModel
 from paperfactory import files
 from paperfactory.evaluate import ids_check
 from paperfactory.packs import Field
-from paperfactory.text import alias_table, defined_terms, find_mentions, normalize_paper, split_rules, split_sents
+from paperfactory.text import (EMPHASIS, ITEM, alias_table, defined_terms, find_mentions, normalize_paper,
+                               split_rules, split_sents)
 from paperfactory.world import fact_errors
 
 VERDICTS = ("SUPPORTS", "CONTRADICTS", "ABSENCE_CLAIM", "NEUTRAL")
@@ -143,8 +144,9 @@ facts. Never mention the materials, notes or records the paper was written from,
 treated another is unknown, unrecorded, unaddressed or absent: if a sentence only says that, drop it. Return only the
 paragraph text (no heading).
 Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop that sentence, keep the rest."""
-    REPAIR_SYS = """You fix one paragraph of a paper. You get the paragraph, the problems found in it, the facts this
-paper states, and names_to_keep. Return the paragraph rewritten so that every problem is gone.
+    REPAIR_SYS = """You fix one paragraph of a paper. Input fields: paragraph, problems (each with the flagged sentence),
+facts_of_this_paper (what the paper must state), names_to_keep. Return the paragraph rewritten so that every problem is
+gone.
 Rules: keep every other statement, name and fact as it is; keep the meaning of each listed fact exactly; add no new
 facts. Every name in names_to_keep must still appear in the paragraph (the full name or the short name the paragraph
 already uses). Never mention the materials, notes or records the paper was written from, and never say that how one
@@ -153,32 +155,41 @@ simplest fix is often to drop the flagged sentence or the wrong part of it. Retu
 heading).
 Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop that sentence, keep the rest.
 Example. Problem: "CONTRADICTS: the world says: no relation between X and Y. Sentence: X and Z relied on Y." with
-names_to_keep ["Z", "Y"] -> "Z relied on Y." """
+names_to_keep ["Z", "Y"] -> "Z relied on Y."
+Example. Problem: "ABSENCE_CLAIM ... Sentence: Z relied on Y, and how Z treated W is not recorded." with
+facts_of_this_paper ["Z: relied on Y."] -> keep the true part: "Z relied on Y." """
 
-    def must_keep(self, para: str, facts: list[list[str]], table) -> list[tuple[str, str]]:
-        """(subject, object) of each fact of the paper whose two names appear together in one sentence of the
-        paragraph (names in two different sentences do not state a fact, so they need not stay together)."""
-        sents = [{m.eid for m in find_mentions(t, table)} for _, _, t in split_sents(para, self.rules)]
-        return [(s_, o) for s_, _, o in facts if any({s_, o} <= named for named in sents)]
+    def table_of(self, md: str):
+        """The paper's own alias table (world + pack names + the short names this text defines)."""
+        return alias_table(self.w, self.f, defined_terms(normalize_paper(md).text, self.base, self.f))
 
-    def lost(self, new: str, must: list[tuple[str, str]], table) -> list[str]:
+    def stated(self, text: str, facts: list[list[str]], table=None) -> set[tuple[str, str]]:
+        """(subject, object) of each fact whose two names appear together in one sentence of text (names in two
+        different sentences do not state a fact). table: the alias table to read names with (default: text's own)."""
+        table = table or self.table_of(text)
+        sents = [{m.eid for m in find_mentions(t, table)} for _, _, t in split_sents(text, self.rules)]
+        return {(s_, o) for s_, _, o in facts if any({s_, o} <= named for named in sents)}
+
+    def lost(self, old_md: str, new_md: str, facts: list[list[str]]) -> list[str]:
+        """Facts stated somewhere in the old paper but nowhere in the new one, each paper read with its own alias
+        table (so dropping the sentence that defines a short name counts too). Review 22 Nov: names anywhere in
+        the paragraph were not enough."""
         ents = self.w["entities"]
-        named = {m.eid for m in find_mentions(new, table)}
-        return [f"{ents[s_]['label']} / {ents[o]['label']}" for s_, o in must if not {s_, o} <= named]
+        gone = self.stated(old_md, facts) - self.stated(new_md, facts)
+        return sorted(f"{ents[s_]['label']} / {ents[o]['label']}" for s_, o in gone)
 
-    def repair_unit(self, pid: str, para: str, problems: list[str], facts: list[list[str]],
-                    table=None) -> str | None:
-        """One rewrite call. table: the paper's alias table (its own short names count as names)."""
-        table = table or self.base
-        must = self.must_keep(para, facts, table)
+    def repair_unit(self, pid: str, md: str, a: int, b: int, problems: list[str], facts: list[list[str]],
+                    table) -> str | None:
+        """One rewrite call for the paragraph md[a:b]; accepted only if no fact of the paper is lost."""
+        para = md[a:b]
+        keep = sorted({self.label(e) for pair in self.stated(para, facts, table) for e in pair})
 
         def check(out: dict[str, Any]) -> str | None:
             new = out["paragraph"].strip()
             if not new:
                 return "the paragraph is empty"
-            gone = self.lost(new, must, table)
-            return f"keep the names of these facts: {gone}" if gone else None
-        keep = sorted({self.label(e) for pair in must for e in pair})
+            gone = self.lost(md, md[:a] + new + md[b:], facts)
+            return f"keep the names of these facts together in one sentence: {gone}" if gone else None
         user = json.dumps({"paragraph": para, "problems": problems, "facts_of_this_paper": [
             f"{self.label(s_)}: {self.f.word('actor')} {self.f.rel_words(r)} {self.label(o)}." for s_, r, o in facts],
             "names_to_keep": keep}, indent=1, ensure_ascii=False)
@@ -186,27 +197,47 @@ names_to_keep ["Z", "Y"] -> "Z relied on Y." """
         return got["paragraph"].strip() if got else None
 
     def drop_flagged(self, md: str, a: int, b: int, flags: list[dict[str, Any]], p,
-                     must: list[tuple[str, str]], table) -> str | None:
-        """Fallback by code: the paragraph md[a:b] without its flagged sentences, if every fact named in it before
-        is still named; else None. A flagged sentence states something the world does not (or talks about the
-        notes), so dropping it never adds an error."""
+                     facts: list[list[str]]) -> tuple[int, int, str] | None:
+        """Fallback by code: (a, b, new text) that replaces md[a:b], the paragraph without its flagged sentences,
+        if no fact of the paper is lost; else None. A flagged sentence states something the world does not (or
+        talks about the notes), so dropping it adds no error. Overlapping flags (one per pair) are cut once;
+        emphasis marks around a cut go with it; a line emptied by the cut is removed with its line break."""
+        cuts: list[list[int]] = []
+        for x, y in sorted({(p.back[fl["start"]], p.back[fl["end"] - 1] + 1) for fl in flags}):
+            if cuts and x <= cuts[-1][1]:
+                cuts[-1][1] = max(cuts[-1][1], y)
+            else:
+                cuts.append([x, y])
         para = md[a:b]
-        cuts = sorted(((p.back[fl["start"]] - a, p.back[fl["end"] - 1] + 1 - a) for fl in flags), reverse=True)
-        for x, y in cuts:
+        for x, y in reversed(cuts):
+            x, y = x - a, y - a
+            while x > 0 and para[x - 1] in EMPHASIS:
+                x -= 1
+            while y < len(para) and para[y] in EMPHASIS:
+                y += 1
             while y < len(para) and para[y] == " ":
                 y += 1
+            if (x == 0 or para[x - 1] == "\n") and y < len(para) and para[y] == "\n":
+                y += 1                                   # the whole line went: no empty line inside the paragraph
             para = para[:x] + para[y:]
         para = para.strip()
-        return para if not self.lost(para, must, table) else None
+        if not para:                                     # the whole unit went: its list marker and line too
+            ls = md.rfind("\n", 0, a) + 1
+            if not md[ls:a].strip() or ITEM.fullmatch(md[ls:a]):
+                a = ls
+                b = b + 1 if md[b:b + 1] == "\n" else b
+        new_md = md[:a] + para + md[b:]
+        return (a, b, para) if not self.lost(md, new_md, facts) else None
 
     def fix_round(self, pid: str, md: str, log: list[dict[str, Any]], label: str) -> tuple[str, list[dict]]:
-        """Check md; rewrite each flagged paragraph once; check the new sentences. -> (md, flags still open)."""
+        """Check md; rewrite each flagged paragraph once (or drop its flagged sentences by code when the model
+        fails); check the new sentences. -> (md, flags still open)."""
         flags, notes = self.check(pid, md)
         log.append({"step": f"{label}:check", "flags": flags, "notes": notes})
         if not flags:
             return md, []
         p = normalize_paper(md)
-        table = alias_table(self.w, self.f, defined_terms(p.text, self.base, self.f))
+        table = self.table_of(md)
         facts = self.w["papers"][pid]["claims"] + self.w["papers"][pid]["decoys"]
         by_unit: dict[int, list[dict[str, Any]]] = {}
         for fl in flags:
@@ -217,12 +248,14 @@ names_to_keep ["Z", "Y"] -> "Z relied on Y." """
         for ui in sorted(by_unit, reverse=True):              # from the end, so earlier offsets stay valid
             u = p.units[ui]
             a, b = p.back[u.start], p.back[u.end - 1] + 1
-            problems = [f"{fl['reason']} Sentence: {fl['text']}" for fl in by_unit[ui]]
-            new = self.repair_unit(pid, md[a:b], problems, facts, table)
+            problems = list(dict.fromkeys(f"{fl['reason']} Sentence: {fl['text']}" for fl in by_unit[ui]))
+            new = self.repair_unit(pid, md, a, b, problems, facts, table)
             log.append({"step": f"{label}:repair", "unit": ui, "old": md[a:b], "new": new, "problems": problems})
             if new is None:                   # the model could not do it: drop the flagged sentences by code
-                new = self.drop_flagged(md, a, b, by_unit[ui], p, self.must_keep(md[a:b], facts, table), table)
-                log.append({"step": f"{label}:drop_sentences", "unit": ui, "new": new})
+                cut = self.drop_flagged(md, a, b, by_unit[ui], p, facts)
+                log.append({"step": f"{label}:drop_sentences", "unit": ui, "new": cut[2] if cut else None})
+                if cut:
+                    a, b, new = cut
             if new is None:
                 still += by_unit[ui]
                 continue
@@ -232,7 +265,13 @@ names_to_keep ["Z", "Y"] -> "Z relied on Y." """
         recheck = (now - old_sents) | ({fl["text"] for fl in flags} & now)
         again, notes = self.check(pid, md, only=recheck)
         log.append({"step": f"{label}:recheck", "flags": again, "notes": notes})
-        return md, still + again
+        seen, open_ = set(), []                          # a flag left open and found again counts once
+        for fl in still + again:
+            k = (fl["text"], fl["kind"], tuple(fl["pair"] or ()))
+            if k not in seen:
+                seen.add(k)
+                open_.append(fl)
+        return md, open_
 
     def repair_paper(self, pid: str, redo: Callable[[str], str | None]) -> dict[str, Any]:
         work = self.s.out_dir / "work" / pid

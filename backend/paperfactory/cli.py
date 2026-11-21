@@ -49,7 +49,8 @@ def check_inputs(s: config.Settings, w: dict[str, Any], f: packs.Field, chk: rep
     """The whole world counts (the check compares each sentence with what the WORLD says), and the writer's inputs
     count too (a failed repair writes the paper again)."""
     return {"world": w, "field_pack": f.raw, "verifier": meta.role(s, "verifier"), "repair": meta.role(s, "repair"),
-            "prompts": [chk.system(), chk.REPAIR_SYS], "redo_writer": write_inputs(s, pid, template)}
+            "prompts": [chk.system(), chk.REPAIR_SYS], "code": meta.file_hash(Path(repair.__file__)),
+            "redo_writer": write_inputs(s, pid, template)}
 
 
 REWRITE_NOTE = (
@@ -62,7 +63,7 @@ REWRITE_NOTE = (
 
 # the inputs that every paper of one evaluation must share (paper-specific ones, like the notes, are left out)
 SHARED = {"inputs": ["template", "pages", "writer", "po_prompts", "po_prompt_version"],
-          "check": ["world", "field_pack", "verifier", "repair", "prompts"]}
+          "check": ["world", "field_pack", "verifier", "repair", "prompts", "code"]}
 
 
 def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixed: bool = False) -> None:

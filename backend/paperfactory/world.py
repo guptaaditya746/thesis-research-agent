@@ -69,13 +69,18 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
                 err.append(f"{pid}: {len(p.get(role, []))} {role}, need {n}")
         if len(set(facts)) != len(facts):
             err.append(f"{pid}: the same fact twice")
-        pairs = [(s, o) for s, _, o in facts]
-        if len(set(pairs)) != len(pairs):
-            err.append(f"{pid}: two relations between the same pair (contradicts itself)")
+        by_pair: dict[tuple[str, str], list[str]] = {}
+        for s, r, o in facts:
+            by_pair.setdefault((s, o), []).append(r)
+        err += [f"{pid}: two relations between the same pair {s}->{o} ({', '.join(rs)}): keep one; a decoy must use "
+                "the same relation as a claim with one entity different" for (s, o), rs in by_pair.items()
+                if len(rs) > 1 and len(set(rs)) > 1]
         for fact in facts:
             err += [f"{pid} {list(fact)}: {m}" for m in fact_errors(fact, ents, f)]
         c = p.get("conflict")
-        if c:
+        if c and (len(c) != 2 or any(not isinstance(x, list) or len(x) != 3 for x in c)):
+            err.append(f"{pid}: a conflict is exactly two facts [subject, relation, object]")
+        elif c:
             (s1, r1, o1), (s2, r2, o2) = c
             if [s1, r1, o1] not in p["claims"] + p["decoys"] or [s2, r2, o2] not in p["claims"] + p["decoys"]:
                 err.append(f"{pid}: conflict facts must be planted facts of the paper")
@@ -201,8 +206,8 @@ Rules:
    has a different pair. If a pair is in FACTS ALREADY USED, reuse its relation or do not use the pair.
 2. A decoy is a near miss of a claim: the SAME relation and exactly ONE entity different (another subject of the same
    kind, or another object of the same kind). Never the same two entities with another relation (that breaks rule 1).
-3. When asked, add a conflict: two planted facts of the paper with different subjects, the SAME object, and the two
-   relations of a conflict pair.
+3. When asked, add a conflict: two CLAIMS of the paper (not decoys) with different subjects, the SAME object, and
+   the two relations of a conflict pair.
 Example (ids only): claim [A1, r1, B1] -> decoy [A2, r1, B1] or [A1, r1, B2]; never [A1, r2, B1].
 Conflict: [A1, r1, B1] and [A3, r2, B1] where (r1, r2) is a conflict pair."""
 
@@ -224,7 +229,7 @@ PAPERS_SCHEMA = {"type": "object", "required": ["papers"], "properties": {"paper
     "type": "object", "required": ["title_hint", "issue", "thesis", "claims", "decoys"], "properties": {
         "title_hint": {"type": "string"}, "issue": {"type": "string"}, "thesis": {"type": "string"},
         "claims": {"type": "array", "items": FACT}, "decoys": {"type": "array", "items": FACT},
-        "conflict": {"type": "array", "items": FACT}}}}}}
+        "conflict": {"type": "array", "items": FACT, "minItems": 2, "maxItems": 2}}}}}}
 
 
 def _pack_text(f: Field) -> str:
