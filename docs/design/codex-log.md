@@ -68,3 +68,10 @@ Try 4 (row_field, `spec/dimensions_v3.py`): Spec marks a per-row dimension (time
 - Running when the session ended (may have stopped with it): `practice-haiku` (EVQA_MAX_CALLS=10) and `practice-qwen-q2` (job 9857). Rerun = same command; finished steps are skipped. Then score with `runs/scratch/score2.sh` (after = links, before = same rows with Answer links=None).
 - Decided: silent paper about a fixed setting -> strict (can't tell). EVQA_MAX_CALLS=10 allowed for Claude runs only; Qwen stays 3.
 - Open, in order: lookups p1/p16 score 0 (unexplained); list p3 Extract writes no rows; Q5 ablations on Qwen; tokens not recorded (lm.py); Q2b word lists (guard test fails on purpose); Q8 fixtures; the 9 questions for Aditya (shapes.ttl comparator, seed.ttl order, materials dataset, Pint/pysbd, sign from Extract, Spec medical slots, text answers, repeated sentences, model search).
+
+## 2026-11-21 Practice, full 22, after the row_field + assign fixes (L3 = prism total)
+| run | L2 recall | L3 before (no links) | L3 after (links) | not-reported acc. before/after |
+|---|---|---|---|---|
+| Qwen `practice-qwen-q2-7f186e5217` | 1.00 | 0.7436 | 0.7436 | 0.89 / 1.00 |
+| Haiku `practice-haiku-aa35f2cf32` | 0.955 | 0.7308 | 0.7308 | 0.89 / 1.00 |
+Old Qwen baseline (before today's code): L3 0.62. Fixed since the handoff: `settings_v2.assign` by-code pick keeps only the settings all sets share (another arm's extra had labelled the row; test updated, 12 pass). Lookups p1/p16 and list p3 now right (time fix). Open: Haiku p11 still names "ORD-399 25 mg daily" as best dose: Answer labels a row from the linked component's representative setting set (with its extras), not from the row's own set (answer/core.py cell()). Qwen trend 0.0 (p6, p8) not yet looked at.

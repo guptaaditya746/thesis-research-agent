@@ -210,8 +210,11 @@ def assign(row: Row, sets: list[SettingSet], section: str, lm: dspy.BaseLM) -> N
         if len(same) == 1:
             # the sets differ only in extras the row does not quote: every pick gives Link the same values, so code
             # takes the first instead of asking (Haiku practice, 21 Nov: P-med-20 rows were left without a set)
-            row.note = "; ".join(filter(None, (row.note, "setting sets differ only in extras; first taken")))
-            row.settings, row.setting_set = sets[0].id, sets[0]
+            # without the extras: they belong to other rows (e.g. another arm) and must not label this one
+            shared = [x for x in sets[0].settings if not x.extra]
+            label = " · ".join(x.value for x in shared if x.value != "not stated") or "not stated"
+            row.note = "; ".join(filter(None, (row.note, "setting sets differ only in extras; shared settings taken")))
+            row.settings, row.setting_set = sets[0].id, sets[0].model_copy(update={"settings": shared, "label": label})
             return
         try:
             with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
