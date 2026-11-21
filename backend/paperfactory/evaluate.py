@@ -16,12 +16,15 @@ from __future__ import annotations
 import json
 import math
 import random
+import re
 from typing import Any
 
 from paperfactory import SCORING_VERSION
 from paperfactory.llm import pmap
 from paperfactory.packs import Field
-from paperfactory.text import alias_table, find_mentions, names, norm, normalize_paper, split_rules, split_sents
+from paperfactory.text import (alias_table, find_mentions, names, norm, norm_text, normalize_paper, split_rules,
+                                split_sents)
+from paperfactory.world import fact_errors
 from paperfactory.write import repeated_phrases
 
 
@@ -34,6 +37,8 @@ class Eval:
         self.letters = {chr(65 + i): r for i, r in enumerate(f.relations)} | {chr(65 + len(f.relations)): "none"}
         self.rules = split_rules(f, w)
         self.table = alias_table(w, f)
+        tail = f.raw["text"]["citation_tail"]
+        self.citation_tail = re.compile(tail) if tail else None
 
     # -------------------------------------------------------------- helpers
     def mentions(self, text: str, eid: str) -> bool:
@@ -220,9 +225,49 @@ question and nothing else. If the papers do not answer it, return no items."""
         "properties": {k: {"type": "string"} for k in
                        ("paper", "subject", "relation", "object", "quote", "answer_sentence")}}}}}
 
-    def entity_of(self, text: str, ids: list[str]) -> str | None:
-        hits = [m for m in find_mentions(text, self.table) if m.eid in ids]
-        return max(hits, key=lambda m: len(m.surface)).eid if hits else None
+    def entities_in(self, text: str) -> list[str]:
+        """Entity ids named in text, in order. A citation tail after a subject, e.g. "Marrin v. Tolst Media
+        (Veldra Court of Appeal, 2019)", belongs to that subject: names inside it are not separate mentions."""
+        t = norm_text(text)
+        ms = find_mentions(t, self.table)
+        ents = self.w["entities"]
+        skip: set[int] = set()
+        for m in ms if self.citation_tail else []:
+            if ents[m.eid]["kind"] in self.f.subject_kinds and (x := self.citation_tail.match(t, m.end)):
+                skip |= {k for k, n in enumerate(ms) if m.end <= n.start < x.end()}
+        return list(dict.fromkeys(m.eid for k, m in enumerate(ms) if k not in skip))
+
+    def resolve(self, it: dict[str, Any], step: str) -> dict[str, Any]:
+        """QA item -> fact id, by the pack's rules (world.fact_errors: allowed kinds, time order), never by name
+        length. Status: resolved | resolved_by_judge | no_valid_subject | ambiguous_subject | no_valid_object |
+        relation_none | invalid_fact | ambiguous_object."""
+        ents = self.w["entities"]
+        subj = [e for e in self.entities_in(it["subject"]) if ents[e]["kind"] in self.f.subject_kinds]
+        if len(subj) != 1:
+            return {"resolution": "ambiguous_subject" if subj else "no_valid_subject", "as_fact": None,
+                    "object_candidates": []}
+        s = subj[0]
+
+        def cands(text: str) -> list[str]:
+            return [o for o in self.entities_in(text) if o != s
+                    and any(not fact_errors((s, r, o), ents, self.f) for r in self.f.relations)]
+        objs = cands(it["object"]) or cands(it["quote"])
+        out: dict[str, Any] = {"object_candidates": objs, "as_fact": None}
+        if not objs:
+            return out | {"resolution": "no_valid_object"}
+        judged = {o: self.judge(it["answer_sentence"], s, o, step) for o in objs}
+        ok = {o: r for o, r in judged.items() if r != "none" and not fact_errors((s, r, o), ents, self.f)}
+        if len(objs) == 1:
+            o = objs[0]
+            if judged[o] == "none":
+                return out | {"resolution": "relation_none"}
+            if o not in ok:
+                return out | {"resolution": "invalid_fact", "judged": f"{s}-{judged[o]}-{o}"}
+            return out | {"resolution": "resolved", "as_fact": f"{s}-{ok[o]}-{o}"}
+        if len(ok) == 1:
+            (o, r), = ok.items()
+            return out | {"resolution": "resolved_by_judge", "as_fact": f"{s}-{r}-{o}"}
+        return out | {"resolution": "ambiguous_object", "judged": judged}
 
     def qa_one(self, q: dict[str, Any], tagged: dict[str, Any]) -> dict[str, Any]:
         raw = {pid: self.paper(pid) for pid in q["papers"]}
@@ -239,8 +284,6 @@ question and nothing else. If the papers do not answer it, return no items."""
                             + json.dumps(got) + "\n\nThese quotes occur more than once in their paper; quote a longer,"
                             " unique stretch instead:\n" + "\n".join(bad), self.QA_SCHEMA)
             repaired = True
-        subj_ids = [e for e, x in self.w["entities"].items() if x["kind"] in self.f.subject_kinds]
-        all_ids = list(self.w["entities"])
         scored = []
         for it in got["items"]:
             pid = locate(it)
@@ -256,13 +299,10 @@ question and nothing else. If the papers do not answer it, return no items."""
                 hit = over & set(q["gold"])
                 prov, span_fact = (("gold_span", sorted(hit)[0]) if hit else ("distractor_span", sorted(over)[0])
                                    if over else ("no_planted_span", None))
-            s_id = self.entity_of(it["subject"], subj_ids)
-            others = [e for e in all_ids if e != s_id]
-            o_id = self.entity_of(it["object"], others) or self.entity_of(it["quote"], others)
-            rel = self.judge(it["answer_sentence"], s_id, o_id, f"judge:qa:{q['id']}") if s_id and o_id else "none"
-            as_fact = f"{s_id}-{rel}-{o_id}"
+            res = self.resolve(it, f"judge:qa:{q['id']}")
+            as_fact = res["as_fact"]
             scored.append({**it, "provenance": prov, "ambiguous_quote": ambiguous, "span_fact": span_fact,
-                           "as_fact": as_fact, "answer_right": as_fact in q["gold"],
+                           **res, "answer_right": as_fact in q["gold"],
                            "correct": prov == "gold_span" and as_fact in q["gold"]})
         found = {x["as_fact"] for x in scored if x["correct"]}
         answered = {x["as_fact"] for x in scored if x["answer_right"]}
