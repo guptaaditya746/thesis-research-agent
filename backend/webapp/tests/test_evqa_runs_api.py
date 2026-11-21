@@ -86,3 +86,22 @@ def test_explain_only_for_practice_runs(root: Path) -> None:
     (bench / "Q1").mkdir(parents=True)
     (bench / "config.yaml").write_text("name: b\nsplit: practice\n", encoding="utf-8")
     assert c.get("/api/evqa/runs/bench-q-1/explain/Q1").status_code == 403
+
+
+def test_baseline_run(root: Path) -> None:
+    run = root / "practice-pqa-rag-abc"
+    (run / "Q1").mkdir(parents=True)
+    (run / "baseline" / "answers").mkdir(parents=True)
+    (run / "config.yaml").write_text("name: practice-pqa-rag\ndomain: medical\nsplit: practice\n"
+                                     "system: paperqa2-rag\n", encoding="utf-8")
+    (run / "Q1" / "answer_text.json").write_text(json.dumps({"qid": "Q1", "text": "-0.5 pp"}), encoding="utf-8")
+    (run / "Q1" / "claims.json").write_text(json.dumps({"qid": "Q1", "claims": []}), encoding="utf-8")
+    c = client()
+    runs = {r["run_id"]: r for r in c.get("/api/evqa/runs").json()}
+    assert runs["practice-pqa-rag-abc"]["system"] == "paperqa2-rag" and runs["slice1-abc"]["system"] == "evqa"
+    d = c.get("/api/evqa/runs/practice-pqa-rag-abc").json()
+    assert set(d["questions"]) == {"Q1"}                     # baseline/ is not a question
+    q = d["questions"]["Q1"]
+    assert q["answer_text"]["text"] == "-0.5 pp" and q["claims"] == {"qid": "Q1", "claims": []}
+    assert q["answer"] is None and q["spec"] is None
+    assert c.get("/api/evqa/runs/practice-pqa-rag-abc/explain/Q1").status_code == 409

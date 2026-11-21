@@ -1,0 +1,15 @@
+# Baseline: PaperQA2 agent tools in PaperQA2's fixed order (agent_type "fake": 3 model-written searches -> gather
+# evidence -> answer), every practice question (22). No tool calling needed.
+name: practice-pqa-agent-fixed
+domain: medical
+split: practice
+questions: []
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+system: paperqa2-agent
+baseline:
+  settings:
+    embedding: sparse
+    agent_type: fake

@@ -38,7 +38,8 @@ def test_run_intervals_cover_the_headline_totals() -> None:
     assert iv["l3"][0] < 2 / 3 < iv["l3"][1]                         # answerable questions only
     assert iv["not_reported_accuracy"][0] <= 0.5 <= iv["not_reported_accuracy"][1]
     assert set(iv) == {"method", "l0", "l1", "l2_recall", "l2_precision", "l2_name_ok", "l3", "advisor",
-                       "not_reported_accuracy", "not_reported_hallucination"}
+                       "not_reported_accuracy", "not_reported_hallucination", "l1_paper", "l2_complete",
+                       "l2_complete_upper"}
 
 
 def test_compare_prints_the_paired_interval_and_says_when_it_holds_zero(tmp_path: Path) -> None:

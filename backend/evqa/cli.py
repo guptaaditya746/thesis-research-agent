@@ -211,6 +211,9 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("run", help="run the QA pipeline on a config (resumable), then score it")
     r.add_argument("--config", type=Path, required=True)
     r.add_argument("--no-eval", action="store_true", help="skip scoring the run folder")
+    r.add_argument("--text", action="store_true", help="also score the answer text (L3-text, LLM; see eval --text)")
+    r.add_argument("--text-model", default=None, help="L3-text reader, backend:model (default qwen:orch-model)")
+    r.add_argument("--judge-model", default=None, help="L3-text patient-group judge (default qwen:sub-model-1)")
     r.set_defaults(fn=pipeline_run)
     e = sub.add_parser("eval", help="score a run folder (writes eval.json)")
     e.add_argument("run_dir", type=Path)
@@ -218,6 +221,11 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--judge", action="store_true", help="also run the blind LLM label judge (eval/judge.py)")
     e.add_argument("--judge-population", action="store_true",
                    help="settle unverified patient groups with the blind LLM judge -> population_judge.json")
+    e.add_argument("--text", action="store_true",
+                   help="also score the answer text, the same way for evqa and baseline runs (L3-text, "
+                        "eval/text_answer.py; LLM reader + blind judge, cached)")
+    e.add_argument("--text-model", default=None, help="L3-text reader, backend:model (default qwen:orch-model)")
+    e.add_argument("--judge-model", default=None, help="L3-text patient-group judge (default qwen:sub-model-1)")
     e.set_defaults(fn=eval_run)
     x = sub.add_parser("explain", help="why one question of a practice run is right or wrong, in plain words")
     x.add_argument("run_dir", type=Path)
@@ -245,7 +253,8 @@ def pipeline_run(a: argparse.Namespace) -> int:
     if not a.no_eval:
         from evqa.contracts import RunConfig
         cfg = RunConfig.load(a.config)
-        eval_run(argparse.Namespace(run_dir=evqa_run.ROOT / cfg.run_id(), domain=cfg.domain))
+        eval_run(argparse.Namespace(run_dir=evqa_run.ROOT / cfg.run_id(), domain=cfg.domain, text=a.text,
+                                    text_model=a.text_model, judge_model=a.judge_model))
     return code
 
 
@@ -295,7 +304,22 @@ def eval_run(a: argparse.Namespace) -> int:
         from evqa.eval.judge import judge_population
         got = judge_population(a.run_dir)
         print(json.dumps({k: v for k, v in got.items() if k != "details"}, indent=2))
+    if getattr(a, "text", False):
+        from evqa.eval import text_answer
+        reader = step_llm(a.text_model) if getattr(a, "text_model", None) else text_answer.READER
+        judge = step_llm(a.judge_model) if getattr(a, "judge_model", None) else text_answer.JUDGE
+        got = text_answer.score_run(a.run_dir, reader=reader, judge_llm=judge)
+        print(json.dumps({k: v for k, v in got["totals"].items() if k != "per_type"}, indent=2))
     return 0
+
+
+def step_llm(spec: str):
+    """'qwen:orch-model' -> StepLLM(backend='qwen', model='orch-model')."""
+    from evqa.contracts import StepLLM
+    backend, _, model = spec.partition(":")
+    if not model:
+        raise SystemExit(f"model {spec!r}: write backend:model, e.g. qwen:orch-model")
+    return StepLLM(backend=backend, model=model)
 
 
 if __name__ == "__main__":

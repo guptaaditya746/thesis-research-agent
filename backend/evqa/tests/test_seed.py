@@ -198,7 +198,7 @@ def test_view_of_the_checked_in_seed() -> None:
 
 def test_seed_wall() -> None:
     """Pipeline steps may not import the seed or eval, nor name the seed folder."""
-    for step in ("spec", "find", "extract", "answer"):
+    for step in ("spec", "find", "extract", "answer", "baselines"):
         folder = BACKEND_EVQA / step
         for f in folder.rglob("*.py") if folder.is_dir() else []:
             text = f.read_text(encoding="utf-8")

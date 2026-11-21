@@ -29,6 +29,15 @@ uv run evqa --help
 uv run webapp serve --port 8080               # Workbench at http://127.0.0.1:8080
 ```
 
+Baselines (PaperQA2, long context; submodule `baselines/`, own uv env), on the GPU job like any run:
+
+```bash
+(cd baselines && uv sync --locked)
+uv run evqa run --config configs/evqa/practice-pqa-rag.yaml --text     # also -pqa-agent, -pqa-agent-fixed, -long-context
+uv run evqa eval runs/evqa/practice-qwen-<hash> --text                 # the same answer-text score for evqa
+uv run evqa compare runs/evqa/practice-qwen-<hash> runs/evqa/practice-pqa-rag-<hash>
+```
+
 - Safety: no auth; binds 127.0.0.1, loopback Host names only (`backend/webapp/guard.py`); the API is read-only.
 
 ## Rules for agents

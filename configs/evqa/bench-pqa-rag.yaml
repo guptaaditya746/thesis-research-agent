@@ -1,0 +1,15 @@
+# Baseline: PaperQA2 fixed pipeline (Docs.aquery: retrieve chunks -> one summary per chunk -> answer), every medical test question (78), benchmark mode.
+# Same model, papers and questions as practice-qwen / bench-qwen. thesis-baselines repo (submodule baselines/).
+# Run: evqa run --config configs/evqa/bench-pqa-rag.yaml --text   (on the GPU job, like the evqa runs)
+name: bench-pqa-rag
+domain: medical
+split: test
+questions: []            # empty = every question of the split
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+system: paperqa2-rag
+baseline:
+  settings:              # PaperQA2 defaults except embedding (see baselines/thesis_baselines/paperqa2.py DEFAULTS)
+    embedding: sparse    # PaperQA2's keyword embedding: no embedding model (Aditya, 21 Nov: light, no dense model)

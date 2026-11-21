@@ -260,7 +260,11 @@ def run_question(q: dict[str, Any], cfg: RunConfig, qdir: Path, events: Events,
 
 
 def run(cfg: RunConfig, *, root: Path = ROOT) -> Path:
-    """Run every question of the config (resumable) and return the run folder runs/evqa/<run_id>/."""
+    """Run every question of the config (resumable) and return the run folder runs/evqa/<run_id>/. A baseline
+    config (RunConfig.system: paperqa2-rag, ...) is run by evqa/baselines instead of the four steps."""
+    if cfg.is_baseline():
+        from evqa import baselines
+        return baselines.run(cfg, root)
     out = root / cfg.run_id()
     out.mkdir(parents=True, exist_ok=True)
     conf = out / "config.yaml"
