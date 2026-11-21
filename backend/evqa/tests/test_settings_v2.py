@@ -185,4 +185,5 @@ def test_sets_that_differ_only_in_extras_are_assigned_by_code():
     def ask(prompt):
         raise AssertionError("no model call expected")
     assign(row, sets, "Results", RecordedLM("fake", ask))
-    assert row.settings == "P/setting1" and "first taken" in row.note
+    assert row.settings == "P/setting1" and "shared settings taken" in row.note
+    assert [x.dimension for x in row.setting_set.settings] == ["age_group"]     # no other arm's extra on this row
