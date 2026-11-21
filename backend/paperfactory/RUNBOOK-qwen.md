@@ -90,6 +90,15 @@ python3 -c "import json;r=[json.loads(l) for l in open('runs/paperfactory/qwen-s
 python3 -c "import json;r=json.load(open('runs/paperfactory/qwen-smoke-law/report.json'));print(json.dumps({k:r[k] for k in ('papers_written','papers_planned','papers_failed_world_check','verifier_test','judge_validation','qa_summary','bm25_baseline','style_leak')},indent=1)[:3000])"
 ```
 
+### 2a. Rerun after the 22 Nov fix (first smoke run stopped at LAW-01)
+
+The first smoke run lost LAW-01 to a false alarm: the check flagged the ordinary opening "This paper examines ...".
+That rule is gone (and "The notes ..." is now caught at a sentence start too). Run the smoke test again with the same
+`nohup srun ... run --config $CFG` command from section 2 (git pull first). It prints "world: settings changed
+(field_pack, genre_pack); doing it again" once: the way the world's inputs are recorded changed, so this one rerun
+makes a new world and new papers (the old ones are kept as *.stale-1). That is expected; apply the section 2 pass
+rules to the new report.
+
 ## 3. The four pilot datasets (20 papers each, one field at a time)
 
 Order: law, llm, medicine, materials (llm, medicine and materials packs are DRAFTS: they have never run). For each

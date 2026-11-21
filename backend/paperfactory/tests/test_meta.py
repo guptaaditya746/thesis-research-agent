@@ -162,3 +162,17 @@ def test_a_kept_legacy_paper_is_not_rewritten_after_its_check(tmp_path: Path) ->
     assert not meta.write_stale(p, {"writer": "a"}, True, "w")              # still legacy: kept, not rewritten
     with pytest.raises(meta.MixedSettings):
         meta.write_stale(p, {"writer": "a"}, False, "w")                    # and without the flag: a clear stop
+
+
+def test_check_patterns_do_not_make_a_new_world(tmp_path: Path) -> None:
+    """Changing the check's sentence patterns redoes the check only, never the world (and so never the papers)."""
+    import copy
+
+    from paperfactory import packs
+    s = law(tmp_path)
+    f, g = packs.field("law"), packs.genre("argument")
+    f2 = packs.Field(copy.deepcopy(f.raw))
+    f2.raw["text"]["absence_patterns"] = ["x"]
+    assert cli.world_inputs(s, f, g) == cli.world_inputs(s, f2, g)
+    f2.raw["relations"]["rejects"]["meaning"] = "changed"
+    assert cli.world_inputs(s, f, g) != cli.world_inputs(s, f2, g)

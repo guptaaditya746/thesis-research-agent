@@ -27,7 +27,12 @@ STEPS = ("world", "seed", "materials", "write", "check", "eval")
 
 # ------------------------------------------------------------------ inputs of each step (#8, meta.py)
 def world_inputs(s: config.Settings, f: packs.Field, g: packs.Genre) -> dict[str, Any]:
-    d: dict[str, Any] = {"field_pack": f.raw, "genre_pack": g.raw, "papers": s.papers}
+    """Only the pack parts the world agent and world.check use: a change to e.g. the check's sentence patterns must
+    not make a new world (and so new papers)."""
+    d: dict[str, Any] = {"field_pack": [world._pack_text(f), f.subject_kinds, f.raw.get("order_attr"),
+                                        f.raw.get("real_names", []), f.raw.get("text", {}).get("name_variants", [])],
+                         "genre_pack": [g.name, g.raw.get("claims_per_paper"), g.raw.get("decoys_per_paper")],
+                         "papers": s.papers}
     if s.world_file:
         return d | {"world_file": (REPO / s.world_file).read_text(encoding="utf-8")}
     return d | {"seed": s.seed, "world_model": meta.role(s, "world"), "prompts": [world.ENT_SYS, world.PAPER_SYS]}

@@ -3,6 +3,7 @@ redo, failed papers. Fake models only."""
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from paperfactory import config, packs, repair
@@ -48,7 +49,7 @@ def test_the_l02_sentence_is_caught_by_pattern_and_by_the_world_check(tmp_path: 
 
 
 def test_a_pattern_with_no_pair_is_flagged_without_the_verifier(tmp_path: Path) -> None:
-    md = "This analysis considers only these decisions and no others at all.\n"
+    md = "The notes list only these decisions and no others at all.\n"
     seen: list = []
     flags, _ = repair.Checker(setup(tmp_path, md), PILOT, LAW, fake(GOOD, seen)).check("L-02", md)
     assert [f["kind"] for f in flags] == ["pattern"] and seen == []
@@ -94,3 +95,14 @@ def test_repair_may_not_drop_a_planted_fact(tmp_path: Path) -> None:
     chk.call = call
     assert chk.repair_unit("L-03", md, ["x"], PILOT["papers"]["L-03"]["claims"]) is None
     assert "keep the names of these facts" in got[0]
+
+
+def test_an_ordinary_opening_sentence_is_not_flagged(tmp_path: Path) -> None:
+    """Qwen smoke run (21 Nov 2026): "This paper examines ..." opened LAW-01 and was flagged by the old pattern
+    "This (analysis|paper|...)"; the paper was repaired, rewritten and failed although nothing was wrong."""
+    md = ("This paper examines the legal sufficiency of implied consent for the processing of sensitive personal "
+          "data under the Data Privacy Act 2015.\n")
+    for name in ("law", "llm", "medicine", "materials"):
+        assert not any(re.search(p, md) for p in packs.field(name).raw["text"]["absence_patterns"]), name
+    flags, _ = repair.Checker(setup(tmp_path, md), PILOT, LAW, fake(GOOD, [])).check("L-02", md)
+    assert flags == []

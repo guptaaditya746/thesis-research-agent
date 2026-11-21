@@ -17,7 +17,7 @@
   "actions": "results",
   "line_of_authority": "line of trial evidence"
  },
- "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "vs.", "approx.", "Dr.", "No.", "Co.", "Ltd.", "Inc."], "lowercase_starts": [], "name_variants": [], "citation_tail": "", "defined_terms": [" ?\\((?:the )?[\"'](?P<t>[^\"']{2,40})[\"']\\)", " ?\\((?P<t>[A-Z][A-Z0-9-]*[A-Z0-9])\\)", ",? hereinafter (?:the )?[\"']?(?P<t>[A-Z][^\"',.;)]{1,39}?)[\"']?(?=[\\s,.;)])"], "absence_patterns": ["\\b[Tt]his (analysis|article|paper|review|note)\\b", "\\brecords? no\\b", "\\bno (recorded )?treatment\\b", "\\bnot (recorded|addressed|stated|documented)\\b", "\\bdoes not address\\b", "\\bis silent on\\b", "\\b(the|our) (notes|records|log|materials)\\b", "\\bno data (on|for)\\b"]},
+ "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "vs.", "approx.", "Dr.", "No.", "Co.", "Ltd.", "Inc."], "lowercase_starts": [], "name_variants": [], "citation_tail": "", "defined_terms": [" ?\\((?:the )?[\"'](?P<t>[^\"']{2,40})[\"']\\)", " ?\\((?P<t>[A-Z][A-Z0-9-]*[A-Z0-9])\\)", ",? hereinafter (?:the )?[\"']?(?P<t>[A-Z][^\"',.;)]{1,39}?)[\"']?(?=[\\s,.;)])"], "absence_patterns": ["\\brecords? no\\b", "\\bno (recorded )?treatment\\b", "\\bnot (recorded|addressed|stated|documented)\\b", "\\bdoes not address\\b", "\\bis silent on\\b", "\\b([Tt]he|[Oo]ur) (notes|records|log|materials)\\b", "\\bno data (on|for)\\b"]},
  "kinds": {
   "treatment": {"about": "an invented drug name following real naming stems (e.g. -mab, -tinib, -gliflozin)", "attrs": {"drug_class": "text"}},
   "trial": {"about": "an invented trial with an acronym name (e.g. 'the CORVA-2 trial')", "attrs": {"condition": "text", "year": "int", "design": "text", "patients": "int"}}
