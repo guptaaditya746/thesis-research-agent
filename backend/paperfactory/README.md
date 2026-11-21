@@ -10,6 +10,9 @@ field pack + genre pack + settings
   -> seed       RDF graph, SHACL check, questions from the field pack's templates, gold answers by SPARQL
   -> materials  PaperOrchestra inputs per paper; holdings go in as DATA, never as finished sentences
   -> write      PaperOrchestra (external/paperorchestra) writes each paper (genre template, length = pages)
+  -> check      every paper must agree with the WORLD: pack patterns + verifier (SUPPORTS / CONTRADICTS /
+                ABSENCE_CLAIM / NEUTRAL); a flagged paragraph is rewritten once, then the whole paper once, then the
+                paper is marked failed (paper.raw.md, paper.md, paper.repairs.json)
   -> eval       tagging (where each fact sits) + verifier, verifier test, judge validation, QA scoring with
                 provenance by code, style-leak test
 ```

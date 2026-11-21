@@ -15,11 +15,11 @@ from pathlib import Path
 
 from repo_paths import REPO
 
-from paperfactory import SCORING_VERSION, config, materials, packs, seed, world, write
+from paperfactory import SCORING_VERSION, config, materials, packs, repair, seed, world, write
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
-STEPS = ("world", "seed", "materials", "write", "eval")
+STEPS = ("world", "seed", "materials", "write", "check", "eval")
 
 
 def run(s: config.Settings, steps: list[str]) -> None:
@@ -50,6 +50,17 @@ def run(s: config.Settings, steps: list[str]) -> None:
     if "write" in steps:
         res = write.write_all(s, w, f, g)
         print("write:", json.dumps(res))
+    if "check" in steps:                 # papers must agree with the world (repair.py)
+        template = packs.render_template(f, g, s.pages, out / f"template_{g.name}_{s.pages}p")
+
+        def redo(pid: str) -> str | None:
+            r = write.write_one(s, pid, template, attempt=2)
+            p = out / "work" / pid / "redo-2" / "paper.md"
+            return p.read_text(encoding="utf-8") if r["status"] in ("ok", "exists") and p.is_file() else None
+        chk = repair.Checker(s, w, f, call)
+        todo = [p for p in w["papers"] if (out / "work" / p / "paper.md").is_file()
+                and not (out / "work" / p / "paper.repairs.json").is_file()]
+        print("check:", json.dumps(write.pmap_papers(lambda p: chk.repair_paper(p, redo), todo)))
     if "eval" in steps:
         gold = json.loads((out / "gold.json").read_text(encoding="utf-8"))
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()

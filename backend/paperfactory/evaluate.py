@@ -443,13 +443,16 @@ Use the whole paper to decide. Pick exactly one number."""
 
     # -------------------------------------------------------------- all
     def run(self) -> dict[str, Any]:
-        pids = [p for p in self.w["papers"] if (self.s.out_dir / "work" / p / "paper.md").is_file()]
+        from paperfactory.repair import failed      # a paper that still disagrees with the world is left out
+        pids = [p for p in self.w["papers"] if (self.s.out_dir / "work" / p / "paper.md").is_file()
+                and not failed(self.s.out_dir, p)]
         tagged = dict(zip(pids, pmap(self.tag_paper, pids)))
         (self.s.out_dir / "tagged.json").write_text(json.dumps({"scoring_version": SCORING_VERSION, "papers": tagged},
                                                                indent=1), encoding="utf-8")
         qs = [q for q in self.G["questions"] if all(p in tagged for p in q["papers"])]
         rep: dict[str, Any] = {"scoring_version": SCORING_VERSION, "settings": dict(vars(self.s)),
                                "papers_written": len(pids), "papers_planned": len(self.w["papers"]),
+                               "papers_failed_world_check": [p for p in self.w["papers"] if failed(self.s.out_dir, p)],
                                "tagging": {p: {k: v for k, v in t.items() if k not in ("sentences", "spans")}
                                            | {"spans_per_fact": {i: len(x) for i, x in t["spans"].items()}}
                                            for p, t in tagged.items()}}

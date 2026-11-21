@@ -21,6 +21,21 @@ PROMPT_SETS = {
             "guidelines": "guidelines_v2.md", "style": True, "references": True},
 }
 
+# C10 (paperfactory fix #4): v1 + the rule that the materials are not a source. v1 itself stays frozen.
+NOTES_RULE = """
+---
+### The materials are not a source (HARD RULE, checked after you write)
+1. Write about the sources themselves. Never refer to the materials you were given ("the notes", "the log",
+   "this analysis", "our records", "the data provided") as if they were a source, and never say what they contain
+   or leave out.
+2. Never write that how one source treated another is not recorded, not addressed, unknown, absent or left open.
+   If the materials give no relation between two sources, say nothing about that pair.
+3. State what one source did with another only when `experimental_log.md` lists it.
+Example. Not allowed: "This analysis records no treatment of X in Y." Allowed: leave the pair X, Y out.
+"""
+PROMPT_SETS["v1n"] = PROMPT_SETS["v1"] | {k: PROMPT_SETS["v1"][k] + "\n" + NOTES_RULE
+                                          for k in ("literature", "section", "refine")}
+
 
 def prompt_set(version: str) -> dict:
     if version not in PROMPT_SETS:

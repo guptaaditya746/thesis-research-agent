@@ -83,6 +83,10 @@ Unchanged and unused: `methods/paper_writer_with_plotting.py`, `methods/agents/{
 C2 (21 Nov 2026): `utils/claude_code_utils.py` can also call Qwen: `--writer_model_name qwen:<alias>` sends each call
 to the llm-setup LiteLLM gateway (thinking off, JSON schema enforced by the server). Same cache, log and 3 slot locks.
 
+C10 (21 Nov 2026): prompt set `v1n` = v1 + `NOTES_RULE` (methods/prompts/versions.py) in the literature, section
+and refinement prompts: the materials are never a source, no claims that a relation is unrecorded or absent, and
+relations only for pairs the log lists. paperfactory uses v1n; v1 stays frozen.
+
 C9 (21 Nov 2026): `--backend_json` (paperfactory RoleModel fields) sends every call through paperfactory's model
 layer (`paperfactory.llm.po_runner`: claude_cli or any OpenAI-compatible server, cost reported / priced / local /
 unknown, never 0 for unknown); `ClaudeCodeLM(runner=...)` takes an outside backend; `--max_parallel` sets the slot
