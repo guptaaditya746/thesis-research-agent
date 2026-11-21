@@ -24,6 +24,13 @@ class Field:
     conflict_pairs = property(lambda self: [tuple(p) for p in self.raw.get("conflict_pairs", [])])
     questions = property(lambda self: self.raw["questions"])
 
+    def word(self, key: str) -> str:
+        """A field word for prompts and headings ("words" in the pack). A missing key is a clear error."""
+        try:
+            return self.raw["words"][key]
+        except KeyError:
+            raise KeyError(f"field pack {self.raw.get('field')!r} has no words.{key}") from None
+
     def rel_words(self, r: str) -> str:
         return self.relations[r]["words"]
 

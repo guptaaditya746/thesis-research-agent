@@ -28,7 +28,7 @@ Order for the rest: re-score → #11 → #6 → #7 → #8 → #13 → #9 → "Do
 - [ ] **#13 Writer cost missing from the report.** Add PaperOrchestra's call logs. Report cost per paper and per
       role, the total, and a projection for N papers. Unknown cost shows "unknown". Recompute the README figure
       from the logs ($0.42 was the whole 3-paper pilot without the writer; the writer added $0.119).
-- [ ] **#9 Law wording in shared code.** Move field words into the packs: materials.py ("line of authority",
+- [x] **#9 Law wording in shared code.** Move field words into the packs: materials.py ("line of authority",
       "Holdings", "Action | Source"), prompts in evaluate.py ("holding"). A missing pack key is a clear error.
       Add a test that searches the shared modules for law terms.
 

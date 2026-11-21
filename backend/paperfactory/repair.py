@@ -64,7 +64,7 @@ class Checker:
 
     def says(self, a: str, b: str) -> str:
         """What the world says about the pair, in the pack's words."""
-        actor = self.f.words["actor"]
+        actor = self.f.word("actor")
         for x, y in ((a, b), (b, a)):
             if (x, y) in self.truth:
                 return f"{self.label(x)}: {actor} {self.f.rel_words(self.truth[(x, y)])} {self.label(y)}."
@@ -82,7 +82,7 @@ class Checker:
         return out
 
     def system(self) -> str:
-        sk, rels = self.f.words["subject_kind"], list(self.f.relations.values())
+        sk, rels = self.f.word("subject_kind"), list(self.f.relations.values())
         r1, r2 = rels[0]["words"], rels[min(1, len(rels) - 1)]["words"]
         return f"""You compare one sentence of a paper with what is TRUE in the paper's world about one pair: a {sk}
 and a source. Each item has an id, the sentence, the sentence before it (context), the pair, and the truth.
@@ -93,7 +93,7 @@ CONTRADICTS: the sentence states a relation for this pair that is not the true o
 ABSENCE_CLAIM: the sentence says the relation for this pair is unknown, not recorded, not addressed, not treated,
   absent or left open.
 NEUTRAL: the sentence names both but says nothing about how the {sk} treated the source.
-Examples (truth "X: {self.f.words['actor']} {r1} Y."):
+Examples (truth "X: {self.f.word('actor')} {r1} Y."):
 "In X, the {sk} {r1} Y." -> SUPPORTS.  "X {r2} Y." -> CONTRADICTS.  "It is not recorded how X treated Y." ->
 ABSENCE_CLAIM.  "X and Y are discussed together in this section." -> NEUTRAL."""
 
@@ -154,7 +154,7 @@ Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop t
             lost = [f"{ents[s]['label']} / {ents[o]['label']}" for s, o in must if not {s, o} <= named]
             return f"keep the names of these facts: {lost}" if lost else None
         user = json.dumps({"paragraph": para, "problems": problems, "facts_of_this_paper": [
-            f"{self.label(s)}: {self.f.words['actor']} {self.f.rel_words(r)} {self.label(o)}." for s, r, o in facts]},
+            f"{self.label(s)}: {self.f.word('actor')} {self.f.rel_words(r)} {self.label(o)}." for s, r, o in facts]},
             indent=1, ensure_ascii=False)
         got = self.call("repair", f"repair:{pid}", self.REPAIR_SYS, user, RepairOut, check)
         return got["paragraph"].strip() if got else None
