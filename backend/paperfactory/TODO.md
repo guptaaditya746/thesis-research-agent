@@ -10,7 +10,7 @@ Order for the rest: re-score → #11 → #6 → #7 → #8 → #13 → #9 → "Do
 - [ ] **#11 how many sentences per field** to export for hand labeling (target about 200).
 
 ## Items
-- [ ] **#11 Verifier score is circular.** The 98% is tested on sentences this verifier already accepted, and 29/98
+- [x] **#11 Verifier score is circular.** The 98% is tested on sentences this verifier already accepted, and 29/98
       negatives are impossible pairs. Build a test set without the verifier (all candidate sentences; negatives:
       decoys, other relation, "not recorded" wording; impossible pairs reported apart). Export CSV with columns
       id, field, paper, sentence, context, subject, relation, object, label (empty), notes. Metrics script:

@@ -3,7 +3,8 @@
 Steps (each LLM call is a separate fresh call; the model per job comes from the settings):
   tag       tagger marks sentences per fact; code checks names; verifier (separate call) confirms each tag;
             a sweep sends untagged sentences that name both ends of a fact to the verifier too.
-  verifier  test: accepted tags must get "yes"; the same sentence with another relation (made by code) "no".
+  verifier  test (circular, accepted tags only): accepted tags must get "yes"; the same sentence with another
+            possible relation (made by code) "no"; impossible pairs apart. The real test is labels.py (hand labels).
   judge     multiple-choice meaning judge, validated on paper wording and on reworded answer wording.
   qa        one call per question over its papers; each item quotes the paper; provenance by code (gold span,
             distractor span, no planted span, made-up quote); the relation by the judge; quotes must be unique
@@ -240,11 +241,20 @@ is "no"."""
                     items.append((ctx, S[j][2], fa, True))
                     items += [(ctx, S[j][2], {**fa, "r": r}, False) for r in self.f.relations if r != fa["r"]]
         got = self.verify([(c, s, fa) for c, s, fa, _ in items], "verifier_test")
+        ents = self.w["entities"]
+        imp = [bool(fact_errors((fa["s"], fa["r"], fa["o"]), ents, self.f)) for _, _, fa, _ in items]
         pos = [g for g, it in zip(got, items) if it[3]]
-        neg = [g for g, it in zip(got, items) if not it[3]]
+        neg = [g for g, it, x in zip(got, items, imp) if not it[3] and not x]
+        neg_imp = [g for g, it, x in zip(got, items, imp) if not it[3] and x]
         right = sum(bool(g) for g in pos) + sum(g is False for g in neg)
-        return {"positives": len(pos), "pos_yes": sum(bool(g) for g in pos), "negatives": len(neg),
-                "neg_no": sum(g is False for g in neg), "accuracy": round(right / max(1, len(items)), 3)}
+        return {"note": "circular: positives are sentences this verifier already accepted while tagging; not a "
+                        "precision estimate. The hand-labeled test is labels.py (export-labels, label-metrics)",
+                "positives": len(pos), "pos_yes": sum(bool(g) for g in pos),
+                "negatives": len(neg), "neg_no": sum(g is False for g in neg),
+                "accuracy_accepted_tags_only": round(right / max(1, len(pos) + len(neg)), 3),
+                "impossible_pair_negatives": {"n": len(neg_imp), "no": sum(g is False for g in neg_imp),
+                                              "note": "relations the pack does not allow for the pair; left out of "
+                                                      "the accuracy"}}
 
     # -------------------------------------------------------------- meaning judge
     def judge_sys(self) -> str:

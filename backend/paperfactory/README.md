@@ -24,6 +24,8 @@ uv run paperfactory run --config backend/paperfactory/configs/law-pilot.json    
 uv run paperfactory run --config backend/paperfactory/configs/law.json          # 20 papers, world agent
 uv run paperfactory run --config ... --steps seed,materials                     # some steps only
 uv run paperfactory check-world --config ... --world my-world.json
+uv run paperfactory export-labels --config ... --out labels.csv --per-field 200   # hand labels for the verifier
+uv run paperfactory label-metrics --labels a.csv --labels b.csv --answers verifier.json [--run-verifier --config ...]
 ```
 
 Heavy runs go through Slurm (`srun --jobid=<job> --overlap ...`). Output goes to the run folder (`out`, under
@@ -61,7 +63,9 @@ report.json, calls.jsonl (every model call with its cost). Steps reuse what exis
 
 ## Law pilot on this system (21 Nov 2026, Haiku for every job, $0.42)
 
-3 papers (2,700-3,200 words), 18 planted facts, all found in the papers (49 spans). Verifier 98% (146/147).
+3 papers (2,700-3,200 words), 18 planted facts, all found in the papers (49 spans). The verifier has no
+precision estimate yet: the old verifier test only reuses sentences the verifier itself accepted (circular); the
+hand-labeled test is `export-labels` / `label-metrics` (labels.py).
 Meaning judge 89.8% on paper wording and on answer wording (bar 90%: just under). QA over 7 questions: right
 answer 100%, right answer with right evidence 93%, precision 57% (extra items: repeats and neighbouring facts).
 Style leak 4.7% (7/150, 95% range 2-9%; chance 5%): passes, down from 19% when holdings were given as sentences.
