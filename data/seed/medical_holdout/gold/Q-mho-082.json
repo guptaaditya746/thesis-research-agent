@@ -1,0 +1,190 @@
+{
+  "qid": "Q-mho-082",
+  "domain": "medical_holdout",
+  "type": "effect",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:pomitral }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:sbp-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "sbp_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-15-01",
+    "R-mho-15-02",
+    "R-mho-15-03",
+    "R-mho-15-04",
+    "R-mho-16-01",
+    "R-mho-16-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-15-01",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "3 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-3.9",
+        "unit": "mmHg",
+        "verdict": "pomitral better"
+      },
+      {
+        "row": "R-mho-15-02",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "3 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-4.2",
+        "unit": "mmHg",
+        "verdict": "pomitral better"
+      },
+      {
+        "row": "R-mho-15-03",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "6 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-5.6",
+        "unit": "mmHg",
+        "verdict": "pomitral better"
+      },
+      {
+        "row": "R-mho-15-04",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "6 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-4.8",
+        "unit": "mmHg",
+        "verdict": "pomitral better"
+      },
+      {
+        "row": "R-mho-16-01",
+        "paper": "P-mho-16",
+        "cells": {
+          "dose": "6 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-5.3",
+        "unit": "mmHg",
+        "verdict": "pomitral better"
+      },
+      {
+        "row": "R-mho-16-02",
+        "paper": "P-mho-16",
+        "cells": {
+          "dose": "6 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-5.2",
+        "unit": "mmHg",
+        "verdict": "pomitral better"
+      }
+    ],
+    "comparator": "placebo",
+    "rounding_step": "0.1",
+    "higher_is_better": false,
+    "per_study": [
+      {
+        "paper": "P-mho-15",
+        "title": "Pomitral for blood pressure and cholesterol in type 2 diabetes with high blood pressure",
+        "rows": [
+          "R-mho-15-01",
+          "R-mho-15-02",
+          "R-mho-15-03",
+          "R-mho-15-04"
+        ],
+        "verdicts": [
+          "pomitral better"
+        ]
+      },
+      {
+        "paper": "P-mho-16",
+        "title": "PMT-774 added to metformin: effects on blood pressure and LDL cholesterol",
+        "rows": [
+          "R-mho-16-01",
+          "R-mho-16-02"
+        ],
+        "verdicts": [
+          "pomitral better"
+        ]
+      }
+    ],
+    "text": "P-mho-15, 3 mg, 12 wk, adults with type 2 diabetes and high blood pressure on metformin: -3.9 mmHg (pomitral better); P-mho-15, 3 mg, 24 wk, adults with type 2 diabetes and high blood pressure on metformin: -4.2 mmHg (pomitral better); P-mho-15, 6 mg, 12 wk, adults with type 2 diabetes and high blood pressure on metformin: -5.6 mmHg (pomitral better); P-mho-15, 6 mg, 24 wk, adults with type 2 diabetes and high blood pressure on metformin: -4.8 mmHg (pomitral better); P-mho-16, 6 mg, 12 wk, adults with type 2 diabetes on metformin: -5.3 mmHg (pomitral better); P-mho-16, 6 mg, 24 wk, adults with type 2 diabetes on metformin: -5.2 mmHg (pomitral better)"
+  },
+  "rows_without_card": 6,
+  "notes": "",
+  "spec": {
+    "type": "effect",
+    "split": "test",
+    "template": "Does pomitral reduce systolic blood pressure more than placebo?",
+    "fixed": {
+      "subject": [
+        "drug_f"
+      ],
+      "comparator": "placebo",
+      "measure": "sbp_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "difference"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "Does pomitral reduce systolic blood pressure more than placebo?",
+    "source": "llm",
+    "text": "Does pomitral lower systolic blood pressure more than placebo?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Does pomitral lower systolic blood pressure more than placebo?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

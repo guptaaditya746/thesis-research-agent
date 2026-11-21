@@ -1,0 +1,94 @@
+{
+  "qid": "Q-med-19",
+  "domain": "medical",
+  "type": "out_of_scope",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:montelukast }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "montelukast"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "montelukast appears in no paper and nowhere in the seed",
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: montelukast appears in no paper and nowhere in the seed"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "out_of_scope",
+    "split": "test",
+    "template": "What does montelukast do to body weight?",
+    "fixed": {
+      "subject": [
+        "montelukast"
+      ],
+      "measure": "weight_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug",
+      "terms": [
+        "montelukast"
+      ],
+      "why": "montelukast appears in no paper and nowhere in the seed"
+    }
+  },
+  "absence_check": {
+    "terms": [
+      "montelukast"
+    ],
+    "papers_checked": 20,
+    "seed_checked": true,
+    "hits": 0
+  },
+  "wording": {
+    "template": "What does montelukast do to body weight?",
+    "source": "llm",
+    "text": "How does montelukast affect body weight?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does montelukast affect body weight?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

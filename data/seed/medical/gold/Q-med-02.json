@@ -1,0 +1,91 @@
+{
+  "qid": "Q-med-02",
+  "domain": "medical",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:kavolemin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_b"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-03-05",
+    "R-med-03-06",
+    "R-med-03-07",
+    "R-med-03-08"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-03-05",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "5 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.1",
+        "unit": "kg"
+      },
+      {
+        "row": "R-med-03-06",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "5 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "0.5",
+        "unit": "kg"
+      },
+      {
+        "row": "R-med-03-07",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "0.7",
+        "unit": "kg"
+      },
+      {
+        "row": "R-med-03-08",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "0.5",
+        "unit": "kg"
+      }
+    ],
+    "text": "4 value(s): 5 mg, 12 wk, adults with type 2 diabetes on metformin, -0.1 kg; 5 mg, 24 wk, adults with type 2 diabetes on metformin, 0.5 kg; 10 mg, 12 wk, adults with type 2 diabetes on metformin, 0.7 kg; 10 mg, 24 wk, adults with type 2 diabetes on metformin, 0.5 kg"
+  },
+  "rows_without_card": 4,
+  "notes": "Open dose and week; the drug raises weight at most points, so the sign matters."
+}

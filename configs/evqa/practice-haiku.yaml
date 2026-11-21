@@ -1,0 +1,18 @@
+# Practice (22 questions) on Claude Haiku 5.5 while Qwen is down (Aditya, 21 Nov: "haiku"). Not comparable to Qwen scores.
+# Run: uv run evqa run --config configs/evqa/practice-haiku.yaml   (no GPU job needed; calls go through `claude -p`)
+name: practice-haiku
+domain: medical
+mode: benchmark
+split: practice
+questions: []            # empty = every question of the split
+llm:
+  backend: claude
+  model: claude-haiku-5-5
+  think: false
+steps: {}                # per-step override, e.g. spec_check: {backend: qwen, model: orch-model-2}
+find:
+  search_terms: true     # model lists other wordings; exact-word search (no BM25)
+  screen_max_papers: 20
+  agent_max_steps: 6
+  agent: true
+closed_book: false

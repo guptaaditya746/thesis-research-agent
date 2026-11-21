@@ -1,0 +1,39 @@
+<section id="contrast">
+<div class="head">
+<p class="eyebrow">1 · The idea</p>
+<h2>Answer-level QA vs evidence-level QA</h2>
+</div>
+<div class="flowrow in" style="--i:1">
+<p class="rowlabel">Answer-level (classic RAG): the model reads passages and writes the answer</p>
+<div class="flow">
+<div class="box b-qa"><h3>Question</h3><p>free text</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-doc"><h3>Retrieve</h3><p>top-k passages from the papers</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box" style="flex:1.6"><h3>LLM reads and writes</h3><p>decides, counts and phrases in one step</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-qa"><h3>Answer</h3><p>text + citations</p></div>
+</div>
+<div class="verdict"><p class="pill pill-bad">Opaque</p><p class="small">How the answer was decided is hidden; a number can be invented; a re-run can change it.</p></div>
+</div>
+<div class="flowrow in" style="--i:3">
+<p class="rowlabel">Evidence-level (ours): facts first, then the answer is computed from them</p>
+<div class="flow">
+<div class="box b-qa"><h3>Question</h3><p>+ answer kind</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-person"><h3>Plan</h3><p>a person confirms</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-lock"><h3>Protocol</h3><p>frozen before reading</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box"><h3>Extract</h3><p>facts + quoted spans</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box"><h3>Graph</h3><p>records of facts</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-code"><h3>Rules</h3><p>code decides</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-qa"><h3>Answer</h3><p>+ run folder</p></div>
+</div>
+<div class="verdict"><p class="pill pill-good">Checkable</p><p class="small">Every number traces to a quote; the rule is fixed before any paper is read; the run can be replayed.</p></div>
+</div>
+<aside>Top row: the usual pattern. Retrieval plus one LLM call that does everything at once, so you cannot see why it said yes or no. Bottom row: we split the job. The model only extracts facts with their exact quotes; code applies a rule that was fixed in the protocol before any paper was opened. Same question, but the answer is a computation over evidence, not a piece of generated text.</aside>
+</section>

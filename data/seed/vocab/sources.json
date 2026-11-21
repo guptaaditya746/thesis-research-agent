@@ -1,0 +1,25 @@
+{
+  "made": "2026-11-21",
+  "sources": {
+    "mesh_desc": {
+      "url": "https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/desc2026.gz",
+      "file": "desc2026.gz",
+      "sha256": "ccd4d0d33bebfd4c836a59e7dd0c635b1d4e20c4f5a6abc55e2eb0ba4c8716dd"
+    },
+    "mesh_supp": {
+      "url": "https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/supp2026.gz",
+      "file": "supp2026.gz",
+      "sha256": "5d487dbb55807724465065f5c0945c630290a0a6decee14618f5380c574d87ab"
+    },
+    "chebi": {
+      "url": "https://ftp.ebi.ac.uk/pub/databases/chebi/flat_files/names.tsv.gz",
+      "file": "chebi-names.tsv.gz",
+      "sha256": "3b728dd21b29c825376ab533155a79682a891ee37665a52805d77a9e79b96a2f"
+    },
+    "qudt": {
+      "url": "https://qudt.org/vocab/unit/",
+      "file": "qudt-units.ttl",
+      "sha256": "8fb6405ef0eef5764e748e302111ffece79b61804c41573c8eedf31a6f2f6712"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+<section id="ev-graph" class="alt">
+<svg aria-label="RDF graph from the real run: a comparison node points to value 223 for Alvenor and value 172 for standard care, both on blood pressure control, with better pointing to 223" viewBox="0 0 1920 1080" width="1920" height="1080" style="position:absolute;left:0;top:0;width:1920px;height:1080px">
+<g fill="none" stroke="#475467" stroke-width="4">
+<path d="M360 580 L600 375"/>
+<path d="M300 545 C330 300 450 300 600 330" stroke="#2E7D4F" stroke-width="5"/>
+<path d="M360 630 L600 840"/>
+<path d="M360 600 L560 600"/>
+<path d="M230 655 L230 760"/>
+<path d="M820 330 L940 315"/>
+<path d="M820 375 L940 585"/>
+<path d="M820 870 L940 885"/>
+<path d="M820 825 L940 615"/>
+</g>
+<rect x="100" y="545" width="260" height="110" rx="12" fill="#111C2E"/>
+<rect x="130" y="760" width="200" height="70" rx="35" fill="#FFFFFF" stroke="#475467" stroke-width="3"/>
+<rect x="600" y="290" width="220" height="100" rx="12" fill="#FFFFFF" stroke="#0B6E99" stroke-width="5"/>
+<rect x="600" y="800" width="220" height="100" rx="12" fill="#FFFFFF" stroke="#8A96A6" stroke-width="5"/>
+<rect x="560" y="545" width="300" height="110" rx="12" fill="#FFFFFF" stroke="#111C2E" stroke-width="3"/>
+<rect x="940" y="280" width="220" height="70" rx="35" fill="#E3F0F6" stroke="#0B6E99" stroke-width="3"/>
+<rect x="940" y="565" width="220" height="70" rx="35" fill="#F2F4F7" stroke="#475467" stroke-width="3"/>
+<rect x="940" y="850" width="220" height="70" rx="35" fill="#F2F4F7" stroke="#8A96A6" stroke-width="3"/>
+<rect x="1230" y="560" width="630" height="230" rx="12" fill="#FEF3F2" stroke="#B42318" stroke-width="4"/>
+</svg>
+<div class="head">
+<p class="eyebrow">3 · Worked example · S010, stages 3 and 4</p>
+<h2>The graph says “better”, the synthesis says “worse”</h2>
+</div>
+<p style="position:absolute;left:110px;top:560px;width:240px;font-size:24px;line-height:1.3;color:#FFFFFF;text-align:center"><b>Comparison</b><br>cmp:16b9</p>
+<p style="position:absolute;left:130px;top:777px;width:200px;font-size:24px;text-align:center">delta = 51</p>
+<p style="position:absolute;left:600px;top:305px;width:220px;font-size:24px;line-height:1.3;text-align:center"><b>Value 223</b><br>of 400</p>
+<p style="position:absolute;left:600px;top:815px;width:220px;font-size:24px;line-height:1.3;text-align:center"><b>Value 172</b><br>of 400</p>
+<p style="position:absolute;left:570px;top:560px;width:280px;font-size:24px;line-height:1.3;text-align:center"><b>Experiment</b><br>S010 · older adults</p>
+<p style="position:absolute;left:940px;top:297px;width:220px;font-size:24px;text-align:center;color:#0B6E99"><b>Alvenor</b></p>
+<p style="position:absolute;left:940px;top:582px;width:220px;font-size:24px;text-align:center">BP control</p>
+<p style="position:absolute;left:940px;top:867px;width:220px;font-size:24px;text-align:center">Standard care</p>
+<p style="position:absolute;left:430px;top:455px;width:60px;font-size:24px;color:#475467">a</p>
+<p style="position:absolute;left:330px;top:300px;width:120px;font-size:24px;color:#2E7D4F"><b>better</b></p>
+<p style="position:absolute;left:440px;top:735px;width:60px;font-size:24px;color:#475467">b</p>
+<p style="position:absolute;left:372px;top:604px;width:190px;font-size:24px;color:#475467">inExperiment</p>
+<p style="position:absolute;left:850px;top:270px;width:80px;font-size:24px;color:#475467">of</p>
+<p style="position:absolute;left:850px;top:890px;width:80px;font-size:24px;color:#475467">of</p>
+<p style="position:absolute;left:800px;top:455px;width:130px;font-size:24px;color:#475467">onMetric</p>
+<p style="position:absolute;left:800px;top:705px;width:130px;font-size:24px;color:#475467">onMetric</p>
+<p style="position:absolute;left:1230px;top:262px;width:630px;font-size:24px;line-height:1.35"><b>Stored as RDF triples</b> (subject · predicate · object), records.nq:<br><span class="mono">cmp:16b9 · a · value:223<br>cmp:16b9 · b · value:172<br>cmp:16b9 · better · value:223<br>value:223 · of · alvenor</span></p>
+<p style="position:absolute;left:1256px;top:578px;width:580px;font-size:24px;line-height:1.35"><b style="color:#B42318">Synthesis read it as</b> (comparisons.json):<br>Alvenor 223 vs Standard care 172, <b>delta −51</b>, “contradicts”<br>→ answer: <b>“S010: worse”</b></p>
+<p style="position:absolute;left:1230px;top:815px;width:630px;font-size:24px;line-height:1.35"><b>Check against our own graph:</b> the graph says Alvenor is better by 51; synthesis flipped the sign. Numbers right, conclusion wrong: a <b>synthesis error</b>.</p>
+<p style="position:absolute;left:1230px;top:960px;width:630px;font-size:24px;line-height:1.35"><b>Merge:</b> 0 of 11 facts in the wrong group · <b>Synthesis:</b> 0 of 3 sheet points</p>
+<aside>This is the real graph from the m01 run, nothing redrawn by hand. Every fact is stored as RDF triples: subject, predicate, object. Here a Comparison node says: a is the value 223, b is the value 172, and better points to 223, with a difference of 51. The values point to their drug, their measure and their experiment, the older adults in S010. So merging did its job: all 11 facts sit in the right group. Then synthesis read the same comparison and wrote delta minus 51, “contradicts”, and the answer called Alvenor worse in S010. Because we can recompute the conclusion from our own graph, we know the numbers were right and the error is in synthesis. That is exactly the split between extraction errors and synthesis errors that section 5 asks for.</aside>
+</section>

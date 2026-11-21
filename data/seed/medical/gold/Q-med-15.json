@@ -1,0 +1,130 @@
+{
+  "qid": "Q-med-15",
+  "domain": "medical",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:kavolemin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_b"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-03-01",
+    "R-med-03-02",
+    "R-med-03-03",
+    "R-med-03-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-03-01",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "5 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.42",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-03-02",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "5 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.58",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-03-03",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.53",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-03-04",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.64",
+        "unit": "pp"
+      }
+    ],
+    "text": "4 value(s): 5 mg, 12 wk, adults with type 2 diabetes on metformin, -0.42 pp; 5 mg, 24 wk, adults with type 2 diabetes on metformin, -0.58 pp; 10 mg, 12 wk, adults with type 2 diabetes on metformin, -0.53 pp; 10 mg, 24 wk, adults with type 2 diabetes on metformin, -0.64 pp"
+  },
+  "rows_without_card": 4,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "lookup",
+    "split": "test",
+    "template": "What does kavolemin do to HbA1c?",
+    "fixed": {
+      "subject": [
+        "drug_b"
+      ],
+      "measure": "hba1c_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "What does kavolemin do to HbA1c?",
+    "source": "llm",
+    "text": "What effect does kavolemin have on HbA1c in the trial results?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "What effect does kavolemin have on HbA1c in the trial results?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

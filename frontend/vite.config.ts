@@ -3,9 +3,8 @@
 //
 // - `npm run dev`: /api is proxied to the FastAPI backend (`webapp serve`, 127.0.0.1:8080 by
 //   default; override with WEBAPP_API).
-// - `npm run dev:mock` (or VITE_MOCK=1): no backend; MSW answers /api from src/mocks.
 // - `npm run build`: dist/, which the backend serves at /.
-// - `npm test`: Vitest in jsdom, with the same MSW handlers in Node.
+// - `npm test`: Vitest in jsdom; MSW in Node answers /api per test.
 import path from "node:path"
 
 import tailwindcss from "@tailwindcss/vite"

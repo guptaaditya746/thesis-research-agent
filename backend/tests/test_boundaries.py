@@ -1,6 +1,6 @@
 """Service boundaries (backend/README.md): a package imports only its own service or one below it.
 
-Order, bottom to top: gateway < engine < evaluation < api. Tests are not checked (they may reach across to reuse
+Order, bottom to top: gateway < engine < api. Tests are not checked (they may reach across to reuse
 fakes). A wrong-way import that exists today is listed in KNOWN with its reason; a new one fails here.
 """
 from __future__ import annotations
@@ -10,17 +10,14 @@ from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1]
 SERVICES = {
-    "gateway": ("modelcall",),
-    "engine": ("evidence", "agent", "gold", "jsonio"),
-    "evaluation": ("evaluation", "scoring", "synth", "packbuilder"),
+    "gateway": ("modelcall", "jsonio"),
+    "engine": ("evqa",),
     "api": ("webapp",),
 }
 RANK = {pkg: rank for rank, pkgs in enumerate(SERVICES.values()) for pkg in pkgs}
 SHARED = {"repo_paths"}   # folder locations only; any package may import it
 # (importer, imported): reason. Keep the list short; fix an entry rather than add one.
-KNOWN = {
-    ("modelcall", "jsonio"): "canonical JSON and atomic writes; jsonio is hashed into extractor ids, so it stays put",
-}
+KNOWN: dict[tuple[str, str], str] = {}
 
 
 def imports(pkg: str) -> set[tuple[str, str]]:
@@ -48,7 +45,7 @@ def test_every_backend_package_has_a_service() -> None:
 def test_imports_follow_the_service_order() -> None:
     wrong = sorted((f, top) for pkg in RANK for f, top in imports(pkg)
                    if top in RANK and RANK[top] > RANK[pkg] and (pkg, top) not in KNOWN)
-    assert wrong == [], "import against the direction gateway < engine < evaluation < api (backend/README.md)"
+    assert wrong == [], "import against the direction gateway < engine < api (backend/README.md)"
 
 
 def test_known_exceptions_still_exist() -> None:

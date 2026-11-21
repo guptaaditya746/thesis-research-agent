@@ -1,0 +1,52 @@
+<section id="templates" class="alt" style="gap:28px">
+<div class="head">
+<p class="eyebrow">1 · The protocol</p>
+<h2>One template per answer kind: the plan only fills its blanks</h2>
+</div>
+<div class="panel in" style="--i:1;gap:0;padding:22px 30px 8px">
+<div class="thead">
+<p style="width:200px;flex:none">Kind</p>
+<p style="width:310px;flex:none">Example question</p>
+<p style="width:470px;flex:none">The person checks</p>
+<p style="flex:1">The answer</p>
+</div>
+<div class="trow">
+<div style="width:200px;flex:none"><h3>Effect</h3></div>
+<p class="q" style="width:310px;flex:none">“Does A improve M compared with B?”</p>
+<p style="width:470px;flex:none">threshold for “no effect”, which measure counts, same setting only</p>
+<p style="flex:1">per paper better / worse / no difference → supported, refuted, mixed, no effect, insufficient</p>
+</div>
+<div class="trow">
+<div style="width:200px;flex:none"><h3>Consistency</h3></div>
+<p class="q" style="width:310px;flex:none">“Do the authors’ claims match their numbers?”</p>
+<p style="width:470px;flex:none">threshold below which a difference is “no effect”</p>
+<p style="flex:1">per claim, agrees or disagrees with the paper’s own numbers</p>
+</div>
+<div class="trow">
+<div style="width:200px;flex:none"><h3>Inventory</h3></div>
+<p class="q" style="width:310px;flex:none">“Which X were studied?”</p>
+<p style="width:470px;flex:none">the target: things compared, or measures</p>
+<p style="flex:1">every distinct name, with the papers that name it</p>
+</div>
+<div class="trow">
+<div style="width:200px;flex:none"><h3>Best</h3></div>
+<p class="q" style="width:310px;flex:none">“Which is best on M?”</p>
+<p style="width:470px;flex:none">count wins per result or per paper; which direction is better</p>
+<p style="flex:1">the thing with the most wins, with the counts</p>
+</div>
+<div class="trow">
+<div style="width:200px;flex:none"><h3 style="color:#0B6E99">Open (written)</h3></div>
+<p class="q" style="width:310px;flex:none">“It depends”, “cannot tell”, mixed questions</p>
+<p style="width:470px;flex:none">the same decisions, line by line</p>
+<p style="flex:1">a model writes 1–8 sentences; code checks every number against the cited facts</p>
+</div>
+<div class="trow">
+<div style="width:200px;flex:none"><h3 style="color:#C62828">Claims check</h3><p style="color:#C62828">always added</p></div>
+<p class="q" style="width:310px;flex:none">“Do the conclusions match the numbers?”</p>
+<p style="width:470px;flex:none"><b>Added by code</b> to every effect and consistency plan; cannot be removed</p>
+<p style="flex:1">firm “improves” claims no comparison backs, shown as a caveat</p>
+</div>
+</div>
+<p class="src">Templates: backend/evidence/kg/templates/*.rq (effect, consistency, inventory, best, oversell)</p>
+<aside>Each kind has a fixed recipe, a SPARQL template. The plan only fills in the blanks, and the person checks what goes into them. That is what makes the answer predictable: for an effect question, the label follows mechanically from the per-paper comparisons. Open questions are the exception: a model writes the text, but code still checks every number. The claims check is always added; it catches authors who claim more than their numbers show, which synth3 plants on purpose.</aside>
+</section>

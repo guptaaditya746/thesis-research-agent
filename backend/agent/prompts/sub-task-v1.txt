@@ -1,8 +1,0 @@
-The agent that started you is researching this concept in the corpus:
-{{concept_json}}
-
-Your task, from that agent:
-{{sub_task}}
-
-{{sub_files}}
-Do this task only, then give your result.

@@ -1,0 +1,38 @@
+{
+  "scilead": {
+    "source_only_questions": 27,
+    "corpus_filtered_questions": 27,
+    "sample_ids": [
+      "scilead-03",
+      "scilead-06",
+      "scilead-11",
+      "scilead-17",
+      "scilead-18",
+      "scilead-19",
+      "scilead-20",
+      "scilead-21",
+      "scilead-22",
+      "scilead-27"
+    ],
+    "sample_paper_guard_passed": true,
+    "question_texts_match_baselines_and_executed_plans": true
+  },
+  "scirex": {
+    "source_only_questions": 26,
+    "corpus_filtered_questions": 19,
+    "sample_ids": [
+      "scirex-001",
+      "scirex-004",
+      "scirex-005",
+      "scirex-006",
+      "scirex-008",
+      "scirex-010",
+      "scirex-011",
+      "scirex-017",
+      "scirex-018",
+      "scirex-019"
+    ],
+    "sample_paper_guard_passed": true,
+    "question_texts_match_baselines_and_executed_plans": true
+  }
+}

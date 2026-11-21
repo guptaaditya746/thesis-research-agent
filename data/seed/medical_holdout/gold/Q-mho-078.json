@@ -1,0 +1,80 @@
+{
+  "qid": "Q-mho-078",
+  "domain": "medical_holdout",
+  "type": "list",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?context { d:t2d-metformin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     sosa:observedProperty d:sbp-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "measure": "sbp_change",
+    "context": "t2d_metformin"
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-mho-16-01",
+    "R-mho-16-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "paper",
+        "label": "study"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-16-01",
+        "paper": "P-mho-16",
+        "cells": {
+          "paper": "PMT-774 added to metformin: effects on blood pressure and LDL cholesterol"
+        },
+        "value": "",
+        "unit": ""
+      }
+    ],
+    "papers": [
+      {
+        "paper": "P-mho-16",
+        "title": "PMT-774 added to metformin: effects on blood pressure and LDL cholesterol",
+        "rows": [
+          "R-mho-16-01",
+          "R-mho-16-02"
+        ]
+      }
+    ],
+    "text": "1 study: P-mho-16 (PMT-774 added to metformin: effects on blood pressure and LDL cholesterol)"
+  },
+  "rows_without_card": 2,
+  "notes": "",
+  "spec": {
+    "type": "list",
+    "split": "test",
+    "template": "Which studies report systolic blood pressure in adults with type 2 diabetes on metformin?",
+    "fixed": {
+      "measure": "sbp_change",
+      "context": "t2d_metformin"
+    },
+    "open": [],
+    "candidate": null,
+    "extra": {
+      "kind": "measure_group"
+    }
+  },
+  "wording": {
+    "template": "Which studies report systolic blood pressure in adults with type 2 diabetes on metformin?",
+    "source": "llm",
+    "text": "Which studies have measured systolic blood pressure in adults with type 2 diabetes on metformin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which studies have measured systolic blood pressure in adults with type 2 diabetes on metformin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

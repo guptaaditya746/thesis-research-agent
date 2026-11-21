@@ -1,0 +1,153 @@
+{
+  "qid": "Q-med-24",
+  "domain": "medical",
+  "type": "effect",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:kavolemin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:fpg-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_b"
+    ],
+    "comparator": "placebo",
+    "measure": "fpg_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-03-09",
+    "R-med-03-10",
+    "R-med-03-11",
+    "R-med-03-12"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-03-09",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "5 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.60",
+        "unit": "mmol/L",
+        "verdict": "kavolemin better"
+      },
+      {
+        "row": "R-med-03-10",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "5 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.67",
+        "unit": "mmol/L",
+        "verdict": "kavolemin better"
+      },
+      {
+        "row": "R-med-03-11",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.86",
+        "unit": "mmol/L",
+        "verdict": "kavolemin better"
+      },
+      {
+        "row": "R-med-03-12",
+        "paper": "P-med-03",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.89",
+        "unit": "mmol/L",
+        "verdict": "kavolemin better"
+      }
+    ],
+    "comparator": "placebo",
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "per_study": [
+      {
+        "paper": "P-med-03",
+        "title": "Kavolemin as add-on to metformin: a 24-week placebo-controlled trial",
+        "rows": [
+          "R-med-03-09",
+          "R-med-03-10",
+          "R-med-03-11",
+          "R-med-03-12"
+        ],
+        "verdicts": [
+          "kavolemin better"
+        ]
+      }
+    ],
+    "text": "P-med-03, 5 mg, 12 wk, adults with type 2 diabetes on metformin: -0.60 mmol/L (kavolemin better); P-med-03, 5 mg, 24 wk, adults with type 2 diabetes on metformin: -0.67 mmol/L (kavolemin better); P-med-03, 10 mg, 12 wk, adults with type 2 diabetes on metformin: -0.86 mmol/L (kavolemin better); P-med-03, 10 mg, 24 wk, adults with type 2 diabetes on metformin: -0.89 mmol/L (kavolemin better)"
+  },
+  "rows_without_card": 4,
+  "notes": "",
+  "spec": {
+    "type": "effect",
+    "split": "test",
+    "template": "Does kavolemin reduce fasting plasma glucose more than placebo?",
+    "fixed": {
+      "subject": [
+        "drug_b"
+      ],
+      "comparator": "placebo",
+      "measure": "fpg_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "difference"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "Does kavolemin reduce fasting plasma glucose more than placebo?",
+    "source": "llm",
+    "text": "Does kavolemin lower fasting plasma glucose more than placebo?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Does kavolemin lower fasting plasma glucose more than placebo?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

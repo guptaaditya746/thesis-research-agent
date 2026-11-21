@@ -1,0 +1,31 @@
+<section id="diagnosis" style="gap:24px">
+<div class="head">
+<p class="eyebrow">4 · Diagnosis</p>
+<h2>Most facts are lost before extraction starts: at the screen</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div class="in" style="--i:1;flex:1;display:flex;flex-direction:column;gap:22px">
+<p class="rowlabel">All runs: planted facts lost at the screen</p>
+<div class="loss">
+<div class="kfrow"><p class="kf">76%</p><p><b>medicine (real-edit)</b><br>1,305 of 1,679 relevant papers rejected; 7,567 of 9,963 facts lost</p></div>
+<div class="meter"><div style="flex:76"></div><div class="rest" style="flex:24"></div></div>
+</div>
+<div class="loss">
+<div class="kfrow"><p class="kf">27%</p><p><b>RAG (template)</b><br>567 of 1,913 relevant papers rejected; 3,146 of 11,775 facts lost</p></div>
+<div class="meter"><div style="flex:27"></div><div class="rest" style="flex:73"></div></div>
+</div>
+<div style="flex:1"></div>
+<p class="where"><b style="color:#111C2E">m01, medicine, seed 1:</b> 9 papers hold the 44 planted facts. The screen rejected 6 of them as “not relevant”. In the 3 papers read, 11 of 16 facts were found (69%).</p>
+</div>
+<div class="panel in" style="--i:3;flex:1.2;gap:14px;padding:22px 30px">
+<p class="tag">Why · example S033, rejected</p>
+<div class="doc"><p class="seen" style="flex:12000">screen reads the first 12,000</p><p class="cut" style="flex:11672">cut off · Table 4</p></div>
+<p class="where">The screen reads only the first 12,000 of 23,672 characters, so Table 4 is cut off, and the real study’s story drowns out one planted sentence.</p>
+<div class="quote"><p class="who" style="color:#A23A1E">Screen said</p><p>“…statins with liagonpril or fobasartan … does not report any experiment or results involving the drug Alvenor.”</p></div>
+<div class="quote"><p class="who" style="color:#0B6E99">The paper says</p><p>“Overall, Alvenor improves blood pressure control compared with Standard care.” Table 4: Alvenor 216 / 400 vs standard care 159 / 400.</p></div>
+</div>
+</div>
+<div class="fix in" style="--i:5"><h3>So the fix is narrow</h3><p>Extraction works on papers that get through. Fix the screen first: read the whole paper, or check for the question’s named arms before asking the model.</p></div>
+<p class="src">results/&lt;domain&gt;/runs/s*/&lt;q&gt;/funnel.json (screen decisions) joined with *.marks.json (A per paper); calls/t000243.json for S033; runs with a saved funnel only</p>
+<aside>This is the key slide for the discussion. The engine does not lose because the rules are wrong or because extraction is weak. It loses because the screen throws out most of the papers that matter, especially on medicine-real, where the original paper’s own study dominates the text and our planted arms appear in one sentence plus a table near the end. The screen only sees the first 12,000 characters. When a paper does get through, the engine finds most facts: 11 of 16 in this example. Proposed fix: screen on the full paper, or let a cheap check for the named arms override the model.</aside>
+</section>

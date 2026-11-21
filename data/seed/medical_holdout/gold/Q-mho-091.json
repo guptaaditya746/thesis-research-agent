@@ -1,0 +1,128 @@
+{
+  "qid": "Q-mho-091",
+  "domain": "medical_holdout",
+  "type": "trend",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:saventrol }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?week = 104)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_e"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "statistic": "MeanDifference",
+    "week": 104
+  },
+  "open_columns": [
+    "dose",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-20-02",
+    "R-mho-20-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-20-02",
+        "paper": "P-mho-20",
+        "cells": {
+          "dose": "20 mg",
+          "patient_group": "adults with type 2 diabetes and obesity on metformin"
+        },
+        "value": "-2.3",
+        "unit": "kg"
+      },
+      {
+        "row": "R-mho-20-04",
+        "paper": "P-mho-20",
+        "cells": {
+          "dose": "40 mg",
+          "patient_group": "adults with type 2 diabetes and obesity on metformin"
+        },
+        "value": "-2.8",
+        "unit": "kg"
+      }
+    ],
+    "axis": {
+      "key": "dose",
+      "label": "dose"
+    },
+    "series": [
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes and obesity on metformin"
+        },
+        "points": [
+          {
+            "at": "20 mg",
+            "value": "-2.3",
+            "unit": "kg",
+            "row": "R-mho-20-02"
+          },
+          {
+            "at": "40 mg",
+            "value": "-2.8",
+            "unit": "kg",
+            "row": "R-mho-20-04"
+          }
+        ],
+        "direction": "goes down"
+      }
+    ],
+    "rounding_step": "0.1",
+    "text": "adults with type 2 diabetes and obesity on metformin: 20 mg -2.3, 40 mg -2.8 (goes down)"
+  },
+  "rows_without_card": 2,
+  "notes": "",
+  "spec": {
+    "type": "trend",
+    "split": "test",
+    "template": "How does the effect of saventrol on body weight at 104 weeks change with the dose?",
+    "fixed": {
+      "subject": [
+        "drug_e"
+      ],
+      "measure": "weight_change",
+      "week": 104
+    },
+    "open": [
+      "dose",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "over_dose",
+      "axis": "dose"
+    }
+  },
+  "wording": {
+    "template": "How does the effect of saventrol on body weight at 104 weeks change with the dose?",
+    "source": "llm",
+    "text": "At 104 weeks, how does changing the dose of saventrol affect its effect on body weight?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "At 104 weeks, how does changing the dose of saventrol affect its effect on body weight?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

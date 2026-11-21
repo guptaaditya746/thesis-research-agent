@@ -1,0 +1,2831 @@
+{
+ "domain": "medical",
+ "paper": "P-med-03",
+ "made": "2026-11-21T01:48:59",
+ "paper_sha256": "4968d7086370c4f038708a2935e28129a01d3e3df14e34c6549a5e89ef551417",
+ "summary": {
+  "facts": 12,
+  "found": 12,
+  "in_planned_place": 12,
+  "missing": 0,
+  "extra": 0,
+  "ignored": 141
+ },
+ "facts": [
+  {
+   "id": "R-med-03-01",
+   "value": "-0.42",
+   "unit": "https://w3id.org/evqa/seed#PercentagePoint",
+   "unit_text": "percentage points",
+   "measure": "change in HbA1c from baseline",
+   "dose": "5",
+   "week": "12",
+   "dose_text": "5 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 826,
+     "end": 831,
+     "raw": "-0.42",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 9316,
+     "end": 9321,
+     "raw": "-0.42",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-02",
+   "value": "-0.58",
+   "unit": "https://w3id.org/evqa/seed#PercentagePoint",
+   "unit_text": "percentage points",
+   "measure": "change in HbA1c from baseline",
+   "dose": "5",
+   "week": "24",
+   "dose_text": "5 mg",
+   "placement": "text",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 962,
+     "end": 967,
+     "raw": "-0.58",
+     "where": "text",
+     "keys": {
+      "measure": false,
+      "dose": false,
+      "week": true
+     },
+     "score": 1,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 9432,
+     "end": 9437,
+     "raw": "-0.58",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-03",
+   "value": "-0.53",
+   "unit": "https://w3id.org/evqa/seed#PercentagePoint",
+   "unit_text": "percentage points",
+   "measure": "change in HbA1c from baseline",
+   "dose": "10",
+   "week": "12",
+   "dose_text": "10 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 873,
+     "end": 878,
+     "raw": "-0.53",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 9350,
+     "end": 9355,
+     "raw": "-0.53",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-04",
+   "value": "-0.64",
+   "unit": "https://w3id.org/evqa/seed#PercentagePoint",
+   "unit_text": "percentage points",
+   "measure": "change in HbA1c from baseline",
+   "dose": "10",
+   "week": "24",
+   "dose_text": "10 mg",
+   "placement": "text",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 990,
+     "end": 995,
+     "raw": "-0.64",
+     "where": "text",
+     "keys": {
+      "measure": false,
+      "dose": false,
+      "week": true
+     },
+     "score": 1,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 9531,
+     "end": 9536,
+     "raw": "-0.64",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-05",
+   "value": "-0.1",
+   "unit": "http://qudt.org/vocab/unit/KiloGM",
+   "unit_text": "kg",
+   "measure": "change in body weight from baseline",
+   "dose": "5",
+   "week": "12",
+   "dose_text": "5 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1203,
+     "end": 1207,
+     "raw": "-0.1",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 10229,
+     "end": 10233,
+     "raw": "-0.1",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-06",
+   "value": "0.5",
+   "unit": "http://qudt.org/vocab/unit/KiloGM",
+   "unit_text": "kg",
+   "measure": "change in body weight from baseline",
+   "dose": "5",
+   "week": "24",
+   "dose_text": "5 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1215,
+     "end": 1218,
+     "raw": "0.5",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": false
+     },
+     "score": 2,
+     "ambiguous": true,
+     "unit_stated": true
+    },
+    {
+     "start": 1254,
+     "end": 1257,
+     "raw": "0.5",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": false
+     },
+     "score": 2,
+     "ambiguous": true,
+     "unit_stated": true
+    },
+    {
+     "start": 10261,
+     "end": 10264,
+     "raw": "0.5",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-07",
+   "value": "0.7",
+   "unit": "http://qudt.org/vocab/unit/KiloGM",
+   "unit_text": "kg",
+   "measure": "change in body weight from baseline",
+   "dose": "10",
+   "week": "12",
+   "dose_text": "10 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1243,
+     "end": 1246,
+     "raw": "0.7",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 10293,
+     "end": 10296,
+     "raw": "0.7",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-08",
+   "value": "0.5",
+   "unit": "http://qudt.org/vocab/unit/KiloGM",
+   "unit_text": "kg",
+   "measure": "change in body weight from baseline",
+   "dose": "10",
+   "week": "24",
+   "dose_text": "10 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1215,
+     "end": 1218,
+     "raw": "0.5",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": false
+     },
+     "score": 2,
+     "ambiguous": true,
+     "unit_stated": true
+    },
+    {
+     "start": 1254,
+     "end": 1257,
+     "raw": "0.5",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": false
+     },
+     "score": 2,
+     "ambiguous": true,
+     "unit_stated": true
+    },
+    {
+     "start": 10325,
+     "end": 10328,
+     "raw": "0.5",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-09",
+   "value": "-0.60",
+   "unit": "http://qudt.org/vocab/unit/MilliMOL-PER-L",
+   "unit_text": "mmol/L",
+   "measure": "change in fasting plasma glucose from baseline",
+   "dose": "5",
+   "week": "12",
+   "dose_text": "5 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1055,
+     "end": 1060,
+     "raw": "-0.60",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 11162,
+     "end": 11167,
+     "raw": "-0.60",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-10",
+   "value": "-0.67",
+   "unit": "http://qudt.org/vocab/unit/MilliMOL-PER-L",
+   "unit_text": "mmol/L",
+   "measure": "change in fasting plasma glucose from baseline",
+   "dose": "5",
+   "week": "24",
+   "dose_text": "5 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1072,
+     "end": 1077,
+     "raw": "-0.67",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": false
+     },
+     "score": 2,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 11195,
+     "end": 11200,
+     "raw": "-0.67",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-11",
+   "value": "-0.86",
+   "unit": "http://qudt.org/vocab/unit/MilliMOL-PER-L",
+   "unit_text": "mmol/L",
+   "measure": "change in fasting plasma glucose from baseline",
+   "dose": "10",
+   "week": "12",
+   "dose_text": "10 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1106,
+     "end": 1111,
+     "raw": "-0.86",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 11229,
+     "end": 11234,
+     "raw": "-0.86",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  },
+  {
+   "id": "R-med-03-12",
+   "value": "-0.89",
+   "unit": "http://qudt.org/vocab/unit/MilliMOL-PER-L",
+   "unit_text": "mmol/L",
+   "measure": "change in fasting plasma glucose from baseline",
+   "dose": "10",
+   "week": "24",
+   "dose_text": "10 mg",
+   "placement": "table",
+   "status": "found",
+   "in_planned_place": true,
+   "spans": [
+    {
+     "start": 1123,
+     "end": 1128,
+     "raw": "-0.89",
+     "where": "text",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": false
+     },
+     "score": 2,
+     "ambiguous": false,
+     "unit_stated": true
+    },
+    {
+     "start": 11263,
+     "end": 11268,
+     "raw": "-0.89",
+     "where": "table",
+     "keys": {
+      "measure": true,
+      "dose": true,
+      "week": true
+     },
+     "score": 3,
+     "ambiguous": false,
+     "unit_stated": true
+    }
+   ],
+   "near": []
+  }
+ ],
+ "extra": [],
+ "ignored": [
+  {
+   "start": 38,
+   "end": 40,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 102,
+   "end": 103,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 301,
+   "end": 302,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 540,
+   "end": 541,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 565,
+   "end": 567,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 622,
+   "end": 624,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 634,
+   "end": 636,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 642,
+   "end": 644,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 777,
+   "end": 779,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 855,
+   "end": 856,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 902,
+   "end": 904,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 923,
+   "end": 925,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 1090,
+   "end": 1091,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 1141,
+   "end": 1143,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 1163,
+   "end": 1165,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 1170,
+   "end": 1172,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 1227,
+   "end": 1228,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 1266,
+   "end": 1268,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 1288,
+   "end": 1290,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 1295,
+   "end": 1297,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 1303,
+   "end": 1305,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 1352,
+   "end": 1353,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "-5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "change",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 1511,
+   "end": 1512,
+   "raw": "1",
+   "where": "text",
+   "value": {
+    "value": "1",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "1"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 1533,
+   "end": 1534,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 2616,
+   "end": 2617,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 2682,
+   "end": 2683,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 2704,
+   "end": 2706,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 3272,
+   "end": 3274,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 3287,
+   "end": 3289,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 3720,
+   "end": 3721,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 3729,
+   "end": 3731,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 3787,
+   "end": 3788,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 3830,
+   "end": 3832,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 3842,
+   "end": 3844,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 4195,
+   "end": 4196,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 4216,
+   "end": 4219,
+   "raw": "2.1",
+   "where": "text",
+   "value": {
+    "value": "2.1",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2.1"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 5006,
+   "end": 5009,
+   "raw": "2.2",
+   "where": "text",
+   "value": {
+    "value": "2.2",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2.2"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 5536,
+   "end": 5537,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 5545,
+   "end": 5547,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 5562,
+   "end": 5564,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 5609,
+   "end": 5611,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 5616,
+   "end": 5618,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 5778,
+   "end": 5781,
+   "raw": "2.3",
+   "where": "text",
+   "value": {
+    "value": "2.3",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2.3"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 6519,
+   "end": 6520,
+   "raw": "3",
+   "where": "text",
+   "value": {
+    "value": "3",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 6535,
+   "end": 6538,
+   "raw": "3.1",
+   "where": "text",
+   "value": {
+    "value": "3.1",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3.1"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 6677,
+   "end": 6679,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 6740,
+   "end": 6742,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 6752,
+   "end": 6754,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 6980,
+   "end": 6983,
+   "raw": "3.2",
+   "where": "text",
+   "value": {
+    "value": "3.2",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3.2"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 7040,
+   "end": 7041,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 7358,
+   "end": 7359,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 7466,
+   "end": 7469,
+   "raw": "3.3",
+   "where": "text",
+   "value": {
+    "value": "3.3",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3.3"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 7538,
+   "end": 7539,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 7574,
+   "end": 7576,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 7865,
+   "end": 7868,
+   "raw": "3.4",
+   "where": "text",
+   "value": {
+    "value": "3.4",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3.4"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 8767,
+   "end": 8768,
+   "raw": "4",
+   "where": "text",
+   "value": {
+    "value": "4",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "4"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 8783,
+   "end": 8786,
+   "raw": "4.1",
+   "where": "text",
+   "value": {
+    "value": "4.1",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "4.1"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 8824,
+   "end": 8825,
+   "raw": "1",
+   "where": "text",
+   "value": {
+    "value": "1",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "1"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 8908,
+   "end": 8910,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 8945,
+   "end": 8947,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9018,
+   "end": 9020,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 9080,
+   "end": 9081,
+   "raw": "1",
+   "where": "text",
+   "value": {
+    "value": "1",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "1"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 9150,
+   "end": 9152,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9293,
+   "end": 9294,
+   "raw": "5",
+   "where": "table",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 9311,
+   "end": 9313,
+   "raw": "12",
+   "where": "table",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9326,
+   "end": 9328,
+   "raw": "10",
+   "where": "table",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 9345,
+   "end": 9347,
+   "raw": "12",
+   "where": "table",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9367,
+   "end": 9369,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9375,
+   "end": 9376,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 9465,
+   "end": 9467,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9473,
+   "end": 9475,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 9560,
+   "end": 9562,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 9653,
+   "end": 9655,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9702,
+   "end": 9704,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9745,
+   "end": 9746,
+   "raw": "1",
+   "where": "text",
+   "value": {
+    "value": "1",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "1"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 9753,
+   "end": 9756,
+   "raw": "4.2",
+   "where": "text",
+   "value": {
+    "value": "4.2",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "4.2"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 9800,
+   "end": 9801,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 9917,
+   "end": 9919,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9924,
+   "end": 9926,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 9992,
+   "end": 9993,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 10206,
+   "end": 10207,
+   "raw": "5",
+   "where": "table",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 10224,
+   "end": 10226,
+   "raw": "12",
+   "where": "table",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10238,
+   "end": 10239,
+   "raw": "5",
+   "where": "table",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 10256,
+   "end": 10258,
+   "raw": "24",
+   "where": "table",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10269,
+   "end": 10271,
+   "raw": "10",
+   "where": "table",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 10288,
+   "end": 10290,
+   "raw": "12",
+   "where": "table",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10301,
+   "end": 10303,
+   "raw": "10",
+   "where": "table",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 10320,
+   "end": 10322,
+   "raw": "24",
+   "where": "table",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10383,
+   "end": 10384,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 10439,
+   "end": 10441,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10494,
+   "end": 10496,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10502,
+   "end": 10504,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 10695,
+   "end": 10698,
+   "raw": "4.3",
+   "where": "text",
+   "value": {
+    "value": "4.3",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "4.3"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 10753,
+   "end": 10754,
+   "raw": "3",
+   "where": "text",
+   "value": {
+    "value": "3",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 10881,
+   "end": 10883,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10888,
+   "end": 10890,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 10899,
+   "end": 10900,
+   "raw": "3",
+   "where": "text",
+   "value": {
+    "value": "3",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "3"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 11139,
+   "end": 11140,
+   "raw": "5",
+   "where": "table",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 11157,
+   "end": 11159,
+   "raw": "12",
+   "where": "table",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 11172,
+   "end": 11173,
+   "raw": "5",
+   "where": "table",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 11190,
+   "end": 11192,
+   "raw": "24",
+   "where": "table",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 11205,
+   "end": 11207,
+   "raw": "10",
+   "where": "table",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 11224,
+   "end": 11226,
+   "raw": "12",
+   "where": "table",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 11239,
+   "end": 11241,
+   "raw": "10",
+   "where": "table",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 11258,
+   "end": 11260,
+   "raw": "24",
+   "where": "table",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 11399,
+   "end": 11401,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 11442,
+   "end": 11444,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 11470,
+   "end": 11472,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 11534,
+   "end": 11535,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "change",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 11609,
+   "end": 11610,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 11628,
+   "end": 11631,
+   "raw": "5.1",
+   "where": "text",
+   "value": {
+    "value": "5.1",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5.1"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 11982,
+   "end": 11984,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 12031,
+   "end": 12032,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "-5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "change",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 12279,
+   "end": 12281,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 12328,
+   "end": 12330,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "-24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "change",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 12344,
+   "end": 12346,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 12356,
+   "end": 12357,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 12479,
+   "end": 12481,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "change",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 12490,
+   "end": 12492,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 12642,
+   "end": 12644,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 12898,
+   "end": 12899,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 12944,
+   "end": 12946,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 12976,
+   "end": 12978,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 13008,
+   "end": 13010,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 13936,
+   "end": 13939,
+   "raw": "5.2",
+   "where": "text",
+   "value": {
+    "value": "5.2",
+    "unit": null,
+    "decimals": 1,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5.2"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 14058,
+   "end": 14059,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 14067,
+   "end": 14069,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 14106,
+   "end": 14108,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 14118,
+   "end": 14120,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 14722,
+   "end": 14723,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 14957,
+   "end": 14959,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": "http://qudt.org/vocab/unit/WK",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 15302,
+   "end": 15303,
+   "raw": "6",
+   "where": "text",
+   "value": {
+    "value": "6",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "6"
+   },
+   "kind": "heading or table header"
+  },
+  {
+   "start": 15337,
+   "end": 15338,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 15372,
+   "end": 15373,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 15397,
+   "end": 15399,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 15534,
+   "end": 15536,
+   "raw": "12",
+   "where": "text",
+   "value": {
+    "value": "12",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "12"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 15546,
+   "end": 15548,
+   "raw": "24",
+   "where": "text",
+   "value": {
+    "value": "24",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "24"
+   },
+   "kind": "time"
+  },
+  {
+   "start": 15574,
+   "end": 15580,
+   "raw": "1 to 3",
+   "where": "text",
+   "value": {
+    "value": null,
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": "1",
+    "high": "3",
+    "raw": "1 to 3"
+   },
+   "kind": "label"
+  },
+  {
+   "start": 15679,
+   "end": 15681,
+   "raw": "10",
+   "where": "text",
+   "value": {
+    "value": "10",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "10"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 15741,
+   "end": 15742,
+   "raw": "5",
+   "where": "text",
+   "value": {
+    "value": "5",
+    "unit": "http://qudt.org/vocab/unit/MilliGM",
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "5"
+   },
+   "kind": "dose"
+  },
+  {
+   "start": 16077,
+   "end": 16078,
+   "raw": "2",
+   "where": "text",
+   "value": {
+    "value": "2",
+    "unit": null,
+    "decimals": 0,
+    "sign_basis": "level",
+    "low": null,
+    "high": null,
+    "raw": "2"
+   },
+   "kind": "label"
+  }
+ ]
+}

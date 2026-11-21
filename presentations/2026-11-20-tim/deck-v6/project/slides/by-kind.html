@@ -1,0 +1,42 @@
+<section id="by-kind" class="alt" style="gap:28px">
+<div class="head">
+<div class="headrow">
+<p class="eyebrow">4 · Results by question kind · C</p>
+<div class="legend">
+<div class="lg"><div class="sw c-eng"></div><p>engine</p></div>
+<div class="lg"><div class="sw c-base"></div><p>plain RAG baseline</p></div>
+</div>
+</div>
+<h2>The engine trails on every kind but one</h2>
+</div>
+<div class="cols" style="gap:28px">
+<div class="panel in" style="--i:1">
+<p class="tag">Medicine (real-edit)</p>
+<div class="chart" style="height:325px">
+<div class="pair"><div class="barcol"><p>9%</p><div class="bar eng" style="width:56px;height:50px"></div></div><div class="barcol"><p>51%</p><div class="bar base" style="width:56px;height:286px"></div></div></div>
+<div class="pair"><div class="barcol"><p>0%</p><div class="bar eng" style="width:56px;height:4px"></div></div><div class="barcol"><p>37%</p><div class="bar base" style="width:56px;height:207px"></div></div></div>
+<div class="pair"><div class="barcol"><p>3%</p><div class="bar eng" style="width:56px;height:17px"></div></div><div class="barcol"><p>6%</p><div class="bar base" style="width:56px;height:34px"></div></div></div>
+<div class="pair"><div class="barcol"><p>12%</p><div class="bar eng" style="width:56px;height:67px"></div></div><div class="barcol"><p>25%</p><div class="bar base" style="width:56px;height:139px"></div></div></div>
+<div class="pair"><div class="barcol"><p style="width:56px;color:#475467;font-weight:400">not run</p></div><div class="barcol"><p>16%</p><div class="bar base" style="width:56px;height:90px"></div></div></div>
+</div>
+<div class="xlabels"><p style="width:140px">effect</p><p style="width:140px">consistency</p><p style="width:140px">inventory</p><p style="width:140px">open</p><p style="width:140px">best</p></div>
+<div style="flex:1"></div>
+<p class="where"><b style="color:#111C2E">Effect is the biggest gap.</b> The kind the engine was built for: 9% vs 51% in medicine. With most facts missing, per-paper comparisons collapse into “mixed” or “insufficient”.</p>
+</div>
+<div class="panel in" style="--i:3">
+<p class="tag">RAG (template)</p>
+<div class="chart" style="height:325px">
+<div class="pair"><div class="barcol"><p>20%</p><div class="bar eng" style="width:56px;height:112px"></div></div><div class="barcol"><p>45%</p><div class="bar base" style="width:56px;height:251px"></div></div></div>
+<div class="pair"><div class="barcol"><p>10%</p><div class="bar eng" style="width:56px;height:56px"></div></div><div class="barcol"><p>23%</p><div class="bar base" style="width:56px;height:129px"></div></div></div>
+<div class="pair"><div class="barcol"><p>18%</p><div class="bar eng" style="width:56px;height:101px"></div></div><div class="barcol"><p>9%</p><div class="bar base" style="width:56px;height:50px"></div></div></div>
+<div class="pair"><div class="barcol"><p>8%</p><div class="bar eng" style="width:56px;height:45px"></div></div><div class="barcol"><p>20%</p><div class="bar base" style="width:56px;height:112px"></div></div></div>
+<div class="pair"><div class="barcol"><p style="width:56px;color:#475467;font-weight:400">not run</p></div><div class="barcol"><p>16%</p><div class="bar base" style="width:56px;height:90px"></div></div></div>
+</div>
+<div class="xlabels"><p style="width:140px">effect</p><p style="width:140px">consistency</p><p style="width:140px">inventory</p><p style="width:140px">open</p><p style="width:140px">best</p></div>
+<div style="flex:1"></div>
+<p class="where"><b style="color:#0B6E99">Inventory is the one win.</b> RAG domain, 18% vs 9%: listing every name across 40 papers suits a fact graph better than top‑k passages.</p>
+</div>
+</div>
+<p class="src">Recomputed from results/&lt;domain&gt;/s*/&lt;system&gt;/*.marks.json; question kinds from data/synth3/questions/&lt;domain&gt;.yaml</p>
+<aside>Per kind, the engine is behind everywhere except inventory in the RAG domain. The best-kind questions never got an engine run, so there is no comparison there yet. Effect questions are where the engine should shine, and it is furthest behind, which points back at extraction rather than at the rules.</aside>
+</section>

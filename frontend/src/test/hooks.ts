@@ -1,6 +1,5 @@
 /**
- * What every test file gets: jest-dom matchers, the MSW server with the app's handlers (fresh
- * in-memory state per test, mock jobs that end only when a test ends them), and stubs for what jsdom lacks
+ * What every test file gets: jest-dom matchers, the MSW server (handlers reset after each test), and stubs for what jsdom lacks
  * (ResizeObserver, matchMedia, scrollIntoView, pointer capture) that Radix, React Flow and the
  * sidebar use. `registerHooks` runs once per file (the module itself is cached across files).
  */
@@ -9,7 +8,6 @@ import "@testing-library/jest-dom/vitest"
 import { cleanup, configure } from "@testing-library/react"
 import { afterAll, afterEach, beforeAll } from "vitest"
 
-import { resetDb, timing } from "@/mocks/handlers"
 import { server } from "@/mocks/node"
 
 class ResizeObserverStub {
@@ -45,14 +43,12 @@ function stubBrowserGaps() {
 }
 
 export function registerHooks() {
-  timing.jobMs = null
   configure({ asyncUtilTimeout: 5_000 })
   stubBrowserGaps()
   beforeAll(() => server.listen({ onUnhandledRequest: "error" }))
   afterEach(() => {
     cleanup()
     server.resetHandlers()
-    resetDb()
   })
   afterAll(() => server.close())
 }

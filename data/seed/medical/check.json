@@ -1,0 +1,113 @@
+{
+  "shapes": {
+    "conforms": true,
+    "report": ""
+  },
+  "name_clashes": {
+    "count": 0,
+    "mode": "re-judged against the label index now",
+    "names": [
+      {
+        "name": "brenoxalin",
+        "code": "BRN-233",
+        "nearest": {
+          "label": "Penoxalin",
+          "source": "chebi:83569",
+          "score": 84.2
+        },
+        "closest_own": 0.0,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "kavolemin",
+        "code": "KVL-543",
+        "nearest": {
+          "label": "Avolin",
+          "source": "chebi:4609",
+          "score": 80.0
+        },
+        "closest_own": 42.1,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "veloranide",
+        "code": "VLR-587",
+        "nearest": {
+          "label": "eloralintide",
+          "source": "chebi:760373",
+          "score": 81.8
+        },
+        "closest_own": 40.0,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "quendarin",
+        "code": "QND-631",
+        "nearest": {
+          "label": "Endrin",
+          "source": "mesh:D004732",
+          "score": 80.0
+        },
+        "closest_own": 52.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "quelmastin",
+        "code": "QLM-331",
+        "nearest": {
+          "label": "Elastin",
+          "source": "mesh:D004549",
+          "score": 82.4
+        },
+        "closest_own": 63.2,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "mirabexan",
+        "code": "MRB-613",
+        "nearest": {
+          "label": "mirabalin",
+          "source": "mesh:C000591757",
+          "score": 77.8
+        },
+        "closest_own": 52.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "tiravelor",
+        "code": "TRV-648",
+        "nearest": {
+          "label": "Travel",
+          "source": "mesh:D014195",
+          "score": 80.0
+        },
+        "closest_own": 52.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "ordenvik",
+        "code": "ORD-399",
+        "nearest": {
+          "label": "Odenil",
+          "source": "mesh:C038974",
+          "score": 71.4
+        },
+        "closest_own": 44.4,
+        "ok": true,
+        "problems": []
+      }
+    ]
+  },
+  "split_overlap": {
+    "count": 0,
+    "items": []
+  },
+  "pass": true
+}

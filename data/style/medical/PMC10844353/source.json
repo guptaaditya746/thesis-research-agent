@@ -1,0 +1,19 @@
+{
+ "pmcid": "PMC10844353",
+ "pmid": "38095657",
+ "doi": "10.1007/s00125-023-06053-9",
+ "source_url": [
+  "https://europepmc.org/article/PMC/PMC10844353",
+  "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10844353/fullTextXML"
+ ],
+ "license": "cc by",
+ "license_url": "https://creativecommons.org/licenses/by/4.0/",
+ "license_statement": "https://creativecommons.org/licenses/by/4.0/Open Access This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit http://creativecommons.org/licenses/by/4.0/.",
+ "citation": "Blüher M, Rosenstock J, Hoefler J, et al. Dose–response effects on HbA1c and bodyweight reduction of survodutide, a dual glucagon/GLP-1 receptor agonist, compared with placebo and open-label semaglutide in people with type 2 diabetes: a randomised clinical trial. Diabetologia. 2024;67:470–482.",
+ "drug": "survodutide (glucagon/GLP-1 receptor dual agonist), six weekly or twice-weekly dose groups, on background metformin",
+ "comparator": "placebo (double-blind) + metformin; open-label semaglutide reference arm",
+ "retrieved": "2026-11-21",
+ "s2_paperId": "367fc9b35789e268e2662330fc08db0277e2b8a7",
+ "s2_oa_license": "CCBY",
+ "s2_url": "https://www.semanticscholar.org/paper/367fc9b35789e268e2662330fc08db0277e2b8a7"
+}

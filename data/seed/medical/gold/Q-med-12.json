@@ -1,0 +1,75 @@
+{
+  "qid": "Q-med-12",
+  "domain": "medical",
+  "type": "absent",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:quendarin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:fpg-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 50)\n  FILTER(?week = 36)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_d"
+    ],
+    "comparator": "placebo",
+    "measure": "fpg_change",
+    "statistic": "MeanDifference",
+    "dose": 50,
+    "week": 36
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports quendarin 50 mg on fasting plasma glucose at 36 weeks (reported weeks: 4, 8, 12, 24, 26, 52)",
+    "columns": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports quendarin 50 mg on fasting plasma glucose at 36 weeks (reported weeks: 4, 8, 12, 24, 26, 52)"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "absent",
+    "split": "test",
+    "template": "How much does quendarin 50 mg change fasting plasma glucose at 36 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_d"
+      ],
+      "measure": "fpg_change",
+      "dose": 50,
+      "week": 36
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "week",
+      "why": "no paper reports quendarin 50 mg on fasting plasma glucose at 36 weeks (reported weeks: 4, 8, 12, 24, 26, 52)"
+    }
+  },
+  "wording": {
+    "template": "How much does quendarin 50 mg change fasting plasma glucose at 36 weeks?",
+    "source": "llm",
+    "text": "What change in fasting plasma glucose at 36 weeks is seen with quendarin 50 mg?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "What change in fasting plasma glucose at 36 weeks is seen with quendarin 50 mg?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

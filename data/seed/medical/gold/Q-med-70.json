@@ -1,0 +1,317 @@
+{
+  "qid": "Q-med-70",
+  "domain": "medical",
+  "type": "best",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:quendarin d:mirabexan }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?week = 24)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_d",
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "week": 24
+  },
+  "open_columns": [
+    "dose",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-16-02",
+    "R-med-16-04",
+    "R-med-09-01",
+    "R-med-09-02",
+    "R-med-06-02",
+    "R-med-06-04",
+    "R-med-08-01",
+    "R-med-06-06",
+    "R-med-08-03",
+    "R-med-06-08",
+    "R-med-14-02",
+    "R-med-14-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "candidate",
+        "label": "drug"
+      },
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-16-02",
+        "paper": "P-med-16",
+        "cells": {
+          "candidate": "mirabexan",
+          "dose": "15 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.49",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-16-04",
+        "paper": "P-med-16",
+        "cells": {
+          "candidate": "mirabexan",
+          "dose": "30 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.55",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-06-02",
+        "paper": "P-med-06",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "5 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.47",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-14-02",
+        "paper": "P-med-14",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "10 mg",
+          "patient_group": "adults with type 2 diabetes and moderate chronic kidney disease on metformin"
+        },
+        "value": "-0.37",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-06-04",
+        "paper": "P-med-06",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "10 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.58",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-08-01",
+        "paper": "P-med-08",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "10 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.34",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-14-04",
+        "paper": "P-med-14",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "20 mg",
+          "patient_group": "adults with type 2 diabetes and moderate chronic kidney disease on metformin"
+        },
+        "value": "-0.55",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-06-06",
+        "paper": "P-med-06",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "20 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.84",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-08-03",
+        "paper": "P-med-08",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "20 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.42",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-09-01",
+        "paper": "P-med-09",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "25 mg",
+          "patient_group": "adults aged 65 years or older with type 2 diabetes on metformin"
+        },
+        "value": "-0.68",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-06-08",
+        "paper": "P-med-06",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "40 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.90",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-09-02",
+        "paper": "P-med-09",
+        "cells": {
+          "candidate": "quendarin",
+          "dose": "50 mg",
+          "patient_group": "adults aged 65 years or older with type 2 diabetes on metformin"
+        },
+        "value": "-0.86",
+        "unit": "pp"
+      }
+    ],
+    "split_by": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "own": [
+      {
+        "key": "dose",
+        "label": "dose"
+      }
+    ],
+    "groups": [
+      {
+        "cells": {
+          "patient_group": "adults aged 65 years or older with type 2 diabetes on metformin"
+        },
+        "ranking": [
+          {
+            "candidate": "quendarin",
+            "row": "R-med-09-02",
+            "value": "-0.86",
+            "unit": "pp",
+            "cells": {
+              "dose": "50 mg"
+            }
+          }
+        ],
+        "missing": [
+          "mirabexan"
+        ],
+        "status": "not reported",
+        "winner": null,
+        "margin": null
+      },
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes and moderate chronic kidney disease on metformin"
+        },
+        "ranking": [
+          {
+            "candidate": "quendarin",
+            "row": "R-med-14-04",
+            "value": "-0.55",
+            "unit": "pp",
+            "cells": {
+              "dose": "20 mg"
+            }
+          }
+        ],
+        "missing": [
+          "mirabexan"
+        ],
+        "status": "not reported",
+        "winner": null,
+        "margin": null
+      },
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "ranking": [
+          {
+            "candidate": "quendarin",
+            "row": "R-med-06-08",
+            "value": "-0.90",
+            "unit": "pp",
+            "cells": {
+              "dose": "40 mg"
+            }
+          },
+          {
+            "candidate": "mirabexan",
+            "row": "R-med-16-04",
+            "value": "-0.55",
+            "unit": "pp",
+            "cells": {
+              "dose": "30 mg"
+            }
+          }
+        ],
+        "missing": [],
+        "status": "winner",
+        "winner": "quendarin",
+        "margin": "0.35"
+      }
+    ],
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "text": "adults aged 65 years or older with type 2 diabetes on metformin: not reported for mirabexan; adults with type 2 diabetes and moderate chronic kidney disease on metformin: not reported for mirabexan; adults with type 2 diabetes on metformin: quendarin (ahead by 0.35)"
+  },
+  "rows_without_card": 12,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "best",
+    "split": "test",
+    "template": "Which drug reduces HbA1c more at 24 weeks, quendarin or mirabexan?",
+    "fixed": {
+      "subject": [
+        "drug_d",
+        "drug_f"
+      ],
+      "measure": "hba1c_change",
+      "week": 24
+    },
+    "open": [
+      "dose",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": "subject",
+    "extra": {
+      "kind": "drugs"
+    }
+  },
+  "wording": {
+    "template": "Which drug reduces HbA1c more at 24 weeks, quendarin or mirabexan?",
+    "source": "llm",
+    "text": "At 24 weeks, which drug lowers HbA1c more, quendarin or mirabexan?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "At 24 weeks, which drug lowers HbA1c more, quendarin or mirabexan?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

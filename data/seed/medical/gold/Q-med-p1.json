@@ -1,0 +1,61 @@
+{
+  "qid": "Q-med-p1",
+  "domain": "medical",
+  "type": "lookup",
+  "split": "practice",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:veloranide }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"practice\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 50)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_c"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "dose": 50
+  },
+  "open_columns": [
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-05-03",
+    "R-med-05-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-05-03",
+        "paper": "P-med-05",
+        "cells": {
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.52",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-05-04",
+        "paper": "P-med-05",
+        "cells": {
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.54",
+        "unit": "pp"
+      }
+    ],
+    "text": "2 value(s): 12 wk, adults with type 2 diabetes on metformin, -0.52 pp; 24 wk, adults with type 2 diabetes on metformin, -0.54 pp"
+  },
+  "rows_without_card": 2,
+  "notes": "Practice twin of Q-med-01 (practice paper only)."
+}

@@ -1,0 +1,189 @@
+# Generator section for the two medical blueprints (data/seed/medical, data/seed/medical_holdout).
+# Those blueprint.yaml files are frozen, so they cannot get a `generator:` section themselves. Everything domain-bound
+# that used to be written into backend/evqa/seed/*.py (slot names, units, effect model, intent cards, the five
+# hand-written questions, question templates, out-of-scope pools, near-miss group rules) lives here instead.
+# A blueprint with its own `generator:` section (data/seed/materials) never reads this file.
+# Changing anything here changes the medical benchmark: rebuild into a scratch folder and compare sha256 first
+# (`uv run python -m evqa.seed.rebuild medical --out <dir> --replay`).
+applies_to: [medical, medical_holdout]
+
+generator:
+  # The result settings of the seed schema (data/seed/schema/glue.ttl): the item tested (subject), what it is compared
+  # against (comparator), who or what was measured (context, ex:Context), one varying setting (factor, ex:Condition)
+  # and the time point (time, ex:atTime). `slot` is this domain's name for each (gold files, SPARQL variables).
+  subject: {noun: drug, paper_key: drug, arms_key: arms}
+  comparator: {default: placebo, paper_key: comparator}
+  statistic: MeanDifference
+  context: {slot: context, section: contexts, paper_key: context, noun: patient group}
+  factor:
+    slot: dose
+    section: factors
+    arm_key: doses                  # each arm lists its factor values
+    comparator_key: comparator_dose
+    node: "dose-{}mg"               # IRI local name of one ex:Condition
+    cell: "{} mg"                   # a gold table cell
+    phrase: "{} mg"                 # in question text
+    noun: dose
+    mention: '(?<![\d.]){n}\s*-?\s*mg\b'
+  time:
+    slot: week
+    paper_key: weeks
+    unit: "unit:WK"
+    cell: "{} wk"
+    phrase: "{} weeks"
+    noun: weeks
+    mention: '(?<![\d.]){n}\s*-?\s*(weeks?|wk)\b|\bweek\s+{n}(?![\d.])'
+    extra: [4, 8, 16, 26, 48, 78, 104]   # times an "absent" question may ask about (besides other seed times)
+
+  # value = formula (+ the comparator's formula subtracted, x paper `scale`) + noise(sd), rounded to the measure's
+  # `decimals`. Each param is a path into the blueprint; {subject}, {measure} and the slot names pick the entry.
+  effect:
+    formula: "emax * dose / (ed50 + dose) * (1 - exp(-week / tau)) * context_factor"
+    params:
+      emax: [drugs, "{subject}", "{measure}", 0]
+      ed50: [drugs, "{subject}", "{measure}", 1]
+      tau: [measures, "{measure}", tau]
+      context_factor: [context_factor, "{context}"]
+    noise_sd: [measures, "{measure}", noise_sd]
+
+  # 'change in HbA1c from baseline' -> 'HbA1c': what a question names (group 1); no match = the whole label.
+  measure_core: '(?:change|reduction|increase) in (.+?)(?: from baseline)?'
+  direction: {higher: [increase, increases], lower: [reduce, reduces]}
+
+  # The intent card: open point -> the fixed answer a user gives. `column` = the slot kept open as a gold column;
+  # `rule` = slots this answer pins; `own_setting` = a setting of the subject itself (not split when subjects compete).
+  # `other_names` is on every card. `difference` is the measure_variant of effect questions.
+  intent:
+    time_point: {label: time point, ask: "Which time point do you mean?",
+                 answer: "Show every time point reported, one per row.", column: week}
+    patient_group: {label: patient group, ask: "Which patients do you mean?",
+                    answer: "Show every patient group, kept apart.", column: context}
+    dose: {label: dose, ask: "Which dose do you mean?", answer: "Show every dose.", column: dose, own_setting: true}
+    measure_variant:
+      label: how the change is measured
+      ask: "How should the change be measured?"
+      answer: "The change from the start of the trial compared with placebo (the mean difference), in the unit the papers use; for HbA1c that is percentage points."
+      rule: {statistic: MeanDifference, comparator: placebo}
+    difference:
+      label: how the difference is measured
+      ask: "How should the difference be measured?"
+      answer: "The difference between the two groups the study compares (the mean difference), in the unit the papers use; for HbA1c that is percentage points."
+      rule: {statistic: MeanDifference}
+    other_names: {label: other names, ask: "Do you know other names for these?",
+                  answer: "I know no other names. Use the names in the question."}
+  # Which intent point keeps each slot open (in this order when a question leaves it open).
+  open_points: {factor: dose, time: time_point, context: patient_group}
+  measure_variant: measure_variant
+  candidate_labels: {factor: dose, subject: drug}   # the candidate column of a best question
+  difference_variant: difference
+
+  # Hand-written questions kept as they are (per domain; ids Q-<prefix>-NN / -pN). Text may use {drug_a} etc.
+  questions:
+    medical:
+      - qid: Q-med-01
+        type: lookup
+        split: test
+        text: "How much does {drug_a} 20 mg lower HbA1c?"
+        fixed: {subject: [drug_a], measure: hba1c_change, dose: 20}
+        open: [time_point, patient_group, measure_variant]
+        notes: "Open week: the hub reports 12 and 24 weeks, the series paper 36 and 52. Open patient group: the near-miss paper has 20 mg in newly diagnosed patients; it must stay a separate row."
+      - qid: Q-med-02
+        type: lookup
+        split: test
+        text: "What does {drug_b} do to body weight?"
+        fixed: {subject: [drug_b], measure: weight_change}
+        open: [dose, time_point, patient_group, measure_variant]
+        notes: "Open dose and week; the drug raises weight at most points, so the sign matters."
+      - qid: Q-med-03
+        type: best
+        split: test
+        text: "Which {drug_a} dose lowers HbA1c the most at 24 weeks in patients who already take metformin?"
+        fixed: {subject: [drug_a], measure: hba1c_change, week: 24, context: t2d_metformin}
+        open: [measure_variant]
+        candidate: dose
+        notes: "Nearly fully stated; only how the change is measured is open."
+      - qid: Q-med-04
+        type: best
+        split: test
+        text: "Which drug lowers HbA1c more at 24 weeks, {drug_a} or {drug_b}?"
+        fixed: {subject: [drug_a, drug_b], measure: hba1c_change, week: 24}
+        open: [dose, patient_group, measure_variant]
+        candidate: subject
+        notes: "Open dose: each drug counts with its best dose. Open patient group: only one drug was tested in newly diagnosed patients, so that group has no winner."
+      - qid: Q-med-p1
+        type: lookup
+        split: practice
+        text: "How much does {drug_c} 50 mg lower HbA1c?"
+        fixed: {subject: [drug_c], measure: hba1c_change, dose: 50}
+        open: [time_point, patient_group, measure_variant]
+        notes: "Practice twin of Q-med-01 (practice paper only)."
+    medical_holdout: []   # the hold-out set is all generated (bench.py)
+
+  bench:
+    quota: {lookup: 10, effect: 8, best: 9, trend: 8, list: 8, conflict: 7,   # 50, incl. the kept 5
+            absent: 20, near_miss: 15, out_of_scope: 15}                      # 50
+    # Out-of-scope pools. Each is used only when code finds none of its terms in any paper.md or in seed.ttl.
+    out_of_scope_subjects: [atorvastatin, lisinopril, amlodipine, warfarin, sertraline, omeprazole, levothyroxine,
+                            losartan, allopurinol, montelukast, gabapentin, simvastatin, metoprolol, furosemide,
+                            clopidogrel, prednisolone, tamsulosin, citalopram, rosuvastatin, apixaban]
+    out_of_scope_topics:
+      - ["systolic blood pressure", ["blood pressure", "systolic"]]
+      - ["LDL cholesterol", ["ldl", "cholesterol"]]
+      - ["migraine frequency", ["migraine"]]
+      - ["bone mineral density", ["bone", "mineral density"]]
+      - ["sleep quality", ["sleep"]]
+      - ["depression scores", ["depression", "depressive"]]
+      - ["asthma attacks", ["asthma"]]
+      - ["hair loss", ["hair", "alopecia"]]
+      - ["visual acuity", ["visual", "vision"]]
+      - ["knee pain", ["knee"]]
+      - ["heart rate", ["heart rate", "pulse"]]
+      - ["liver fat", ["liver fat", "hepatic fat", "steatosis"]]
+    # Near-miss contexts: a regex substitution on a real context label (`count` 0 = every match) and marker terms
+    # that must be in no seed context label and not in the subject's papers.
+    context_variants:
+      - {name: elderly, sub: '^adults with\b', with: "elderly adults with", terms: [elderly, older, aged 65, aged 75]}
+      - {name: adolescents, sub: '^adults with\b', with: "adolescents with",
+         terms: [adolescen, children, paediatric, pediatric, youth]}
+      - {name: pregnant, sub: '^adults with\b', with: "pregnant women with", terms: [pregnan]}
+      - {name: type 1, sub: 'type 2', with: "type 1", terms: [type 1]}
+      - {name: kidney, sub: 'type 2 diabetes', with: "type 2 diabetes and chronic kidney disease", count: 1,
+         terms: [kidney, renal]}
+      - {name: obesity, sub: 'type 2 diabetes', with: "type 2 diabetes and obesity", count: 1, terms: [obes]}
+      - {name: insulin, sub: 'on metformin', with: "on insulin", terms: [insulin]}
+    # Question templates: [kind, text]. Fields: {subject} {subject_b} {measure} {factor} {time} {context} {verb}
+    # {verbs} {than} {topic}; `why` texts also {times} {around} {real} {have}.
+    templates:
+      lookup_subject: [drug, "What does {subject} do to {measure}?"]
+      lookup_factor: [dose, "How much does {subject} {factor} change {measure}?"]
+      lookup_time: [week, "How much does {subject} change {measure} at {time}?"]
+      lookup_context: [group, "How much does {subject} change {measure} in {context}?"]
+      trend_over_time: [over_time, "How does the effect of {subject} {factor} on {measure} change over time?"]
+      trend_over_factor: [over_dose, "How does the effect of {subject} on {measure} at {time} change with the dose?"]
+      best_factor_any_context: [dose_any_group, "Which {subject} dose {verbs} {measure} the most at {time}?"]
+      best_factor: [dose, "Which {subject} dose {verbs} {measure} the most at {time} in {context}?"]
+      best_subjects: [drugs, "Which drug {verbs} {measure} more at {time}, {subject} or {subject_b}?"]
+      conflict: [dose_week, "What is the effect of {subject} {factor} on {measure} at {time}?"]
+      list_subject_measure: [drug_measure, "Which studies report the effect of {subject} on {measure}?"]
+      list_subject: [drug, "Which studies tested {subject}?"]
+      list_subject_context: [drug_group, "Which studies tested {subject} in {context}?"]
+      list_measure_context: [measure_group, "Which studies report {measure} in {context}?"]
+      effect_subject: [drug, "Does {subject} {verb} {measure} more than {than}?"]
+      effect_factor: [dose, "Does {subject} {factor} {verb} {measure} more than {than}?"]
+      than_default: "{comparator}"
+      than_active: "{comparator} does"
+      active_suffix: _vs_active
+      absent_time: [week, "How much does {subject} {factor} change {measure} at {time}?",
+                    "no paper reports {subject} {factor} on {measure} at {time} (reported weeks: {times})"]
+      absent_context: [group, "How much does {subject} change {measure} in {context}?",
+                       "no paper reports {subject} on {measure} in {context}"]
+      absent_measure: [measure, "What does {subject} do to {measure}?",
+                       "no paper reports {subject} on {measure} (its papers report: {have})"]
+      near_miss_context: [group, "How much does {subject} change {measure} in {context}?",
+                          "no paper reports {subject} on {measure} in {context}; the closest rows are for {real}"]
+      near_miss_factor: [dose, "How much does {subject} {factor} change {measure}?",
+                         "no paper reports {subject} {factor} on {measure}; the closest dose(s) reported: {around}"]
+      out_of_scope_subject: [drug, "What does {subject} do to {measure}?",
+                             "{subject} appears in no paper and nowhere in the seed"]
+      out_of_scope_topic: [topic, "What does {subject} do to {topic}?",
+                           "{topic} appears in no paper and nowhere in the seed"]

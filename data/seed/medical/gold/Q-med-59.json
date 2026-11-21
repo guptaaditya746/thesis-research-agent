@@ -1,0 +1,283 @@
+{
+  "qid": "Q-med-59",
+  "domain": "medical",
+  "type": "effect",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:brenoxalin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-01-01",
+    "R-med-01-02",
+    "R-med-01-03",
+    "R-med-01-04",
+    "R-med-01-05",
+    "R-med-01-06",
+    "R-med-02-01",
+    "R-med-02-02",
+    "R-med-02-03",
+    "R-med-02-04",
+    "R-med-04-01",
+    "R-med-04-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-01-01",
+        "paper": "P-med-01",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.46",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-01-02",
+        "paper": "P-med-01",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.57",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-01-03",
+        "paper": "P-med-01",
+        "cells": {
+          "dose": "20 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.72",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-01-04",
+        "paper": "P-med-01",
+        "cells": {
+          "dose": "20 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.78",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-01-05",
+        "paper": "P-med-01",
+        "cells": {
+          "dose": "40 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.90",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-01-06",
+        "paper": "P-med-01",
+        "cells": {
+          "dose": "40 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.91",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-02-01",
+        "paper": "P-med-02",
+        "cells": {
+          "dose": "20 mg",
+          "time_point": "36 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.78",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-02-02",
+        "paper": "P-med-02",
+        "cells": {
+          "dose": "20 mg",
+          "time_point": "52 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.82",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-02-03",
+        "paper": "P-med-02",
+        "cells": {
+          "dose": "40 mg",
+          "time_point": "36 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.98",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-02-04",
+        "paper": "P-med-02",
+        "cells": {
+          "dose": "40 mg",
+          "time_point": "52 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-1.05",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-04-01",
+        "paper": "P-med-04",
+        "cells": {
+          "dose": "20 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-0.99",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      },
+      {
+        "row": "R-med-04-02",
+        "paper": "P-med-04",
+        "cells": {
+          "dose": "40 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-1.16",
+        "unit": "pp",
+        "verdict": "brenoxalin better"
+      }
+    ],
+    "comparator": "placebo",
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "per_study": [
+      {
+        "paper": "P-med-01",
+        "title": "Brenoxalin added to metformin in type 2 diabetes: a 24-week dose-ranging trial",
+        "rows": [
+          "R-med-01-01",
+          "R-med-01-02",
+          "R-med-01-03",
+          "R-med-01-04",
+          "R-med-01-05",
+          "R-med-01-06"
+        ],
+        "verdicts": [
+          "brenoxalin better"
+        ]
+      },
+      {
+        "paper": "P-med-02",
+        "title": "Long-term extension of Brenoxalin with metformin: results to week 52",
+        "rows": [
+          "R-med-02-01",
+          "R-med-02-02",
+          "R-med-02-03",
+          "R-med-02-04"
+        ],
+        "verdicts": [
+          "brenoxalin better"
+        ]
+      },
+      {
+        "paper": "P-med-04",
+        "title": "Brenoxalin as first treatment in newly diagnosed type 2 diabetes",
+        "rows": [
+          "R-med-04-01",
+          "R-med-04-02"
+        ],
+        "verdicts": [
+          "brenoxalin better"
+        ]
+      }
+    ],
+    "text": "P-med-01, 10 mg, 12 wk, adults with type 2 diabetes on metformin: -0.46 pp (brenoxalin better); P-med-01, 10 mg, 24 wk, adults with type 2 diabetes on metformin: -0.57 pp (brenoxalin better); P-med-01, 20 mg, 12 wk, adults with type 2 diabetes on metformin: -0.72 pp (brenoxalin better); P-med-01, 20 mg, 24 wk, adults with type 2 diabetes on metformin: -0.78 pp (brenoxalin better); P-med-01, 40 mg, 12 wk, adults with type 2 diabetes on metformin: -0.90 pp (brenoxalin better); P-med-01, 40 mg, 24 wk, adults with type 2 diabetes on metformin: -0.91 pp (brenoxalin better); P-med-02, 20 mg, 36 wk, adults with type 2 diabetes on metformin: -0.78 pp (brenoxalin better); P-med-02, 20 mg, 52 wk, adults with type 2 diabetes on metformin: -0.82 pp (brenoxalin better); P-med-02, 40 mg, 36 wk, adults with type 2 diabetes on metformin: -0.98 pp (brenoxalin better); P-med-02, 40 mg, 52 wk, adults with type 2 diabetes on metformin: -1.05 pp (brenoxalin better); P-med-04, 20 mg, 24 wk, adults with newly diagnosed type 2 diabetes, no prior drug: -0.99 pp (brenoxalin better); P-med-04, 40 mg, 24 wk, adults with newly diagnosed type 2 diabetes, no prior drug: -1.16 pp (brenoxalin better)"
+  },
+  "rows_without_card": 12,
+  "notes": "",
+  "spec": {
+    "type": "effect",
+    "split": "test",
+    "template": "Does brenoxalin reduce HbA1c more than placebo?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "comparator": "placebo",
+      "measure": "hba1c_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "difference"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "Does brenoxalin reduce HbA1c more than placebo?",
+    "source": "llm",
+    "text": "Is brenoxalin better than placebo at lowering HbA1c?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Is brenoxalin better than placebo at lowering HbA1c?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

@@ -1,9 +1,0 @@
-Research this concept in the corpus and give the final answer.
-
-Concept:
-{{concept_json}}
-
-Answer shape ({{shape_kind}}). One row looks like this; the values are placeholders with their types:
-{{row_example}}
-
-Start ./answer-draft.json as soon as you have the first facts and keep it up to date.

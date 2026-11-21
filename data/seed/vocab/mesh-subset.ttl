@@ -1,0 +1,130 @@
+# Frozen subset made by `evqa seed vocab` from https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/desc2026.gz (sha256 ccd4d0d33bebfd4c836a59e7dd0c635b1d4e20c4f5a6abc55e2eb0ba4c8716dd). Do not edit by hand.
+@prefix mesh: <http://id.nlm.nih.gov/mesh/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+mesh:D000068900 skos:altLabel "0431, MK",
+        "4-Oxo-4-(3-(trifluoromethyl)-5,6-dihydro(1,2,4)triazolo(4,3-a)pyrazin-7(8H)-yl)-1-(2,4,5-trifluorophenyl)butan-2-amine",
+        "Anhydrous, Sitagliptin Phosphate",
+        "Januvia",
+        "MK 0431",
+        "MK-0431",
+        "MK0431",
+        "Monohydrate, Sitagliptin Monophosphate",
+        "Monohydrate, Sitagliptin Phosphate",
+        "Monophosphate Monohydrate, Sitagliptin",
+        "Phosphate Anhydrous, Sitagliptin",
+        "Phosphate Monohydrate, Sitagliptin",
+        "Phosphate, Sitagliptin",
+        "Sitagliptin",
+        "Sitagliptin Monophosphate Monohydrate",
+        "Sitagliptin Phosphate Anhydrous",
+        "Sitagliptin Phosphate Monohydrate" ;
+    skos:prefLabel "Sitagliptin Phosphate" .
+
+mesh:D001786 skos:altLabel "Blood Sugar",
+        "Glucose, Blood",
+        "Sugar, Blood" ;
+    skos:prefLabel "Blood Glucose" .
+
+mesh:D001794 skos:altLabel "Diastolic Pressure",
+        "Pressure, Blood",
+        "Pressure, Diastolic",
+        "Pressure, Pulse",
+        "Pressure, Systolic",
+        "Pressures, Systolic",
+        "Pulse Pressure",
+        "Systolic Pressure" ;
+    skos:prefLabel "Blood Pressure" .
+
+mesh:D001835 skos:altLabel "Body Weights",
+        "Weight, Body",
+        "Weights, Body" ;
+    skos:prefLabel "Body Weight" .
+
+mesh:D003924 skos:altLabel "Adult-Onset Diabetes Mellitus",
+        "Diabetes Mellitus, Adult Onset",
+        "Diabetes Mellitus, Adult-Onset",
+        "Diabetes Mellitus, Ketosis Resistant",
+        "Diabetes Mellitus, Ketosis-Resistant",
+        "Diabetes Mellitus, Maturity Onset",
+        "Diabetes Mellitus, Maturity-Onset",
+        "Diabetes Mellitus, Non Insulin Dependent",
+        "Diabetes Mellitus, Non-Insulin-Dependent",
+        "Diabetes Mellitus, Noninsulin Dependent",
+        "Diabetes Mellitus, Noninsulin-Dependent",
+        "Diabetes Mellitus, Slow Onset",
+        "Diabetes Mellitus, Slow-Onset",
+        "Diabetes Mellitus, Stable",
+        "Diabetes Mellitus, Type II",
+        "Diabetes, Maturity-Onset",
+        "Diabetes, Type 2",
+        "Ketosis-Resistant Diabetes Mellitus",
+        "MODY (Maturity-onset diabetes of the young)",
+        "Maturity Onset Diabetes",
+        "Maturity Onset Diabetes Mellitus",
+        "Maturity-Onset Diabetes",
+        "Maturity-Onset Diabetes Mellitus",
+        "NIDDM",
+        "Non-Insulin-Dependent Diabetes Mellitus",
+        "Noninsulin Dependent Diabetes Mellitus",
+        "Noninsulin-Dependent Diabetes Mellitus",
+        "Slow-Onset Diabetes Mellitus",
+        "Stable Diabetes Mellitus",
+        "Type 2 Diabetes",
+        "Type 2 Diabetes Mellitus" ;
+    skos:prefLabel "Diabetes Mellitus, Type 2" .
+
+mesh:D006442 skos:altLabel "A1a-1 Hemoglobin, Glycosylated",
+        "A1a-2 Hemoglobin, Glycated",
+        "A1b Hemoglobin, Glycated",
+        "A1b Hemoglobin, Glycosylated",
+        "Fructated Hemoglobins",
+        "Glycated A1a-2 Hemoglobin",
+        "Glycated A1b Hemoglobin",
+        "Glycated Hemoglobin A",
+        "Glycated Hemoglobin A1c",
+        "Glycated Hemoglobins",
+        "Glycohemoglobin",
+        "Glycohemoglobin A",
+        "Glycohemoglobins",
+        "Glycosylated A1a-1 Hemoglobin",
+        "Glycosylated A1b Hemoglobin",
+        "Glycosylated Hemoglobin",
+        "Glycosylated Hemoglobin A",
+        "Glycosylated Hemoglobin A1c",
+        "Hb A1",
+        "Hb A1a+b",
+        "Hb A1a-1",
+        "Hb A1a-2",
+        "Hb A1b",
+        "Hb A1c",
+        "HbA1",
+        "Hemoglobin A(1)",
+        "Hemoglobin A, Glycated",
+        "Hemoglobin A, Glycosylated",
+        "Hemoglobin A1c, Glycated",
+        "Hemoglobin A1c, Glycosylated",
+        "Hemoglobin, Glycated",
+        "Hemoglobin, Glycated A1a 2",
+        "Hemoglobin, Glycated A1a-2",
+        "Hemoglobin, Glycated A1b",
+        "Hemoglobin, Glycosylated",
+        "Hemoglobin, Glycosylated A1a 1",
+        "Hemoglobin, Glycosylated A1a-1",
+        "Hemoglobin, Glycosylated A1b",
+        "Hemoglobins, Fructated",
+        "Hemoglobins, Glycated" ;
+    skos:prefLabel "Glycated Hemoglobin" .
+
+mesh:D008078 skos:altLabel "Cholesterol, beta-Lipoprotein",
+        "Cholesteryl Linoleate, LDL",
+        "LDL Cholesterol",
+        "LDL Cholesteryl Linoleate",
+        "Low Density Lipoprotein Cholesterol",
+        "beta Lipoprotein Cholesterol",
+        "beta-Lipoprotein Cholesterol" ;
+    skos:prefLabel "Cholesterol, LDL" .
+
+mesh:D010919 skos:altLabel "Sham Treatment" ;
+    skos:prefLabel "Placebos" .
+

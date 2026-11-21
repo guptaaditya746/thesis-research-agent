@@ -1,0 +1,43 @@
+<section id="dq-ours" class="alt" style="gap:28px">
+<div class="head">
+<p class="eyebrow">2 · Data quality in synth3</p>
+<h2>Synth3: 24 folders, 960 papers, each world with a known truth</h2>
+</div>
+<div class="bignums in" style="--i:1">
+<div class="bn row" style="flex:1.25"><p class="v">4</p><p class="l">domains: medicine, RAG, law, materials (+ medicine-real)</p></div>
+<div class="bn row" style="flex:1.25"><p class="v">24</p><p class="l">folders of 40 papers, each folder a seed with its own hidden truth</p></div>
+<div class="bn row"><p class="v">960</p><p class="l">papers</p></div>
+</div>
+<div class="in" style="--i:3;display:flex;gap:28px;flex:1">
+<div class="panel" style="flex:1.5">
+<p class="tag">Realism · medicine-real</p>
+<div class="kfrow"><p class="kf">0.79–0.85</p><p>AUC on full words, 5 seeds. The classifier can still tell; 0.5 would mean it cannot.</p></div>
+<div class="sgrid" style="grid-template-columns:190px repeat(5, 72px) 300px">
+<p class="h">AUC by features</p><p class="h">s1</p><p class="h">s2</p><p class="h">s3</p><p class="h">s4</p><p class="h">s5</p>
+<div class="strip"><p style="position:absolute;left:20px;top:0;width:60px;text-align:center;font-size:24px;font-weight:600;color:#475467">0.5</p><p style="position:absolute;left:240px;top:0;width:60px;text-align:right;font-size:24px;font-weight:600;color:#475467">1.0</p></div>
+<p>full words</p><p class="num">0.82</p><p class="num">0.79</p><p class="num">0.85</p><p class="num">0.79</p><p class="num">0.81</p>
+<div class="strip"><div class="ax"></div><div class="half"></div><x-shape kind="ellipse" style="left:203px"></x-shape><x-shape kind="ellipse" style="left:188px"></x-shape><x-shape kind="ellipse" style="left:218px"></x-shape><x-shape kind="ellipse" style="left:188px"></x-shape><x-shape kind="ellipse" style="left:198px"></x-shape></div>
+<p>names masked</p><p class="num">0.74</p><p class="num">0.72</p><p class="num">0.80</p><p class="num">0.70</p><p class="num">0.74</p>
+<div class="strip"><div class="ax"></div><div class="half"></div><x-shape kind="ellipse" style="left:163px"></x-shape><x-shape kind="ellipse" style="left:153px"></x-shape><x-shape kind="ellipse" style="left:193px"></x-shape><x-shape kind="ellipse" style="left:143px"></x-shape><x-shape kind="ellipse" style="left:163px"></x-shape></div>
+<p>surface only</p><p class="num">0.48</p><p class="num">0.60</p><p class="num">0.67</p><p class="num">0.52</p><p class="num">0.60</p>
+<div class="strip"><div class="ax"></div><div class="half"></div><x-shape kind="ellipse" style="left:33px"></x-shape><x-shape kind="ellipse" style="left:93px"></x-shape><x-shape kind="ellipse" style="left:128px"></x-shape><x-shape kind="ellipse" style="left:53px"></x-shape><x-shape kind="ellipse" style="left:93px"></x-shape></div>
+</div>
+<p class="where">Tell-tale words: real “placebo, amlodipine, valsartan”; synthetic “standard care, Alvenor, Cardivel”. Mostly the names, not the style.</p>
+</div>
+<div class="panel" style="flex:1">
+<p class="tag">Fidelity · RAG domain</p>
+<div class="kfrow"><p class="kf">193 / 200</p><p>papers read back exactly as planted (96.5%)</p></div>
+<div style="display:flex;gap:14px">
+<div class="seedcell" style="flex:1"><p class="h">s1</p><p class="v">38</p><div class="meter"><div class="c-eng" style="flex:38"></div><div style="flex:2"></div></div></div>
+<div class="seedcell" style="flex:1"><p class="h">s2</p><p class="v">38</p><div class="meter"><div class="c-eng" style="flex:38"></div><div style="flex:2"></div></div></div>
+<div class="seedcell" style="flex:1"><p class="h">s3</p><p class="v">37</p><div class="meter"><div class="c-eng" style="flex:37"></div><div style="flex:3"></div></div></div>
+<div class="seedcell" style="flex:1"><p class="h">s4</p><p class="v">40</p><div class="meter"><div class="c-eng" style="flex:40"></div></div></div>
+<div class="seedcell" style="flex:1"><p class="h">s5</p><p class="v">40</p><div class="meter"><div class="c-eng" style="flex:40"></div></div></div>
+</div>
+<p class="where">Passes per seed, out of 40.</p>
+<p class="where">Failures are of two types: extra result rows that were never planted (S003, S027 in s3), and a claim whose direction flipped from “helps” to “hurts” (S030).</p>
+</div>
+</div>
+<p class="src">data/synth3/built/medicine-real/realism-s1..s5.json (“raw” and “masked” runs) · data/synth3/built/rag/s1..s5/real/reader-check.json</p>
+<aside>How we applied the two measures. Realism was measured on medicine-real: real PubMed Central papers with names changed and results planted. AUC around 0.8 means the classifier can still tell, but when we mask names it drops, and on style alone it is close to chance in some seeds. So the giveaway is mostly vocabulary, our invented drug names. Fidelity on the RAG domain: 193 of 200 papers read back exactly as planted. The 7 failures are known and listed. Caveat: realism is only measured on medicine-real so far, fidelity shown here only for RAG.</aside>
+</section>

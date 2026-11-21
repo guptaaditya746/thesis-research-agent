@@ -1,42 +1,32 @@
 """The FastAPI backend: `webapp.app:create_app()`.
 
-The evidence-level app under /api/ev, the supervisor's flow (STATE.md §4 "Web app"): the viewer (webapp/evapi.py,
-read-only GETs over the files the commands write: corpora, protocols and proposals, runs with the funnel,
-evidence graph and answer, scores A/B/C with the baselines beside the engine) and what the app starts and
-writes (webapp/evjobs.py: the questions to select from, jobs that run the same commands as the runbook, a
-proposal's decisions.yaml). `/api/health` says the server is up. The built frontend (frontend/dist) is served
-at / with every other path falling back to index.html (client-side routes), when that directory exists.
+The Workbench API under /api/evqa (read-only GETs over data/seed, data/dataset and runs/evqa: webapp/evqa_api.py,
+evqa_questions_api.py, evqa_papers_api.py, evqa_runs_api.py) and `/api/health`. The built frontend (frontend/dist)
+is served at / with every other path falling back to index.html (client-side routes), when that directory exists.
 
-The server writes only job state and logs ($EV/.jobs/) and decisions.yaml of a proposal; the jobs it starts
-write what their commands write, into the $EV layout. It has no authentication: it binds to 127.0.0.1 and is
-reached through an SSH tunnel (README, "Web app"); webapp/guard.py answers only loopback Host names and takes
-a write only from a loopback client as a same-origin JSON request, so neither other hosts nor other web pages
-the user has open can start jobs or read through DNS rebinding. Request paths are checked against their roots
-(webapp/files.py).
+No authentication: it binds to 127.0.0.1 and is reached through an SSH tunnel; webapp/guard.py answers only
+loopback Host names (DNS rebinding) and takes a write only from a loopback client.
 """
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
-from evidence.rundir import RunDir
-
-from .evapi import evidence_router
-from .evfiles import EvidenceFiles
-from .evjobs import evjobs_router
-from .evplan import NotWired, PlanBackend, evplan_router
-from .evquestions import Questions
-from .files import BadRequest, Conflict, Damaged, NotFound, inside
+from .evqa_api import router as evqa_router
+from .evqa_papers_api import router as evqa_papers_router
+from .evqa_questions_api import router as evqa_questions_router
+from .evqa_runs_api import router as evqa_runs_router
 from .guard import Guard
-from .jobs import JobManager
-from .models import Health, Job
-from .procs import PosixProcesses
 from .settings import Settings
+
+
+class Health(BaseModel):
+    ok: bool
+    version: str
 
 
 def app_version() -> str:
@@ -46,69 +36,18 @@ def app_version() -> str:
         return "0"
 
 
-@dataclass
-class Services:
-    """Everything the routes read through; one per app."""
-
-    settings: Settings
-    jobs: JobManager = field(init=False)
-    evidence: EvidenceFiles = field(init=False)  # the evidence-level viewer (webapp/evfiles.py)
-    questions: Questions = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.jobs = JobManager(self.settings, after=self.check_job, processes=PosixProcesses())
-        self.evidence = EvidenceFiles(self.settings)
-        self.questions = Questions(self.settings)
-
-    def check_job(self, job: Job) -> None:
-        """After an engine run: its failed extractor calls (e.g. the gateway went away); the job stays done, with
-        `failed_calls` and a warning the pages show. (A baseline whose model call fails exits non-zero itself.)"""
-        if job.kind != "run" or not job.refs.get("run"):
-            return
-        try:
-            path = self.evidence.run_dir(job.refs["run"])
-        except NotFound:
-            return
-        job.failed_calls = RunDir(path).failed_calls()
-        if job.failed_calls:
-            job.warnings.append(f"{job.failed_calls} extractor call(s) failed (the model gateway or the GLiNER service "
-                                "did not answer; status error or partial in calls/); they are in the record cache: "
-                                "run again with 'retry errors' once the service answers")
-
-
-def create_app(settings: Settings | None = None, plan_backend: PlanBackend | None = None) -> FastAPI:
-    services = Services(settings or Settings())
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        services.jobs.load()
-        yield
-        await services.jobs.shutdown()
-
-    app = FastAPI(title="Thesis: evidence-level synthesis", version=app_version(), lifespan=lifespan,
-                  description="The supervisor's flow: question, protocol (or a proposal), corpus, run, evidence graph, "
-                              "answer and scores with the baselines beside the engine; the jobs that make them.")
-    app.state.services = services
-    s = services.settings
+def create_app(settings: Settings | None = None) -> FastAPI:
+    s = settings or Settings()
+    app = FastAPI(title="Thesis: evqa Workbench", version=app_version(),
+                  description="Read-only views of the evqa seed, papers, questions and runs.")
+    app.state.settings = s
     app.add_middleware(Guard, allowed_hosts=s.hosts, write_clients=s.writers)  # webapp/guard.py
-    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400), (Damaged, 422), (NotWired, 501)):
-        app.add_exception_handler(exc_type, _handler(status))
     app.include_router(health_router(), prefix="/api")
-    app.include_router(evidence_router(services.evidence), prefix="/api/ev")
-    app.include_router(evjobs_router(s, services.evidence, services.jobs, services.questions), prefix="/api/ev")
-    if plan_backend is None:   # the real planner model, templates, plan runs and links review (webapp/planwire.py)
-        from .planwire import default_backend
-        plan_backend = default_backend(s)
-    app.include_router(evplan_router(s, plan_backend), prefix="/api/ev")  # the plan page (webapp/evplan.py)
+    for router in (evqa_router, evqa_questions_router, evqa_papers_router, evqa_runs_router):
+        app.include_router(router, prefix="/api")
     if s.web_dist.is_dir():
-        add_frontend(app, s)
+        add_frontend(app, s.web_dist)
     return app
-
-
-def _handler(status: int):
-    async def handle(request: Request, exc: Exception) -> JSONResponse:
-        return JSONResponse({"detail": str(exc)}, status_code=status)
-    return handle
 
 
 def health_router() -> APIRouter:
@@ -121,18 +60,18 @@ def health_router() -> APIRouter:
     return api
 
 
-def add_frontend(app: FastAPI, settings: Settings) -> None:
+def add_frontend(app: FastAPI, dist: Path) -> None:
     """Serve the built frontend: files from dist/, any other path (a client route) as index.html."""
-    dist = settings.web_dist
+    root = dist.resolve()
 
     @app.get("/{path:path}", include_in_schema=False)
     def frontend(path: str) -> FileResponse:
         if path == "api" or path.startswith("api/"):
-            raise NotFound(f"no such API endpoint: /{path}")
-        target = inside(dist, path) if path else dist / "index.html"
-        if target.is_file():
+            raise HTTPException(404, f"no such API endpoint: /{path}")
+        target = (root / path).resolve() if path else root / "index.html"
+        if target.is_relative_to(root) and target.is_file():
             return FileResponse(target)
-        index = dist / "index.html"
+        index = root / "index.html"
         if not index.is_file():
-            raise NotFound("the frontend is not built (frontend/dist/index.html missing)")
+            raise HTTPException(404, "the frontend is not built (frontend/dist/index.html missing)")
         return FileResponse(index)

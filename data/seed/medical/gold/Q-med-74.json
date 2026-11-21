@@ -1,0 +1,100 @@
+{
+  "qid": "Q-med-74",
+  "domain": "medical",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:mirabexan }\n  VALUES ?context { d:t2d-metformin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "context": "t2d_metformin",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [
+    "R-med-11-06"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-11-06",
+        "paper": "P-med-11",
+        "cells": {
+          "dose": "15 mg",
+          "time_point": "26 wk"
+        },
+        "value": "-0.1",
+        "unit": "kg"
+      }
+    ],
+    "text": "1 value(s): 15 mg, 26 wk, -0.1 kg"
+  },
+  "rows_without_card": 1,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "lookup",
+    "split": "test",
+    "template": "How much does mirabexan change body weight in adults with type 2 diabetes on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_f"
+      ],
+      "measure": "weight_change",
+      "context": "t2d_metformin"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group"
+    }
+  },
+  "wording": {
+    "template": "How much does mirabexan change body weight in adults with type 2 diabetes on metformin?",
+    "source": "llm",
+    "text": "By how much does mirabexan change body weight in adults with type 2 diabetes on metformin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does mirabexan affect body weight in adults with type 2 diabetes on metformin?",
+        "problems": [
+          "verifier: original asks for the amount of change (\"how much\"), candidate asks for a general effect (\"how does ... affect\"), so the kind of answer differs"
+        ],
+        "verifier": {
+          "same": false,
+          "difference": "original asks for the amount of change (\"how much\"), candidate asks for a general effect (\"how does ... affect\"), so the kind of answer differs"
+        }
+      },
+      {
+        "attempt": 2,
+        "text": "By how much does mirabexan change body weight in adults with type 2 diabetes on metformin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

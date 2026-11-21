@@ -1,0 +1,19 @@
+{
+ "pmcid": "PMC9117147",
+ "pmid": "35551292",
+ "doi": "10.1038/s41591-022-01803-5",
+ "source_url": [
+  "https://europepmc.org/article/PMC/PMC9117147",
+  "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9117147/fullTextXML"
+ ],
+ "license": "cc by",
+ "license_url": "http://creativecommons.org/licenses/by/4.0/",
+ "license_statement": "Open Access This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons license, and indicate if changes were made. The images or other third party material in this article are included in the article’s Creative Commons license, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons license and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.",
+ "citation": "Yang W, Zhu D, Gan S, et al. Dorzagliatin add-on therapy to metformin in patients with type 2 diabetes: a randomized, double-blind, placebo-controlled phase 3 trial. Nature Medicine. 2022;28:974–981.",
+ "drug": "dorzagliatin (glucokinase activator) 75 mg twice daily, added to metformin",
+ "comparator": "placebo + metformin",
+ "retrieved": "2026-11-21",
+ "s2_paperId": "0cae15ec171593d8db310c9ed901f609a32541c5",
+ "s2_oa_license": "CCBY",
+ "s2_url": "https://www.semanticscholar.org/paper/0cae15ec171593d8db310c9ed901f609a32541c5"
+}

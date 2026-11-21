@@ -1,0 +1,168 @@
+{
+  "qid": "Q-med-06",
+  "domain": "medical",
+  "type": "list",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:brenoxalin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ]
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-med-01-01",
+    "R-med-01-02",
+    "R-med-01-03",
+    "R-med-01-04",
+    "R-med-01-05",
+    "R-med-01-06",
+    "R-med-01-07",
+    "R-med-01-08",
+    "R-med-01-09",
+    "R-med-01-10",
+    "R-med-01-11",
+    "R-med-01-12",
+    "R-med-01-13",
+    "R-med-01-14",
+    "R-med-01-15",
+    "R-med-01-16",
+    "R-med-01-17",
+    "R-med-01-18",
+    "R-med-02-01",
+    "R-med-02-02",
+    "R-med-02-03",
+    "R-med-02-04",
+    "R-med-02-05",
+    "R-med-02-06",
+    "R-med-02-07",
+    "R-med-02-08",
+    "R-med-04-01",
+    "R-med-04-02",
+    "R-med-04-03",
+    "R-med-04-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "paper",
+        "label": "study"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-01-01",
+        "paper": "P-med-01",
+        "cells": {
+          "paper": "Brenoxalin added to metformin in type 2 diabetes: a 24-week dose-ranging trial"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-med-02-01",
+        "paper": "P-med-02",
+        "cells": {
+          "paper": "Long-term extension of Brenoxalin with metformin: results to week 52"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-med-04-01",
+        "paper": "P-med-04",
+        "cells": {
+          "paper": "Brenoxalin as first treatment in newly diagnosed type 2 diabetes"
+        },
+        "value": "",
+        "unit": ""
+      }
+    ],
+    "papers": [
+      {
+        "paper": "P-med-01",
+        "title": "Brenoxalin added to metformin in type 2 diabetes: a 24-week dose-ranging trial",
+        "rows": [
+          "R-med-01-01",
+          "R-med-01-02",
+          "R-med-01-03",
+          "R-med-01-04",
+          "R-med-01-05",
+          "R-med-01-06",
+          "R-med-01-07",
+          "R-med-01-08",
+          "R-med-01-09",
+          "R-med-01-10",
+          "R-med-01-11",
+          "R-med-01-12",
+          "R-med-01-13",
+          "R-med-01-14",
+          "R-med-01-15",
+          "R-med-01-16",
+          "R-med-01-17",
+          "R-med-01-18"
+        ]
+      },
+      {
+        "paper": "P-med-02",
+        "title": "Long-term extension of Brenoxalin with metformin: results to week 52",
+        "rows": [
+          "R-med-02-01",
+          "R-med-02-02",
+          "R-med-02-03",
+          "R-med-02-04",
+          "R-med-02-05",
+          "R-med-02-06",
+          "R-med-02-07",
+          "R-med-02-08"
+        ]
+      },
+      {
+        "paper": "P-med-04",
+        "title": "Brenoxalin as first treatment in newly diagnosed type 2 diabetes",
+        "rows": [
+          "R-med-04-01",
+          "R-med-04-02",
+          "R-med-04-03",
+          "R-med-04-04"
+        ]
+      }
+    ],
+    "text": "3 studies: P-med-01 (Brenoxalin added to metformin in type 2 diabetes: a 24-week dose-ranging trial); P-med-02 (Long-term extension of Brenoxalin with metformin: results to week 52); P-med-04 (Brenoxalin as first treatment in newly diagnosed type 2 diabetes)"
+  },
+  "rows_without_card": 30,
+  "notes": "",
+  "spec": {
+    "type": "list",
+    "split": "test",
+    "template": "Which studies tested brenoxalin?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ]
+    },
+    "open": [],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "Which studies tested brenoxalin?",
+    "source": "llm",
+    "text": "Which trials have looked at brenoxalin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which trials have looked at brenoxalin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

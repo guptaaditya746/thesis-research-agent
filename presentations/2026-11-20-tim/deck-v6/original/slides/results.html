@@ -1,0 +1,23 @@
+<section id="results">
+<div class="head">
+<p class="eyebrow">4 · Results</p>
+<h2>First synth3 run: the RAG baseline beats the engine on correctness</h2>
+</div>
+<div class="panel in" style="--i:1">
+<table class="t">
+<tr><th style="width:28%">domain</th><th style="width:20%">system</th><th>answers judged</th><th>A</th><th>B</th><th>C</th></tr>
+<tr><td>medicine (real-edit)</td><td>engine</td><td>99</td><td>8%</td><td>55%</td><td>10%</td></tr>
+<tr><td>medicine (real-edit)</td><td>RAG baseline</td><td>124</td><td>n/a</td><td>94%</td><td>29%</td></tr>
+<tr><td>RAG (template)</td><td>engine</td><td>100</td><td>23%</td><td>63%</td><td>12%</td></tr>
+<tr><td>RAG (template)</td><td>RAG baseline</td><td>125</td><td>n/a</td><td>90%</td><td>24%</td></tr>
+</table>
+</div>
+<div class="bignums in" style="--i:3;--v:52px">
+<div class="bn warn"><p class="v">10% vs 32%</p><p class="l">C on the same 20 questions, medicine (engine vs baseline)</p></div>
+<div class="bn warn"><p class="v">12% vs 25%</p><p class="l">C on the same 20 questions, RAG domain</p></div>
+<div class="bn"><p class="v">9 / 47 / 42</p><p class="l">per answer, engine better / worse / same, medicine</p></div>
+<div class="bn"><p class="v">12 / 34 / 52</p><p class="l">per answer, engine better / worse / same, RAG domain</p></div>
+</div>
+<p class="src">data/synth3/results/synth3-report.md; matched and per-answer numbers recomputed from results/&lt;domain&gt;/s*/&lt;system&gt;/*.marks.json</p>
+<aside>Honest headline: on this first run the engine loses to the baseline on C in both domains, by about 2 to 3 times. The matched numbers use only the 20 questions per domain the engine answered, so the comparison is fair. Per answer, the engine is mostly worse or tied. The next slides say where and why.</aside>
+</section>

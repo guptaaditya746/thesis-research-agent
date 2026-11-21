@@ -9,7 +9,7 @@ export default function NotFoundPage() {
   return (
     <EmptyState icon={<CompassIcon />} title="No such page" description={`Nothing lives at ${pathname}.`}>
       <Button asChild variant="outline">
-        <Link to="/">Back to the overview</Link>
+        <Link to="/">Back to the Workbench</Link>
       </Button>
     </EmptyState>
   )

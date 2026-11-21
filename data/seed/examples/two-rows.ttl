@@ -1,0 +1,62 @@
+# Two example fact rows, one per domain, using glue.ttl.
+# Names (velotrazin, AMX-6) are made up. Real-world links (DOID, MeSH) only type them.
+
+@prefix ex:   <https://w3id.org/evqa/seed#> .
+@prefix d:    <https://w3id.org/evqa/data/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# ================= medical =================
+d:velotrazin a ex:Item ;
+    skos:prefLabel "velotrazin" ; skos:altLabel "VLZ" , "VLZ-20" .
+d:placebo a ex:Item ; skos:prefLabel "placebo" .
+d:hba1c-change a ex:Measure ;
+    skos:prefLabel "change in HbA1c from baseline" ; skos:altLabel "ΔHbA1c" , "HbA1c reduction" ;
+    skos:closeMatch <http://id.nlm.nih.gov/mesh/D006442> ;          # MeSH Glycated Hemoglobin (check)
+    ex:higherIsBetter false .
+d:t2d-adults-on-metformin a ex:Context ;
+    skos:prefLabel "adults with type 2 diabetes on metformin" ;
+    skos:closeMatch <http://purl.obolibrary.org/obo/DOID_9352> .   # DOID type 2 diabetes mellitus (check)
+d:daily-dose a ex:Factor ; skos:prefLabel "daily dose" .
+d:dose-20mg a ex:Condition ; ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ; qudt:numericValue 20.0 ; qudt:unit unit:MilliGM ] .
+
+d:P-med-03 a ex:Paper ; ex:domain "medical" ; ex:role "hub" ; ex:evidenceKind ex:RCT ;
+    dcterms:title "Velotrazin added to metformin in type 2 diabetes: a 24-week dose-ranging trial" .
+
+d:R-med-03-01 a ex:Result ;
+    ex:subject d:velotrazin ; ex:comparator d:placebo ;
+    sosa:observedProperty d:hba1c-change ;
+    sosa:hasFeatureOfInterest d:t2d-adults-on-metformin ;
+    ex:condition d:dose-20mg ;
+    ex:atTime [ a qudt:QuantityValue ; qudt:numericValue 24.0 ; qudt:unit unit:WK ] ;
+    ex:statistic ex:MeanDifference ;
+    sosa:hasResult [ a qudt:QuantityValue ; qudt:numericValue -1.10 ; qudt:unit unit:PERCENT ] ;
+    ex:reportedIn d:P-med-03 ; ex:placement "table" .
+
+# ================= materials =================
+d:amx6 a ex:Item ;
+    skos:prefLabel "AMX-6 aluminium alloy" ; skos:altLabel "AMX-6" , "AMX6" .
+d:yield-strength a ex:Measure ;
+    skos:prefLabel "0.2% yield strength" ; skos:altLabel "YS" , "Rp0.2" ;
+    ex:higherIsBetter true .                                          # TODO: closeMatch to PMDco term
+d:amx6-sheet a ex:Context ; skos:prefLabel "AMX-6 sheet, 2 mm, solution treated at 530 C" .
+d:ageing-time a ex:Factor ; skos:prefLabel "ageing time at 175 C" .
+d:aged-8h a ex:Condition ; ex:factor d:ageing-time ;
+    ex:setting [ a qudt:QuantityValue ; qudt:numericValue 8.0 ; qudt:unit unit:HR ] .
+
+d:P-mat-07 a ex:Paper ; ex:domain "materials" ; ex:role "series" ; ex:evidenceKind ex:LabTest ;
+    dcterms:title "Peak ageing of AMX-6 sheet at 175 C" .
+
+d:R-mat-07-01 a ex:Result ;
+    ex:subject d:amx6 ;                       # single value, so no comparator
+    sosa:observedProperty d:yield-strength ;
+    sosa:hasFeatureOfInterest d:amx6-sheet ;
+    ex:condition d:aged-8h ;
+    ex:statistic ex:MeanValue ;
+    sosa:hasResult [ a qudt:QuantityValue ; qudt:numericValue 312.0 ; qudt:unit unit:MegaPA ] ;
+    ex:reportedIn d:P-mat-07 ; ex:placement "text" .

@@ -1,0 +1,23 @@
+<section id="dq-defs" class="alt" hidden>
+<div class="head">
+<p class="eyebrow">Backup · formal definitions of data quality (synth2/realism.py, synth3/reader.py)</p>
+<h2>For one built folder of a domain</h2>
+</div>
+<div class="cols">
+<div class="panel">
+<p class="tag">Realism · classifier two-sample test</p>
+<p class="where">R: pieces of held-out real papers (label 1). S: pieces of our synthetic papers, cut by the same rules (label 0). View v ∈ {full words, masked words, function words, 22 surface counts, masked + surface}. Logistic regression, 5-fold GroupKFold (all pieces of one paper in one fold); s(x) = out-of-fold score.</p>
+<div class="eq"><p>AUC(v) =</p><div class="frac"><p class="num">Σ<span>r∈R</span> Σ<span>x∈S</span> 1[ s(r) &gt; s(x) ]</p><p class="den">|R| · |S|</p></div></div>
+<p class="where">Ties count ½. 0.5 = cannot tell (goal), 1 = always tells. Masked: drug and arm names → ARMNAME, sites → SITE, numbers and citations masked.</p>
+<div class="eq"><p>gap(f) =</p><div class="frac"><p class="num">μ<span>S</span>(f) − μ<span>R</span>(f)</p><p class="den">σ<span>R</span>(f)</p></div><p>, report mean |gap|</p></div>
+</div>
+<div class="panel">
+<p class="tag">Fidelity · blind reader check</p>
+<p class="where">A model reads paper p without seeing the plan and returns rows (arm, subgroup, measure, k/n or mean/sd, quote) and claims (arm, against, measure, direction). Code compares them with the planted study.</p>
+<div class="eq"><p>ok(p) = L ∧ Q ∧ R<span>⊆</span> ∧ R<span>⊇</span> ∧ K</p></div>
+<p class="where">L: label and setting match. Q: every quote is in the paper. R⊆: every row on a planted arm and a known measure is a planted row with the same values (rounded to the measure’s decimals). R⊇: every planted row is read back. K: every planted claim is read with its planted direction. Rows on other arms or measures (the real study’s own) are counted, not failed.</p>
+<div class="eq"><p>Fid =</p><div class="frac"><p class="num">1</p><p class="den">N</p></div><p>Σ<span>p</span> 1[ ok(p) ]</p></div>
+</div>
+</div>
+<aside>Backup slide, hidden in the show. Use it if Tim asks how realism and fidelity are computed exactly. Realism is the classifier two-sample test: if a plain logistic regression cannot separate real from synthetic pieces, AUC is near 0.5. The five views show where any difference lives: words, names, function words or layout. The style gap is a per-feature z-score that can still move when AUC is stuck at 1. Fidelity is all-or-nothing per paper: label, setting, quotes, every planted row and claim must come back exactly. Rows about the original real study are allowed and only counted.</aside>
+</section>

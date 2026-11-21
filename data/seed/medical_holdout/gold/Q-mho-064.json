@@ -1,0 +1,144 @@
+{
+  "qid": "Q-mho-064",
+  "domain": "medical_holdout",
+  "type": "conflict",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:sorvelin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:fpg-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 10)\n  FILTER(?week = 26)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "comparator": "placebo",
+    "measure": "fpg_change",
+    "statistic": "MeanDifference",
+    "dose": 10,
+    "week": 26
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-18-02",
+    "R-mho-01-16",
+    "R-mho-05-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-18-02",
+        "paper": "P-mho-18",
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on basal insulin"
+        },
+        "value": "-0.70",
+        "unit": "mmol/L"
+      },
+      {
+        "row": "R-mho-01-16",
+        "paper": "P-mho-01",
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.94",
+        "unit": "mmol/L"
+      },
+      {
+        "row": "R-mho-05-02",
+        "paper": "P-mho-05",
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-1.49",
+        "unit": "mmol/L"
+      }
+    ],
+    "conflict": true,
+    "groups": [
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on basal insulin"
+        },
+        "status": "single",
+        "spread": "0.00",
+        "rows": [
+          {
+            "row": "R-mho-18-02",
+            "paper": "P-mho-18",
+            "value": "-0.70",
+            "unit": "mmol/L"
+          }
+        ]
+      },
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "status": "conflict",
+        "spread": "0.55",
+        "rows": [
+          {
+            "row": "R-mho-01-16",
+            "paper": "P-mho-01",
+            "value": "-0.94",
+            "unit": "mmol/L"
+          },
+          {
+            "row": "R-mho-05-02",
+            "paper": "P-mho-05",
+            "value": "-1.49",
+            "unit": "mmol/L"
+          }
+        ]
+      }
+    ],
+    "rounding_step": "0.01",
+    "text": "adults with type 2 diabetes on basal insulin: single (P-mho-18 -0.70 mmol/L); adults with type 2 diabetes on metformin: conflict (P-mho-01 -0.94 mmol/L vs P-mho-05 -1.49 mmol/L)"
+  },
+  "rows_without_card": 3,
+  "notes": "",
+  "spec": {
+    "type": "conflict",
+    "split": "test",
+    "template": "What is the effect of sorvelin 10 mg on fasting plasma glucose at 26 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "measure": "fpg_change",
+      "dose": 10,
+      "week": 26
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "dose_week"
+    }
+  },
+  "wording": {
+    "template": "What is the effect of sorvelin 10 mg on fasting plasma glucose at 26 weeks?",
+    "source": "llm",
+    "text": "How does sorvelin 10 mg affect fasting plasma glucose at 26 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does sorvelin 10 mg affect fasting plasma glucose at 26 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

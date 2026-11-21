@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<DescriptorRecordSet LanguageCode="eng">
-<DescriptorRecord><DescriptorUI>D006331</DescriptorUI><DescriptorName><String>Heart Diseases</String></DescriptorName>
-<TreeNumberList><TreeNumber>C14.280</TreeNumber></TreeNumberList>
-<ConceptList><Concept PreferredConceptYN="Y"><TermList><Term><String>Heart Diseases</String></Term><Term><String>Cardiac Diseases</String></Term></TermList></Concept></ConceptList></DescriptorRecord>
-<DescriptorRecord><DescriptorUI>D009203</DescriptorUI><DescriptorName><String>Myocardial Infarction</String></DescriptorName>
-<TreeNumberList><TreeNumber>C14.280.647</TreeNumber></TreeNumberList>
-<ConceptList><Concept PreferredConceptYN="Y"><TermList><Term><String>Myocardial Infarction</String></Term><Term><String>Heart Attack</String></Term><Term><String>Infarction, Myocardial</String></Term></TermList></Concept></ConceptList></DescriptorRecord>
-</DescriptorRecordSet>

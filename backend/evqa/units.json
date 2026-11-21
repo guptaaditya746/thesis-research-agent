@@ -1,0 +1,217 @@
+{
+ "about": "Unit table for evqa/norm.py. Made by evqa.seed.units.freeze(); do not edit by hand.",
+ "qudt_sha256": "8fb6405ef0eef5764e748e302111ffece79b61804c41573c8eedf31a6f2f6712",
+ "units": {
+  "http://qudt.org/vocab/unit/KiloGM": {
+   "symbol": "kg",
+   "label": "kilogram",
+   "multiplier": "1.0",
+   "dimension": "A0E0L0I0M1H0T0D0",
+   "words": [
+    "kilogrammes",
+    "kilogramme",
+    "kilograms",
+    "kilogram",
+    "kg"
+   ],
+   "write_as": "kg",
+   "source": "qudt-subset.ttl"
+  },
+  "http://qudt.org/vocab/unit/MilliGM": {
+   "symbol": "mg",
+   "label": "milligram",
+   "multiplier": "0.000001",
+   "dimension": "A0E0L0I0M1H0T0D0",
+   "words": [
+    "milligrammes",
+    "milligramme",
+    "milligrams",
+    "milligram",
+    "mg"
+   ],
+   "write_as": "mg",
+   "source": "qudt-subset.ttl"
+  },
+  "http://qudt.org/vocab/unit/MilliMOL-PER-L": {
+   "symbol": "mmol/L",
+   "label": "millimole per litre",
+   "multiplier": "1.0",
+   "dimension": "A1E0L-3I0M0H0T0D0",
+   "words": [
+    "millimoles per liter",
+    "millimoles per litre",
+    "millimole per liter",
+    "millimole per litre",
+    "mmol per liter",
+    "mmol per litre",
+    "mmol l-1",
+    "mmol/l"
+   ],
+   "write_as": "mmol/L",
+   "source": "qudt-subset.ttl"
+  },
+  "http://qudt.org/vocab/unit/MilliM_HG": {
+   "symbol": "mmHg",
+   "label": "millimetre of mercury",
+   "multiplier": "133.322387415",
+   "dimension": "A0E0L-1I0M1H0T-2D0",
+   "words": [
+    "millimeters of mercury",
+    "millimetres of mercury",
+    "millimeter of mercury",
+    "millimetre of mercury",
+    "mm hg",
+    "mmhg"
+   ],
+   "write_as": "mmHg",
+   "source": "qudt-subset.ttl"
+  },
+  "http://qudt.org/vocab/unit/WK": {
+   "symbol": "wk",
+   "label": "week",
+   "multiplier": "604800.0",
+   "dimension": "A0E0L0I0M0H0T1D0",
+   "words": [
+    "weeks",
+    "week",
+    "wks",
+    "wk"
+   ],
+   "write_as": "weeks",
+   "source": "qudt-subset.ttl"
+  },
+  "https://w3id.org/evqa/seed#PercentagePoint": {
+   "symbol": "pp",
+   "label": "percentage point",
+   "multiplier": "0.01",
+   "dimension": "percentage-point",
+   "words": [
+    "percentage points",
+    "percentage point",
+    "percent points",
+    "percent point",
+    "% points",
+    "%-points",
+    "% point",
+    "p.p.",
+    "pp"
+   ],
+   "write_as": "percentage points",
+   "source": "glue.ttl"
+  },
+  "http://qudt.org/vocab/unit/GM": {
+   "symbol": "g",
+   "label": "gram",
+   "multiplier": "0.001",
+   "dimension": "A0E0L0I0M1H0T0D0",
+   "words": [
+    "grammes",
+    "gramme",
+    "grams",
+    "gram",
+    "g"
+   ],
+   "write_as": "g",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/MicroGM": {
+   "symbol": "μg",
+   "label": "microgram",
+   "multiplier": "0.000000001",
+   "dimension": "A0E0L0I0M1H0T0D0",
+   "words": [
+    "micrograms",
+    "microgram",
+    "mcg",
+    "ug",
+    "µg",
+    "μg"
+   ],
+   "write_as": "μg",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/LB": {
+   "symbol": "lbm",
+   "label": "pound mass",
+   "multiplier": "0.45359237",
+   "dimension": "A0E0L0I0M1H0T0D0",
+   "words": [
+    "pound mass",
+    "pounds",
+    "pound",
+    "lbm",
+    "lbs",
+    "lb"
+   ],
+   "write_as": "lbm",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/PERCENT": {
+   "symbol": "%",
+   "label": "percent",
+   "multiplier": "0.01",
+   "dimension": "A0E0L0I0M0H0T0D1",
+   "words": [
+    "per cent",
+    "percents",
+    "percent",
+    "%"
+   ],
+   "write_as": "%",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/MilliGM-PER-DeciL": {
+   "symbol": "mg/dL",
+   "label": "milligram per decilitre",
+   "multiplier": "0.01",
+   "dimension": "A0E0L-3I0M1H0T0D0",
+   "words": [
+    "milligrams per deciliter",
+    "milligrams per decilitre",
+    "milligram per decilitre",
+    "mg per deciliter",
+    "mg per decilitre",
+    "mg/dl"
+   ],
+   "write_as": "mg/dL",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/DAY": {
+   "symbol": "d",
+   "label": "day",
+   "multiplier": "86400.0",
+   "dimension": "A0E0L0I0M0H0T1D0",
+   "words": [
+    "days",
+    "day"
+   ],
+   "write_as": "d",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/MO": {
+   "symbol": "mo",
+   "label": "month",
+   "multiplier": "2551442.976",
+   "dimension": "A0E0L0I0M0H0T1D0",
+   "words": [
+    "months",
+    "month",
+    "mo"
+   ],
+   "write_as": "mo",
+   "source": "QUDT download"
+  },
+  "http://qudt.org/vocab/unit/YR": {
+   "symbol": "a",
+   "label": "year",
+   "multiplier": "31557600.0",
+   "dimension": "A0E0L0I0M0H0T1D0",
+   "words": [
+    "years",
+    "year"
+   ],
+   "write_as": "a",
+   "source": "QUDT download"
+  }
+ }
+}

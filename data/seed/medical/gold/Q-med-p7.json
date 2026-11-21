@@ -1,0 +1,75 @@
+{
+  "qid": "Q-med-p7",
+  "domain": "medical",
+  "type": "absent",
+  "split": "practice",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:veloranide }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"practice\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 100)\n  FILTER(?week = 36)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_c"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "dose": 100,
+    "week": 36
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports veloranide 100 mg on HbA1c at 36 weeks (reported weeks: 12, 24)",
+    "columns": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports veloranide 100 mg on HbA1c at 36 weeks (reported weeks: 12, 24)"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "absent",
+    "split": "practice",
+    "template": "How much does veloranide 100 mg change HbA1c at 36 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_c"
+      ],
+      "measure": "hba1c_change",
+      "dose": 100,
+      "week": 36
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "week",
+      "why": "no paper reports veloranide 100 mg on HbA1c at 36 weeks (reported weeks: 12, 24)"
+    }
+  },
+  "wording": {
+    "template": "How much does veloranide 100 mg change HbA1c at 36 weeks?",
+    "source": "llm",
+    "text": "What change in HbA1c does veloranide 100 mg produce at 36 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "What change in HbA1c does veloranide 100 mg produce at 36 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

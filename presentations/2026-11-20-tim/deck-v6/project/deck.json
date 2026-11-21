@@ -1,0 +1,78 @@
+{
+  "v": 5,
+  "attachments": {},
+  "createdOnFiles": {
+    "at": "2026-11-19T18:30:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "faces": {
+    "ibm-plex-sans": {
+      "family": "IBM Plex Sans",
+      "href": "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+    },
+    "jetbrains-mono": {
+      "family": "JetBrains Mono",
+      "href": "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+    },
+    "source-serif-4": {
+      "family": "Source Serif 4",
+      "href": "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+    }
+  },
+  "format": {
+    "shared": [
+      "project/deck.css"
+    ],
+    "v": 1
+  },
+  "lists": "css",
+  "order": [
+    "cover",
+    "contrast",
+    "a06a8002",
+    "pipeline",
+    "protocol",
+    "protocol-parts",
+    "templates",
+    "div-data",
+    "data-gen",
+    "data-example",
+    "dq-measure",
+    "dq-defs",
+    "dq-classifier",
+    "dq-ours",
+    "ev-measure",
+    "ev-funnel",
+    "ev-stages",
+    "ev-defs",
+    "ev-example",
+    "ev-graph",
+    "ev-recall",
+    "div-results",
+    "results",
+    "by-kind",
+    "diagnosis",
+    "observations",
+    "limits"
+  ],
+  "sections": {
+    "s1": {
+      "description": "The system: answer-level vs evidence-level, the pipeline, the protocol.",
+      "start": "cover"
+    },
+    "s2": {
+      "description": "How we measure the quality of the synthetic data, and what synth3 shows.",
+      "start": "div-data"
+    },
+    "s3": {
+      "description": "How we measure the evidence system, with a worked example.",
+      "start": "ev-measure"
+    },
+    "s4": {
+      "description": "Results, observations and limitations.",
+      "start": "div-results"
+    }
+  },
+  "title": "Evidence-Level QA — synth3"
+}

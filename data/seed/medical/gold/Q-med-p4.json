@@ -1,0 +1,144 @@
+{
+  "qid": "Q-med-p4",
+  "domain": "medical",
+  "type": "conflict",
+  "split": "practice",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:ordenvik }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"practice\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 25)\n  FILTER(?week = 24)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_h"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "statistic": "MeanDifference",
+    "dose": 25,
+    "week": 24
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-20-04",
+    "R-med-17-10",
+    "R-med-19-03"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-20-04",
+        "paper": "P-med-20",
+        "cells": {
+          "patient_group": "adults aged 65 years or older with type 2 diabetes on metformin"
+        },
+        "value": "-0.5",
+        "unit": "kg"
+      },
+      {
+        "row": "R-med-17-10",
+        "paper": "P-med-17",
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-1.0",
+        "unit": "kg"
+      },
+      {
+        "row": "R-med-19-03",
+        "paper": "P-med-19",
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.5",
+        "unit": "kg"
+      }
+    ],
+    "conflict": true,
+    "groups": [
+      {
+        "cells": {
+          "patient_group": "adults aged 65 years or older with type 2 diabetes on metformin"
+        },
+        "status": "single",
+        "spread": "0.0",
+        "rows": [
+          {
+            "row": "R-med-20-04",
+            "paper": "P-med-20",
+            "value": "-0.5",
+            "unit": "kg"
+          }
+        ]
+      },
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "status": "conflict",
+        "spread": "0.5",
+        "rows": [
+          {
+            "row": "R-med-17-10",
+            "paper": "P-med-17",
+            "value": "-1.0",
+            "unit": "kg"
+          },
+          {
+            "row": "R-med-19-03",
+            "paper": "P-med-19",
+            "value": "-0.5",
+            "unit": "kg"
+          }
+        ]
+      }
+    ],
+    "rounding_step": "0.1",
+    "text": "adults aged 65 years or older with type 2 diabetes on metformin: single (P-med-20 -0.5 kg); adults with type 2 diabetes on metformin: conflict (P-med-17 -1.0 kg vs P-med-19 -0.5 kg)"
+  },
+  "rows_without_card": 3,
+  "notes": "",
+  "spec": {
+    "type": "conflict",
+    "split": "practice",
+    "template": "What is the effect of ordenvik 25 mg on body weight at 24 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_h"
+      ],
+      "measure": "weight_change",
+      "dose": 25,
+      "week": 24
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "dose_week"
+    }
+  },
+  "wording": {
+    "template": "What is the effect of ordenvik 25 mg on body weight at 24 weeks?",
+    "source": "llm",
+    "text": "How does ordenvik 25 mg affect body weight at 24 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does ordenvik 25 mg affect body weight at 24 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

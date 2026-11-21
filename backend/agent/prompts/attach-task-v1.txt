@@ -1,8 +1,0 @@
-The answer is about this concept:
-{{concept_json}}
-
-Answer row {{row_id}}:
-{{row_json}}
-
-Fact {{fact_id}} ({{fact_n}} of {{fact_count}}). Find a source for it and record it with exactly these s, p and o:
-{{spo_json}}

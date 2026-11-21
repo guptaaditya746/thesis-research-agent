@@ -78,7 +78,7 @@ def test_model_identity_is_the_pin_for_the_replicas():
 
 def test_model_identity_is_the_pin_for_orch_model():
     """Part G.3: orch-model, the one model of every extractor and both baselines, maps to its pinned weights."""
-    from agent.rundir import ORCHESTRATOR
+    from modelcall.pins import ORCHESTRATOR
 
     assert modelcall.model_identity([modelcall.openai_model("orch-model")]) == f"{ORCHESTRATOR['name']}@{ORCHESTRATOR['revision']}"
     assert modelcall.model_identity([modelcall.openai_model("orch-model")]) != modelcall.model_identity([modelcall.openai_model("sub-model-1")])

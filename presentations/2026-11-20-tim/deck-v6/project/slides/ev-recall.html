@@ -1,0 +1,20 @@
+<section id="ev-recall" class="alt">
+<div class="head">
+<p class="eyebrow">3 · Worked example · how A is marked · paper S010</p>
+<h2>A planted fact next to the fact the engine pulled</h2>
+</div>
+<div class="panel in" style="--i:1">
+<table class="t sm">
+<tr><th style="width:36%">Planted fact (from ground_truth.json)</th><th>Pulled fact (engine, with quote from the paper)</th><th style="width:12%">Judge</th></tr>
+<tr><td>Standard care, older adults, normal kidney: 172 of 400</td><td>#4 value 172 · “| Older adults, Normal kidney function, University hospital | Standard care | Blood pressure control | 172 | 400 |”</td><td>found</td></tr>
+<tr><td>Alvenor, older adults, normal kidney: 223 of 400</td><td>#6 value 223 · same table, next row</td><td>found</td></tr>
+<tr><td>Standard care, older adults, reduced kidney: 165 of 400</td><td>#8 value 165</td><td>found</td></tr>
+<tr><td>Alvenor, older adults, reduced kidney: 217 of 400</td><td>#9 value 217</td><td>found</td></tr>
+<tr><td>Authors say Alvenor beats standard care</td><td>nothing pulled</td><td style="color:#B42318">missing</td></tr>
+<tr><td>Study ran at Northgate Heart Cohort</td><td>#19 setting · “The groups in this comparison were followed at the Northgate Heart Cohort.”</td><td>found</td></tr>
+</table>
+<p class="where"><b>S010: 5 of 6 found.</b> When a paper passes the screen, numbers come out exact and quoted. Compare S033 (Diagnosis slide): rejected at the screen, so all its facts count as missing.</p>
+</div>
+<p class="src">judge.py planted_facts() and a_input() · results/medicine/s1/system/m01.marks.json · 19 facts pulled from S010 in total</p>
+<aside>This is what A actually compares. Code turns the hidden truth into plain sentences, the planted facts. The engine's pulled facts are structured items, each with an exact quote. The judge reads both lists per paper and marks each planted fact found or missing, with a reason, for example "Pulled fact 4 states 172 of 400 for Standard care in the correct group". Here the only miss is the authors' claim sentence. A good paper; the problem is the papers that never get read.</aside>
+</section>

@@ -1,0 +1,75 @@
+{
+  "qid": "Q-mho-055",
+  "domain": "medical_holdout",
+  "type": "absent",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:tembrexil }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 5)\n  FILTER(?week = 8)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_c"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "statistic": "MeanDifference",
+    "dose": 5,
+    "week": 8
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports tembrexil 5 mg on body weight at 8 weeks (reported weeks: 6, 12, 24, 26, 36, 60)",
+    "columns": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports tembrexil 5 mg on body weight at 8 weeks (reported weeks: 6, 12, 24, 26, 36, 60)"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "absent",
+    "split": "test",
+    "template": "How much does tembrexil 5 mg change body weight at 8 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_c"
+      ],
+      "measure": "weight_change",
+      "dose": 5,
+      "week": 8
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "week",
+      "why": "no paper reports tembrexil 5 mg on body weight at 8 weeks (reported weeks: 6, 12, 24, 26, 36, 60)"
+    }
+  },
+  "wording": {
+    "template": "How much does tembrexil 5 mg change body weight at 8 weeks?",
+    "source": "llm",
+    "text": "How much does tembrexil 5 mg change body weight at 8 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How much does tembrexil 5 mg change body weight at 8 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

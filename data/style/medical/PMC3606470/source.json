@@ -1,0 +1,19 @@
+{
+ "pmcid": "PMC3606470",
+ "pmid": "23425012",
+ "doi": "10.1186/1741-7015-11-43",
+ "source_url": [
+  "https://europepmc.org/article/PMC/PMC3606470",
+  "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3606470/fullTextXML"
+ ],
+ "license": "cc by",
+ "license_url": "https://creativecommons.org/licenses/by/2.0/",
+ "license_statement": "https://creativecommons.org/licenses/by/2.0/This is an Open Access article distributed under the terms of the Creative Commons Attribution License (http://creativecommons.org/licenses/by/2.0), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.",
+ "citation": "Bailey CJ, Gross JL, Hennicken D, et al. Dapagliflozin add-on to metformin in type 2 diabetes inadequately controlled with metformin: a randomized, double-blind, placebo-controlled 102-week trial. BMC Medicine. 2013;11:43.",
+ "drug": "dapagliflozin (SGLT2 inhibitor) 2.5, 5 or 10 mg once daily, added to metformin",
+ "comparator": "placebo + metformin",
+ "retrieved": "2026-11-21",
+ "s2_paperId": "15a72a6e14e0bad1c999e7cc36d3855a4834544d",
+ "s2_oa_license": "CCBY",
+ "s2_url": "https://www.semanticscholar.org/paper/15a72a6e14e0bad1c999e7cc36d3855a4834544d"
+}

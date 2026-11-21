@@ -1,0 +1,96 @@
+{
+  "qid": "Q-mho-048",
+  "domain": "medical_holdout",
+  "type": "near_miss",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:sorvelin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:fpg-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(LCASE(STR(?contextLabel)) = \"adults with type 1 diabetes on basal insulin\")\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "comparator": "placebo",
+    "measure": "fpg_change",
+    "context": "label:adults with type 1 diabetes on basal insulin",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports sorvelin on fasting plasma glucose in adults with type 1 diabetes on basal insulin; the closest rows are for adults with type 2 diabetes on basal insulin",
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports sorvelin on fasting plasma glucose in adults with type 1 diabetes on basal insulin; the closest rows are for adults with type 2 diabetes on basal insulin"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "near_miss",
+    "split": "test",
+    "template": "How much does sorvelin change fasting plasma glucose in adults with type 1 diabetes on basal insulin?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "measure": "fpg_change",
+      "context": "label:adults with type 1 diabetes on basal insulin"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group:type 1",
+      "near": [
+        "R-mho-18-02"
+      ],
+      "why": "no paper reports sorvelin on fasting plasma glucose in adults with type 1 diabetes on basal insulin; the closest rows are for adults with type 2 diabetes on basal insulin"
+    }
+  },
+  "near_rows": [
+    "R-mho-18-02"
+  ],
+  "wording": {
+    "template": "How much does sorvelin change fasting plasma glucose in adults with type 1 diabetes on basal insulin?",
+    "source": "llm",
+    "text": "What change in fasting plasma glucose does sorvelin cause in adults with type 1 diabetes on basal insulin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How much does sorvelin lower fasting plasma glucose in adults with type 1 diabetes on basal insulin?",
+        "problems": [
+          "verifier: \"lower\" presumes a decrease, while \"change\" is direction-neutral"
+        ],
+        "verifier": {
+          "same": false,
+          "difference": "\"lower\" presumes a decrease, while \"change\" is direction-neutral"
+        }
+      },
+      {
+        "attempt": 2,
+        "text": "What change in fasting plasma glucose does sorvelin cause in adults with type 1 diabetes on basal insulin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

@@ -1,36 +1,16 @@
 # Files whose bytes are hashed must be identical on every checkout, so they are always LF,
-# whatever core.autocrlf says. A CRLF copy of data/corpus/manifest.json hashes differently from the
-# Ceph copy (D5: 22e9471b...), and anchors hash the corpus Markdown byte for byte.
+# whatever core.autocrlf says.
 
-# Frozen corpus: manifest.json (its sha256 goes into every run's config.json) and any Markdown.
-data/corpus/** text eol=lf
-
-# The 10 D1 Docling papers the anchor and broker tests treat as corpus files.
+# Recorded results of the earlier system (hashed into their manifests; never edited).
 tests/D1/docling/** text eol=lf
-
-# Schemas and worked examples the concept/answer code validates and hashes.
-backend/agent/schemas/** text eol=lf
-backend/agent/tests/fixtures/** text eol=lf
-
-# Hash-chained logs (events.jsonl, claims.jsonl) and other JSON Lines records.
-*.jsonl text eol=lf
-
-# The system prompt (its sha256 goes into config.json).
 tests/B/system_prompt.txt text eol=lf
+tests/EV2/corpora/** text eol=lf
+tests/EV2/ui-case/** text eol=lf
+tests/EV4/** text eol=lf
+reports/** -text
 
-# Main loop (rows 1.8, 1.10): versioned prompts and hand-written concepts are hashed into
-# config.json; the claim shim runs on the Linux node.
-backend/agent/prompts/** text eol=lf
-backend/agent/concepts/** text eol=lf
-# Concept sessions (rows 2.1-2.3): data/concepts/<question-id>/ with the frozen concept.json and its chain.
-data/concepts/** text eol=lf
-# The 12 questions (row 2.3): the same bytes on every checkout, so the file hash the Slurm scripts print matches.
-data/questions/** text eol=lf
-# Batch run manifests (row 2.9).
-backend/agent/manifests/** text eol=lf
-backend/agent/bin/** text eol=lf
-# The spawn shim (row 2.12) runs on the Linux node too.
-backend/agent/spawn-bin/** text eol=lf
+# JSON Lines records (call caches, logs).
+*.jsonl text eol=lf
 
 # Shell and Slurm scripts run on the Linux node; CRLF breaks them.
 *.sh text eol=lf
@@ -41,34 +21,3 @@ scripts/omen-tunnels-external text eol=lf
 # The built web app (frontend/dist, made by `npm run build`) is committed byte for byte, so the
 # Slurm node serves it without npm.
 frontend/dist/** -text
-
-# Evidence-level system: the protocol and extractor prompts are hashed into extractor and protocol ids; the
-# test papers are hashed into their manifest.
-# Domain packs are hashed: protocols, words and pack files (backend/evidence/pack.py, backend/evidence/protocol.py).
-data/domains/** text eol=lf
-backend/evidence/extractors/prompts/** text eol=lf
-# The names check prompt is hashed into the names step's id (backend/evidence/engine.py).
-backend/evidence/prompts/** text eol=lf
-backend/evidence/tests/fixtures/** text eol=lf
-# The judge and gold prompts are hashed into cache keys and result lines.
-backend/gold/prompts/** text eol=lf
-
-# Synthetic benchmark (synth/): example corpora (placements are code-point offsets into the papers as stored)
-# and the renderer prompts (hashed into corpus.json).
-backend/synth/examples/** text eol=lf
-backend/synth/prompts/** text eol=lf
-
-# Proposal flow (Part E): the steps record the sha256 of the raw bytes of the files they read (frame.json,
-# draft.yaml, decisions.yaml, protocol.v<N>.yaml), and the prompts are hashed into every proposal.
-proposals/** text eol=lf
-backend/evidence/propose/** text eol=lf
-
-# EV2 corpora built here and run on Slurm: papers are hashed into manifest.json, placements are offsets.
-tests/EV2/corpora/** text eol=lf
-tests/EV2/ui-case/** text eol=lf
-
-# EV4 corpora, call caches and sources (plan 2 Task 18 on): papers are hashed into manifest.json, placements are
-# offsets, so a CRLF checkout would break both.
-tests/EV4/** text eol=lf
-# Run folders are hashed byte for byte (manifest.json); `evidence verify` must pass on every checkout.
-reports/** -text

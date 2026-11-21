@@ -1,0 +1,134 @@
+{
+  "qid": "Q-mho-038",
+  "domain": "medical_holdout",
+  "type": "best",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:pomitral }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?week = 24)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "week": 24
+  },
+  "open_columns": [
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-15-10",
+    "R-mho-15-12"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "candidate",
+        "label": "dose"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-15-10",
+        "paper": "P-mho-15",
+        "cells": {
+          "candidate": "3 mg",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-0.15",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-15-12",
+        "paper": "P-mho-15",
+        "cells": {
+          "candidate": "6 mg",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-0.17",
+        "unit": "pp"
+      }
+    ],
+    "split_by": [
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "own": [],
+    "groups": [
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "ranking": [
+          {
+            "candidate": "6 mg",
+            "row": "R-mho-15-12",
+            "value": "-0.17",
+            "unit": "pp",
+            "cells": {}
+          },
+          {
+            "candidate": "3 mg",
+            "row": "R-mho-15-10",
+            "value": "-0.15",
+            "unit": "pp",
+            "cells": {}
+          }
+        ],
+        "missing": [],
+        "status": "winner",
+        "winner": "6 mg",
+        "margin": "0.02"
+      }
+    ],
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "text": "adults with type 2 diabetes and high blood pressure on metformin: 6 mg (ahead by 0.02)"
+  },
+  "rows_without_card": 2,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "best",
+    "split": "test",
+    "template": "Which pomitral dose reduces HbA1c the most at 24 weeks?",
+    "fixed": {
+      "subject": [
+        "drug_f"
+      ],
+      "measure": "hba1c_change",
+      "week": 24
+    },
+    "open": [
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": "dose",
+    "extra": {
+      "kind": "dose_any_group"
+    }
+  },
+  "wording": {
+    "template": "Which pomitral dose reduces HbA1c the most at 24 weeks?",
+    "source": "llm",
+    "text": "Which pomitral dose lowers HbA1c the most at 24 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which pomitral dose lowers HbA1c the most at 24 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

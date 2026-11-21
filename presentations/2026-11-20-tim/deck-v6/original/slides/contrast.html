@@ -1,0 +1,43 @@
+<section id="contrast">
+<div class="head">
+<p class="eyebrow">1 · The idea</p>
+<h2>Answer-level QA vs evidence-level QA</h2>
+</div>
+<div class="flowrow in" style="--i:1">
+<p class="rowlabel">Answer-level SOTA (PaperQA2, OpenScholar, deep-research agents): the LLM still decides</p>
+<div class="flow">
+<div class="box b-qa"><h3>Question</h3><p>free text</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-doc"><h3>Agent searches</h3><p>many queries, citation chasing</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-doc"><h3>Rerank + summarize</h3><p>passages scored for relevance</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box" style="flex:1.4"><h3>LLM drafts, self-critiques</h3><p>decides, counts and phrases; revises</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-qa"><h3>Answer</h3><p>text + verified citations</p></div>
+</div>
+<div class="verdict"><p class="pill pill-bad">Still opaque</p><p class="small">Citations are real and checked, but which papers count and how they add up is decided inside the model; a re-run can change it.</p></div>
+</div>
+<div class="flowrow in" style="--i:3">
+<p class="rowlabel" style="transform:translate(0, -8px)">Evidence-level (ours): facts first, then the answer is computed from them</p>
+<div class="flow">
+<div class="box b-qa"><h3>Question</h3><p>+ answer kind</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-person"><h3>Plan</h3><p>a person confirms</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-lock"><h3>Protocol</h3><p>frozen before reading</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box"><h3>Extract</h3><p>facts + quoted spans</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box"><h3>Graph</h3><p>records of facts</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-code"><h3>Rules</h3><p>code decides</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-qa"><h3>Answer</h3><p>+ run folder</p></div>
+</div>
+<div class="verdict"><p class="pill pill-good">Checkable</p><p class="small">Every number traces to a quote; the rule is fixed before any paper is read; the run can be replayed.</p></div>
+</div>
+<img src="/_blob/c76e897eac45ff594a1cda1bda1d3939" alt="image.png" id="c4d35e0f" style="position:absolute; top:calc(50% - 372.75px); left:calc(50% + 599.21px); width:640px; height:242px; transform:translate(-50%, -50%)">
+<img src="/_blob/46532842e3dbbb8250f791da3f4731fd" alt="image.png" id="9e808aa3" style="position:absolute; top:calc(50% + 396.66px); left:calc(50% + 466.99px); width:640px; height:162px; transform:translate(-50%, -50%)">
+<aside>Top row: today's best answer-level systems for scientific literature. PaperQA2 is an agent that searches, chases citations, reranks and summarizes passages, then writes a cited answer; it matched or beat experts on LitQA2. OpenScholar retrieves from 45 million open-access papers and refines its draft with self-feedback; it was the reference on ScholarQABench (Nature, 2026). Deep-research agents from OpenAI and Google follow the same pattern at larger scale. These fix invented citations, but the decision itself, which papers count and how they add up to yes or no, still happens inside one LLM call, so you cannot see why it said yes or no. Bottom row: we split the job. The model only extracts facts with their exact quotes; code applies a rule that was fixed in the protocol before any paper was opened. Same question, but the answer is a computation over evidence, not a piece of generated text.</aside>
+</section>

@@ -1,0 +1,24 @@
+<section id="dq-measure">
+<div class="head">
+<p class="eyebrow">2 · Data quality</p>
+<h2>How to measure the quality of synthetic papers</h2>
+<p class="lead">Two questions: do they read like real papers, and do they say exactly what we planted?</p>
+</div>
+<div class="cols">
+<div class="panel in" style="--i:1">
+<p class="tag">Realism</p>
+<h3>Can a classifier tell real from synthetic?</h3>
+<div class="eq"><p>AUC = P( s(real) &gt; s(synthetic) )</p></div>
+<p class="where">For a random real text piece and a random synthetic one, s is the cross-validated classifier score. AUC = 0.5: cannot tell (ideal). AUC = 1: always tells.</p>
+<p class="where">Run per feature set F ∈ {full words, masked names, function words, surface style}: the drop in AUC shows <i>where</i> the difference lives. This is the classifier two-sample test.</p>
+</div>
+<div class="panel in" style="--i:3">
+<p class="tag">Fidelity</p>
+<h3>Does the text carry the planted truth, and only it?</h3>
+<div class="eq"><p>Fid =</p><div class="frac"><p class="num">1</p><p class="den">N</p></div><p>Σ<span>p</span> 1[ read(p) = plan(p) ]</p></div>
+<p class="where">Over the N papers p of a folder, a reader extracts every result row and author claim back from the text. The paper passes only if every planted row comes back with its values, every claim with its direction, and no wrong row appears for a planted arm. Rows about the original real study are only counted.</p>
+<p class="where">Without fidelity the gold answer is not the truth of the text, and every score after it is noise.</p>
+</div>
+</div>
+<aside>Two separate properties. Realism: if a simple classifier can easily tell synthetic papers from real ones, the system might be learning artefacts of our generator. The AUC is the probability that a random real piece scores higher than a random synthetic piece; 0.5 is the goal. Masking names and testing only style tells us what gives it away. Fidelity: a reader re-extracts the numbers and claims from each generated paper and compares them with the plan. If they do not match, our answer key is wrong, not the system.</aside>
+</section>

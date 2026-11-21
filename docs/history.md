@@ -16,3 +16,5 @@ One line per phase. Old docs (plans, specs, handoffs, runbooks, deck) live in gi
 Also at `pre-restructure`: `synth/README.md` (generator guide: knobs, variants, LLM renderer), `GLOSSARY.md` (now a table in `architecture.md`), `design-system/`, `thesis_pipeline.html`, `evaluation_dashboard.html`.
 
 Code comments naming a deleted doc (`docs/evidence-system.md`, `docs/STATE.md`, `docs/earlier-work.md`, runbooks) mean that file at `pre-restructure`. Not rewritten: many sit in hashed files (`backend/README.md`, hashed files).
+
+| evqa | 21 Nov | old system removed: `evidence`, `agent`, `gold`, `evaluation`, `scoring`, `synth` (synth2/3), `packbuilder`, the `/api/ev` app and its UI, `data/{domains,questions,concepts,corpus}`, old scripts and runbook; only evqa + Workbench remain | git before 21 Nov; `runs/backup/old-code-2026-11-21.tar.gz` |

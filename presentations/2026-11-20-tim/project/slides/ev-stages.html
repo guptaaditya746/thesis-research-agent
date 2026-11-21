@@ -1,0 +1,18 @@
+<section id="ev-stages" class="alt" hidden>
+<div class="head">
+<p class="eyebrow">Backup · Evaluation per stage</p>
+<h2>Each stage scored against its own gold</h2>
+<p class="lead">Two runs per stage: with the system’s real input, and with perfect input built from the gold.</p>
+</div>
+<table class="t sm in" style="--i:1">
+<tr><th style="width:15%">stage</th><th style="width:22%">perfect input (from gold)</th><th style="width:28%">compared with gold</th><th>metrics</th></tr>
+<tr><td>0 Folder</td><td>—</td><td>real papers, the plan</td><td>realism AUC, fidelity</td></tr>
+<tr><td>1 Screen</td><td>the question</td><td>papers that hold planted facts</td><td>paper recall, precision</td></tr>
+<tr><td>2 Extract</td><td>only the gold papers, whole text</td><td>planted facts and their placements</td><td>precision, recall, F1; quote lands on a placement (Tim A)</td></tr>
+<tr><td>3 Merge</td><td>the gold facts</td><td>study cells: number ↔ drug ↔ group ↔ measure</td><td>association accuracy, triple F1 (Tim B)</td></tr>
+<tr><td>4 Synthesize</td><td>the gold graph</td><td>true conclusions; and a recalculation from our own graph</td><td>sheet points met, vs truth and vs own graph (Tim C)</td></tr>
+<tr><td>End to end</td><td>—</td><td>true conclusions</td><td>facts found / planted, sheet points met</td></tr>
+</table>
+<p class="small in" style="--i:2">Locate is not a stage here: we read the whole paper (exhaustive), so it cannot lose a fact.</p>
+<aside>Backup for questions. Every stage has gold to compare with, because we planted everything. With real input, errors pile up the way they do in use. With perfect input from the gold, a stage's score shows only its own mistakes. If the end-to-end score is bad but synthesis with perfect input is good, the problem is upstream. That is how we separate extraction errors from synthesis errors, as asked in section 5.</aside>
+</section>

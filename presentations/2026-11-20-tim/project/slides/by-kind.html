@@ -1,0 +1,22 @@
+<section id="by-kind" class="alt">
+<div class="head">
+<p class="eyebrow">4 · Results by question kind</p>
+<h2>The engine trails on every kind but one</h2>
+</div>
+<div class="panel in" style="--i:1">
+<table class="t">
+<tr><th style="width:24%">C by kind</th><th>medicine engine</th><th>medicine baseline</th><th>RAG engine</th><th>RAG baseline</th></tr>
+<tr><td>effect</td><td>9%</td><td>51%</td><td>20%</td><td>45%</td></tr>
+<tr><td>consistency</td><td>0%</td><td>37%</td><td>10%</td><td>23%</td></tr>
+<tr><td>inventory</td><td>3%</td><td>6%</td><td>18% (engine ahead)</td><td>9%</td></tr>
+<tr><td>open</td><td>12%</td><td>25%</td><td>8%</td><td>20%</td></tr>
+<tr><td>best</td><td>not run</td><td>16%</td><td>not run</td><td>16%</td></tr>
+</table>
+</div>
+<div class="cols in" style="--i:3">
+<div class="ob"><h3>Effect is the biggest gap</h3><p>The kind the engine was built for: 9% vs 51% in medicine. With most facts missing, per-paper comparisons collapse into “mixed” or “insufficient”.</p></div>
+<div class="ob blue"><h3>Inventory is the one win</h3><p>RAG domain, 18% vs 9%: listing every name across 40 papers suits a fact graph better than top-k passages.</p></div>
+</div>
+<p class="src">Recomputed from results/&lt;domain&gt;/s*/&lt;system&gt;/*.marks.json; question kinds from data/synth3/questions/&lt;domain&gt;.yaml</p>
+<aside>Per kind, the engine is behind everywhere except inventory in the RAG domain. The best-kind questions never got an engine run, so there is no comparison there yet. Effect questions are where the engine should shine, and it is furthest behind, which points back at extraction rather than at the rules.</aside>
+</section>

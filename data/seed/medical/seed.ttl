@@ -1,0 +1,3518 @@
+# Seed of the medical domain: the truth. Made by `evqa seed build medical` from blueprint.yaml and names.json.
+# Do not edit by hand; change the blueprint and rebuild.
+@prefix d: <https://w3id.org/evqa/data/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix ex: <https://w3id.org/evqa/seed#> .
+@prefix mesh: <http://id.nlm.nih.gov/mesh/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+d:R-med-01-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.46 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.57 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.72 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.78 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.90 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.91 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.6 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.7 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.9 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.3 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-13 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.75 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-14 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.84 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-15 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.97 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-16 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.99 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-17 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.25 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-01-18 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.25 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-01 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.78 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 36.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.82 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.98 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 36.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.05 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 36.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.7 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 36.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-02-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-02 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-03-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.42 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.58 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.53 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.64 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.1 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.7 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.60 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.67 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.86 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-03-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.89 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-03 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:kavolemin .
+
+d:R-med-04-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.99 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-04 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-04-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.16 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-04 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-04-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.36 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-04 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-04-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.63 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-04 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:brenoxalin .
+
+d:R-med-05-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.35 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.42 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.52 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.54 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.3 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-05-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.7 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-05 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-06-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.40 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.47 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.50 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.73 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.77 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.90 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-5mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.9 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-13 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-15 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.1 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-16 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-40mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.47 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 4.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.73 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 8.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.83 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.03 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.97 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.76 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 4.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.08 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 8.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.22 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.32 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-07-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.24 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-07 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.29 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.44 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.6 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-09-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.68 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-09 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-09-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.86 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-09 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-09-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-09 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-09-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.9 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-09 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-09-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.98 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-09 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-09-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.11 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-09 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-10-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.69 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.79 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.85 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.98 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.84 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.83 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.05 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-10-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-asian ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.03 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-10 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-11-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.54 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-11-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.86 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-11-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.54 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-11-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.6 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-11-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-11-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.1 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-11-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.84 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-11-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.91 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-11-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.53 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 26.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-11 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-12-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.32 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:sitagliptin ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-12 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-12-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.32 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:sitagliptin ;
+    ex:condition d:dose-100mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-12 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-12-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.7 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:sitagliptin ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-12 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-12-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue 0.7 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:sitagliptin ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-12 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.46 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.66 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.77 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.97 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-200mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.51 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.79 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.90 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-13-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.07 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-200mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-13 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quelmastin .
+
+d:R-med-14-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.36 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.37 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.45 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.55 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.2 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.6 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.54 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.43 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.65 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-14-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-renal ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.71 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-14 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-15-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -3.2 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-2mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -4.3 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-2mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -4.9 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-4mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -5.2 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-4mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.28 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-2mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.32 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-2mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.33 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-4mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.34 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-4mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.18 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-2mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.16 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-2mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.22 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-4mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-15-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-hypertension ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.21 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-4mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-15 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:tiravelor .
+
+d:R-med-16-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.40 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.49 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.57 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-30mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.55 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-30mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -3.9 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -3.3 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -3.4 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-30mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -5.2 ;
+            qudt:unit unit:MilliM_HG ] ;
+    sosa:observedProperty d:sbp-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-30mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.19 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.26 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-15mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.27 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-30mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-16-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.31 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:ldl-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-30mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-16 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:mirabexan .
+
+d:R-med-17-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.38 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.39 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.59 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.59 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.80 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.6 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-11 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.0 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-13 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.37 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-14 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.55 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-15 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.77 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-16 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.75 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-17 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.89 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 12.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-18 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.91 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-50mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.33 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 4.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.57 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 8.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.76 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 16.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.80 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.80 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 48.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.68 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 4.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.81 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 8.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-08 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.90 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 16.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-09 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.86 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-18-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-naive ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.89 ;
+            qudt:unit unit:MilliMOL-PER-L ] ;
+    sosa:observedProperty d:fpg-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 48.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-18 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-19-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.40 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-19 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-19-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 52.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-19 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-20-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.51 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-20 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-20-02 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.33 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-20 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-20-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.58 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-20 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-20-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-20 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-20-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-20 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-20-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-elderly ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.9 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-100mg ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-20 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:veloranide .
+
+d:R-med-06-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.58 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:conflictsWith d:R-med-08-01 ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-06 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.84 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:conflictsWith d:R-med-08-03 ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-12 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.8 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:conflictsWith d:R-med-08-05 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-06-14 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.4 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:conflictsWith d:R-med-08-07 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-06 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.34 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:conflictsWith d:R-med-06-04 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.42 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:conflictsWith d:R-med-06-06 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-05 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-10mg ;
+    ex:conflictsWith d:R-med-06-12 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-08-07 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.6 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-20mg ;
+    ex:conflictsWith d:R-med-06-14 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-08 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:quendarin .
+
+d:R-med-17-04 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.53 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:conflictsWith d:R-med-19-01 ;
+    ex:placement "text" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-17-10 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -1.0 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:conflictsWith d:R-med-19-03 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-17 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-19-01 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.38 ;
+            qudt:unit ex:PercentagePoint ] ;
+    sosa:observedProperty d:hba1c-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:conflictsWith d:R-med-17-04 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-19 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:R-med-19-03 a ex:Result ;
+    sosa:hasFeatureOfInterest d:t2d-metformin ;
+    sosa:hasResult [ a qudt:QuantityValue ;
+            qudt:numericValue -0.5 ;
+            qudt:unit unit:KiloGM ] ;
+    sosa:observedProperty d:weight-change ;
+    ex:atTime [ a qudt:QuantityValue ;
+            qudt:numericValue 24.0 ;
+            qudt:unit unit:WK ] ;
+    ex:comparator d:placebo ;
+    ex:condition d:dose-25mg ;
+    ex:conflictsWith d:R-med-17-10 ;
+    ex:placement "table" ;
+    ex:reportedIn d:P-med-19 ;
+    ex:statistic ex:MeanDifference ;
+    ex:subject d:ordenvik .
+
+d:dose-200mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 200.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:P-med-04 a ex:Paper ;
+    dcterms:title "Brenoxalin as first treatment in newly diagnosed type 2 diabetes" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "near_miss" ;
+    ex:split "test" .
+
+d:P-med-12 a ex:Paper ;
+    dcterms:title "Quelmastin versus sitagliptin added to metformin: a 52-week head-to-head trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "head_to_head" ;
+    ex:split "test" .
+
+d:P-med-19 a ex:Paper ;
+    dcterms:title "Ordenvik with metformin: a 52-week multicentre trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "conflict" ;
+    ex:split "practice" .
+
+d:sitagliptin a ex:Item ;
+    skos:closeMatch mesh:D000068900 ;
+    skos:prefLabel "sitagliptin" .
+
+d:P-med-09 a ex:Paper ;
+    dcterms:title "Quendarin in older adults with type 2 diabetes on metformin" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "near_miss" ;
+    ex:split "test" .
+
+d:P-med-20 a ex:Paper ;
+    dcterms:title "ORD-399 and Veloranide in older adults with type 2 diabetes on metformin" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:mention [ ex:item d:ordenvik ;
+            ex:written "code" ] ;
+    ex:role "multi_arm" ;
+    ex:split "practice" .
+
+d:dose-2mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 2.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:dose-30mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 30.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:dose-4mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 4.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:P-med-02 a ex:Paper ;
+    dcterms:title "Long-term extension of Brenoxalin with metformin: results to week 52" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "series" ;
+    ex:split "test" .
+
+d:P-med-05 a ex:Paper ;
+    dcterms:title "Veloranide with metformin in type 2 diabetes: a 24-week trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "filler" ;
+    ex:split "practice" .
+
+d:P-med-08 a ex:Paper ;
+    dcterms:title "Quendarin with metformin in type 2 diabetes: a multicentre 52-week trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "conflict" ;
+    ex:split "test" .
+
+d:P-med-13 a ex:Paper ;
+    dcterms:title "Dose range of Quelmastin added to metformin in type 2 diabetes" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "dose_ranging" ;
+    ex:split "test" .
+
+d:ldl-change a ex:Measure ;
+    skos:altLabel "LDL-C change",
+        "change in low-density lipoprotein cholesterol" ;
+    skos:closeMatch mesh:D008078 ;
+    skos:prefLabel "change in LDL cholesterol from baseline" ;
+    ex:higherIsBetter false ;
+    ex:unit unit:MilliMOL-PER-L .
+
+d:sbp-change a ex:Measure ;
+    skos:altLabel "SBP change",
+        "change in systolic BP" ;
+    skos:closeMatch mesh:D001794 ;
+    skos:prefLabel "change in systolic blood pressure from baseline" ;
+    ex:higherIsBetter false ;
+    ex:unit unit:MilliM_HG .
+
+d:P-med-11 a ex:Paper ;
+    dcterms:title "Quendarin, Quelmastin and Mirabexan added to metformin: a three-drug placebo-controlled trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:mention [ ex:item d:quelmastin ;
+            ex:written "both" ],
+        [ ex:item d:mirabexan ;
+            ex:written "both" ],
+        [ ex:item d:quendarin ;
+            ex:written "both" ] ;
+    ex:role "multi_arm" ;
+    ex:split "test" .
+
+d:dose-15mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 15.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:P-med-07 a ex:Paper ;
+    dcterms:title "Quendarin as first treatment in newly diagnosed type 2 diabetes: one-year results" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "trend" ;
+    ex:split "test" .
+
+d:P-med-18 a ex:Paper ;
+    dcterms:title "Ordenvik (ORD-399) as first treatment in newly diagnosed type 2 diabetes: 48-week results" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:mention [ ex:item d:ordenvik ;
+            ex:written "both" ] ;
+    ex:role "trend" ;
+    ex:split "practice" .
+
+d:dose-5mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 5.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:P-med-03 a ex:Paper ;
+    dcterms:title "Kavolemin as add-on to metformin: a 24-week placebo-controlled trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "hub" ;
+    ex:split "test" .
+
+d:P-med-10 a ex:Paper ;
+    dcterms:title "QLM-331 in East Asian adults with type 2 diabetes on metformin: a 24-week trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:mention [ ex:item d:quelmastin ;
+            ex:written "code" ] ;
+    ex:role "alias" ;
+    ex:split "test" .
+
+d:P-med-14 a ex:Paper ;
+    dcterms:title "Quendarin in type 2 diabetes with moderate chronic kidney disease" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "near_miss" ;
+    ex:split "test" .
+
+d:P-med-15 a ex:Paper ;
+    dcterms:title "Tiravelor for blood pressure and cholesterol in type 2 diabetes with high blood pressure" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "distractor" ;
+    ex:split "test" .
+
+d:P-med-16 a ex:Paper ;
+    dcterms:title "MRB-613 added to metformin: effects on HbA1c, blood pressure and LDL cholesterol" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:mention [ ex:item d:mirabexan ;
+            ex:written "code" ] ;
+    ex:role "alias" ;
+    ex:split "test" .
+
+d:daily-dose a ex:Factor ;
+    skos:prefLabel "daily dose" .
+
+d:kavolemin a ex:Item ;
+    skos:altLabel "KVL-543" ;
+    skos:prefLabel "kavolemin" ;
+    ex:madeUp true .
+
+d:t2d-asian a ex:Context ;
+    skos:closeMatch mesh:D003924 ;
+    skos:prefLabel "East Asian adults with type 2 diabetes on metformin" .
+
+d:t2d-elderly a ex:Context ;
+    skos:closeMatch mesh:D003924 ;
+    skos:prefLabel "adults aged 65 years or older with type 2 diabetes on metformin" .
+
+d:t2d-hypertension a ex:Context ;
+    skos:closeMatch mesh:D003924 ;
+    skos:prefLabel "adults with type 2 diabetes and high blood pressure on metformin" .
+
+d:t2d-renal a ex:Context ;
+    skos:closeMatch mesh:D003924 ;
+    skos:prefLabel "adults with type 2 diabetes and moderate chronic kidney disease on metformin" .
+
+d:tiravelor a ex:Item ;
+    skos:altLabel "TRV-648" ;
+    skos:prefLabel "tiravelor" ;
+    ex:madeUp true .
+
+d:veloranide a ex:Item ;
+    skos:altLabel "VLR-587" ;
+    skos:prefLabel "veloranide" ;
+    ex:madeUp true .
+
+d:P-med-06 a ex:Paper ;
+    dcterms:title "Quendarin added to metformin in type 2 diabetes: a 24-week dose-finding trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "dose_ranging" ;
+    ex:split "test" .
+
+d:dose-40mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 40.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:dose-100mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 100.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:mirabexan a ex:Item ;
+    skos:altLabel "MRB-613" ;
+    skos:prefLabel "mirabexan" ;
+    ex:madeUp true .
+
+d:P-med-01 a ex:Paper ;
+    dcterms:title "Brenoxalin added to metformin in type 2 diabetes: a 24-week dose-ranging trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "hub" ;
+    ex:split "test" .
+
+d:P-med-17 a ex:Paper ;
+    dcterms:title "Ordenvik added to metformin in type 2 diabetes: a 24-week dose-ranging trial" ;
+    ex:domain "medical" ;
+    ex:evidenceKind ex:RCT ;
+    ex:role "dose_ranging" ;
+    ex:split "practice" .
+
+d:dose-50mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 50.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:t2d-naive a ex:Context ;
+    skos:closeMatch mesh:D003924 ;
+    skos:prefLabel "adults with newly diagnosed type 2 diabetes, no prior drug" .
+
+d:quelmastin a ex:Item ;
+    skos:altLabel "QLM-331" ;
+    skos:prefLabel "quelmastin" ;
+    ex:madeUp true .
+
+d:brenoxalin a ex:Item ;
+    skos:altLabel "BRN-233" ;
+    skos:prefLabel "brenoxalin" ;
+    ex:madeUp true .
+
+d:dose-25mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 25.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:dose-10mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 10.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:dose-20mg a ex:Condition ;
+    ex:factor d:daily-dose ;
+    ex:setting [ a qudt:QuantityValue ;
+            qudt:numericValue 20.0 ;
+            qudt:unit unit:MilliGM ] .
+
+d:ordenvik a ex:Item ;
+    skos:altLabel "ORD-399" ;
+    skos:prefLabel "ordenvik" ;
+    ex:madeUp true .
+
+d:fpg-change a ex:Measure ;
+    skos:altLabel "FPG change",
+        "change in fasting glucose" ;
+    skos:closeMatch mesh:D001786 ;
+    skos:prefLabel "change in fasting plasma glucose from baseline" ;
+    ex:higherIsBetter false ;
+    ex:unit unit:MilliMOL-PER-L .
+
+d:quendarin a ex:Item ;
+    skos:altLabel "QND-631" ;
+    skos:prefLabel "quendarin" ;
+    ex:madeUp true .
+
+d:weight-change a ex:Measure ;
+    skos:altLabel "body-weight change",
+        "weight change" ;
+    skos:closeMatch mesh:D001835 ;
+    skos:prefLabel "change in body weight from baseline" ;
+    ex:higherIsBetter false ;
+    ex:unit unit:KiloGM .
+
+d:hba1c-change a ex:Measure ;
+    skos:altLabel "HbA1c reduction",
+        "change in glycated haemoglobin",
+        "ΔHbA1c" ;
+    skos:closeMatch mesh:D006442 ;
+    skos:prefLabel "change in HbA1c from baseline" ;
+    ex:higherIsBetter false ;
+    ex:unit ex:PercentagePoint .
+
+d:t2d-metformin a ex:Context ;
+    skos:closeMatch mesh:D003924 ;
+    skos:prefLabel "adults with type 2 diabetes on metformin" .
+
+d:placebo a ex:Item ;
+    skos:closeMatch mesh:D010919 ;
+    skos:prefLabel "placebo" .
+

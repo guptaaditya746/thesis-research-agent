@@ -1,0 +1,133 @@
+{
+  "qid": "Q-mho-080",
+  "domain": "medical_holdout",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:dulmarexa }\n  VALUES ?context { d:t2d-metformin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_d"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "context": "t2d_metformin",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [
+    "R-mho-09-01",
+    "R-mho-09-02",
+    "R-mho-09-03",
+    "R-mho-09-04",
+    "R-mho-11-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-09-01",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "100 mg",
+          "time_point": "12 wk"
+        },
+        "value": "-0.46",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-09-02",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "100 mg",
+          "time_point": "24 wk"
+        },
+        "value": "-0.59",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-09-03",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "12 wk"
+        },
+        "value": "-0.63",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-09-04",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "24 wk"
+        },
+        "value": "-0.69",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-11-02",
+        "paper": "P-mho-11",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "26 wk"
+        },
+        "value": "-0.67",
+        "unit": "pp"
+      }
+    ],
+    "text": "5 value(s): 100 mg, 12 wk, -0.46 pp; 100 mg, 24 wk, -0.59 pp; 200 mg, 12 wk, -0.63 pp; 200 mg, 24 wk, -0.69 pp; 200 mg, 26 wk, -0.67 pp"
+  },
+  "rows_without_card": 5,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "lookup",
+    "split": "test",
+    "template": "How much does dulmarexa change HbA1c in adults with type 2 diabetes on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_d"
+      ],
+      "measure": "hba1c_change",
+      "context": "t2d_metformin"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group"
+    }
+  },
+  "wording": {
+    "template": "How much does dulmarexa change HbA1c in adults with type 2 diabetes on metformin?",
+    "source": "llm",
+    "text": "How much does dulmarexa change HbA1c in adults with type 2 diabetes on metformin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How much does dulmarexa change HbA1c in adults with type 2 diabetes on metformin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

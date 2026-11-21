@@ -1,0 +1,103 @@
+{
+  "qid": "Q-med-47",
+  "domain": "medical",
+  "type": "near_miss",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:brenoxalin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(LCASE(STR(?contextLabel)) = \"adults with type 2 diabetes on insulin\")\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "context": "label:adults with type 2 diabetes on insulin",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports brenoxalin on HbA1c in adults with type 2 diabetes on insulin; the closest rows are for adults with type 2 diabetes on metformin",
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports brenoxalin on HbA1c in adults with type 2 diabetes on insulin; the closest rows are for adults with type 2 diabetes on metformin"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "near_miss",
+    "split": "test",
+    "template": "How much does brenoxalin change HbA1c in adults with type 2 diabetes on insulin?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "measure": "hba1c_change",
+      "context": "label:adults with type 2 diabetes on insulin"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group:insulin",
+      "near": [
+        "R-med-01-01",
+        "R-med-01-02",
+        "R-med-01-03",
+        "R-med-01-04",
+        "R-med-01-05",
+        "R-med-01-06",
+        "R-med-02-01",
+        "R-med-02-02",
+        "R-med-02-03",
+        "R-med-02-04"
+      ],
+      "why": "no paper reports brenoxalin on HbA1c in adults with type 2 diabetes on insulin; the closest rows are for adults with type 2 diabetes on metformin"
+    }
+  },
+  "near_rows": [
+    "R-med-01-01",
+    "R-med-01-02",
+    "R-med-01-03",
+    "R-med-01-04",
+    "R-med-01-05",
+    "R-med-01-06",
+    "R-med-02-01",
+    "R-med-02-02",
+    "R-med-02-03",
+    "R-med-02-04"
+  ],
+  "wording": {
+    "template": "How much does brenoxalin change HbA1c in adults with type 2 diabetes on insulin?",
+    "source": "llm",
+    "text": "How much does brenoxalin change HbA1c in adults with type 2 diabetes on insulin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How much does brenoxalin change HbA1c in adults with type 2 diabetes on insulin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

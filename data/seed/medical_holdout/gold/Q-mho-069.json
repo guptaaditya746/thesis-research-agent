@@ -1,0 +1,91 @@
+{
+  "qid": "Q-mho-069",
+  "domain": "medical_holdout",
+  "type": "near_miss",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:dulmarexa }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 75)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_d"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "dose": 75
+  },
+  "open_columns": [
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports dulmarexa 75 mg on HbA1c; the closest dose(s) reported: 50 mg, 100 mg",
+    "columns": [
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports dulmarexa 75 mg on HbA1c; the closest dose(s) reported: 50 mg, 100 mg"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "near_miss",
+    "split": "test",
+    "template": "How much does dulmarexa 75 mg change HbA1c?",
+    "fixed": {
+      "subject": [
+        "drug_d"
+      ],
+      "measure": "hba1c_change",
+      "dose": 75
+    },
+    "open": [
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "dose",
+      "near": [
+        "R-mho-09-01",
+        "R-mho-09-02",
+        "R-mho-10-01",
+        "R-mho-10-02"
+      ],
+      "why": "no paper reports dulmarexa 75 mg on HbA1c; the closest dose(s) reported: 50 mg, 100 mg"
+    }
+  },
+  "near_rows": [
+    "R-mho-09-01",
+    "R-mho-09-02",
+    "R-mho-10-01",
+    "R-mho-10-02"
+  ],
+  "wording": {
+    "template": "How much does dulmarexa 75 mg change HbA1c?",
+    "source": "llm",
+    "text": "What change in HbA1c would I expect with dulmarexa 75 mg?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "What change in HbA1c would I expect with dulmarexa 75 mg?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+# Slice 1 closed book: no papers (Find returns nothing), so every answer should be "not reported".
+# The ~0 sanity run: any value it reports came from the model, not from a paper.
+name: slice1-closed-book
+domain: medical
+mode: benchmark
+split: test
+questions: [Q-med-01, Q-med-02, Q-med-03, Q-med-04]   # pinned 21 Nov (was []: the split grew to 78); new list = new run_id
+llm:
+  backend: qwen
+  model: orch-model
+  think: false           # Qwen reasoning off (Aditya, 21 Nov)
+steps: {}                # per-step override, e.g. spec_check: {backend: qwen, model: orch-model-2}
+find:
+  search_terms: true     # model lists other wordings; exact-word search (no BM25)
+  screen_max_papers: 20
+  agent_max_steps: 6
+  agent: true
+closed_book: true

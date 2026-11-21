@@ -1,0 +1,34 @@
+<section id="dq-ours" class="alt">
+<div class="head">
+<p class="eyebrow">2 · Data quality in synth3</p>
+<h2>Synth3: 24 folders, 960 papers, each world with a known truth</h2>
+</div>
+<div class="bignums in" style="--i:1">
+<div class="bn"><p class="v">4</p><p class="l">domains: medicine, RAG, law, materials (+ medicine-real)</p></div>
+<div class="bn"><p class="v">960</p><p class="l">papers in 24 folders of 40, each folder a seed with its own hidden truth</p></div>
+<div class="bn"><p class="v">0.79–0.85</p><p class="l">realism AUC, medicine-real, full words, 5 seeds</p></div>
+<div class="bn"><p class="v">193 / 200</p><p class="l">fidelity, RAG papers that read back exactly as planted (96.5%)</p></div>
+</div>
+<div class="cols in" style="--i:3">
+<div class="panel">
+<h3>Realism by feature set (medicine-real AUC)</h3>
+<table class="t sm">
+<tr><th style="width:34%">features</th><th>s1</th><th>s2</th><th>s3</th><th>s4</th><th>s5</th></tr>
+<tr><td>full words</td><td>0.82</td><td>0.79</td><td>0.85</td><td>0.79</td><td>0.81</td></tr>
+<tr><td>names masked</td><td>0.74</td><td>0.72</td><td>0.80</td><td>0.70</td><td>0.74</td></tr>
+<tr><td>surface only</td><td>0.48</td><td>0.60</td><td>0.67</td><td>0.52</td><td>0.60</td></tr>
+</table>
+<p class="where">Tell-tale words: real “placebo, amlodipine, valsartan”; synthetic “standard care, Alvenor, Cardivel”. Mostly the names, not the style.</p>
+</div>
+<div class="panel">
+<h3>Fidelity by seed (RAG domain)</h3>
+<table class="t sm">
+<tr><th style="width:34%">seed</th><th>s1</th><th>s2</th><th>s3</th><th>s4</th><th>s5</th></tr>
+<tr><td>pass / 40</td><td>38</td><td>38</td><td>37</td><td>40</td><td>40</td></tr>
+</table>
+<p class="where">Failures are of two types: extra result rows that were never planted (S003, S027 in s3), and a claim whose direction flipped from “helps” to “hurts” (S030).</p>
+</div>
+</div>
+<p class="src">data/synth3/built/medicine-real/realism-s1..s5.json (“raw” and “masked” runs) · data/synth3/built/rag/s1..s5/real/reader-check.json</p>
+<aside>How we applied the two measures. Realism was measured on medicine-real: real PubMed Central papers with names changed and results planted. AUC around 0.8 means the classifier can still tell, but when we mask names it drops, and on style alone it is close to chance in some seeds. So the giveaway is mostly vocabulary, our invented drug names. Fidelity on the RAG domain: 193 of 200 papers read back exactly as planted. The 7 failures are known and listed. Caveat: realism is only measured on medicine-real so far, fidelity shown here only for RAG.</aside>
+</section>

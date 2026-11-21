@@ -1,0 +1,130 @@
+<section id="protocol-parts">
+<style>
+#protocol-parts .code{position:absolute;left:204px;top:302px;width:900px;display:flex;flex-direction:column;font-family:'JetBrains Mono','Courier New',monospace;color:#D8DEE6}
+#protocol-parts .code p,#protocol-parts .nums p{font-size:24px;line-height:32px;height:32px;white-space:nowrap}
+#protocol-parts .nums{position:absolute;left:136px;top:302px;width:44px;display:flex;flex-direction:column;font-family:'JetBrains Mono','Courier New',monospace;color:#5B6B80;text-align:right}
+#protocol-parts .tab{position:absolute;top:256px;font-family:'JetBrains Mono','Courier New',monospace;font-size:24px;line-height:32px;white-space:nowrap}
+#protocol-parts .num{position:absolute;left:1186px;width:40px;font-size:24px;line-height:40px;font-weight:600;color:#FFFFFF;text-align:center}
+#protocol-parts .note{position:absolute;left:1244px;width:548px;display:flex;flex-direction:column;gap:2px}
+#protocol-parts .note p{font-size:24px;line-height:31px}
+#protocol-parts .note .key{font-family:'JetBrains Mono','Courier New',monospace;font-weight:600;color:#0B6E99}
+#protocol-parts .bad{position:absolute;left:1200px;top:628px;width:592px;box-sizing:border-box;padding:18px 24px;display:flex;flex-direction:column;gap:4px}
+#protocol-parts .bad p{font-size:24px;line-height:31px}
+#protocol-parts .lock{position:absolute;left:1276px;top:876px;width:516px;display:flex;flex-direction:column}
+#protocol-parts .lock p{font-size:24px;line-height:32px}
+</style>
+<svg aria-label="A code editor showing protocol.yaml. Three blue blocks (locate, screen, evidence types) and one red line (higher_is_better: false) are joined by lines to notes on the right. A padlock marks the file as locked by a fingerprint." viewBox="0 0 1920 1080" width="1920" height="1080" style="position:absolute;left:0;top:0;width:1920px;height:1080px">
+<rect x="128" y="240" width="984" height="712" rx="12" fill="#0A1220"/>
+<path d="M128 292 H1112 V940 A12 12 0 0 1 1100 952 H140 A12 12 0 0 1 128 940 Z" fill="#0F1A2B"/>
+<rect x="144" y="248" width="264" height="50" rx="8" fill="#0F1A2B"/>
+<rect x="144" y="248" width="264" height="4" fill="#0B6E99"/>
+<path d="M162 260 H176 L182 266 V284 H162 Z" fill="none" stroke="#8CC8E6" stroke-width="2.5"/>
+<rect x="188" y="302" width="2" height="640" fill="#1E2C42"/>
+<rect x="128" y="336" width="984" height="60" fill="#0B6E99" fill-opacity="0.28"/>
+<rect x="128" y="400" width="984" height="92" fill="#0B6E99" fill-opacity="0.28"/>
+<rect x="128" y="496" width="984" height="220" fill="#0B6E99" fill-opacity="0.28"/>
+<rect x="128" y="846" width="984" height="32" fill="#B42318" fill-opacity="0.75"/>
+<g fill="#4FB3DC">
+<rect x="128" y="336" width="6" height="60"/>
+<rect x="128" y="400" width="6" height="92"/>
+<rect x="128" y="496" width="6" height="220"/>
+</g>
+<rect x="128" y="846" width="6" height="32" fill="#FF8A80"/>
+<g fill="none" stroke="#0B6E99" stroke-width="3">
+<path d="M1112 366 C1156 366 1142 270 1186 270"/>
+<path d="M1112 446 C1156 446 1142 372 1186 372"/>
+<path d="M1112 606 C1156 606 1142 520 1186 520"/>
+</g>
+<path d="M1112 862 C1166 862 1146 760 1200 760" fill="none" stroke="#B42318" stroke-width="4"/>
+<g fill="#0B6E99">
+<circle cx="1112" cy="366" r="7"/><circle cx="1112" cy="446" r="7"/><circle cx="1112" cy="606" r="7"/>
+<circle cx="1206" cy="270" r="20"/><circle cx="1206" cy="372" r="20"/><circle cx="1206" cy="520" r="20"/>
+</g>
+<circle cx="1112" cy="862" r="8" fill="#B42318"/>
+<rect x="1200" y="628" width="592" height="232" rx="12" fill="#FEF3F2" stroke="#B42318" stroke-width="4"/>
+<g fill="none" stroke="#F2C078" stroke-width="3">
+<path d="M838 270 V264 A8 8 0 0 1 854 264 V270"/>
+</g>
+<rect x="832" y="270" width="28" height="20" rx="4" fill="#F2C078"/>
+<path d="M1218 906 V894 A18 18 0 0 1 1254 894 V906" fill="none" stroke="#111C2E" stroke-width="6"/>
+<rect x="1204" y="904" width="64" height="46" rx="8" fill="#111C2E"/>
+<circle cx="1236" cy="923" r="6" fill="#F2C078"/>
+<rect x="1233" y="925" width="6" height="14" fill="#F2C078"/>
+</svg>
+<div class="head">
+<p class="eyebrow">1 · The protocol · the real file for question m01 (abridged)</p>
+<h2>What a protocol holds, and what we can change</h2>
+</div>
+<p class="tab" style="left:196px;color:#D8DEE6">protocol.yaml</p>
+<p class="tab" style="left:874px;color:#F2C078">sha256 c9da3f0e…</p>
+<div class="nums">
+<p>1</p>
+<p>2</p>
+<p>3</p>
+<p>4</p>
+<p>5</p>
+<p>6</p>
+<p>7</p>
+<p>8</p>
+<p>9</p>
+<p>10</p>
+<p>11</p>
+<p>12</p>
+<p>13</p>
+<p>14</p>
+<p>15</p>
+<p>16</p>
+<p>17</p>
+<p>18</p>
+<p>19</p>
+<p>20</p>
+</div>
+<div class="code">
+<p><span style="color:#8CC8E6">question:</span> Does Alvenor improve blood pressure control …?</p>
+<p><span style="color:#8CC8E6">locate:</span></p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">strategy:</span> <span style="color:#F2C078">exhaustive</span></p>
+<p><span style="color:#8CC8E6">screen:</span></p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">terms:</span> [alvenor, standard care, BP control, …]</p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">extractors:</span> [regex_screen, llm_screen]</p>
+<p><span style="color:#8CC8E6">evidence_types:</span></p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">condition:</span></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8CC8E6">fields:</span> {label, role: alvenor | standard_care | other}</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8CC8E6">merge_key:</span> [label, role]</p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">metric:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {name, canonical, higher_is_better}</p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">measurement:</span>&nbsp; {value, dataset, form}</p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">author_claim:</span> {direction: improves | no_effect | worsens}</p>
+<p><span style="color:#8CC8E6">synthesis:</span></p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">compare:</span> {treatment: alvenor, control: standard_care}</p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">metrics:</span></p>
+<p>&nbsp;&nbsp;- <span style="color:#8CC8E6">canonical:</span> blood_pressure_control</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#FFFFFF"><b>higher_is_better: false</b></span></p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">min_effect:</span> <span style="color:#F2C078">0.01</span></p>
+<p>&nbsp;&nbsp;<span style="color:#8CC8E6">claim_map:</span> {improves: supports, worsens: contradicts}</p>
+</div>
+<p class="num" style="top:250px">1</p>
+<p class="num" style="top:352px">2</p>
+<p class="num" style="top:500px">3</p>
+<div class="note" style="top:254px">
+<p class="key">locate</p>
+<p>Reads every paper whole. No fact is lost.</p>
+</div>
+<div class="note" style="top:356px">
+<p class="key">screen</p>
+<p>154 names for drug, control, measure. <span style="color:#0B6E99"><b>Change:</b></span> add or drop names.</p>
+</div>
+<div class="note" style="top:504px">
+<p class="key">evidence_types</p>
+<p>What to pull from a paper, as a schema. <span style="color:#0B6E99"><b>Change:</b></span> fields; regex or LLM per type.</p>
+</div>
+<div class="bad">
+<p class="mono" style="color:#B42318;font-weight:600">higher_is_better: false</p>
+<p>“Lower is better”: wrong for BP control.</p>
+<p>S010: Alvenor 223 vs standard care 172 comes out “worse”.</p>
+<p style="color:#B42318"><b>Fix: one word. Nobody checked.</b></p>
+</div>
+<div class="lock">
+<p><b>Locked by fingerprint</b> · written by code</p>
+<p style="color:#475467">Any change makes a new protocol.</p>
+</div>
+<aside>This is the real protocol file for question m01, shortened: the full file has 348 lines, mostly the 154 names and the regex patterns. Code writes it from the plan the previous slide showed, and nobody edits it by hand. The decisions and evidence lines live in the plan, not in this file. Read the numbers. One: locate reads the whole paper, so nothing is lost here. Two: the screen uses the names the plan found for the drug, the control and the measure, regex first and the LLM when unsure; we can add or drop names. Three: the evidence types are a schema, the fields the extractor must fill, and the merge key decides which mentions are the same arm; we can change the fields and pick regex or LLM per type. Below that, synthesis says which side is the treatment and which is the control. The red line is the example: the plan said blood pressure control is better when lower. Nobody checked, because in synth3 the system confirmed its own decisions. That one word is why S010, 223 against 172, came out as "worse". A person would change one word before any paper is opened. After that the file is locked with a fingerprint, c9da3f0e, and any change gives a new protocol.</aside>
+</section>

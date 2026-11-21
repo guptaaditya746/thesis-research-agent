@@ -1,0 +1,29 @@
+<section id="ev-measure">
+<div class="head">
+<p class="eyebrow">3 · Evaluation</p>
+<h2>Three scores, one per stage that can fail</h2>
+<p class="lead">Known truth per folder lets us score the facts, the faithfulness and the answer separately.</p>
+</div>
+<div class="cols3">
+<div class="panel in" style="--i:1">
+<p class="tag">A · Fact recall</p>
+<h3>Did extraction find the planted facts?</h3>
+<div class="eq"><p>A =</p><div class="frac"><p class="num">Σ<span>p</span> found(p)</p><p class="den">Σ<span>p</span> planted(p)</p></div></div>
+<p class="where">p: papers in the folder; planted: facts in the question’s scope. A paper with no pulled fact counts every planted fact as missing.</p>
+</div>
+<div class="panel in" style="--i:2">
+<p class="tag">B · Faithfulness</p>
+<h3>Is every claim backed by the facts used?</h3>
+<div class="eq"><p>B =</p><div class="frac"><p class="num">supported claims</p><p class="den">claims in the answer</p></div></div>
+<p class="where">Each claim marked supported, contradicted or invented against the cited facts (baseline: its passages).</p>
+</div>
+<div class="panel in" style="--i:3">
+<p class="tag">C · Answer correctness</p>
+<h3>Does the answer meet the answer sheet?</h3>
+<div class="eq"><p>C =</p><div class="frac"><p class="num">sheet points met</p><p class="den">sheet points</p></div></div>
+<p class="where">The sheet is a checklist drawn from the hidden world; the judge ticks each point and quotes the answer.</p>
+</div>
+</div>
+<p class="small">Reported as the mean over judged answers, per domain and system. Judge: Qwen3.8-27B (<span class="mono">sub-model-1</span>), blind to the system name and the sub-questions. A is not defined for the RAG baseline (it pulls passages, not facts).</p>
+<aside>A tells us whether extraction works, B whether the answer stays faithful to its own evidence, C whether the final answer is right. Separating them is the point: an engine can have perfect logic and still fail C because A is low. For the baseline only B and C apply. All three are judged by an LLM, so the judge itself must be checked against hand marks; that is still open.</aside>
+</section>

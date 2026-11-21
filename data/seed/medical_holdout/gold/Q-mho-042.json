@@ -1,0 +1,97 @@
+{
+  "qid": "Q-mho-042",
+  "domain": "medical_holdout",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:tavorindel }\n  VALUES ?context { d:t2d-naive }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_g"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "context": "t2d_naive",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [
+    "R-mho-19-01"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-19-01",
+        "paper": "P-mho-19",
+        "cells": {
+          "dose": "10 mg",
+          "time_point": "26 wk"
+        },
+        "value": "-0.63",
+        "unit": "pp"
+      }
+    ],
+    "text": "1 value(s): 10 mg, 26 wk, -0.63 pp"
+  },
+  "rows_without_card": 1,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "lookup",
+    "split": "test",
+    "template": "How much does tavorindel change HbA1c in adults with newly diagnosed type 2 diabetes, no prior drug?",
+    "fixed": {
+      "subject": [
+        "drug_g"
+      ],
+      "measure": "hba1c_change",
+      "context": "t2d_naive"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group"
+    }
+  },
+  "wording": {
+    "template": "How much does tavorindel change HbA1c in adults with newly diagnosed type 2 diabetes, no prior drug?",
+    "source": "llm",
+    "text": "What change in HbA1c would I expect with tavorindel in adults with newly diagnosed type 2 diabetes, no prior drug?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "For adults with newly diagnosed type 2 diabetes who have not taken any prior drug, how much does tavorindel change HbA1c?",
+        "problems": [
+          "drops group 'adults with newly diagnosed type 2 diabetes, no prior drug'"
+        ],
+        "verifier": null
+      },
+      {
+        "attempt": 2,
+        "text": "What change in HbA1c would I expect with tavorindel in adults with newly diagnosed type 2 diabetes, no prior drug?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

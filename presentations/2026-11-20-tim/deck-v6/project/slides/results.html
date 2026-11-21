@@ -1,0 +1,56 @@
+<section id="results" style="gap:28px">
+<div class="head">
+<div class="headrow">
+<p class="eyebrow">4 · Results · first synth3 run</p>
+<div class="legend">
+<div class="lg"><div class="sw c-eng"></div><p>engine</p></div>
+<div class="lg"><div class="sw c-base"></div><p>plain RAG baseline</p></div>
+</div>
+</div>
+<h2>The plain RAG baseline beats the engine on correctness</h2>
+</div>
+<div style="display:flex;gap:28px;flex:1">
+<div class="panel in" style="--i:1;flex:1">
+<p class="tag">C · answer correctness</p>
+<h3>On the same 20 questions per domain</h3>
+<div style="flex:1"></div>
+<div class="chart" style="height:300px">
+<div class="pair">
+<div class="barcol"><p>10%</p><div class="bar eng" style="width:110px;height:80px"></div></div>
+<div class="barcol"><p>32%</p><div class="bar base" style="width:110px;height:256px"></div></div>
+</div>
+<div class="pair">
+<div class="barcol"><p>12%</p><div class="bar eng" style="width:110px;height:96px"></div></div>
+<div class="barcol"><p>25%</p><div class="bar base" style="width:110px;height:200px"></div></div>
+</div>
+</div>
+<div class="xlabels"><p style="width:226px">medicine</p><p style="width:226px">RAG domain</p></div>
+</div>
+<div style="flex:1.45;display:flex;flex-direction:column;gap:20px">
+<div class="panel in" style="--i:2;padding:18px 30px;gap:8px">
+<p class="tag">All judged answers</p>
+<table class="t" style="font-size:24px">
+<tr><th style="width:27%">domain</th><th style="width:27%">system</th><th style="width:16%">judged</th><th>A</th><th>B</th><th>C</th></tr>
+<tr><td>medicine (real-edit)</td><td>engine</td><td>99</td><td>8%</td><td>55%</td><td>10%</td></tr>
+<tr><td>medicine (real-edit)</td><td>plain RAG baseline</td><td>124</td><td>n/a</td><td>94%</td><td>29%</td></tr>
+<tr><td>RAG (template)</td><td>engine</td><td>100</td><td>23%</td><td>63%</td><td>12%</td></tr>
+<tr><td>RAG (template)</td><td>plain RAG baseline</td><td>125</td><td>n/a</td><td>90%</td><td>24%</td></tr>
+</table>
+</div>
+<div class="panel in" style="--i:3;flex:1;gap:12px;padding:18px 30px">
+<div class="headrow">
+<h3 style="font-size:28px">Per answer: is the engine better?</h3>
+<div class="legend" style="gap:18px">
+<div class="lg"><div class="sw seg-b"></div><p>better</p></div>
+<div class="lg"><div class="sw seg-w"></div><p>worse</p></div>
+<div class="lg"><div class="sw seg-s"></div><p>same</p></div>
+</div>
+</div>
+<div class="splitrow"><p class="lab">medicine</p><div class="stack"><p class="seg-b" style="flex:9">9</p><p class="seg-w" style="flex:47">47</p><p class="seg-s" style="flex:42">42</p></div></div>
+<div class="splitrow"><p class="lab">RAG domain</p><div class="stack"><p class="seg-b" style="flex:12">12</p><p class="seg-w" style="flex:34">34</p><p class="seg-s" style="flex:52">52</p></div></div>
+</div>
+</div>
+</div>
+<p class="src">data/synth3/results/synth3-report.md; matched and per-answer numbers recomputed from results/&lt;domain&gt;/s*/&lt;system&gt;/*.marks.json</p>
+<aside>Honest headline: on this first run the engine loses to the plain RAG baseline on C in both domains, by about 2 to 3 times. The matched numbers use only the 20 questions per domain the engine answered, so the comparison is fair. Per answer, the engine is mostly worse or tied. The next slides say where and why.</aside>
+</section>

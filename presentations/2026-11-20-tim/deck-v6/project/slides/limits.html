@@ -1,0 +1,25 @@
+<section id="limits" class="dark" style="gap:32px">
+<div class="head">
+<p class="eyebrow">5 · Limitations and next steps</p>
+<h2>What is not validated yet, and what comes next</h2>
+</div>
+<div class="cols" style="gap:64px">
+<div class="in" style="--i:1;display:flex;flex-direction:column">
+<p class="rowlabel" style="color:#7CC7E8;padding-bottom:14px">Limitations of this run</p>
+<div class="drow"><p class="k">Judge</p><p>Not yet checked: 0 of 30 answers hand-marked.</p></div>
+<div class="drow"><p class="k">Answer sheets</p><p>All 249 drafted by a model, none checked by me.</p></div>
+<div class="drow"><p class="k">Plans</p><p>All 200 engine answers ran on plans the system confirmed, not a person.</p></div>
+<div class="drow"><p class="k">Domains</p><p>Only medicine-real and RAG ran; law, materials and template medicine have no questions yet.</p></div>
+<div class="drow"><p class="k">Re-runs</p><p>Seed 1 only, once each; LiteLLM no-cache not confirmed.</p></div>
+</div>
+<div class="in" style="--i:3;display:flex;flex-direction:column">
+<p class="rowlabel" style="color:#7CC7E8;padding-bottom:14px">Next steps, in order</p>
+<div class="drow"><p class="n">1</p><p>Find why papers yield no facts (screen or extractor) and fix it.</p></div>
+<div class="drow"><p class="n">2</p><p>Hand-mark the 30 judge-test answers; report agreement.</p></div>
+<div class="drow"><p class="n">3</p><p>Check a sample of answer sheets.</p></div>
+<div class="drow"><p class="n">4</p><p>Run the 5 skipped questions per domain, then law and materials.</p></div>
+<div class="drow"><p class="n">5</p><p>Re-run seeds 2–5 to measure variance.</p></div>
+</div>
+</div>
+<aside>The honest frame for Tim: the measurement setup works, and it already tells us exactly where the engine fails. None of the scores are validated yet: the judge, the sheets and the plans all lack a human check. The first fix is extraction, because every later stage depends on it. Question for Tim: is a judge agreement of 80% on 30 items enough, or does he want more?</aside>
+</section>

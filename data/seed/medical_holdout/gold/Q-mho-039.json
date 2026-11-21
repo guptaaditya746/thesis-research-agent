@@ -1,0 +1,133 @@
+{
+  "qid": "Q-mho-039",
+  "domain": "medical_holdout",
+  "type": "lookup",
+  "split": "test",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:parvelinor }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 50)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_b"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "dose": 50
+  },
+  "open_columns": [
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-03-03",
+    "R-mho-03-04",
+    "R-mho-19-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-03-03",
+        "paper": "P-mho-03",
+        "cells": {
+          "time_point": "13 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.57",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-19-02",
+        "paper": "P-mho-19",
+        "cells": {
+          "time_point": "26 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-0.82",
+        "unit": "pp"
+      },
+      {
+        "row": "R-mho-03-04",
+        "paper": "P-mho-03",
+        "cells": {
+          "time_point": "26 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.77",
+        "unit": "pp"
+      }
+    ],
+    "text": "3 value(s): 13 wk, adults with type 2 diabetes on metformin, -0.57 pp; 26 wk, adults with newly diagnosed type 2 diabetes, no prior drug, -0.82 pp; 26 wk, adults with type 2 diabetes on metformin, -0.77 pp"
+  },
+  "rows_without_card": 5,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "lookup",
+    "split": "test",
+    "template": "How much does parvelinor 50 mg change HbA1c?",
+    "fixed": {
+      "subject": [
+        "drug_b"
+      ],
+      "measure": "hba1c_change",
+      "dose": 50
+    },
+    "open": [
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "dose"
+    }
+  },
+  "wording": {
+    "template": "How much does parvelinor 50 mg change HbA1c?",
+    "source": "llm",
+    "text": "How much does parvelinor 50 mg change HbA1c?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How much does parvelinor 50 mg lower HbA1c?",
+        "problems": [
+          "verifier: \"lower\" assumes a decrease, while \"change\" is direction-neutral"
+        ],
+        "verifier": {
+          "same": false,
+          "difference": "\"lower\" assumes a decrease, while \"change\" is direction-neutral"
+        }
+      },
+      {
+        "attempt": 2,
+        "text": "How does parvelinor 50 mg change HbA1c?",
+        "problems": [
+          "verifier: \"How much\" asks for a quantity (one value), while \"How does\" asks for a qualitative description or direction of change"
+        ],
+        "verifier": {
+          "same": false,
+          "difference": "\"How much\" asks for a quantity (one value), while \"How does\" asks for a qualitative description or direction of change"
+        }
+      },
+      {
+        "attempt": 3,
+        "text": "How much does parvelinor 50 mg change HbA1c?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

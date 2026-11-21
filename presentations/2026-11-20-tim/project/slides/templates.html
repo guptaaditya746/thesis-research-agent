@@ -1,0 +1,16 @@
+<section id="templates" class="alt">
+<div class="head">
+<p class="eyebrow">1 · The protocol</p>
+<h2>One template per answer kind: the plan only fills its blanks</h2>
+</div>
+<div class="kinds">
+<div class="kcard in" style="--i:1"><h3>Effect</h3><p class="q">“Does A improve M compared with B?”</p><p><b>Person checks:</b> threshold for “no effect”, which measure counts, same setting only</p><p><b>Answer:</b> per paper better / worse / no difference → supported, refuted, mixed, no effect, insufficient</p></div>
+<div class="kcard in" style="--i:2"><h3>Consistency</h3><p class="q">“Do the authors’ claims match their numbers?”</p><p><b>Person checks:</b> threshold below which a difference is “no effect”</p><p><b>Answer:</b> per claim, agrees or disagrees with the paper’s own numbers</p></div>
+<div class="kcard in" style="--i:3"><h3>Inventory</h3><p class="q">“Which X were studied?”</p><p><b>Person checks:</b> the target: things compared, or measures</p><p><b>Answer:</b> every distinct name, with the papers that name it</p></div>
+<div class="kcard in" style="--i:4"><h3>Best</h3><p class="q">“Which is best on M?”</p><p><b>Person checks:</b> count wins per result or per paper; which direction is better</p><p><b>Answer:</b> the thing with the most wins, with the counts</p></div>
+<div class="kcard open in" style="--i:5"><h3>Open (written)</h3><p class="q">“It depends”, “cannot tell”, mixed questions</p><p><b>Person checks:</b> the same decisions, line by line</p><p><b>Answer:</b> a model writes 1–8 sentences; code checks every number against the cited facts</p></div>
+<div class="kcard claims in" style="--i:6"><h3>Claims check (always added)</h3><p class="q">“Do the conclusions match the numbers?”</p><p><b>Added to:</b> every effect and consistency plan, by code; cannot be removed</p><p><b>Answer:</b> firm “improves” claims no comparison backs, shown as a caveat</p></div>
+</div>
+<p class="src">Templates: backend/evidence/kg/templates/*.rq (effect, consistency, inventory, best, oversell)</p>
+<aside>Each kind has a fixed recipe, a SPARQL template. The plan only fills in the blanks, and the person checks what goes into them. That is what makes the answer predictable: for an effect question, the label follows mechanically from the per-paper comparisons. Open questions are the exception: a model writes the text, but code still checks every number. The claims check is always added; it catches authors who claim more than their numbers show, which synth3 plants on purpose.</aside>
+</section>

@@ -1,8 +1,0 @@
-# Papers held out of generator drafting (spec 6.11): synth.draft refuses a paper whose id, or whose text holding a PMCID,
-# is listed here. OWED, needs network: fill each list from the benchmark's own id list before drafting from real papers
-# (plan 2 Task 18 Step 3).
-#   yun2024: the 120 PMCIDs of evaluation/data/annotated_rct_dataset.csv, github.com/hyesunyun/llm-meta-analysis
-#   scilead, scirex: the paper ids of the SciLead and SciREX benchmarks
-yun2024: []
-scilead: []
-scirex: []

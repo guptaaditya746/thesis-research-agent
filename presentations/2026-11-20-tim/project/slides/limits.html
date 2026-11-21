@@ -1,0 +1,29 @@
+<section id="limits" class="dark">
+<div class="head">
+<p class="eyebrow">5 · Limitations and next steps</p>
+<h2>What is not validated yet, and what comes next</h2>
+</div>
+<div class="cols">
+<div class="flowrow in" style="--i:1">
+<p class="rowlabel" style="color:#7CC7E8">Limitations of this run</p>
+<ul class="list">
+<li>Judge not yet checked: 0 of 30 answers hand-marked.</li>
+<li>All 249 answer sheets drafted by a model, none checked by me.</li>
+<li>All 200 engine answers ran on plans the system confirmed, not a person.</li>
+<li>Only medicine-real and RAG ran; law, materials and template medicine have no questions yet.</li>
+<li>Re-runs: seed 1 only, once each; LiteLLM no-cache not confirmed.</li>
+</ul>
+</div>
+<div class="flowrow in" style="--i:3">
+<p class="rowlabel" style="color:#7CC7E8">Next steps, in order</p>
+<ul class="list">
+<li>Find why papers yield no facts (screen or extractor) and fix it.</li>
+<li>Hand-mark the 30 judge-test answers; report agreement.</li>
+<li>Check a sample of answer sheets.</li>
+<li>Run the 5 skipped questions per domain, then law and materials.</li>
+<li>Re-run seeds 2–5 to measure variance.</li>
+</ul>
+</div>
+</div>
+<aside>The honest frame for Tim: the measurement setup works, and it already tells us exactly where the engine fails. None of the scores are validated yet: the judge, the sheets and the plans all lack a human check. The first fix is extraction, because every later stage depends on it. Question for Tim: is a judge agreement of 80% on 30 items enough, or does he want more?</aside>
+</section>

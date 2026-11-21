@@ -1,0 +1,125 @@
+{
+  "qid": "Q-mho-019",
+  "domain": "medical_holdout",
+  "type": "list",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:dulmarexa }\n  VALUES ?context { d:t2d-metformin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_d"
+    ],
+    "context": "t2d_metformin"
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-mho-09-01",
+    "R-mho-09-02",
+    "R-mho-09-03",
+    "R-mho-09-04",
+    "R-mho-09-05",
+    "R-mho-09-06",
+    "R-mho-09-07",
+    "R-mho-09-08",
+    "R-mho-09-09",
+    "R-mho-09-10",
+    "R-mho-09-11",
+    "R-mho-09-12",
+    "R-mho-11-02",
+    "R-mho-11-05",
+    "R-mho-11-08"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "paper",
+        "label": "study"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-09-01",
+        "paper": "P-mho-09",
+        "cells": {
+          "paper": "DLM-868 added to metformin in type 2 diabetes: a 24-week trial"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-mho-11-02",
+        "paper": "P-mho-11",
+        "cells": {
+          "paper": "Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial"
+        },
+        "value": "",
+        "unit": ""
+      }
+    ],
+    "papers": [
+      {
+        "paper": "P-mho-09",
+        "title": "DLM-868 added to metformin in type 2 diabetes: a 24-week trial",
+        "rows": [
+          "R-mho-09-01",
+          "R-mho-09-02",
+          "R-mho-09-03",
+          "R-mho-09-04",
+          "R-mho-09-05",
+          "R-mho-09-06",
+          "R-mho-09-07",
+          "R-mho-09-08",
+          "R-mho-09-09",
+          "R-mho-09-10",
+          "R-mho-09-11",
+          "R-mho-09-12"
+        ]
+      },
+      {
+        "paper": "P-mho-11",
+        "title": "Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial",
+        "rows": [
+          "R-mho-11-02",
+          "R-mho-11-05",
+          "R-mho-11-08"
+        ]
+      }
+    ],
+    "text": "2 studies: P-mho-09 (DLM-868 added to metformin in type 2 diabetes: a 24-week trial); P-mho-11 (Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial)"
+  },
+  "rows_without_card": 15,
+  "notes": "",
+  "spec": {
+    "type": "list",
+    "split": "test",
+    "template": "Which studies tested dulmarexa in adults with type 2 diabetes on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_d"
+      ],
+      "context": "t2d_metformin"
+    },
+    "open": [],
+    "candidate": null,
+    "extra": {
+      "kind": "drug_group"
+    }
+  },
+  "wording": {
+    "template": "Which studies tested dulmarexa in adults with type 2 diabetes on metformin?",
+    "source": "llm",
+    "text": "Which trials have tested dulmarexa in adults with type 2 diabetes on metformin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which trials have tested dulmarexa in adults with type 2 diabetes on metformin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

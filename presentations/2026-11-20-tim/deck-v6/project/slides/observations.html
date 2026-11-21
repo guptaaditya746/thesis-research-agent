@@ -1,0 +1,41 @@
+<section id="observations" style="gap:28px">
+<div class="head">
+<p class="eyebrow">4 · Observations</p>
+<h2>What the numbers say about the system</h2>
+</div>
+<div class="obs" style="gap:28px">
+<div class="panel find in" style="--i:1">
+<h3>Extraction is the bottleneck</h3>
+<div class="figs">
+<div class="fig"><p class="kf warn">8%</p><p class="cap">fact recall A, medicine</p></div>
+<div class="fig"><p class="kf warn">23%</p><p class="cap">fact recall A, RAG</p></div>
+</div>
+<p class="txt">Most misses are papers where no fact was pulled at all, so the rules have little to work on.</p>
+</div>
+<div class="panel find in" style="--i:2">
+<h3>Facts from the wrong text</h3>
+<div class="figs">
+<div class="fig"><p class="kf warn" style="font-style:italic">“blaiksartan”</p><p class="cap">a renamed drug of the real paper, not a planted arm</p></div>
+</div>
+<p class="txt">On medicine-real the engine pulled claims about the real paper’s renamed drugs, not the planted arms. Seen in m01, seed 1.</p>
+</div>
+<div class="panel find in" style="--i:3">
+<h3>Empty and skipped answers</h3>
+<div class="figs">
+<div class="fig"><p class="kf">11 / 100</p><p class="cap">medicine answers with no fact</p></div>
+<div class="fig"><p class="kf">5 / 100</p><p class="cap">RAG answers with no fact</p></div>
+</div>
+<p class="txt">These engine answers say no paper gave a fact. 5 of 25 questions per domain never got a complete engine run, including all “best” questions.</p>
+</div>
+<div class="panel find in" style="--i:4">
+<h3>Re-runs are mostly stable</h3>
+<div class="figs">
+<div class="fig"><p class="kf good">13/20</p><p class="cap">same headline, medicine</p></div>
+<div class="fig"><p class="kf good">20/20</p><p class="cap">same headline, RAG</p></div>
+</div>
+<p class="txt">Seed 1 redone once with no cache, temperature 0. 67% and 80% of model calls identical.</p>
+</div>
+</div>
+<p class="src">synth3-report.md · results/medicine/s1/system/m01.answer.json · results/&lt;domain&gt;/reexec/s1/report.json</p>
+<aside>Four observations. One: extraction is the bottleneck, not the reasoning. Two: on the real-edit medicine papers, the extractor sometimes reads the original paper’s content instead of the planted arms, which is a realism-meets-extraction problem. Three: some answers are empty and some questions never ran; that is engineering. Four: replay works reasonably, but medicine is less stable than RAG, likely because real-edit text is harder. That last point is my inference.</aside>
+</section>

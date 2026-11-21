@@ -1,0 +1,28 @@
+<section id="ev-defs" class="alt" hidden>
+<div class="head">
+<p class="eyebrow">Backup · formal definitions of A, B, C (judge.py)</p>
+<h2>For one question q, one system, one folder</h2>
+</div>
+<div class="cols3">
+<div class="panel">
+<p class="tag">A · Fact recall</p>
+<p class="where">G(p): planted facts of paper p in q’s scope: result rows of the named arms and control on the named measures, author claims, setting. E(p): facts pulled from p (≤ 60 shown). The judge gives each g ∈ G(p) a mark in {found, wrong, missing}; F(p) = the found ones.</p>
+<div class="eq"><p>A =</p><div class="frac"><p class="num">Σ<span>p</span> |F(p)|</p><p class="den">Σ<span>p</span> |G(p)|</p></div></div>
+<p class="where">Pooled over papers. If E(p) is empty, F(p) = ∅: all of p’s facts count as missing. Not defined for the baseline (no pulled facts).</p>
+</div>
+<div class="panel">
+<p class="tag">B · Faithfulness</p>
+<p class="where">U: facts the answer used: pulled facts of the cited papers (all if none cited; ≤ 150, every cited paper keeps its first facts). Baseline: its retrieved passages. The judge splits answer T into claims c1 … cn and labels each v(ci) ∈ {supported, contradicted, invented}.</p>
+<div class="eq"><p>B =</p><div class="frac"><p class="num">|{ i : v(ci) = supported }|</p><p class="den">n</p></div></div>
+<p class="where">Supported and contradicted must cite a fact in U; invented cites none (code checks). n = 0: no score.</p>
+</div>
+<div class="panel">
+<p class="tag">C · Answer correctness</p>
+<p class="where">P = {p1 … pk}: points of q’s answer sheet, drafted from the hidden world. The judge marks each point met or not met; a met mark must quote words found in T (code checks).</p>
+<div class="eq"><p>C =</p><div class="frac"><p class="num">|{ j : pj met }|</p><p class="den">k</p></div></div>
+<p class="where">Empty answer: C = 0, no judge call.</p>
+</div>
+</div>
+<p class="small">Reported score per domain and system = mean over judged answers (status ok; pending items left out). Every judge reply is checked by code with one repair; one that stays bad is pending.</p>
+<aside>Backup slide, hidden in the show. Use it if Tim asks exactly how A, B and C are computed. Key differences: A is pooled over papers, so big papers weigh more. B checks claims against the system's own evidence (honesty), C checks against the truth (being right), so a system can have high B and low C, like the baseline on m01.</aside>
+</section>

@@ -1,0 +1,35 @@
+<section id="pipeline" class="alt">
+<div class="head">
+<p class="eyebrow">1 · The system</p>
+<h2>The evidence-level pipeline, stage by stage</h2>
+</div>
+<div class="flow in" style="--i:1">
+<div class="box b-qa"><h3>Question</h3><p><span class="mono">kind</span>: effect, consistency, inventory, best, open</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box" style="flex:1.5"><h3>Plan</h3><p>Lines: 1–5, from a template or a checked query</p><p>Decisions: threshold, counts as, direction</p><p>Main rule: any, all or majority of lines</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-person"><h3>A person confirms</h3><p>every decision, on the <span class="mono">/plan</span> page</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-lock"><h3>Protocol</h3><p>written by code, frozen with a fingerprint</p></div>
+</div>
+<div class="flow in" style="--i:3">
+<div class="box b-doc"><h3>Folder</h3><p>domain / seed, 40 papers</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box"><h3>Screen</h3><p>regex, then LLM: keep papers that bear on the question</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box" style="flex:1.5"><h3>Extractor cascade</h3><p>regex → LLM; strategy <span class="mono">gaps</span>: the LLM only for what is missing</p><p>items: condition, metric, measurement, author claim, each with its span</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-code"><h3>Checks + merge</h3><p>R1: span re-anchored</p><p>R8: number in its span</p></div>
+</div>
+<div class="flow in" style="--i:5">
+<div class="box b-measured"><span class="mtag">Measured · A: fact recall</span><h3>Records graph</h3><p>paper, experiment, thing, value, claim, comparison</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-code"><h3>Lines run</h3><p>one SPARQL query per line, then the main rule</p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-code" style="flex:1.4"><h3>Synthesis</h3><p>per paper better / worse / no difference → label</p><p><i>open: written answer, every number checked</i></p></div>
+<x-shape kind="arrow-right" class="arr"></x-shape>
+<div class="box b-qa"><h3>Answer + run folder</h3><p>label, cited papers, flags; calls, seal, replay</p></div>
+</div>
+<p class="src">Code: backend/evidence: engine.py, planrun.py, checks.py, kg/build.py, rules.py, written.py, rundir.py</p>
+<aside>Three rows, read left to right. Row 1 happens before any paper is opened: the question becomes a plan, a person confirms it, code freezes it as the protocol. Row 2 reads the papers: screen first, then a cascade of extractors where the cheap regex goes first and the LLM only fills gaps; every item keeps its exact quote, and two checks make sure the quote is really there and the number is in it. Row 3 is pure code: build the graph, run one query per evidence line, apply the kind's rules. Open questions get a short written answer, but code checks every number against the cited facts. The run folder lets anyone replay the run from the recorded model calls.</aside>
+</section>

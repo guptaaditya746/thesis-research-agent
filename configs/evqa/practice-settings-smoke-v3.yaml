@@ -1,0 +1,17 @@
+name: practice-settings-smoke-v3
+domain: medical
+mode: benchmark
+split: practice
+questions:
+- Q-med-p1
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+steps: {}
+find:
+  search_terms: true
+  screen_max_papers: 20
+  agent_max_steps: 6
+  agent: true
+closed_book: false

@@ -1,0 +1,114 @@
+{
+  "qid": "Q-mho-013",
+  "domain": "medical_holdout",
+  "type": "near_miss",
+  "split": "test",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:saventrol }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(LCASE(STR(?contextLabel)) = \"pregnant women with type 2 diabetes and obesity on metformin\")\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_e"
+    ],
+    "comparator": "placebo",
+    "measure": "weight_change",
+    "context": "label:pregnant women with type 2 diabetes and obesity on metformin",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports saventrol on body weight in pregnant women with type 2 diabetes and obesity on metformin; the closest rows are for adults with type 2 diabetes and obesity on metformin",
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports saventrol on body weight in pregnant women with type 2 diabetes and obesity on metformin; the closest rows are for adults with type 2 diabetes and obesity on metformin"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "near_miss",
+    "split": "test",
+    "template": "How much does saventrol change body weight in pregnant women with type 2 diabetes and obesity on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_e"
+      ],
+      "measure": "weight_change",
+      "context": "label:pregnant women with type 2 diabetes and obesity on metformin"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "group:pregnant",
+      "near": [
+        "R-mho-13-01",
+        "R-mho-13-02",
+        "R-mho-13-03",
+        "R-mho-13-04",
+        "R-mho-13-05",
+        "R-mho-13-06",
+        "R-mho-20-01",
+        "R-mho-20-02",
+        "R-mho-20-03",
+        "R-mho-20-04"
+      ],
+      "why": "no paper reports saventrol on body weight in pregnant women with type 2 diabetes and obesity on metformin; the closest rows are for adults with type 2 diabetes and obesity on metformin"
+    }
+  },
+  "near_rows": [
+    "R-mho-13-01",
+    "R-mho-13-02",
+    "R-mho-13-03",
+    "R-mho-13-04",
+    "R-mho-13-05",
+    "R-mho-13-06",
+    "R-mho-20-01",
+    "R-mho-20-02",
+    "R-mho-20-03",
+    "R-mho-20-04"
+  ],
+  "wording": {
+    "template": "How much does saventrol change body weight in pregnant women with type 2 diabetes and obesity on metformin?",
+    "source": "llm",
+    "text": "In pregnant women with type 2 diabetes and obesity on metformin, how much does saventrol change body weight?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does saventrol affect body weight in pregnant women with type 2 diabetes and obesity on metformin?",
+        "problems": [
+          "verifier: \"how much ... change\" asks for a magnitude; \"how does ... affect\" asks for an effect or direction"
+        ],
+        "verifier": {
+          "same": false,
+          "difference": "\"how much ... change\" asks for a magnitude; \"how does ... affect\" asks for an effect or direction"
+        }
+      },
+      {
+        "attempt": 2,
+        "text": "In pregnant women with type 2 diabetes and obesity on metformin, how much does saventrol change body weight?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

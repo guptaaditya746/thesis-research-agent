@@ -1,0 +1,120 @@
+{
+  "qid": "Q-med-p11",
+  "domain": "medical",
+  "type": "best",
+  "split": "practice",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:veloranide }\n  VALUES ?context { d:t2d-elderly }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"practice\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?week = 24)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_c"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "context": "t2d_elderly",
+    "statistic": "MeanDifference",
+    "week": 24
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-med-20-02",
+    "R-med-20-03"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "candidate",
+        "label": "dose"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-20-02",
+        "paper": "P-med-20",
+        "cells": {
+          "candidate": "25 mg"
+        },
+        "value": "-0.33",
+        "unit": "pp"
+      },
+      {
+        "row": "R-med-20-03",
+        "paper": "P-med-20",
+        "cells": {
+          "candidate": "100 mg"
+        },
+        "value": "-0.58",
+        "unit": "pp"
+      }
+    ],
+    "split_by": [],
+    "own": [],
+    "groups": [
+      {
+        "cells": {},
+        "ranking": [
+          {
+            "candidate": "100 mg",
+            "row": "R-med-20-03",
+            "value": "-0.58",
+            "unit": "pp",
+            "cells": {}
+          },
+          {
+            "candidate": "25 mg",
+            "row": "R-med-20-02",
+            "value": "-0.33",
+            "unit": "pp",
+            "cells": {}
+          }
+        ],
+        "missing": [],
+        "status": "winner",
+        "winner": "100 mg",
+        "margin": "0.25"
+      }
+    ],
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "text": "all: 100 mg (ahead by 0.25)"
+  },
+  "rows_without_card": 2,
+  "notes": "",
+  "answerable": true,
+  "status": "answered",
+  "spec": {
+    "type": "best",
+    "split": "practice",
+    "template": "Which veloranide dose reduces HbA1c the most at 24 weeks in adults aged 65 years or older with type 2 diabetes on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_c"
+      ],
+      "measure": "hba1c_change",
+      "week": 24,
+      "context": "t2d_elderly"
+    },
+    "open": [
+      "measure_variant"
+    ],
+    "candidate": "dose",
+    "extra": {
+      "kind": "dose"
+    }
+  },
+  "wording": {
+    "template": "Which veloranide dose reduces HbA1c the most at 24 weeks in adults aged 65 years or older with type 2 diabetes on metformin?",
+    "source": "llm",
+    "text": "In adults aged 65 years or older with type 2 diabetes on metformin, which veloranide dose lowers HbA1c the most at 24 weeks?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "In adults aged 65 years or older with type 2 diabetes on metformin, which veloranide dose lowers HbA1c the most at 24 weeks?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

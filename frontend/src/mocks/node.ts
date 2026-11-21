@@ -1,6 +1,4 @@
-/** MSW in Node (Vitest): the same handlers as the browser worker. */
+/** MSW in Node (Vitest): no default handlers; each test installs the /api answers it needs with server.use. */
 import { setupServer } from "msw/node"
 
-import { handlers } from "./handlers"
-
-export const server = setupServer(...handlers)
+export const server = setupServer()

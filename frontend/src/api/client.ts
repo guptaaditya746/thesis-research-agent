@@ -1,6 +1,5 @@
 /**
- * The one HTTP layer of the app: every request goes through `request` here (src/api/ev.ts builds the typed
- * client on it), so a change of base URL, auth or error handling happens in one place. Errors become
+ * The one HTTP layer of the app: every request goes through `request` here (src/api/evqa*.ts build on it), so a change of base URL, auth or error handling happens in one place. Errors become
  * `ApiError` with the HTTP status and FastAPI's `detail`. Writes send JSON bodies, which is what the backend's
  * guard (webapp/guard.py) asks of every write.
  */

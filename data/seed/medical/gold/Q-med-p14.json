@@ -1,0 +1,96 @@
+{
+  "qid": "Q-med-p14",
+  "domain": "medical",
+  "type": "near_miss",
+  "split": "practice",
+  "answerable": false,
+  "status": "not_reported",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:veloranide }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"practice\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 200)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_c"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference",
+    "dose": 200
+  },
+  "open_columns": [
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [],
+  "answer": {
+    "status": "not_reported",
+    "why": "no paper reports veloranide 200 mg on HbA1c; the closest dose(s) reported: 100 mg",
+    "columns": [
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [],
+    "text": "not reported: no paper reports veloranide 200 mg on HbA1c; the closest dose(s) reported: 100 mg"
+  },
+  "rows_without_card": 0,
+  "notes": "",
+  "spec": {
+    "type": "near_miss",
+    "split": "practice",
+    "template": "How much does veloranide 200 mg change HbA1c?",
+    "fixed": {
+      "subject": [
+        "drug_c"
+      ],
+      "measure": "hba1c_change",
+      "dose": 200
+    },
+    "open": [
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "dose",
+      "near": [
+        "R-med-20-03"
+      ],
+      "why": "no paper reports veloranide 200 mg on HbA1c; the closest dose(s) reported: 100 mg"
+    }
+  },
+  "near_rows": [
+    "R-med-20-03"
+  ],
+  "wording": {
+    "template": "How much does veloranide 200 mg change HbA1c?",
+    "source": "llm",
+    "text": "How much does veloranide 200 mg change HbA1c?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How much does veloranide 200 mg lower HbA1c?",
+        "problems": [
+          "verifier: \"change\" is directionally neutral, while \"lower\" presupposes a decrease in HbA1c"
+        ],
+        "verifier": {
+          "same": false,
+          "difference": "\"change\" is directionally neutral, while \"lower\" presupposes a decrease in HbA1c"
+        }
+      },
+      {
+        "attempt": 2,
+        "text": "How much does veloranide 200 mg change HbA1c?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "qid": "Q-med-36",
+  "domain": "medical",
+  "type": "trend",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:mirabexan }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:sbp-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 30)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "sbp_change",
+    "statistic": "MeanDifference",
+    "dose": 30
+  },
+  "open_columns": [
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-med-16-07",
+    "R-med-16-08"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-med-16-07",
+        "paper": "P-med-16",
+        "cells": {
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-3.4",
+        "unit": "mmHg"
+      },
+      {
+        "row": "R-med-16-08",
+        "paper": "P-med-16",
+        "cells": {
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-5.2",
+        "unit": "mmHg"
+      }
+    ],
+    "axis": {
+      "key": "time_point",
+      "label": "time point"
+    },
+    "series": [
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "points": [
+          {
+            "at": "12 wk",
+            "value": "-3.4",
+            "unit": "mmHg",
+            "row": "R-med-16-07"
+          },
+          {
+            "at": "24 wk",
+            "value": "-5.2",
+            "unit": "mmHg",
+            "row": "R-med-16-08"
+          }
+        ],
+        "direction": "goes down"
+      }
+    ],
+    "rounding_step": "0.1",
+    "text": "adults with type 2 diabetes on metformin: 12 wk -3.4, 24 wk -5.2 (goes down)"
+  },
+  "rows_without_card": 2,
+  "notes": "",
+  "spec": {
+    "type": "trend",
+    "split": "test",
+    "template": "How does the effect of mirabexan 30 mg on systolic blood pressure change over time?",
+    "fixed": {
+      "subject": [
+        "drug_f"
+      ],
+      "measure": "sbp_change",
+      "dose": 30
+    },
+    "open": [
+      "time_point",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "over_time",
+      "axis": "time_point"
+    }
+  },
+  "wording": {
+    "template": "How does the effect of mirabexan 30 mg on systolic blood pressure change over time?",
+    "source": "llm",
+    "text": "How does mirabexan 30 mg affect systolic blood pressure over time?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does mirabexan 30 mg affect systolic blood pressure over time?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

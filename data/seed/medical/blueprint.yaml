@@ -1,0 +1,315 @@
+# Blueprint of the medical seed (slice 1). Written by hand; `evqa seed build medical` expands it into seed.ttl.
+# Code makes every value from the effect model below (fixed random seed). The LLM only invents the drug names
+# (slots with `invent:`), and code checks those against MeSH and ChEBI labels.
+domain: medical
+random_seed: 20261120
+
+items:
+  drug_a: {invent: "oral once-daily glucose-lowering drug, the main drug of this dataset"}
+  drug_b: {invent: "oral once-daily glucose-lowering drug from another company"}
+  drug_c: {invent: "oral once-daily glucose-lowering drug, used only in practice papers"}
+  placebo: {label: placebo, mesh: D010919}
+  # Added 21 Nov 2026 (corpus 5 -> 20 papers). Old papers never use these, so the old questions keep their gold.
+  drug_d: {invent: "oral once-daily glucose-lowering drug, the second main drug of this dataset"}
+  drug_e: {invent: "oral once-daily glucose-lowering drug, often called by its development code"}
+  drug_f: {invent: "oral once-daily drug that lowers glucose and blood pressure"}
+  drug_g: {invent: "oral once-daily drug that lowers blood pressure and LDL cholesterol in diabetes"}
+  drug_h: {invent: "oral once-daily glucose-lowering drug, used only in practice papers"}
+  sitagliptin: {label: sitagliptin, mesh: D000068900}   # a real active comparator only, never a subject
+
+contexts:
+  t2d_metformin: {label: "adults with type 2 diabetes on metformin", mesh: D003924}
+  t2d_naive: {label: "adults with newly diagnosed type 2 diabetes, no prior drug", mesh: D003924}
+  t2d_elderly: {label: "adults aged 65 years or older with type 2 diabetes on metformin", mesh: D003924}
+  t2d_renal: {label: "adults with type 2 diabetes and moderate chronic kidney disease on metformin", mesh: D003924}
+  t2d_asian: {label: "East Asian adults with type 2 diabetes on metformin", mesh: D003924}
+  t2d_hypertension: {label: "adults with type 2 diabetes and high blood pressure on metformin", mesh: D003924}
+
+factors:
+  daily_dose: {label: "daily dose", unit: "unit:MilliGM"}
+
+# effect = emax * dose / (ed50 + dose) * (1 - exp(-week / tau)) * context factor + noise, rounded to `decimals`.
+# All values are mean differences vs placebo (negative = lower than placebo).
+measures:
+  hba1c_change:
+    label: "change in HbA1c from baseline"
+    alt: ["HbA1c reduction", "ΔHbA1c", "change in glycated haemoglobin"]
+    mesh: D006442
+    unit: ex:PercentagePoint
+    higher_is_better: false
+    decimals: 2
+    tau: 6
+    noise_sd: 0.04
+  weight_change:
+    label: "change in body weight from baseline"
+    alt: ["weight change", "body-weight change"]
+    mesh: D001835
+    unit: unit:KiloGM
+    higher_is_better: false
+    decimals: 1
+    tau: 10
+    noise_sd: 0.15
+  fpg_change:
+    label: "change in fasting plasma glucose from baseline"
+    alt: ["FPG change", "change in fasting glucose"]
+    mesh: D001786
+    unit: unit:MilliMOL-PER-L
+    higher_is_better: false
+    decimals: 2
+    tau: 4
+    noise_sd: 0.05
+  sbp_change:
+    label: "change in systolic blood pressure from baseline"
+    alt: ["SBP change", "change in systolic BP"]
+    mesh: D001794
+    unit: unit:MilliM_HG
+    higher_is_better: false
+    decimals: 1
+    tau: 4
+    noise_sd: 0.4
+  ldl_change:
+    label: "change in LDL cholesterol from baseline"
+    alt: ["LDL-C change", "change in low-density lipoprotein cholesterol"]
+    mesh: D008078
+    unit: unit:MilliMOL-PER-L
+    higher_is_better: false
+    decimals: 2
+    tau: 4
+    noise_sd: 0.03
+
+drugs:   # effect model per drug and measure: [emax, ed50 in mg]
+  drug_a: {hba1c_change: [-1.30, 12], weight_change: [-2.4, 15], fpg_change: [-1.60, 10]}
+  drug_b: {hba1c_change: [-0.95, 4], weight_change: [0.8, 5], fpg_change: [-1.20, 4]}
+  drug_c: {hba1c_change: [-0.80, 20], weight_change: [-1.0, 20], fpg_change: [-1.00, 20]}
+  drug_d: {hba1c_change: [-1.10, 8], weight_change: [-1.8, 10], fpg_change: [-1.40, 8]}
+  drug_e: {hba1c_change: [-1.20, 40], weight_change: [1.2, 50], fpg_change: [-1.30, 40]}
+  drug_f: {hba1c_change: [-0.85, 12], weight_change: [-0.5, 12], fpg_change: [-0.90, 12], sbp_change: [-6.0, 10],
+           ldl_change: [-0.35, 10]}
+  drug_g: {hba1c_change: [-0.30, 2], sbp_change: [-7.5, 2], ldl_change: [-0.60, 2]}
+  drug_h: {hba1c_change: [-1.00, 15], weight_change: [-1.5, 15], fpg_change: [-1.20, 15]}
+  sitagliptin: {hba1c_change: [-0.75, 30], weight_change: [0.1, 30]}
+
+context_factor: {t2d_metformin: 1.0, t2d_naive: 1.25, t2d_elderly: 0.9, t2d_renal: 0.7, t2d_asian: 1.15,
+                 t2d_hypertension: 1.0}
+
+# Each paper: drug x doses x weeks x measures, against placebo unless `comparator` names another item (then
+# `comparator_dose` in mg). Several drugs in one paper: `arms: [{drug, doses}]`. Rows stated in a sentence (the rest
+# go in a table): rows at the last week for the first measure.
+# Optional: `scale` multiplies the paper's means (a deliberate conflict; both papers list each other in
+# `conflict_with`, and the seed links the clashing rows with ex:conflictsWith); `names: {item: code|both}` makes the
+# paper call a made-up drug only by its development code, or by name and code (default: name only).
+# Roles: hub, series, near_miss, filler, dose_ranging, trend, conflict, multi_arm, head_to_head, alias, distractor.
+papers:
+  - id: P-med-01
+    role: hub
+    split: test
+    kind: RCT
+    title: "{drug_a} added to metformin in type 2 diabetes: a 24-week dose-ranging trial"
+    drug: drug_a
+    context: t2d_metformin
+    doses: [10, 20, 40]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change, fpg_change]
+  - id: P-med-02
+    role: series
+    split: test
+    kind: RCT
+    title: "Long-term extension of {drug_a} with metformin: results to week 52"
+    drug: drug_a
+    context: t2d_metformin
+    doses: [20, 40]
+    weeks: [36, 52]
+    measures: [hba1c_change, weight_change]
+  - id: P-med-03
+    role: hub
+    split: test
+    kind: RCT
+    title: "{drug_b} as add-on to metformin: a 24-week placebo-controlled trial"
+    drug: drug_b
+    context: t2d_metformin
+    doses: [5, 10]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change, fpg_change]
+  - id: P-med-04
+    role: near_miss
+    split: test
+    kind: RCT
+    title: "{drug_a} as first treatment in newly diagnosed type 2 diabetes"
+    drug: drug_a
+    context: t2d_naive
+    doses: [20, 40]
+    weeks: [24]
+    measures: [hba1c_change, fpg_change]
+  - id: P-med-05
+    role: filler
+    split: practice
+    kind: RCT
+    title: "{drug_c} with metformin in type 2 diabetes: a 24-week trial"
+    drug: drug_c
+    context: t2d_metformin
+    doses: [25, 50]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change]
+
+  # ---- added 21 Nov 2026: P-med-06..20 (practice: 17-20, drug_h and drug_c only) ----
+  - id: P-med-06
+    role: dose_ranging      # best dose (4 candidates); list for drug_d; conflict partner of P-med-08
+    split: test
+    kind: RCT
+    title: "{drug_d} added to metformin in type 2 diabetes: a 24-week dose-finding trial"
+    drug: drug_d
+    context: t2d_metformin
+    doses: [5, 10, 20, 40]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change]
+    conflict_with: [P-med-08]
+  - id: P-med-07
+    role: trend             # same drug, dose and measure at 5 time points
+    split: test
+    kind: RCT
+    title: "{drug_d} as first treatment in newly diagnosed type 2 diabetes: one-year results"
+    drug: drug_d
+    context: t2d_naive
+    doses: [20]
+    weeks: [4, 8, 12, 26, 52]
+    measures: [hba1c_change, fpg_change]
+  - id: P-med-08
+    role: conflict          # 10 and 20 mg at week 24 clash with P-med-06 (smaller effects)
+    split: test
+    kind: RCT
+    title: "{drug_d} with metformin in type 2 diabetes: a multicentre 52-week trial"
+    drug: drug_d
+    context: t2d_metformin
+    doses: [10, 20]
+    weeks: [24, 52]
+    measures: [hba1c_change, weight_change]
+    scale: 0.55
+    conflict_with: [P-med-06]
+  - id: P-med-09
+    role: near_miss         # elderly (not plain "on metformin"), 25 mg (not 20 mg)
+    split: test
+    kind: RCT
+    title: "{drug_d} in older adults with type 2 diabetes on metformin"
+    drug: drug_d
+    context: t2d_elderly
+    doses: [25, 50]
+    weeks: [24]
+    measures: [hba1c_change, weight_change, fpg_change]
+  - id: P-med-10
+    role: alias             # drug_e only by its code; P-med-11 links code and name
+    split: test
+    kind: RCT
+    title: "{drug_e_code} in East Asian adults with type 2 diabetes on metformin: a 24-week trial"
+    drug: drug_e
+    context: t2d_asian
+    doses: [50, 100]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change, fpg_change]
+    names: {drug_e: code}
+  - id: P-med-11
+    role: multi_arm         # three drugs vs one placebo: effect and best-of-3 material; names and codes together
+    split: test
+    kind: RCT
+    title: "{drug_d}, {drug_e} and {drug_f} added to metformin: a three-drug placebo-controlled trial"
+    arms: [{drug: drug_d, doses: [10]}, {drug: drug_e, doses: [100]}, {drug: drug_f, doses: [15]}]
+    context: t2d_metformin
+    weeks: [26]
+    measures: [hba1c_change, weight_change, fpg_change]
+    names: {drug_d: both, drug_e: both, drug_f: both}
+  - id: P-med-12
+    role: head_to_head      # against a real active drug, not placebo (comparator near miss)
+    split: test
+    kind: RCT
+    title: "{drug_e} versus sitagliptin added to metformin: a 52-week head-to-head trial"
+    drug: drug_e
+    comparator: sitagliptin
+    comparator_dose: 100
+    context: t2d_metformin
+    doses: [100]
+    weeks: [24, 52]
+    measures: [hba1c_change, weight_change]
+  - id: P-med-13
+    role: dose_ranging      # best dose (4 candidates) for drug_e; drug_e raises weight
+    split: test
+    kind: RCT
+    title: "Dose range of {drug_e} added to metformin in type 2 diabetes"
+    drug: drug_e
+    context: t2d_metformin
+    doses: [25, 50, 100, 200]
+    weeks: [24]
+    measures: [hba1c_change, fpg_change]
+  - id: P-med-14
+    role: near_miss         # kidney disease group, same doses as P-med-06
+    split: test
+    kind: RCT
+    title: "{drug_d} in type 2 diabetes with moderate chronic kidney disease"
+    drug: drug_d
+    context: t2d_renal
+    doses: [10, 20]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change, fpg_change]
+  - id: P-med-15
+    role: distractor        # a drug no question asks about; blood pressure and LDL cholesterol
+    split: test
+    kind: RCT
+    title: "{drug_g} for blood pressure and cholesterol in type 2 diabetes with high blood pressure"
+    drug: drug_g
+    context: t2d_hypertension
+    doses: [2, 4]
+    weeks: [12, 24]
+    measures: [sbp_change, ldl_change, hba1c_change]
+  - id: P-med-16
+    role: alias             # drug_f only by its code
+    split: test
+    kind: RCT
+    title: "{drug_f_code} added to metformin: effects on HbA1c, blood pressure and LDL cholesterol"
+    drug: drug_f
+    context: t2d_metformin
+    doses: [15, 30]
+    weeks: [12, 24]
+    measures: [hba1c_change, sbp_change, ldl_change]
+    names: {drug_f: code}
+  - id: P-med-17
+    role: dose_ranging      # practice: best dose (3 candidates); conflict partner of P-med-19
+    split: practice
+    kind: RCT
+    title: "{drug_h} added to metformin in type 2 diabetes: a 24-week dose-ranging trial"
+    drug: drug_h
+    context: t2d_metformin
+    doses: [10, 25, 50]
+    weeks: [12, 24]
+    measures: [hba1c_change, weight_change, fpg_change]
+    conflict_with: [P-med-19]
+  - id: P-med-18
+    role: trend             # practice: 5 time points; name and code together
+    split: practice
+    kind: RCT
+    title: "{drug_h} ({drug_h_code}) as first treatment in newly diagnosed type 2 diabetes: 48-week results"
+    drug: drug_h
+    context: t2d_naive
+    doses: [25]
+    weeks: [4, 8, 16, 24, 48]
+    measures: [hba1c_change, fpg_change]
+    names: {drug_h: both}
+  - id: P-med-19
+    role: conflict          # practice: 25 mg at week 24 clashes with P-med-17
+    split: practice
+    kind: RCT
+    title: "{drug_h} with metformin: a 52-week multicentre trial"
+    drug: drug_h
+    context: t2d_metformin
+    doses: [25]
+    weeks: [24, 52]
+    measures: [hba1c_change, weight_change]
+    scale: 0.6
+    conflict_with: [P-med-17]
+  - id: P-med-20
+    role: multi_arm         # practice: two drugs vs placebo in older adults; drug_h only by its code
+    split: practice
+    kind: RCT
+    title: "{drug_h_code} and {drug_c} in older adults with type 2 diabetes on metformin"
+    arms: [{drug: drug_h, doses: [25]}, {drug: drug_c, doses: [25, 100]}]
+    context: t2d_elderly
+    weeks: [24]
+    measures: [hba1c_change, weight_change]
+    names: {drug_h: code}
