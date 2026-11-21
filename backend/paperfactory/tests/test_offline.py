@@ -109,3 +109,24 @@ def test_split_and_repeats() -> None:
     assert [x[2] for x in s] == ["In Marrin v. Tolst Media the court held so.", "Then s. 9 applied to it here."]
     text = "In Rusk the court relied on it as a basis for its ruling. " * 3
     assert repeated_phrases(text, ["Rusk"])
+
+
+def test_scoring_version_is_written_into_every_result_file(tmp_path: Path) -> None:
+    from paperfactory import SCORING_VERSION, cli
+    (tmp_path / "w.json").write_text(json.dumps(PILOT))
+    s = config.Settings("law", "argument", papers=3, out=str(tmp_path / "run"), world_file=str(tmp_path / "w.json"),
+                        leak_trials=0)
+    cli.run(s, ["world", "seed"])
+    assert json.loads((tmp_path / "run" / "gold.json").read_text())["scoring_version"] == SCORING_VERSION
+    md = "Rusk relied on section 14 of the Act here.\n"
+    for pid in PILOT["papers"]:
+        (tmp_path / "run" / "work" / pid).mkdir(parents=True)
+        (tmp_path / "run" / "work" / pid / "paper.md").write_text(md)
+
+    def fake(role, step, system, user, schema):
+        return {"tags": []} if role == "tagger" else {"answers": []} if role == "verifier" else \
+            {"rewritten": []} if step.startswith("reword") else {"items": []} if role == "qa" else {"choice": "A"}
+    gold = json.loads((tmp_path / "run" / "gold.json").read_text())
+    rep = Eval(s, PILOT, LAW, gold, fake).run()
+    assert rep["scoring_version"] == SCORING_VERSION
+    assert json.loads((tmp_path / "run" / "tagged.json").read_text())["scoring_version"] == SCORING_VERSION

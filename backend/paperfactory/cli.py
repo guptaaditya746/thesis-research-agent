@@ -15,7 +15,7 @@ from pathlib import Path
 
 from repo_paths import REPO
 
-from paperfactory import config, materials, packs, seed, world, write
+from paperfactory import SCORING_VERSION, config, materials, packs, seed, world, write
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
@@ -42,7 +42,8 @@ def run(s: config.Settings, steps: list[str]) -> None:
     if "seed" in steps:
         graph, gold = seed.make(w, f, s.qa_papers_per_question, s.seed)
         graph.serialize(out / "seed.ttl", format="turtle")
-        (out / "gold.json").write_text(json.dumps(gold, indent=1), encoding="utf-8")
+        (out / "gold.json").write_text(json.dumps({"scoring_version": SCORING_VERSION} | gold, indent=1),
+                                       encoding="utf-8")
         print(f"seed: SHACL ok, {len(gold['facts'])} facts, {len(gold['questions'])} questions")
     if "materials" in steps:
         print("materials:", len(materials.write_all(w, f, g, out)), "papers")

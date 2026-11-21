@@ -9,7 +9,7 @@ Steps (each LLM call is a separate fresh call; the model per job comes from the 
             distractor span, no planted span, made-up quote); the relation by the judge; quotes must be unique
             in their paper (one repair call otherwise).
   leak      style-leak test: one planted sentence among 19 other claim-like sentences; can a model spot it?
-Output: tagged.json, report.json in the run folder.
+Output: tagged.json ({scoring_version, papers}), report.json in the run folder.
 """
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ import math
 import random
 from typing import Any
 
+from paperfactory import SCORING_VERSION
 from paperfactory.llm import pmap
 from paperfactory.packs import Field
 from paperfactory.text import mentions, names, norm, normalize_paper, split_rules, split_sents
@@ -306,9 +307,10 @@ Use the whole paper to decide. Pick exactly one number."""
     def run(self) -> dict[str, Any]:
         pids = [p for p in self.w["papers"] if (self.s.out_dir / "work" / p / "paper.md").is_file()]
         tagged = dict(zip(pids, pmap(self.tag_paper, pids)))
-        (self.s.out_dir / "tagged.json").write_text(json.dumps(tagged, indent=1), encoding="utf-8")
+        (self.s.out_dir / "tagged.json").write_text(json.dumps({"scoring_version": SCORING_VERSION, "papers": tagged},
+                                                               indent=1), encoding="utf-8")
         qs = [q for q in self.G["questions"] if all(p in tagged for p in q["papers"])]
-        rep: dict[str, Any] = {"settings": dict(vars(self.s)),
+        rep: dict[str, Any] = {"scoring_version": SCORING_VERSION, "settings": dict(vars(self.s)),
                                "papers_written": len(pids), "papers_planned": len(self.w["papers"]),
                                "tagging": {p: {k: v for k, v in t.items() if k not in ("sentences", "spans")}
                                            | {"spans_per_fact": {i: len(x) for i, x in t["spans"].items()}}
