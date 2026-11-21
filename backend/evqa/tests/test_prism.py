@@ -203,8 +203,10 @@ def test_perfect_run_of_every_type_scores_one(tmp_path: Path) -> None:
     assert nr["l0"] is None and nr["l1"] is None and nr["l2"]["recall"] is None and nr["facts"] == []
     assert t["l1"] == 1.0                                  # n/a questions stay out of the means
     assert res["intervals"]["l3"] == [1.0, 1.0] and res["intervals"]["l0"] == [1.0, 1.0]   # eval.json "intervals"
-    assert list(res)[:-1] == ["run_id", "domain", "config_name", "closed_book", "unknown_questions", "totals",
-                              "questions"]                 # the older keys are unchanged; intervals come last
+    assert list(res)[:-2] == ["run_id", "domain", "config_name", "closed_book", "unknown_questions", "totals",
+                              "questions"]                 # the older keys are unchanged; intervals, data come last
+    assert list(res)[-2:] == ["intervals", "data"]
+    assert set(res["data"]) == {"data_hash", "papers", "questions", "gold"}   # the data the score was made on
 
 
 def test_near_miss_answer_with_the_closest_facts_is_a_trap(tmp_path: Path) -> None:

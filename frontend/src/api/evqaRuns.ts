@@ -68,8 +68,9 @@ export type EvalTotals = { questions: number; answerable?: number; facts: number
 export type RunEval = { run_id: string; domain?: string; config_name?: string; closed_book?: boolean
   unknown_questions?: string[]; totals: EvalTotals; questions: Record<string, QuestionScore> }
 
+/** closed: why a hold-out run shows only its totals (questions, per-question events and scores are left out). */
 export type RunDetail = { run_id: string; config: Record<string, unknown>; questions: Record<string, RunQuestion>
-  events: RunEvent[]; eval: RunEval | Broken | null }
+  events: RunEvent[]; eval: RunEval | Broken | null; closed?: string | null }
 
 export const isBroken = (x: unknown): x is Broken =>
   typeof x === "object" && x !== null && "_error" in x

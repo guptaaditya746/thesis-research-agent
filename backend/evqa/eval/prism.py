@@ -36,6 +36,7 @@ Totals: answerable L3 (mean over in-corpus types), per type, and the not-reporte
 rate, near-miss trap rate).
 Intervals: eval.json "intervals" holds a 95% bootstrap interval (resampling questions, eval/bootstrap.py) for each
 headline total; every headline total is a mean over questions. The other keys of eval.json are unchanged.
+Data: eval.json "data" holds the hashes of the papers, questions and gold files the score was made on (datahash.py).
 Eval may read data/seed; the pipeline steps may not (seed wall test).
 """
 from __future__ import annotations
@@ -49,7 +50,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from evqa import norm
+from evqa import datahash, norm
 from evqa.answer import canon
 from evqa.contracts import Answer, FindHit, Row, RunConfig, Spec, read_jsonl
 from evqa.eval import bootstrap
@@ -684,6 +685,7 @@ def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = N
     out = {"run_id": run_dir.name, "domain": domain, "config_name": cfg.name, "closed_book": cfg.closed_book,
            "unknown_questions": [q for q in qids if q not in golds], "totals": totals, "questions": questions}
     out["intervals"] = run_intervals(qs)
+    out["data"] = datahash.data_hashes(domain, cfg.split)   # the data this score was made on (evqa/datahash.py)
     (run_dir / "eval.json").write_text(json.dumps(out, indent=2, sort_keys=False) + "\n", encoding="utf-8")
     return out
 

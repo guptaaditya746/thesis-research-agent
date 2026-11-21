@@ -12,6 +12,9 @@ A connection error, timeout, HTTP 429/5xx (claude: a timeout or no JSON) is retr
 waits; the call slot is let go while waiting. Token usage of real calls is counted (COUNTS "prompt_tokens",
 "completion_tokens") and stored in the cache record. EVQA_MODEL_REVISION (optional, e.g. the weights' hash or date)
 goes into the cache key, so answers cached from other weights behind the same alias are not reused; unset = old keys.
+EVQA_OFFLINE=1 (read at call time): a cache miss raises OfflineCacheMiss instead of calling the model, so a run that
+finishes offline is proven to be rebuilt exactly from the cache. It is a ServiceError, so the step stops (the question
+is logged as a problem), never skipped as a bad reply.
 """
 from __future__ import annotations
 
@@ -74,10 +77,22 @@ def _bump(label: str, key: str, n: int = 1) -> None:
             COUNTS.setdefault(label, Counter())[key] += n
 
 
+class OfflineCacheMiss(ServiceError):
+    """EVQA_OFFLINE=1 and the call is not in the cache: no model is called. Message: "<label> key <12 hex>"."""
+
+
+def offline() -> bool:
+    return os.environ.get("EVQA_OFFLINE", "").strip().lower() in ("1", "true", "yes")
+
+
 class _CountedLM(RecordedLM):
     def __init__(self, *args, label: str = "", **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, on_miss=self._offline_guard, **kwargs)
         self.label = label
+
+    def _offline_guard(self, key: str) -> None:
+        if offline():
+            raise OfflineCacheMiss(f"{self.label or self.alias} key {key[:12]}")
 
     def forward(self, *args, **kwargs):
         out = super().forward(*args, **kwargs)

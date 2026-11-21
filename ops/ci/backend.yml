@@ -1,3 +1,4 @@
+# Copy to .github/workflows/backend.yml (the Claude session token cannot push workflow files).
 name: backend
 
 on:

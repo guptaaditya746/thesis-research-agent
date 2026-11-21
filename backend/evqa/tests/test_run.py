@@ -171,7 +171,9 @@ def test_manifest_is_written_and_changed_code_stops_a_resume(stubs, tmp_path, mo
     cfg = RunConfig(name="t", questions=["Q1"])
     out = runner.run(cfg, root=tmp_path / "runs")
     first = json.loads((out / "manifest.json").read_text())
-    assert first["code_hash"] == runner.code_hash() and set(first) == {"git_sha", "git_dirty", "code_hash"}
+    assert first["code_hash"] == runner.code_hash()
+    assert set(first) == {"git_sha", "git_dirty", "code_hash", "data_hash", "data"}
+    assert set(first["data"]) == {"papers", "questions", "gold"}
     runner.run(cfg, root=tmp_path / "runs")                                  # same code: resumes
     monkeypatch.setattr(runner, "code_hash", lambda dirs=None: "other")
     monkeypatch.delenv("EVQA_ALLOW_CODE_CHANGE", raising=False)
@@ -236,3 +238,181 @@ def test_progress_eta_and_quiet(monkeypatch) -> None:
     q = runner.Progress(2, out=quiet)
     q.finished("Q1", 1.0)
     assert quiet.getvalue() == "" and q.done == 1
+
+
+# ---------------------------------------------------------------- data fingerprint
+@pytest.fixture
+def data_dirs(tmp_path, monkeypatch):
+    """A tiny dataset + seed folder for datahash (paths.DATASET / paths.SEED point at it)."""
+    from evqa import paths
+    ds, seed = tmp_path / "data" / "dataset", tmp_path / "data" / "seed"
+    (ds / "medical" / "P1").mkdir(parents=True)
+    (ds / "medical" / "P1" / "paper.md").write_text("paper one")
+    (ds / "medical" / "questions").mkdir()
+    (ds / "medical" / "questions" / "test.jsonl").write_text("{}\n")
+    (ds / "medical" / "questions" / "practice.jsonl").write_text("{}\n")
+    (seed / "medical" / "gold").mkdir(parents=True)
+    (seed / "medical" / "gold" / "Q1.json").write_text("{}")
+    (seed / "medical" / "papers").mkdir()
+    (seed / "medical" / "papers" / "writer_log.jsonl").write_text("x")
+    monkeypatch.setattr(paths, "DATASET", ds)
+    monkeypatch.setattr(paths, "SEED", seed)
+    monkeypatch.setattr(paths, "DATA", tmp_path / "data")
+    return ds / "medical", seed / "medical"
+
+
+def test_data_hashes_name_the_group_that_changed(data_dirs) -> None:
+    from evqa import datahash
+    ds, seed = data_dirs
+    first = datahash.data_hashes("medical", "test")
+    assert set(first) == {"data_hash", "papers", "questions", "gold"}
+    (ds / "questions" / "practice.jsonl").write_text("other split\n")      # not read by a test-split run
+    (seed / "papers" / "writer_log.jsonl").write_text("y")                  # not read by eval
+    assert datahash.data_hashes("medical", "test") == first
+    (seed / "gold" / "Q1.json").write_text('{"a": 1}')
+    second = datahash.data_hashes("medical", "test")
+    assert second["gold"] != first["gold"] and second["data_hash"] != first["data_hash"]
+    assert (second["papers"], second["questions"]) == (first["papers"], first["questions"])
+
+
+def test_changed_papers_or_questions_stop_a_resume(stubs, data_dirs, tmp_path, monkeypatch) -> None:
+    ds, seed = data_dirs
+    monkeypatch.delenv("EVQA_ALLOW_DATA_CHANGE", raising=False)
+    cfg = RunConfig(name="t", questions=["Q1"])
+    out = runner.run(cfg, root=tmp_path / "runs")
+    first = json.loads((out / "manifest.json").read_text())
+    (seed / "gold" / "Q1.json").write_text('{"a": 1}')                     # gold only: logged, not refused
+    runner.run(cfg, root=tmp_path / "runs")
+    assert any(e["data"].get("message") == "data changed" and e["data"]["changed"] == ["gold"] for e in events(out))
+    (ds / "P1" / "paper.md").write_text("paper one, edited")
+    with pytest.raises(RuntimeError, match="papers changed"):
+        runner.run(cfg, root=tmp_path / "runs")
+    (ds / "questions" / "test.jsonl").write_text("{}\n{}\n")
+    with pytest.raises(RuntimeError, match="papers, questions changed"):
+        runner.run(cfg, root=tmp_path / "runs")
+    monkeypatch.setenv("EVQA_ALLOW_DATA_CHANGE", "1")
+    runner.run(cfg, root=tmp_path / "runs")
+    assert any(e["data"].get("changed") == ["papers", "questions", "gold"] for e in events(out))
+    assert json.loads((out / "manifest.json").read_text()) == first          # the first start stays on record
+
+
+def test_old_manifest_gets_the_data_hash_added(stubs, data_dirs, tmp_path) -> None:
+    cfg = RunConfig(name="t", questions=["Q1"])
+    out = runner.run(cfg, root=tmp_path / "runs")
+    m = json.loads((out / "manifest.json").read_text())
+    old = {k: m[k] for k in ("git_sha", "git_dirty", "code_hash")}
+    (out / "manifest.json").write_text(json.dumps(old))
+    runner.run(cfg, root=tmp_path / "runs")
+    assert json.loads((out / "manifest.json").read_text()) == m
+    assert any(e["data"].get("message") == "data hash added" for e in events(out))
+
+
+# ---------------------------------------------------------------- pools sized from the call cap
+def _peak_questions(stubs, tmp_path, monkeypatch, cfg: RunConfig) -> int:
+    import threading
+    import time
+    from evqa import corpus as corpus_mod
+    many = [{"qid": f"Q{i}", "question": f"q {i}", "intent_card": []} for i in range(1, 11)]
+    monkeypatch.setattr(corpus_mod, "questions", lambda domain, split: many)
+    now, peak, lock = [0], [0], threading.Lock()
+    old = runner._step
+
+    def spec(q, cfg):
+        with lock:
+            now[0] += 1
+            peak[0] = max(peak[0], now[0])
+        time.sleep(0.2)
+        with lock:
+            now[0] -= 1
+        return Spec(qid=q["qid"], question=q["question"], type="lookup", subjects=[Name(label="d")],
+                    measure=Name(label="m")).seal()
+    monkeypatch.setattr(runner, "_step", lambda name: spec if name == "spec" else old(name))
+    runner.run(cfg, root=tmp_path / "runs")
+    return peak[0]
+
+
+def test_qwen_config_runs_up_to_the_qwen_cap(stubs, tmp_path, monkeypatch) -> None:
+    from evqa import slots
+    monkeypatch.setattr(slots, "MAX_SLOTS_QWEN", 8)
+    assert _peak_questions(stubs, tmp_path, monkeypatch, RunConfig(name="qw")) > 3
+
+
+def test_claude_config_stays_at_three(stubs, tmp_path, monkeypatch) -> None:
+    from evqa import slots
+    from evqa.contracts import StepLLM
+    monkeypatch.setattr(slots, "MAX_SLOTS_QWEN", 8)
+    cfg = RunConfig(name="cl", llm=StepLLM(backend="claude", model="claude-haiku-5-5"))
+    assert _peak_questions(stubs, tmp_path, monkeypatch, cfg) == 3
+    assert runner.question_workers(RunConfig()) == 8 and runner.question_workers(cfg) == 3
+
+
+def test_pmap_and_cap_follow_the_backend(monkeypatch) -> None:
+    import threading
+    import time
+    from evqa import llm, slots
+    assert llm.cap_for("qwen") == 3 and llm.cap_for("claude") == 3          # defaults unchanged
+    monkeypatch.setattr(slots, "MAX_SLOTS_QWEN", 8)
+    assert llm.cap_for("qwen") == 8 and llm.cap_for("claude") == 3
+    now, peak, lock = [0], [0], threading.Lock()
+
+    def slow(i):
+        with lock:
+            now[0] += 1
+            peak[0] = max(peak[0], now[0])
+        time.sleep(0.1)
+        with lock:
+            now[0] -= 1
+        return i
+    assert llm.pmap(slow, range(16), workers=llm.cap_for("qwen")) == list(range(16)) and peak[0] > 3
+    peak[0] = 0
+    llm.pmap(slow, range(9))                                                 # default (paperwriter, seed): 3
+    assert peak[0] == 3
+
+
+# ---------------------------------------------------------------- circuit breaker
+def test_breaker_stops_the_run_when_the_service_is_down(stubs, tmp_path, monkeypatch, capsys) -> None:
+    import argparse
+    from evqa import corpus as corpus_mod
+    many = [{"qid": f"Q{i}", "question": f"q {i}", "intent_card": []} for i in range(1, 13)]
+    monkeypatch.setattr(corpus_mod, "questions", lambda domain, split: many)
+    monkeypatch.delenv("EVQA_BREAKER", raising=False)
+    started: list[str] = []
+    old = runner._step
+
+    def find(spec, domain, cfg):
+        started.append(spec.qid)
+        raise ConnectionRefusedError("model service refused the connection")
+    monkeypatch.setattr(runner, "_step", lambda name: find if name == "find" else old(name))
+    conf = tmp_path / "c.yaml"
+    conf.write_text("name: down\n")
+    monkeypatch.setattr(runner, "ROOT", tmp_path / "runs")
+    parser = argparse.ArgumentParser()
+    runner.add_cli(parser.add_subparsers())
+    a = parser.parse_args(["run", "--config", str(conf)])
+    assert a.fn(a) == 1
+    out = tmp_path / "runs" / RunConfig.load(conf).run_id()
+    ev = events(out)
+    stop = [e for e in ev if e["data"].get("message") == "run stopped: model service down"]
+    assert len(stop) == 1 and stop[0]["kind"] == "problem"
+    assert 3 <= len(started) < 12 and ev[-1]["data"]["stopped"] == "model service down"
+    assert len(ev[-1]["data"]["not_started"]) == 12 - len(started)
+    err = capsys.readouterr().err
+    assert "Restart the model service, then rerun the same command" in err
+
+
+def test_breaker_counts_service_failures_in_a_row_only() -> None:
+    b = runner.Breaker(3)
+    b.ended(ConnectionRefusedError())
+    b.ended(TimeoutError())
+    b.ended(None)                         # a question that finished resets the count
+    b.ended(ConnectionRefusedError())
+    b.ended(ValueError("bad reply"))      # not a service failure: resets too
+    b.ended(ConnectionRefusedError())
+    b.ended(ConnectionRefusedError())
+    assert not b.tripped
+    b.ended(ConnectionRefusedError())
+    assert b.tripped
+    off = runner.Breaker(0)
+    for _ in range(5):
+        off.ended(ConnectionRefusedError())
+    assert not off.tripped

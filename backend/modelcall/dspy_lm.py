@@ -10,7 +10,8 @@ Without `cache` nothing is recorded: production must pass one. `attempt` (a call
 key, so a retry after an unparseable reply is a new recorded call and the bad reply stays on file. `model_revision`
 (optional: which weights serve the alias) joins the key only when set, so keys made without it still hit.
 An `ask` may return a `str` with a `usage` dict attribute (token counts); it is stored in the record and returned as
-the response usage, never part of the key or the text."""
+the response usage, never part of the key or the text. `on_miss(key)` (optional) is called before a cache miss
+would make the raw call; it may raise to forbid the call (evqa's offline replay, EVQA_OFFLINE=1)."""
 from __future__ import annotations
 
 import json
@@ -36,7 +37,8 @@ class RecordedLM(dspy.BaseLM):
     then keys on the retry number and the call settings too, so a retry is a new recorded call."""
 
     def __init__(self, alias: str, ask: Callable[..., str], cache: JsonlCache | None = None, *, with_call: bool = False,
-                 on_bad: Callable[..., None] | None = None, model_revision: str | None = None, **kwargs: Any) -> None:
+                 on_bad: Callable[..., None] | None = None, model_revision: str | None = None, on_miss: Callable[[str], None] | None = None,
+                 **kwargs: Any) -> None:
         super().__init__(model=alias, model_type="chat", cache=False, **kwargs)
         self.alias = alias
         self._ask = ask
@@ -46,6 +48,7 @@ class RecordedLM(dspy.BaseLM):
         self._on_bad = on_bad
         self._last = threading.local()
         self.model_revision = model_revision   # in the cache key only when set (old keys stay the same)
+        self._on_miss = on_miss   # on_miss(key): told before a miss calls the model; may raise to forbid it
 
     def bad_reply(self) -> None:
         """The reply of this thread's last call did not parse: tell `on_bad` (the engine marks the recorded call, so
@@ -77,6 +80,8 @@ class RecordedLM(dspy.BaseLM):
         if hit is not None:
             text, usage = hit["output"], dict(hit.get("usage") or {})
         else:
+            if self._on_miss is not None:
+                self._on_miss(key)
             reply = (self._ask(render(msgs), attempt=attempt, settings=json.loads(json.dumps(settings, default=repr)))
                      if self._with_call else self._ask(render(msgs)))
             text, usage = str(reply), dict(getattr(reply, "usage", None) or {})

@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Protocol, TypeVar
 
 from evqa.paths import CACHE, LLM_LOG
+from evqa import slots
 from evqa.slots import MAX_SLOTS, model_slot
 
 MAX_WORKERS = MAX_SLOTS              # 3 unless EVQA_MAX_CALLS is set (slots.py)
@@ -99,7 +100,15 @@ def call(lm: Any, system: str, user: str, schema: dict[str, Any], *, step: str) 
     return got["output"]
 
 
+def cap_for(backend: str) -> int:
+    """How many calls of `backend` may run at once: MAX_SLOTS_QWEN for qwen, else MAX_SLOTS (slots.py; both 3
+    unless EVQA_MAX_CALLS / EVQA_MAX_CALLS_QWEN are set). Pools that feed one backend's calls use it as their size;
+    the slot locks still bound the real calls."""
+    return slots.MAX_SLOTS_QWEN if backend == "qwen" else slots.MAX_SLOTS
+
+
 def pmap(fn: Callable[[T], R], items: Iterable[T], workers: int = MAX_WORKERS) -> list[R]:
-    """`fn` over `items`, at most `workers` (capped at 3) at once, results in input order."""
-    with ThreadPoolExecutor(max_workers=min(workers, MAX_WORKERS)) as pool:
+    """`fn` over `items`, at most `workers` at once, results in input order. `workers` is capped at the largest
+    backend cap (3 unless EVQA_MAX_CALLS / EVQA_MAX_CALLS_QWEN raise it); callers pass cap_for(backend)."""
+    with ThreadPoolExecutor(max_workers=min(workers, max(MAX_WORKERS, slots.MAX_SLOTS_QWEN))) as pool:
         return list(pool.map(fn, items))

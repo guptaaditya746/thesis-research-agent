@@ -69,7 +69,11 @@ function mockApi() {
     http.get("/api/evqa/files", () => HttpResponse.json([])),
     http.get("/api/evqa/runs", () => HttpResponse.json([
       { run_id: "slice1-aaa", name: "slice1", domain: "medical", closed_book: false, mtime: 2, has_eval: true },
-      { run_id: "closed-bbb", name: "closed", domain: "medical", closed_book: true, mtime: 1, has_eval: true }])),
+      { run_id: "closed-bbb", name: "closed", domain: "medical", closed_book: true, mtime: 1, has_eval: true },
+      { run_id: "holdout-ccc", name: "holdout-qwen", domain: "medical_holdout", closed_book: false, mtime: 0, has_eval: true }])),
+    http.get("/api/evqa/runs/holdout-ccc", () => HttpResponse.json({ run_id: "holdout-ccc",
+      config: { name: "holdout-qwen", domain: "medical_holdout", questions: ["Q-mho-001"] }, questions: {}, events: [],
+      eval: null, closed: "holdout-ccc is a hold-out run: score only." })),
     http.get("/api/evqa/runs/slice1-aaa", () => HttpResponse.json(run)),
     http.get("/api/evqa/runs/closed-bbb", () => HttpResponse.json(closed)),
     http.get("/api/evqa/questions/medical/:qid", () => HttpResponse.json({ qid: "Q-med-01", question: spec.question,
@@ -144,5 +148,15 @@ describe("workbench run and evaluation panes", () => {
     expect(within(box).getByText(/1 of 2 true facts shown right/)).toBeInTheDocument()
     fireEvent.click(within(box).getByRole("button", { name: "close" }))
     expect(screen.queryByRole("region", { name: "Why: Q-med-01" })).not.toBeInTheDocument()
+  }, 60_000)
+
+  it("shows only why a hold-out run stays closed", async () => {
+    mockApi()
+    renderRoutes(routes, "/workbench")
+    fireEvent.click(await screen.findByRole("tab", { name: "2 · Run" }, FIRST))
+    expect(await screen.findByText("Every time point.", undefined, T)).toBeInTheDocument()
+    fireEvent.click(screen.getByText("holdout-ccc"))
+    expect(await screen.findByText("holdout-ccc is a hold-out run: score only.", undefined, T)).toBeInTheDocument()
+    expect(screen.queryByText("Q-mho-001")).not.toBeInTheDocument()
   }, 60_000)
 })

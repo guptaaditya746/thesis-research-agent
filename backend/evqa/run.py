@@ -7,11 +7,17 @@ Per question the steps spec, find, extract, link, answer run in order; each writ
 Extract also writes settings.jsonl, its setting-reading audit; link writes links.jsonl, extract/links.py) and logs a start and an end
 Event (seconds, output count, LLM requests / real calls / cache hits) to events.jsonl. A step whose output file
 exists is skipped, so a rerun resumes; after a step that ran, the later steps run again. A failing step logs a "problem" Event and stops that question only.
-Questions run in a pool of QUESTION_WORKERS; LLM calls are capped at 3 at once (EVQA_MAX_CALLS) by evqa.lm anyway.
+Questions run in a pool of question_workers(cfg): the call cap of the config's backends (llm.cap_for: 3, or
+EVQA_MAX_CALLS / EVQA_MAX_CALLS_QWEN for qwen); the slot locks of evqa.lm bound the real calls anyway.
+Circuit breaker: after EVQA_BREAKER (default 3; 0 = off) questions in a row failed because the model service is down
+(llm.service_failed), no new question starts; the running ones finish, a "problem" Event "run stopped: model service
+down" is logged, stderr says to restart the service and rerun the same command, and `evqa run` exits 1.
 closed_book: Find is not called (no papers) and Extract is skipped, so Answer says "not reported".
 manifest.json (written on first start): git commit, dirty flag and a hash of the code (evqa + modelcall sources,
 tests left out). A resume whose code hash differs stops with an error, unless EVQA_ALLOW_CODE_CHANGE=1 (then an
-info Event "code changed" is logged): a run's outputs should all come from the same code.
+info Event "code changed" is logged): a run's outputs should all come from the same code. It also holds data_hash and
+the hash per data group (datahash.py: papers, questions, gold); a resume whose papers or questions changed stops the
+same way unless EVQA_ALLOW_DATA_CHANGE=1 (info Event "data changed"); a changed gold group is only logged.
 Progress: one line on stderr per finished question, e.g. `[12/78] Q-med-05 ok 34.2s  eta 41m` (or
 `problem: <error type>`); EVQA_QUIET=1 turns it off. events.jsonl stays as it is.
 """
@@ -34,15 +40,35 @@ from typing import Any
 import yaml
 from pydantic import BaseModel
 
-from evqa import corpus, lm
+from evqa import corpus, datahash, lm
 from evqa.contracts import Answer, Event, FindHit, Link, Row, RunConfig, Spec, read_jsonl
-from evqa.llm import MAX_WORKERS
+from evqa.llm import cap_for, service_failed
 from evqa.paths import REPO
 
 ROOT = REPO / "runs" / "evqa"
 CODE_DIRS = [Path(__file__).resolve().parent, Path(__file__).resolve().parents[1] / "modelcall"]
-QUESTION_WORKERS = MAX_WORKERS     # 3 unless EVQA_MAX_CALLS is set
 _event_lock = threading.Lock()
+
+
+def question_workers(cfg: RunConfig) -> int:
+    """Questions at once: the largest call cap among the backends the config uses (3 unless EVQA_MAX_CALLS /
+    EVQA_MAX_CALLS_QWEN raise it)."""
+    return max(cap_for(s.backend) for s in [cfg.llm, *cfg.steps.values()])
+
+
+class Breaker:
+    """Counts questions in a row that failed because the model service is down; after `limit` (<= 0: never) it
+    trips, and no new question starts. A question that ends any other way resets the count."""
+
+    def __init__(self, limit: int) -> None:
+        self.limit, self.count, self.tripped = limit, 0, False
+        self._lock = threading.Lock()
+
+    def ended(self, exc: BaseException | None) -> None:
+        with self._lock:
+            self.count = self.count + 1 if exc is not None and service_failed(exc) else 0
+            if self.limit > 0 and self.count >= self.limit:
+                self.tripped = True
 
 
 def _step(name: str):
@@ -88,25 +114,51 @@ def _git(*args: str) -> str | None:
     return done.stdout.strip()
 
 
-def manifest() -> dict[str, Any]:
+def manifest(domain: str | None = None, split: str = "test") -> dict[str, Any]:
+    """git commit, dirty flag, code hash and (given the domain) the data hashes (datahash.py): data_hash over every
+    file, and "data" = the hash of each group (papers, questions, gold), so a mismatch says which one changed."""
     status = _git("status", "--porcelain")
-    return {"git_sha": _git("rev-parse", "HEAD") or None, "git_dirty": None if status is None else bool(status),
-            "code_hash": code_hash()}
+    out: dict[str, Any] = {"git_sha": _git("rev-parse", "HEAD") or None,
+                           "git_dirty": None if status is None else bool(status), "code_hash": code_hash()}
+    if domain is not None:
+        hashes = datahash.data_hashes(domain, split)
+        out["data_hash"] = hashes.pop("data_hash")
+        out["data"] = hashes
+    return out
 
 
-def check_manifest(out: Path, events: "Events") -> None:
-    """Write <run>/manifest.json on first start; on resume refuse changed code (module doc)."""
-    path, now = out / "manifest.json", manifest()
+def check_manifest(out: Path, events: "Events", cfg: RunConfig | None = None) -> None:
+    """Write <run>/manifest.json on first start; on resume refuse changed code, papers or questions (module doc).
+    An old manifest without data_hash gets the data hashes added (no refusal). A changed gold group is only logged:
+    it changes the score, not the run's outputs."""
+    path = out / "manifest.json"
+    now = manifest(cfg.domain, cfg.split) if cfg is not None else manifest()
     if not path.is_file():
         _write_atomic(path, json.dumps(now, indent=2) + "\n")
         return
     old = json.loads(path.read_text(encoding="utf-8"))
-    if old.get("code_hash") == now["code_hash"]:
+    if old.get("code_hash") != now["code_hash"]:
+        if os.environ.get("EVQA_ALLOW_CODE_CHANGE") != "1":
+            raise RuntimeError(f"{out.name}: the code changed since this run started (code hash "
+                               f"{old.get('code_hash')} -> {now['code_hash']}). Start a new run, or set "
+                               "EVQA_ALLOW_CODE_CHANGE=1 to resume anyway.")
+        events.log("run", "info", message="code changed", old=old, new=now)
+    if "data_hash" not in now:
         return
-    if os.environ.get("EVQA_ALLOW_CODE_CHANGE") != "1":
-        raise RuntimeError(f"{out.name}: the code changed since this run started (code hash {old.get('code_hash')} "
-                           f"-> {now['code_hash']}). Start a new run, or set EVQA_ALLOW_CODE_CHANGE=1 to resume anyway.")
-    events.log("run", "info", message="code changed", old=old, new=now)
+    if "data_hash" not in old:          # a manifest from before data hashes: record them now
+        _write_atomic(path, json.dumps({**old, "data_hash": now["data_hash"], "data": now["data"]}, indent=2) + "\n")
+        events.log("run", "info", message="data hash added", data_hash=now["data_hash"], data=now["data"])
+        return
+    if old["data_hash"] == now["data_hash"]:
+        return
+    was = old.get("data") or {}
+    changed = [g for g in datahash.GROUPS if was.get(g) != now["data"][g]]
+    blocking = [g for g in changed if g != "gold"]
+    if blocking and os.environ.get("EVQA_ALLOW_DATA_CHANGE") != "1":
+        raise RuntimeError(f"{out.name}: the data changed since this run started ({', '.join(blocking)} changed; "
+                           f"data hash {old['data_hash']} -> {now['data_hash']}). Start a new run, or set "
+                           "EVQA_ALLOW_DATA_CHANGE=1 to resume anyway.")
+    events.log("run", "info", message="data changed", changed=changed, old=old.get("data"), new=now["data"])
 
 
 class Events:
@@ -168,7 +220,7 @@ def _do(step: str, qid: str, path: Path, events: Events, fn, load, redo: list[bo
 
 
 def run_question(q: dict[str, Any], cfg: RunConfig, qdir: Path, events: Events,
-                 progress: Progress | None = None) -> bool:
+                 progress: Progress | None = None, breaker: Breaker | None = None) -> bool:
     """The four steps for one question. True when answer.json exists at the end. The steps see only the
     pipeline-facing part of the record (corpus.pipeline_record: qid, question, intent card answers)."""
     q = corpus.pipeline_record(q)
@@ -195,9 +247,13 @@ def run_question(q: dict[str, Any], cfg: RunConfig, qdir: Path, events: Events,
             lambda p: Answer.model_validate_json(p.read_text(encoding="utf-8")), redo)
     except Exception as e:   # noqa: BLE001 - one question's failure must not stop the others
         events.log("run", "problem", qid, error=f"{type(e).__name__}: {e}", trace=traceback.format_exc()[-4000:])
+        if breaker:
+            breaker.ended(e)
         if progress:
             progress.finished(qid, time.monotonic() - t0, problem=type(e).__name__)
         return False
+    if breaker:
+        breaker.ended(None)
     if progress:
         progress.finished(qid, time.monotonic() - t0)
     return True
@@ -212,7 +268,7 @@ def run(cfg: RunConfig, *, root: Path = ROOT) -> Path:
     if not conf.is_file():
         _write_atomic(conf, text)
     events = Events(out / "events.jsonl")
-    check_manifest(out, events)
+    check_manifest(out, events, cfg)
     questions = corpus.questions(cfg.domain, cfg.split)
     if cfg.questions:
         unknown = set(cfg.questions) - {q["qid"] for q in questions}
@@ -221,10 +277,27 @@ def run(cfg: RunConfig, *, root: Path = ROOT) -> Path:
         questions = [q for q in questions if q["qid"] in cfg.questions]
     events.log("run", "start", run_id=cfg.run_id(), questions=[q["qid"] for q in questions])
     t0, progress = time.monotonic(), Progress(len(questions))
-    with ThreadPoolExecutor(QUESTION_WORKERS) as pool:
-        done = list(pool.map(lambda q: run_question(q, cfg, out / q["qid"], events, progress), questions))
+    breaker = Breaker(int(os.environ.get("EVQA_BREAKER") or 3))
+
+    def one(q: dict[str, Any]) -> bool | None:
+        if breaker.tripped:      # the model service is down: start no new question (None = not started)
+            return None
+        return run_question(q, cfg, out / q["qid"], events, progress, breaker)
+
+    with ThreadPoolExecutor(question_workers(cfg)) as pool:
+        done = list(pool.map(one, questions))
+    not_started = [q["qid"] for q, ok in zip(questions, done, strict=True) if ok is None]
+    if breaker.tripped:
+        events.log("run", "problem", message="run stopped: model service down", in_a_row=breaker.limit,
+                   not_started=not_started)
     events.log("run", "end", seconds=round(time.monotonic() - t0, 3), questions=len(questions),
-               answered=sum(done), failed=[q["qid"] for q, ok in zip(questions, done, strict=True) if not ok])
+               answered=sum(ok is True for ok in done),
+               failed=[q["qid"] for q, ok in zip(questions, done, strict=True) if ok is False],
+               **({"stopped": "model service down", "not_started": not_started} if breaker.tripped else {}))
+    if breaker.tripped:
+        print(f"evqa run stopped: the model service is down ({breaker.limit} questions in a row failed to reach "
+              f"it; {len(not_started)} not started). Restart the model service, then rerun the same command: "
+              "finished steps are skipped.", file=sys.stderr, flush=True)
     return out
 
 
@@ -241,4 +314,5 @@ def cli_run(a: argparse.Namespace) -> int:
     end = [json.loads(line) for line in (folder / "events.jsonl").read_text(encoding="utf-8").splitlines()
            if line.strip()][-1]
     print(f"{folder}\n{json.dumps(end.get('data', {}))}")
-    return 0 if not end.get("data", {}).get("failed") else 1
+    data = end.get("data", {})
+    return 1 if data.get("failed") or data.get("stopped") else 0

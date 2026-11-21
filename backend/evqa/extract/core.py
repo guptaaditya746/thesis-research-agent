@@ -32,7 +32,7 @@ from evqa.answer import canon
 from evqa.contracts import FindHit, Passage, Row, RunConfig, Spec, StdValue
 from evqa.extract import anchor, settings_v2
 from evqa.extract.prompt import ExtractRows, RowDraft
-from evqa.llm import MAX_WORKERS, service_failed
+from evqa.llm import cap_for, service_failed
 
 log = logging.getLogger(__name__)
 ATTEMPTS = 3
@@ -295,7 +295,7 @@ def run(spec: Spec, hits: list[FindHit], domain: str, cfg: RunConfig, lm: dspy.B
         return [named_in_paper(to_spec(check(d, paper, texts[paper], indexes[paper], passage), spec), spec,
                                texts[paper], found_names.get(paper, [])) for d in drafts]
 
-    with ThreadPoolExecutor(MAX_WORKERS) as pool:
+    with ThreadPoolExecutor(cap_for(cfg.llm_for("extract").backend)) as pool:   # the backend's call cap
         found = [r for rows in pool.map(one, jobs) for r in rows]
         papers = sorted({r.paper for r in found if not r.dropped})
         traces: dict[str, list[dict]] = {p: [] for p in papers}

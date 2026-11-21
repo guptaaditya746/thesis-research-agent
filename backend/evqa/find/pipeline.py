@@ -31,7 +31,7 @@ from pydantic import BaseModel
 
 from evqa import corpus
 from evqa.contracts import FindHit, Passage, RunConfig, Spec
-from evqa.llm import pmap, service_failed
+from evqa.llm import cap_for, pmap, service_failed
 from evqa.find import passages as P
 from evqa.find.prompts import PROMPTS_VERSION, MarkPassages, NextSearch, ScreenPaper, SearchTerms
 from evqa.find.search import find_term, rank_passages
@@ -104,6 +104,7 @@ class _Find:
     def __init__(self, spec: Spec, domain: str, cfg: RunConfig, lm: dspy.BaseLM | None,
                  log: Callable[[dict[str, Any]], None] | None):
         self.spec, self.cfg = spec, cfg
+        self.workers = cap_for(cfg.llm_for("find").backend)   # pool size: the call cap of Find's backend
         self.texts = corpus.papers(domain)
         self.passages = {pid: P.split(t) for pid, t in self.texts.items()}
         self._lm = lm
@@ -224,7 +225,7 @@ class _Find:
                 return pid, "unsure", "the screen reply could not be read", show
             return pid, str(out.decision), " ".join(str(out.reason).split())[:300], show
 
-        for pid, decision, reason, show in pmap(one, pids):
+        for pid, decision, reason, show in pmap(one, pids, workers=self.workers):
             self.screen[pid] = (decision, reason, text)
             self._detail(pid)["screen_passages"] = show
             self._log({"kind": "screen", "paper": pid, "decision": decision, "reason": reason})
@@ -293,7 +294,7 @@ class _Find:
                 rejected.append({"id": [i for c in failed for i in c], "quote": "", "why": "reply unreadable"})
             return pid, got, rejected
 
-        for pid, got, rejected in pmap(one, pids):
+        for pid, got, rejected in pmap(one, pids, workers=self.workers):
             self.marks[pid] = got
             self.marked_with[pid] = text
             d = self._detail(pid)
