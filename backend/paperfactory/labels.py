@@ -46,6 +46,7 @@ def items(w: dict[str, Any], f: Field, tagged: dict[str, Any], papers_md: dict[s
     base = alias_table(w, f)
     truth = {(s, o): r for p in w["papers"].values() for s, r, o in p["claims"] + p["decoys"]}
     possible = lambda s, o: [r for r in f.relations if not fact_errors((s, r, o), ents, f)]  # noqa: E731
+    actor = f.words["actor"].split()[-1].lower()
     out: list[dict[str, Any]] = []
     for pid, t in tagged.items():
         md = (papers_md or {}).get(pid)
@@ -58,10 +59,18 @@ def items(w: dict[str, Any], f: Field, tagged: dict[str, Any], papers_md: dict[s
             named = list(dict.fromkeys(m.eid for m in find_mentions(sent, table)))
             pairs = [(a, b) for a in named for b in named if a != b and ents[a]["kind"] in f.subject_kinds
                      and possible(a, b)]
+            # review finding 7: the tagger also accepts a subject named in the sentence before and referred to by
+            # "it" or the actor word ("the court"); such sentences are harder and must be in the test set too
+            refers = any(x in f" {sent.lower()} " for x in (" it ", " its ", f" {actor} "))
+            before = [m.eid for m in find_mentions(ctx, table)] if n and refers else []
+            via_ctx = {(a, b) for a in dict.fromkeys(before) for b in named if a != b and a not in named
+                       and ents[a]["kind"] in f.subject_kinds and possible(a, b)}
+            pairs += sorted(via_ctx)
 
             def add(kind: str, s: str, r: str, o: str, sentence: str = sent, context: str = ctx) -> None:
                 out.append({"field": f.name, "paper": pid, "n": n, "kind": kind, "s": s, "r": r, "o": o,
-                            "sentence": sentence, "context": context})
+                            "sentence": sentence, "context": context,
+                            "via": "context" if (s, o) in via_ctx or (o, s) in via_ctx else "sentence"})
             for a, b in pairs:
                 true = truth.get((a, b))
                 if true:
@@ -77,7 +86,7 @@ def items(w: dict[str, Any], f: Field, tagged: dict[str, Any], papers_md: dict[s
                     elif true:
                         add("other_relation", a, r, b)
                 for s, r, o in planted:
-                    if len({s, o} & {a, b}) == 1 and not {s, o} <= set(named):
+                    if len({s, o} & {a, b}) == 1 and not {s, o} <= set(named) | {a}:
                         add("decoy", s, r, o)
                 r = true or rng.choice(possible(a, b))
                 tpl = rng.choice(NOT_RECORDED)
@@ -185,31 +194,56 @@ def scores(pairs: list[tuple[str, str | None]]) -> dict[str, Any]:
             "false_accept": _rate(fp, fp + tn), "false_reject": _rate(fn, fn + tp)}
 
 
-def metrics(labels: list[dict[str, str | None]], key: dict[str, Any], answers: dict[str, str | None]) -> dict[str, Any]:
-    """labels: one {id: label} per labeler. The gold label of an item is the labelers' label when all who labeled it
-    agree; items they disagree on are counted and left out. Impossible pairs are reported apart."""
+# the kinds the real evaluation sends to the verifier: tags and sweep items are planted facts checked on sentences
+# that state them (candidate) or state a neighbouring fact (decoy); the other kinds exist only in this test
+EVAL_KINDS = ("candidate", "decoy")
+
+
+def metrics(labels: list[dict[str, str | None]], key: dict[str, Any], answers: dict[str, str | None],
+            adjudicated: dict[str, str | None] | None = None) -> dict[str, Any]:
+    """labels: one {id: label} per labeler. Gold label: the adjudicated label if given (labelers settle their
+    disagreements together, review finding 6), else the label all labelers agree on. Unsettled disagreements are
+    not dropped silently: they are counted, and "worst_case" scores them as verifier errors.
+    Main numbers (they do not depend on how many items of each kind were sampled): recall on candidate items, and the
+    false-accept rate per kind. "eval_mix" scores only the kinds the evaluation sends to the verifier; "test_mix" is
+    this test set's own mix (round robin over kinds), so its precision is NOT the evaluation's precision.
+    Impossible pairs are reported apart."""
     gold: dict[str, str] = {}
-    disagree = 0
+    unsettled: list[str] = []
     for i in key:
+        if adjudicated and adjudicated.get(i):
+            gold[i] = adjudicated[i]
+            continue
         got = {lab[i] for lab in labels if lab.get(i)}
         if len(got) == 1:
             gold[i] = got.pop()
         elif got:
-            disagree += 1
+            unsettled.append(i)
     agreement = [{"labelers": [x, y], **kappa(labels[x], labels[y])}
                  for x in range(len(labels)) for y in range(x + 1, len(labels))]
 
     def by(field: str, ids: list[str]) -> dict[str, Any]:
-        return {v: scores([(gold[i], answers.get(i)) for i in ids if key[i][field] == v])
-                for v in sorted({key[i][field] for i in ids})}
+        return {v: scores([(gold[i], answers.get(i)) for i in ids if key[i].get(field, "sentence") == v])
+                for v in sorted({key[i].get(field, "sentence") for i in ids})}
     main = [i for i in gold if key[i]["kind"] != "impossible_pair"]
     imp = [i for i in gold if key[i]["kind"] == "impossible_pair"]
-    return {"items": len(key), "labeled": len(gold), "labelers_disagree": disagree, "agreement": agreement,
-            "overall": scores([(gold[i], answers.get(i)) for i in main]),
-            "by_field": by("field", main), "by_relation": by("r", main), "by_kind": by("kind", main),
-            "impossible_pairs": scores([(gold[i], answers.get(i)) for i in imp]),
-            "note": "impossible pairs (relations the pack does not allow for the pair) are left out of the overall "
-                    "numbers: a verifier gets them right without reading the sentence"}
+    wrong = {"yes": "no", "no": "yes"}
+    worst = [(gold[i], answers.get(i)) for i in main] + [
+        (wrong.get(answers.get(i) or "", "yes"), answers.get(i)) for i in unsettled
+        if key[i]["kind"] != "impossible_pair"]
+    kinds = by("kind", main)
+    return {"items": len(key), "labeled": len(gold), "unsettled_disagreements": len(unsettled),
+            "agreement": agreement,
+            "recall_candidates": kinds.get("candidate", scores([]))["recall"],
+            "false_accept_by_kind": {k: v["false_accept"] for k, v in kinds.items()},
+            "eval_mix": scores([(gold[i], answers.get(i)) for i in main if key[i]["kind"] in EVAL_KINDS]),
+            "test_mix": scores([(gold[i], answers.get(i)) for i in main]),
+            "worst_case": scores(worst),
+            "by_field": by("field", main), "by_relation": by("r", main), "by_kind": kinds,
+            "by_via": by("via", main), "impossible_pairs": scores([(gold[i], answers.get(i)) for i in imp]),
+            "note": "test_mix precision depends on the sampled mix of kinds; use recall_candidates, "
+                    "false_accept_by_kind and eval_mix. Impossible pairs (relations the pack does not allow for the "
+                    "pair) are left out: a verifier gets them right without reading the sentence."}
 
 
 # ------------------------------------------------------------------ file entry points (cli)
@@ -222,11 +256,13 @@ def export_run(out: Path, f: Field, dest: Path, per_field: int = 200, seed: int 
     return export(w, f, tagged, dest, per_field, md, seed)
 
 
-def metrics_files(label_csvs: list[Path], key_file: Path | None, answers_file: Path, make_eval=None) -> dict[str, Any]:
+def metrics_files(label_csvs: list[Path], key_file: Path | None, answers_file: Path, make_eval=None,
+                  adjudicated_csv: Path | None = None) -> dict[str, Any]:
     """metrics() from files. With make_eval (a function returning an evaluate.Eval) and no answers file yet, the
     verifier is asked first (model calls) and its answers are written to answers_file."""
     key = json.loads((key_file or key_path(label_csvs[0])).read_text(encoding="utf-8"))
     if make_eval is not None and not answers_file.is_file():
         answers_file.write_text(json.dumps(verifier_answers(make_eval(), key), indent=1), encoding="utf-8")
     answers = json.loads(answers_file.read_text(encoding="utf-8"))
-    return metrics([read_labels(p) for p in label_csvs], key, answers)
+    return metrics([read_labels(p) for p in label_csvs], key, answers,
+                   read_labels(adjudicated_csv) if adjudicated_csv else None)

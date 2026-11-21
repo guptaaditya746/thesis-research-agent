@@ -27,7 +27,7 @@ uv run paperfactory check-world --config ... --world my-world.json
 uv run paperfactory run --config ... --no-cache                                 # never read cached model answers
 uv run paperfactory clear-cache --config ... --step verify:                     # drop one step's cached answers
 uv run paperfactory export-labels --config ... --out labels.csv --per-field 200   # hand labels for the verifier
-uv run paperfactory label-metrics --labels a.csv --labels b.csv --answers verifier.json [--run-verifier --config ...]
+uv run paperfactory label-metrics --labels a.csv --labels b.csv --answers verifier.json [--adjudicated agreed.csv] [--run-verifier --config ...]
 ```
 
 Restarts: world.json, work/<paper>/paper.md and report.json each get a `<name>.meta.json` (hashes of the settings,

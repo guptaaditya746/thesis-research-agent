@@ -191,6 +191,7 @@ def main(argv: list[str] | None = None) -> None:
     m.add_argument("--run-verifier", action="store_true",
                    help="make the answers file with the verifier first (model calls; needs --config)")
     m.add_argument("--config")
+    m.add_argument("--adjudicated", help="CSV with the labels both labelers agreed on after discussing disagreements")
     a = ap.parse_args(argv)
     if a.cmd == "relation-table":
         print("\n".join(packs.relation_table(packs.field(x)) for x in a.field))
@@ -204,7 +205,8 @@ def main(argv: list[str] | None = None) -> None:
             gold = json.loads((s.out_dir / "gold.json").read_text(encoding="utf-8"))
             return Eval(s, w, packs.field(s.field), gold, Caller(s))
         print(json.dumps(labels.metrics_files([Path(p) for p in a.labels], Path(a.key) if a.key else None,
-                                              Path(a.answers), make_eval if a.run_verifier else None), indent=1))
+                                              Path(a.answers), make_eval if a.run_verifier else None,
+                                              Path(a.adjudicated) if a.adjudicated else None), indent=1))
         return
     s = config.load(a.config)
     if a.cmd == "export-labels":

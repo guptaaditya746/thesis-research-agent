@@ -58,14 +58,32 @@ def test_metrics_precision_recall_kappa() -> None:
     b = {"x0": "yes", "x1": "yes", "x2": "no", "x3": "no", "x4": "no", "x5": "yes", "imp": "no"}
     ans = {"x0": "yes", "x1": "no", "x2": "yes", "x3": "no", "x5": "yes", "imp": "no"}
     m = labels.metrics([a, b], key, ans)
-    assert m["labelers_disagree"] == 1                     # x4 left out
-    o = m["overall"]
+    assert m["unsettled_disagreements"] == 1               # x4 left out of the main numbers ...
+    o = m["test_mix"]
     assert (o["tp"], o["fp"], o["fn"], o["tn"]) == (2, 1, 1, 1)       # x0, x5 | x2 | x1 | x3
     assert o["precision"]["value"] == 0.667 and o["recall"]["value"] == 0.667
     assert o["false_accept"]["value"] == 0.5 and len(o["precision"]["ci95"]) == 2
     assert m["impossible_pairs"]["n"] == 1 and m["by_relation"]["relies_on"]["n"] == 5
     ag = m["agreement"][0]
     assert ag["n"] == 6 and ag["agree"] == 5 and 0 < ag["kappa"] < 1
+    assert m["worst_case"]["n"] == 6 and m["worst_case"]["unanswered"] == 1        # x4: no verifier answer
+    m2 = labels.metrics([a, b], key, ans | {"x4": "no"})
+    assert m2["worst_case"]["fn"] + m2["worst_case"]["fp"] == 3                    # ... counted as an error
+    assert m["recall_candidates"]["value"] == 0.667 and m["eval_mix"]["n"] == 5
+    settled = labels.metrics([a, b], key, ans, adjudicated={"x4": "yes"})
+    assert settled["unsettled_disagreements"] == 0 and settled["test_mix"]["n"] == 6
+
+
+def test_subject_named_in_the_sentence_before_makes_items() -> None:
+    """Review finding 7: "Rusk ... . It relied on section 14." is a candidate, as the tagger would accept it."""
+    sents = ["The court decided Rusk v. Oberline Health in 2023.", "It relied on section 14 for its ruling."]
+    offs, a = [], 0
+    for x in sents:
+        offs.append([a, a + len(x), x])
+        a += len(x) + 1
+    its = labels.items(PILOT, LAW, {"L-01": {"sentences": offs}})
+    hit = [i for i in its if i["n"] == 1 and i["kind"] == "candidate"]
+    assert hit and hit[0]["s"] == "K5" and hit[0]["o"] == "S14" and hit[0]["via"] == "context"
 
 
 def test_kappa_edge_cases() -> None:
@@ -123,4 +141,4 @@ def test_cli_export_and_metrics(tmp_path: Path, capsys) -> None:
     (tmp_path / "a.json").write_text(json.dumps({i: "yes" for i in key}))
     cli.main(["label-metrics", "--labels", str(tmp_path / "l.csv"), "--answers", str(tmp_path / "a.json")])
     m = json.loads(capsys.readouterr().out)
-    assert m["labeled"] == len(rows) and m["overall"]["recall"]["value"] in (1.0, None)
+    assert m["labeled"] == len(rows) and m["test_mix"]["recall"]["value"] in (1.0, None)
