@@ -18,7 +18,7 @@ def papers() -> dict[str, dict[str, Any]]:
 
 def test_every_paper_gets_both_files(tmp_path: Path, papers: dict[str, dict[str, Any]]) -> None:
     written = brief.write("medical", out=tmp_path)
-    assert len(written) == 2 * len(papers) == 40
+    assert len(written) == 2 * len(papers) == 80
     assert {p.parent.name for p in written} == set(papers)   # practice and test papers alike
     assert {p.name for p in written} == {"idea_sparse.md", "experimental_log.md"}
 

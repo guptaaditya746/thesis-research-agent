@@ -109,11 +109,10 @@ def test_compare_practice_runs(tmp_path: Path, capsys: pytest.CaptureFixture[str
     assert "| Q2 |" not in per_q and "advisor" not in per_q      # same values: no difference row
 
 
-def test_compare_refuses_per_question_for_bench_and_holdout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_compare_refuses_per_question_for_bench(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     p1 = make_run(tmp_path, "practice-qwen", "practice", 0.5, {"Q1": _q("Q1", "lookup", 0.0, 0.7)})
     p2 = make_run(tmp_path, "practice-b", "practice", 0.6, {"Q1": _q("Q1", "lookup", 1.0, 0.7)})
     bench = make_run(tmp_path, "bench-qwen", "test", 0.9, {"Q1": _q("Q1", "lookup", 0.3, 0.1)})
-    hold = make_run(tmp_path, "holdout-qwen", "practice", 0.8, {"Q1": _q("Q1", "lookup", 0.4, 0.2)})
     test_split = make_run(tmp_path, "slice1", "test", 0.7, {"Q1": _q("Q1", "lookup", 0.6, 0.3)})
     opened: list[Path] = []
     orig = compare.Run.questions
@@ -122,16 +121,15 @@ def test_compare_refuses_per_question_for_bench_and_holdout(tmp_path: Path, monk
         opened.append(self.path)
         return orig(self)
     monkeypatch.setattr(compare.Run, "questions", spy)
-    text = compare.report([p1, bench, hold, test_split, p2])
+    text = compare.report([p1, bench, test_split, p2])
     assert list(dict.fromkeys(opened)) == [p1, p2]      # parts 2 and 3 open only the practice runs
     head, per_q = text.split("## Per-question")
     assert "| question | type | measure | practice-qwen-abc | practice-b-abc |" in per_q
-    assert "| l3 | 0.5 | 0.9 | 0.8 | 0.7 | 0.6 |" in head      # totals of every run are still shown
+    assert "| l3 | 0.5 | 0.9 | 0.7 | 0.6 |" in head      # totals of every run are still shown
     assert "| Q1 | lookup | l3 | 0 | 1 |" in text
-    assert "`bench-qwen-abc`: name 'bench-qwen' is a test/hold-out run" in text
-    assert "`holdout-qwen-abc`: name 'holdout-qwen' is a test/hold-out run" in text
+    assert "`bench-qwen-abc`: name 'bench-qwen' is a test run" in text
     assert "`slice1-abc`: split is 'test'" in text
-    for r in (bench, hold, test_split):
+    for r in (bench, test_split):
         with pytest.raises(PermissionError):
             orig(compare.Run(r))
 

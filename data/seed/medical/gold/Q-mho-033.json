@@ -1,0 +1,133 @@
+{
+  "qid": "Q-mho-033",
+  "domain": "medical",
+  "type": "list",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:tavorindel }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_g"
+    ]
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-mho-17-01",
+    "R-mho-17-02",
+    "R-mho-17-03",
+    "R-mho-17-04",
+    "R-mho-17-05",
+    "R-mho-17-06",
+    "R-mho-17-07",
+    "R-mho-17-08",
+    "R-mho-17-09",
+    "R-mho-17-10",
+    "R-mho-17-11",
+    "R-mho-17-12",
+    "R-mho-17-13",
+    "R-mho-17-14",
+    "R-mho-17-15",
+    "R-mho-17-16",
+    "R-mho-17-17",
+    "R-mho-17-18",
+    "R-mho-19-01",
+    "R-mho-19-03"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "paper",
+        "label": "study"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-17-01",
+        "paper": "P-mho-17",
+        "cells": {
+          "paper": "Tavorindel added to basal insulin in type 2 diabetes: a 26-week trial"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-mho-19-01",
+        "paper": "P-mho-19",
+        "cells": {
+          "paper": "Tavorindel (TVR-676) and Parvelinor as first treatment in newly diagnosed type 2 diabetes"
+        },
+        "value": "",
+        "unit": ""
+      }
+    ],
+    "papers": [
+      {
+        "paper": "P-mho-17",
+        "title": "Tavorindel added to basal insulin in type 2 diabetes: a 26-week trial",
+        "rows": [
+          "R-mho-17-01",
+          "R-mho-17-02",
+          "R-mho-17-03",
+          "R-mho-17-04",
+          "R-mho-17-05",
+          "R-mho-17-06",
+          "R-mho-17-07",
+          "R-mho-17-08",
+          "R-mho-17-09",
+          "R-mho-17-10",
+          "R-mho-17-11",
+          "R-mho-17-12",
+          "R-mho-17-13",
+          "R-mho-17-14",
+          "R-mho-17-15",
+          "R-mho-17-16",
+          "R-mho-17-17",
+          "R-mho-17-18"
+        ]
+      },
+      {
+        "paper": "P-mho-19",
+        "title": "Tavorindel (TVR-676) and Parvelinor as first treatment in newly diagnosed type 2 diabetes",
+        "rows": [
+          "R-mho-19-01",
+          "R-mho-19-03"
+        ]
+      }
+    ],
+    "text": "2 studies: P-mho-17 (Tavorindel added to basal insulin in type 2 diabetes: a 26-week trial); P-mho-19 (Tavorindel (TVR-676) and Parvelinor as first treatment in newly diagnosed type 2 diabetes)"
+  },
+  "rows_without_card": 20,
+  "notes": "",
+  "spec": {
+    "type": "list",
+    "split": "test",
+    "template": "Which studies tested tavorindel?",
+    "fixed": {
+      "subject": [
+        "drug_g"
+      ]
+    },
+    "open": [],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "Which studies tested tavorindel?",
+    "source": "llm",
+    "text": "Which trials have looked at tavorindel?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which trials have looked at tavorindel?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

@@ -10,7 +10,7 @@ question's find.jsonl, rows.jsonl and answer.json, the seed facts (data/seed: tr
 paper.md. Per fact: right or wrong, the step that lost it (eval's blame), the passage Find kept around the fact, the
 rows Extract made there with their quotes, and how Answer used those rows.
 
-Refuses (Refused) any run folder whose config split is not "practice" or whose name starts with bench- or holdout-:
+Refuses (Refused) any run folder whose config split is not "practice" or whose name starts with bench-:
 their per-question outputs must not be opened (docs/design/codex-instructions.md, rule 5).
 """
 from __future__ import annotations
@@ -80,8 +80,8 @@ def config(run_dir: Path) -> dict[str, Any]:
 def check_practice(run_dir: Path) -> dict[str, Any]:
     """The run's config, or Refused when the run is not a practice run."""
     name = Path(run_dir).name
-    if name.startswith(("bench-", "holdout-")):
-        raise Refused(f"{name} is a test or hold-out run: its answers stay closed. Only practice runs can be explained.")
+    if name.startswith("bench-"):
+        raise Refused(f"{name} is a test run: its answers stay closed. Only practice runs can be explained.")
     cfg = config(Path(run_dir))
     if cfg.get("split") != "practice":
         raise Refused(f"{name} is not a practice run (config split: {cfg.get('split')!r}). "

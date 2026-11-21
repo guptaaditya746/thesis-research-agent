@@ -355,6 +355,8 @@ def test_frozen_bench_set_regolds_without_llm(world) -> None:
         pytest.skip("the 100-question set is not written yet")
     assert qs.verify(DOMAIN) == []
     for qid in m["questions"]:
+        if not qid.startswith("Q-med-"):   # Q-mho-*: merged in from the old hold-out world, other blueprint
+            continue
         g = json.loads((qs.gold_dir(DOMAIN) / f"{qid}.json").read_text(encoding="utf-8"))
         g.pop("wording", None)
         assert json.loads(qs._dump(bench.regold(world, g))) == g, qid

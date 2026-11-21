@@ -10,7 +10,6 @@ import { DatasetPane } from "./DatasetPane"
 import { EvalPane } from "./EvalPane"
 import { PaperPane } from "./PaperPane"
 import { QuestionsPane } from "./QuestionsPane"
-import { groupDomains } from "./domains"
 import { RunPane } from "./RunPane"
 
 const PANES = [
@@ -28,9 +27,8 @@ export default function WorkbenchPage() {
   const [runId, setRunId] = useState("")
   const [qid, setQid] = useState("")
   const pick = (r: string, q: string) => { setRunId(r); setQid(q) }
-  const groups = groupDomains(domains.data ?? [])
-  const current = domain || groups[0]?.base || ""
-  const group = groups.find((g) => g.base === current || g.holdout === current)
+  const all = domains.data ?? []
+  const current = domain || all[0] || ""
   return (
     <div className="space-y-4">
       <PageHeader title="Workbench" description="Made-up papers with a known truth: the seed graph, the run, the layered evaluation." />
@@ -44,20 +42,11 @@ export default function WorkbenchPage() {
           </button>
         ))}
         <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
-          {groups.length > 1 && (
+          {all.length > 1 && (
             <label>Domain{" "}
-              <select className="rounded border bg-background p-2" value={group?.base ?? current}
+              <select className="rounded border bg-background p-2" value={current}
                 onChange={(e) => setDomain(e.target.value)}>
-                {groups.map((g) => <option key={g.base}>{g.base}</option>)}
-              </select>
-            </label>
-          )}
-          {group?.holdout && (
-            <label>Set{" "}
-              <select aria-label="Set" className="rounded border bg-background p-2" value={current}
-                onChange={(e) => setDomain(e.target.value)}>
-                <option value={group.base}>practice</option>
-                <option value={group.holdout}>holdout (locked)</option>
+                {all.map((d) => <option key={d}>{d}</option>)}
               </select>
             </label>
           )}

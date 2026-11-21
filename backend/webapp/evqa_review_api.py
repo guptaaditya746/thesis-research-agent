@@ -7,7 +7,7 @@
     POST /api/evqa/review/{task}/labels              {scope, item_id, item_version, reviewer, choice, parts, note}
                                                      -> {saved, automated}: the verdict is shown after the label
 
-scope = a domain (fidelity) or a run id (population). 403 for hold-out papers or runs, 404 for an unknown task,
+scope = a domain (fidelity) or a run id (population). 404 for an unknown task,
 item or run, 409 when the item changed since it was shown, 422 for a bad choice or an empty reviewer name.
 """
 from __future__ import annotations

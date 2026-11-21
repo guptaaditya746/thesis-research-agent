@@ -1,0 +1,241 @@
+{
+  "qid": "Q-mho-083",
+  "domain": "medical",
+  "type": "effect",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:dulmarexa }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:hba1c-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_d"
+    ],
+    "comparator": "placebo",
+    "measure": "hba1c_change",
+    "statistic": "MeanDifference"
+  },
+  "open_columns": [
+    "dose",
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-09-01",
+    "R-mho-09-02",
+    "R-mho-09-03",
+    "R-mho-09-04",
+    "R-mho-10-01",
+    "R-mho-10-02",
+    "R-mho-10-03",
+    "R-mho-10-04",
+    "R-mho-11-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-09-01",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "100 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.46",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-09-02",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "100 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.59",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-09-03",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "12 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.63",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-09-04",
+        "paper": "P-mho-09",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.69",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-10-01",
+        "paper": "P-mho-10",
+        "cells": {
+          "dose": "50 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-0.57",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-10-02",
+        "paper": "P-mho-10",
+        "cells": {
+          "dose": "100 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-0.70",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-10-03",
+        "paper": "P-mho-10",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-0.87",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-10-04",
+        "paper": "P-mho-10",
+        "cells": {
+          "dose": "400 mg",
+          "time_point": "24 wk",
+          "patient_group": "adults with newly diagnosed type 2 diabetes, no prior drug"
+        },
+        "value": "-0.96",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      },
+      {
+        "row": "R-mho-11-02",
+        "paper": "P-mho-11",
+        "cells": {
+          "dose": "200 mg",
+          "time_point": "26 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.67",
+        "unit": "pp",
+        "verdict": "dulmarexa better"
+      }
+    ],
+    "comparator": "placebo",
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "per_study": [
+      {
+        "paper": "P-mho-09",
+        "title": "DLM-868 added to metformin in type 2 diabetes: a 24-week trial",
+        "rows": [
+          "R-mho-09-01",
+          "R-mho-09-02",
+          "R-mho-09-03",
+          "R-mho-09-04"
+        ],
+        "verdicts": [
+          "dulmarexa better"
+        ]
+      },
+      {
+        "paper": "P-mho-10",
+        "title": "Dose range of Dulmarexa in newly diagnosed type 2 diabetes",
+        "rows": [
+          "R-mho-10-01",
+          "R-mho-10-02",
+          "R-mho-10-03",
+          "R-mho-10-04"
+        ],
+        "verdicts": [
+          "dulmarexa better"
+        ]
+      },
+      {
+        "paper": "P-mho-11",
+        "title": "Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial",
+        "rows": [
+          "R-mho-11-02"
+        ],
+        "verdicts": [
+          "dulmarexa better"
+        ]
+      }
+    ],
+    "text": "P-mho-09, 100 mg, 12 wk, adults with type 2 diabetes on metformin: -0.46 pp (dulmarexa better); P-mho-09, 100 mg, 24 wk, adults with type 2 diabetes on metformin: -0.59 pp (dulmarexa better); P-mho-09, 200 mg, 12 wk, adults with type 2 diabetes on metformin: -0.63 pp (dulmarexa better); P-mho-09, 200 mg, 24 wk, adults with type 2 diabetes on metformin: -0.69 pp (dulmarexa better); P-mho-10, 50 mg, 24 wk, adults with newly diagnosed type 2 diabetes, no prior drug: -0.57 pp (dulmarexa better); P-mho-10, 100 mg, 24 wk, adults with newly diagnosed type 2 diabetes, no prior drug: -0.70 pp (dulmarexa better); P-mho-10, 200 mg, 24 wk, adults with newly diagnosed type 2 diabetes, no prior drug: -0.87 pp (dulmarexa better); P-mho-10, 400 mg, 24 wk, adults with newly diagnosed type 2 diabetes, no prior drug: -0.96 pp (dulmarexa better); P-mho-11, 200 mg, 26 wk, adults with type 2 diabetes on metformin: -0.67 pp (dulmarexa better)"
+  },
+  "rows_without_card": 9,
+  "notes": "",
+  "spec": {
+    "type": "effect",
+    "split": "test",
+    "template": "Does dulmarexa reduce HbA1c more than placebo?",
+    "fixed": {
+      "subject": [
+        "drug_d"
+      ],
+      "comparator": "placebo",
+      "measure": "hba1c_change"
+    },
+    "open": [
+      "dose",
+      "time_point",
+      "patient_group",
+      "difference"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "drug"
+    }
+  },
+  "wording": {
+    "template": "Does dulmarexa reduce HbA1c more than placebo?",
+    "source": "llm",
+    "text": "Is dulmarexa better than placebo at lowering HbA1c?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Is dulmarexa better than placebo at lowering HbA1c?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

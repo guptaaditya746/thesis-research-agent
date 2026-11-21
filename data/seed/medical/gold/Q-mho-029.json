@@ -1,0 +1,88 @@
+{
+  "qid": "Q-mho-029",
+  "domain": "medical",
+  "type": "list",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:sorvelin }\n  VALUES ?context { d:t2d-obese }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "context": "t2d_obese"
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-mho-04-01",
+    "R-mho-04-02",
+    "R-mho-04-03",
+    "R-mho-04-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "paper",
+        "label": "study"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-04-01",
+        "paper": "P-mho-04",
+        "cells": {
+          "paper": "Sorvelin in adults with type 2 diabetes and obesity"
+        },
+        "value": "",
+        "unit": ""
+      }
+    ],
+    "papers": [
+      {
+        "paper": "P-mho-04",
+        "title": "Sorvelin in adults with type 2 diabetes and obesity",
+        "rows": [
+          "R-mho-04-01",
+          "R-mho-04-02",
+          "R-mho-04-03",
+          "R-mho-04-04"
+        ]
+      }
+    ],
+    "text": "1 study: P-mho-04 (Sorvelin in adults with type 2 diabetes and obesity)"
+  },
+  "rows_without_card": 4,
+  "notes": "",
+  "spec": {
+    "type": "list",
+    "split": "test",
+    "template": "Which studies tested sorvelin in adults with type 2 diabetes and obesity on metformin?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "context": "t2d_obese"
+    },
+    "open": [],
+    "candidate": null,
+    "extra": {
+      "kind": "drug_group"
+    }
+  },
+  "wording": {
+    "template": "Which studies tested sorvelin in adults with type 2 diabetes and obesity on metformin?",
+    "source": "llm",
+    "text": "Which trials have tested sorvelin in adults with type 2 diabetes and obesity on metformin?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which trials have tested sorvelin in adults with type 2 diabetes and obesity on metformin?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

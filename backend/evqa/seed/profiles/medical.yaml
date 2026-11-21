@@ -1,11 +1,11 @@
-# Generator section for the two medical blueprints (data/seed/medical, data/seed/medical_holdout).
+# Generator section for the medical blueprint (data/seed/medical).
 # Those blueprint.yaml files are frozen, so they cannot get a `generator:` section themselves. Everything domain-bound
 # that used to be written into backend/evqa/seed/*.py (slot names, units, effect model, intent cards, the five
 # hand-written questions, question templates, out-of-scope pools, near-miss group rules) lives here instead.
 # A blueprint with its own `generator:` section (data/seed/materials) never reads this file.
 # Changing anything here changes the medical benchmark: rebuild into a scratch folder and compare sha256 first
 # (`uv run python -m evqa.seed.rebuild medical --out <dir> --replay`).
-applies_to: [medical, medical_holdout]
+applies_to: [medical]
 
 generator:
   # The result settings of the seed schema (data/seed/schema/glue.ttl): the item tested (subject), what it is compared
@@ -117,7 +117,6 @@ generator:
         fixed: {subject: [drug_c], measure: hba1c_change, dose: 50}
         open: [time_point, patient_group, measure_variant]
         notes: "Practice twin of Q-med-01 (practice paper only)."
-    medical_holdout: []   # the hold-out set is all generated (bench.py)
 
   bench:
     quota: {lookup: 10, effect: 8, best: 9, trend: 8, list: 8, conflict: 7,   # 50, incl. the kept 5

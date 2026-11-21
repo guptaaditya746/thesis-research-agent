@@ -3,14 +3,11 @@
     GET /api/evqa/runs             every run folder: run_id, config name, system (evqa or a baseline such as
                                    paperqa2-rag, evqa/baselines), mtime, has eval.json
     GET /api/evqa/runs/{run_id}    config, per question spec/find/rows/answer (evqa) or find/answer_text (baseline),
-                                   claims (`evqa eval --text`), events tail, eval.json if present;
-                                   for a hold-out run (evqa/holdout.py) only config, run-level events and eval totals,
-                                   with `closed` saying why (otherwise null)
+                                   claims (`evqa eval --text`), events tail, eval.json if present
     GET /api/evqa/runs/{run_id}/graph/{qid}   the question's rows drawn inside its piece of the seed graph
-                                   (Cytoscape elements, evqa/eval/qgraph.py); 404 for an unknown run or question,
-                                   403 for a hold-out run
+                                   (Cytoscape elements, evqa/eval/qgraph.py); 404 for an unknown run or question
     GET /api/evqa/runs/{run_id}/explain/{qid} why each true fact is right or wrong (evqa/explain.py, data form);
-                                   403 for a run that is not a practice run (bench-*, holdout-*, split != practice);
+                                   403 for a run that is not a practice run (bench-*, split != practice);
                                    409 for a baseline run (no evqa steps to explain)
 
 A run_id must name an existing direct child folder of RUNS_ROOT (no paths, no dots); files are read as JSON, never
@@ -28,7 +25,6 @@ import yaml
 from fastapi import APIRouter, HTTPException
 
 from evqa import explain as evqa_explain
-from evqa import holdout
 from evqa.eval import qgraph
 from evqa.paths import REPO
 
@@ -89,13 +85,6 @@ def _run(run_id: str) -> Path:
     return path
 
 
-def _open(run: Path) -> None:
-    """403 for a hold-out run: its per-question outputs stay closed (score only)."""
-    why = holdout.run_closed(_config(run), run.name)
-    if why:
-        raise HTTPException(403, why)
-
-
 @router.get("/runs")
 def runs() -> list[dict[str, Any]]:
     root = Path(RUNS_ROOT)
@@ -117,25 +106,18 @@ def runs() -> list[dict[str, Any]]:
 def run(run_id: str) -> dict[str, Any]:
     d = _run(run_id)
     cfg, ev = _config(d), _json(d / "eval.json")
-    closed = holdout.run_closed(cfg, d.name)
-    if closed:   # totals only: no question folders, no per-question events or scores
-        if isinstance(ev, dict):
-            ev = {**ev, "questions": {}}
-        events = [e for e in _lines(d / "events.jsonl") if isinstance(e, dict) and not e.get("qid")][-EVENTS_TAIL:]
-        return {"run_id": d.name, "config": cfg, "questions": {}, "events": events, "eval": ev, "closed": closed}
     questions = {}
     for q in sorted(p for p in d.iterdir() if p.is_dir() and not p.is_symlink() and p.name not in NOT_QUESTIONS):
         item: dict[str, Any] = {f.split(".")[0]: _json(q / f) for f in QFILES}
         item.update({f.split(".")[0]: _lines(q / f) for f in QLINES})
         questions[q.name] = item
     return {"run_id": d.name, "config": cfg, "questions": questions,
-            "events": _lines(d / "events.jsonl", EVENTS_TAIL), "eval": ev, "closed": None}
+            "events": _lines(d / "events.jsonl", EVENTS_TAIL), "eval": ev}
 
 
 @router.get("/runs/{run_id}/graph/{qid}")
 def graph(run_id: str, qid: str) -> dict[str, Any]:
     d = _run(run_id)
-    _open(d)
     if not QID.match(qid):
         raise HTTPException(404, f"no question {qid!r}")
     cfg = _config(d)
@@ -149,7 +131,6 @@ def graph(run_id: str, qid: str) -> dict[str, Any]:
 @router.get("/runs/{run_id}/explain/{qid}")
 def explain(run_id: str, qid: str) -> dict[str, Any]:
     d = _run(run_id)
-    _open(d)
     if not QID.match(qid):
         raise HTTPException(404, f"no question {qid!r}")
     if _config(d).get("system") in BASELINE_SYSTEMS:

@@ -49,15 +49,7 @@ def test_medical_blueprint_gets_its_generator_from_the_profile() -> None:
         profile.generator({"domain": "nowhere"})
 
 
-# ---------------------------------------------------------------- 2. medical byte identity
-
-def test_medical_questions_and_gold_rebuild_byte_identical() -> None:
-    w = bench.World("medical")
-    files, _ = bench.render("medical", w=w, replay=qs.gold_dir("medical"))
-    assert len(files) == 103
-    for path, text in files.items():
-        assert hashlib.sha256(text.encode()).hexdigest() == hashlib.sha256(path.read_bytes()).hexdigest(), path
-
+# (2. medical byte identity removed 21 Nov 2026: medical is now the merge of two generated sets.)
 
 # ---------------------------------------------------------------- 3. materials
 

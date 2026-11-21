@@ -7,9 +7,9 @@ artifacts. Running, scoring and viewing a run never wait for a label: a task wit
               next to the paper text where L0 put it (a table excerpt keeps its caption and header row; up to 4 L0 spans, each marked). Sample:
               every fact L0 could not place, matched ambiguously or not in the planned place; every fact where the
               writer report (runs/paperwriter/.../facts_check.json) and L0 disagree; plus PASS_SAMPLE ordinary passes
-              (seeded random). Practice papers only until the rubric is frozen (FROZEN_FOR_HOLDOUT).
+              (seeded random). Practice papers by default (split argument).
   population  scope = run. One unique pair from run_dir/population_judge.json: the patient group as the run wrote it
-              and the true seed group. Practice runs only (holdout.run_closed).
+              and the true seed group.
 
 Hidden verdicts: items_for() never returns the automated verdict (or the stratum, which names it) of an item the reviewer has not labelled;
 add_label() returns it right after the label is saved.
@@ -29,7 +29,7 @@ import random
 from pathlib import Path
 from typing import Any
 
-from evqa import holdout, norm
+from evqa import norm
 from evqa.eval import dataset as l0
 from evqa.eval import prism
 from evqa.paths import DATA, DATASET, REPO
@@ -40,7 +40,6 @@ RUNS = REPO / "runs" / "evqa"
 WRITER = REPO / "runs" / "paperwriter"
 PASS_SAMPLE = 10
 SEED = 20261121
-FROZEN_FOR_HOLDOUT = False                 # set True (and bump the rubric id) once the fidelity rubric is frozen
 EXCERPT = 600                              # characters of prose shown around a value in a long paragraph
 PARAGRAPH = 1600                           # a paragraph up to this length is shown whole
 
@@ -140,8 +139,6 @@ def _claim(f: dict[str, Any]) -> list[dict[str, str]]:
 
 def fidelity_items(domain: str, split: str = "practice") -> list[dict[str, Any]]:
     """The fidelity sample (module doc), in a fixed order. Each item: id, version, stratum, show, automated."""
-    if holdout.is_holdout_domain(domain) and not FROZEN_FOR_HOLDOUT:
-        raise PermissionError("the fidelity rubric is not frozen yet: hold-out papers are not sampled")
     papers = brief.paper_facts(domain)
     flagged, passes = [], []
     for pid, p in sorted(papers.items()):
@@ -192,11 +189,6 @@ def run_dir(run_id: str) -> Path:
 
 def population_items(run_id: str) -> list[dict[str, Any]]:
     d = run_dir(run_id)
-    import yaml
-    cfg = yaml.safe_load((d / "config.yaml").read_text(encoding="utf-8")) if (d / "config.yaml").is_file() else {}
-    why = holdout.run_closed(cfg or {}, d.name)
-    if why:
-        raise PermissionError(why)
     p = d / "population_judge.json"
     if not p.is_file():
         return []

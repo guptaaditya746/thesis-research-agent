@@ -1,0 +1,153 @@
+{
+  "qid": "Q-mho-035",
+  "domain": "medical",
+  "type": "trend",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:pomitral }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:sbp-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?week = 12)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_f"
+    ],
+    "comparator": "placebo",
+    "measure": "sbp_change",
+    "statistic": "MeanDifference",
+    "week": 12
+  },
+  "open_columns": [
+    "dose",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-15-01",
+    "R-mho-15-03",
+    "R-mho-16-01"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "dose",
+        "label": "dose"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-15-01",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "3 mg",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-3.9",
+        "unit": "mmHg"
+      },
+      {
+        "row": "R-mho-15-03",
+        "paper": "P-mho-15",
+        "cells": {
+          "dose": "6 mg",
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "value": "-5.6",
+        "unit": "mmHg"
+      },
+      {
+        "row": "R-mho-16-01",
+        "paper": "P-mho-16",
+        "cells": {
+          "dose": "6 mg",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-5.3",
+        "unit": "mmHg"
+      }
+    ],
+    "axis": {
+      "key": "dose",
+      "label": "dose"
+    },
+    "series": [
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes and high blood pressure on metformin"
+        },
+        "points": [
+          {
+            "at": "3 mg",
+            "value": "-3.9",
+            "unit": "mmHg",
+            "row": "R-mho-15-01"
+          },
+          {
+            "at": "6 mg",
+            "value": "-5.6",
+            "unit": "mmHg",
+            "row": "R-mho-15-03"
+          }
+        ],
+        "direction": "goes down"
+      },
+      {
+        "cells": {
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "points": [
+          {
+            "at": "6 mg",
+            "value": "-5.3",
+            "unit": "mmHg",
+            "row": "R-mho-16-01"
+          }
+        ],
+        "direction": "one point"
+      }
+    ],
+    "rounding_step": "0.1",
+    "text": "adults with type 2 diabetes and high blood pressure on metformin: 3 mg -3.9, 6 mg -5.6 (goes down); adults with type 2 diabetes on metformin: 6 mg -5.3 (one point)"
+  },
+  "rows_without_card": 3,
+  "notes": "",
+  "spec": {
+    "type": "trend",
+    "split": "test",
+    "template": "How does the effect of pomitral on systolic blood pressure at 12 weeks change with the dose?",
+    "fixed": {
+      "subject": [
+        "drug_f"
+      ],
+      "measure": "sbp_change",
+      "week": 12
+    },
+    "open": [
+      "dose",
+      "patient_group",
+      "measure_variant"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "over_dose",
+      "axis": "dose"
+    }
+  },
+  "wording": {
+    "template": "How does the effect of pomitral on systolic blood pressure at 12 weeks change with the dose?",
+    "source": "llm",
+    "text": "How does pomitral's effect on systolic blood pressure at 12 weeks vary with dose?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "How does pomitral's effect on systolic blood pressure at 12 weeks vary with dose?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

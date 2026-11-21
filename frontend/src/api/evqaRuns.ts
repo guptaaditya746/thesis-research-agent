@@ -87,9 +87,8 @@ export type RunEval = { run_id: string; domain?: string; config_name?: string; c
   intervals?: Record<string, unknown>
   unknown_questions?: string[]; totals: EvalTotals; questions: Record<string, QuestionScore> }
 
-/** closed: why a hold-out run shows only its totals (questions, per-question events and scores are left out). */
 export type RunDetail = { run_id: string; config: Record<string, unknown>; questions: Record<string, RunQuestion>
-  events: RunEvent[]; eval: RunEval | Broken | null; closed?: string | null }
+  events: RunEvent[]; eval: RunEval | Broken | null }
 
 export const isBroken = (x: unknown): x is Broken =>
   typeof x === "object" && x !== null && "_error" in x

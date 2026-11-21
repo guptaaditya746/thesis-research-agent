@@ -23,7 +23,7 @@ SECTIONS = ("Methods: participants", "Results: mean difference vs placebo", "Res
 
 
 def style_dir(domain: str) -> Path:
-    """data/style/<domain>; a variant domain such as medical_holdout uses its base domain's examples."""
+    """data/style/<domain>; a variant domain (<base>_<name>) uses its base domain's examples."""
     return STYLE / domain.split("_")[0]
 
 

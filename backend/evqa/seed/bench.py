@@ -110,10 +110,10 @@ class World:
             subj, meas, ctx = item_of.get(_local(r.subject)), measure_of.get(_local(r.measure)), \
                 context_of.get(_local(r.context))
             comp = item_of.get(_local(r.comparator)) if r.comparator is not None else None
+            pid = _local(r.paper)   # every paper of the graph, also one whose items this blueprint does not name
+            self.papers[pid] = {"split": str(r.split), "title": str(r.title), "role": str(r.role or "")}
             if None in (subj, meas, ctx) or (r.comparator is not None and comp is None):
                 continue
-            pid = _local(r.paper)
-            self.papers[pid] = {"split": str(r.split), "title": str(r.title), "role": str(r.role or "")}
             self.facts.append({"id": _local(r.r), "paper": pid, "split": str(r.split), "subject": subj,
                                "comparator": comp, "measure": meas, self.C: ctx, "stat": _local(r.stat),
                                self.F: Decimal(str(r.factor.toPython())), self.T: Decimal(str(r.time.toPython())),

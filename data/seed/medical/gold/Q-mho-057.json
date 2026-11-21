@@ -1,0 +1,163 @@
+{
+  "qid": "Q-mho-057",
+  "domain": "medical",
+  "type": "effect",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:sorvelin }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     ex:comparator d:placebo ;\n     sosa:observedProperty d:fpg-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:statistic ex:MeanDifference ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n  FILTER(?dose = 10)\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_a"
+    ],
+    "comparator": "placebo",
+    "measure": "fpg_change",
+    "statistic": "MeanDifference",
+    "dose": 10
+  },
+  "open_columns": [
+    "time_point",
+    "patient_group"
+  ],
+  "row_ids": [
+    "R-mho-01-15",
+    "R-mho-01-16",
+    "R-mho-05-02",
+    "R-mho-18-02"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "time_point",
+        "label": "time point"
+      },
+      {
+        "key": "patient_group",
+        "label": "patient group"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-01-15",
+        "paper": "P-mho-01",
+        "cells": {
+          "time_point": "13 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.92",
+        "unit": "mmol/L",
+        "verdict": "sorvelin better"
+      },
+      {
+        "row": "R-mho-01-16",
+        "paper": "P-mho-01",
+        "cells": {
+          "time_point": "26 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-0.94",
+        "unit": "mmol/L",
+        "verdict": "sorvelin better"
+      },
+      {
+        "row": "R-mho-05-02",
+        "paper": "P-mho-05",
+        "cells": {
+          "time_point": "26 wk",
+          "patient_group": "adults with type 2 diabetes on metformin"
+        },
+        "value": "-1.49",
+        "unit": "mmol/L",
+        "verdict": "sorvelin better"
+      },
+      {
+        "row": "R-mho-18-02",
+        "paper": "P-mho-18",
+        "cells": {
+          "time_point": "26 wk",
+          "patient_group": "adults with type 2 diabetes on basal insulin"
+        },
+        "value": "-0.70",
+        "unit": "mmol/L",
+        "verdict": "sorvelin better"
+      }
+    ],
+    "comparator": "placebo",
+    "rounding_step": "0.01",
+    "higher_is_better": false,
+    "per_study": [
+      {
+        "paper": "P-mho-01",
+        "title": "Sorvelin added to metformin in type 2 diabetes: a 26-week dose-ranging trial",
+        "rows": [
+          "R-mho-01-15",
+          "R-mho-01-16"
+        ],
+        "verdicts": [
+          "sorvelin better"
+        ]
+      },
+      {
+        "paper": "P-mho-05",
+        "title": "Sorvelin with metformin in type 2 diabetes: a multinational 26-week trial",
+        "rows": [
+          "R-mho-05-02"
+        ],
+        "verdicts": [
+          "sorvelin better"
+        ]
+      },
+      {
+        "paper": "P-mho-18",
+        "title": "Sorvelin added to basal insulin in type 2 diabetes",
+        "rows": [
+          "R-mho-18-02"
+        ],
+        "verdicts": [
+          "sorvelin better"
+        ]
+      }
+    ],
+    "text": "P-mho-01, 13 wk, adults with type 2 diabetes on metformin: -0.92 mmol/L (sorvelin better); P-mho-01, 26 wk, adults with type 2 diabetes on metformin: -0.94 mmol/L (sorvelin better); P-mho-05, 26 wk, adults with type 2 diabetes on metformin: -1.49 mmol/L (sorvelin better); P-mho-18, 26 wk, adults with type 2 diabetes on basal insulin: -0.70 mmol/L (sorvelin better)"
+  },
+  "rows_without_card": 4,
+  "notes": "",
+  "spec": {
+    "type": "effect",
+    "split": "test",
+    "template": "Does sorvelin 10 mg reduce fasting plasma glucose more than placebo?",
+    "fixed": {
+      "subject": [
+        "drug_a"
+      ],
+      "comparator": "placebo",
+      "measure": "fpg_change",
+      "dose": 10
+    },
+    "open": [
+      "time_point",
+      "patient_group",
+      "difference"
+    ],
+    "candidate": null,
+    "extra": {
+      "kind": "dose"
+    }
+  },
+  "wording": {
+    "template": "Does sorvelin 10 mg reduce fasting plasma glucose more than placebo?",
+    "source": "llm",
+    "text": "Does sorvelin 10 mg lower fasting plasma glucose more than placebo?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Does sorvelin 10 mg lower fasting plasma glucose more than placebo?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}

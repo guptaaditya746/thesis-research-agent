@@ -7,7 +7,6 @@ import { routes } from "@/app/routes"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
-import { groupDomains } from "./domains"
 
 // jsdom has no canvas: a stub stands in for Cytoscape (the graph itself is checked in the browser).
 vi.mock("cytoscape", () => {
@@ -45,12 +44,4 @@ describe("workbench dataset pane", () => {
     expect(screen.getByRole("img", { name: "Knowledge graph of P-med-05" })).toBeInTheDocument()
     expect(screen.getByText("seed/medical/seed.ttl")).toBeInTheDocument()
   }, 30_000)
-})
-
-describe("groupDomains", () => {
-  it("folds a holdout set into its domain and keeps the others", () => {
-    expect(groupDomains(["materials", "medical", "medical_holdout"])).toEqual([
-      { base: "materials", holdout: null }, { base: "medical", holdout: "medical_holdout" }])
-    expect(groupDomains(["law_holdout"])).toEqual([{ base: "law_holdout", holdout: null }])
-  })
 })

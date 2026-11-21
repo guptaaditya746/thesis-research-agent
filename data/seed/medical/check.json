@@ -102,6 +102,90 @@
         "closest_own": 44.4,
         "ok": true,
         "problems": []
+      },
+      {
+        "name": "sorvelin",
+        "code": "SRV-609",
+        "nearest": {
+          "label": "somelin",
+          "source": "chebi:31666",
+          "score": 80.0
+        },
+        "closest_own": 55.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "parvelinor",
+        "code": "PRV-301",
+        "nearest": {
+          "label": "parellin",
+          "source": "mesh:C518563",
+          "score": 77.8
+        },
+        "closest_own": 66.7,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "tembrexil",
+        "code": "TMB-399",
+        "nearest": {
+          "label": "Temaril",
+          "source": "mesh:C031242",
+          "score": 75.0
+        },
+        "closest_own": 52.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "dulmarexa",
+        "code": "DLM-868",
+        "nearest": {
+          "label": "Marex",
+          "source": "chebi:5818",
+          "score": 71.4
+        },
+        "closest_own": 55.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "saventrol",
+        "code": "SVN-171",
+        "nearest": {
+          "label": "Slentrol",
+          "source": "chebi:748799",
+          "score": 82.4
+        },
+        "closest_own": 52.6,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "pomitral",
+        "code": "PMT-774",
+        "nearest": {
+          "label": "Mictral",
+          "source": "mesh:C028959",
+          "score": 80.0
+        },
+        "closest_own": 47.1,
+        "ok": true,
+        "problems": []
+      },
+      {
+        "name": "tavorindel",
+        "code": "TVR-676",
+        "nearest": {
+          "label": "Tarian Gel",
+          "source": "mesh:C000732088",
+          "score": 73.7
+        },
+        "closest_own": 60.0,
+        "ok": true,
+        "problems": []
       }
     ]
   },

@@ -1,0 +1,157 @@
+{
+  "qid": "Q-mho-076",
+  "domain": "medical",
+  "type": "list",
+  "split": "test",
+  "answerable": true,
+  "status": "answered",
+  "sparql": "PREFIX ex: <https://w3id.org/evqa/seed#>\nPREFIX d: <https://w3id.org/evqa/data/>\nPREFIX sosa: <http://www.w3.org/ns/sosa/>\nPREFIX qudt: <http://qudt.org/schema/qudt/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?r ?paper ?subject ?context ?contextLabel ?dose ?week ?value ?unit WHERE {\n  VALUES ?subject { d:saventrol }\n  ?r a ex:Result ;\n     ex:subject ?subject ;\n     ex:reportedIn ?paper ;\n     sosa:observedProperty d:weight-change ;\n     sosa:hasFeatureOfInterest ?context ;\n     ex:condition/ex:setting/qudt:numericValue ?dose ;\n     ex:atTime/qudt:numericValue ?week ;\n     sosa:hasResult [ qudt:numericValue ?value ; qudt:unit ?unit ] .\n  ?paper ex:split \"test\" .\n  ?context skos:prefLabel ?contextLabel .\n} ORDER BY ?subject ?context ?dose ?week ?r\n",
+  "slots": {
+    "subject": [
+      "drug_e"
+    ],
+    "measure": "weight_change"
+  },
+  "open_columns": [],
+  "row_ids": [
+    "R-mho-11-06",
+    "R-mho-13-01",
+    "R-mho-13-02",
+    "R-mho-13-03",
+    "R-mho-13-04",
+    "R-mho-13-05",
+    "R-mho-13-06",
+    "R-mho-14-01",
+    "R-mho-14-02",
+    "R-mho-14-03",
+    "R-mho-14-04",
+    "R-mho-14-05",
+    "R-mho-20-01",
+    "R-mho-20-02",
+    "R-mho-20-03",
+    "R-mho-20-04"
+  ],
+  "answer": {
+    "columns": [
+      {
+        "key": "paper",
+        "label": "study"
+      }
+    ],
+    "table": [
+      {
+        "row": "R-mho-11-06",
+        "paper": "P-mho-11",
+        "cells": {
+          "paper": "Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-mho-13-01",
+        "paper": "P-mho-13",
+        "cells": {
+          "paper": "Saventrol for glucose and body weight in type 2 diabetes with obesity"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-mho-14-01",
+        "paper": "P-mho-14",
+        "cells": {
+          "paper": "Saventrol added to metformin: five doses over 24 weeks"
+        },
+        "value": "",
+        "unit": ""
+      },
+      {
+        "row": "R-mho-20-01",
+        "paper": "P-mho-20",
+        "cells": {
+          "paper": "Saventrol in type 2 diabetes with obesity: two-year follow-up"
+        },
+        "value": "",
+        "unit": ""
+      }
+    ],
+    "papers": [
+      {
+        "paper": "P-mho-11",
+        "title": "Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial",
+        "rows": [
+          "R-mho-11-06"
+        ]
+      },
+      {
+        "paper": "P-mho-13",
+        "title": "Saventrol for glucose and body weight in type 2 diabetes with obesity",
+        "rows": [
+          "R-mho-13-01",
+          "R-mho-13-02",
+          "R-mho-13-03",
+          "R-mho-13-04",
+          "R-mho-13-05",
+          "R-mho-13-06"
+        ]
+      },
+      {
+        "paper": "P-mho-14",
+        "title": "Saventrol added to metformin: five doses over 24 weeks",
+        "rows": [
+          "R-mho-14-01",
+          "R-mho-14-02",
+          "R-mho-14-03",
+          "R-mho-14-04",
+          "R-mho-14-05"
+        ]
+      },
+      {
+        "paper": "P-mho-20",
+        "title": "Saventrol in type 2 diabetes with obesity: two-year follow-up",
+        "rows": [
+          "R-mho-20-01",
+          "R-mho-20-02",
+          "R-mho-20-03",
+          "R-mho-20-04"
+        ]
+      }
+    ],
+    "text": "4 studies: P-mho-11 (Tembrexil, Dulmarexa and Saventrol added to metformin: a three-arm placebo-controlled trial); P-mho-13 (Saventrol for glucose and body weight in type 2 diabetes with obesity); P-mho-14 (Saventrol added to metformin: five doses over 24 weeks); P-mho-20 (Saventrol in type 2 diabetes with obesity: two-year follow-up)"
+  },
+  "rows_without_card": 16,
+  "notes": "",
+  "spec": {
+    "type": "list",
+    "split": "test",
+    "template": "Which studies report the effect of saventrol on body weight?",
+    "fixed": {
+      "subject": [
+        "drug_e"
+      ],
+      "measure": "weight_change"
+    },
+    "open": [],
+    "candidate": null,
+    "extra": {
+      "kind": "drug_measure"
+    }
+  },
+  "wording": {
+    "template": "Which studies report the effect of saventrol on body weight?",
+    "source": "llm",
+    "text": "Which trials have reported saventrol's effect on body weight?",
+    "attempts": [
+      {
+        "attempt": 1,
+        "text": "Which trials have reported saventrol's effect on body weight?",
+        "problems": [],
+        "verifier": {
+          "same": true,
+          "difference": null
+        }
+      }
+    ]
+  }
+}
