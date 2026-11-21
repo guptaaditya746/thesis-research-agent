@@ -97,6 +97,10 @@ def gold(g: Graph, q: dict[str, Any]) -> tuple[str, list[str]]:
     return sparql, sorted(fid(short(s), short(r), short(o)) for s, r, o in g.query(sparql))
 
 
+# D1: what kind of question a template makes, from its filter (the same for every field)
+QUESTION_TYPES = {("subject", "object"): "pair", ("subject",): "subject_relation", ("object",): "conflict"}
+
+
 def questions(w: dict[str, Any], f: Field, per_question: int, seed: int) -> list[dict[str, Any]]:
     """Question cards from the field pack's templates, one per template per paper where the paper has a fitting
     claim. Each question is asked over its own paper plus papers that share an entity with it (up to
@@ -123,7 +127,8 @@ def questions(w: dict[str, Any], f: Field, per_question: int, seed: int) -> list
             if card:
                 text = t["text"].format(s=label(card["subject"]) if "subject" in card else "",
                                         o=label(card["object"]) if "object" in card else "")
-                out.append({"id": f"{pid}:{t['id']}", "template": t["id"], "text": text, "papers": scope, **card})
+                out.append({"id": f"{pid}:{t['id']}", "template": t["id"], "question_type": QUESTION_TYPES[
+                    tuple(t["filter"])], "text": text, "papers": scope, **card})
     return out
 
 

@@ -22,7 +22,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from paperfactory import SCORING_VERSION
+from paperfactory import SCORING_VERSION, baseline
 from paperfactory.llm import pmap
 from paperfactory.packs import Field
 from paperfactory.text import (AliasTable, alias_table, defined_terms, find_mentions, names, norm, norm_text,
@@ -532,6 +532,7 @@ Use the whole paper to decide. Pick exactly one number."""
             "legacy_only": [{"question": q["id"], "as_fact": it["as_fact"], "reason": it["evidence_reason"],
                              "quote": it["quote"][:200]} for q in qa for it in q["items"]
                             if it["evidence_ok_legacy"] and not it["evidence_ok"]]}
+        rep["bm25_baseline"] = baseline.report(qs, tagged)          # D1: code only, no model calls
         rep["style_leak"] = self.leak(tagged) if self.s.leak_trials else None
         return rep
 

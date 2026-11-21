@@ -148,6 +148,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
             "code": {m: meta.file_hash(Path(__file__).with_name(m)) for m in ("evaluate.py", "text.py")}})
         print(json.dumps({k: rep[k] for k in ("papers_written", "verifier_test", "judge_validation", "qa_summary",
                                                "style_leak")}
+                         | {"bm25_baseline": rep["bm25_baseline"]["all"]}
                          | {"cost": {k: rep["cost"][k] for k in ("usd", "usd_known", "calls", "mean_per_paper_usd",
                                                                  "projection")}}, indent=1))
 
