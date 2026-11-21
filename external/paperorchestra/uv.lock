@@ -1,0 +1,8 @@
+version = 1
+revision = 3
+requires-python = ">=3.11"
+
+[[package]]
+name = "paperorchestra-vendored"
+version = "0.0.0+d9bae99.thesis"
+source = { virtual = "." }

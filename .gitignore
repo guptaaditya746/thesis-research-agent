@@ -15,3 +15,6 @@ frontend/node_modules/
 # synth3: built folders and world files are committed (private repo, Aditya 18 Nov); real-paper pools stay local
 data/synth3/pools/
 data/synth3/results/
+
+# paperfactory: shared model-call slot locks
+data/cache/

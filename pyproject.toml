@@ -19,6 +19,7 @@ dependencies = [
     "pydantic-ai-slim[mcp,openai]==2.55.0",
     "pydantic-settings==2.15.0",
     "pyoxigraph==0.5.11",
+    "pyshacl==0.30.1",
     "pyyaml==6.0.3",
     "rank-bm25==0.2.2",
     "rapidfuzz>=3.14.6",
@@ -42,6 +43,7 @@ synth = "synth.cli:main"
 synth2 = "synth2.cli:main"
 synth3 = "synth3.cli:main"
 evaluate = "evaluation.cli:main"
+paperfactory = "paperfactory.cli:main"
 
 [dependency-groups]
 dev = [

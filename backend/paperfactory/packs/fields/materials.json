@@ -1,0 +1,34 @@
+{
+ "field": "materials",
+ "status": "DRAFT, not yet run: Aditya reviews before use",
+ "setting": "Invented materials (alloys, coatings, compounds) studied in invented lab studies. Properties and test methods are real concepts; material names, labs and findings are invented.",
+ "words": {
+  "paper_kind": "a critical review in materials science",
+  "venue": "materials science journal",
+  "subject_kind": "study",
+  "subject_plural": "studies",
+  "source_kinds": "lab studies and the materials and earlier studies they assess",
+  "actor": "the authors",
+  "framework_section": "Background on the Materials",
+  "analysis_section": "Analysis of the Reported Evidence"
+ },
+ "kinds": {
+  "material": {"about": "an invented material with a plausible code name (e.g. 'alloy TK-7', 'coating Veral-3')", "attrs": {"family": "text"}},
+  "study": {"about": "an invented lab study named by lab and year (e.g. 'the Hollis Lab 2019 study')", "attrs": {"property": "text", "year": "int", "method": "text"}}
+ },
+ "subject_kinds": ["study"],
+ "order_attr": "year",
+ "relations": {
+  "reports_improvement": {"words": "reported an improvement with", "meaning": "the study reports that the material improved the property it tested", "object_kinds": ["material"]},
+  "reports_no_change": {"words": "reported no change with", "meaning": "the study reports no clear change in the tested property for the material", "object_kinds": ["material"]},
+  "reports_degradation": {"words": "reported degradation with", "meaning": "the study reports that the material worsened the tested property", "object_kinds": ["material"]},
+  "fails_to_replicate": {"words": "failed to replicate", "meaning": "the study repeated an earlier study and did not get its result", "object_kinds": ["study"]}
+ },
+ "conflict_pairs": [["reports_improvement", "reports_no_change"], ["reports_improvement", "reports_degradation"]],
+ "questions": [
+  {"id": "treat", "text": "What did {s} report about {o}?", "filter": ["subject", "object"]},
+  {"id": "improved", "text": "Which materials improved the tested property in {s}?", "filter": ["subject"], "relation": "reports_improvement"},
+  {"id": "conflict", "text": "Which studies found that {o} improved the tested property, and which did not?", "filter": ["object"], "relation_in": ["reports_improvement", "reports_no_change", "reports_degradation"]}
+ ],
+ "world_notes": "Make 4-6 invented materials in 1-2 families and enough studies (years 2012-2025) that each paper has its own mix. A study may only fail to replicate an EARLIER study. Plant disagreements: two studies with opposite findings for the same material."
+}

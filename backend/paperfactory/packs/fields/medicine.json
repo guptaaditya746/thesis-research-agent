@@ -1,0 +1,34 @@
+{
+ "field": "medicine",
+ "status": "DRAFT, not yet run: Aditya reviews before use",
+ "setting": "Invented treatments tested in invented clinical trials. Diseases, outcome measures and trial designs are real concepts; drug names, trial names, sponsors and results are invented.",
+ "words": {
+  "paper_kind": "a narrative clinical review",
+  "venue": "clinical journal",
+  "subject_kind": "trial",
+  "subject_plural": "trials",
+  "source_kinds": "clinical trials and the treatments and earlier trials they assess",
+  "actor": "the investigators",
+  "framework_section": "Clinical Background",
+  "analysis_section": "Analysis of the Trial Evidence"
+ },
+ "kinds": {
+  "treatment": {"about": "an invented drug name following real naming stems (e.g. -mab, -tinib, -gliflozin)", "attrs": {"drug_class": "text"}},
+  "trial": {"about": "an invented trial with an acronym name (e.g. 'the CORVA-2 trial')", "attrs": {"condition": "text", "year": "int", "design": "text", "patients": "int"}}
+ },
+ "subject_kinds": ["trial"],
+ "order_attr": "year",
+ "relations": {
+  "finds_benefit": {"words": "found a benefit of", "meaning": "the trial reports that the treatment improved the main outcome", "object_kinds": ["treatment"]},
+  "finds_no_effect": {"words": "found no effect of", "meaning": "the trial reports no clear difference on the main outcome for the treatment", "object_kinds": ["treatment"]},
+  "finds_harm": {"words": "found harm from", "meaning": "the trial reports that the treatment made the main outcome or safety worse", "object_kinds": ["treatment"]},
+  "contradicts": {"words": "contradicted", "meaning": "the trial reports a result that disagrees with an earlier trial", "object_kinds": ["trial"]}
+ },
+ "conflict_pairs": [["finds_benefit", "finds_no_effect"], ["finds_benefit", "finds_harm"]],
+ "questions": [
+  {"id": "treat", "text": "What did {s} find about {o}?", "filter": ["subject", "object"]},
+  {"id": "benefit", "text": "Which treatments showed a benefit in {s}?", "filter": ["subject"], "relation": "finds_benefit"},
+  {"id": "conflict", "text": "Which trials found {o} helpful, and which did not?", "filter": ["object"], "relation_in": ["finds_benefit", "finds_no_effect", "finds_harm"]}
+ ],
+ "world_notes": "Make 4-6 invented treatments for 1-2 real conditions and enough trials (years 2012-2025) that each paper has its own mix. A trial may only contradict an EARLIER trial. Plant disagreements: two trials with opposite findings for the same treatment."
+}
