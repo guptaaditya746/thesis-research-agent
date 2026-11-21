@@ -9,7 +9,7 @@ import pytest
 
 from paperfactory import config, materials, packs, seed, world
 from paperfactory.evaluate import Eval
-from paperfactory.text import split_sents
+from paperfactory.text import split_rules, split_sents
 from paperfactory.write import repeated_phrases
 
 HERE = Path(__file__).resolve().parents[1]
@@ -97,14 +97,36 @@ def test_settings_model_per_role(tmp_path: Path) -> None:
 def test_judge_options_come_from_the_field() -> None:
     _, gold = seed.make(PILOT, LAW, per_question=3, seed=1)
     e = Eval(config.Settings("law", "argument"), PILOT, LAW, gold, call=None)
-    assert list(e.letters.values()) == ["relies_on", "distinguishes", "rejects", "none"]
+    assert e.options == ["relies_on", "distinguishes", "rejects", "none"]
     med = packs.field("medicine")
     e2 = Eval(config.Settings("medicine", "argument"), PILOT, med, gold, call=None)
-    assert len(e2.letters) == len(med.relations) + 1
+    assert len(e2.options) == len(med.relations) + 1
 
 
 def test_split_and_repeats() -> None:
-    s = split_sents("In Marrin v. Tolst Media the court held so. Then s. 9 applied to it here.\n")
+    s = split_sents("In Marrin v. Tolst Media the court held so. Then s. 9 applied to it here.\n",
+                    split_rules(LAW, PILOT))
     assert [x[2] for x in s] == ["In Marrin v. Tolst Media the court held so.", "Then s. 9 applied to it here."]
     text = "In Rusk the court relied on it as a basis for its ruling. " * 3
     assert repeated_phrases(text, ["Rusk"])
+
+
+def test_scoring_version_is_written_into_every_result_file(tmp_path: Path) -> None:
+    from paperfactory import SCORING_VERSION, cli
+    (tmp_path / "w.json").write_text(json.dumps(PILOT))
+    s = config.Settings("law", "argument", papers=3, out=str(tmp_path / "run"), world_file=str(tmp_path / "w.json"),
+                        leak_trials=0)
+    cli.run(s, ["world", "seed"])
+    assert json.loads((tmp_path / "run" / "gold.json").read_text())["scoring_version"] == SCORING_VERSION
+    md = "Rusk relied on section 14 of the Act here.\n"
+    for pid in PILOT["papers"]:
+        (tmp_path / "run" / "work" / pid).mkdir(parents=True)
+        (tmp_path / "run" / "work" / pid / "paper.md").write_text(md)
+
+    def fake(role, step, system, user, schema, check=None):
+        return {"tags": []} if role == "tagger" else {"answers": []} if role == "verifier" else \
+            {"rewritten": []} if step.startswith("reword") else {"items": []} if role == "qa" else {"choice": "none"}
+    gold = json.loads((tmp_path / "run" / "gold.json").read_text())
+    rep = Eval(s, PILOT, LAW, gold, fake).run()
+    assert rep["scoring_version"] == SCORING_VERSION
+    assert json.loads((tmp_path / "run" / "tagged.json").read_text())["scoring_version"] == SCORING_VERSION

@@ -50,6 +50,10 @@ def main():
                         help="JSON file of references [{id, first_author, authors_text, year, venue, title, gist, "
                              "abstract}] (v2r, C8).")
     parser.add_argument("--timeout", type=int, default=900, help="Seconds per claude call.")
+    parser.add_argument("--backend_json", default=None,
+                        help="C9: paperfactory RoleModel fields as JSON; every call then goes through paperfactory's "
+                             "model layer (run in the main project environment).")
+    parser.add_argument("--max_parallel", type=int, default=3, help="Slot locks in --lock_dir (at most 3).")
     args = parser.parse_args()
 
     from utils.claude_code_utils import ClaudeCodeLM
@@ -65,8 +69,12 @@ def main():
     for name in (args.idea_filename, args.experimental_log_filename):
         shutil.copy(os.path.join(args.raw_materials_dir, name), os.path.join(target_raw_materials, name))
 
-    lm = ClaudeCodeLM(args.writer_model_name, cache_dir=args.cache_dir, lock_dir=args.lock_dir,
-                      log_path=args.log_path, timeout=args.timeout)
+    runner, label = None, args.writer_model_name
+    if args.backend_json:
+        from paperfactory.llm import po_runner
+        runner, label = po_runner(json.loads(args.backend_json))
+    lm = ClaudeCodeLM(label, cache_dir=args.cache_dir, lock_dir=args.lock_dir, log_path=args.log_path,
+                      timeout=args.timeout, max_parallel=args.max_parallel, runner=runner)
     print(f"Starting Paper Generation (Markdown) in {base_dir}")
     summary = write_single_paper(
         base_dir=base_dir,

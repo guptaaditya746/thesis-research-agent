@@ -15,11 +15,11 @@ from pathlib import Path
 
 from repo_paths import REPO
 
-from paperfactory import config, materials, packs, seed, world, write
+from paperfactory import SCORING_VERSION, config, materials, packs, repair, seed, world, write
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller
 
-STEPS = ("world", "seed", "materials", "write", "eval")
+STEPS = ("world", "seed", "materials", "write", "check", "eval")
 
 
 def run(s: config.Settings, steps: list[str]) -> None:
@@ -42,20 +42,32 @@ def run(s: config.Settings, steps: list[str]) -> None:
     if "seed" in steps:
         graph, gold = seed.make(w, f, s.qa_papers_per_question, s.seed)
         graph.serialize(out / "seed.ttl", format="turtle")
-        (out / "gold.json").write_text(json.dumps(gold, indent=1), encoding="utf-8")
+        (out / "gold.json").write_text(json.dumps({"scoring_version": SCORING_VERSION} | gold, indent=1),
+                                       encoding="utf-8")
         print(f"seed: SHACL ok, {len(gold['facts'])} facts, {len(gold['questions'])} questions")
     if "materials" in steps:
         print("materials:", len(materials.write_all(w, f, g, out)), "papers")
     if "write" in steps:
         res = write.write_all(s, w, f, g)
         print("write:", json.dumps(res))
+    if "check" in steps:                 # papers must agree with the world (repair.py)
+        template = packs.render_template(f, g, s.pages, out / f"template_{g.name}_{s.pages}p")
+
+        def redo(pid: str) -> str | None:
+            r = write.write_one(s, pid, template, attempt=2)
+            p = out / "work" / pid / "redo-2" / "paper.md"
+            return p.read_text(encoding="utf-8") if r["status"] in ("ok", "exists") and p.is_file() else None
+        chk = repair.Checker(s, w, f, call)
+        todo = [p for p in w["papers"] if (out / "work" / p / "paper.md").is_file()
+                and not (out / "work" / p / "paper.repairs.json").is_file()]
+        print("check:", json.dumps(write.pmap_papers(lambda p: chk.repair_paper(p, redo), todo)))
     if "eval" in steps:
         gold = json.loads((out / "gold.json").read_text(encoding="utf-8"))
         rep = Eval(s, w, f, gold, call, g.raw.get("max_mentions_per_fact", 3)).run()
-        rep["cost_usd_total"] = call.cost()
+        rep["cost"] = call.cost()
         (out / "report.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False), encoding="utf-8")
         print(json.dumps({k: rep[k] for k in ("papers_written", "verifier_test", "judge_validation", "qa_summary",
-                                               "style_leak", "cost_usd_total")}, indent=1))
+                                               "style_leak", "cost")}, indent=1))
 
 
 def main(argv: list[str] | None = None) -> None:

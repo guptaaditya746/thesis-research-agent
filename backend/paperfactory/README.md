@@ -10,6 +10,9 @@ field pack + genre pack + settings
   -> seed       RDF graph, SHACL check, questions from the field pack's templates, gold answers by SPARQL
   -> materials  PaperOrchestra inputs per paper; holdings go in as DATA, never as finished sentences
   -> write      PaperOrchestra (external/paperorchestra) writes each paper (genre template, length = pages)
+  -> check      every paper must agree with the WORLD: pack patterns + verifier (SUPPORTS / CONTRADICTS /
+                ABSENCE_CLAIM / NEUTRAL); a flagged paragraph is rewritten once, then the whole paper once, then the
+                paper is marked failed (paper.raw.md, paper.md, paper.repairs.json)
   -> eval       tagging (where each fact sits) + verifier, verifier test, judge validation, QA scoring with
                 provenance by code, style-leak test
 ```
@@ -34,7 +37,7 @@ report.json, calls.jsonl (every model call with its cost). Steps reuse what exis
 | field, genre | pack names (packs/fields/*.json, packs/genres/*/) |
 | papers | papers per run (default 20) |
 | pages | paper length; words = pages x the genre's words per page |
-| models | model per job: world, writer, tagger, verifier, judge, qa, leak; `default` for the rest |
+| models | model per job: world, writer, tagger, verifier, judge, rewriter, repair, qa, leak; `default` for the rest. A name (`claude-haiku-5-5` = `claude -p`; `qwen:<alias>` = that alias on the LiteLLM gateway) or the fields of `config.RoleModel`: backend (`claude_cli` / `openai`), model, base_url, context_window, timeout, max_parallel, max_tokens, price_in_per_mtok, price_out_per_mtok, local. Unknown cost is reported as unknown, never 0 |
 | world_file | hand-written world instead of the world agent |
 | qa_papers_per_question | papers each question is asked over (its own + ones sharing an entity) |
 | leak_trials | tries in the style-leak test (0 = skip) |

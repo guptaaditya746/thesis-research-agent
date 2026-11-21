@@ -11,6 +11,8 @@ dependencies = [
     "jsonschema==4.25.1",
     "pydantic-ai-slim[mcp,openai]==2.55.0",
     "pydantic-settings==2.15.0",
+    "pyoxigraph==0.5.11",
+    "pysbd>=0.3.4",
     "pyshacl==0.30.1",
     "pyyaml==6.0.3",
     "rapidfuzz>=3.14.6",

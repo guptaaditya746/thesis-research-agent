@@ -14,6 +14,7 @@ import json
 from typing import Any
 
 from paperfactory.packs import Field, Genre
+from paperfactory.text import alias_table, find_mentions
 
 Fact = tuple[str, str, str]
 
@@ -42,6 +43,15 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
                 err.append(f"{eid}: attr {a} must be an integer")
             elif typ.startswith("ref:") and (v not in ents or ents[v].get("kind") != typ[4:]):
                 err.append(f"{eid}: attr {a} must name a {typ[4:]}")
+    # a name inside another entity's name (whole words): papers could not tell the two apart
+    # (label and alt only: names the pack derives, e.g. a first party, are marked ambiguous at scoring instead)
+    named = {eid: [e["label"]] + e.get("alt", []) for eid, e in ents.items() if e.get("kind") in f.kinds
+             and e.get("label")}
+    for eid in named:
+        tab = alias_table({"entities": {eid: {**ents[eid], "kind": "-"}}}, f)
+        for other, ons in named.items():
+            for on in ons if other != eid else []:
+                err += [f"name {m.surface!r} ({eid}) inside {on!r} ({other})" for m in find_mentions(on, tab)]
     papers = w.get("papers", {})
     if n_papers is not None and len(papers) != n_papers:
         err.append(f"{len(papers)} papers, need {n_papers}")
@@ -143,12 +153,12 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
     user = (f"FIELD PACK:\n{_pack_text(f)}\n\nMake about {n_subj} entities of kind "
             f"{'/'.join(f.subject_kinds)} and enough of the other kinds (see the notes). Random seed: {s.seed}.")
     sch = _schema_entities(f)
-    got = call("world", "world:entities", ENT_SYS, user, sch)
+    got = _need(call("world", "world:entities", ENT_SYS, user, sch), "world:entities")
     w = {"field": f.name, "genre": g.name, "entities": _ents(got), "papers": {}}
     errs = check(w, f, g)
     if errs:
-        got = call("world", "world:entities:repair", ENT_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
-                   + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), sch)
+        got = _need(call("world", "world:entities:repair", ENT_SYS, user + "\n\nYOUR LAST ANSWER:\n" + json.dumps(got)
+                         + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), sch), "world:entities:repair")
         w["entities"] = _ents(got)
         errs = check(w, f, g)
         if errs:
@@ -162,7 +172,7 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
                 f"Plan {n} papers. Each has exactly {g.raw['claims_per_paper']} claims and "
                 f"{g.raw['decoys_per_paper']} decoys. Give a conflict in at least one of them. Spread the papers over "
                 f"different entities and issues.")
-        got = call("world", f"world:papers:{b}", PAPER_SYS, user, PAPERS_SCHEMA)
+        got = _need(call("world", f"world:papers:{b}", PAPER_SYS, user, PAPERS_SCHEMA), f"world:papers:{b}")
         for attempt in range(2):
             trial = dict(w, papers=dict(w["papers"]))
             for i, p in enumerate(got["papers"][:n]):
@@ -173,9 +183,17 @@ def draft(s, f: Field, g: Genre, call) -> dict[str, Any]:
                 break
             if attempt:
                 raise ValueError(f"papers {b + 1}-{b + n} failed the checks after one repair:\n" + "\n".join(errs[:40]))
-            got = call("world", f"world:papers:{b}:repair", PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n"
-                       + json.dumps(got) + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA)
+            got = _need(call("world", f"world:papers:{b}:repair", PAPER_SYS, user + "\n\nYOUR LAST ANSWER:\n"
+                             + json.dumps(got) + "\n\nFIX THESE ERRORS:\n" + "\n".join(errs[:40]), PAPERS_SCHEMA),
+                        f"world:papers:{b}:repair")
     return w
+
+
+def _need(got: dict[str, Any] | None, step: str) -> dict[str, Any]:
+    """The world agent cannot go on without an answer: stop with a clear error (calls.jsonl has the reasons)."""
+    if got is None:
+        raise ValueError(f"{step}: the world model gave no answer in the required form (parse_error, see calls.jsonl)")
+    return got
 
 
 def _ents(got: dict[str, Any]) -> dict[str, Any]:

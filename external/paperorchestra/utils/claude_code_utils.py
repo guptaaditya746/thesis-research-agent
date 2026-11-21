@@ -44,7 +44,11 @@ class ClaudeCodeLM:
 
     def __init__(self, model: str = DEFAULT_MODEL, *, cache_dir: str | os.PathLike, lock_dir: str | os.PathLike,
                  log_path: str | os.PathLike | None = None, timeout: int = 900,
-                 claude_bin: str | None = None, max_parallel: int = MAX_PARALLEL, poll: float = 0.2):
+                 claude_bin: str | None = None, max_parallel: int = MAX_PARALLEL, poll: float = 0.2,
+                 runner: Any = None):
+        # runner(system, user, schema) -> {output, cost_usd, served_model, input_tokens, output_tokens}: an outside
+        # backend (C9: paperfactory's model layer). `model` is then only the label in the cache key and the log.
+        self.runner = runner
         self.model = model
         self.cache_dir = Path(cache_dir)
         self.lock_dir = Path(lock_dir)
@@ -102,6 +106,11 @@ class ClaudeCodeLM:
                 "input_tokens": usage.get("prompt_tokens"), "output_tokens": usage.get("completion_tokens")}
 
     def _run_claude(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
+        if self.runner is not None:
+            got = self.runner(system, user, schema)
+            if not isinstance(got.get("output"), dict):
+                raise ClaudeCodeError(f"backend gave no JSON object: {str(got.get('reject_reason'))[:300]}")
+            return got
         if self.model.startswith("qwen:"):
             return self._run_qwen(system, user, schema)
         with tempfile.TemporaryDirectory(prefix="po-llm-") as empty:
