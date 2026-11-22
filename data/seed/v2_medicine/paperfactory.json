@@ -1,0 +1,467 @@
+{
+ "source": "paperfactory",
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/runs/paperfactory/v2p3-medicine",
+ "field": "medicine",
+ "genre": "synthesis",
+ "planned": 3,
+ "papers": [
+  {
+   "id": "MED-01",
+   "title": "Divergent Efficacy of FGF23-Targeted Therapies in Secondary Hyperparathyroidism: A Comparative Analysis of Early Trials",
+   "issue": "The conflicting results between the DREBRABES-4 and NAZOTO-9 trials regarding the efficacy of FGF23-targeted agents in secondary hyperparathyroidism.",
+   "thesis": "While the DREBRABES-4 trial demonstrated a benefit of potrocet in reducing phosphate levels, the subsequent NAZOTO-9 trial found no effect of katrogrestinib on vascular calcification, suggesting that different mechanisms of FGF23 inhibition may yield disparate clinical outcomes in CKD patients.",
+   "facts": [
+    {
+     "id": "ATR1-finds_benefit-AT1",
+     "kind": "claim",
+     "subject": "the DREBRABES-4 trial",
+     "relation": "finds_benefit",
+     "object": "potrocet",
+     "spans": [
+      [
+       591,
+       752
+      ],
+      [
+       2291,
+       2424
+      ],
+      [
+       4128,
+       4335
+      ],
+      [
+       6755,
+       6840
+      ],
+      [
+       8567,
+       8668
+      ],
+      [
+       10835,
+       11002
+      ],
+      [
+       13368,
+       13509
+      ]
+     ]
+    },
+    {
+     "id": "ATR2-finds_no_effect-AT2",
+     "kind": "claim",
+     "subject": "the NAZOTO-9 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogrestinib",
+     "spans": [
+      [
+       591,
+       752
+      ],
+      [
+       2556,
+       2663
+      ],
+      [
+       4128,
+       4335
+      ],
+      [
+       6841,
+       6923
+      ],
+      [
+       8775,
+       8892
+      ],
+      [
+       13510,
+       13628
+      ]
+     ]
+    },
+    {
+     "id": "ATR2-contradicts-ATR1",
+     "kind": "claim",
+     "subject": "the NAZOTO-9 trial",
+     "relation": "contradicts",
+     "object": "the DREBRABES-4 trial",
+     "spans": [
+      [
+       6980,
+       7096
+      ],
+      [
+       9422,
+       9617
+      ]
+     ]
+    },
+    {
+     "id": "ATR1-finds_benefit-AT2",
+     "kind": "decoy",
+     "subject": "the DREBRABES-4 trial",
+     "relation": "finds_benefit",
+     "object": "katrogrestinib",
+     "spans": [
+      [
+       6755,
+       6840
+      ],
+      [
+       8669,
+       8774
+      ],
+      [
+       13510,
+       13628
+      ]
+     ]
+    },
+    {
+     "id": "ATR2-finds_no_effect-AT1",
+     "kind": "decoy",
+     "subject": "the NAZOTO-9 trial",
+     "relation": "finds_no_effect",
+     "object": "potrocet",
+     "spans": [
+      [
+       6841,
+       6923
+      ],
+      [
+       8893,
+       8996
+      ],
+      [
+       10835,
+       11002
+      ],
+      [
+       13368,
+       13509
+      ]
+     ]
+    },
+    {
+     "id": "ATR4-finds_no_effect-AT2",
+     "kind": "decoy",
+     "subject": "the LODON-3 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogrestinib",
+     "spans": [
+      [
+       6924,
+       6979
+      ],
+      [
+       8997,
+       9100
+      ],
+      [
+       13510,
+       13628
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-02",
+   "title": "Conflicting Efficacy Signals for Third-Generation EGFR TKIs: LEGEGRUM-3 vs. GRENAM-7",
+   "issue": "The LEGEGRUM-3 trial (2020) reported a benefit for the third-generation TKI krethebrutinib, while the subsequent GRENAM-7 trial (2022) reported no effect for the second-generation TKI nukokrontinib, creating a discrepancy in the perceived value of advanced EGFR TKIs.",
+   "thesis": "The LEGEGRUM-3 trial found a benefit of krethebrutinib, whereas the GRENAM-7 trial found no effect of nukokrontinib, indicating that the efficacy of EGFR TKIs is highly dependent on the specific agent and trial context.",
+   "facts": [
+    {
+     "id": "BTR4-finds_benefit-BT1",
+     "kind": "claim",
+     "subject": "the LEGEGRUM-3 trial",
+     "relation": "finds_benefit",
+     "object": "krethebrutinib",
+     "spans": [
+      [
+       672,
+       909
+      ],
+      [
+       2353,
+       2504
+      ],
+      [
+       2921,
+       3140
+      ],
+      [
+       3831,
+       4161
+      ],
+      [
+       8054,
+       8178
+      ],
+      [
+       8863,
+       9082
+      ],
+      [
+       9083,
+       9215
+      ],
+      [
+       9461,
+       9669
+      ],
+      [
+       9935,
+       10079
+      ],
+      [
+       11489,
+       11605
+      ]
+     ]
+    },
+    {
+     "id": "BTR5-finds_no_effect-BT3",
+     "kind": "claim",
+     "subject": "the GRENAM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "nukokrontinib",
+     "spans": [
+      [
+       672,
+       909
+      ],
+      [
+       2505,
+       2631
+      ],
+      [
+       2921,
+       3140
+      ],
+      [
+       3831,
+       4161
+      ],
+      [
+       8301,
+       8428
+      ],
+      [
+       8863,
+       9082
+      ],
+      [
+       9216,
+       9360
+      ],
+      [
+       10755,
+       10880
+      ],
+      [
+       11489,
+       11605
+      ]
+     ]
+    },
+    {
+     "id": "BTR5-contradicts-BTR4",
+     "kind": "claim",
+     "subject": "the GRENAM-7 trial",
+     "relation": "contradicts",
+     "object": "the LEGEGRUM-3 trial",
+     "spans": [
+      [
+       9935,
+       10079
+      ]
+     ]
+    },
+    {
+     "id": "BTR4-finds_benefit-BT2",
+     "kind": "decoy",
+     "subject": "the LEGEGRUM-3 trial",
+     "relation": "finds_benefit",
+     "object": "gredrertinib",
+     "spans": [
+      [
+       8179,
+       8300
+      ],
+      [
+       10526,
+       10651
+      ]
+     ]
+    },
+    {
+     "id": "BTR5-finds_no_effect-BT1",
+     "kind": "decoy",
+     "subject": "the GRENAM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "krethebrutinib",
+     "spans": [
+      [
+       8429,
+       8563
+      ],
+      [
+       9361,
+       9460
+      ],
+      [
+       9935,
+       10079
+      ]
+     ]
+    },
+    {
+     "id": "BTR5-contradicts-BTR3",
+     "kind": "decoy",
+     "subject": "the GRENAM-7 trial",
+     "relation": "contradicts",
+     "object": "the THAFO-3 trial",
+     "spans": [
+      [
+       10080,
+       10197
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-03",
+   "title": "Divergent Efficacy Signals for CDK4/6 Inhibitors in Metastatic Breast Cancer: A Comparative Analysis of SIPEM-7 and LEFOKOL-5",
+   "issue": "The consistency of progression-free survival benefits across different generations of CDK4/6 inhibitors in HR-positive metastatic breast cancer.",
+   "thesis": "While the SIPEM-7 trial established a clear benefit for lifostinib, the subsequent LEFOKOL-5 trial reported a benefit for dagostinib, creating a conflict in the interpretation of efficacy for the drug class when compared against earlier neutral or contradictory findings in the broader literature.",
+   "facts": [
+    {
+     "id": "CTR2-finds_benefit-CT2",
+     "kind": "claim",
+     "subject": "the SIPEM-7 trial",
+     "relation": "finds_benefit",
+     "object": "lifostinib",
+     "spans": [
+      [
+       2593,
+       2736
+      ],
+      [
+       5074,
+       5274
+      ],
+      [
+       8842,
+       8937
+      ]
+     ]
+    },
+    {
+     "id": "CTR5-finds_benefit-CT3",
+     "kind": "claim",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "finds_benefit",
+     "object": "dagostinib",
+     "spans": [
+      [
+       1066,
+       1134
+      ],
+      [
+       2737,
+       2856
+      ],
+      [
+       6475,
+       6652
+      ],
+      [
+       9305,
+       9402
+      ],
+      [
+       11352,
+       11416
+      ],
+      [
+       13875,
+       13997
+      ]
+     ]
+    },
+    {
+     "id": "CTR5-contradicts-CTR4",
+     "kind": "claim",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "contradicts",
+     "object": "the VOHOKRAL-8 trial",
+     "spans": [
+      [
+       6475,
+       6652
+      ]
+     ]
+    },
+    {
+     "id": "CTR2-finds_benefit-CT1",
+     "kind": "decoy",
+     "subject": "the SIPEM-7 trial",
+     "relation": "finds_benefit",
+     "object": "labreltinib",
+     "spans": [
+      [
+       5074,
+       5274
+      ],
+      [
+       9208,
+       9304
+      ]
+     ]
+    },
+    {
+     "id": "CTR5-finds_benefit-CT2",
+     "kind": "decoy",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "finds_benefit",
+     "object": "lifostinib",
+     "spans": [
+      [
+       8938,
+       9035
+      ],
+      [
+       9403,
+       9462
+      ]
+     ]
+    },
+    {
+     "id": "CTR5-contradicts-CTR3",
+     "kind": "decoy",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "contradicts",
+     "object": "the BRASTE-8 trial",
+     "spans": [
+      [
+       1135,
+       1221
+      ],
+      [
+       9463,
+       9560
+      ],
+      [
+       11736,
+       11833
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

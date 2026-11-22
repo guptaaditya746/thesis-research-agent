@@ -1,0 +1,359 @@
+@prefix ex: <https://example.org/paperfactory/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:AD1-relies_on-AP1 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:AP1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:AD1 .
+
+ex:AD2-relies_on-AP1 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:AP1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:AD2 .
+
+ex:AD3 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Pomuthel v. Hemem Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "a reorganization plan was submitted, but a class of unsecured creditors voted against it, arguing the plan did not provide sufficient recovery" ;
+    ex:outcome "plan rejected; the court held that the two-thirds in amount threshold was not met in the impaired class" ;
+    ex:year 2018 .
+
+ex:AD4 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Kuhizun v. Trefezer Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a creditor alleged that the debtor had transferred assets to a related party eight months before insolvency proceedings began, with the intent to defraud other creditors" ;
+    ex:outcome "transfer voided; the court found clear evidence of fraudulent intent and ordered the assets returned to the estate" ;
+    ex:year 2020 .
+
+ex:AD5 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Bruse v. Kikom Health" ;
+    ex:court ex:C2 ;
+    ex:facts "the debtor argued that a transfer made to a supplier six months before insolvency was a normal business transaction and not fraudulent, despite the debtor being in financial distress" ;
+    ex:outcome "transfer upheld; the court distinguished earlier case law and found no intent to hinder or defraud, as the supplier provided essential services" ;
+    ex:year 2022 .
+
+ex:AD6-distinguishes-AD1 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:AD1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:AD6 .
+
+ex:AD6-distinguishes-AD2 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:AD2 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:AD6 .
+
+ex:AD6-rejects-AP1 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:AP1 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:AD6 .
+
+ex:AD6-rejects-AP2 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:AP2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:AD6 .
+
+ex:AP3 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 25 of the Tetre Corporate Insolvency Act" ;
+    ex:summary "a reorganization plan is confirmed only if it is accepted by a majority in number and two-thirds in amount of the voting creditors in each impaired class" ;
+    ex:topic "creditor voting on reorganization plans" .
+
+ex:AP4 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 31 of the Tetre Corporate Insolvency Act" ;
+    ex:summary "transfers made by the debtor within one year before the commencement of proceedings are voidable if made with intent to hinder, delay, or defraud creditors" ;
+    ex:topic "avoidance of pre-insolvency transfers" .
+
+ex:BD1-relies_on-BP4 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:BP4 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:BD1 .
+
+ex:BD2-relies_on-BP3 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:BP3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:BD2 .
+
+ex:BD3 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Gothukur v. Didota Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a broadcasting commission revoked a license without allowing the licensee to respond to new evidence of misconduct" ;
+    ex:outcome "revocation quashed; case remitted for a hearing in accordance with procedural rights" ;
+    ex:year 2018 .
+
+ex:BD4-relies_on-BP4 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:BP4 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:BD4 .
+
+ex:BD5-rejects-BP1 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:BP1 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:BD5 .
+
+ex:BD5-rejects-BP4 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:BP4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:BD5 .
+
+ex:BD5-relies_on-BP3 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:BP3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:BD5 .
+
+ex:BD6 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Thisas v. Ribror Health" ;
+    ex:court ex:C3 ;
+    ex:facts "a public health agency issued a directive restricting movement without providing written reasons, relying on emergency powers" ;
+    ex:outcome "directive upheld; court ruled that in emergencies, the duty to give reasons is satisfied by the public announcement of the directive" ;
+    ex:year 2024 .
+
+ex:BP2 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 12 of the Tetre Administrative Procedure Act" ;
+    ex:summary "before a final decision is made, the affected party must be given a reasonable opportunity to present their case and respond to any adverse evidence" ;
+    ex:topic "right to be heard" .
+
+ex:CD1-rejects-CP3 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:CP3 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:CD1 .
+
+ex:CD1-relies_on-CP1 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:CP1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:CD1 .
+
+ex:CD1-relies_on-CP2 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:CP2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:CD1 .
+
+ex:CD2 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stogretron v. Stadrer Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a news outlet used excerpts from a book in a review article without explicit permission" ;
+    ex:outcome "no infringement found; the use qualified as fair dealing for criticism with sufficient acknowledgment" ;
+    ex:year 2015 .
+
+ex:CD3-relies_on-CP1 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:CP1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:CD3 .
+
+ex:CD3-relies_on-CP3 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:CP3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:CD3 .
+
+ex:CD3-relies_on-CP4 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:CP4 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:CD3 .
+
+ex:CD4 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Medar v. Truvin Tech" ;
+    ex:court ex:C3 ;
+    ex:facts "a technology company challenged the validity of a patent on a data processing method, arguing it was obvious" ;
+    ex:outcome "patent upheld; the court found the invention involved an inventive step over the prior art" ;
+    ex:year 2020 .
+
+ex:CD5 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Sunen v. Thegom Education" ;
+    ex:court ex:C2 ;
+    ex:facts "a university used a copyrighted image in a lecture slide deck for educational purposes" ;
+    ex:outcome "infringement found; the court rejected the fair dealing defense, stating the use was not for criticism or review" ;
+    ex:year 2022 .
+
+ex:CD6 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Lofilom v. Rizal Logistics" ;
+    ex:court ex:C1 ;
+    ex:facts "a logistics firm used a sign similar to a registered trademark for different goods, arguing no confusion was likely" ;
+    ex:outcome "no infringement; the court distinguished the earlier ruling on identical goods, finding the goods were dissimilar" ;
+    ex:year 2024 .
+
+ex:AP2 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 12 of the Tetre Corporate Insolvency Act" ;
+    ex:summary "the court may authorize the debtor to obtain new financing during insolvency proceedings, granting such financing super-priority status over existing secured claims" ;
+    ex:topic "debtor-in-possession financing" .
+
+ex:BD1 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Pugram v. Povul Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a hospital authority denied a patient access to their medical records citing internal policy" ;
+    ex:outcome "access granted; authority ordered to provide records within 14 days" ;
+    ex:year 2012 .
+
+ex:BD2 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Laper v. Dravun Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank regulator imposed a fine on a branch for minor procedural errors without providing detailed reasons" ;
+    ex:outcome "fine upheld; court found the summary of reasons sufficient for the gravity of the breach" ;
+    ex:year 2015 .
+
+ex:BD4 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Mokrol v. Vubravum Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurance regulator refused to disclose internal audit reports to a policyholder claiming unfair denial of claims" ;
+    ex:outcome "disclosure denied; court accepted the regulator's claim that disclosure would prejudice third-party privacy" ;
+    ex:year 2020 .
+
+ex:BP1 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 4 of the Tetre Administrative Procedure Act" ;
+    ex:summary "every administrative decision that adversely affects a person must be accompanied by a written statement of the facts and legal grounds relied upon" ;
+    ex:topic "duty to give reasons" .
+
+ex:CP2 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 12 of the Tetre Intellectual Property Act" ;
+    ex:summary "fair dealing with a work for the purpose of criticism or review does not infringe copyright, provided that sufficient acknowledgment is given" ;
+    ex:topic "fair dealing for criticism" .
+
+ex:CP4 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 31 of the Tetre Intellectual Property Act" ;
+    ex:summary "a patent shall be invalid if the invention was not novel or did not involve an inventive step at the date of filing" ;
+    ex:topic "patent validity" .
+
+ex:AD1 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Sadepo v. Rubrothes Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a creditor applied to open insolvency proceedings against a debtor who had missed three consecutive loan payments" ;
+    ex:outcome "proceedings opened; the court found the debtor unable to pay debts as they fell due" ;
+    ex:year 2012 .
+
+ex:AD2 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zudur v. Stupus Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "the debtor sought authorization for new financing to keep operations running during insolvency, claiming existing secured lenders were not providing adequate support" ;
+    ex:outcome "financing authorized with super-priority status; the court emphasized the need to preserve enterprise value" ;
+    ex:year 2015 .
+
+ex:BP3 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 21 of the Tetre Administrative Procedure Act" ;
+    ex:summary "any administrative sanction imposed must be proportionate to the gravity of the breach and the circumstances of the offender" ;
+    ex:topic "proportionality of sanctions" .
+
+ex:CP1 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 4 of the Tetre Intellectual Property Act" ;
+    ex:summary "the author of an original work is the first owner of the copyright in that work, unless the work is made in the course of employment" ;
+    ex:topic "copyright ownership" .
+
+ex:CP3 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 25 of the Tetre Intellectual Property Act" ;
+    ex:summary "a person infringes a registered trademark if they use a sign in the course of trade that is identical to the trademark in relation to identical goods or services" ;
+    ex:topic "trademark infringement" .
+
+ex:AP1 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 4 of the Tetre Corporate Insolvency Act" ;
+    ex:summary "a court may open insolvency proceedings if the debtor is unable to pay its debts as they fall due, upon application by the debtor or a creditor" ;
+    ex:topic "commencement of insolvency proceedings" .
+
+ex:BD5 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Begon v. Bomebros Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a data protection authority fined a tech company for automated decision-making without human review, citing lack of specific legal basis" ;
+    ex:outcome "fine reduced; court found the sanction disproportionate to the initial breach given the company's cooperation" ;
+    ex:year 2022 .
+
+ex:BP4 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 35 of the Tetre Administrative Procedure Act" ;
+    ex:summary "citizens have a right to access administrative records unless disclosure would prejudice national security or the privacy of a third party" ;
+    ex:topic "access to information" .
+
+ex:C3 a ex:Court,
+        ex:Entity ;
+    skos:altLabel "Supreme Court" ;
+    skos:prefLabel "Tetre Supreme Court" ;
+    ex:level 3 .
+
+ex:CD1 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Graro v. Drede Publishing" ;
+    ex:court ex:C1 ;
+    ex:facts "a publisher claimed ownership of a novel written by a freelance author under a standard contract" ;
+    ex:outcome "claim dismissed; copyright remained with the author as the work was not made in the course of employment" ;
+    ex:year 2012 .
+
+ex:CD3 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Roham v. Polotrim Retail" ;
+    ex:court ex:C1 ;
+    ex:facts "a retailer sold goods bearing a logo identical to a registered trademark for the same category of products" ;
+    ex:outcome "infringement established; injunction granted and damages awarded to the trademark owner" ;
+    ex:year 2018 .
+
+ex:Court rdfs:subClassOf ex:Entity .
+
+ex:AD6 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Hutheno v. Pagre Bank" ;
+    ex:court ex:C3 ;
+    ex:facts "a dispute arose over whether a creditor's application to open insolvency proceedings was timely, given that the debtor had recently received a large asset sale" ;
+    ex:outcome "application dismissed; the court held that the debtor was not unable to pay debts as they fell due at the time of the application" ;
+    ex:year 2024 .
+
+ex:C2 a ex:Court,
+        ex:Entity ;
+    skos:altLabel "Court of Appeal" ;
+    skos:prefLabel "Tetre Court of Appeal" ;
+    ex:level 2 .
+
+ex:LAW-01 a ex:Paper .
+
+ex:LAW-05 a ex:Paper .
+
+ex:LAW-09 a ex:Paper .
+
+ex:C1 a ex:Court,
+        ex:Entity ;
+    skos:altLabel "District Court" ;
+    skos:prefLabel "Tetre District Court" ;
+    ex:level 1 .
+
+ex:Provision rdfs:subClassOf ex:Entity .
+
+ex:Decision rdfs:subClassOf ex:Entity .
+

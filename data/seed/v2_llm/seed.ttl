@@ -1,0 +1,460 @@
+@prefix ex: <https://example.org/paperfactory/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:AS3 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Mupadem 2023" ;
+    skos:prefLabel "the Mupadem 2023 study" ;
+    ex:benchmark ex:AB1 ;
+    ex:model ex:AMO2 ;
+    ex:setting "fine-tuned" ;
+    ex:summary "applies the adapter-based fine-tuning method to the 13B decoder model to capture morphological features and measures the impact on translation quality" ;
+    ex:year 2023 .
+
+ex:AS4-reports_gain-AM1 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:AM1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:AS4 .
+
+ex:AS4-reports_gain-AM2 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:AM2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:AS4 .
+
+ex:AS5-fails_to_replicate-AS1 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:AS1 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:AS5 .
+
+ex:AS5-fails_to_replicate-AS2 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:AS2 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:AS5 .
+
+ex:AS5-reports_no_gain-AM1 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:AM1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:AS5 .
+
+ex:AS5-reports_no_gain-AM3 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:AM3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:AS5 .
+
+ex:AS6 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Banagro 2026" ;
+    skos:prefLabel "the Banagro 2026 study" ;
+    ex:benchmark ex:AB1 ;
+    ex:model ex:AMO2 ;
+    ex:setting "zero-shot" ;
+    ex:summary "investigates if constrained beam search enforcing dependency structures helps the large decoder model generate more grammatical translations" ;
+    ex:year 2026 .
+
+ex:BS1-reports_gain-BM1 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:BM1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:BS1 .
+
+ex:BS1-reports_gain-BM2 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:BM2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:BS1 .
+
+ex:BS2 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Megreda 2022" ;
+    skos:prefLabel "the Megreda 2022 study" ;
+    ex:benchmark ex:BB2 ;
+    ex:model ex:BMO2 ;
+    ex:setting "few-shot, 5 examples" ;
+    ex:summary "tests retrieval-augmented theme extraction on long-form articles, comparing against a baseline without retrieval" ;
+    ex:year 2022 .
+
+ex:BS3-fails_to_replicate-BS1 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:BS1 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:BS3 .
+
+ex:BS3-reports_no_gain-BM1 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:BM1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:BS3 .
+
+ex:BS3-reports_no_gain-BM3 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:BM3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:BS3 .
+
+ex:BS4 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Dedrola 2024" ;
+    skos:prefLabel "the Dedrola 2024 study" ;
+    ex:benchmark ex:BB1 ;
+    ex:model ex:BMO2 ;
+    ex:setting "fine-tuned" ;
+    ex:summary "applies constrained decoding to the topic classification task, reporting a drop in performance due to vocabulary limitations" ;
+    ex:year 2024 .
+
+ex:BS5 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Grodrokris 2025" ;
+    skos:prefLabel "the Grodrokris 2025 study" ;
+    ex:benchmark ex:BB2 ;
+    ex:model ex:BMO1 ;
+    ex:setting "few-shot, 3 seeds" ;
+    ex:summary "assesses retrieval-augmented generation for open-ended theme extraction, showing a clear gain in semantic similarity scores" ;
+    ex:year 2025 .
+
+ex:BS6-reports_no_gain-BM1 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:BM1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:BS6 .
+
+ex:CM3 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Gragol" ;
+    skos:prefLabel "Gragol summarization" ;
+    ex:family "extractive" ;
+    ex:summary "selects the most representative sentences from a document to form a summary, using term frequency and position" .
+
+ex:CS2-reports_gain-CM2 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:CM2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:CS2 .
+
+ex:CS3 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Femem 2023" ;
+    skos:prefLabel "the Femem 2023 study" ;
+    ex:benchmark ex:CB2 ;
+    ex:model ex:CMO1 ;
+    ex:setting "fine-tuned" ;
+    ex:summary "applies the extractive method to summarization, showing a drop in ROUGE-2 compared to the standard baseline" ;
+    ex:year 2023 .
+
+ex:CS4-reports_no_gain-CM1 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:CM1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:CS4 .
+
+ex:CS4-reports_no_gain-CM2 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:CM2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:CS4 .
+
+ex:CS5 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Rakes 2025" ;
+    skos:prefLabel "the Rakes 2025 study" ;
+    ex:benchmark ex:CB2 ;
+    ex:model ex:CMO1 ;
+    ex:setting "few-shot, 3 examples" ;
+    ex:summary "compares the extractive method against the baseline on summarization, reporting a modest gain in ROUGE-2" ;
+    ex:year 2025 .
+
+ex:CS6-fails_to_replicate-CS1 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:CS1 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:CS6 .
+
+ex:CS6-fails_to_replicate-CS2 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:CS2 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:CS6 .
+
+ex:CS6-reports_no_gain-CM2 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:CM2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:CS6 .
+
+ex:AB2 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Thipom-POS" ;
+    skos:prefLabel "the Thipom-POS benchmark" ;
+    ex:metric "tag accuracy" ;
+    ex:summary "token-level tagging of morphologically rich languages, measuring the percentage of correctly assigned tags" ;
+    ex:task "part-of-speech tagging" .
+
+ex:AM2 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Thetran" ;
+    skos:prefLabel "Thetran decoding" ;
+    ex:family "decoding" ;
+    ex:summary "uses a constrained beam search that enforces valid dependency structures during the generation of the target language sentence" .
+
+ex:AM3 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Ragrer" ;
+    skos:prefLabel "Ragrer adapter" ;
+    ex:family "fine-tuning" ;
+    ex:summary "inserts small trainable layers into the encoder to capture morphological features of low-resource languages without updating the main weights" .
+
+ex:AS1 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nimel 2021" ;
+    skos:prefLabel "the Nimel 2021 study" ;
+    ex:benchmark ex:AB1 ;
+    ex:model ex:AMO1 ;
+    ex:setting "zero-shot" ;
+    ex:summary "evaluates the baseline translation performance of the 7B encoder-decoder model on low-resource pairs without any auxiliary methods" ;
+    ex:year 2021 .
+
+ex:AS2 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nodrana 2022" ;
+    skos:prefLabel "the Nodrana 2022 study" ;
+    ex:benchmark ex:AB1 ;
+    ex:model ex:AMO1 ;
+    ex:setting "few-shot, 5 examples" ;
+    ex:summary "tests whether prompting the model to output part-of-speech tags before translation improves BLEU scores on the low-resource benchmark" ;
+    ex:year 2022 .
+
+ex:BM2 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Bruke" ;
+    skos:prefLabel "Bruke retrieval" ;
+    ex:family "retrieval" ;
+    ex:summary "retrieves similar documents from a corpus to provide context for the model to infer the underlying topics of the target text" .
+
+ex:BM3 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Brulum" ;
+    skos:prefLabel "Brulum decoding" ;
+    ex:family "decoding" ;
+    ex:summary "uses a constrained decoding strategy that forces the model to output only words from a predefined vocabulary of topic labels" .
+
+ex:BS6 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nozur 2026" ;
+    skos:prefLabel "the Nozur 2026 study" ;
+    ex:benchmark ex:BB2 ;
+    ex:model ex:BMO2 ;
+    ex:setting "zero-shot" ;
+    ex:summary "attempts to replicate the findings of the 2022 study on retrieval-augmented theme extraction but fails to observe the same performance gains" ;
+    ex:year 2026 .
+
+ex:CM1 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Trasor" ;
+    skos:prefLabel "Trasor extraction" ;
+    ex:family "graph-based" ;
+    ex:summary "builds a co-occurrence graph of terms in a document and ranks them by centrality to select keywords" .
+
+ex:CS1 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Braliram 2021" ;
+    skos:prefLabel "the Braliram 2021 study" ;
+    ex:benchmark ex:CB1 ;
+    ex:model ex:CMO1 ;
+    ex:setting "zero-shot" ;
+    ex:summary "evaluates the graph-based method on keyword extraction, finding it outperforms the baseline by 4% F1" ;
+    ex:year 2021 .
+
+ex:AM1 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Kabaso" ;
+    skos:prefLabel "Kabaso prompting" ;
+    ex:family "prompting" ;
+    ex:summary "instructs the model to output the part-of-speech tag for each token in a sentence before generating the translation" .
+
+ex:AS4 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Vofal 2024" ;
+    skos:prefLabel "the Vofal 2024 study" ;
+    ex:benchmark ex:AB2 ;
+    ex:model ex:AMO2 ;
+    ex:setting "zero-shot" ;
+    ex:summary "assesses the accuracy of the 13B model in assigning part-of-speech tags to morphologically rich languages without any specific prompting strategy" ;
+    ex:year 2024 .
+
+ex:CB2 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Vidra-SUM" ;
+    skos:prefLabel "the Vidra-SUM benchmark" ;
+    ex:metric "ROUGE-2" ;
+    ex:summary "a set of long-form documents paired with human-written summaries, evaluating the model's ability to select the most important sentences" ;
+    ex:task "extractive summarization" .
+
+ex:CS2 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Lomakra 2022" ;
+    skos:prefLabel "the Lomakra 2022 study" ;
+    ex:benchmark ex:CB1 ;
+    ex:model ex:CMO2 ;
+    ex:setting "few-shot, 5 examples" ;
+    ex:summary "tests the neural method on keyword extraction, reporting a significant gain over the zero-shot baseline" ;
+    ex:year 2022 .
+
+ex:CS4 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Grovim 2024" ;
+    skos:prefLabel "the Grovim 2024 study" ;
+    ex:benchmark ex:CB1 ;
+    ex:model ex:CMO2 ;
+    ex:setting "zero-shot" ;
+    ex:summary "re-evaluates the neural method on keyword extraction, finding no clear difference from the baseline score" ;
+    ex:year 2024 .
+
+ex:AMO1 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Tedroso" ;
+    skos:prefLabel "Tedroso-7B" ;
+    ex:size "7B" ;
+    ex:summary "a multilingual encoder-decoder model trained on parallel corpora for low-resource language pairs" .
+
+ex:AMO2 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Thoradram" ;
+    skos:prefLabel "Thoradram-13B" ;
+    ex:size "13B" ;
+    ex:summary "a large decoder-only model with strong morphological analysis capabilities, fine-tuned for translation tasks" .
+
+ex:BB1 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Tilutron-Topic" ;
+    skos:prefLabel "the Tilutron-Topic benchmark" ;
+    ex:metric "macro-averaged F1 score" ;
+    ex:summary "a collection of short documents labeled with one or more topic categories from a fixed set of 50 labels" ;
+    ex:task "document topic classification" .
+
+ex:BB2 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Vokosti-Theme" ;
+    skos:prefLabel "the Vokosti-Theme benchmark" ;
+    ex:metric "semantic similarity to reference themes" ;
+    ex:summary "long-form articles where the model must generate a list of key themes without a fixed label set, evaluated against human-annotated themes" ;
+    ex:task "open-ended theme extraction" .
+
+ex:BM1 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Gredapos" ;
+    skos:prefLabel "Gredapos prompting" ;
+    ex:family "prompting" ;
+    ex:summary "instructs the model to identify the main themes in a document and assign a probability score to each theme before generating the final topic list" .
+
+ex:BMO1 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Dogres" ;
+    skos:prefLabel "Dogres-7B" ;
+    ex:size "7B" ;
+    ex:summary "a decoder-only model trained on a mix of web text and academic papers, fine-tuned for document summarization" .
+
+ex:BMO2 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Sakem" ;
+    skos:prefLabel "Sakem-13B" ;
+    ex:size "13B" ;
+    ex:summary "a large decoder-only model with strong long-context capabilities, trained on a diverse corpus including code and scientific literature" .
+
+ex:BS1 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Netras 2021" ;
+    skos:prefLabel "the Netras 2021 study" ;
+    ex:benchmark ex:BB1 ;
+    ex:model ex:BMO1 ;
+    ex:setting "zero-shot" ;
+    ex:summary "evaluates the effectiveness of theme probability scoring on a small subset of the topic classification benchmark" ;
+    ex:year 2021 .
+
+ex:BS3 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Brastom 2023" ;
+    skos:prefLabel "the Brastom 2023 study" ;
+    ex:benchmark ex:BB1 ;
+    ex:model ex:BMO1 ;
+    ex:setting "zero-shot" ;
+    ex:summary "re-evaluates the theme probability scoring method on the full test set, finding no significant improvement over the baseline" ;
+    ex:year 2023 .
+
+ex:CM2 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Steferis" ;
+    skos:prefLabel "Steferis extraction" ;
+    ex:family "neural" ;
+    ex:summary "uses a transformer encoder to score each token for its likelihood of being a keyword based on context" .
+
+ex:CMO1 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Kolal" ;
+    skos:prefLabel "Kolal-7B" ;
+    ex:size "7B" ;
+    ex:summary "a decoder-only model trained on a mix of web text and scientific papers, fine-tuned for text extraction tasks" .
+
+ex:CMO2 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Stosa" ;
+    skos:prefLabel "Stosa-13B" ;
+    ex:size "13B" ;
+    ex:summary "a large decoder-only model with strong long-context capabilities, trained on a diverse corpus including code and literature" .
+
+ex:CS6 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nodabril 2026" ;
+    skos:prefLabel "the Nodabril 2026 study" ;
+    ex:benchmark ex:CB1 ;
+    ex:model ex:CMO2 ;
+    ex:setting "zero-shot" ;
+    ex:summary "attempts to replicate the results of the 2022 study on the neural method but fails to observe the reported gain" ;
+    ex:year 2026 .
+
+ex:AS5 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Donar 2025" ;
+    skos:prefLabel "the Donar 2025 study" ;
+    ex:benchmark ex:AB1 ;
+    ex:model ex:AMO1 ;
+    ex:setting "few-shot, 5 examples" ;
+    ex:summary "re-runs the setup from the 2022 study to check if the part-of-speech prompting method still yields a gain on the same model and benchmark" ;
+    ex:year 2025 .
+
+ex:CB1 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Togobe-KW" ;
+    skos:prefLabel "the Togobe-KW benchmark" ;
+    ex:metric "F1 score" ;
+    ex:summary "a collection of news articles and scientific abstracts where the goal is to identify the top five most relevant keywords from the text" ;
+    ex:task "single-document keyword extraction" .
+
+ex:AB1 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Gofabran-MT" ;
+    skos:prefLabel "the Gofabran-MT benchmark" ;
+    ex:metric "BLEU score" ;
+    ex:summary "sentence-level translation pairs for low-resource language pairs, evaluated on a held-out test set" ;
+    ex:task "neural machine translation" .
+
+ex:Benchmark rdfs:subClassOf ex:Entity .
+
+ex:LLM-01 a ex:Paper .
+
+ex:LLM-02 a ex:Paper .
+
+ex:LLM-04 a ex:Paper .
+
+ex:Model rdfs:subClassOf ex:Entity .
+
+ex:Method rdfs:subClassOf ex:Entity .
+
+ex:Study rdfs:subClassOf ex:Entity .
+

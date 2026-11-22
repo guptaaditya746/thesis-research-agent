@@ -160,3 +160,31 @@ Live check, 20-paper law world: entities passed first try (50 entities, 4167 out
 2. **QA direction**: in llm and materials the answerer swaps subject and object on "Which methods/materials … in study X?" questions; QA prompt or direction-aware scoring.
 3. **Style leak** over the bar in medicine and materials.
 Code and pack changes are **not committed**: names.py, world.py, cli.py (paper-count check), 4 packs (name patterns, examples, notes; materials absence pattern), tests (176 pass), configs `qwen/pilot40-*.json`. Lane script: /tmp/claude-11026/-mnt-ceph-storage-data-tmp-2026-xepi3167-thesis-thesis-research-agent/1947e690-efa1-4882-9db7-359f1ba95885/scratchpad/run40.sh.
+
+## v2 pilot, 3 papers per field (Claude, 22 Nov 2026)
+
+Built: topic clusters from OpenAlex (one topic per cluster), numbers made by code (entity numbers, effects with
+95% CI that agree with the relation, pooled values with I² computed by code), synthesis genre with per-field
+templates (law: argument v2 with numbers), style cards, banned phrases, final number/table gate, verifier prompt v2
+(side-by-side sentences NEUTRAL). Configs: configs/qwen/v2p3-*.json. Workbench domains: v2_law, v2_llm,
+v2_medicine, v2_materials.
+
+| field | pass | topics | tables/paper | words | leak (30 trials) | QA recall / answer recall |
+|---|---|---|---|---|---|---|
+| law | 2/3 | corporate insolvency, administrative, IP | 2 | 2200-2770 | 0.50 | 0.67 / 1.00 |
+| llm | 3/3 | NLP techniques, topic modelling, text analysis | 2 | 1880-2600 | 0.23 | 0.71 / 0.71 |
+| medicine | 3/3 | parathyroid, lung cancer, cancer pathways | 2 | 1880-2160 | 0.53 | 0.75 / 0.83 |
+| materials | 3/3 | hydrogen storage, high-temperature coatings, textiles | 2 | 2010-2630 | 0.00 | 0.28 / 0.50 |
+
+Fixes during the pilot: PaperOrchestra literature step with unnumbered sections; every number in a table (a split
+column was dropped: MED-02, MED-03, MAT-04); a wrong conflict is dropped, not the paper (6/9 law papers); law
+absence pattern "the records" removed (access-to-records cases).
+
+Open (for Aditya):
+1. Style leak is far over the 0.10 bar in law and medicine. The planted sentences reuse the log's relation words
+   ("The NAZOTO-9 trial reported no effect of katrogrestinib", "also found a benefit of ..., with a hazard ratio of
+   0.77") and stand out. Next fix: give relations as meanings, not words, and vary the number phrasing.
+2. LAW-01 failed: the planned thesis claims support from a decision that rejected the section (thesis not built
+   from the facts; outside review gap 2).
+3. Only 3 papers per field and 30 leak trials: numbers are noisy.
+4. 500 open-licence donor papers downloaded (data/cache/donors, manifest with licences), not used yet.
