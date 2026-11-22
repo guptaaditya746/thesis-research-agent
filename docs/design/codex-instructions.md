@@ -128,7 +128,7 @@ Q9. Final scores (only after Q1-Q3 are done and practice is stable): one bench-q
 ## 5. How to test (every item)
 
 - `uv run pytest -q backend` (about 6-7 min) must pass; new code gets tests with fake LMs / fake HTTP (no network).
-- Workbench, if you touch frontend/: `export PATH=~/.nvm/versions/node/v24.16.0/bin:$PATH; cd frontend &&
+- Workbench, if you touch frontend/ (submodule `thesis-workbench`; commit and push there, then the pointer here): `export PATH=~/.nvm/versions/node/v24.16.0/bin:$PATH; cd frontend &&
   npx tsc --noEmit -p . && npx eslint . && npx vitest run && npx vite build`.
 - Practice run: copy configs/evqa/bench-qwen.yaml to configs/evqa/practice-qwen.yaml with `split: practice`;
   `evqa run --config ...` (resumable; scores itself). Compare with `evqa compare` (Q5) once it exists.

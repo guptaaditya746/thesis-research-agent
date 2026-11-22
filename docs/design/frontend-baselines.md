@@ -66,5 +66,5 @@ passages with exact offsets (so the paper drawer can highlight them). Fact `blam
 
 ## 4. Build
 
-`frontend/dist/` is committed (Slurm serves it without npm): after the change run the frontend build
-(`frontend/README.md`) and commit `dist/` with the source.
+`frontend/` is the submodule `thesis-workbench`; `dist/` is not committed. After the change run the frontend build
+(`frontend/README.md`), commit and push in `frontend/`, then commit the new submodule pointer in this repo.

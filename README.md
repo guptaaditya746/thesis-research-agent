@@ -9,7 +9,7 @@ against the seed. The Workbench (web UI) shows each step. See `docs/architecture
 | Path | What |
 |---|---|
 | [`backend/`](backend/README.md) | Python packages: `evqa`, `modelcall`, `jsonio`, `webapp`, `repo_paths` |
-| [`frontend/`](frontend/README.md) | the Workbench (Vite/React); `dist/` committed |
+| `frontend/` | submodule [`thesis-workbench`](https://github.com/guptaaditya746/thesis-workbench): the Workbench (Vite/React); build `dist/` before `webapp serve` |
 | [`data/`](data/README.md) | `seed/` (truth), `dataset/` (papers), `cache/` (downloads) |
 | `configs/evqa/` | run configs |
 | `external/paperorchestra/` | vendored paper writer |
@@ -26,6 +26,7 @@ git submodule update --init --recursive
 uv sync --locked --all-groups                 # Python 3.13+, pins in uv.lock
 uv run pytest -q                              # backend/ tests; no cluster or model needed
 uv run evqa --help
+(cd frontend && uv run --group frontend npm ci && uv run --group frontend npm run build)   # Workbench dist/
 uv run webapp serve --port 8080               # Workbench at http://127.0.0.1:8080
 ```
 

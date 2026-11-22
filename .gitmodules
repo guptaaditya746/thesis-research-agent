@@ -10,3 +10,6 @@
 [submodule "services/model-queue"]
 	path = services/model-queue
 	url = https://github.com/guptaaditya746/model-queue.git
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/guptaaditya746/thesis-workbench.git
