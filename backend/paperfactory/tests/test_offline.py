@@ -81,7 +81,8 @@ def test_template_gets_field_words_and_length(tmp_path: Path) -> None:
     assert "## 2. Legal Framework" in (d / "template.md").read_text()
     guide = (d / "guidelines.md").read_text()
     assert "10 printed pages" in guide and "4500 to 5500 words" in guide and "{" not in guide
-    assert json.loads((d / "genre.json").read_text())["numeric_facts"] is False
+    # argument v2 (22 Nov 2026): law papers carry numbers (awards, hearing days) and 2+ tables
+    assert json.loads((d / "genre.json").read_text())["numeric_facts"] is True
 
 
 def test_settings_model_per_role(tmp_path: Path) -> None:

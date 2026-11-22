@@ -59,7 +59,7 @@
    "about": "an invented material",
    "attrs": {
     "family": "text",
-    "summary": "text"
+    "summary": "text?"
    },
    "name": {
     "label": "{type} {W}-{D}",
@@ -86,8 +86,8 @@
     "property": "text",
     "year": "int",
     "method": "text",
-    "reference": "text",
-    "summary": "text"
+    "reference": "text?",
+    "summary": "text?"
    },
    "name": {
     "label": "the {W} Lab {a:year} study",

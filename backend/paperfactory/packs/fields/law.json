@@ -83,7 +83,8 @@
    "\\bnot (recorded|addressed|stated|documented)\\b",
    "\\bdoes not address\\b",
    "\\bis silent on\\b",
-   "\\b([Tt]he|[Oo]ur) (notes|records|log|materials)\\b"
+   "\\b([Tt]he|[Oo]ur) (notes|log)\\b",
+   "\\b([Tt]he|[Oo]ur) (records|materials) (provided|given|available|supplied)\\b"
   ]
  },
  "kinds": {
@@ -114,7 +115,7 @@
    "about": "a section of an invented statute",
    "attrs": {
     "topic": "text",
-    "summary": "text"
+    "summary": "text?"
    },
    "name": {
     "label": "section {section} of the {COUNTRY} {statute}",
@@ -141,7 +142,7 @@
     "court": "ref:court",
     "year": "int",
     "facts": "text",
-    "outcome": "text"
+    "outcome": "text?"
    },
    "name": {
     "label": "{W} v. {W2} {org}",

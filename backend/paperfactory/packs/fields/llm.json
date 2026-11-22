@@ -61,7 +61,7 @@
    "about": "an invented method for language models",
    "attrs": {
     "family": "text",
-    "summary": "text"
+    "summary": "text?"
    },
    "name": {
     "label": "{W} {type}",
@@ -86,7 +86,7 @@
    "about": "an invented language model",
    "attrs": {
     "size": "text",
-    "summary": "text"
+    "summary": "text?"
    },
    "name": {
     "label": "{W}-{size}",
@@ -111,8 +111,8 @@
    "about": "an invented benchmark",
    "attrs": {
     "task": "text",
-    "metric": "text",
-    "summary": "text"
+    "metric": "text?",
+    "summary": "text?"
    },
    "name": {
     "label": "the {W}-{code} benchmark",
@@ -141,7 +141,7 @@
     "model": "ref:model",
     "benchmark": "ref:benchmark",
     "setting": "text",
-    "summary": "text"
+    "summary": "text?"
    },
    "name": {
     "label": "the {W} {a:year} study",

@@ -40,9 +40,11 @@ ex:FactShape a sh:NodeShape ; sh:targetClass ex:Fact ;
     for kind, k in f.kinds.items():
         props = []
         for a, typ in k.get("attrs", {}).items():
+            low = "0" if typ.endswith("?") else "1"          # "text?": optional (22 Nov 2026: summaries, outcomes)
+            typ = typ.rstrip("?")
             c = ("sh:datatype xsd:integer" if typ == "int" else f"sh:class ex:{kind_class(typ[4:])}"
                  if typ.startswith("ref:") else "sh:datatype xsd:string")
-            props.append(f"sh:property [ sh:path ex:{a} ; sh:minCount 1 ; sh:maxCount 1 ; {c} ]")
+            props.append(f"sh:property [ sh:path ex:{a} ; sh:minCount {low} ; sh:maxCount 1 ; {c} ]")
         if props:
             out.append(f"ex:{kind_class(kind)}Shape a sh:NodeShape ; sh:targetClass ex:{kind_class(kind)} ; "
                        + " ; ".join(props) + " .")
@@ -63,6 +65,8 @@ def build(w: dict[str, Any], f: Field) -> tuple[Graph, dict[str, Any]]:
         for a in e.get("alt", []):
             g.add((n, SKOS.altLabel, Literal(a)))
         for a, typ in f.kinds[e["kind"]].get("attrs", {}).items():
+            if a not in e["attrs"] and typ.endswith("?"):
+                continue
             v = e["attrs"][a]
             g.add((n, EX[a], EX[v] if typ.startswith("ref:") else Literal(v, datatype=XSD.integer)
                    if typ == "int" else Literal(v)))

@@ -70,7 +70,8 @@ def render_template(f: Field, g: Genre, pages: int, dest: Path) -> Path:
     lo, hi = g.raw["words_per_page"]
     values = word_values(f) | {
         "PAGES": pages, "WORDS_LO": pages * lo, "WORDS_HI": pages * hi,
-        "MAX_MENTIONS": g.raw.get("max_mentions_per_fact", 3)}
+        "MAX_MENTIONS": g.raw.get("max_mentions_per_fact", 3), "PAPER_TYPE": f.raw["words"].get("paper_kind", ""),
+        "MIN_TABLES": g.raw.get("min_tables", 0), "STYLE_CARD": ""}
     dest.mkdir(parents=True, exist_ok=True)
     for name in ("template.md", "guidelines.md"):
         (dest / name).write_text(fill((g.folder / name).read_text(encoding="utf-8"), values), encoding="utf-8")

@@ -144,7 +144,7 @@ def test_each_paper_gets_its_meta_as_soon_as_it_is_written(tmp_path: Path, monke
         cli.run(s, ["write"])
     paper = s.out_dir / "work" / first / "paper.md"
     assert meta.read(paper)["inputs"]
-    assert not meta.write_stale(paper, cli.write_inputs(s, first, s.out_dir / "template_argument_6p"), False, "w")
+    assert not meta.write_stale(paper, cli.write_inputs(s, first, s.out_dir / "templates" / first), False, "w")
 
 
 def test_a_kept_legacy_paper_is_not_rewritten_after_its_check(tmp_path: Path) -> None:

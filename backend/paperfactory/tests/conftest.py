@@ -15,4 +15,4 @@ PILOT_FOCUS = [sorted({c[0] for c in p["claims"]}) for p in _PILOT["papers"].val
 @pytest.fixture
 def pilot_focus(monkeypatch):
     """Fake world models answer with the pilot papers: give each paper the pilot paper's subjects as its focus."""
-    monkeypatch.setattr(world, "plan_focus", lambda w, f, seed, n: (PILOT_FOCUS * (n // len(PILOT_FOCUS) + 1))[:n])
+    monkeypatch.setattr(world, "plan_focus", lambda w, f, seed, n, among=None: (PILOT_FOCUS * (n // len(PILOT_FOCUS) + 1))[:n])

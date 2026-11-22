@@ -55,7 +55,7 @@
    "about": "an invented drug",
    "attrs": {
     "drug_class": "text",
-    "summary": "text"
+    "summary": "text?"
    },
    "name": {
     "label": "{w}{stem}",
@@ -80,8 +80,8 @@
     "condition": "text",
     "year": "int",
     "design": "text",
-    "comparator": "text",
-    "summary": "text"
+    "comparator": "text?",
+    "summary": "text?"
    },
    "name": {
     "label": "the {WU}-{D} trial",

@@ -96,8 +96,7 @@ def number_rows(w: dict[str, Any], f: Field, pid: str) -> tuple[list[dict[str, s
     """(rows, tables). rows: every number of the paper, each with a row id, a label, the value as the paper must
     print it, its unit and its placement. tables: [title, row ids] for each table to build (setups first, then
     effects with the pooled values). Pooled values are computed here (quant.pooled), never by the writer.
-    Placement: numbers of the focus subjects' setups that read naturally in a sentence (unit 'weeks', the effect in
-    points or %) go in the text; everything else in a table."""
+    Placement: every number in a table (the text may repeat any of them; PaperOrchestra checks the tables)."""
     p, nums = w["papers"][pid], w.get("numbers", {"entities": {}, "facts": {}})
     eff = f.raw.get("effect")
     pre, rows, n = _row_prefix(f, pid), [], 0
@@ -111,7 +110,6 @@ def number_rows(w: dict[str, Any], f: Field, pid: str) -> tuple[list[dict[str, s
         bucket.append(rid)
     facts = p["claims"] + p["decoys"]
     ents = list(dict.fromkeys([x for s_, _, o in facts for x in (s_, o)]))
-    focus = set(p.get("focus", []))
     for e in ents:
         spec = f.kinds[w["entities"][e]["kind"]].get("numbers", {})
         for attr, sp in spec.items():
@@ -119,7 +117,9 @@ def number_rows(w: dict[str, Any], f: Field, pid: str) -> tuple[list[dict[str, s
             if v is None:
                 continue
             unit = sp.get("unit", "")
-            place = "text" if e in focus and unit == "weeks" else "table"
+            # v2 pilot (22 Nov 2026): a column split between text and table made the writer drop it (MED-02,
+            # MED-03: follow-up weeks of the other trials missing); every number now goes in a table
+            place = "table"
             add(f"{_name(w, e)}: {sp.get('label', attr.replace('_', ' '))}", v, unit, place,
                 setups if place == "table" else [])
             if place == "table":
@@ -137,8 +137,7 @@ def number_rows(w: dict[str, Any], f: Field, pid: str) -> tuple[list[dict[str, s
                 add(f"{what}: baseline {eff['short']}", x["baseline"], unit, "table", effects, d)
                 add(f"{what}: {eff['short']} with the method", x["with"], unit, "table", effects, d)
             dunit = eff.get("delta_unit", unit)
-            claim = [s_, r, o] in p["claims"]
-            place = "text" if claim and eff["scale"] == "difference" else "table"
+            place = "table"     # MAT-04: the estimate column was dropped when the claims' estimates were text-only
             add(f"{what}: {eff['name']}", x["estimate"], dunit if place == "text" else unit, place,
                 effects if place == "table" else [], d)
             add(f"{what}: 95% CI lower bound", x["ci_low"], unit, "table", effects, d)

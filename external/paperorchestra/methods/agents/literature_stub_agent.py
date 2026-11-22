@@ -42,7 +42,12 @@ class StubLiteratureAgent:
             payload["references"] = self.references
         # paperfactory (genre-general): the step fills the first two numbered sections of the template, whatever
         # the genre calls them (IMRaD: Introduction + Related Work; argument: Introduction + Legal Framework)
-        numbered = [t for t, _ in split_sections(load_md_file(self.template_path)) if t[:1].isdigit()]
+        # paperfactory v2 (22 Nov 2026): per-paper templates need not number their sections ("Introduction",
+        # "I. Introduction"): then the first two sections after the Abstract
+        titles = [t for t, _ in split_sections(load_md_file(self.template_path))]
+        numbered = [t for t in titles if t[:1].isdigit()]
+        if len(numbered) < 2:
+            numbered = [t for t in titles if t and t.strip().lower() != "abstract"]
         first, second = numbered[0], numbered[1]
         user = (f"Generate the Markdown for the sections '{first}' (key: introduction) and '{second}' "
                 f"(key: related_work). Write '{second}' as that section title asks.\n\n") + json.dumps(

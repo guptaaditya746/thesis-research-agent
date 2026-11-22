@@ -42,6 +42,8 @@ def check(w: dict[str, Any], f: Field, g: Genre, n_papers: int | None = None) ->
             labels[k] = eid
         for a, typ in f.kinds[e["kind"]].get("attrs", {}).items():
             v = e.get("attrs", {}).get(a)
+            if v is None and typ.endswith("?"):      # optional ("text?", 22 Nov 2026)
+                continue
             if v is None:
                 err.append(f"{eid}: missing attr {a}")
             elif typ == "int" and not isinstance(v, int):
@@ -327,7 +329,7 @@ def _entities_of_kind(s, f: Field, g: Genre, call, so_far: dict[str, Any], kind:
             f"{json.dumps({k: {'kind': e['kind'], 'attrs': e['attrs']} for k, e in so_far.items()})}\n\n"
             f"{cluster_text(f, cluster)}{ask}. Every entity has kind {kind}; ids start with {pre} and are not used "
             f"above. Random seed: {s.seed}.")
-    sch, step = _schema_entities(f, kind), f"world:entities:{pre}"
+    sch, step = _schema_entities(f, kind), f"world:entities:{kind}" + (f":{cluster['id']}" if cluster else "")
 
     def judge(got: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
         ids = [e.get("id", "") for e in got["entities"]]
@@ -336,7 +338,8 @@ def _entities_of_kind(s, f: Field, g: Genre, call, so_far: dict[str, Any], kind:
         errs += [f"id {i} is already used by an entity above" for i in ids if i in so_far]
         errs += [f"{i}: kind must be {kind}" for i, e in new.items() if e["kind"] != kind]
         errs += [e for e in count_errors(new, f, n_subj) if f" kind {kind}:" in e]
-        errs += [f"id {i} must start with {pre}" for i in ids if not i.startswith(pre)]
+        if cluster:     # ids of different clusters must never clash
+            errs += [f"id {i} must start with {pre}" for i in ids if not i.startswith(pre)]
         errs += check({"entities": (others or {}) | so_far | new, "papers": {}}, f, g)
         return new, errs
     got = _need(call("world", step, ENT_SYS, user, sch), step)
@@ -424,6 +427,23 @@ def fix_decoys(p: dict[str, Any], truth: dict[tuple[str, str], str], ents: dict[
     return notes
 
 
+def conflict_errors(p: dict[str, Any], f: Field) -> list[str]:
+    """The conflict rules of check() for one paper."""
+    c = p.get("conflict")
+    if not c:
+        return []
+    if len(c) != 2 or any(not isinstance(x, list) or len(x) != 3 for x in c):
+        return ["a conflict is exactly two facts"]
+    (s1, r1, o1), (s2, r2, o2) = c
+    err = []
+    if [s1, r1, o1] not in p.get("claims", []) + p.get("decoys", []) or \
+            [s2, r2, o2] not in p.get("claims", []) + p.get("decoys", []):
+        err.append("conflict facts must be planted facts of the paper")
+    if o1 != o2 or s1 == s2 or ((r1, r2) not in f.conflict_pairs and (r2, r1) not in f.conflict_pairs):
+        err.append("conflict must be two subjects, one object, a conflict pair of relations")
+    return err
+
+
 def focus_errors(papers: dict[str, Any]) -> list[str]:
     err = []
     for pid, p in papers.items():
@@ -503,7 +523,8 @@ def _plan_papers(s, f: Field, g: Genre, call, w: dict[str, Any], ents: dict[str,
                 "FIXED lists facts the world already has for a paper's FOCUS subjects: a pair in FIXED keeps exactly "
                 "that relation (or is not used).\n\n"
                 f"Plan {n} papers. Each has exactly {g.raw['claims_per_paper']} claims and "
-                f"{g.raw['decoys_per_paper']} decoys. Give a conflict in at least one of them.")
+                f"{g.raw['decoys_per_paper']} decoys. "
+                + ("Give a conflict in at least one of them." if n > 1 else "Give a conflict if two claims allow it."))
         step = f"world:papers:{cl['id'] if cl else ''}{b}"
         got = _top_up(_need(call("world", step, PAPER_SYS, user, PAPERS_SCHEMA), step), n, user, call, step)
         for attempt in range(1 + PAPER_REPAIRS):
@@ -521,6 +542,10 @@ def _plan_papers(s, f: Field, g: Genre, call, w: dict[str, Any], ents: dict[str,
                         truth.setdefault((x[0], x[2]), x[1])
                 if notes := fix_decoys(q, truth, ents, f, rng):
                     trial["decoy_repairs"][pid] = notes
+                if q.get("conflict") and conflict_errors(q, f):
+                    # an optional extra: a wrong conflict goes, the paper stays (v2 pilot, 22 Nov 2026: with one paper
+                    # per batch every law paper had to carry a conflict, and 6 of 9 were dropped for a wrong one)
+                    trial.setdefault("conflicts_dropped", {})[pid] = q.pop("conflict")
                 trial["papers"][pid] = q
             errs = check(trial, f, g, n_papers=len(trial["papers"])) + focus_errors(trial["papers"])
             if not errs:
