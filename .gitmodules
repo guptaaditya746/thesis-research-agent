@@ -4,3 +4,6 @@
 [submodule "baselines"]
 	path = baselines
 	url = https://github.com/guptaaditya746/thesis-baselines.git
+[submodule "services/paper-factory"]
+	path = services/paper-factory
+	url = https://github.com/guptaaditya746/Paper-factory.git

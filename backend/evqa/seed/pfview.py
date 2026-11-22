@@ -1,9 +1,10 @@
-"""Workbench views of a paperfactory domain (data/seed/<domain>/paperfactory.json, made by paperfactory/workbench.py).
+"""Workbench views of a paperfactory domain (data/seed/<domain>/paperfactory.json, made by
+`paperfactory export-workbench --data-dir ../../data` in the submodule services/paper-factory).
 
 Paperfactory facts are relations between invented entities ("Laper v. Dravun Media relies_on section 1"), not
 numbers, so the L0 numbers check does not apply. The paper pane gets the same L0 shape it always reads: each planted
 fact is "found" where the tagger + verifier accepted a sentence for it (its spans), "missing" otherwise; no extra or
-ignored numbers. Read-only; never imports paperfactory (engine may not import evaluation).
+ignored numbers. Read-only; never imports paperfactory (a separate service since 22 Nov 2026).
 """
 from __future__ import annotations
 

@@ -22,7 +22,6 @@ dependencies = [
 [project.scripts]
 webapp = "webapp.cli:main"
 evqa = "evqa.cli:main"
-paperfactory = "paperfactory.cli:main"
 
 [project.optional-dependencies]
 deepeval = [
@@ -54,7 +53,7 @@ filterwarnings = ["ignore::DeprecationWarning:pyshacl.*", "ignore::DeprecationWa
 [tool.ruff]
 line-length = 120
 target-version = "py313"
-extend-exclude = ["external", "frontend", "llm-setup"]
+extend-exclude = ["external", "frontend", "llm-setup", "services", "baselines"]
 
 [tool.ruff.lint]
 # pyflakes (undefined names, unused imports/variables) and syntax errors only; the `# noqa: BLE001/S310/...`

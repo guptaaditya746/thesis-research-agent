@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import ast
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -19,7 +18,6 @@ from rdflib import Graph
 
 from evqa.paths import BACKEND_EVQA, REPO, domain_dir
 from evqa.seed import bench, build, check, profile, rebuild
-from evqa.seed import questions as qs
 from evqa.seed.build import EX
 
 MAT = "materials"
