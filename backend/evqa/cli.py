@@ -95,6 +95,18 @@ def seed_questions(a: argparse.Namespace) -> int:
     return 0
 
 
+def seed_pfbench(a: argparse.Namespace) -> int:
+    from evqa.seed import pfbench
+    got = pfbench.build(a.domain)
+    if a.dry_run:
+        print(json.dumps({"mix": got["mix"], "short": got["short"], "candidates": got["candidates"]}, indent=2))
+        for q in got["questions"]:
+            print(f"{q['qid']}  {q['type']:<13} {q['question']}")
+        return 0
+    print(json.dumps(pfbench.write(a.domain, got), indent=2))
+    return 0
+
+
 def seed_bench(a: argparse.Namespace) -> int:
     from evqa import llm
     from evqa.seed import bench, questions
@@ -189,6 +201,10 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--dry-run", action="store_true")
     b.add_argument("--model", default="claude-haiku-5-5")
     b.set_defaults(fn=seed_bench)
+    pb = seed.add_parser("pfbench", help="40 questions + gold of a paperfactory domain from its fact rows (code only)")
+    pb.add_argument("domain")
+    pb.add_argument("--dry-run", action="store_true", help="print the mix and the questions; write nothing")
+    pb.set_defaults(fn=seed_pfbench)
     rb = seed.add_parser("rebuild", help="rebuild a domain's seed, questions and gold from its blueprint (code only)")
     rb.add_argument("domain")
     rb.add_argument("rest", nargs=argparse.REMAINDER)
@@ -296,9 +312,15 @@ def run_domain(run_dir: Path, domain: str | None) -> str:
 
 
 def eval_run(a: argparse.Namespace) -> int:
-    from evqa.eval.prism import score_run      # lazy: builds the seed graph
-    out = score_run(a.run_dir, domain=run_domain(a.run_dir, a.domain))
-    print(json.dumps(out["totals"], indent=2))
+    from evqa.seed import pfview
+    domain = run_domain(a.run_dir, a.domain)
+    if pfview.is_pf(domain):       # paperfactory domain: no seed graph, so only the answer-text score (L3-text)
+        if not getattr(a, "text", False):
+            raise SystemExit(f"{domain} is a paperfactory domain: only `evqa eval <run> --text` applies")
+    else:
+        from evqa.eval.prism import score_run      # lazy: builds the seed graph
+        out = score_run(a.run_dir, domain=domain)
+        print(json.dumps(out["totals"], indent=2))
     if getattr(a, "judge", False):
         from evqa.eval.judge import judge_run
         got = judge_run(a.run_dir)
