@@ -5,7 +5,7 @@ Code only, no LLM.
     explain(run_dir, qid) -> str           one short block per true fact, plus the question line
     uv run python -m evqa.explain <run_dir> <qid> [--json]
 
-Reads <run_dir>/eval.json (written by evqa.eval.prism) as plain data and tolerates new or missing fields, then the
+Reads <run_dir>/eval.json (written by evqa.scoring with the thesis-scorer service) as plain data and tolerates new or missing fields, then the
 question's find.jsonl, rows.jsonl and answer.json, the seed facts (data/seed: truth, allowed here as in eval) and
 paper.md. Per fact: right or wrong, the step that lost it (eval's blame), the passage Find kept around the fact, the
 rows Extract made there with their quotes, and how Answer used those rows.

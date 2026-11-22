@@ -12,9 +12,9 @@ whose name (config name or folder name) starts with bench-, is left out of part 
 per-question data is read: from eval.json only "totals" and "intervals" are used, from events.jsonl only sums over
 all questions.
 
-Noise: every run's l3 row is followed by its 95% interval (eval.json "intervals", made by prism; "n/a" for an
+Noise: every run's l3 row is followed by its 95% interval (eval.json "intervals", made by the scorer; "n/a" for an
 eval.json written before intervals existed). Part 3, practice runs only: each run's l3 against the first practice
-run, over the questions both scored, with a paired bootstrap interval for the difference (eval/bootstrap.py). When
+run, over the questions both scored, with a paired bootstrap interval for the difference (thesis_scorer.bootstrap). When
 that interval contains 0 the report says so: the difference may be chance.
 """
 from __future__ import annotations
@@ -28,8 +28,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from thesis_scorer import bootstrap
 
-from evqa.eval import bootstrap
 from evqa.paths import REPO
 
 LAYERS = ["questions", "answerable", "facts", "l0", "l1", "l2_recall", "l2_precision", "l2_name_ok", "l3",
@@ -71,7 +71,7 @@ class Run:
         return json.loads(f.read_text(encoding="utf-8")).get("totals") or {}
 
     def intervals(self) -> dict[str, Any]:
-        """The run's bootstrap intervals per total (prism.run_intervals); {} for an older eval.json."""
+        """The run's bootstrap intervals per total (thesis_scorer structured.run_intervals); {} for an older eval.json."""
         f = self.path / "eval.json"
         if not f.is_file():
             return {}

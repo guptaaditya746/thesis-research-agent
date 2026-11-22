@@ -16,7 +16,7 @@ Run folder runs/evqa/<run_id>/ (same layout as an evqa run, see contracts.py):
   events.jsonl               per question a "find" and an "answer" end event: seconds and tokens of the system
                              (the whole question's tokens go on "answer"), so `evqa compare` shows cost
 There is no spec/rows/answer.json: the structured layers (L2, structured L3, advisor) are n/a for a baseline.
-The comparable answer score is L3-text (`evqa eval --text`, eval/text_answer.py), made the same way for evqa runs.
+The comparable answer score is L3-text (`evqa eval --text`, thesis_scorer.text), made the same way for evqa runs.
 
 Pipeline rule: this module reads only the dataset folder (corpus.py), never the seed (seed wall test).
 """

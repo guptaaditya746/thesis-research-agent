@@ -1,4 +1,4 @@
-"""L0 (evqa/eval/dataset.py) on a hand-written correct P-med-01 paper: every fact found in its planned place, and
+"""L0 (evqa/seed/l0.py) on a hand-written correct P-med-01 paper: every fact found in its planned place, and
 numbers changed on purpose are caught (plan target: at least 95%)."""
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from evqa.eval import dataset
+from evqa.seed import l0 as dataset
 from evqa.seed.brief import paper_facts
 
 PAPER = (Path(__file__).parent / "fixtures" / "P-med-01" / "paper.md").read_text(encoding="utf-8")

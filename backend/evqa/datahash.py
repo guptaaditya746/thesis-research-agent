@@ -5,10 +5,10 @@
 Groups (each a sha256 over relative path + bytes of its files, in sorted path order):
   papers     data/dataset/<domain>/*/paper.md                       (corpus.papers)
   questions  data/dataset/<domain>/questions/<split>.jsonl          (corpus.questions)
-  gold       data/seed/<domain>/: seed.ttl, blueprint.yaml, names.json, gold/*.json, l0/*.json (what eval/prism reads)
+  gold       data/seed/<domain>/: seed.ttl, blueprint.yaml, names.json, gold/*.json, l0/*.json (what evqa/scoring.py puts in the gold file)
 data_hash is one sha256 over all those files together, in sorted path order. A missing file is left out.
-run.py stores them in manifest.json (and refuses a resume when papers or questions changed); eval/prism.py writes
-them into eval.json under "data", so a score names the data it was made on.
+run.py stores them in manifest.json (and refuses a resume when papers or questions changed); evqa/scoring.py puts
+them into the gold file and so into eval.json under "data", so a score names the data it was made on.
 """
 from __future__ import annotations
 

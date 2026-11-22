@@ -16,3 +16,6 @@
 [submodule "data"]
 	path = data
 	url = https://github.com/guptaaditya746/thesis-benchmark.git
+[submodule "services/thesis-scorer"]
+	path = services/thesis-scorer
+	url = https://github.com/guptaaditya746/thesis-scorer.git

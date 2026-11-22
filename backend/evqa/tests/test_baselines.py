@@ -1,4 +1,4 @@
-"""Baseline runs (evqa/baselines) and the answer-text score (eval/text_answer.py). No model, no subprocess: the
+"""Baseline runs (evqa/baselines) and their answer-text score (evqa/scoring.py -> thesis_scorer.text). No model, no subprocess: the
 baseline system is a fake runner that writes the thesis-baselines output files; the claim reader is faked."""
 from __future__ import annotations
 
@@ -10,9 +10,12 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from evqa import baselines, compare, corpus
-from evqa.contracts import Answer, AnswerRow, RunConfig, TextAnswer, TextClaim, TextClaims
-from evqa.eval import prism, text_answer
+from thesis_scorer import text as text_answer
+from thesis_scorer.llm import Chat
+from thesis_scorer.schema import TextClaim, TextClaims
+
+from evqa import baselines, compare, corpus, scoring
+from evqa.contracts import Answer, AnswerRow, RunConfig, TextAnswer
 
 DOMAIN = "medical"
 
@@ -78,9 +81,9 @@ def test_locate_and_find_hits() -> None:
 
 def _gold_chunk(qid: str) -> tuple[str, str]:
     """A chunk of the paper holding the first gold fact's L0 span (what a good retriever returns)."""
-    g = prism.gold(DOMAIN)[qid]
-    f = prism.seed_facts(DOMAIN)[g["row_ids"][0]]
-    s, e = prism.l0_spans(DOMAIN, f["paper"])[f["id"]][0]
+    g = scoring.gold(DOMAIN)[qid]
+    f = scoring.seed_facts(DOMAIN)[g["row_ids"][0]]
+    s, e = scoring.l0_spans(DOMAIN, f["paper"])[f["id"]][0]
     text = corpus.papers(DOMAIN)[f["paper"]]
     return f["paper"], text[max(0, s - 40):e + 40]
 
@@ -126,7 +129,7 @@ def test_run_imports_answers_and_prism_scores_l1(baseline_run: Path) -> None:
     end = events[-1]
     assert end["step"] == "run" and end["data"]["failed"] == ["Q-med-p2"] and end["data"]["imported"] == 2
     assert any(e["kind"] == "problem" and e["qid"] == "Q-med-p2" for e in events)
-    ev = prism.score_run(out, DOMAIN)
+    ev = scoring.score_run(out, DOMAIN)
     q1 = ev["questions"]["Q-med-p1"]
     assert q1["l1"] is not None and q1["facts"][0]["l1"] is True and q1["l3"]["score"] is None
     assert q1["advisor"]["score"] is None and q1["l2"]["recall"] is None
@@ -135,93 +138,43 @@ def test_run_imports_answers_and_prism_scores_l1(baseline_run: Path) -> None:
     assert ev["questions"]["Q-med-p2"]["missing_files"] == ["find.jsonl", "answer_text.json"]
 
 
-# ---------------------------------------------------------------- text score
+# ---------------------------------------------------------------- text score (rules: services/thesis-scorer tests)
 def _claim(value: str, quote: str, **kw) -> TextClaim:
     return TextClaim(value_text=value, quote=quote, **kw)
-
-
-def test_check_drops_claims_not_in_the_text() -> None:
-    text = "At week 12, X lowered HbA1c by 0.52 percentage points (P-1)."
-    assert text_answer.check(_claim("lowered HbA1c by 0.52 percentage points", text), text) is None
-    assert text_answer.check(_claim("0.61 percentage points", "lowered by 0.61 percentage points"), text) \
-        == "quote is not in the answer text"
-    assert text_answer.check(_claim("0.61 pp", text), text) == "value_text is not in its quote"
-    assert text_answer.check(_claim("week", "At week"), text) == "value_text holds no number"
-
-
-def test_same_value_reads_direction_words_and_percent() -> None:
-    pp = text_answer.PP
-    q = "X lowered HbA1c by 0.52 percentage points at week 12 and by 0.54 at week 24."
-    assert text_answer.same_value(_claim("0.54", q), "-0.54", pp)         # sign and unit from its sentence
-    assert not text_answer.same_value(_claim("0.54", "X: 0.54 at 12 mg and 2 kg"), "-0.54", pp)
-    assert text_answer.same_value(_claim("lowered HbA1c by 0.52 percentage points", ""), "-0.52", pp)
-    assert text_answer.same_value(_claim("-0.52%", ""), "-0.52", pp)
-    assert not text_answer.same_value(_claim("-0.62 pp", ""), "-0.52", pp)
-
-
-def _score(qid: str, text: str, claims: list[TextClaim], cannot: bool = False, citations=()) -> dict:
-    ta = TextAnswer(qid=qid, system="paperqa2-rag", text=text, cannot_answer=cannot, citations=list(citations))
-    tc = TextClaims(qid=qid, text_sha256="x", model="m", claims=claims)
-    return text_answer.score_question(prism.gold(DOMAIN)[qid], ta, tc, DOMAIN, None,
-                                      sorted(corpus.papers(DOMAIN)))
-
-
-def test_lookup_needs_each_varying_setting() -> None:
-    q = "Veloranide 50 mg lowered HbA1c by 0.52 percentage points at week 12 and by 0.54 percentage points at week 24."
-    both = [_claim("lowered HbA1c by 0.52 percentage points", q, subject="Veloranide", time_point="week 12"),
-            _claim("0.54 percentage points", q, subject="Veloranide", time_point="week 24")]
-    got = _score("Q-med-p1", q, both)
-    assert got["score"] == 1.0 and got["exact"] and got["settings_checked"] == ["time_point"]
-    swapped = [_claim("lowered HbA1c by 0.52 percentage points", q, subject="Veloranide", time_point="week 24")]
-    assert _score("Q-med-p1", q, swapped)["score"] == 0.0           # right number, wrong time point
-    q2 = q.replace("Veloranide", "Kavolemin")                     # same numbers, another drug
-    other = [_claim("lowered HbA1c by 0.52 percentage points", q2, subject="Kavolemin", time_point="week 12")]
-    assert _score("Q-med-p1", q2, other)["score"] == 0.0
-    one = _score("Q-med-p1", q, both[:1])
-    assert one["recall"] == 0.5 and one["precision"] == 1.0 and not one["exact"]
-
-
-def test_not_reported_and_list() -> None:
-    right = _score("Q-med-p12", "I cannot answer.", [], cannot=True)
-    assert right["score"] == 1.0 and not right["hallucination"]
-    wrong = _score("Q-med-p12", "It changed by -0.4 mmol/L.", [_claim("-0.4 mmol/L", "It changed by -0.4 mmol/L.")])
-    assert wrong["score"] == 0.0 and wrong["hallucination"]
-    gold = {r["paper"] for r in prism.gold(DOMAIN)["Q-med-p2"]["answer"]["table"]}
-    text = "Studies: " + ", ".join(sorted(gold))
-    assert _score("Q-med-p2", text, [])["score"] == 1.0
-    assert _score("Q-med-p2", text + ", P-med-01", [])["precision"] < 1.0
 
 
 def test_render_evqa_answer_states_values_and_papers() -> None:
     rows = [SimpleNamespace(paper="P-med-05")]
     ans = Answer(qid="Q", type="lookup", sentence="Two values.",
                  table=[AnswerRow(cells={"time point": "12 wk"}, value="-0.52", unit=text_answer.PP, rows=[0])])
-    text = text_answer.render(ans, rows)   # type: ignore[arg-type]
+    text = scoring.render(ans, rows)   # type: ignore[arg-type]
     assert text == "Two values.\n- time point 12 wk: -0.52 pp [P-med-05]"
 
 
 def test_score_run_merges_into_eval_and_resolves_blame(baseline_run: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    prism.score_run(baseline_run, DOMAIN)
+    scoring.score_run(baseline_run, DOMAIN)
     calls: list[str] = []
 
-    def fake_read(question, text, lm, model, qid):
+    def fake_read(question, text, reader, qid):
         calls.append(qid)
         claims = [] if "cannot" in text else [
             _claim("lowered HbA1c by 0.52 percentage points", text, subject="Veloranide", time_point="week 12")]
-        return TextClaims(qid=qid, text_sha256=__import__("hashlib").sha256(text.encode()).hexdigest(), model=model,
-                          claims=claims)
+        return TextClaims(qid=qid, text_sha256=__import__("hashlib").sha256(text.encode()).hexdigest(),
+                          model=reader.name, claims=claims)
 
     monkeypatch.setattr(text_answer, "read_claims", fake_read)
-    out = text_answer.score_run(baseline_run, reader_lm=object(), judge_lm=object())   # type: ignore[arg-type]
+    def chat() -> Chat:
+        return Chat("m", send=lambda body: 1 / 0, cache=False)        # read_claims is faked; no judge call
+    out = scoring.score_text(baseline_run, reader_chat=chat(), judge_chat=chat())
     assert out["questions"]["Q-med-p1"]["recall"] == 0.5 and out["questions"]["Q-med-p12"]["score"] == 1.0
     assert out["questions"]["Q-med-p2"]["missing"] == "no answer"
     ev = json.loads((baseline_run / "eval.json").read_text())
-    assert ev["totals"]["l3_text"] == out["totals"]["l3_text"] and ev["text_eval"]["version"] == "text-1"
+    assert ev["totals"]["l3_text"] == out["totals"]["l3_text"] and ev["text_eval"]["version"] == "text-2"
     assert ev["questions"]["Q-med-p1"]["l3_text"]["score"] == out["questions"]["Q-med-p1"]["score"]
     blames = [f["blame"] for f in ev["questions"]["Q-med-p1"]["facts"]]
     assert "unscored" not in blames and "none" in blames
     assert ev["totals"]["blame"]["unscored"] == 0
-    text_answer.score_run(baseline_run, reader_lm=object(), judge_lm=object())   # type: ignore[arg-type]
+    scoring.score_text(baseline_run, reader_chat=chat(), judge_chat=chat())
     assert len(calls) == 2                                      # claims.json reused for the same text and model
     report = compare.report([baseline_run])
     assert "| system | paperqa2-rag |" in report and "| l3_text |" in report

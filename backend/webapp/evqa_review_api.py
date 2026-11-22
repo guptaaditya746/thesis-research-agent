@@ -1,4 +1,4 @@
-"""/api/evqa/review: the optional human review queue (evqa/eval/review.py). Labels are the only thing written.
+"""/api/evqa/review: the optional human review queue (evqa/seed/review.py). Labels are the only thing written.
 
     GET  /api/evqa/review/tasks                      every task: title, question, choices with rubric, parts
     GET  /api/evqa/review/{task}/summary?scope=      coverage and label counts (Evaluation page)
@@ -17,7 +17,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from evqa.eval import review
+from evqa.seed import review
 
 router = APIRouter(prefix="/evqa/review")
 

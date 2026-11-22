@@ -17,7 +17,11 @@ dependencies = [
     "pyyaml==6.0.3",
     "rapidfuzz>=3.14.6",
     "rdflib==7.6.0",
+    "thesis-scorer",
 ]
+
+[tool.uv.sources]
+thesis-scorer = { path = "services/thesis-scorer", editable = true }   # the scorer service (git submodule)
 
 [project.scripts]
 webapp = "webapp.cli:main"

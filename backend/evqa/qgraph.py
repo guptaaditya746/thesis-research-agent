@@ -5,7 +5,7 @@
 The seed piece: the gold facts of the question (gold row_ids) and their entity nodes (drug, comparator, patient group,
 dose, week, measure), each fact inside a compound node for its paper; then other seed facts of the same papers (1 hop
 through the paper) as grey context, the ones sharing most entities first, until about MAX_NODES nodes.
-The run on top (from eval.json, else scored now with prism.score_question):
+The run on top (from eval.json, else scored now with evqa.scoring):
   found    gold fact with a matched row (L2) whose names are all right             green
   missed   gold fact without such a row                                             red
   wrong    run row that matched a gold fact's value and place but never with all names right; linked to that fact
@@ -14,7 +14,7 @@ The run on top (from eval.json, else scored now with prism.score_question):
 Row nodes link to the entities they name; an entity the seed piece lacks is added (status extra).
 Node data: id, label, kind, status, value, unit, quote, start, end (offsets in paper.md; span_from row = the row's
 quote, seed = the fact's L0 span, quote then is its line), paper, row, rows, fact,
-blame, names, parent. Eval may read the seed; the pipeline may not import this module (seed wall test).
+blame, names, parent. It reads the seed; the pipeline may not import this module (seed wall test).
 """
 from __future__ import annotations
 
@@ -24,11 +24,12 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from thesis_scorer import structured
 
 from evqa import norm
 from evqa.answer import canon
 from evqa.contracts import Row, RunConfig
-from evqa.eval import prism
+from evqa import scoring
 from evqa.paths import paper_file
 from evqa.seed import brief
 
@@ -59,7 +60,7 @@ class _Builder:
     # ------------------------------------------------------------ entity keys
     def fact_entities(self, f: dict[str, Any]) -> dict[str, tuple[str, str]]:
         """kind -> (node id, label) for a seed fact."""
-        slots = prism.fact_slots(f)
+        slots = structured.fact_slots(f)
         out = {"drug": (f"drug:{slots['subject']}", f["subject"]),
                "group": (f"group:{f['context']}", f["context"]),
                "measure": (f"measure:{f['measure']}", f["measure"])}
@@ -74,20 +75,20 @@ class _Builder:
     def row_entities(self, r: Row) -> dict[str, tuple[str, str]]:
         """kind -> (node id, label) for a run row, using the seed node ids when the names mean the same."""
         out: dict[str, tuple[str, str]] = {}
-        subj = prism.slot_value("subject", r.subject, self.domain)
+        subj = structured.slot_value("subject", r.subject, None)
         if subj:
             out["drug"] = (f"drug:{subj}", r.subject)
         if r.comparator and r.comparator.strip():
             out["comparator"] = (f"comparator:{r.comparator.strip().lower()}", r.comparator)
         if r.patient_group and r.patient_group.strip():
-            g = prism.slot_value("patient_group", r.patient_group, self.domain)   # seed node only when the text
+            g = structured.slot_value("patient_group", r.patient_group, None)   # seed node only when the text
             out["group"] = (f"group:{g}", g)                                      # is the context label itself
         for kind, slot, text in (("dose", "dose", r.dose), ("time", "time_point", r.time_point)):
             if text and text.strip():
                 v = canon.value(slot, text) or text.strip()
                 out[kind] = (f"{kind}:{v}", v)
         if r.measure.strip():
-            same = next((mid for mid, f in self.measures.items() if prism.measure_ok(r.measure, [], f)), None)
+            same = next((mid for mid, f in self.measures.items() if structured.measure_ok(r.measure, [], f)), None)
             out["measure"] = (same, self.nodes[same]["data"]["label"]) if same else (f"measure:{r.measure}", r.measure)
         return out
 
@@ -141,7 +142,7 @@ def _score(run_dir: Path, qid: str, g: dict[str, Any], domain: str) -> dict[str,
     q = (data or {}).get("questions", {}).get(qid) if isinstance(data, dict) else None
     if isinstance(q, dict) and isinstance(q.get("facts"), list):
         return q
-    return prism.score_question(run_dir / qid, g, domain)
+    return scoring.score_run(run_dir, domain, only=[qid], write=False)["questions"].get(qid, {})
 
 
 def question_graph(run_dir: Path, qid: str, domain: str | None = None, max_nodes: int = MAX_NODES) -> dict[str, Any]:
@@ -154,14 +155,14 @@ def question_graph(run_dir: Path, qid: str, domain: str | None = None, max_nodes
     except (ValueError, yaml.YAMLError):              # a broken config still draws (with the default domain)
         cfg = RunConfig()
     domain = domain or cfg.domain
-    golds = prism.gold(domain)
+    golds = scoring.gold(domain)
     if qid not in golds:
         raise KeyError(qid)
     g = golds[qid]
-    facts = prism.seed_facts(domain)
+    facts = scoring.seed_facts(domain)
     titles = _titles(domain)
     score = _score(run_dir, qid, g, domain)
-    rows: list[Row] = prism._jsonl(run_dir / qid / "rows.jsonl", Row)
+    rows: list[Row] = scoring._jsonl(run_dir / qid / "rows.jsonl", Row) or []
     texts: dict[str, str | None] = {}
     b = _Builder(domain)
 
@@ -190,8 +191,8 @@ def question_graph(run_dir: Path, qid: str, domain: str | None = None, max_nodes
                                 "value": f["value"], "unit": sym, "paper": f["paper"], "fact": f["id"],
                                 "parent": parent, "rows": matched, "row": matched[0] if matched else None,
                                 "measure": f["measure"], "group": f["context"], "subject": f["subject"],
-                                "comparator": f.get("comparator"), "dose": prism.fact_slots(f).get("dose"),
-                                "week": prism.fact_slots(f).get("time_point")}
+                                "comparator": f.get("comparator"), "dose": structured.fact_slots(f).get("dose"),
+                                "week": structured.fact_slots(f).get("time_point")}
         fs = per_fact.get(f["id"])
         if fs:
             data["blame"] = fs.get("blame")
@@ -200,7 +201,7 @@ def question_graph(run_dir: Path, qid: str, domain: str | None = None, max_nodes
         if r is not None and r.quote_start >= 0:
             data.update(quote=r.quote, start=r.quote_start, end=r.quote_end, span_from="row")
         else:
-            spans = prism.l0_spans(domain, f["paper"]).get(f["id"], ())
+            spans = scoring.l0_spans(domain, f["paper"]).get(f["id"], ())
             if spans:
                 s, e = spans[0]
                 text = _paper_text(domain, f["paper"], texts)

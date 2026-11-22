@@ -8,7 +8,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from evqa.eval import dataset
+from evqa.seed import l0 as dataset
 from evqa.seed import pview
 from evqa.seed import questions as seed_questions
 from webapp.evqa_papers_api import router

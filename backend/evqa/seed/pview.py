@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from evqa.eval import dataset
+from evqa.seed import l0 as dataset
 from evqa.paths import REPO, brief_dir, paper_file
 from evqa.seed import pfview
 from evqa.seed.brief import paper_facts

@@ -10,7 +10,7 @@ Run folder (runs/evqa/<run_id>/):
   <qid>/links.jsonl      Link           (Link: setting sets judged same/different/unknown, generator + verifier)
   <qid>/answer.json      Answer         (Answer: code only)
   <qid>/answer_text.json TextAnswer     (baseline runs only: the system's own answer text, evqa/baselines)
-  <qid>/claims.json      TextClaims     (`evqa eval --text`: the values the answer text states, eval/text_answer.py)
+  <qid>/claims.json      TextClaims     (`evqa eval --text`: the values the answer text states, thesis_scorer.text)
   baseline/              the baseline system's own files (questions it was given, raw answers, run_info.json)
 Pipeline steps read ONLY: data/dataset/<domain>/questions/*.jsonl (question + intent card) and
 data/dataset/<domain>/*/paper.md. Never data/seed (seed wall test).
@@ -396,7 +396,7 @@ class TextAnswer(BaseModel):
 
 
 class TextClaim(BaseModel):
-    """One value an answer text states (eval/text_answer.py). Every text field is copied from the answer; "" when
+    """One value an answer text states (thesis_scorer.text). Every text field is copied from the answer; "" when
     the answer does not say it."""
     value_text: str                    # the value as written, with its unit and direction words ("fell by 0.8 %")
     subject: str = ""                  # drug (or other subject) the value is for

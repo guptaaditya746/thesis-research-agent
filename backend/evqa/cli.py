@@ -136,8 +136,8 @@ def paper_brief(a: argparse.Namespace) -> int:
 
 
 def paper_check(a: argparse.Namespace) -> int:
-    from evqa.eval import dataset
-    rows = dataset.check_domain(a.domain)
+    from evqa.seed import l0
+    rows = l0.check_domain(a.domain)
     for r in rows:
         print(json.dumps(r, default=str))
     return 0
@@ -231,21 +231,26 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--config", type=Path, required=True)
     r.add_argument("--no-eval", action="store_true", help="skip scoring the run folder")
     r.add_argument("--text", action="store_true", help="also score the answer text (L3-text, LLM; see eval --text)")
-    r.add_argument("--text-model", default=None, help="L3-text reader, backend:model (default qwen:orch-model)")
-    r.add_argument("--judge-model", default=None, help="L3-text patient-group judge (default qwen:sub-model-1)")
+    r.add_argument("--text-model", default=None, help="L3-text reader, a LiteLLM model (default orch-model)")
+    r.add_argument("--judge-model", default=None, help="L3-text patient-group judge (default sub-model-1)")
     r.set_defaults(fn=pipeline_run)
     e = sub.add_parser("eval", help="score a run folder (writes eval.json)")
     e.add_argument("run_dir", type=Path)
     e.add_argument("--domain", default=None, help="default: domain in <run_dir>/config.yaml (must agree)")
-    e.add_argument("--judge", action="store_true", help="also run the blind LLM label judge (eval/judge.py)")
+    e.add_argument("--judge", action="store_true", help="also run the blind LLM label judge (thesis_scorer.judge)")
     e.add_argument("--judge-population", action="store_true",
                    help="settle unverified patient groups with the blind LLM judge -> population_judge.json")
     e.add_argument("--text", action="store_true",
                    help="also score the answer text, the same way for evqa and baseline runs (L3-text, "
-                        "eval/text_answer.py; LLM reader + blind judge, cached)")
-    e.add_argument("--text-model", default=None, help="L3-text reader, backend:model (default qwen:orch-model)")
-    e.add_argument("--judge-model", default=None, help="L3-text patient-group judge (default qwen:sub-model-1)")
+                        "thesis_scorer.text; LLM reader + blind judge, cached)")
+    e.add_argument("--text-model", default=None, help="L3-text reader, a LiteLLM model (default orch-model)")
+    e.add_argument("--judge-model", default=None, help="L3-text patient-group judge (default sub-model-1)")
     e.set_defaults(fn=eval_run)
+    ge = sub.add_parser("gold-export", help="write the scorer's gold file of a domain and split (thesis-scorer input)")
+    ge.add_argument("domain")
+    ge.add_argument("--split", default="test", choices=["practice", "test"])
+    ge.add_argument("--out", type=Path, required=True)
+    ge.set_defaults(fn=gold_export)
     x = sub.add_parser("explain", help="why one question of a practice run is right or wrong, in plain words")
     x.add_argument("run_dir", type=Path)
     x.add_argument("qid")
@@ -312,39 +317,45 @@ def run_domain(run_dir: Path, domain: str | None) -> str:
 
 
 def eval_run(a: argparse.Namespace) -> int:
-    from evqa.seed import pfview
+    """Score a run folder with the scorer service (evqa/scoring.py -> services/thesis-scorer)."""
+    from evqa import scoring                   # lazy: builds the seed graph
     domain = run_domain(a.run_dir, a.domain)
-    if pfview.is_pf(domain):       # paperfactory domain: no seed graph, so only the answer-text score (L3-text)
+    if scoring.is_pf(domain):      # paperfactory domain: no seed graph, so only the answer-text score (L3-text)
         if not getattr(a, "text", False):
             raise SystemExit(f"{domain} is a paperfactory domain: only `evqa eval <run> --text` applies")
     else:
-        from evqa.eval.prism import score_run      # lazy: builds the seed graph
-        out = score_run(a.run_dir, domain=domain)
+        out = scoring.score_run(a.run_dir, domain=domain)
         print(json.dumps(out["totals"], indent=2))
     if getattr(a, "judge", False):
-        from evqa.eval.judge import judge_run
-        got = judge_run(a.run_dir)
+        got = scoring.judge_run(a.run_dir)
         print(json.dumps({k: v for k, v in got.items() if k != "details"}, indent=2))
     if getattr(a, "judge_population", False):
-        from evqa.eval.judge import judge_population
-        got = judge_population(a.run_dir)
+        got = scoring.judge_population(a.run_dir)
         print(json.dumps({k: v for k, v in got.items() if k != "details"}, indent=2))
     if getattr(a, "text", False):
-        from evqa.eval import text_answer
-        reader = step_llm(a.text_model) if getattr(a, "text_model", None) else text_answer.READER
-        judge = step_llm(a.judge_model) if getattr(a, "judge_model", None) else text_answer.JUDGE
-        got = text_answer.score_run(a.run_dir, reader=reader, judge_llm=judge)
+        reader = scorer_model(a.text_model) if getattr(a, "text_model", None) else scoring.READER
+        judge = scorer_model(a.judge_model) if getattr(a, "judge_model", None) else scoring.JUDGE
+        got = scoring.score_text(a.run_dir, reader=reader, judge_model=judge)
         print(json.dumps({k: v for k, v in got["totals"].items() if k != "per_type"}, indent=2))
     return 0
 
 
-def step_llm(spec: str):
-    """'qwen:orch-model' -> StepLLM(backend='qwen', model='orch-model')."""
-    from evqa.contracts import StepLLM
+def scorer_model(spec: str) -> str:
+    """The LiteLLM model name the scorer calls: 'orch-model' or 'qwen:orch-model' -> 'orch-model'."""
     backend, _, model = spec.partition(":")
-    if not model:
-        raise SystemExit(f"model {spec!r}: write backend:model, e.g. qwen:orch-model")
-    return StepLLM(backend=backend, model=model)
+    if model and backend != "qwen":
+        raise SystemExit(f"model {spec!r}: the scorer calls LiteLLM models only (e.g. orch-model)")
+    return model or backend
+
+
+def gold_export(a: argparse.Namespace) -> int:
+    """The scorer's gold file for a domain and split (input of `thesis-scorer score`)."""
+    from evqa import scoring
+    out = scoring.gold_file(a.domain, a.split)
+    a.out.parent.mkdir(parents=True, exist_ok=True)
+    a.out.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"{a.out}: {len(out['questions'])} questions, {len(out['facts'])} facts")
+    return 0
 
 
 if __name__ == "__main__":

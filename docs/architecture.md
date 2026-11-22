@@ -22,7 +22,7 @@ data/seed/<domain>/ (blueprint, seed.ttl, briefs, gold)  -- truth; the pipeline 
 data/dataset/<domain>/<paper>/paper.md  -- all the QA system may read
         |  evqa run --config configs/evqa/<x>.yaml   (spec -> find -> extract -> answer)
         v
-runs/evqa/<run>/  --  evqa eval (scores against data/seed)  -->  Workbench
+runs/evqa/<run>/  --  evqa eval  -->  services/thesis-scorer (gold.json + answers.jsonl in, eval.json out)  -->  Workbench
 ```
 
 ## Baselines (compare with other answering systems)
@@ -34,7 +34,7 @@ configs/evqa/practice-pqa-rag.yaml (system: paperqa2-rag | paperqa2-agent | long
 evqa/baselines  --subprocess-->  baselines/ (submodule thesis-baselines, own uv env: PaperQA2, long context)
         |  same questions (corpus.py), same papers, same Qwen gateway alias
         v
-runs/evqa/<run>/<qid>/find.jsonl + answer_text.json  --  prism (L0, L1)  +  eval/text_answer.py (L3-text)
+runs/evqa/<run>/<qid>/find.jsonl + answer_text.json  --  thesis-scorer: L0, L1 + L3-text (same rules for every system)
         |
         v
 evqa compare evqa-run baseline-run   (l3_text is the score every system has)
@@ -57,3 +57,4 @@ lists the values the text states, code checks each against the text and against 
 | `tests/`, `reports/` | recorded results of the earlier system; never edited |
 | `llm-setup/` | submodule: vLLM + LiteLLM stack on Slurm |
 | `baselines/` | submodule thesis-baselines: PaperQA2 and long-context baselines (own uv env) |
+| `services/thesis-scorer/` | submodule thesis-scorer: scores any system's answers (gold file + answers JSONL in, report out); evqa uses it via `evqa/scoring.py` |

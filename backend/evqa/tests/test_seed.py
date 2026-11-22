@@ -197,7 +197,7 @@ def test_view_of_the_checked_in_seed() -> None:
 
 
 def test_seed_wall() -> None:
-    """Pipeline steps may not import the seed or eval, nor name the seed folder."""
+    """Pipeline steps may not import the seed or the scorer, nor name the seed folder."""
     for step in ("spec", "find", "extract", "answer", "baselines"):
         folder = BACKEND_EVQA / step
         for f in folder.rglob("*.py") if folder.is_dir() else []:
@@ -206,7 +206,7 @@ def test_seed_wall() -> None:
             for node in ast.walk(ast.parse(text)):
                 mods = ([a.name for a in node.names] if isinstance(node, ast.Import)
                         else [node.module or ""] if isinstance(node, ast.ImportFrom) else [])
-                assert not any(m.startswith(("evqa.seed", "evqa.eval")) for m in mods), f
+                assert not any(m.startswith(("evqa.seed", "evqa.scoring", "evqa.qgraph", "thesis_scorer")) for m in mods), f
 
 
 def test_checked_in_names_have_no_problems() -> None:

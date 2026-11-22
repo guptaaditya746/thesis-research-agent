@@ -1,4 +1,4 @@
-"""qgraph (evqa/eval/qgraph.py): one question's rows drawn inside its piece of the seed graph."""
+"""qgraph (evqa/qgraph.py): one question's rows drawn inside its piece of the seed graph."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,7 +7,8 @@ import pytest
 import yaml
 
 from evqa.contracts import Row, RunConfig, StdValue, write_jsonl
-from evqa.eval import prism, qgraph
+from evqa import qgraph
+from evqa import scoring as prism
 from evqa.paths import domain_dir
 
 DOMAIN = "medical"

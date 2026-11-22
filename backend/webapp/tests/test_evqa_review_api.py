@@ -8,7 +8,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from evqa.eval import review
+from evqa.seed import review
 from webapp.evqa_review_api import router
 
 

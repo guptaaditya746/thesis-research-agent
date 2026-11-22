@@ -94,9 +94,9 @@ def test_paper_write_refuses_tracked_paper(tmp_path, monkeypatch):
 # ---------- eval --domain ----------
 
 def test_eval_domain_comes_from_config(tmp_path, monkeypatch):
-    from evqa.eval import prism
+    from evqa import scoring as prism
     got = []
-    monkeypatch.setattr(prism, "score_run", lambda run_dir, domain: got.append(domain) or {"totals": {}})
+    monkeypatch.setattr(prism, "score_run", lambda run_dir, domain, **kw: got.append(domain) or {"totals": {}})
     (tmp_path / "config.yaml").write_text(yaml.safe_dump({"domain": "materials"}))
     assert cli.main(["eval", str(tmp_path)]) == 0
     assert cli.main(["eval", str(tmp_path), "--domain", "materials"]) == 0

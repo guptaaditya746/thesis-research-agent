@@ -5,7 +5,7 @@
     GET /api/evqa/runs/{run_id}    config, per question spec/find/rows/answer (evqa) or find/answer_text (baseline),
                                    claims (`evqa eval --text`), events tail, eval.json if present
     GET /api/evqa/runs/{run_id}/graph/{qid}   the question's rows drawn inside its piece of the seed graph
-                                   (Cytoscape elements, evqa/eval/qgraph.py); 404 for an unknown run or question
+                                   (Cytoscape elements, evqa/qgraph.py); 404 for an unknown run or question
     GET /api/evqa/runs/{run_id}/explain/{qid} why each true fact is right or wrong (evqa/explain.py, data form);
                                    403 for a run that is not a practice run (bench-*, split != practice);
                                    409 for a baseline run (no evqa steps to explain)
@@ -25,7 +25,7 @@ import yaml
 from fastapi import APIRouter, HTTPException
 
 from evqa import explain as evqa_explain
-from evqa.eval import qgraph
+from evqa import qgraph
 from evqa.paths import REPO
 
 RUNS_ROOT = REPO / "runs" / "evqa"      # module variable so tests can monkeypatch it

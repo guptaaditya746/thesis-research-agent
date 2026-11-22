@@ -30,8 +30,8 @@ from pathlib import Path
 from typing import Any
 
 from evqa import norm
-from evqa.eval import dataset as l0
-from evqa.eval import prism
+from evqa import scoring
+from evqa.seed import l0
 from evqa.paths import DATA, DATASET, REPO
 from evqa.seed import brief
 
@@ -148,7 +148,7 @@ def fidelity_items(domain: str, split: str = "practice") -> list[dict[str, Any]]
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")
-        l0_rep = prism.l0_facts(domain, pid)
+        l0_rep = scoring.l0_facts(domain, pid)
         writer = _writer_report(domain, pid)
         for f in p["facts"]:
             r = l0_rep.get(f["id"], {})

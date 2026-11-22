@@ -192,7 +192,7 @@ def test_advisor_score() -> None:
 
 
 def test_spec_reads_no_papers() -> None:
-    """Independent advisor: no corpus papers, no seed, no eval in the spec package."""
+    """Independent advisor: no corpus papers, no seed, no scorer in the spec package."""
     for f in (BACKEND_EVQA / "spec").rglob("*.py"):
         tree = ast.parse(f.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -200,7 +200,7 @@ def test_spec_reads_no_papers() -> None:
                 assert node.module not in {"evqa.corpus", "evqa.paths"}, f
                 assert not (node.module == "evqa" and any(a.name in {"corpus", "paths"} for a in node.names)), f
             if isinstance(node, ast.Import):
-                assert not any(a.name.startswith(("evqa.corpus", "evqa.seed", "evqa.eval")) for a in node.names), f
+                assert not any(a.name.startswith(("evqa.corpus", "evqa.seed", "evqa.scoring", "thesis_scorer")) for a in node.names), f
 
 
 def test_an_empty_reply_is_asked_again(monkeypatch) -> None:
