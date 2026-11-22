@@ -132,13 +132,16 @@ def paper_check(a: argparse.Namespace) -> int:
 
 
 def _tracked(paths: list[Path]) -> list[Path]:
-    """The paths among `paths` that git tracks."""
+    """The paths among `paths` that git tracks. data/ is a submodule (thesis-benchmark), so git is asked from
+    each file's own folder: run from the repo root, `git ls-files` cannot see inside a submodule."""
     import subprocess
-    from repo_paths import REPO
-    if not paths:
-        return []
-    out = subprocess.run(["git", "ls-files", "--", *map(str, paths)], capture_output=True, text=True, cwd=REPO)
-    return [REPO / x for x in out.stdout.splitlines() if x.strip()]
+    kept = []
+    for p in paths:
+        p = Path(p).resolve()
+        out = subprocess.run(["git", "ls-files", "--", p.name], capture_output=True, text=True, cwd=p.parent)
+        if out.stdout.strip():
+            kept.append(p)
+    return kept
 
 
 def frozen_reason(domain: str, paper: str | None) -> str | None:

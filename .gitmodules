@@ -13,3 +13,6 @@
 [submodule "frontend"]
 	path = frontend
 	url = https://github.com/guptaaditya746/thesis-workbench.git
+[submodule "data"]
+	path = data
+	url = https://github.com/guptaaditya746/thesis-benchmark.git
