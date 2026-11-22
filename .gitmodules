@@ -7,3 +7,6 @@
 [submodule "services/paper-factory"]
 	path = services/paper-factory
 	url = https://github.com/guptaaditya746/Paper-factory.git
+[submodule "services/model-queue"]
+	path = services/model-queue
+	url = https://github.com/guptaaditya746/model-queue.git
