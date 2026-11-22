@@ -1,4 +1,5 @@
-"""pfbench: questions + gold from paperfactory fact rows, and their L3-text scoring (no model calls)."""
+"""pfbench: questions + gold from paperfactory fact rows, their gold file for the scorer (evqa/scoring.py) and
+their L3-text scoring by thesis_scorer (no model calls)."""
 from __future__ import annotations
 
 import json
@@ -6,9 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from evqa.contracts import TextAnswer, TextClaim, TextClaims
-from evqa.eval import text_answer
-from evqa.seed import pfbench
+from thesis_scorer import text
+from thesis_scorer.gold import Gold
+from thesis_scorer.schema import GoldFile, Record, TextClaim, TextClaims
+
+from evqa import scoring
+from evqa.seed import pfbench, pfview
 
 ENTS = {
     "T1": {"kind": "treatment", "label": "potrogliflozin", "alt": [], "attrs": {}},
@@ -58,7 +62,9 @@ def dom(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
     monkeypatch.setattr(pfbench, "DATASET", tmp_path / "dataset")
     import evqa.paths
     monkeypatch.setattr(evqa.paths, "domain_dir", lambda name: tmp_path / "seed" / name)
-    monkeypatch.setattr(text_answer, "is_pf", lambda name: True)
+    monkeypatch.setattr(pfview, "domain_dir", lambda name: tmp_path / "seed" / name)
+    monkeypatch.setattr(scoring, "domain_dir", lambda name: tmp_path / "seed" / name)
+    monkeypatch.setattr(scoring, "DATASET", tmp_path / "dataset")
     return "pf_test"
 
 
@@ -84,18 +90,23 @@ def test_value_in_two_papers_is_one_row(dom: str):
     assert lk["table"][0]["papers"] == ["MED-01", "MED-09"]
 
 
-def _ta(text: str) -> TextAnswer:
-    return TextAnswer(qid="q", system="x", text=text, cannot_answer=False, citations=[])
+def _gold(dom: str, golds: list[dict]) -> Gold:
+    return Gold(GoldFile.model_validate({"domain": dom, "kind": "paperfactory", "units": {},
+                                         "entities": ENTS, "questions": golds}))
+
+
+def _score(dom: str, g: dict, answer: str, claims: list[TextClaim]) -> dict:
+    tc = TextClaims(qid=g["qid"], text_sha256="x", model="m", claims=claims)
+    return text.score_question(g, Record(qid=g["qid"], answer=answer), tc, _gold(dom, [g]), None)
 
 
 def test_scoring_numbers_without_units_and_any_paper(dom: str):
     d = pfbench.Domain(dom)
     lk = next(c for c in pfbench.lookups(d) if c["key"] == ("lookup", "TR1", "patients"))
     g = pfbench._gold("Q1", d, "lookup", lk["q"], lk["slots"], lk["table"], lk["columns"])
-    text = "The ZIMOR-3 trial randomised 100 patients (MED-09)."
-    tc = TextClaims(qid="Q1", text_sha256="x", model="m", claims=[
-        TextClaim(value_text="100 patients", subject="the ZIMOR-3 trial", paper="MED-09", quote=text)])
-    got = text_answer.score_question(g, _ta(text), tc, dom, None, [])
+    t = "The ZIMOR-3 trial randomised 100 patients (MED-09)."
+    got = _score(dom, g, t, [TextClaim(value_text="100 patients", subject="the ZIMOR-3 trial", paper="MED-09",
+                                       quote=t)])
     assert got["exact"] and got["score"] == 1.0
 
 
@@ -103,8 +114,17 @@ def test_scoring_entity_list(dom: str):
     d = pfbench.Domain(dom)
     c = pfbench.lists(d)[0]
     g = pfbench._gold("Q2", d, "list", c["q"], c["slots"], [], c["columns"], c["entities"])
-    tc = TextClaims(qid="Q2", text_sha256="x", model="m", claims=[])
-    right = text_answer.score_question(g, _ta("ZIMOR-3 and the SUTHO-5 trial."), tc, dom, None, [])
-    extra = text_answer.score_question(g, _ta("ZIMOR-3, SUTHO-5 and BRUMON-6."), tc, dom, None, [])
+    right = _score(dom, g, "ZIMOR-3 and the SUTHO-5 trial.", [])
+    extra = _score(dom, g, "ZIMOR-3, SUTHO-5 and BRUMON-6.", [])
     assert right["exact"] and right["score"] == 1.0
     assert extra["recall"] == 1.0 and extra["precision"] == pytest.approx(2 / 3, abs=1e-3)
+
+
+def test_gold_file_of_a_paperfactory_domain(dom: str):
+    pfbench.write(dom, pfbench.build(dom, mix={t: 1 for t in pfbench.MIX}))
+    gf = scoring.gold_file(dom, "test")
+    assert gf["kind"] == "paperfactory" and gf["facts"] == {} and gf["names"] == {}
+    assert gf["entities"]["TR1"] == {"kind": "trial", "label": "the ZIMOR-3 trial", "alt": ["ZIMOR-3"]}
+    assert len(gf["questions"]) == len(pfbench.MIX) and all(q["question"] for q in gf["questions"])
+    lk = next(q for q in gf["questions"] if q["type"] == "lookup")
+    assert lk["answer"]["table"][0]["papers"]

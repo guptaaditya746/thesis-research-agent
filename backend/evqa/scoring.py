@@ -115,6 +115,9 @@ def gold_file(domain: str, split: str, qids: list[str] | None = None) -> dict[st
     golds = gold(domain)
     qids = split_qids(domain, split) if qids is None else [q for q in qids if q in golds]
     texts = asked(domain)
+    papers = sorted(p.parent.name for p in (DATASET / domain).glob("*/paper.md"))
+    if is_pf(domain):
+        return pf_gold_file(domain, split, qids, golds, texts, papers)
     facts = {}
     for fid, f in seed_facts(domain).items():
         l0 = l0_facts(domain, f["paper"]).get(fid, {})
@@ -133,8 +136,27 @@ def gold_file(domain: str, split: str, qids: list[str] | None = None) -> dict[st
         questions.append({**g, "question": texts.get(q, ""), "labels": labels})
     from evqa.seed import questions as seed_questions
     out = {"domain": domain, "split": split, "units": norm.units(), "names": seed_questions.names(domain),
-           "papers": sorted(p.parent.name for p in (DATASET / domain).glob("*/paper.md")),
-           "facts": facts, "questions": questions, "data": datahash.data_hashes(domain, split)}
+           "papers": papers, "facts": facts, "questions": questions, "data": datahash.data_hashes(domain, split)}
+    return GoldFile.model_validate(out).model_dump(mode="json")
+
+
+def is_pf(domain: str) -> bool:
+    """A paperfactory domain (evqa/seed/pfbench.py gold from shared fact rows, no evqa seed graph)."""
+    from evqa.seed import pfview
+    return pfview.is_pf(domain)
+
+
+def pf_gold_file(domain: str, split: str, qids: list[str], golds: dict[str, dict[str, Any]],
+                 texts: dict[str, str], papers: list[str]) -> dict[str, Any]:
+    """The gold file of a paperfactory domain: kind "paperfactory", no facts, the entities of
+    data/seed/<d>/entities.json; the pfbench gold questions as written (rows with "papers", entities)."""
+    path = domain_dir(domain) / "entities.json"
+    ents = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    out = {"domain": domain, "kind": "paperfactory", "split": split, "units": norm.units(), "papers": papers,
+           "entities": {k: {"kind": e["kind"], "label": e["label"], "alt": list(e.get("alt") or [])}
+                        for k, e in ents.items()},
+           "questions": [{**golds[q], "question": texts.get(q, "")} for q in qids],
+           "data": datahash.data_hashes(domain, split)}
     return GoldFile.model_validate(out).model_dump(mode="json")
 
 
@@ -257,8 +279,10 @@ def score_run(run_dir: Path, domain: str = "medical", only: list[str] | None = N
     text_path = run_dir / "eval_text.json"
     saved = json.loads(text_path.read_text(encoding="utf-8")) if text_path.is_file() else None
     report = api.score(g, recs, qids, text_report=saved)
-    out = {"run_id": run_dir.name, "domain": report.pop("domain"), "config_name": cfg.name,
-           "closed_book": cfg.closed_book, **report}
+    head = {"run_id": run_dir.name, "domain": report.pop("domain")}
+    if not g.is_pf:          # a paperfactory run has the text score only (cli: `evqa eval --text`)
+        head.update(config_name=cfg.name, closed_book=cfg.closed_book)
+    out = {**head, **report}
     if write:
         (run_dir / "eval.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     return out

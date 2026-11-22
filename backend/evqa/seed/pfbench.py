@@ -13,7 +13,7 @@ Every paper in facts.jsonl passed the paperfactory checks, so each number row is
 relation was found by the tagger. Values are the world's (quant.py): one value per (subject, number), so a number in
 several papers is ONE gold row (its papers listed in "papers"); systems may cite any of them.
 
-Types (the evqa names; the same scoring code, eval/text_answer.py):
+Types (the evqa names; scored by the thesis-scorer service, thesis_scorer.text):
   lookup        one number of one entity                      -> its row
   effect        the effect a study reported for one object    -> estimate and 95% CI rows
   best          the effect (or a number) across the entities that share one object -> one row per candidate

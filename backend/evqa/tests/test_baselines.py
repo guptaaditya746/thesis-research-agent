@@ -155,7 +155,7 @@ def test_score_run_merges_into_eval_and_resolves_blame(baseline_run: Path, monke
     scoring.score_run(baseline_run, DOMAIN)
     calls: list[str] = []
 
-    def fake_read(question, text, reader, qid):
+    def fake_read(question, text, reader, qid, instructions=text_answer.READ_CLAIMS):
         calls.append(qid)
         claims = [] if "cannot" in text else [
             _claim("lowered HbA1c by 0.52 percentage points", text, subject="Veloranide", time_point="week 12")]
