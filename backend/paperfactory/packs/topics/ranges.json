@@ -1,0 +1,18 @@
+{
+ "fetched": "2026-11-22",
+ "ranges": {
+  "phase3_enrolment": {
+   "source": "ClinicalTrials.gov API v2",
+   "query": {
+    "filter.overallStatus": "COMPLETED",
+    "query.term": "AREA[Phase]PHASE3 AND AREA[StudyType]INTERVENTIONAL"
+   },
+   "n": 4406,
+   "p10": 39,
+   "p25": 85,
+   "median": 220,
+   "p75": 515,
+   "p90": 1011
+  }
+ }
+}

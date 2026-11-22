@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import copy
 import json
-import subprocess
 
 import pytest
 
@@ -54,17 +53,16 @@ def test_confusions_are_relations_and_go_both_ways(name: str) -> None:
     assert "| Easily confused with |" in packs.relation_table(f)
 
 
-def test_world_agent_prompt_does_not_change() -> None:
-    try:                       # needs git and that commit (a shallow clone or a machine without git: skip)
-        old = subprocess.run(["git", "show", "a6b7cad:backend/paperfactory/packs/fields/law.json"],
-                             capture_output=True, text=True, cwd=packs.PACKS, timeout=30).stdout
-    except (OSError, subprocess.SubprocessError):
-        old = ""
-    if not old:
-        pytest.skip("commit a6b7cad not in this clone")
-    old_f = packs.Field(json.loads(old))
-    keys = ("setting", "kinds", "relations", "conflict_pairs", "world_notes")
-    assert world._pack_text(LAW) == json.dumps({k: old_f.raw[k] for k in keys if k in old_f.raw}, indent=1)
+def test_world_agent_sees_the_pack_without_reviewer_fields_or_name_patterns() -> None:
+    """Was a freeze of the law pack at a6b7cad; on 22 Nov 2026 names moved to code (names.py), so the agent sees each
+    kind's about, attrs, name parts and example, and never "confusable_with" or the name patterns."""
+    shown = json.loads(world._pack_text(LAW))
+    assert set(shown) == {"setting", "kinds", "relations", "conflict_pairs", "world_notes"}
+    assert all("confusable_with" not in r for r in shown["relations"].values())
+    assert shown["kinds"]["court"] == {"about": LAW.kinds["court"]["about"], "attrs": {"level": "int"},
+                                       "name_parts": LAW.kinds["court"]["name"]["parts"],
+                                       "example": LAW.kinds["court"]["name"]["example"]}
+    assert "{W}" not in world._pack_text(LAW) and "label" not in world._pack_text(LAW)
 
 
 def test_a_paper_planned_twice_is_an_error() -> None:

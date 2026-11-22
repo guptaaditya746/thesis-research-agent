@@ -1,0 +1,2040 @@
+@prefix ex: <https://example.org/paperfactory/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:S1-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-36 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S1 .
+
+ex:S10-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-34 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S10 .
+
+ex:S10-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-34 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S10 .
+
+ex:S10-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-34 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S10 .
+
+ex:S10-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-34 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S10 .
+
+ex:S11-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-05,
+        ex:LLM-08,
+        ex:LLM-10,
+        ex:LLM-13,
+        ex:LLM-28 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S11 .
+
+ex:S11-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-28 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S11 .
+
+ex:S12-fails_to_replicate-S9 a ex:Fact ;
+    ex:inPaper ex:LLM-05 ;
+    ex:object ex:S9 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S12 .
+
+ex:S12-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-05,
+        ex:LLM-08,
+        ex:LLM-10,
+        ex:LLM-11,
+        ex:LLM-13,
+        ex:LLM-33 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S12 .
+
+ex:S13-fails_to_replicate-S9 a ex:Fact ;
+    ex:inPaper ex:LLM-05 ;
+    ex:object ex:S9 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S13 .
+
+ex:S13-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-20 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S13 .
+
+ex:S13-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-20 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S13 .
+
+ex:S14-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-35 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S14 .
+
+ex:S14-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-35 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S14 .
+
+ex:S14-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-35 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S14 .
+
+ex:S15-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-27 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S15 .
+
+ex:S15-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-27 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S15 .
+
+ex:S16-fails_to_replicate-S13 a ex:Fact ;
+    ex:inPaper ex:LLM-03 ;
+    ex:object ex:S13 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S16 .
+
+ex:S16-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-03,
+        ex:LLM-09 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S16 .
+
+ex:S17-fails_to_replicate-S13 a ex:Fact ;
+    ex:inPaper ex:LLM-03,
+        ex:LLM-25 ;
+    ex:object ex:S13 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S17 .
+
+ex:S17-fails_to_replicate-S14 a ex:Fact ;
+    ex:inPaper ex:LLM-25 ;
+    ex:object ex:S14 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S17 .
+
+ex:S17-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-25,
+        ex:LLM-35 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S17 .
+
+ex:S17-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-25 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S17 .
+
+ex:S18-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-03,
+        ex:LLM-30 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S18 .
+
+ex:S18-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-30 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S18 .
+
+ex:S19-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-08 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S19 .
+
+ex:S2-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-36,
+        ex:LLM-38 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S2 .
+
+ex:S2-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-38 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S2 .
+
+ex:S20-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-07 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S20 .
+
+ex:S21-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-30 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S21 .
+
+ex:S21-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-30 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S21 .
+
+ex:S22-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S22 .
+
+ex:S22-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-01,
+        ex:LLM-05,
+        ex:LLM-07 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S22 .
+
+ex:S23-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-01,
+        ex:LLM-05,
+        ex:LLM-08 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S23 .
+
+ex:S24-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-01,
+        ex:LLM-15 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S24 .
+
+ex:S24-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-15 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S24 .
+
+ex:S25-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-24 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S25 .
+
+ex:S25-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-24 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S25 .
+
+ex:S25-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-24 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S25 .
+
+ex:S25-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-24 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S25 .
+
+ex:S26-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-02,
+        ex:LLM-09 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S26 .
+
+ex:S26-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-02,
+        ex:LLM-06,
+        ex:LLM-13 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S26 .
+
+ex:S27-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-31 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S27 .
+
+ex:S27-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-02,
+        ex:LLM-31 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S27 .
+
+ex:S27-reports_no_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-31 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S27 .
+
+ex:S27-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-31 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S27 .
+
+ex:S28-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-02,
+        ex:LLM-06,
+        ex:LLM-13,
+        ex:LLM-20 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S28 .
+
+ex:S29-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-20 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S29 .
+
+ex:S29-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-20 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S29 .
+
+ex:S3-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-36 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S3 .
+
+ex:S3-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-36 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S3 .
+
+ex:S3-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-36 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S3 .
+
+ex:S3-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-36 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S3 .
+
+ex:S30-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-39 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S30 .
+
+ex:S30-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-39 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S30 .
+
+ex:S31-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-13 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S31 .
+
+ex:S31-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-13,
+        ex:LLM-14 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S31 .
+
+ex:S32-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-21 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S32 .
+
+ex:S32-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-21 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S32 .
+
+ex:S32-reports_no_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-21 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S32 .
+
+ex:S32-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-21 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S32 .
+
+ex:S33-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-23 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S33 .
+
+ex:S33-reports_drop-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-23 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S33 .
+
+ex:S33-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-23 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S33 .
+
+ex:S33-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-23 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S33 .
+
+ex:S34-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-26 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S34 .
+
+ex:S34-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-26 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S34 .
+
+ex:S35-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-21,
+        ex:LLM-30 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S35 .
+
+ex:S35-reports_drop-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-21 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S35 .
+
+ex:S36-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-29 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S36 .
+
+ex:S36-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-29 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S36 .
+
+ex:S36-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-26 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S36 .
+
+ex:S37-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S37 .
+
+ex:S37-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-02 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S37 .
+
+ex:S37-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-04,
+        ex:LLM-09 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S37 .
+
+ex:S38-fails_to_replicate-S3 a ex:Fact ;
+    ex:inPaper ex:LLM-28 ;
+    ex:object ex:S3 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S38 .
+
+ex:S38-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-04 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S38 .
+
+ex:S38-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-02,
+        ex:LLM-11,
+        ex:LLM-20 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S38 .
+
+ex:S39-fails_to_replicate-S3 a ex:Fact ;
+    ex:inPaper ex:LLM-28 ;
+    ex:object ex:S3 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S39 .
+
+ex:S39-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-28 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S39 .
+
+ex:S39-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-04,
+        ex:LLM-07,
+        ex:LLM-28 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S39 .
+
+ex:S4-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-17 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S4 .
+
+ex:S4-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-17 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S4 .
+
+ex:S4-reports_no_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-17 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S4 .
+
+ex:S40-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-40 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S40 .
+
+ex:S40-reports_drop-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-01,
+        ex:LLM-40 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S40 .
+
+ex:S41-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-39 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S41 .
+
+ex:S41-reports_drop-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-39 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S41 .
+
+ex:S41-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-39 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S41 .
+
+ex:S41-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-39 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S41 .
+
+ex:S42-reports_drop-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-01 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S42 .
+
+ex:S43-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-24,
+        ex:LLM-38 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S43 .
+
+ex:S43-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-24 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S43 .
+
+ex:S44-reports_no_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-27 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S44 .
+
+ex:S45-reports_no_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-27 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S45 .
+
+ex:S45-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-10,
+        ex:LLM-12 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S45 .
+
+ex:S46-reports_drop-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-33 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S46 .
+
+ex:S46-reports_drop-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-33 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S46 .
+
+ex:S46-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-16,
+        ex:LLM-33 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S46 .
+
+ex:S47-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-16 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S47 .
+
+ex:S47-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-16 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S47 .
+
+ex:S47-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-16,
+        ex:LLM-26 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S47 .
+
+ex:S48-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-25,
+        ex:LLM-30 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S48 .
+
+ex:S48-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-25 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S48 .
+
+ex:S49-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-18 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S49 .
+
+ex:S49-reports_drop-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-18 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S49 .
+
+ex:S49-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-18 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S49 .
+
+ex:S49-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-18 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S49 .
+
+ex:S5-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-33 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S5 .
+
+ex:S5-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-33 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S5 .
+
+ex:S50-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-37 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S50 .
+
+ex:S50-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-37 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S50 .
+
+ex:S50-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-37 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S50 .
+
+ex:S51-reports_drop-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-32 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_drop ;
+    ex:subject ex:S51 .
+
+ex:S51-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-32 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S51 .
+
+ex:S51-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-32 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S51 .
+
+ex:S52-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-34 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S52 .
+
+ex:S52-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-34 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S52 .
+
+ex:S53-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-10,
+        ex:LLM-11 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S53 .
+
+ex:S53-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-10 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S53 .
+
+ex:S54-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-09 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S54 .
+
+ex:S55-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-14 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S55 .
+
+ex:S56-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-09 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S56 .
+
+ex:S56-reports_no_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-09,
+        ex:LLM-27 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S56 .
+
+ex:S57-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-17 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S57 .
+
+ex:S57-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-17 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S57 .
+
+ex:S58-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-19 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S58 .
+
+ex:S58-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-19 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S58 .
+
+ex:S58-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-19 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S58 .
+
+ex:S59-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-06,
+        ex:LLM-15,
+        ex:LLM-19 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S59 .
+
+ex:S6-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-18 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S6 .
+
+ex:S6-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-18 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S6 .
+
+ex:S60-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-06,
+        ex:LLM-12,
+        ex:LLM-15 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S60 .
+
+ex:S60-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-06 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S60 .
+
+ex:S61-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-07 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S61 .
+
+ex:S61-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-07 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S61 .
+
+ex:S62-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-08,
+        ex:LLM-32 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S62 .
+
+ex:S62-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-08 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S62 .
+
+ex:S63-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-26 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S63 .
+
+ex:S63-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-26 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S63 .
+
+ex:S64-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-29 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S64 .
+
+ex:S64-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-29 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S64 .
+
+ex:S64-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-29 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S64 .
+
+ex:S64-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-29 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S64 .
+
+ex:S65-fails_to_replicate-S8 a ex:Fact ;
+    ex:inPaper ex:LLM-22 ;
+    ex:object ex:S8 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S65 .
+
+ex:S65-fails_to_replicate-S9 a ex:Fact ;
+    ex:inPaper ex:LLM-22 ;
+    ex:object ex:S9 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S65 .
+
+ex:S65-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-22 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S65 .
+
+ex:S65-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-22 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S65 .
+
+ex:S66-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-32 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S66 .
+
+ex:S66-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-32 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S66 .
+
+ex:S67-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-12,
+        ex:LLM-15 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S67 .
+
+ex:S67-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-04,
+        ex:LLM-07,
+        ex:LLM-12 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S67 .
+
+ex:S68-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-23 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S68 .
+
+ex:S68-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-23 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S68 .
+
+ex:S69-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-04,
+        ex:LLM-12 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S69 .
+
+ex:S7-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-11 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S7 .
+
+ex:S7-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-11,
+        ex:LLM-14 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S7 .
+
+ex:S70-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-16 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S70 .
+
+ex:S70-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-16 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S70 .
+
+ex:S71-reports_no_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-12 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S71 .
+
+ex:S72-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-11 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S72 .
+
+ex:S73-fails_to_replicate-S4 a ex:Fact ;
+    ex:inPaper ex:LLM-14 ;
+    ex:object ex:S4 ;
+    ex:relation ex:fails_to_replicate ;
+    ex:subject ex:S73 .
+
+ex:S73-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-17 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S73 .
+
+ex:S73-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-03,
+        ex:LLM-14 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S73 .
+
+ex:S74-reports_no_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-03,
+        ex:LLM-06,
+        ex:LLM-10,
+        ex:LLM-14 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S74 .
+
+ex:S75-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-35 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S75 .
+
+ex:S75-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-35,
+        ex:LLM-37 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S75 .
+
+ex:S76-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-31 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S76 .
+
+ex:S76-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-31 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S76 .
+
+ex:S77-reports_no_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-19 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S77 .
+
+ex:S77-reports_no_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-19 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S77 .
+
+ex:S78-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-40 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S78 .
+
+ex:S78-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-40 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S78 .
+
+ex:S78-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-40 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S78 .
+
+ex:S78-reports_gain-M6 a ex:Fact ;
+    ex:inPaper ex:LLM-40 ;
+    ex:object ex:M6 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S78 .
+
+ex:S79-reports_gain-M2 a ex:Fact ;
+    ex:inPaper ex:LLM-38 ;
+    ex:object ex:M2 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S79 .
+
+ex:S79-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-38 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S79 .
+
+ex:S79-reports_no_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-38 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_no_gain ;
+    ex:subject ex:S79 .
+
+ex:S8-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-22 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S8 .
+
+ex:S8-reports_gain-M5 a ex:Fact ;
+    ex:inPaper ex:LLM-22 ;
+    ex:object ex:M5 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S8 .
+
+ex:S80-reports_gain-M1 a ex:Fact ;
+    ex:inPaper ex:LLM-37 ;
+    ex:object ex:M1 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S80 .
+
+ex:S80-reports_gain-M4 a ex:Fact ;
+    ex:inPaper ex:LLM-37 ;
+    ex:object ex:M4 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S80 .
+
+ex:S9-reports_gain-M3 a ex:Fact ;
+    ex:inPaper ex:LLM-15,
+        ex:LLM-27 ;
+    ex:object ex:M3 ;
+    ex:relation ex:reports_gain ;
+    ex:subject ex:S9 .
+
+ex:S1 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Banagro 2019" ;
+    skos:prefLabel "the Banagro 2019 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2019 .
+
+ex:S19 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Stosa 2022" ;
+    skos:prefLabel "the Stosa 2022 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2022 .
+
+ex:S20 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Togobe 2022" ;
+    skos:prefLabel "the Togobe 2022 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2022 .
+
+ex:S23 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Lomakra 2023" ;
+    skos:prefLabel "the Lomakra 2023 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2023 .
+
+ex:S28 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Mitra 2023" ;
+    skos:prefLabel "the Mitra 2023 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2023 .
+
+ex:S42 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Lofam 2025" ;
+    skos:prefLabel "the Lofam 2025 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2025 .
+
+ex:S44 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Sevos 2025" ;
+    skos:prefLabel "the Sevos 2025 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2025 .
+
+ex:S54 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Tigrum 2020" ;
+    skos:prefLabel "the Tigrum 2020 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2020 .
+
+ex:S55 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nabru 2021" ;
+    skos:prefLabel "the Nabru 2021 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S59 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Putrus 2022" ;
+    skos:prefLabel "the Putrus 2022 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2022 .
+
+ex:S69 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Grugofel 2025" ;
+    skos:prefLabel "the Grugofel 2025 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2025 .
+
+ex:S71 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Higos 2026" ;
+    skos:prefLabel "the Higos 2026 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2026 .
+
+ex:S72 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bitor 2026" ;
+    skos:prefLabel "the Bitor 2026 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2026 .
+
+ex:S74 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Graso 2021" ;
+    skos:prefLabel "the Graso 2021 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S11 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Brastom 2021" ;
+    skos:prefLabel "the Brastom 2021 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S12 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Dedrola 2021" ;
+    skos:prefLabel "the Dedrola 2021 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S15 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Trasor 2021" ;
+    skos:prefLabel "the Trasor 2021 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2021 .
+
+ex:S16 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Steferis 2022" ;
+    skos:prefLabel "the Steferis 2022 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2022 .
+
+ex:S18 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Kolal 2022" ;
+    skos:prefLabel "the Kolal 2022 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2022 .
+
+ex:S2 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Gredapos 2019" ;
+    skos:prefLabel "the Gredapos 2019 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2019 .
+
+ex:S21 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Vidra 2022" ;
+    skos:prefLabel "the Vidra 2022 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2022 .
+
+ex:S22 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Braliram 2023" ;
+    skos:prefLabel "the Braliram 2023 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2023 .
+
+ex:S24 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Femem 2023" ;
+    skos:prefLabel "the Femem 2023 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2023 .
+
+ex:S26 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Rakes 2023" ;
+    skos:prefLabel "the Rakes 2023 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S29 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Stutohas 2023" ;
+    skos:prefLabel "the Stutohas 2023 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2023 .
+
+ex:S30 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Hostal 2023" ;
+    skos:prefLabel "the Hostal 2023 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2023 .
+
+ex:S31 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bramos 2024" ;
+    skos:prefLabel "the Bramos 2024 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2024 .
+
+ex:S34 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Trigras 2024" ;
+    skos:prefLabel "the Trigras 2024 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2024 .
+
+ex:S35 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Mener 2024" ;
+    skos:prefLabel "the Mener 2024 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2024 .
+
+ex:S40 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Dukinal 2025" ;
+    skos:prefLabel "the Dukinal 2025 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2025 .
+
+ex:S43 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Hohas 2025" ;
+    skos:prefLabel "the Hohas 2025 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2025 .
+
+ex:S45 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Totin 2025" ;
+    skos:prefLabel "the Totin 2025 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2025 .
+
+ex:S48 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bririro 2026" ;
+    skos:prefLabel "the Bririro 2026 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2026 .
+
+ex:S5 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Dogres 2020" ;
+    skos:prefLabel "the Dogres 2020 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2020 .
+
+ex:S52 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Tikrar 2020" ;
+    skos:prefLabel "the Tikrar 2020 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2020 .
+
+ex:S53 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Sitafur 2020" ;
+    skos:prefLabel "the Sitafur 2020 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2020 .
+
+ex:S56 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Robidrum 2021" ;
+    skos:prefLabel "the Robidrum 2021 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S57 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bredul 2021" ;
+    skos:prefLabel "the Bredul 2021 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S6 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Sakem 2020" ;
+    skos:prefLabel "the Sakem 2020 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2020 .
+
+ex:S60 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Laradrum 2022" ;
+    skos:prefLabel "the Laradrum 2022 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2022 .
+
+ex:S61 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Rothihen 2023" ;
+    skos:prefLabel "the Rothihen 2023 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S62 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Kretather 2023" ;
+    skos:prefLabel "the Kretather 2023 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S63 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bifel 2023" ;
+    skos:prefLabel "the Bifel 2023 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S66 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Penom 2024" ;
+    skos:prefLabel "the Penom 2024 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2024 .
+
+ex:S67 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Mopel 2025" ;
+    skos:prefLabel "the Mopel 2025 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2025 .
+
+ex:S68 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Zupetran 2025" ;
+    skos:prefLabel "the Zupetran 2025 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2025 .
+
+ex:S7 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Tilutron 2020" ;
+    skos:prefLabel "the Tilutron 2020 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2020 .
+
+ex:S70 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Thonir 2026" ;
+    skos:prefLabel "the Thonir 2026 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2026 .
+
+ex:S75 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Pegem 2021" ;
+    skos:prefLabel "the Pegem 2021 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S76 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Brustekru 2022" ;
+    skos:prefLabel "the Brustekru 2022 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2022 .
+
+ex:S77 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Logrim 2022" ;
+    skos:prefLabel "the Logrim 2022 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2022 .
+
+ex:S80 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Matebrim 2023" ;
+    skos:prefLabel "the Matebrim 2023 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:Benchmark rdfs:subClassOf ex:Entity .
+
+ex:Model rdfs:subClassOf ex:Entity .
+
+ex:S36 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Vitraran 2024" ;
+    skos:prefLabel "the Vitraran 2024 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2024 .
+
+ex:S37 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Tekos 2025" ;
+    skos:prefLabel "the Tekos 2025 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2025 .
+
+ex:S38 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Rokrar 2025" ;
+    skos:prefLabel "the Rokrar 2025 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2025 .
+
+ex:S39 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Vomobral 2025" ;
+    skos:prefLabel "the Vomobral 2025 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2025 .
+
+ex:S46 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Fodra 2026" ;
+    skos:prefLabel "the Fodra 2026 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2026 .
+
+ex:S47 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bivam 2026" ;
+    skos:prefLabel "the Bivam 2026 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2026 .
+
+ex:S50 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Kitaras 2026" ;
+    skos:prefLabel "the Kitaras 2026 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2026 .
+
+ex:S51 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Pilom 2026" ;
+    skos:prefLabel "the Pilom 2026 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2026 .
+
+ex:S58 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Fastum 2022" ;
+    skos:prefLabel "the Fastum 2022 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2022 .
+
+ex:S73 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Fistem 2021" ;
+    skos:prefLabel "the Fistem 2021 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S79 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Thoses 2023" ;
+    skos:prefLabel "the Thoses 2023 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S8 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Vokosti 2020" ;
+    skos:prefLabel "the Vokosti 2020 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2020 .
+
+ex:S10 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Megreda 2021" ;
+    skos:prefLabel "the Megreda 2021 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2021 .
+
+ex:S14 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nozur 2021" ;
+    skos:prefLabel "the Nozur 2021 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2021 .
+
+ex:S17 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Gragol 2022" ;
+    skos:prefLabel "the Gragol 2022 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2022 .
+
+ex:S25 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Grovim 2023" ;
+    skos:prefLabel "the Grovim 2023 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S27 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Nodabril 2023" ;
+    skos:prefLabel "the Nodabril 2023 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2023 .
+
+ex:S32 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Lulos 2024" ;
+    skos:prefLabel "the Lulos 2024 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2024 .
+
+ex:S33 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Drotan 2024" ;
+    skos:prefLabel "the Drotan 2024 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD3 ;
+    ex:setting "few-shot" ;
+    ex:year 2024 .
+
+ex:S4 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Brulum 2020" ;
+    skos:prefLabel "the Brulum 2020 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "few-shot" ;
+    ex:year 2020 .
+
+ex:S41 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Drestamom 2025" ;
+    skos:prefLabel "the Drestamom 2025 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD2 ;
+    ex:setting "few-shot" ;
+    ex:year 2025 .
+
+ex:S49 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Dugrudis 2026" ;
+    skos:prefLabel "the Dugrudis 2026 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD1 ;
+    ex:setting "fine-tuned" ;
+    ex:year 2026 .
+
+ex:S64 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Vives 2024" ;
+    skos:prefLabel "the Vives 2024 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2024 .
+
+ex:S65 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Kozon 2024" ;
+    skos:prefLabel "the Kozon 2024 study" ;
+    ex:benchmark ex:B2 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2024 .
+
+ex:S78 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Grudes 2022" ;
+    skos:prefLabel "the Grudes 2022 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2022 .
+
+ex:S9 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Netras 2020" ;
+    skos:prefLabel "the Netras 2020 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD2 ;
+    ex:setting "zero-shot" ;
+    ex:year 2020 .
+
+ex:S13 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Grodrokris 2021" ;
+    skos:prefLabel "the Grodrokris 2021 study" ;
+    ex:benchmark ex:B1 ;
+    ex:model ex:MD3 ;
+    ex:setting "zero-shot" ;
+    ex:year 2021 .
+
+ex:LLM-01 a ex:Paper .
+
+ex:LLM-02 a ex:Paper .
+
+ex:LLM-03 a ex:Paper .
+
+ex:LLM-04 a ex:Paper .
+
+ex:LLM-05 a ex:Paper .
+
+ex:LLM-06 a ex:Paper .
+
+ex:LLM-07 a ex:Paper .
+
+ex:LLM-08 a ex:Paper .
+
+ex:LLM-09 a ex:Paper .
+
+ex:LLM-10 a ex:Paper .
+
+ex:LLM-11 a ex:Paper .
+
+ex:LLM-12 a ex:Paper .
+
+ex:LLM-13 a ex:Paper .
+
+ex:LLM-14 a ex:Paper .
+
+ex:LLM-15 a ex:Paper .
+
+ex:LLM-16 a ex:Paper .
+
+ex:LLM-17 a ex:Paper .
+
+ex:LLM-18 a ex:Paper .
+
+ex:LLM-19 a ex:Paper .
+
+ex:LLM-20 a ex:Paper .
+
+ex:LLM-21 a ex:Paper .
+
+ex:LLM-22 a ex:Paper .
+
+ex:LLM-23 a ex:Paper .
+
+ex:LLM-24 a ex:Paper .
+
+ex:LLM-25 a ex:Paper .
+
+ex:LLM-26 a ex:Paper .
+
+ex:LLM-27 a ex:Paper .
+
+ex:LLM-28 a ex:Paper .
+
+ex:LLM-29 a ex:Paper .
+
+ex:LLM-30 a ex:Paper .
+
+ex:LLM-31 a ex:Paper .
+
+ex:LLM-32 a ex:Paper .
+
+ex:LLM-33 a ex:Paper .
+
+ex:LLM-34 a ex:Paper .
+
+ex:LLM-35 a ex:Paper .
+
+ex:LLM-36 a ex:Paper .
+
+ex:LLM-37 a ex:Paper .
+
+ex:LLM-38 a ex:Paper .
+
+ex:LLM-39 a ex:Paper .
+
+ex:LLM-40 a ex:Paper .
+
+ex:Method rdfs:subClassOf ex:Entity .
+
+ex:S3 a ex:Entity,
+        ex:Study ;
+    skos:altLabel "Bruke 2019" ;
+    skos:prefLabel "the Bruke 2019 study" ;
+    ex:benchmark ex:B3 ;
+    ex:model ex:MD1 ;
+    ex:setting "zero-shot" ;
+    ex:year 2019 .
+
+ex:M4 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Tedroso" ;
+    skos:prefLabel "Tedroso adapter" ;
+    ex:family "fine-tuning" .
+
+ex:M6 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Gofabran" ;
+    skos:prefLabel "Gofabran decoding" ;
+    ex:family "decoding" .
+
+ex:MD2 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Nimel" ;
+    skos:prefLabel "Nimel-13B" ;
+    ex:size "13B" .
+
+ex:MD3 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Nodrana" ;
+    skos:prefLabel "Nodrana-70B" ;
+    ex:size "70B" .
+
+ex:B3 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Donar-Code" ;
+    skos:prefLabel "the Donar-Code benchmark" ;
+    ex:task "code generation" .
+
+ex:M5 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Thoradram" ;
+    skos:prefLabel "Thoradram retrieval" ;
+    ex:family "retrieval" .
+
+ex:B1 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Mupadem-QA" ;
+    skos:prefLabel "the Mupadem-QA benchmark" ;
+    ex:task "multi-hop question answering" .
+
+ex:B2 a ex:Benchmark,
+        ex:Entity ;
+    skos:altLabel "Vofal-Math" ;
+    skos:prefLabel "the Vofal-Math benchmark" ;
+    ex:task "arithmetic reasoning" .
+
+ex:M2 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Thetran" ;
+    skos:prefLabel "Thetran prompting" ;
+    ex:family "prompting" .
+
+ex:M3 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Ragrer" ;
+    skos:prefLabel "Ragrer decoding" ;
+    ex:family "decoding" .
+
+ex:MD1 a ex:Entity,
+        ex:Model ;
+    skos:altLabel "Thipom" ;
+    skos:prefLabel "Thipom-7B" ;
+    ex:size "7B" .
+
+ex:M1 a ex:Entity,
+        ex:Method ;
+    skos:altLabel "Kabaso" ;
+    skos:prefLabel "Kabaso prompting" ;
+    ex:family "prompting" .
+
+ex:Study rdfs:subClassOf ex:Entity .
+

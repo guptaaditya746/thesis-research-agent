@@ -65,6 +65,7 @@ class Settings:
     genre: str
     papers: int = 20
     pages: int = 6
+    clusters: int = 0     # topic clusters per world (packs/topics/<field>.json); 0 = no topics, one cluster (22 Nov 2026)
     models: dict[str, str | dict[str, Any]] = field(default_factory=dict)   # role or "default" -> RoleModel
     out: str = "runs/paperfactory/default"
     seed: int = 1

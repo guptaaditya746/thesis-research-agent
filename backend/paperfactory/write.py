@@ -21,7 +21,13 @@ from paperfactory.llm import slot_dir
 PO = REPO / "external" / "paperorchestra"
 
 
-PROMPT_VERSION = "v1n"
+PROMPT_VERSION = "v1n"     # genres without numbers
+PROMPT_VERSION_NUMBERS = "v1nn"   # genres with numbers (genre.json numeric_facts): + one repair call for invented numbers
+
+
+def prompt_version(template: Path) -> str:
+    g = template / "genre.json"
+    return PROMPT_VERSION_NUMBERS if g.is_file() and json.loads(g.read_text()).get("numeric_facts") else PROMPT_VERSION
 WRITER_CALLS = 12          # the writer's time limit is this many call timeouts (about 10 calls per paper)     # PaperOrchestra's v1 + the rule that the materials are not a source (C10)
 
 
@@ -37,7 +43,7 @@ def write_one(s, pid: str, template: Path, attempt: int = 1, use_cache: bool = T
     cmd = ["uv", "run", "--quiet", "--project", str(REPO), "python", str(PO / "paper_writing_cli.py"),
            "--raw_materials_dir", str(s.out_dir / "papers" / pid), "--output_dir", str(out),
            "--template_dir", str(template), "--writer_model_name", rm.model,
-           "--backend_json", json.dumps(asdict(rm)), "--prompt_version", PROMPT_VERSION,
+           "--backend_json", json.dumps(asdict(rm)), "--prompt_version", prompt_version(template),
            "--cache_dir", str(po_cache(s, attempt, use_cache)),
            "--lock_dir", str(slot_dir(s.slots, rm)),
            "--max_parallel", str(rm.max_parallel),

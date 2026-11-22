@@ -1,0 +1,3598 @@
+{
+ "source": "paperfactory",
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/runs/paperfactory/qwen40-llm",
+ "field": "llm",
+ "genre": "argument",
+ "planned": 40,
+ "papers": [
+  {
+   "id": "LLM-01",
+   "title": "Divergent Outcomes for Decoding Strategies in Code Generation",
+   "issue": "The reliability of decoding methods across different model scales and benchmarks.",
+   "thesis": "Decoding methods like Ragrer and Gofabran show inconsistent effects, with Ragrer improving performance on smaller models but degrading it on larger ones.",
+   "facts": [
+    {
+     "id": "S22-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Braliram 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       5827,
+       6055
+      ],
+      [
+       7862,
+       8026
+      ],
+      [
+       12169,
+       12322
+      ]
+     ]
+    },
+    {
+     "id": "S42-reports_drop-M6",
+     "kind": "claim",
+     "subject": "the Lofam 2025 study",
+     "relation": "reports_drop",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       6750,
+       6965
+      ],
+      [
+       10363,
+       10507
+      ],
+      [
+       12323,
+       12487
+      ]
+     ]
+    },
+    {
+     "id": "S22-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Braliram 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9213,
+       9338
+      ]
+     ]
+    },
+    {
+     "id": "S24-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Femem 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       5827,
+       6055
+      ],
+      [
+       8343,
+       8522
+      ],
+      [
+       12169,
+       12322
+      ]
+     ]
+    },
+    {
+     "id": "S40-reports_drop-M6",
+     "kind": "decoy",
+     "subject": "the Dukinal 2025 study",
+     "relation": "reports_drop",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       6750,
+       6965
+      ],
+      [
+       9826,
+       9988
+      ],
+      [
+       12323,
+       12487
+      ]
+     ]
+    },
+    {
+     "id": "S23-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Lomakra 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9115,
+       9212
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-03",
+   "title": "Adapter Fine-Tuning vs. Prompting in Multi-Hop QA",
+   "issue": "The comparative effectiveness of fine-tuning adapters versus prompting in complex question answering.",
+   "thesis": "Adapter-based fine-tuning (Tedroso) offers superior performance gains in multi-hop QA compared to prompting methods, which often fail to replicate earlier positive results.",
+   "facts": [
+    {
+     "id": "S16-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Steferis 2022 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       10728,
+       10932
+      ],
+      [
+       11568,
+       11759
+      ],
+      [
+       14536,
+       14656
+      ],
+      [
+       16164,
+       16343
+      ]
+     ]
+    },
+    {
+     "id": "S74-reports_no_gain-M2",
+     "kind": "claim",
+     "subject": "the Graso 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       10038,
+       10221
+      ],
+      [
+       11568,
+       11759
+      ]
+     ]
+    },
+    {
+     "id": "S16-fails_to_replicate-S13",
+     "kind": "claim",
+     "subject": "the Steferis 2022 study",
+     "relation": "fails_to_replicate",
+     "object": "the Grodrokris 2021 study",
+     "spans": [
+      [
+       9487,
+       9642
+      ],
+      [
+       10728,
+       10932
+      ],
+      [
+       13773,
+       13936
+      ]
+     ]
+    },
+    {
+     "id": "S18-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Kolal 2022 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       11091,
+       11261
+      ],
+      [
+       11568,
+       11759
+      ],
+      [
+       14536,
+       14656
+      ],
+      [
+       16164,
+       16343
+      ]
+     ]
+    },
+    {
+     "id": "S73-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Fistem 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       8724,
+       8879
+      ],
+      [
+       11568,
+       11759
+      ]
+     ]
+    },
+    {
+     "id": "S17-fails_to_replicate-S13",
+     "kind": "decoy",
+     "subject": "the Gragol 2022 study",
+     "relation": "fails_to_replicate",
+     "object": "the Grodrokris 2021 study",
+     "spans": [
+      [
+       9777,
+       9861
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-04",
+   "title": "Conflicting Evidence on Retrieval-Augmented Decoding: A Methodological Analysis",
+   "issue": "The stability of retrieval and decoding method impacts across different evaluation settings.",
+   "thesis": "There is a direct conflict in the literature regarding the impact of retrieval methods, with one study reporting a gain and another reporting no gain for the same method on the same benchmark.",
+   "facts": [
+    {
+     "id": "S37-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Tekos 2025 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       483,
+       751
+      ],
+      [
+       7349,
+       7462
+      ],
+      [
+       9064,
+       9236
+      ],
+      [
+       12281,
+       12549
+      ],
+      [
+       12850,
+       13108
+      ],
+      [
+       14992,
+       15245
+      ],
+      [
+       16187,
+       16374
+      ]
+     ]
+    },
+    {
+     "id": "S69-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Grugofel 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       8624,
+       8776
+      ],
+      [
+       14642,
+       14821
+      ]
+     ]
+    },
+    {
+     "id": "S37-reports_drop-M3",
+     "kind": "claim",
+     "subject": "the Tekos 2025 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       7463,
+       7648
+      ],
+      [
+       11138,
+       11355
+      ]
+     ]
+    },
+    {
+     "id": "S39-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Vomobral 2025 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       8066,
+       8190
+      ],
+      [
+       14992,
+       15245
+      ]
+     ]
+    },
+    {
+     "id": "S67-reports_no_gain-M5",
+     "kind": "decoy",
+     "subject": "the Mopel 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       483,
+       751
+      ],
+      [
+       8371,
+       8523
+      ],
+      [
+       9237,
+       9406
+      ],
+      [
+       12281,
+       12549
+      ],
+      [
+       12850,
+       13108
+      ],
+      [
+       16187,
+       16374
+      ]
+     ]
+    },
+    {
+     "id": "S38-reports_drop-M3",
+     "kind": "decoy",
+     "subject": "the Rokrar 2025 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       7751,
+       7893
+      ],
+      [
+       11138,
+       11355
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-05",
+   "title": "Zero-Shot Prompting in Code and Math: A Replication Analysis",
+   "issue": "The reproducibility of zero-shot prompting results in code generation and arithmetic reasoning.",
+   "thesis": "Zero-shot prompting methods like Kabaso show significant variability, with some studies failing to replicate earlier gains, suggesting high sensitivity to model size and task complexity.",
+   "facts": [
+    {
+     "id": "S12-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Dedrola 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7801,
+       7954
+      ]
+     ]
+    },
+    {
+     "id": "S23-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Lomakra 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9361,
+       9494
+      ]
+     ]
+    },
+    {
+     "id": "S12-fails_to_replicate-S9",
+     "kind": "claim",
+     "subject": "the Dedrola 2021 study",
+     "relation": "fails_to_replicate",
+     "object": "the Netras 2020 study",
+     "spans": [
+      [
+       1054,
+       1202
+      ],
+      [
+       7955,
+       8121
+      ],
+      [
+       11729,
+       11942
+      ]
+     ]
+    },
+    {
+     "id": "S11-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Brastom 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7528,
+       7703
+      ]
+     ]
+    },
+    {
+     "id": "S22-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Braliram 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9083,
+       9219
+      ]
+     ]
+    },
+    {
+     "id": "S13-fails_to_replicate-S9",
+     "kind": "decoy",
+     "subject": "the Grodrokris 2021 study",
+     "relation": "fails_to_replicate",
+     "object": "the Netras 2020 study",
+     "spans": [
+      [
+       1054,
+       1202
+      ],
+      [
+       8490,
+       8733
+      ],
+      [
+       11729,
+       11942
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-06",
+   "title": "Zero-shot Decoding Strategies on Thipom-7B: A Comparative Analysis",
+   "issue": "The effectiveness of decoding methods in zero-shot settings for smaller models.",
+   "thesis": "Ragrer decoding provides consistent gains in zero-shot code generation, while Gofabran decoding shows no benefit in arithmetic reasoning.",
+   "facts": [
+    {
+     "id": "S59-reports_no_gain-M6",
+     "kind": "claim",
+     "subject": "the Putrus 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       11660,
+       11808
+      ],
+      [
+       13630,
+       13748
+      ]
+     ]
+    },
+    {
+     "id": "S60-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Laradrum 2022 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       13449,
+       13629
+      ]
+     ]
+    },
+    {
+     "id": "S60-reports_no_gain-M2",
+     "kind": "claim",
+     "subject": "the Laradrum 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       9107,
+       9266
+      ],
+      [
+       12745,
+       12883
+      ],
+      [
+       13749,
+       13990
+      ]
+     ]
+    },
+    {
+     "id": "S74-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Graso 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       12745,
+       12883
+      ],
+      [
+       13749,
+       13990
+      ]
+     ]
+    },
+    {
+     "id": "S28-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Mitra 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       9955,
+       10152
+      ],
+      [
+       12745,
+       12883
+      ],
+      [
+       13749,
+       13990
+      ]
+     ]
+    },
+    {
+     "id": "S26-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Rakes 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       10378,
+       10457
+      ],
+      [
+       12745,
+       12883
+      ],
+      [
+       13749,
+       13990
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-07",
+   "title": "Fine-tuning vs. Few-shot: Divergent Outcomes for Retrieval Methods",
+   "issue": "Whether fine-tuning or few-shot prompting is more effective for retrieval-based methods.",
+   "thesis": "Thoradram retrieval yields gains in few-shot QA but fails to improve fine-tuned arithmetic performance.",
+   "facts": [
+    {
+     "id": "S20-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Togobe 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       613,
+       868
+      ],
+      [
+       7285,
+       7433
+      ],
+      [
+       9391,
+       9545
+      ],
+      [
+       10933,
+       11189
+      ],
+      [
+       11589,
+       11749
+      ],
+      [
+       12884,
+       13073
+      ]
+     ]
+    },
+    {
+     "id": "S61-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Rothihen 2023 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       613,
+       868
+      ],
+      [
+       8058,
+       8184
+      ],
+      [
+       9250,
+       9390
+      ],
+      [
+       10775,
+       10932
+      ],
+      [
+       11750,
+       11945
+      ],
+      [
+       12884,
+       13073
+      ]
+     ]
+    },
+    {
+     "id": "S61-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Rothihen 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8185,
+       8362
+      ],
+      [
+       9762,
+       9874
+      ]
+     ]
+    },
+    {
+     "id": "S22-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Braliram 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7695,
+       7901
+      ],
+      [
+       9762,
+       9874
+      ]
+     ]
+    },
+    {
+     "id": "S67-reports_no_gain-M5",
+     "kind": "decoy",
+     "subject": "the Mopel 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       869,
+       1027
+      ],
+      [
+       8476,
+       8554
+      ],
+      [
+       9391,
+       9545
+      ],
+      [
+       11750,
+       11945
+      ]
+     ]
+    },
+    {
+     "id": "S39-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Vomobral 2025 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       8898,
+       9076
+      ],
+      [
+       9250,
+       9390
+      ],
+      [
+       10775,
+       10932
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-08",
+   "title": "Conflicting Evidence on Prompting Methods in Fine-tuned and Few-shot Settings",
+   "issue": "The reliability of prompting methods across different evaluation settings.",
+   "thesis": "Kabaso prompting shows a gain in fine-tuned QA but no gain in few-shot arithmetic, highlighting setting-dependent performance.",
+   "facts": [
+    {
+     "id": "S19-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Stosa 2022 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       379,
+       577
+      ],
+      [
+       8173,
+       8303
+      ]
+     ]
+    },
+    {
+     "id": "S62-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Kretather 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       379,
+       577
+      ]
+     ]
+    },
+    {
+     "id": "S62-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Kretather 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       9441,
+       9576
+      ]
+     ]
+    },
+    {
+     "id": "S12-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Dedrola 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7426,
+       7605
+      ]
+     ]
+    },
+    {
+     "id": "S11-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Brastom 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7083,
+       7299
+      ]
+     ]
+    },
+    {
+     "id": "S23-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Lomakra 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8862,
+       9007
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-09",
+   "title": "Zero-shot Performance of Adapter and Decoding Methods on Nimel-13B",
+   "issue": "The impact of parameter-efficient fine-tuning and decoding strategies in zero-shot scenarios.",
+   "thesis": "Tedroso adapter improves zero-shot code generation, while Ragrer decoding does not affect arithmetic reasoning.",
+   "facts": [
+    {
+     "id": "S54-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Tigrum 2020 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       5591,
+       5746
+      ],
+      [
+       8492,
+       8650
+      ],
+      [
+       10798,
+       10973
+      ],
+      [
+       13547,
+       13718
+      ]
+     ]
+    },
+    {
+     "id": "S56-reports_no_gain-M3",
+     "kind": "claim",
+     "subject": "the Robidrum 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       824,
+       942
+      ],
+      [
+       6931,
+       7073
+      ],
+      [
+       8894,
+       9059
+      ],
+      [
+       11322,
+       11502
+      ],
+      [
+       12800,
+       12906
+      ],
+      [
+       14998,
+       15178
+      ]
+     ]
+    },
+    {
+     "id": "S56-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Robidrum 2021 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7586,
+       7735
+      ],
+      [
+       9060,
+       9179
+      ],
+      [
+       11954,
+       12168
+      ]
+     ]
+    },
+    {
+     "id": "S16-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Steferis 2022 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       6052,
+       6176
+      ],
+      [
+       9457,
+       9591
+      ],
+      [
+       10974,
+       11165
+      ]
+     ]
+    },
+    {
+     "id": "S37-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Tekos 2025 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7736,
+       7887
+      ],
+      [
+       10307,
+       10472
+      ],
+      [
+       11954,
+       12168
+      ]
+     ]
+    },
+    {
+     "id": "S26-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Rakes 2023 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7736,
+       7887
+      ],
+      [
+       9894,
+       10012
+      ],
+      [
+       11954,
+       12168
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-11",
+   "title": "Zero-shot prompting efficacy on the Mupadem-QA benchmark: A comparative analysis of Thipom-7B and Nimel-13B",
+   "issue": "The consistency of prompting methods across different model scales in zero-shot settings.",
+   "thesis": "Kabaso prompting yields consistent gains on Mupadem-QA for both small and mid-sized models, whereas Thetran prompting shows variable results.",
+   "facts": [
+    {
+     "id": "S7-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Tilutron 2020 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       6581,
+       6767
+      ],
+      [
+       7475,
+       7590
+      ]
+     ]
+    },
+    {
+     "id": "S7-reports_no_gain-M2",
+     "kind": "claim",
+     "subject": "the Tilutron 2020 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       6581,
+       6767
+      ],
+      [
+       7591,
+       7716
+      ],
+      [
+       10362,
+       10525
+      ]
+     ]
+    },
+    {
+     "id": "S72-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Bitor 2026 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9624,
+       9696
+      ]
+     ]
+    },
+    {
+     "id": "S53-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Sitafur 2020 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       6768,
+       6895
+      ],
+      [
+       8059,
+       8152
+      ]
+     ]
+    },
+    {
+     "id": "S12-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Dedrola 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       6896,
+       7022
+      ],
+      [
+       8490,
+       8614
+      ]
+     ]
+    },
+    {
+     "id": "S38-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Rokrar 2025 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       5721,
+       5871
+      ],
+      [
+       9121,
+       9197
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-12",
+   "title": "Retrieval-augmented generation in few-shot code generation: Evidence from Thipom-7B and Nimel-13B",
+   "issue": "The impact of retrieval methods on code generation tasks in few-shot settings.",
+   "thesis": "Thoradram retrieval fails to provide consistent gains in few-shot code generation, with mixed results across model sizes.",
+   "facts": [
+    {
+     "id": "S67-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Mopel 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7588,
+       7799
+      ]
+     ]
+    },
+    {
+     "id": "S67-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Mopel 2025 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       7800,
+       8001
+      ]
+     ]
+    },
+    {
+     "id": "S71-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Higos 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       9601,
+       9712
+      ]
+     ]
+    },
+    {
+     "id": "S60-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Laradrum 2022 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": []
+    },
+    {
+     "id": "S45-reports_no_gain-M5",
+     "kind": "decoy",
+     "subject": "the Totin 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       9039,
+       9137
+      ],
+      [
+       9138,
+       9311
+      ],
+      [
+       10962,
+       11115
+      ]
+     ]
+    },
+    {
+     "id": "S69-reports_no_gain-M5",
+     "kind": "decoy",
+     "subject": "the Grugofel 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       8127,
+       8229
+      ],
+      [
+       8230,
+       8441
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-15",
+   "title": "Decoding strategies in zero-shot code generation: Ragrer vs. Baseline",
+   "issue": "The effectiveness of Ragrer decoding in zero-shot code generation tasks.",
+   "thesis": "Ragrer decoding provides a significant gain in zero-shot code generation on Donar-Code, a result that has been consistently replicated.",
+   "facts": [
+    {
+     "id": "S24-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Femem 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       9017,
+       9120
+      ],
+      [
+       14048,
+       14224
+      ]
+     ]
+    },
+    {
+     "id": "S9-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Netras 2020 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       7827,
+       8044
+      ],
+      [
+       14048,
+       14224
+      ]
+     ]
+    },
+    {
+     "id": "S24-reports_no_gain-M6",
+     "kind": "claim",
+     "subject": "the Femem 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       9121,
+       9292
+      ],
+      [
+       10794,
+       10908
+      ]
+     ]
+    },
+    {
+     "id": "S59-reports_no_gain-M6",
+     "kind": "decoy",
+     "subject": "the Putrus 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       10794,
+       10908
+      ]
+     ]
+    },
+    {
+     "id": "S60-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Laradrum 2022 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       8571,
+       8670
+      ],
+      [
+       14048,
+       14224
+      ]
+     ]
+    },
+    {
+     "id": "S67-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Mopel 2025 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       9440,
+       9488
+      ],
+      [
+       11311,
+       11567
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-16",
+   "title": "Divergent Outcomes for Retrieval and Prompting in Large-Scale Zero-Shot Evaluation",
+   "issue": "The reliability of Thoradram retrieval and Thetran prompting on the Nodrana-70B model across different benchmarks and settings.",
+   "thesis": "Thoradram retrieval yields inconsistent results on the Vofal-Math benchmark, while Thetran prompting shows no gain on the Mupadem-QA benchmark in zero-shot settings.",
+   "facts": [
+    {
+     "id": "S47-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Bivam 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7164,
+       7287
+      ],
+      [
+       10111,
+       10247
+      ],
+      [
+       10762,
+       10933
+      ],
+      [
+       14126,
+       14274
+      ]
+     ]
+    },
+    {
+     "id": "S47-reports_gain-M2",
+     "kind": "claim",
+     "subject": "the Bivam 2026 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       7508,
+       7586
+      ],
+      [
+       7587,
+       7804
+      ],
+      [
+       8751,
+       8899
+      ],
+      [
+       13150,
+       13334
+      ]
+     ]
+    },
+    {
+     "id": "S70-reports_no_gain-M2",
+     "kind": "claim",
+     "subject": "the Thonir 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       8653,
+       8750
+      ],
+      [
+       12508,
+       12739
+      ]
+     ]
+    },
+    {
+     "id": "S46-reports_no_gain-M5",
+     "kind": "decoy",
+     "subject": "the Fodra 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       10012,
+       10110
+      ],
+      [
+       10762,
+       10933
+      ],
+      [
+       14126,
+       14274
+      ]
+     ]
+    },
+    {
+     "id": "S47-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Bivam 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7805,
+       7881
+      ]
+     ]
+    },
+    {
+     "id": "S70-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Thonir 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9049,
+       9198
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-17",
+   "title": "Replication Failures and the Limits of Adapter Methods in Few-Shot Code Generation",
+   "issue": "The reproducibility of early few-shot findings on Thipom-7B and the efficacy of Tedroso adapter on Nodrana-70B.",
+   "thesis": "The Fistem 2021 study failed to replicate the Brulum 2020 findings, and the Bredul 2021 study reported a gain from Tedroso adapter on the Donar-Code benchmark.",
+   "facts": [
+    {
+     "id": "S4-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Brulum 2020 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7144,
+       7292
+      ]
+     ]
+    },
+    {
+     "id": "S57-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Bredul 2021 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       594,
+       799
+      ],
+      [
+       4166,
+       4367
+      ],
+      [
+       8059,
+       8185
+      ],
+      [
+       14955,
+       15161
+      ]
+     ]
+    },
+    {
+     "id": "S4-reports_no_gain-M3",
+     "kind": "claim",
+     "subject": "the Brulum 2020 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": []
+    },
+    {
+     "id": "S73-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Fistem 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": []
+    },
+    {
+     "id": "S57-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Bredul 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": []
+    },
+    {
+     "id": "S4-reports_gain-M2",
+     "kind": "decoy",
+     "subject": "the Brulum 2020 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       7144,
+       7292
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-18",
+   "title": "Conflicting Evidence for Ragrer Decoding in Fine-Tuned and Few-Shot Settings",
+   "issue": "Disagreement between recent fine-tuned and historical few-shot studies regarding the impact of Ragrer decoding on Thipom-7B.",
+   "thesis": "The Dugrudis 2026 study reported a drop with Ragrer decoding, while the Sakem 2020 study reported a gain from Ragrer decoding, creating a direct conflict in the literature.",
+   "facts": [
+    {
+     "id": "S49-reports_drop-M3",
+     "kind": "claim",
+     "subject": "the Dugrudis 2026 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       242,
+       388
+      ],
+      [
+       2070,
+       2191
+      ],
+      [
+       10981,
+       11106
+      ],
+      [
+       12154,
+       12304
+      ]
+     ]
+    },
+    {
+     "id": "S6-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Sakem 2020 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       389,
+       529
+      ],
+      [
+       2192,
+       2315
+      ],
+      [
+       10981,
+       11106
+      ],
+      [
+       12154,
+       12304
+      ]
+     ]
+    },
+    {
+     "id": "S49-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Dugrudis 2026 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": []
+    },
+    {
+     "id": "S49-reports_drop-M6",
+     "kind": "decoy",
+     "subject": "the Dugrudis 2026 study",
+     "relation": "reports_drop",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       8165,
+       8333
+      ],
+      [
+       10981,
+       11106
+      ]
+     ]
+    },
+    {
+     "id": "S6-reports_gain-M6",
+     "kind": "decoy",
+     "subject": "the Sakem 2020 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       10981,
+       11106
+      ]
+     ]
+    },
+    {
+     "id": "S49-reports_gain-M2",
+     "kind": "decoy",
+     "subject": "the Dugrudis 2026 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LLM-19",
+   "title": "Zero-Shot Stability of Gofabran Decoding and Thoradram Retrieval",
+   "issue": "The performance of Gofabran decoding and Thoradram retrieval in zero-shot settings on Thipom-7B and Nimel-13B.",
+   "thesis": "Gofabran decoding shows no gain in zero-shot settings on both Thipom-7B and Nimel-13B, while Thoradram retrieval also fails to show gains in these specific zero-shot evaluations.",
+   "facts": [
+    {
+     "id": "S58-reports_no_gain-M6",
+     "kind": "claim",
+     "subject": "the Fastum 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": []
+    },
+    {
+     "id": "S77-reports_no_gain-M6",
+     "kind": "claim",
+     "subject": "the Logrim 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": []
+    },
+    {
+     "id": "S58-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Fastum 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": []
+    },
+    {
+     "id": "S59-reports_no_gain-M6",
+     "kind": "decoy",
+     "subject": "the Putrus 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": []
+    },
+    {
+     "id": "S77-reports_no_gain-M3",
+     "kind": "decoy",
+     "subject": "the Logrim 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": []
+    },
+    {
+     "id": "S58-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Fastum 2022 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LLM-20",
+   "title": "The Replication Crisis in Large Model Evaluation: A Case Study of Nodrana-70B",
+   "issue": "The failure of subsequent studies to replicate the initial findings of the Grodrokris 2021 study on the Nodrana-70B model.",
+   "thesis": "The Grodrokris 2021 study's findings were not replicated by the Steferis 2022 and Brastom 2021 studies, and the Stutohas 2023 study reported no gain from Thetran prompting on the Vofal-Math benchmark.",
+   "facts": [
+    {
+     "id": "S13-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Grodrokris 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       465,
+       557
+      ],
+      [
+       2104,
+       2292
+      ]
+     ]
+    },
+    {
+     "id": "S29-reports_no_gain-M2",
+     "kind": "claim",
+     "subject": "the Stutohas 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       558,
+       714
+      ],
+      [
+       2821,
+       2973
+      ],
+      [
+       8669,
+       8864
+      ],
+      [
+       10677,
+       10909
+      ]
+     ]
+    },
+    {
+     "id": "S13-reports_no_gain-M2",
+     "kind": "claim",
+     "subject": "the Grodrokris 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": []
+    },
+    {
+     "id": "S29-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Stutohas 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7349,
+       7550
+      ]
+     ]
+    },
+    {
+     "id": "S38-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Rokrar 2025 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8059,
+       8171
+      ],
+      [
+       9372,
+       9552
+      ]
+     ]
+    },
+    {
+     "id": "S28-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Mitra 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       7645,
+       7757
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-21",
+   "title": "Divergent Outcomes for Decoding Strategies in Fine-Tuned and Few-Shot Settings",
+   "issue": "The impact of decoding methods on arithmetic reasoning and code generation tasks across different evaluation settings.",
+   "thesis": "Decoding methods like Ragrer and Gofabran show inconsistent performance, with Ragrer failing to improve fine-tuned models on arithmetic but Gofabran showing no gain in few-shot code generation.",
+   "facts": [
+    {
+     "id": "S32-reports_no_gain-M3",
+     "kind": "claim",
+     "subject": "the Lulos 2024 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       4262,
+       4516
+      ],
+      [
+       10133,
+       10243
+      ]
+     ]
+    },
+    {
+     "id": "S35-reports_drop-M6",
+     "kind": "claim",
+     "subject": "the Mener 2024 study",
+     "relation": "reports_drop",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       4262,
+       4516
+      ],
+      [
+       10244,
+       10362
+      ]
+     ]
+    },
+    {
+     "id": "S32-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Lulos 2024 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": []
+    },
+    {
+     "id": "S32-reports_no_gain-M6",
+     "kind": "decoy",
+     "subject": "the Lulos 2024 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       4262,
+       4516
+      ],
+      [
+       10133,
+       10243
+      ]
+     ]
+    },
+    {
+     "id": "S35-reports_drop-M3",
+     "kind": "decoy",
+     "subject": "the Mener 2024 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       4262,
+       4516
+      ],
+      [
+       10244,
+       10362
+      ]
+     ]
+    },
+    {
+     "id": "S32-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Lulos 2024 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LLM-24",
+   "title": "Prompting Efficacy in Few-Shot vs Zero-Shot Multi-Hop QA",
+   "issue": "How prompting methods perform differently when moving from few-shot to zero-shot settings on multi-hop question answering.",
+   "thesis": "Kabaso prompting shows a gain in few-shot settings but fails to provide a gain in zero-shot settings for the same benchmark, suggesting a dependency on demonstration examples.",
+   "facts": [
+    {
+     "id": "S25-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Grovim 2023 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       732,
+       863
+      ],
+      [
+       2490,
+       2644
+      ],
+      [
+       8436,
+       8566
+      ],
+      [
+       8876,
+       9064
+      ],
+      [
+       11887,
+       12131
+      ]
+     ]
+    },
+    {
+     "id": "S43-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Hohas 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       864,
+       1000
+      ],
+      [
+       2645,
+       2836
+      ],
+      [
+       8876,
+       9064
+      ],
+      [
+       11887,
+       12131
+      ]
+     ]
+    },
+    {
+     "id": "S25-reports_gain-M2",
+     "kind": "claim",
+     "subject": "the Grovim 2023 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": []
+    },
+    {
+     "id": "S25-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Grovim 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": []
+    },
+    {
+     "id": "S43-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Hohas 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": []
+    },
+    {
+     "id": "S25-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Grovim 2023 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LLM-25",
+   "title": "Adapter Methods and Replication Challenges in Few-Shot Evaluation",
+   "issue": "The role of adapter methods in few-shot settings and the difficulty in replicating earlier zero-shot findings.",
+   "thesis": "The Tedroso adapter method provides consistent gains in few-shot settings, while the Brulum 2020 study's findings on prompting are not replicated by the Steferis 2022 study.",
+   "facts": [
+    {
+     "id": "S17-fails_to_replicate-S13",
+     "kind": "claim",
+     "subject": "the Gragol 2022 study",
+     "relation": "fails_to_replicate",
+     "object": "the Grodrokris 2021 study",
+     "spans": [
+      [
+       702,
+       904
+      ],
+      [
+       2822,
+       3037
+      ],
+      [
+       5914,
+       6120
+      ],
+      [
+       12637,
+       12859
+      ]
+     ]
+    },
+    {
+     "id": "S48-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Bririro 2026 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       905,
+       1034
+      ],
+      [
+       6596,
+       6757
+      ],
+      [
+       11404,
+       11545
+      ],
+      [
+       12488,
+       12636
+      ]
+     ]
+    },
+    {
+     "id": "S17-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Gragol 2022 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       702,
+       904
+      ],
+      [
+       2822,
+       3037
+      ],
+      [
+       6596,
+       6757
+      ],
+      [
+       11404,
+       11545
+      ],
+      [
+       12488,
+       12636
+      ]
+     ]
+    },
+    {
+     "id": "S17-fails_to_replicate-S14",
+     "kind": "decoy",
+     "subject": "the Gragol 2022 study",
+     "relation": "fails_to_replicate",
+     "object": "the Nozur 2021 study",
+     "spans": [
+      [
+       702,
+       904
+      ],
+      [
+       2822,
+       3037
+      ],
+      [
+       5914,
+       6120
+      ],
+      [
+       8644,
+       8829
+      ],
+      [
+       12637,
+       12859
+      ]
+     ]
+    },
+    {
+     "id": "S48-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Bririro 2026 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       905,
+       1034
+      ],
+      [
+       6596,
+       6757
+      ]
+     ]
+    },
+    {
+     "id": "S17-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Gragol 2022 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       702,
+       904
+      ],
+      [
+       6596,
+       6757
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-26",
+   "title": "Divergent Outcomes for Adapter and Retrieval Methods in Code Generation",
+   "issue": "The inconsistent effectiveness of fine-tuning and retrieval strategies on the Donar-Code benchmark across different model scales and evaluation settings.",
+   "thesis": "While Tedroso adapter shows promise in few-shot settings for mid-sized models, Thoradram retrieval fails to provide consistent gains in fine-tuned settings for smaller models, suggesting a trade-off between parameter efficiency and task-specific adaptation.",
+   "facts": [
+    {
+     "id": "S34-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Trigras 2024 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       9665,
+       9883
+      ]
+     ]
+    },
+    {
+     "id": "S34-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Trigras 2024 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       9884,
+       10108
+      ],
+      [
+       12994,
+       13190
+      ]
+     ]
+    },
+    {
+     "id": "S63-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Bifel 2023 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       9146,
+       9346
+      ],
+      [
+       12994,
+       13190
+      ]
+     ]
+    },
+    {
+     "id": "S36-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Vitraran 2024 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       10430,
+       10602
+      ]
+     ]
+    },
+    {
+     "id": "S63-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Bifel 2023 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       8976,
+       9145
+      ]
+     ]
+    },
+    {
+     "id": "S47-reports_no_gain-M5",
+     "kind": "decoy",
+     "subject": "the Bivam 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       10947,
+       11148
+      ],
+      [
+       13347,
+       13647
+      ],
+      [
+       13840,
+       14104
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-27",
+   "title": "Decoding Strategies in Zero-Shot Arithmetic and Code Reasoning",
+   "issue": "The impact of decoding methods on large models in zero-shot settings for arithmetic and code tasks.",
+   "thesis": "Ragrer decoding provides a significant boost in zero-shot arithmetic reasoning for large models, whereas Gofabran decoding yields negligible results in zero-shot code generation, indicating task-specific sensitivity to decoding strategies.",
+   "facts": [
+    {
+     "id": "S15-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Trasor 2021 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       9478,
+       9673
+      ],
+      [
+       10170,
+       10333
+      ]
+     ]
+    },
+    {
+     "id": "S15-reports_no_gain-M6",
+     "kind": "claim",
+     "subject": "the Trasor 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       5499,
+       5634
+      ],
+      [
+       8080,
+       8235
+      ],
+      [
+       9674,
+       9749
+      ]
+     ]
+    },
+    {
+     "id": "S44-reports_no_gain-M3",
+     "kind": "claim",
+     "subject": "the Sevos 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       6367,
+       6607
+      ],
+      [
+       9024,
+       9123
+      ],
+      [
+       9478,
+       9673
+      ],
+      [
+       10170,
+       10333
+      ]
+     ]
+    },
+    {
+     "id": "S45-reports_no_gain-M3",
+     "kind": "decoy",
+     "subject": "the Totin 2025 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       6367,
+       6607
+      ],
+      [
+       9124,
+       9238
+      ],
+      [
+       9478,
+       9673
+      ],
+      [
+       10170,
+       10333
+      ]
+     ]
+    },
+    {
+     "id": "S9-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Netras 2020 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       5312,
+       5498
+      ],
+      [
+       9478,
+       9673
+      ],
+      [
+       10170,
+       10333
+      ]
+     ]
+    },
+    {
+     "id": "S56-reports_no_gain-M3",
+     "kind": "decoy",
+     "subject": "the Robidrum 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       6217,
+       6366
+      ],
+      [
+       9478,
+       9673
+      ],
+      [
+       11176,
+       11316
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-29",
+   "title": "Conflicting Evidence on Prompting and Decoding in Zero-Shot QA",
+   "issue": "The contradictory findings regarding the effectiveness of prompting and decoding methods in zero-shot multi-hop question answering.",
+   "thesis": "There is a direct conflict in the literature regarding the utility of Kabaso prompting and Ragrer decoding in zero-shot QA, with some studies reporting gains and others reporting no gain or drops, highlighting the instability of these methods in this setting.",
+   "facts": [
+    {
+     "id": "S36-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Vitraran 2024 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       873,
+       1059
+      ],
+      [
+       10823,
+       10996
+      ],
+      [
+       12850,
+       12954
+      ]
+     ]
+    },
+    {
+     "id": "S64-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Vives 2024 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       873,
+       1059
+      ],
+      [
+       11698,
+       11832
+      ],
+      [
+       12850,
+       12954
+      ]
+     ]
+    },
+    {
+     "id": "S64-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Vives 2024 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       1060,
+       1267
+      ],
+      [
+       12250,
+       12410
+      ],
+      [
+       15682,
+       15851
+      ]
+     ]
+    },
+    {
+     "id": "S36-reports_gain-M2",
+     "kind": "decoy",
+     "subject": "the Vitraran 2024 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       1060,
+       1267
+      ],
+      [
+       10997,
+       11204
+      ]
+     ]
+    },
+    {
+     "id": "S64-reports_no_gain-M2",
+     "kind": "decoy",
+     "subject": "the Vives 2024 study",
+     "relation": "reports_no_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       1060,
+       1267
+      ],
+      [
+       12007,
+       12174
+      ]
+     ]
+    },
+    {
+     "id": "S64-reports_gain-M6",
+     "kind": "decoy",
+     "subject": "the Vives 2024 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       1060,
+       1267
+      ],
+      [
+       12411,
+       12559
+      ],
+      [
+       15682,
+       15851
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-30",
+   "title": "Adapter and Decoding Methods in Fine-Tuned Code Generation",
+   "issue": "The performance of fine-tuning and decoding methods in fine-tuned settings for code generation tasks.",
+   "thesis": "Tedroso adapter provides a robust gain in fine-tuned code generation, while Ragrer decoding leads to performance drops, suggesting that fine-tuning may interfere with the benefits of certain decoding strategies.",
+   "facts": [
+    {
+     "id": "S18-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Kolal 2022 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       6892,
+       7029
+      ],
+      [
+       10456,
+       10736
+      ]
+     ]
+    },
+    {
+     "id": "S21-reports_drop-M3",
+     "kind": "claim",
+     "subject": "the Vidra 2022 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       7494,
+       7643
+      ],
+      [
+       7922,
+       8116
+      ],
+      [
+       10184,
+       10359
+      ]
+     ]
+    },
+    {
+     "id": "S21-reports_gain-M6",
+     "kind": "claim",
+     "subject": "the Vidra 2022 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       7644,
+       7790
+      ],
+      [
+       7922,
+       8116
+      ]
+     ]
+    },
+    {
+     "id": "S18-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Kolal 2022 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7030,
+       7236
+      ]
+     ]
+    },
+    {
+     "id": "S48-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Bririro 2026 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       8812,
+       8902
+      ],
+      [
+       9168,
+       9380
+      ],
+      [
+       10456,
+       10736
+      ]
+     ]
+    },
+    {
+     "id": "S35-reports_drop-M3",
+     "kind": "decoy",
+     "subject": "the Mener 2024 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       8300,
+       8464
+      ],
+      [
+       9168,
+       9380
+      ],
+      [
+       10184,
+       10359
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-31",
+   "title": "Retrieval Augmentation in Few-Shot Code Generation: A Critical Synthesis",
+   "issue": "Does the Thoradram retrieval method consistently improve performance on the Donar-Code benchmark in few-shot settings, and how does it compare to other methods?",
+   "thesis": "The Thoradram retrieval method yields significant gains in few-shot code generation, while the Tedroso adapter method shows no clear benefit in the same setting.",
+   "facts": [
+    {
+     "id": "S27-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Nodabril 2023 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       709,
+       900
+      ]
+     ]
+    },
+    {
+     "id": "S27-reports_no_gain-M4",
+     "kind": "claim",
+     "subject": "the Nodabril 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       709,
+       900
+      ],
+      [
+       11231,
+       11356
+      ]
+     ]
+    },
+    {
+     "id": "S76-reports_gain-M5",
+     "kind": "claim",
+     "subject": "the Brustekru 2022 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       901,
+       1095
+      ]
+     ]
+    },
+    {
+     "id": "S27-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Nodabril 2023 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       9425,
+       9612
+      ]
+     ]
+    },
+    {
+     "id": "S76-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Brustekru 2022 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       901,
+       1095
+      ]
+     ]
+    },
+    {
+     "id": "S27-reports_no_gain-M6",
+     "kind": "decoy",
+     "subject": "the Nodabril 2023 study",
+     "relation": "reports_no_gain",
+     "object": "Gofabran decoding",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LLM-32",
+   "title": "Decoding Strategies for Fine-Tuned Small Models: Gains and Drops",
+   "issue": "How do different decoding methods (Ragrer vs Gofabran) affect the performance of the Thipom-7B model on the Donar-Code benchmark when fine-tuned?",
+   "thesis": "The Ragrer decoding method causes a performance drop in fine-tuned settings, whereas the Gofabran decoding method provides a gain.",
+   "facts": [
+    {
+     "id": "S51-reports_drop-M3",
+     "kind": "claim",
+     "subject": "the Pilom 2026 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       8933,
+       9045
+      ],
+      [
+       10641,
+       10756
+      ],
+      [
+       11461,
+       11696
+      ]
+     ]
+    },
+    {
+     "id": "S51-reports_gain-M6",
+     "kind": "claim",
+     "subject": "the Pilom 2026 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       8933,
+       9045
+      ],
+      [
+       11461,
+       11696
+      ]
+     ]
+    },
+    {
+     "id": "S66-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Penom 2024 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       8176,
+       8339
+      ],
+      [
+       10096,
+       10267
+      ]
+     ]
+    },
+    {
+     "id": "S66-reports_gain-M6",
+     "kind": "decoy",
+     "subject": "the Penom 2024 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       8176,
+       8339
+      ]
+     ]
+    },
+    {
+     "id": "S51-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Pilom 2026 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8933,
+       9045
+      ]
+     ]
+    },
+    {
+     "id": "S62-reports_gain-M3",
+     "kind": "decoy",
+     "subject": "the Kretather 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       7529,
+       7670
+      ],
+      [
+       10096,
+       10267
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-33",
+   "title": "The Limits of Retrieval in Zero-Shot Question Answering",
+   "issue": "Is the Thoradram retrieval method effective for zero-shot multi-hop question answering on the Mupadem-QA benchmark?",
+   "thesis": "The Thoradram retrieval method fails to provide gains in zero-shot QA, while the Kabaso prompting method shows a drop in performance.",
+   "facts": [
+    {
+     "id": "S46-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Fodra 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       8272,
+       8439
+      ],
+      [
+       9250,
+       9366
+      ],
+      [
+       13178,
+       13325
+      ],
+      [
+       13493,
+       13893
+      ]
+     ]
+    },
+    {
+     "id": "S46-reports_drop-M1",
+     "kind": "claim",
+     "subject": "the Fodra 2026 study",
+     "relation": "reports_drop",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8440,
+       8582
+      ],
+      [
+       9728,
+       9940
+      ],
+      [
+       13493,
+       13893
+      ]
+     ]
+    },
+    {
+     "id": "S5-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Dogres 2020 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7135,
+       7272
+      ],
+      [
+       9728,
+       9940
+      ],
+      [
+       10509,
+       10746
+      ],
+      [
+       13493,
+       13893
+      ]
+     ]
+    },
+    {
+     "id": "S5-reports_gain-M2",
+     "kind": "decoy",
+     "subject": "the Dogres 2020 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       7273,
+       7428
+      ],
+      [
+       13493,
+       13893
+      ]
+     ]
+    },
+    {
+     "id": "S46-reports_drop-M2",
+     "kind": "decoy",
+     "subject": "the Fodra 2026 study",
+     "relation": "reports_drop",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       8583,
+       8730
+      ],
+      [
+       13493,
+       13893
+      ]
+     ]
+    },
+    {
+     "id": "S12-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Dedrola 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7718,
+       7847
+      ],
+      [
+       9728,
+       9940
+      ],
+      [
+       10509,
+       10746
+      ],
+      [
+       13493,
+       13893
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-35",
+   "title": "Replication Failures and Adapter Methods in Zero-Shot Arithmetic",
+   "issue": "Can the results of the Nozur 2021 study on arithmetic reasoning be replicated, and what is the impact of the Tedroso adapter method?",
+   "thesis": "The Nozur 2021 study failed to replicate earlier findings, and the Tedroso adapter method provides a gain in zero-shot arithmetic reasoning.",
+   "facts": [
+    {
+     "id": "S14-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Nozur 2021 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       528,
+       703
+      ],
+      [
+       7403,
+       7576
+      ],
+      [
+       10019,
+       10270
+      ],
+      [
+       11426,
+       11575
+      ],
+      [
+       11576,
+       11757
+      ],
+      [
+       11994,
+       12214
+      ],
+      [
+       13482,
+       13698
+      ]
+     ]
+    },
+    {
+     "id": "S75-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Pegem 2021 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       8655,
+       8817
+      ],
+      [
+       9909,
+       10018
+      ],
+      [
+       10019,
+       10270
+      ],
+      [
+       11994,
+       12214
+      ],
+      [
+       13482,
+       13698
+      ]
+     ]
+    },
+    {
+     "id": "S14-reports_no_gain-M5",
+     "kind": "claim",
+     "subject": "the Nozur 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       7726,
+       7893
+      ]
+     ]
+    },
+    {
+     "id": "S75-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Pegem 2021 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8818,
+       8959
+      ],
+      [
+       12671,
+       12822
+      ]
+     ]
+    },
+    {
+     "id": "S14-reports_no_gain-M1",
+     "kind": "decoy",
+     "subject": "the Nozur 2021 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       7894,
+       8080
+      ],
+      [
+       8081,
+       8319
+      ],
+      [
+       8960,
+       9078
+      ],
+      [
+       12671,
+       12822
+      ]
+     ]
+    },
+    {
+     "id": "S17-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Gragol 2022 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       10019,
+       10270
+      ],
+      [
+       11994,
+       12214
+      ],
+      [
+       13482,
+       13698
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-36",
+   "title": "The Fragility of Early Code Generation Claims: A Replication Crisis",
+   "issue": "Why do recent studies fail to replicate the positive results reported in the foundational Bruke 2019 study on code generation?",
+   "thesis": "The apparent gains from decoding methods in early code generation studies are artifacts of specific evaluation settings that do not generalize to later, more rigorous zero-shot evaluations.",
+   "facts": [
+    {
+     "id": "S1-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Banagro 2019 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       6930,
+       7068
+      ]
+     ]
+    },
+    {
+     "id": "S3-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Bruke 2019 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       8358,
+       8517
+      ]
+     ]
+    },
+    {
+     "id": "S3-reports_gain-M6",
+     "kind": "claim",
+     "subject": "the Bruke 2019 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       8358,
+       8517
+      ]
+     ]
+    },
+    {
+     "id": "S2-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Gredapos 2019 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": []
+    },
+    {
+     "id": "S3-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Bruke 2019 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       8050,
+       8229
+      ],
+      [
+       8358,
+       8517
+      ]
+     ]
+    },
+    {
+     "id": "S3-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Bruke 2019 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       8358,
+       8517
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-37",
+   "title": "Adapter Efficacy in Fine-Tuned Arithmetic: A Comparative Analysis",
+   "issue": "Does the Tedroso adapter method provide consistent benefits in fine-tuned arithmetic reasoning compared to prompting strategies?",
+   "thesis": "The Tedroso adapter method demonstrates superior stability in fine-tuned settings for arithmetic tasks, whereas prompting methods show inconsistent or negative effects.",
+   "facts": [
+    {
+     "id": "S50-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Kitaras 2026 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       1177,
+       1310
+      ],
+      [
+       8860,
+       8965
+      ],
+      [
+       9774,
+       9933
+      ],
+      [
+       13094,
+       13328
+      ],
+      [
+       13329,
+       13545
+      ]
+     ]
+    },
+    {
+     "id": "S50-reports_no_gain-M1",
+     "kind": "claim",
+     "subject": "the Kitaras 2026 study",
+     "relation": "reports_no_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       982,
+       1112
+      ],
+      [
+       8966,
+       9112
+      ],
+      [
+       10135,
+       10245
+      ],
+      [
+       11837,
+       11927
+      ]
+     ]
+    },
+    {
+     "id": "S80-reports_gain-M4",
+     "kind": "claim",
+     "subject": "the Matebrim 2023 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       8180,
+       8308
+      ],
+      [
+       9661,
+       9773
+      ],
+      [
+       12269,
+       12480
+      ],
+      [
+       13094,
+       13328
+      ]
+     ]
+    },
+    {
+     "id": "S50-reports_gain-M2",
+     "kind": "decoy",
+     "subject": "the Kitaras 2026 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       1113,
+       1176
+      ],
+      [
+       9113,
+       9288
+      ],
+      [
+       10414,
+       10517
+      ],
+      [
+       11265,
+       11523
+      ],
+      [
+       11837,
+       11927
+      ]
+     ]
+    },
+    {
+     "id": "S80-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Matebrim 2023 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       982,
+       1112
+      ],
+      [
+       8180,
+       8308
+      ],
+      [
+       10135,
+       10245
+      ]
+     ]
+    },
+    {
+     "id": "S75-reports_gain-M4",
+     "kind": "decoy",
+     "subject": "the Pegem 2021 study",
+     "relation": "reports_gain",
+     "object": "Tedroso adapter",
+     "spans": [
+      [
+       7777,
+       7933
+      ],
+      [
+       9568,
+       9660
+      ],
+      [
+       12269,
+       12480
+      ],
+      [
+       13094,
+       13328
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-39",
+   "title": "Decoding Strategies in Code Generation: Gains and Drops",
+   "issue": "What is the impact of different decoding strategies on code generation performance in large models?",
+   "thesis": "Decoding methods yield mixed results in code generation, with some studies reporting significant drops while others show gains, indicating high variance in method efficacy.",
+   "facts": [
+    {
+     "id": "S30-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Hostal 2023 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       519,
+       752
+      ]
+     ]
+    },
+    {
+     "id": "S41-reports_drop-M3",
+     "kind": "claim",
+     "subject": "the Drestamom 2025 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       519,
+       752
+      ],
+      [
+       8275,
+       8445
+      ]
+     ]
+    },
+    {
+     "id": "S41-reports_gain-M1",
+     "kind": "claim",
+     "subject": "the Drestamom 2025 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       753,
+       837
+      ],
+      [
+       11488,
+       11649
+      ]
+     ]
+    },
+    {
+     "id": "S30-reports_gain-M6",
+     "kind": "decoy",
+     "subject": "the Hostal 2023 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       519,
+       752
+      ]
+     ]
+    },
+    {
+     "id": "S41-reports_drop-M6",
+     "kind": "decoy",
+     "subject": "the Drestamom 2025 study",
+     "relation": "reports_drop",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       519,
+       752
+      ]
+     ]
+    },
+    {
+     "id": "S41-reports_gain-M2",
+     "kind": "decoy",
+     "subject": "the Drestamom 2025 study",
+     "relation": "reports_gain",
+     "object": "Thetran prompting",
+     "spans": [
+      [
+       753,
+       837
+      ],
+      [
+       11488,
+       11649
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LLM-40",
+   "title": "Conflicting Evidence on Decoding Methods in Code Generation",
+   "issue": "Why do different studies report contradictory findings regarding the effectiveness of the Gofabran decoding method in code generation?",
+   "thesis": "The Gofabran decoding method exhibits conflicting effects in code generation, with some studies reporting drops and others reporting gains, suggesting that the method's efficacy is context-dependent.",
+   "facts": [
+    {
+     "id": "S40-reports_drop-M6",
+     "kind": "claim",
+     "subject": "the Dukinal 2025 study",
+     "relation": "reports_drop",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       536,
+       682
+      ],
+      [
+       2878,
+       3051
+      ],
+      [
+       5733,
+       5971
+      ],
+      [
+       8261,
+       8460
+      ],
+      [
+       8602,
+       8730
+      ],
+      [
+       9647,
+       9853
+      ],
+      [
+       10429,
+       10605
+      ]
+     ]
+    },
+    {
+     "id": "S78-reports_gain-M6",
+     "kind": "claim",
+     "subject": "the Grudes 2022 study",
+     "relation": "reports_gain",
+     "object": "Gofabran decoding",
+     "spans": [
+      [
+       411,
+       535
+      ],
+      [
+       2731,
+       2877
+      ],
+      [
+       5733,
+       5971
+      ],
+      [
+       8602,
+       8730
+      ],
+      [
+       9647,
+       9853
+      ],
+      [
+       10429,
+       10605
+      ]
+     ]
+    },
+    {
+     "id": "S78-reports_gain-M3",
+     "kind": "claim",
+     "subject": "the Grudes 2022 study",
+     "relation": "reports_gain",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       1278,
+       1472
+      ],
+      [
+       8731,
+       8864
+      ],
+      [
+       9647,
+       9853
+      ]
+     ]
+    },
+    {
+     "id": "S40-reports_drop-M3",
+     "kind": "decoy",
+     "subject": "the Dukinal 2025 study",
+     "relation": "reports_drop",
+     "object": "Ragrer decoding",
+     "spans": [
+      [
+       1278,
+       1472
+      ],
+      [
+       8731,
+       8864
+      ],
+      [
+       9647,
+       9853
+      ]
+     ]
+    },
+    {
+     "id": "S78-reports_gain-M1",
+     "kind": "decoy",
+     "subject": "the Grudes 2022 study",
+     "relation": "reports_gain",
+     "object": "Kabaso prompting",
+     "spans": [
+      [
+       1278,
+       1472
+      ],
+      [
+       7627,
+       7753
+      ],
+      [
+       8865,
+       8969
+      ],
+      [
+       9647,
+       9853
+      ]
+     ]
+    },
+    {
+     "id": "S78-reports_gain-M5",
+     "kind": "decoy",
+     "subject": "the Grudes 2022 study",
+     "relation": "reports_gain",
+     "object": "Thoradram retrieval",
+     "spans": [
+      [
+       1278,
+       1472
+      ],
+      [
+       8865,
+       8969
+      ],
+      [
+       9647,
+       9853
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

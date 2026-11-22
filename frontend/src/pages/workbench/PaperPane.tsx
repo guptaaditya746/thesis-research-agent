@@ -31,6 +31,11 @@ const MARK_HELP: Record<MarkKind, string> = {
 }
 const PLACE = { table: "in a table", text: "in a sentence" }
 
+/** "measure, dose, week N", leaving out the parts a fact has not got (paperfactory facts have no dose or week). */
+function factWhere(f: L0Fact): string {
+  return [f.measure, f.dose_text, f.week !== null ? `week ${f.week}` : null].filter(Boolean).join(", ")
+}
+
 /** Every mark of the L0 result, one per span (a fact beats a near miss beats an extra number at the same place). */
 function marksOf(l0: L0Result): Mark[] {
   const rank: Record<MarkKind, number> = { fact: 0, misplaced: 0, near: 1, extra: 2 }
@@ -38,7 +43,7 @@ function marksOf(l0: L0Result): Mark[] {
   for (const f of l0.facts) {
     for (const s of f.spans) {
       all.push({ start: s.start, end: s.end, kind: s.where === f.placement ? "fact" : "misplaced",
-        title: `${f.id}: ${f.measure}, ${f.dose_text ?? ""}, week ${f.week ?? ""} = ${f.value} ${f.unit_text}` })
+        title: `${f.id}: ${factWhere(f)}${f.value ? ` = ${f.value} ${f.unit_text}` : ""}` })
     }
     for (const s of f.near) all.push({ start: s.start, end: s.end, kind: "near", title: `${f.id}? ${s.why}` })
   }
@@ -129,7 +134,7 @@ function FactList({ l0, marks }: { l0: L0Result; marks: Mark[] }) {
                   <span className="font-mono text-xs">{f.id}</span>{" "}
                   <b className="font-mono">{f.value} {f.unit_text}</b>{" "}
                   <span className="text-muted-foreground">
-                    {f.measure}, {f.dose_text}, week {f.week}; should be {PLACE[f.placement]}
+                    {factWhere(f)}; should be {PLACE[f.placement]}
                   </span>
                   {f.near.length > 0 && <span className="block text-xs text-destructive">
                     almost: “{f.near[0].raw}” ({f.near[0].why})</span>}

@@ -13,6 +13,7 @@ from typing import Any
 
 from evqa.eval import dataset
 from evqa.paths import REPO, brief_dir, paper_file
+from evqa.seed import pfview
 from evqa.seed.brief import paper_facts
 
 BRIEFS = ("idea_sparse.md", "experimental_log.md")
@@ -36,6 +37,8 @@ def _rel(path: Path) -> str:
 
 
 def papers(domain: str) -> list[dict[str, Any]]:
+    if pfview.is_pf(domain):
+        return pfview.papers(domain)
     out = []
     for pid, p in paper_facts(domain).items():
         folder = brief_dir(domain, pid)
@@ -47,6 +50,8 @@ def papers(domain: str) -> list[dict[str, Any]]:
 
 
 def paper(domain: str, pid: str) -> dict[str, Any]:
+    if pfview.is_pf(domain):
+        return pfview.paper(domain, pid)
     p = paper_facts(domain).get(pid)
     if p is None:
         raise KeyError(pid)

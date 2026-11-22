@@ -2,6 +2,7 @@
 
   uv run paperfactory run --config backend/paperfactory/configs/law.json [--steps world,seed,materials,write,eval]
   uv run paperfactory check-world --config ... --world FILE
+  uv run paperfactory export-workbench --config ... --domain pf_law
   uv run paperfactory export-labels --config ... --out labels.csv [--per-field 200]
   uv run paperfactory label-metrics --labels a.csv [--labels b.csv] --answers answers.json [--run-verifier --config ...]
 
@@ -18,7 +19,8 @@ from typing import Any
 
 from repo_paths import REPO
 
-from paperfactory import SCORING_VERSION, config, cost, files, labels, materials, meta, packs, repair, seed, world, write
+from paperfactory import SCORING_VERSION, config, cost, files, labels, materials, meta, packs, repair, seed, style, topics, workbench, world, write
+from paperfactory import quant
 from paperfactory.evaluate import Eval
 from paperfactory.llm import Caller, GatewayDown
 
@@ -32,7 +34,13 @@ def world_inputs(s: config.Settings, f: packs.Field, g: packs.Genre) -> dict[str
     d: dict[str, Any] = {"field_pack": [world._pack_text(f), f.subject_kinds, f.raw.get("order_attr"),
                                         f.raw.get("real_names", []), f.raw.get("text", {}).get("name_variants", [])],
                          "genre_pack": [g.name, g.raw.get("claims_per_paper"), g.raw.get("decoys_per_paper")],
-                         "papers": s.papers}
+                         "papers": s.papers, "clusters": s.clusters,
+                         "topics": [f.raw.get("topics"), f.raw.get("cluster_note"), f.raw.get("shared_kinds"),
+                                    meta.file_hash(topics.TOPICS / f"{f.name}.json")
+                                    if (topics.TOPICS / f"{f.name}.json").is_file() else None],
+                         "numbers": [f.raw.get("effect"), {k: v.get("numbers") for k, v in f.kinds.items()},
+                                     {r: v.get("effect") for r, v in f.relations.items()}, topics.ranges(),
+                                     meta.file_hash(Path(quant.__file__))]}
     if s.world_file:
         return d | {"world_file": (REPO / s.world_file).read_text(encoding="utf-8")}
     return d | {"seed": s.seed, "world_model": meta.role(s, "world"), "prompts": [world.ENT_SYS, world.PAPER_SYS]}
@@ -41,7 +49,7 @@ def world_inputs(s: config.Settings, f: packs.Field, g: packs.Genre) -> dict[str
 def write_inputs(s: config.Settings, pid: str, template: Path) -> dict[str, Any]:
     return {"notes": meta.dir_hash(s.out_dir / "papers" / pid), "template": meta.dir_hash(template),
             "pages": s.pages, "writer": meta.role(s, "writer"), "po_prompts": meta.dir_hash(meta.PO_PROMPTS),
-            "po_prompt_version": write.PROMPT_VERSION}
+            "po_prompt_version": write.prompt_version(template)}
 
 
 def check_inputs(s: config.Settings, w: dict[str, Any], f: packs.Field, chk: repair.Checker, pid: str,
@@ -62,7 +70,8 @@ REWRITE_NOTE = (
     "and outputs are in judge.jsonl.")
 
 # the inputs that every paper of one evaluation must share (paper-specific ones, like the notes, are left out)
-SHARED = {"inputs": ["template", "pages", "writer", "po_prompts", "po_prompt_version"],
+# (template and pages left out since 22 Nov 2026: each paper has its own style card, template and length)
+SHARED = {"inputs": ["writer", "po_prompts", "po_prompt_version"],
           "check": ["world", "field_pack", "verifier", "repair", "prompts", "code"]}
 
 
@@ -87,7 +96,9 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                 except ValueError as e:          # recorded for the morning; a rerun asks the model afresh
                     files.write_json(out / "world.failed.json", {"error": str(e)})
                     sys.exit(f"world failed (details in world.failed.json):\n{str(e)[:2000]}")
-            errs = world.check(w, f, g, n_papers=s.papers - len(w.get("dropped_papers", {})))
+            if "numbers" not in w and (f.raw.get("effect") or any(k.get("numbers") for k in f.kinds.values())):
+                w["numbers"] = quant.make(w, f, s.seed)       # every number of the world, by code
+            errs = world.check(w, f, g, n_papers=len(w["papers"]) if w.get("dropped_papers") else s.papers)
             if errs:
                 sys.exit("world failed the checks:\n" + "\n".join(errs[:40]))
             for x in world.decoy_warnings(w, f):
@@ -101,23 +112,32 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
         graph.serialize(out / "seed.ttl", format="turtle")
         files.write_json(out / "gold.json", {"scoring_version": SCORING_VERSION} | gold)
         print(f"seed: SHACL ok, {len(gold['facts'])} facts, {len(gold['questions'])} questions")
+    # style cards (style.py): every paper its own template, tone, voice, opening and length (22 Nov 2026)
+    cards = style.cards(list(w["papers"]), f, g, s.seed) if g.raw.get("templates") else None
+    if cards:
+        files.write_json(out / "style_cards.json", cards)
     if "materials" in steps:
-        print("materials:", len(materials.write_all(w, f, g, out)), "papers")
-    template = packs.render_template(f, g, s.pages, out / f"template_{g.name}_{s.pages}p")
+        print("materials:", len(materials.write_all(w, f, g, out, cards)), "papers")
+    if cards:
+        tdirs = {pid: packs.render_paper_template(f, g, cards[pid], out / "templates" / pid) for pid in w["papers"]}
+    else:
+        shared_t = packs.render_template(f, g, s.pages, out / f"template_{g.name}_{s.pages}p")
+        tdirs = {pid: shared_t for pid in w["papers"]}
+    template = tdirs.get
     paper = lambda pid: out / "work" / pid / "paper.md"  # noqa: E731
     if "write" in steps:
         for pid in w["papers"]:
-            if meta.write_stale(paper(pid), write_inputs(s, pid, template), allow_mixed, f"write {pid}"):
+            if meta.write_stale(paper(pid), write_inputs(s, pid, template(pid)), allow_mixed, f"write {pid}"):
                 print(f"write {pid}: old paper kept as", meta.set_aside(out / "work" / pid).name)
                 for log in (out / "work").glob(f"{pid}.*"):       # its call logs go too (cost report, #13)
                     meta.set_aside(log)
         def write_paper(pid: str) -> dict[str, Any]:
             try:
-                r = write.write_one(s, pid, template, use_cache=use_cache)
+                r = write.write_one(s, pid, template(pid), use_cache=use_cache)
             except Exception as e:  # noqa: BLE001 - one paper never stops the step
                 r = {"pid": pid, "status": f"failed ({type(e).__name__}: {str(e)[:200]})"}
             if r["status"] == "ok":              # saved per paper at once: a stop later in the step keeps it
-                meta.write_done(paper(pid), write_inputs(s, pid, template))
+                meta.write_done(paper(pid), write_inputs(s, pid, template(pid)))
             elif r["status"] != "exists" and paper(pid).is_file():
                 # PaperOrchestra failed after writing paper.md: never keep a paper of unknown quality
                 print(f"write {pid}: failed but left a paper.md; kept aside as", meta.set_aside(out / "work" / pid).name)
@@ -125,13 +145,13 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
         print("write:", json.dumps(write.pmap_papers(write_paper, list(w["papers"]), s.parallel)))
     if "check" in steps:                 # papers must agree with the world (repair.py)
         def redo(pid: str) -> str | None:
-            r = write.write_one(s, pid, template, attempt=2, use_cache=use_cache)
+            r = write.write_one(s, pid, template(pid), attempt=2, use_cache=use_cache)
             p = out / "work" / pid / "redo-2" / "paper.md"
             return p.read_text(encoding="utf-8") if r["status"] in ("ok", "exists") and p.is_file() else None
-        chk = repair.Checker(s, w, f, call)
+        chk = repair.Checker(s, w, f, call, g)
         todo = []
         for pid in [p for p in w["papers"] if paper(p).is_file()]:
-            state, why = meta.check_state(paper(pid), check_inputs(s, w, f, chk, pid, template), allow_mixed,
+            state, why = meta.check_state(paper(pid), check_inputs(s, w, f, chk, pid, template(pid)), allow_mixed,
                                           f"check {pid}")
             if state == "redo":
                 work = out / "work" / pid
@@ -152,7 +172,7 @@ def run(s: config.Settings, steps: list[str], use_cache: bool = True, allow_mixe
                 raise
             except Exception as e:  # noqa: BLE001 - one paper never stops the step; no check_done: a rerun retries
                 return {"pid": pid, "status": f"error ({type(e).__name__}: {str(e)[:200]})"}
-            meta.check_done(paper(pid), check_inputs(s, w, f, chk, pid, template))
+            meta.check_done(paper(pid), check_inputs(s, w, f, chk, pid, template(pid)))
             return r
         print("check:", json.dumps(write.pmap_papers(check_one, todo, s.parallel)))
     if "eval" in steps:
@@ -218,6 +238,9 @@ def main(argv: list[str] | None = None) -> None:
     cc = sub.add_parser("clear-cache", help="delete the cached model answers of one step")
     cc.add_argument("--config", required=True)
     cc.add_argument("--step", required=True, help="step prefix as in calls.jsonl, e.g. 'verify:' or 'qa:LAW-01'")
+    wb = sub.add_parser("export-workbench", help="copy the run's checked papers into the Workbench (workbench.py)")
+    wb.add_argument("--config", required=True)
+    wb.add_argument("--domain", required=True, help="Workbench domain name, e.g. pf_law")
     c = sub.add_parser("check-world")
     c.add_argument("--config", required=True)
     c.add_argument("--world", required=True)
@@ -252,6 +275,9 @@ def main(argv: list[str] | None = None) -> None:
                                               Path(a.adjudicated) if a.adjudicated else None), indent=1))
         return
     s = config.load(a.config)
+    if a.cmd == "export-workbench":
+        print(json.dumps(workbench.export(s.out_dir, a.domain)))
+        return
     if a.cmd == "export-labels":
         print(json.dumps(labels.export_run(s.out_dir, packs.field(s.field), Path(a.out), a.per_field, a.seed)))
         return
@@ -272,7 +298,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"removed {Caller(s).clear(a.step)} cached answers for steps starting with {a.step!r}")
     else:
         w, f, g = json.loads(Path(a.world).read_text()), packs.field(s.field), packs.genre(s.genre)
-        errs = world.check(w, f, g, n_papers=s.papers - len(w.get("dropped_papers", {})))
+        errs = world.check(w, f, g, n_papers=len(w["papers"]) if w.get("dropped_papers") else s.papers)
         print(json.dumps(world.shape(w, f, g, s.pages), indent=1))
         print("\n".join(f"warning: {x}" for x in world.decoy_warnings(w, f)))
         print("\n".join(errs) or "ok")

@@ -1,6 +1,6 @@
 {
  "field": "materials",
- "status": "DRAFT, not yet run: Aditya reviews before use",
+ "status": "v2 (22 Nov 2026): clusters, summaries, numbers. Draft: Aditya reviews.",
  "setting": "Invented materials (alloys, coatings, compounds) studied in invented lab studies. Properties and test methods are real concepts; material names, labs and findings are invented.",
  "words": {
   "paper_kind": "a critical review in materials science",
@@ -17,27 +17,260 @@
   "actions": "results",
   "line_of_authority": "line of experimental evidence"
  },
- "text": {"abbreviations": ["e.g.", "i.e.", "cf.", "et al.", "Fig.", "Eq.", "Ref.", "vs.", "approx.", "ca.", "wt.", "Dr.", "No.", "Co.", "Ltd.", "Inc."], "lowercase_starts": [], "name_variants": [], "citation_tail": "", "defined_terms": [" ?\\((?:the )?[\"'](?P<t>[^\"']{2,40})[\"']\\)", " ?\\((?P<t>[A-Z][A-Z0-9-]*[A-Z0-9])\\)", ",? hereinafter (?:the )?[\"']?(?P<t>[A-Z][^\"',.;)]{1,39}?)[\"']?(?=[\\s,.;)])"], "absence_patterns": ["\\brecords? no\\b", "\\bno (recorded )?treatment\\b", "\\bnot (recorded|addressed|stated|documented)\\b", "\\bdoes not address\\b", "\\bis silent on\\b", "\\b([Tt]he|[Oo]ur) (notes|records|log|materials)\\b", "\\bno data (on|for)\\b"]},
- "kinds": {
-  "material": {"about": "an invented material with a plausible code name (e.g. 'alloy TK-7', 'coating Veral-3')", "attrs": {"family": "text"}},
-  "study": {"about": "an invented lab study named by lab and year (e.g. 'the Hollis Lab 2019 study')", "attrs": {"property": "text", "year": "int", "method": "text"}}
+ "text": {
+  "abbreviations": [
+   "e.g.",
+   "i.e.",
+   "cf.",
+   "et al.",
+   "Fig.",
+   "Eq.",
+   "Ref.",
+   "vs.",
+   "approx.",
+   "ca.",
+   "wt.",
+   "Dr.",
+   "No.",
+   "Co.",
+   "Ltd.",
+   "Inc."
+  ],
+  "lowercase_starts": [],
+  "name_variants": [],
+  "citation_tail": "",
+  "defined_terms": [
+   " ?\\((?:the )?[\"'](?P<t>[^\"']{2,40})[\"']\\)",
+   " ?\\((?P<t>[A-Z][A-Z0-9-]*[A-Z0-9])\\)",
+   ",? hereinafter (?:the )?[\"']?(?P<t>[A-Z][^\"',.;)]{1,39}?)[\"']?(?=[\\s,.;)])"
+  ],
+  "absence_patterns": [
+   "\\brecords? no\\b",
+   "\\bno (recorded )?treatment\\b",
+   "\\bnot (recorded|addressed|stated|documented)\\b",
+   "\\bdoes not address\\b",
+   "\\bis silent on\\b",
+   "\\b([Tt]he|[Oo]ur) (notes|records|log)\\b",
+   "\\bno data (on|for)\\b"
+  ]
  },
- "subject_kinds": ["study"],
+ "kinds": {
+  "material": {
+   "about": "an invented material",
+   "attrs": {
+    "family": "text",
+    "summary": "text"
+   },
+   "name": {
+    "label": "{type} {W}-{D}",
+    "alt": [
+     "{W}-{D}"
+    ],
+    "parts": {
+     "type": "the type of material in one plain word, e.g. alloy, coating, polymer, ceramic"
+    },
+    "example": {
+     "name_parts": {
+      "type": "coating"
+     },
+     "attrs": {
+      "family": "ceramic coatings",
+      "summary": "a plasma-sprayed yttria-stabilised zirconia top coat on a nickel bond coat"
+     }
+    }
+   }
+  },
+  "study": {
+   "about": "an invented lab study, named by its lab and year",
+   "attrs": {
+    "property": "text",
+    "year": "int",
+    "method": "text",
+    "reference": "text",
+    "summary": "text"
+   },
+   "name": {
+    "label": "the {W} Lab {a:year} study",
+    "alt": [
+     "{W} Lab {a:year}"
+    ],
+    "parts": {},
+    "example": {
+     "name_parts": {},
+     "attrs": {
+      "property": "wear resistance",
+      "year": 2017,
+      "method": "pin-on-disc test",
+      "reference": "uncoated steel",
+      "summary": "dry sliding against an alumina ball at room temperature; wear volume measured by profilometry"
+     }
+    }
+   },
+   "numbers": {
+    "samples": {
+     "choice": [
+      3,
+      4,
+      5,
+      6,
+      8
+     ],
+     "unit": "n",
+     "label": "samples tested"
+    },
+    "test_temperature_C": {
+     "choice": [
+      25,
+      25,
+      200,
+      400,
+      600,
+      800
+     ],
+     "unit": "°C",
+     "label": "test temperature"
+    }
+   }
+  }
+ },
+ "subject_kinds": [
+  "study"
+ ],
  "order_attr": "year",
  "relations": {
-  "reports_improvement": {"words": "reported an improvement with", "meaning": "the study reports that the material improved the property it tested", "object_kinds": ["material"], "confusable_with": ["reports_no_change", "reports_degradation"]},
-  "reports_no_change": {"words": "reported no change with", "meaning": "the study reports no clear change in the tested property for the material", "object_kinds": ["material"], "confusable_with": ["reports_improvement", "reports_degradation"]},
-  "reports_degradation": {"words": "reported degradation with", "meaning": "the study reports that the material worsened the tested property", "object_kinds": ["material"], "confusable_with": ["reports_improvement", "reports_no_change"]},
-  "fails_to_replicate": {"words": "failed to replicate", "meaning": "the study repeated an earlier study and did not get its result", "object_kinds": ["study"], "confusable_with": []}
+  "reports_improvement": {
+   "words": "reported an improvement with",
+   "meaning": "the study reports that the material improved the property it tested",
+   "object_kinds": [
+    "material"
+   ],
+   "confusable_with": [
+    "reports_no_change",
+    "reports_degradation"
+   ],
+   "effect": "better"
+  },
+  "reports_no_change": {
+   "words": "reported no change with",
+   "meaning": "the study reports no clear change in the tested property for the material",
+   "object_kinds": [
+    "material"
+   ],
+   "confusable_with": [
+    "reports_improvement",
+    "reports_degradation"
+   ],
+   "effect": "none"
+  },
+  "reports_degradation": {
+   "words": "reported degradation with",
+   "meaning": "the study reports that the material worsened the tested property",
+   "object_kinds": [
+    "material"
+   ],
+   "confusable_with": [
+    "reports_improvement",
+    "reports_no_change"
+   ],
+   "effect": "worse"
+  },
+  "fails_to_replicate": {
+   "words": "failed to replicate",
+   "meaning": "the study repeated an earlier study and did not get its result",
+   "object_kinds": [
+    "study"
+   ],
+   "confusable_with": []
+  }
  },
- "conflict_pairs": [["reports_improvement", "reports_no_change"], ["reports_improvement", "reports_degradation"]],
+ "conflict_pairs": [
+  [
+   "reports_improvement",
+   "reports_no_change"
+  ],
+  [
+   "reports_improvement",
+   "reports_degradation"
+  ]
+ ],
  "confusable_note": "DRAFT for review: for a property where lower is better (wear, creep) a fall is an improvement; small changes are written as improvement or as no change.",
  "real_names": [],
  "real_names_note": "Real names that invented entities must not use (whole words, any case; world.check). Empty until Aditya approves the sources for this list.",
  "questions": [
-  {"id": "treat", "text": "What did {s} report about {o}?", "filter": ["subject", "object"]},
-  {"id": "improved", "text": "Which materials improved the tested property in {s}?", "filter": ["subject"], "relation": "reports_improvement"},
-  {"id": "conflict", "text": "Which studies found that {o} improved the tested property, and which did not?", "filter": ["object"], "relation_in": ["reports_improvement", "reports_no_change", "reports_degradation"]}
+  {
+   "id": "treat",
+   "text": "What did {s} report about {o}?",
+   "filter": [
+    "subject",
+    "object"
+   ]
+  },
+  {
+   "id": "improved",
+   "text": "Which materials improved the tested property in {s}?",
+   "filter": [
+    "subject"
+   ],
+   "relation": "reports_improvement"
+  },
+  {
+   "id": "conflict",
+   "text": "Which studies found that {o} improved the tested property, and which did not?",
+   "filter": [
+    "object"
+   ],
+   "relation_in": [
+    "reports_improvement",
+    "reports_no_change",
+    "reports_degradation"
+   ]
+  }
  ],
- "world_notes": "Make 4-6 invented materials in 1-2 families and enough studies (years 2012-2025) that each paper has its own mix. A study may only fail to replicate an EARLIER study. Plant disagreements: two studies with opposite findings for the same material."
+ "world_notes": "Make 3-4 invented materials in the cluster's family and enough studies (years 2012-2025) that each paper has its own mix. A study may only fail to replicate an EARLIER study. Plant disagreements: two studies with opposite findings for the same material.",
+ "topics": {
+  "openalex": {
+   "subfields": [
+    "2506",
+    "2508",
+    "2503",
+    "2507",
+    "2505",
+    "2504"
+   ],
+   "include": [],
+   "exclude": [
+    "biolog",
+    "medical",
+    "drug"
+   ]
+  },
+  "keep": 40
+ },
+ "cluster_note": "All materials and studies of this cluster belong to ONE material family within the cluster topic, and the studies test properties that matter for it.",
+ "effect": {
+  "name": "change in the tested property relative to the reference (%, positive = better)",
+  "short": "change",
+  "unit": "%",
+  "scale": "difference",
+  "better_side": "higher",
+  "decimals": 1,
+  "better": [
+   6.0,
+   38.0
+  ],
+  "none": [
+   -1.8,
+   1.8
+  ],
+  "worse": [
+   -26.0,
+   -5.0
+  ],
+  "ci_half": [
+   1.0,
+   3.8
+  ],
+  "pool_label": "pooled change (inverse-variance)",
+  "delta_unit": "%"
+ }
 }

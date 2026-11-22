@@ -22,7 +22,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from paperfactory import files
+from paperfactory import files, style
 from paperfactory.evaluate import ids_check
 from paperfactory.packs import Field
 from paperfactory.text import (EMPHASIS, ITEM, alias_table, defined_terms, find_mentions, normalize_paper,
@@ -46,14 +46,26 @@ class RepairOut(BaseModel):
     paragraph: str
 
 
+def fact_check():
+    """PaperOrchestra's number check (stdlib only), loaded by path: it lives in the vendored writer's project."""
+    import importlib.util
+    from repo_paths import REPO
+    path = REPO / "external" / "paperorchestra" / "utils" / "fact_check.py"
+    spec = importlib.util.spec_from_file_location("po_fact_check", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def failed(out_dir, pid: str) -> bool:
     p = out_dir / "work" / pid / "paper.repairs.json"
     return p.is_file() and json.loads(p.read_text(encoding="utf-8")).get("status") == "failed"
 
 
 class Checker:
-    def __init__(self, s, w: dict[str, Any], f: Field, call):
-        self.s, self.w, self.f, self.call = s, w, f, call
+    def __init__(self, s, w: dict[str, Any], f: Field, call, g=None):
+        self.s, self.w, self.f, self.call, self.g = s, w, f, call, g
+        self.banned = style.banned_re(g.raw.get("banned_phrases", [])) if g is not None else None
         self.rules = split_rules(f, w)
         self.base = alias_table(w, f)
         self.patterns = [re.compile(p) for p in f.raw["text"]["absence_patterns"]]
@@ -83,7 +95,10 @@ class Checker:
                     out.append((a, b))
         return out
 
-    def system(self) -> str:
+    def system_v1(self) -> str:
+        """v1 (until 22 Nov 2026): side-by-side sentences ('A found X, while B found Y') were often judged
+        CONTRADICTS for the pair (A, B), which has no relation; about 1 in 4 papers of the 40-paper pilot failed on
+        that alone."""
         sk, rels = self.f.word("subject_kind"), list(self.f.relations.values())
         r1, r2 = rels[0]["words"], rels[min(1, len(rels) - 1)]["words"]
         return f"""You compare one sentence of a paper with what is TRUE in the paper's world about one pair: a {sk}
@@ -99,6 +114,26 @@ Examples (truth "X: {self.f.word('actor')} {r1} Y."):
 "In X, the {sk} {r1} Y." -> SUPPORTS.  "X {r2} Y." -> CONTRADICTS.  "It is not recorded how X treated Y." ->
 ABSENCE_CLAIM.  "X and Y are discussed together in this section." -> NEUTRAL."""
 
+    def system(self) -> str:
+        sk, rels = self.f.word("subject_kind"), list(self.f.relations.values())
+        r1, r2 = rels[0]["words"], rels[min(1, len(rels) - 1)]["words"]
+        return f"""You compare one sentence of a paper with what is TRUE in the paper's world about one pair: a {sk}
+and a source. Each item has an id, the sentence, the sentence before it (context), the pair, and the truth.
+Answer with one verdict per item, using its id:
+SUPPORTS: the sentence states the true relation for this pair (in any wording).
+CONTRADICTS: the sentence states a relation BETWEEN the two members of this pair that is not the true one, or a
+  relation between them where the truth has none.
+ABSENCE_CLAIM: the sentence says the relation for this pair is unknown, not recorded, not addressed, not treated,
+  absent or left open.
+NEUTRAL: the sentence names both but states no relation between the two of them. Two {sk}s set side by side, each
+  with its own result about something else, are NEUTRAL for the pair of those two {sk}s; a table row that lists
+  them is NEUTRAL too unless it states how one treated the other.
+Examples (truth "X: {self.f.word('actor')} {r1} Y."):
+"In X, the {sk} {r1} Y." -> SUPPORTS.  "X {r2} Y." -> CONTRADICTS.  "It is not recorded how X treated Y." ->
+ABSENCE_CLAIM.  "X and Y are discussed together in this section." -> NEUTRAL.
+Example (truth "No relation between X and Z is true in this world."): "X {r1} Y, whereas Z {r2} Y." -> NEUTRAL
+(each states its own result about Y; nothing links X and Z). "Z {r2} X." -> CONTRADICTS."""
+
     # ------------------------------------------------------------ detection
     def check(self, pid: str, md: str, only: set[str] | None = None) -> tuple[list[dict[str, Any]], list[str]]:
         """(flags, notes) for the sentences of md (only those whose text is in `only`, if given)."""
@@ -111,6 +146,9 @@ ABSENCE_CLAIM.  "X and Y are discussed together in this section." -> NEUTRAL."""
                 continue
             hits = [p.pattern for p in self.patterns if p.search(t)]
             prs = self.pairs(t, table)
+            if self.banned is not None and (bm := self.banned.search(t)):
+                flags.append({"n": n, "start": a, "end": b, "text": t, "kind": "STYLE", "pair": None,
+                              "reason": f"STYLE: remove the phrase {bm.group(0)!r} (say it plainly or drop it)"})
             if hits and not prs:
                 flags.append({"n": n, "start": a, "end": b, "text": t, "kind": "pattern", "pair": None,
                               "reason": f"wording about the notes or a missing relation ({hits[0]})"})
@@ -144,11 +182,26 @@ facts. Never mention the materials, notes or records the paper was written from,
 treated another is unknown, unrecorded, unaddressed or absent: if a sentence only says that, drop it. Return only the
 paragraph text (no heading).
 Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop that sentence, keep the rest."""
-    REPAIR_SYS = """You fix one paragraph of a paper. Input fields: paragraph, problems (each with the flagged sentence),
+    # v2 (until 22 Nov 2026): said nothing about numbers; papers now carry checked numbers (row ids)
+    REPAIR_SYS_V2 = """You fix one paragraph of a paper. Input fields: paragraph, problems (each with the flagged sentence),
 facts_of_this_paper (what the paper must state), names_to_keep. Return the paragraph rewritten so that every problem is
 gone.
 Rules: keep every other statement, name and fact as it is; keep the meaning of each listed fact exactly; add no new
 facts. Every name in names_to_keep must still appear in the paragraph (the full name or the short name the paragraph
+already uses). Never mention the materials, notes or records the paper was written from, and never say that how one
+source treated another is unknown, unrecorded, unaddressed or absent: if a sentence only says that, drop it. The
+simplest fix is often to drop the flagged sentence or the wrong part of it. Return only the paragraph text (no
+heading).
+Example. Problem: "ABSENCE_CLAIM: It is not recorded how X treated Y." -> drop that sentence, keep the rest.
+Example. Problem: "CONTRADICTS: the world says: no relation between X and Y. Sentence: X and Z relied on Y." with
+names_to_keep ["Z", "Y"] -> "Z relied on Y."
+Example. Problem: "ABSENCE_CLAIM ... Sentence: Z relied on Y, and how Z treated W is not recorded." with
+facts_of_this_paper ["Z: relied on Y."] -> keep the true part: "Z relied on Y." """
+    REPAIR_SYS = """You fix one paragraph of a paper. Input fields: paragraph, problems (each with the flagged sentence;
+a STYLE problem names a phrase to remove), facts_of_this_paper (what the paper must state), names_to_keep. Return the paragraph rewritten so that every problem is
+gone.
+Rules: keep every other statement, name and fact as it is; keep the meaning of each listed fact exactly; add no new
+facts. Keep every number exactly as written (same digits, decimals and unit) and keep tables as they are. Every name in names_to_keep must still appear in the paragraph (the full name or the short name the paragraph
 already uses). Never mention the materials, notes or records the paper was written from, and never say that how one
 source treated another is unknown, unrecorded, unaddressed or absent: if a sentence only says that, drop it. The
 simplest fix is often to drop the flagged sentence or the wrong part of it. Return only the paragraph text (no
@@ -273,6 +326,25 @@ facts_of_this_paper ["Z: relied on Y."] -> keep the true part: "Z relied on Y." 
                 open_.append(fl)
         return md, open_
 
+    def gate(self, pid: str, md: str) -> list[dict[str, Any]]:
+        """Checks by code after the repairs (22 Nov 2026): every number row of the notes is in the paper exactly and
+        in its place (PaperOrchestra's fact_check), no row id leaked, and at least the genre's min_tables tables.
+        A failure is an open flag (kind NUMBERS / TABLES), so the paper is written again once, then failed."""
+        if self.g is None or not self.g.raw.get("numeric_facts"):
+            return []
+        log = (self.s.out_dir / "papers" / pid / "experimental_log.md").read_text(encoding="utf-8")
+        fc = fact_check()
+        out = [{"n": None, "start": 0, "end": 0, "text": "", "kind": "NUMBERS", "pair": None,
+                "reason": f"{r['id']} {r['value']} {r['unit']}: {r['reason']}"}
+               for r in fc.check_facts(md, fc.parse_facts(log)) if not r["ok"]]
+        out += [{"n": None, "start": 0, "end": 0, "text": "", "kind": "NUMBERS", "pair": None,
+                 "reason": f"row id {x} printed in the paper"} for x in fc.leaked_row_ids(md)]
+        n_tables = len(fc._blocks(md)[0])
+        if n_tables < self.g.raw.get("min_tables", 0):
+            out.append({"n": None, "start": 0, "end": 0, "text": "", "kind": "TABLES", "pair": None,
+                        "reason": f"{n_tables} tables, need at least {self.g.raw['min_tables']}"})
+        return out
+
     def repair_paper(self, pid: str, redo: Callable[[str], str | None]) -> dict[str, Any]:
         work = self.s.out_dir / "work" / pid
         md = (work / "paper.md").read_text(encoding="utf-8")
@@ -282,13 +354,17 @@ facts_of_this_paper ["Z: relied on Y."] -> keep the true part: "Z relied on Y." 
         log: list[dict[str, Any]] = []
         md, left = self.fix_round(pid, md, log, "first")
         status = "clean" if len(log) == 1 else "repaired"     # one log entry: the first check found nothing
+        style_left = [x for x in left if x["kind"] == "STYLE"]   # a banned phrase left over never fails a paper
+        left = [x for x in left if x["kind"] != "STYLE"] + self.gate(pid, md)
         if left:
             new = redo(pid)
-            log.append({"step": "redo", "ok": new is not None})
+            log.append({"step": "redo", "ok": new is not None, "why": [x["reason"] for x in left][:20]})
             if new is not None:
                 md, left = self.fix_round(pid, new, log, "after_redo")
+                style_left = [x for x in left if x["kind"] == "STYLE"]
+                left = [x for x in left if x["kind"] != "STYLE"] + self.gate(pid, md)
             status = "failed" if left or new is None else "redone"
         files.write_text(work / "paper.md", md)
-        rec = {"pid": pid, "status": status, "open_flags": left, "log": log}
+        rec = {"pid": pid, "status": status, "open_flags": left, "style_left": style_left, "log": log}
         files.write_json(work / "paper.repairs.json", rec)
         return {"pid": pid, "status": status, "open_flags": len(left)}

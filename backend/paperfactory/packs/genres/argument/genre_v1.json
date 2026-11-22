@@ -1,0 +1,15 @@
+{
+ "genre": "argument",
+ "numeric_facts": false,
+ "about": "A paper that argues for one thesis by analysing what earlier sources did (decisions, trials, studies). Facts are holdings: subject --relation--> source. PaperOrchestra reads genre.json in the template folder and skips its number-fact gate when numeric_facts is false.",
+ "words_per_page": [450, 550],
+ "claims_per_paper": 3,
+ "decoys_per_paper": 3,
+ "max_mentions_per_fact": 3,
+ "log_sections": ["Setting", "Sources", "Holdings (data)", "Conflict", "Argument Plan", "Rules"],
+ "argument_plan": [
+  "Set out the issue and the relevant sources.",
+  "Analyse the {SUBJECT_PLURAL} in time order and what each did with each source.",
+  "Defend the thesis; then state the strongest counter-argument and answer it from the {FACTS}."
+ ]
+}

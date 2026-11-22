@@ -1,0 +1,3902 @@
+{
+ "source": "paperfactory",
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/runs/paperfactory/qwen40-materials",
+ "field": "materials",
+ "genre": "argument",
+ "planned": 40,
+ "papers": [
+  {
+   "id": "MAT-01",
+   "title": "Divergent Corrosion and Wear Findings in Recent Material Studies",
+   "issue": "Inconsistencies in reported property changes for ceramic coatings and titanium alloys across different testing methodologies.",
+   "thesis": "The Brudes Lab 2024 study and the Thagrogral Lab 2012 study report conflicting outcomes for their respective materials, highlighting the sensitivity of corrosion and wear metrics to specific test conditions.",
+   "facts": [
+    {
+     "id": "S26-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Brudes Lab 2024 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       556,
+       766
+      ],
+      [
+       2983,
+       3205
+      ],
+      [
+       8140,
+       8286
+      ],
+      [
+       9343,
+       9553
+      ],
+      [
+       13868,
+       14002
+      ]
+     ]
+    },
+    {
+     "id": "S26-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Brudes Lab 2024 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       10718,
+       10933
+      ],
+      [
+       13868,
+       14002
+      ]
+     ]
+    },
+    {
+     "id": "S57-reports_degradation-M1",
+     "kind": "claim",
+     "subject": "the Thagrogral Lab 2012 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       556,
+       766
+      ],
+      [
+       2983,
+       3205
+      ],
+      [
+       9343,
+       9553
+      ],
+      [
+       14003,
+       14124
+      ]
+     ]
+    },
+    {
+     "id": "S57-reports_degradation-M2",
+     "kind": "decoy",
+     "subject": "the Thagrogral Lab 2012 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       556,
+       766
+      ],
+      [
+       2983,
+       3205
+      ],
+      [
+       9343,
+       9553
+      ],
+      [
+       14003,
+       14124
+      ]
+     ]
+    },
+    {
+     "id": "S69-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Zekistam Lab 2024 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       10718,
+       10933
+      ],
+      [
+       14125,
+       14366
+      ]
+     ]
+    },
+    {
+     "id": "S52-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Megrekron Lab 2021 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       10718,
+       10933
+      ],
+      [
+       14125,
+       14366
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-03",
+   "title": "Thermal Conductivity Discrepancies in Ceramic Coatings",
+   "issue": "Conflicting reports on thermal conductivity improvements in ceramic coatings Kogal-8 and Bumom-7.",
+   "thesis": "The Satho Lab 2018 study and the Grazor Lab 2020 study present a direct conflict regarding the thermal conductivity of coating Kogal-8, with one reporting improvement and the other reporting no change.",
+   "facts": [
+    {
+     "id": "S35-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Satho Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       282,
+       430
+      ],
+      [
+       1653,
+       1893
+      ],
+      [
+       5724,
+       5850
+      ],
+      [
+       11205,
+       11407
+      ],
+      [
+       11686,
+       11950
+      ],
+      [
+       13084,
+       13305
+      ]
+     ]
+    },
+    {
+     "id": "S65-reports_no_change-M3",
+     "kind": "claim",
+     "subject": "the Grazor Lab 2020 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       282,
+       430
+      ],
+      [
+       1653,
+       1893
+      ],
+      [
+       6528,
+       6644
+      ],
+      [
+       13084,
+       13305
+      ]
+     ]
+    },
+    {
+     "id": "S65-reports_improvement-M4",
+     "kind": "claim",
+     "subject": "the Grazor Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       2819,
+       2992
+      ]
+     ]
+    },
+    {
+     "id": "S35-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Satho Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       2819,
+       2992
+      ]
+     ]
+    },
+    {
+     "id": "S78-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Papoden Lab 2019 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       2993,
+       3116
+      ]
+     ]
+    },
+    {
+     "id": "S78-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Papoden Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       6645,
+       6888
+      ],
+      [
+       10823,
+       11029
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-04",
+   "title": "Fatigue Life Variability in Titanium Alloys",
+   "issue": "The impact of ultrasonic versus rotating beam fatigue testing on the perceived durability of titanium alloys.",
+   "thesis": "The Tofere Lab 2025 study and the Rebru Lab 2017 study show that fatigue life outcomes for alloy Stetrugel-6 are method-dependent, with one reporting improvement and the other degradation.",
+   "facts": [
+    {
+     "id": "S28-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Tofere Lab 2025 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       2467,
+       2604
+      ],
+      [
+       8222,
+       8368
+      ],
+      [
+       8692,
+       8832
+      ],
+      [
+       10678,
+       11005
+      ],
+      [
+       12407,
+       12575
+      ],
+      [
+       13541,
+       13688
+      ]
+     ]
+    },
+    {
+     "id": "S76-reports_degradation-M1",
+     "kind": "claim",
+     "subject": "the Rebru Lab 2017 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       2605,
+       2748
+      ],
+      [
+       7044,
+       7185
+      ],
+      [
+       8222,
+       8368
+      ],
+      [
+       8692,
+       8832
+      ],
+      [
+       10678,
+       11005
+      ],
+      [
+       13541,
+       13688
+      ]
+     ]
+    },
+    {
+     "id": "S76-reports_no_change-M2",
+     "kind": "claim",
+     "subject": "the Rebru Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       7186,
+       7374
+      ],
+      [
+       8885,
+       9000
+      ]
+     ]
+    },
+    {
+     "id": "S28-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Tofere Lab 2025 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       8369,
+       8453
+      ],
+      [
+       8885,
+       9000
+      ]
+     ]
+    },
+    {
+     "id": "S51-reports_degradation-M1",
+     "kind": "decoy",
+     "subject": "the Grubave Lab 2020 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       7724,
+       7879
+      ]
+     ]
+    },
+    {
+     "id": "S57-reports_degradation-M1",
+     "kind": "decoy",
+     "subject": "the Thagrogral Lab 2012 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       6591,
+       6767
+      ],
+      [
+       7724,
+       7879
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-05",
+   "title": "Hardness and Fatigue: Cross-Property Correlations in Alloys",
+   "issue": "The relationship between hardness measurements and fatigue life in titanium alloys Stetrugel-6 and Sapifin-2.",
+   "thesis": "The Putro Lab 2021 study and the Fulel Lab 2025 study indicate that hardness improvements in alloy Sapifin-2 do not necessarily correlate with fatigue life improvements in alloy Stetrugel-6.",
+   "facts": [
+    {
+     "id": "S19-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Putro Lab 2021 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       617,
+       713
+      ],
+      [
+       9230,
+       9325
+      ]
+     ]
+    },
+    {
+     "id": "S70-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Fulel Lab 2025 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       714,
+       845
+      ],
+      [
+       11368,
+       11450
+      ],
+      [
+       13649,
+       13845
+      ],
+      [
+       15484,
+       15610
+      ]
+     ]
+    },
+    {
+     "id": "S70-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Fulel Lab 2025 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       714,
+       845
+      ],
+      [
+       11608,
+       11706
+      ],
+      [
+       14101,
+       14359
+      ],
+      [
+       15484,
+       15610
+      ]
+     ]
+    },
+    {
+     "id": "S19-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Putro Lab 2021 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       617,
+       713
+      ],
+      [
+       9326,
+       9413
+      ]
+     ]
+    },
+    {
+     "id": "S28-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Tofere Lab 2025 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       846,
+       937
+      ],
+      [
+       11914,
+       12000
+      ],
+      [
+       14101,
+       14359
+      ],
+      [
+       15611,
+       15736
+      ]
+     ]
+    },
+    {
+     "id": "S38-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Bopor Lab 2021 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       10287,
+       10377
+      ],
+      [
+       13846,
+       14100
+      ],
+      [
+       15737,
+       15912
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-08",
+   "title": "Corrosion Resistance Conflicts in Titanium Alloys",
+   "issue": "Contradictory findings regarding the corrosion resistance of Stetrugel-6 and Sapifin-2.",
+   "thesis": "A direct conflict exists where the Zefos Lab 2016 study reported degradation in fatigue life with Sapifin-2, while the Ratrol Lab 2015 study reported an improvement in corrosion resistance with Stetrugel-6, indicating that different test methods yield opposing conclusions for alloy durability.",
+   "facts": [
+    {
+     "id": "S10-reports_degradation-M2",
+     "kind": "claim",
+     "subject": "the Zefos Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       193,
+       511
+      ],
+      [
+       2310,
+       2450
+      ],
+      [
+       7913,
+       8055
+      ],
+      [
+       8679,
+       8843
+      ],
+      [
+       13242,
+       13426
+      ],
+      [
+       13985,
+       14134
+      ]
+     ]
+    },
+    {
+     "id": "S32-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Ratrol Lab 2015 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       193,
+       511
+      ],
+      [
+       2451,
+       2632
+      ],
+      [
+       7287,
+       7447
+      ],
+      [
+       11716,
+       11875
+      ]
+     ]
+    },
+    {
+     "id": "S32-reports_no_change-M2",
+     "kind": "claim",
+     "subject": "the Ratrol Lab 2015 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       2451,
+       2632
+      ],
+      [
+       7448,
+       7628
+      ]
+     ]
+    },
+    {
+     "id": "S10-reports_degradation-M1",
+     "kind": "decoy",
+     "subject": "the Zefos Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       193,
+       511
+      ],
+      [
+       2310,
+       2450
+      ],
+      [
+       8056,
+       8145
+      ],
+      [
+       10443,
+       10579
+      ],
+      [
+       13985,
+       14134
+      ]
+     ]
+    },
+    {
+     "id": "S51-reports_degradation-M2",
+     "kind": "decoy",
+     "subject": "the Grubave Lab 2020 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       940,
+       1130
+      ],
+      [
+       9158,
+       9293
+      ],
+      [
+       12550,
+       12739
+      ],
+      [
+       13985,
+       14134
+      ]
+     ]
+    },
+    {
+     "id": "S76-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Rebru Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       940,
+       1130
+      ],
+      [
+       8617,
+       8678
+      ],
+      [
+       9466,
+       9551
+      ],
+      [
+       13113,
+       13241
+      ],
+      [
+       14241,
+       14473
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-09",
+   "title": "Replication Failures in Thermal Conductivity Studies",
+   "issue": "The reliability of thermal conductivity measurements for ceramic coatings over time.",
+   "thesis": "The Legrer Lab 2012 study reported an improvement in thermal conductivity with Kogal-8, but the Krebro Lab 2023 study failed to replicate the findings of the Legrer Lab 2012 study, suggesting that early thermal data for Kogal-8 may be unreliable.",
+   "facts": [
+    {
+     "id": "S29-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Legrer Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       524,
+       674
+      ],
+      [
+       2449,
+       2598
+      ],
+      [
+       5622,
+       5809
+      ],
+      [
+       12990,
+       13155
+      ]
+     ]
+    },
+    {
+     "id": "S68-fails_to_replicate-S29",
+     "kind": "claim",
+     "subject": "the Krebro Lab 2023 study",
+     "relation": "fails_to_replicate",
+     "object": "the Legrer Lab 2012 study",
+     "spans": [
+      [
+       675,
+       821
+      ],
+      [
+       2794,
+       2994
+      ],
+      [
+       6458,
+       6652
+      ],
+      [
+       9999,
+       10128
+      ],
+      [
+       13156,
+       13320
+      ]
+     ]
+    },
+    {
+     "id": "S68-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Krebro Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       822,
+       934
+      ],
+      [
+       2794,
+       2994
+      ],
+      [
+       6653,
+       6804
+      ],
+      [
+       10392,
+       10493
+      ],
+      [
+       12139,
+       12313
+      ],
+      [
+       13156,
+       13320
+      ]
+     ]
+    },
+    {
+     "id": "S29-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Legrer Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       524,
+       674
+      ],
+      [
+       2449,
+       2598
+      ],
+      [
+       5622,
+       5809
+      ],
+      [
+       7866,
+       7980
+      ],
+      [
+       12990,
+       13155
+      ]
+     ]
+    },
+    {
+     "id": "S68-fails_to_replicate-S5",
+     "kind": "decoy",
+     "subject": "the Krebro Lab 2023 study",
+     "relation": "fails_to_replicate",
+     "object": "the Drithekra Lab 2014 study",
+     "spans": [
+      [
+       6458,
+       6652
+      ],
+      [
+       8908,
+       9005
+      ],
+      [
+       13321,
+       13496
+      ]
+     ]
+    },
+    {
+     "id": "S68-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Krebro Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       822,
+       934
+      ],
+      [
+       2794,
+       2994
+      ],
+      [
+       6653,
+       6804
+      ],
+      [
+       10212,
+       10315
+      ],
+      [
+       12139,
+       12313
+      ],
+      [
+       13156,
+       13320
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-10",
+   "title": "Wear Rate Variability in Ceramic Coatings",
+   "issue": "Divergent wear rate results for Bumom-7 and Kogal-8 in recent studies.",
+   "thesis": "The Dikrur Lab 2022 study reported an improvement in fatigue life with Kogal-8, while the Kinal Lab 2022 study reported degradation in wear rate with Bumom-7, indicating that coating performance is highly sensitive to the specific tribological test method employed.",
+   "facts": [
+    {
+     "id": "S22-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Dikrur Lab 2022 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       635,
+       762
+      ],
+      [
+       5109,
+       5300
+      ],
+      [
+       8232,
+       8327
+      ],
+      [
+       10957,
+       11063
+      ],
+      [
+       17643,
+       17853
+      ]
+     ]
+    },
+    {
+     "id": "S39-reports_degradation-M4",
+     "kind": "claim",
+     "subject": "the Kinal Lab 2022 study",
+     "relation": "reports_degradation",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       763,
+       904
+      ],
+      [
+       6337,
+       6490
+      ],
+      [
+       9116,
+       9288
+      ],
+      [
+       11064,
+       11206
+      ],
+      [
+       17643,
+       17853
+      ]
+     ]
+    },
+    {
+     "id": "S39-reports_no_change-M3",
+     "kind": "claim",
+     "subject": "the Kinal Lab 2022 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       763,
+       904
+      ],
+      [
+       6337,
+       6490
+      ],
+      [
+       9289,
+       9364
+      ],
+      [
+       11064,
+       11206
+      ],
+      [
+       17643,
+       17853
+      ]
+     ]
+    },
+    {
+     "id": "S22-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Dikrur Lab 2022 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       635,
+       762
+      ],
+      [
+       5109,
+       5300
+      ],
+      [
+       8328,
+       8418
+      ],
+      [
+       10957,
+       11063
+      ],
+      [
+       14290,
+       14382
+      ],
+      [
+       17643,
+       17853
+      ]
+     ]
+    },
+    {
+     "id": "S29-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Legrer Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       905,
+       1147
+      ],
+      [
+       7550,
+       7652
+      ],
+      [
+       12536,
+       12722
+      ]
+     ]
+    },
+    {
+     "id": "S68-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Krebro Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       905,
+       1147
+      ],
+      [
+       9986,
+       10077
+      ],
+      [
+       12723,
+       12815
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-11",
+   "title": "Oxidation and Corrosion Stability of Ceramic Coatings in Recent Trials",
+   "issue": "The reliability of Kogal-8 and Bumom-7 under high-temperature and corrosive conditions.",
+   "thesis": "Recent studies indicate that ceramic coatings Kogal-8 and Bumom-7 exhibit stable performance, with no significant degradation in oxidation resistance or corrosion resistance.",
+   "facts": [
+    {
+     "id": "S24-reports_no_change-M3",
+     "kind": "claim",
+     "subject": "the Stomestim Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       731,
+       841
+      ],
+      [
+       7985,
+       8189
+      ]
+     ]
+    },
+    {
+     "id": "S24-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Stomestim Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       731,
+       841
+      ],
+      [
+       8190,
+       8385
+      ],
+      [
+       12435,
+       12518
+      ]
+     ]
+    },
+    {
+     "id": "S56-reports_no_change-M3",
+     "kind": "claim",
+     "subject": "the Stipuma Lab 2025 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       925,
+       1056
+      ],
+      [
+       10480,
+       10646
+      ]
+     ]
+    },
+    {
+     "id": "S56-reports_degradation-M4",
+     "kind": "decoy",
+     "subject": "the Stipuma Lab 2025 study",
+     "relation": "reports_degradation",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       925,
+       1056
+      ],
+      [
+       10647,
+       10761
+      ],
+      [
+       11504,
+       11610
+      ]
+     ]
+    },
+    {
+     "id": "S24-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Stomestim Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       731,
+       841
+      ],
+      [
+       8386,
+       8500
+      ]
+     ]
+    },
+    {
+     "id": "S68-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Krebro Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       842,
+       924
+      ],
+      [
+       9720,
+       9801
+      ],
+      [
+       12287,
+       12434
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-13",
+   "title": "Hardness Assessment of Titanium Alloys via Indentation Methods",
+   "issue": "Consistency of hardness measurements for Stetrugel-6 and Sapifin-2 across different indentation techniques.",
+   "thesis": "Both Stetrugel-6 and Sapifin-2 show improved hardness in recent nanoindentation and scratch tests, suggesting a robust mechanical response.",
+   "facts": [
+    {
+     "id": "S49-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Nafir Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       13742,
+       13871
+      ]
+     ]
+    },
+    {
+     "id": "S49-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Nafir Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       13742,
+       13871
+      ]
+     ]
+    },
+    {
+     "id": "S55-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Rosemam Lab 2024 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       13872,
+       14004
+      ]
+     ]
+    },
+    {
+     "id": "S55-reports_degradation-M2",
+     "kind": "decoy",
+     "subject": "the Rosemam Lab 2024 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       10984,
+       11193
+      ],
+      [
+       13872,
+       14004
+      ]
+     ]
+    },
+    {
+     "id": "S49-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Nafir Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       13742,
+       13871
+      ]
+     ]
+    },
+    {
+     "id": "S34-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Thukepel Lab 2017 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       13641,
+       13741
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-14",
+   "title": "Wear Rate Variability in Ceramic Coatings and Alloys",
+   "issue": "The impact of different wear testing methods on the reported performance of Kogal-8 and Stetrugel-6.",
+   "thesis": "Wear rate results for Kogal-8 and Stetrugel-6 are inconsistent, with some studies reporting degradation and others showing no change, highlighting methodological sensitivity.",
+   "facts": [
+    {
+     "id": "S15-reports_degradation-M3",
+     "kind": "claim",
+     "subject": "the Stamen Lab 2019 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       12562,
+       12672
+      ],
+      [
+       15889,
+       16030
+      ]
+     ]
+    },
+    {
+     "id": "S15-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Stamen Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       12562,
+       12672
+      ],
+      [
+       14774,
+       14960
+      ],
+      [
+       15889,
+       16030
+      ]
+     ]
+    },
+    {
+     "id": "S33-reports_degradation-M3",
+     "kind": "claim",
+     "subject": "the Rebre Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       12457,
+       12561
+      ],
+      [
+       15770,
+       15888
+      ]
+     ]
+    },
+    {
+     "id": "S33-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Rebre Lab 2016 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       12457,
+       12561
+      ],
+      [
+       14774,
+       14960
+      ],
+      [
+       15770,
+       15888
+      ]
+     ]
+    },
+    {
+     "id": "S15-reports_degradation-M4",
+     "kind": "decoy",
+     "subject": "the Stamen Lab 2019 study",
+     "relation": "reports_degradation",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       15889,
+       16030
+      ]
+     ]
+    },
+    {
+     "id": "S24-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Stomestim Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       14524,
+       14685
+      ],
+      [
+       16031,
+       16166
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-15",
+   "title": "Corrosion and Fatigue Life of Titanium Alloys in Long-Term Studies",
+   "issue": "The long-term corrosion resistance and fatigue life of Stetrugel-6 and Sapifin-2.",
+   "thesis": "Stetrugel-6 and Sapifin-2 demonstrate stable corrosion resistance and improved fatigue life in recent accelerated and cyclic loading tests.",
+   "facts": [
+    {
+     "id": "S62-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Setes Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       689,
+       889
+      ]
+     ]
+    },
+    {
+     "id": "S62-reports_no_change-M2",
+     "kind": "claim",
+     "subject": "the Setes Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       689,
+       889
+      ],
+      [
+       14645,
+       14878
+      ]
+     ]
+    },
+    {
+     "id": "S64-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Merum Lab 2019 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       890,
+       1110
+      ],
+      [
+       13107,
+       13386
+      ],
+      [
+       15966,
+       16173
+      ]
+     ]
+    },
+    {
+     "id": "S64-reports_degradation-M2",
+     "kind": "decoy",
+     "subject": "the Merum Lab 2019 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       890,
+       1110
+      ],
+      [
+       13896,
+       14027
+      ],
+      [
+       15966,
+       16173
+      ]
+     ]
+    },
+    {
+     "id": "S62-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Setes Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       689,
+       889
+      ]
+     ]
+    },
+    {
+     "id": "S19-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Putro Lab 2021 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       1111,
+       1238
+      ],
+      [
+       16174,
+       16297
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-17",
+   "title": "Corrosion Resistance Discrepancies in Titanium Alloys",
+   "issue": "Conflicting reports on the corrosion resistance of Stetrugel-6 from the Zugreden Lab 2018 and Bopor Lab 2021 studies.",
+   "thesis": "The Zugreden Lab 2018 study reported an improvement in corrosion resistance for Stetrugel-6, whereas the Bopor Lab 2021 study reported no change for the same material.",
+   "facts": [
+    {
+     "id": "S14-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Zugreden Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       70,
+       241
+      ],
+      [
+       2135,
+       2289
+      ],
+      [
+       6365,
+       6538
+      ],
+      [
+       11292,
+       11439
+      ],
+      [
+       13148,
+       13277
+      ]
+     ]
+    },
+    {
+     "id": "S38-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Bopor Lab 2021 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       70,
+       241
+      ],
+      [
+       2290,
+       2427
+      ],
+      [
+       7594,
+       7745
+      ],
+      [
+       11292,
+       11439
+      ],
+      [
+       13278,
+       13369
+      ]
+     ]
+    },
+    {
+     "id": "S14-reports_no_change-M2",
+     "kind": "claim",
+     "subject": "the Zugreden Lab 2018 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       6699,
+       6795
+      ]
+     ]
+    },
+    {
+     "id": "S38-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Bopor Lab 2021 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       7746,
+       7845
+      ]
+     ]
+    },
+    {
+     "id": "S27-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Thorem Lab 2025 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       9102,
+       9243
+      ],
+      [
+       9408,
+       9646
+      ],
+      [
+       12304,
+       12433
+      ],
+      [
+       13586,
+       13824
+      ]
+     ]
+    },
+    {
+     "id": "S49-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Nafir Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       9040,
+       9101
+      ],
+      [
+       9408,
+       9646
+      ],
+      [
+       12304,
+       12433
+      ],
+      [
+       13586,
+       13824
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-18",
+   "title": "Wear and Oxidation Performance of Ceramic Coatings",
+   "issue": "The impact of the Kronor Lab 2013 and Grebrom Lab 2015 studies on the perceived performance of Kogal-8 and Bumom-7.",
+   "thesis": "The Kronor Lab 2013 study reported degradation in wear rate for Kogal-8, while the Grebrom Lab 2015 study reported no change in oxidation resistance for Bumom-7.",
+   "facts": [
+    {
+     "id": "S3-reports_degradation-M3",
+     "kind": "claim",
+     "subject": "the Kronor Lab 2013 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       527,
+       723
+      ],
+      [
+       3243,
+       3454
+      ],
+      [
+       7234,
+       7402
+      ],
+      [
+       9502,
+       9658
+      ],
+      [
+       10272,
+       10474
+      ],
+      [
+       12092,
+       12345
+      ]
+     ]
+    },
+    {
+     "id": "S60-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Grebrom Lab 2015 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       527,
+       723
+      ],
+      [
+       3243,
+       3454
+      ],
+      [
+       7754,
+       7944
+      ],
+      [
+       12092,
+       12345
+      ]
+     ]
+    },
+    {
+     "id": "S3-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Kronor Lab 2013 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       7403,
+       7636
+      ]
+     ]
+    },
+    {
+     "id": "S60-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Grebrom Lab 2015 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       7945,
+       8147
+      ],
+      [
+       9502,
+       9658
+      ]
+     ]
+    },
+    {
+     "id": "S26-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Brudes Lab 2024 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       8808,
+       8946
+      ]
+     ]
+    },
+    {
+     "id": "S24-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Stomestim Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       8467,
+       8683
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-19",
+   "title": "Fatigue Life and Oxidation Resistance in Advanced Materials",
+   "issue": "Evaluating the fatigue life of Sapifin-2 and oxidation resistance of Stetrugel-6 based on Furetho Lab 2023 and Hozethe Lab 2021 data.",
+   "thesis": "The Furetho Lab 2023 study reported an improvement in fatigue life for Sapifin-2, and the Hozethe Lab 2021 study reported an improvement in oxidation resistance for Stetrugel-6.",
+   "facts": [
+    {
+     "id": "S40-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Furetho Lab 2023 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       410,
+       692
+      ],
+      [
+       3425,
+       3674
+      ],
+      [
+       5817,
+       6088
+      ],
+      [
+       8184,
+       8249
+      ],
+      [
+       8810,
+       8990
+      ],
+      [
+       12136,
+       12240
+      ],
+      [
+       13262,
+       13371
+      ]
+     ]
+    },
+    {
+     "id": "S66-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Hozethe Lab 2021 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       410,
+       692
+      ],
+      [
+       3425,
+       3674
+      ],
+      [
+       5817,
+       6088
+      ],
+      [
+       7672,
+       7747
+      ],
+      [
+       9241,
+       9441
+      ],
+      [
+       13372,
+       13486
+      ]
+     ]
+    },
+    {
+     "id": "S40-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Furetho Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       835,
+       1068
+      ],
+      [
+       8250,
+       8341
+      ],
+      [
+       9630,
+       9829
+      ],
+      [
+       10425,
+       10548
+      ],
+      [
+       13262,
+       13371
+      ]
+     ]
+    },
+    {
+     "id": "S66-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Hozethe Lab 2021 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       835,
+       1068
+      ],
+      [
+       7748,
+       7856
+      ],
+      [
+       8991,
+       9150
+      ],
+      [
+       10878,
+       11014
+      ],
+      [
+       13372,
+       13486
+      ]
+     ]
+    },
+    {
+     "id": "S1-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Thithegam Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       6522,
+       6612
+      ],
+      [
+       9442,
+       9629
+      ]
+     ]
+    },
+    {
+     "id": "S33-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Rebre Lab 2016 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       7062,
+       7131
+      ],
+      [
+       9442,
+       9629
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-20",
+   "title": "Oxidation and Fatigue Studies on Titanium Alloys and Coatings",
+   "issue": "Comparing the findings of the Krestos Lab 2025 and Hozus Lab 2013 studies regarding material degradation.",
+   "thesis": "The Krestos Lab 2025 study reported degradation in oxidation resistance for Kogal-8, while the Hozus Lab 2013 study reported no change in fatigue life for Stetrugel-6.",
+   "facts": [
+    {
+     "id": "S42-reports_degradation-M3",
+     "kind": "claim",
+     "subject": "the Krestos Lab 2025 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       499,
+       676
+      ],
+      [
+       2748,
+       2974
+      ],
+      [
+       10769,
+       10914
+      ],
+      [
+       12983,
+       13184
+      ],
+      [
+       14624,
+       14767
+      ],
+      [
+       14909,
+       15095
+      ]
+     ]
+    },
+    {
+     "id": "S58-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Hozus Lab 2013 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       499,
+       676
+      ],
+      [
+       2748,
+       2974
+      ],
+      [
+       11317,
+       11465
+      ],
+      [
+       12983,
+       13184
+      ],
+      [
+       14624,
+       14767
+      ],
+      [
+       15230,
+       15375
+      ]
+     ]
+    },
+    {
+     "id": "S42-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Krestos Lab 2025 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       11878,
+       12021
+      ]
+     ]
+    },
+    {
+     "id": "S58-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Hozus Lab 2013 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": []
+    },
+    {
+     "id": "S69-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Zekistam Lab 2024 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       11878,
+       12021
+      ]
+     ]
+    },
+    {
+     "id": "S15-reports_degradation-M3",
+     "kind": "decoy",
+     "subject": "the Stamen Lab 2019 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       10769,
+       10914
+      ],
+      [
+       14909,
+       15095
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-22",
+   "title": "Oxidation Resistance and Wear Rate Discrepancies in Titanium Alloys: A Methodological Framework for Interpreting Conflicting Data",
+   "issue": "Conflicting reports on oxidation resistance and wear rate for titanium alloys Stetrugel-6 and Sapifin-2.",
+   "thesis": "The Begrur Lab 2017 study found no change in oxidation resistance for both titanium alloys, whereas the Diper Lab 2016 study reported degradation in wear rate for Stetrugel-6, indicating potential instability in high-temperature performance.",
+   "facts": [
+    {
+     "id": "S12-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Begrur Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       434,
+       582
+      ],
+      [
+       2378,
+       2507
+      ],
+      [
+       13658,
+       13798
+      ]
+     ]
+    },
+    {
+     "id": "S12-reports_no_change-M2",
+     "kind": "claim",
+     "subject": "the Begrur Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       434,
+       582
+      ],
+      [
+       2378,
+       2507
+      ],
+      [
+       13658,
+       13798
+      ]
+     ]
+    },
+    {
+     "id": "S75-reports_degradation-M1",
+     "kind": "claim",
+     "subject": "the Diper Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       583,
+       737
+      ],
+      [
+       2508,
+       2639
+      ],
+      [
+       13799,
+       13948
+      ]
+     ]
+    },
+    {
+     "id": "S12-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Begrur Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       434,
+       582
+      ],
+      [
+       13658,
+       13798
+      ]
+     ]
+    },
+    {
+     "id": "S75-reports_degradation-M2",
+     "kind": "decoy",
+     "subject": "the Diper Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       583,
+       737
+      ],
+      [
+       13799,
+       13948
+      ]
+     ]
+    },
+    {
+     "id": "S75-reports_degradation-M4",
+     "kind": "decoy",
+     "subject": "the Diper Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       583,
+       737
+      ],
+      [
+       13799,
+       13948
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-23",
+   "title": "Hardness Variability in Titanium Alloys: A Conflict in Nanoindentation Results",
+   "issue": "Disagreement between the Bropulon Lab 2018 and Kuhazo Lab 2014 studies regarding the hardness of titanium alloy Stetrugel-6.",
+   "thesis": "The Bropulon Lab 2018 study reported an improvement in hardness for Stetrugel-6, while the Kuhazo Lab 2014 study reported no change, creating a direct conflict in the assessment of the alloy's mechanical properties.",
+   "facts": [
+    {
+     "id": "S13-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Bropulon Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       537,
+       664
+      ],
+      [
+       3731,
+       3864
+      ],
+      [
+       11484,
+       11600
+      ],
+      [
+       14399,
+       14570
+      ],
+      [
+       15483,
+       15634
+      ]
+     ]
+    },
+    {
+     "id": "S31-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Kuhazo Lab 2014 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       665,
+       794
+      ],
+      [
+       3865,
+       3994
+      ],
+      [
+       11484,
+       11600
+      ],
+      [
+       13378,
+       13532
+      ],
+      [
+       15635,
+       15796
+      ]
+     ]
+    },
+    {
+     "id": "S13-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Bropulon Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       14399,
+       14570
+      ],
+      [
+       15483,
+       15634
+      ]
+     ]
+    },
+    {
+     "id": "S13-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Bropulon Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       10919,
+       11039
+      ],
+      [
+       15483,
+       15634
+      ]
+     ]
+    },
+    {
+     "id": "S31-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Kuhazo Lab 2014 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       13378,
+       13532
+      ],
+      [
+       15635,
+       15796
+      ]
+     ]
+    },
+    {
+     "id": "S31-reports_no_change-M4",
+     "kind": "decoy",
+     "subject": "the Kuhazo Lab 2014 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       13378,
+       13532
+      ],
+      [
+       15635,
+       15796
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-25",
+   "title": "Oxidation and Thermal Conductivity in Ceramic Coatings",
+   "issue": "Assessment of oxidation resistance and thermal conductivity for ceramic coatings Kogal-8 and Bumom-7.",
+   "thesis": "The Vogem Lab 2013 study reported no change in oxidation resistance for both ceramic coatings, while the Brusizal Lab 2014 study reported an improvement in thermal conductivity for Kogal-8, highlighting distinct performance characteristics.",
+   "facts": [
+    {
+     "id": "S30-reports_no_change-M3",
+     "kind": "claim",
+     "subject": "the Vogem Lab 2013 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       424,
+       572
+      ],
+      [
+       8426,
+       8513
+      ],
+      [
+       14970,
+       15118
+      ]
+     ]
+    },
+    {
+     "id": "S30-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Vogem Lab 2013 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": []
+    },
+    {
+     "id": "S59-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Brusizal Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       573,
+       726
+      ],
+      [
+       10395,
+       10473
+      ],
+      [
+       15250,
+       15419
+      ]
+     ]
+    },
+    {
+     "id": "S30-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Vogem Lab 2013 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": []
+    },
+    {
+     "id": "S59-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Brusizal Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": []
+    },
+    {
+     "id": "S59-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Brusizal Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MAT-26",
+   "title": "Wear Rate Stability of Ceramic Coatings: A Comparative Analysis of 2024 and 2013 Studies",
+   "issue": "The consistency of wear rate findings for ceramic coating Bumom-7 across different testing methodologies and time periods.",
+   "thesis": "Recent tribological studies indicate that while Bumom-7 shows no change in wear rate under specific conditions, its performance remains inconsistent with earlier degradation reports, whereas Kogal-8 exhibits a stable improvement trend.",
+   "facts": [
+    {
+     "id": "S69-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Zekistam Lab 2024 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": []
+    },
+    {
+     "id": "S69-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Zekistam Lab 2024 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": []
+    },
+    {
+     "id": "S72-reports_improvement-M4",
+     "kind": "claim",
+     "subject": "the Budrol Lab 2013 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": []
+    },
+    {
+     "id": "S72-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Budrol Lab 2013 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": []
+    },
+    {
+     "id": "S59-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Brusizal Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": []
+    },
+    {
+     "id": "S29-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Legrer Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MAT-29",
+   "title": "Thermal Conductivity Trends in Ceramic Coatings: A Longitudinal Study from 2017 to 2024",
+   "issue": "The evolution of thermal conductivity findings for ceramic coatings Kogal-8 and Bumom-7 over a seven-year period.",
+   "thesis": "Both the Panos Lab 2017 and Likrir Lab 2024 studies report improvements in thermal conductivity for both ceramic coatings, indicating a consistent trend of enhanced thermal performance in this material family over time.",
+   "facts": [
+    {
+     "id": "S11-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Panos Lab 2017 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       732,
+       872
+      ],
+      [
+       6801,
+       6959
+      ],
+      [
+       9280,
+       9408
+      ],
+      [
+       12581,
+       12688
+      ],
+      [
+       13247,
+       13386
+      ]
+     ]
+    },
+    {
+     "id": "S11-reports_improvement-M4",
+     "kind": "claim",
+     "subject": "the Panos Lab 2017 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       732,
+       872
+      ],
+      [
+       6960,
+       7066
+      ],
+      [
+       9540,
+       9693
+      ],
+      [
+       13247,
+       13386
+      ]
+     ]
+    },
+    {
+     "id": "S41-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Likrir Lab 2024 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       943,
+       1082
+      ],
+      [
+       8639,
+       8785
+      ],
+      [
+       9280,
+       9408
+      ],
+      [
+       12581,
+       12688
+      ],
+      [
+       13454,
+       13576
+      ]
+     ]
+    },
+    {
+     "id": "S11-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Panos Lab 2017 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       732,
+       872
+      ],
+      [
+       7208,
+       7294
+      ],
+      [
+       13247,
+       13386
+      ]
+     ]
+    },
+    {
+     "id": "S41-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Likrir Lab 2024 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       943,
+       1082
+      ],
+      [
+       8786,
+       8897
+      ],
+      [
+       9540,
+       9693
+      ],
+      [
+       13454,
+       13576
+      ]
+     ]
+    },
+    {
+     "id": "S35-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Satho Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       873,
+       942
+      ],
+      [
+       7843,
+       8015
+      ],
+      [
+       9540,
+       9693
+      ],
+      [
+       13387,
+       13453
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-30",
+   "title": "Oxidation Resistance in Titanium Alloys: A Comparative Analysis of 2017 and 2018 Studies",
+   "issue": "The consistency of oxidation resistance findings for titanium alloys Stetrugel-6 and Sapifin-2 from studies conducted in consecutive years.",
+   "thesis": "The Nusto Lab 2017 study reported no change in oxidation resistance for Stetrugel-6, while the Stogrel Lab 2018 study reported an improvement in thermal conductivity for the same material, suggesting that different properties may respond differently to material modifications over time.",
+   "facts": [
+    {
+     "id": "S48-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Nusto Lab 2017 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       402,
+       661
+      ],
+      [
+       2834,
+       2967
+      ],
+      [
+       7316,
+       7469
+      ],
+      [
+       8548,
+       8734
+      ],
+      [
+       10353,
+       10606
+      ],
+      [
+       12428,
+       12545
+      ]
+     ]
+    },
+    {
+     "id": "S48-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Nusto Lab 2017 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       1184,
+       1397
+      ],
+      [
+       7629,
+       7730
+      ],
+      [
+       12428,
+       12545
+      ]
+     ]
+    },
+    {
+     "id": "S77-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Stogrel Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       402,
+       661
+      ],
+      [
+       1398,
+       1521
+      ],
+      [
+       2968,
+       3116
+      ],
+      [
+       8548,
+       8734
+      ],
+      [
+       12546,
+       12717
+      ]
+     ]
+    },
+    {
+     "id": "S77-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Stogrel Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       1398,
+       1521
+      ],
+      [
+       8886,
+       9079
+      ],
+      [
+       12546,
+       12717
+      ]
+     ]
+    },
+    {
+     "id": "S28-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Tofere Lab 2025 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       1184,
+       1397
+      ],
+      [
+       9747,
+       9815
+      ],
+      [
+       12718,
+       12798
+      ]
+     ]
+    },
+    {
+     "id": "S49-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Nafir Lab 2018 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       1184,
+       1397
+      ],
+      [
+       9194,
+       9366
+      ],
+      [
+       11790,
+       12042
+      ],
+      [
+       12546,
+       12717
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-31",
+   "title": "Early Corrosion and Thermal Conductivity Benchmarks for Titanium Alloys",
+   "issue": "Establishing baseline performance for Stetrugel-6 and Sapifin-2 in 2012",
+   "thesis": "The Thithegam Lab 2012 study and the Mehol Lab 2012 study provide the foundational data for corrosion resistance and thermal conductivity of the primary titanium alloys, showing consistent improvements.",
+   "facts": [
+    {
+     "id": "S2-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Pagragrar Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       987,
+       1225
+      ],
+      [
+       11507,
+       11728
+      ]
+     ]
+    },
+    {
+     "id": "S2-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Pagragrar Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       987,
+       1225
+      ],
+      [
+       11507,
+       11728
+      ]
+     ]
+    },
+    {
+     "id": "S71-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Mehol Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       987,
+       1225
+      ],
+      [
+       11507,
+       11728
+      ]
+     ]
+    },
+    {
+     "id": "S2-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Pagragrar Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       987,
+       1225
+      ],
+      [
+       11507,
+       11728
+      ]
+     ]
+    },
+    {
+     "id": "S71-reports_improvement-M2",
+     "kind": "decoy",
+     "subject": "the Mehol Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       987,
+       1225
+      ],
+      [
+       11507,
+       11728
+      ]
+     ]
+    },
+    {
+     "id": "S71-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Mehol Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       987,
+       1225
+      ],
+      [
+       11507,
+       11728
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-32",
+   "title": "Divergent Wear and Hardness Findings in Ceramic Coatings",
+   "issue": "Reconciling conflicting reports on the wear rate of Kogal-8 and Bumom-7",
+   "thesis": "While the Pagadol Lab 2016 study reported no change in hardness for the ceramic coatings, the Brihoher Lab 2016 study reported significant degradation in their wear rate, suggesting a trade-off between hardness and wear performance.",
+   "facts": [
+    {
+     "id": "S61-reports_no_change-M3",
+     "kind": "claim",
+     "subject": "the Pagadol Lab 2016 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       2949,
+       3125
+      ],
+      [
+       8744,
+       8916
+      ],
+      [
+       11759,
+       11950
+      ]
+     ]
+    },
+    {
+     "id": "S61-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Pagadol Lab 2016 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       2949,
+       3125
+      ],
+      [
+       8744,
+       8916
+      ],
+      [
+       11759,
+       11950
+      ]
+     ]
+    },
+    {
+     "id": "S9-reports_degradation-M3",
+     "kind": "claim",
+     "subject": "the Brihoher Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       8744,
+       8916
+      ],
+      [
+       11759,
+       11950
+      ]
+     ]
+    },
+    {
+     "id": "S61-reports_no_change-M1",
+     "kind": "decoy",
+     "subject": "the Pagadol Lab 2016 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       8744,
+       8916
+      ],
+      [
+       11759,
+       11950
+      ]
+     ]
+    },
+    {
+     "id": "S9-reports_degradation-M4",
+     "kind": "decoy",
+     "subject": "the Brihoher Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       8744,
+       8916
+      ],
+      [
+       11759,
+       11950
+      ]
+     ]
+    },
+    {
+     "id": "S9-reports_degradation-M1",
+     "kind": "decoy",
+     "subject": "the Brihoher Lab 2016 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       8744,
+       8916
+      ],
+      [
+       11759,
+       11950
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-34",
+   "title": "Oxidation Resistance and Corrosion Stability in Titanium Alloys",
+   "issue": "Assessing the long-term stability of Stetrugel-6 and Sapifin-2",
+   "thesis": "The Briror Lab 2019 study and the Rathu Lab 2019 study confirm that both titanium alloys exhibit stable oxidation resistance and corrosion resistance, with no significant degradation observed over the test periods.",
+   "facts": [
+    {
+     "id": "S36-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Briror Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       776,
+       885
+      ],
+      [
+       7312,
+       7463
+      ],
+      [
+       12015,
+       12243
+      ],
+      [
+       13490,
+       13642
+      ]
+     ]
+    },
+    {
+     "id": "S36-reports_no_change-M2",
+     "kind": "claim",
+     "subject": "the Briror Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       776,
+       885
+      ],
+      [
+       12015,
+       12243
+      ],
+      [
+       13490,
+       13642
+      ]
+     ]
+    },
+    {
+     "id": "S50-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Rathu Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       8927,
+       9037
+      ],
+      [
+       12015,
+       12243
+      ]
+     ]
+    },
+    {
+     "id": "S36-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Briror Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       776,
+       885
+      ],
+      [
+       13490,
+       13642
+      ]
+     ]
+    },
+    {
+     "id": "S50-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Rathu Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       12015,
+       12243
+      ]
+     ]
+    },
+    {
+     "id": "S50-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Rathu Lab 2019 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MAT-35",
+   "title": "Corrosion and Oxidation: A Preliminary Assessment of Ceramic Coatings for Harsh Environments",
+   "issue": "Initial assessment of Kogal-8 and Bumom-7 in corrosive and high-temperature environments",
+   "thesis": "The Volar Lab 2013 study and the Trebun Lab 2014 study indicate that ceramic coatings Kogal-8 and Bumom-7 show improved corrosion resistance and oxidation resistance, respectively, making them suitable for harsh environments.",
+   "facts": [
+    {
+     "id": "S44-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Volar Lab 2013 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       721,
+       888
+      ],
+      [
+       11885,
+       12124
+      ],
+      [
+       15668,
+       15900
+      ]
+     ]
+    },
+    {
+     "id": "S44-reports_improvement-M4",
+     "kind": "claim",
+     "subject": "the Volar Lab 2013 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       721,
+       888
+      ],
+      [
+       11885,
+       12124
+      ],
+      [
+       15668,
+       15900
+      ]
+     ]
+    },
+    {
+     "id": "S6-reports_improvement-M3",
+     "kind": "claim",
+     "subject": "the Trebun Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       889,
+       1029
+      ],
+      [
+       11885,
+       12124
+      ],
+      [
+       15668,
+       15900
+      ]
+     ]
+    },
+    {
+     "id": "S44-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Volar Lab 2013 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       721,
+       888
+      ],
+      [
+       11885,
+       12124
+      ],
+      [
+       15668,
+       15900
+      ]
+     ]
+    },
+    {
+     "id": "S6-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Trebun Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       889,
+       1029
+      ],
+      [
+       11885,
+       12124
+      ],
+      [
+       15668,
+       15900
+      ]
+     ]
+    },
+    {
+     "id": "S6-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Trebun Lab 2014 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       889,
+       1029
+      ],
+      [
+       6962,
+       7185
+      ],
+      [
+       11253,
+       11494
+      ],
+      [
+       11885,
+       12124
+      ],
+      [
+       15668,
+       15900
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-36",
+   "title": "Thermal Conductivity and Wear Rate Discrepancies in Titanium Alloys",
+   "issue": "Inconsistent findings regarding the thermal conductivity and wear rate performance of alloy Stetrugel-6 across different testing methodologies.",
+   "thesis": "The Dranam Lab 2020 study and the Dratefar Lab 2022 study present conflicting evidence on the material properties of Stetrugel-6, suggesting method-dependent variability in reported improvements.",
+   "facts": [
+    {
+     "id": "S17-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Dranam Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       510,
+       740
+      ],
+      [
+       2573,
+       2746
+      ],
+      [
+       10033,
+       10182
+      ],
+      [
+       12220,
+       12453
+      ],
+      [
+       13430,
+       13620
+      ],
+      [
+       14461,
+       14611
+      ]
+     ]
+    },
+    {
+     "id": "S21-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Dratefar Lab 2022 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       510,
+       740
+      ],
+      [
+       2747,
+       2915
+      ],
+      [
+       9216,
+       9398
+      ],
+      [
+       10183,
+       10340
+      ],
+      [
+       12220,
+       12453
+      ],
+      [
+       13621,
+       13787
+      ],
+      [
+       14461,
+       14611
+      ]
+     ]
+    },
+    {
+     "id": "S17-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Dranam Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       12220,
+       12453
+      ],
+      [
+       13430,
+       13620
+      ]
+     ]
+    },
+    {
+     "id": "S17-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Dranam Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       12220,
+       12453
+      ],
+      [
+       13430,
+       13620
+      ]
+     ]
+    },
+    {
+     "id": "S21-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Dratefar Lab 2022 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       12220,
+       12453
+      ],
+      [
+       13621,
+       13787
+      ]
+     ]
+    },
+    {
+     "id": "S17-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Dranam Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       12220,
+       12453
+      ],
+      [
+       13430,
+       13620
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-37",
+   "title": "Fatigue Life and Wear Rate Stability in Ceramic Coatings",
+   "issue": "Evaluating the stability of coating Bumom-7 under fatigue and wear conditions, with a focus on the Dresta Lab 2014 and Megrekron Lab 2021 studies.",
+   "thesis": "While the Dresta Lab 2014 study reported degradation in wear rate for Bumom-7, the Megrekron Lab 2021 study found no change in fatigue life, indicating that wear mechanisms do not necessarily correlate with fatigue performance.",
+   "facts": [
+    {
+     "id": "S45-reports_degradation-M4",
+     "kind": "claim",
+     "subject": "the Dresta Lab 2014 study",
+     "relation": "reports_degradation",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       380,
+       505
+      ],
+      [
+       2842,
+       2960
+      ],
+      [
+       11788,
+       11898
+      ],
+      [
+       16655,
+       16816
+      ]
+     ]
+    },
+    {
+     "id": "S52-reports_no_change-M4",
+     "kind": "claim",
+     "subject": "the Megrekron Lab 2021 study",
+     "relation": "reports_no_change",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       506,
+       644
+      ],
+      [
+       2961,
+       3095
+      ],
+      [
+       10567,
+       10672
+      ],
+      [
+       11899,
+       12026
+      ],
+      [
+       16655,
+       16816
+      ]
+     ]
+    },
+    {
+     "id": "S45-reports_degradation-M3",
+     "kind": "claim",
+     "subject": "the Dresta Lab 2014 study",
+     "relation": "reports_degradation",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       14864,
+       15028
+      ]
+     ]
+    },
+    {
+     "id": "S45-reports_degradation-M1",
+     "kind": "decoy",
+     "subject": "the Dresta Lab 2014 study",
+     "relation": "reports_degradation",
+     "object": "alloy Stetrugel-6",
+     "spans": []
+    },
+    {
+     "id": "S52-reports_no_change-M3",
+     "kind": "decoy",
+     "subject": "the Megrekron Lab 2021 study",
+     "relation": "reports_no_change",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       11033,
+       11155
+      ],
+      [
+       14864,
+       15028
+      ]
+     ]
+    },
+    {
+     "id": "S45-reports_degradation-M2",
+     "kind": "decoy",
+     "subject": "the Dresta Lab 2014 study",
+     "relation": "reports_degradation",
+     "object": "alloy Sapifin-2",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MAT-38",
+   "title": "Hardness and Oxidation Resistance in Titanium Alloys",
+   "issue": "Comparing the hardness and oxidation resistance outcomes for alloy Stetrugel-6 from the Goter Lab 2020 and Stukos Lab 2023 studies.",
+   "thesis": "The Goter Lab 2020 study reported an improvement in hardness for Stetrugel-6, while the Stukos Lab 2023 study reported no change in oxidation resistance, highlighting a divergence between mechanical and chemical stability metrics.",
+   "facts": [
+    {
+     "id": "S37-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Goter Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       437,
+       547
+      ],
+      [
+       3264,
+       3412
+      ],
+      [
+       10679,
+       10783
+      ],
+      [
+       12983,
+       13129
+      ],
+      [
+       14894,
+       15075
+      ]
+     ]
+    },
+    {
+     "id": "S54-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Stukos Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       548,
+       684
+      ],
+      [
+       3413,
+       3592
+      ],
+      [
+       10784,
+       10968
+      ],
+      [
+       13262,
+       13399
+      ],
+      [
+       14894,
+       15075
+      ]
+     ]
+    },
+    {
+     "id": "S37-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Goter Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       11599,
+       11725
+      ],
+      [
+       12983,
+       13129
+      ]
+     ]
+    },
+    {
+     "id": "S37-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Goter Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       12983,
+       13129
+      ]
+     ]
+    },
+    {
+     "id": "S54-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Stukos Lab 2023 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       11599,
+       11725
+      ],
+      [
+       13262,
+       13399
+      ]
+     ]
+    },
+    {
+     "id": "S37-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Goter Lab 2020 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       12983,
+       13129
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MAT-39",
+   "title": "Fatigue and Hardness Performance of Alloy Sapifin-2",
+   "issue": "Assessing the fatigue life and hardness of alloy Sapifin-2 based on the Testu Lab 2015 and Dulel Lab 2022 studies.",
+   "thesis": "Both the Testu Lab 2015 and Dulel Lab 2022 studies reported improvements in the performance of Sapifin-2, suggesting consistent positive trends in both fatigue and hardness metrics over time.",
+   "facts": [
+    {
+     "id": "S46-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Testu Lab 2015 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       638,
+       772
+      ],
+      [
+       773,
+       889
+      ],
+      [
+       3113,
+       3300
+      ],
+      [
+       3301,
+       3424
+      ],
+      [
+       4652,
+       4738
+      ],
+      [
+       5780,
+       5851
+      ],
+      [
+       7941,
+       8078
+      ],
+      [
+       11236,
+       11349
+      ],
+      [
+       16068,
+       16196
+      ],
+      [
+       17140,
+       17308
+      ]
+     ]
+    },
+    {
+     "id": "S67-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Dulel Lab 2022 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       638,
+       772
+      ],
+      [
+       890,
+       1014
+      ],
+      [
+       3113,
+       3300
+      ],
+      [
+       3301,
+       3424
+      ],
+      [
+       4652,
+       4738
+      ],
+      [
+       6670,
+       6737
+      ],
+      [
+       9850,
+       9973
+      ],
+      [
+       11236,
+       11349
+      ],
+      [
+       16473,
+       16588
+      ],
+      [
+       17140,
+       17308
+      ]
+     ]
+    },
+    {
+     "id": "S46-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Testu Lab 2015 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       8300,
+       8466
+      ],
+      [
+       16281,
+       16470
+      ]
+     ]
+    },
+    {
+     "id": "S46-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Testu Lab 2015 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       8711,
+       8860
+      ],
+      [
+       16281,
+       16470
+      ]
+     ]
+    },
+    {
+     "id": "S67-reports_improvement-M1",
+     "kind": "decoy",
+     "subject": "the Dulel Lab 2022 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       10192,
+       10344
+      ]
+     ]
+    },
+    {
+     "id": "S46-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Testu Lab 2015 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MAT-40",
+   "title": "Hardness and Corrosion Resistance in Alloy Stetrugel-6",
+   "issue": "Investigating the hardness and corrosion resistance of alloy Stetrugel-6 through the Lostam Lab 2012 and Dedri Lab 2015 studies.",
+   "thesis": "The Lostam Lab 2012 study reported an improvement in hardness for Stetrugel-6, whereas the Dedri Lab 2015 study reported no change in corrosion resistance, indicating that early mechanical gains did not translate to chemical stability improvements.",
+   "facts": [
+    {
+     "id": "S43-reports_improvement-M1",
+     "kind": "claim",
+     "subject": "the Lostam Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       562,
+       735
+      ],
+      [
+       2969,
+       3161
+      ],
+      [
+       9312,
+       9449
+      ],
+      [
+       14307,
+       14428
+      ]
+     ]
+    },
+    {
+     "id": "S74-reports_no_change-M1",
+     "kind": "claim",
+     "subject": "the Dedri Lab 2015 study",
+     "relation": "reports_no_change",
+     "object": "alloy Stetrugel-6",
+     "spans": [
+      [
+       736,
+       892
+      ],
+      [
+       2969,
+       3161
+      ],
+      [
+       9450,
+       9640
+      ],
+      [
+       12774,
+       13000
+      ],
+      [
+       14429,
+       14618
+      ]
+     ]
+    },
+    {
+     "id": "S43-reports_improvement-M2",
+     "kind": "claim",
+     "subject": "the Lostam Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       562,
+       735
+      ]
+     ]
+    },
+    {
+     "id": "S43-reports_improvement-M3",
+     "kind": "decoy",
+     "subject": "the Lostam Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Kogal-8",
+     "spans": [
+      [
+       562,
+       735
+      ]
+     ]
+    },
+    {
+     "id": "S74-reports_no_change-M2",
+     "kind": "decoy",
+     "subject": "the Dedri Lab 2015 study",
+     "relation": "reports_no_change",
+     "object": "alloy Sapifin-2",
+     "spans": [
+      [
+       736,
+       892
+      ]
+     ]
+    },
+    {
+     "id": "S43-reports_improvement-M4",
+     "kind": "decoy",
+     "subject": "the Lostam Lab 2012 study",
+     "relation": "reports_improvement",
+     "object": "coating Bumom-7",
+     "spans": [
+      [
+       562,
+       735
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1809 @@
+@prefix ex: <https://example.org/paperfactory/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:D1-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-44 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D1 .
+
+ex:D11-distinguishes-D10 a ex:Fact ;
+    ex:inPaper ex:LAW-26 ;
+    ex:object ex:D10 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D11 .
+
+ex:D11-distinguishes-D9 a ex:Fact ;
+    ex:inPaper ex:LAW-26 ;
+    ex:object ex:D9 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D11 .
+
+ex:D11-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-26 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D11 .
+
+ex:D12-distinguishes-D10 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:D10 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D12 .
+
+ex:D12-distinguishes-D11 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:D11 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D12 .
+
+ex:D12-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-05 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D12 .
+
+ex:D12-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-26 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D12 .
+
+ex:D13-distinguishes-D12 a ex:Fact ;
+    ex:inPaper ex:LAW-47 ;
+    ex:object ex:D12 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D13 .
+
+ex:D13-distinguishes-D7 a ex:Fact ;
+    ex:inPaper ex:LAW-16 ;
+    ex:object ex:D7 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D13 .
+
+ex:D13-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-05,
+        ex:LAW-16 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D13 .
+
+ex:D13-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-16 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D13 .
+
+ex:D14-distinguishes-D12 a ex:Fact ;
+    ex:inPaper ex:LAW-29,
+        ex:LAW-47 ;
+    ex:object ex:D12 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D14 .
+
+ex:D14-distinguishes-D13 a ex:Fact ;
+    ex:inPaper ex:LAW-29 ;
+    ex:object ex:D13 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D14 .
+
+ex:D14-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-29,
+        ex:LAW-47 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D14 .
+
+ex:D15-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-29,
+        ex:LAW-47 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D15 .
+
+ex:D16-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-18 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D16 .
+
+ex:D16-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-18 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D16 .
+
+ex:D16-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-18 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D16 .
+
+ex:D17-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-35 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D17 .
+
+ex:D17-distinguishes-D46 a ex:Fact ;
+    ex:inPaper ex:LAW-35 ;
+    ex:object ex:D46 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D17 .
+
+ex:D17-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-35 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D17 .
+
+ex:D18-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-09,
+        ex:LAW-27,
+        ex:LAW-35 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D18 .
+
+ex:D19-distinguishes-D17 a ex:Fact ;
+    ex:inPaper ex:LAW-27 ;
+    ex:object ex:D17 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D19 .
+
+ex:D19-distinguishes-D18 a ex:Fact ;
+    ex:inPaper ex:LAW-27 ;
+    ex:object ex:D18 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D19 .
+
+ex:D19-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-09,
+        ex:LAW-27 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D19 .
+
+ex:D2-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-14 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D2 .
+
+ex:D2-distinguishes-D46 a ex:Fact ;
+    ex:inPaper ex:LAW-14 ;
+    ex:object ex:D46 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D2 .
+
+ex:D2-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-14,
+        ex:LAW-44 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D2 .
+
+ex:D20-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-03,
+        ex:LAW-09,
+        ex:LAW-43 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D20 .
+
+ex:D20-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-03 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D20 .
+
+ex:D20-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-03 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D20 .
+
+ex:D21-distinguishes-D18 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:D18 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D21 .
+
+ex:D21-distinguishes-D19 a ex:Fact ;
+    ex:inPaper ex:LAW-09 ;
+    ex:object ex:D19 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D21 .
+
+ex:D21-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-03,
+        ex:LAW-09,
+        ex:LAW-13,
+        ex:LAW-43 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D21 .
+
+ex:D21-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-43 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D21 .
+
+ex:D21-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-06,
+        ex:LAW-43 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D21 .
+
+ex:D22-distinguishes-D4 a ex:Fact ;
+    ex:inPaper ex:LAW-06 ;
+    ex:object ex:D4 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D22 .
+
+ex:D22-distinguishes-D5 a ex:Fact ;
+    ex:inPaper ex:LAW-06 ;
+    ex:object ex:D5 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D22 .
+
+ex:D22-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-43 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D22 .
+
+ex:D22-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-06,
+        ex:LAW-43 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D22 .
+
+ex:D23-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-13 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D23 .
+
+ex:D24-distinguishes-D18 a ex:Fact ;
+    ex:inPaper ex:LAW-31,
+        ex:LAW-44 ;
+    ex:object ex:D18 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D24 .
+
+ex:D24-distinguishes-D19 a ex:Fact ;
+    ex:inPaper ex:LAW-31,
+        ex:LAW-44 ;
+    ex:object ex:D19 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D24 .
+
+ex:D24-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-31,
+        ex:LAW-44 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D24 .
+
+ex:D25-distinguishes-D18 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:D18 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D25 .
+
+ex:D25-distinguishes-D19 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:D19 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D25 .
+
+ex:D25-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-01,
+        ex:LAW-29,
+        ex:LAW-31,
+        ex:LAW-44 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D25 .
+
+ex:D26-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-01,
+        ex:LAW-12,
+        ex:LAW-29 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D26 .
+
+ex:D27-distinguishes-D21 a ex:Fact ;
+    ex:inPaper ex:LAW-12 ;
+    ex:object ex:D21 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D27 .
+
+ex:D27-distinguishes-D22 a ex:Fact ;
+    ex:inPaper ex:LAW-12 ;
+    ex:object ex:D22 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D27 .
+
+ex:D27-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-12,
+        ex:LAW-28 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D27 .
+
+ex:D28-distinguishes-D26 a ex:Fact ;
+    ex:inPaper ex:LAW-28 ;
+    ex:object ex:D26 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D28 .
+
+ex:D28-distinguishes-D27 a ex:Fact ;
+    ex:inPaper ex:LAW-28 ;
+    ex:object ex:D27 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D28 .
+
+ex:D28-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-45 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D28 .
+
+ex:D28-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-28 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D28 .
+
+ex:D29-distinguishes-D21 a ex:Fact ;
+    ex:inPaper ex:LAW-34 ;
+    ex:object ex:D21 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D29 .
+
+ex:D29-distinguishes-D22 a ex:Fact ;
+    ex:inPaper ex:LAW-34 ;
+    ex:object ex:D22 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D29 .
+
+ex:D29-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-34,
+        ex:LAW-45 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D29 .
+
+ex:D3-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-15 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D3 .
+
+ex:D3-distinguishes-D2 a ex:Fact ;
+    ex:inPaper ex:LAW-15 ;
+    ex:object ex:D2 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D3 .
+
+ex:D3-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-14,
+        ex:LAW-15 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D3 .
+
+ex:D30-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-34,
+        ex:LAW-40 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D30 .
+
+ex:D30-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-40 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D30 .
+
+ex:D30-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-40 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D30 .
+
+ex:D31-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-20,
+        ex:LAW-36 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D31 .
+
+ex:D31-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-20 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D31 .
+
+ex:D33-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-20,
+        ex:LAW-36,
+        ex:LAW-41 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D33 .
+
+ex:D34-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-20 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D34 .
+
+ex:D34-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-20,
+        ex:LAW-38 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D34 .
+
+ex:D34-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-20 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D34 .
+
+ex:D35-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-03,
+        ex:LAW-42 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D35 .
+
+ex:D35-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-42 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D35 .
+
+ex:D35-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-42 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D35 .
+
+ex:D36-rejects-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-03,
+        ex:LAW-42 ;
+    ex:object ex:P4 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D36 .
+
+ex:D36-relies_on-P5 a ex:Fact ;
+    ex:inPaper ex:LAW-34 ;
+    ex:object ex:P5 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D36 .
+
+ex:D37-distinguishes-D32 a ex:Fact ;
+    ex:inPaper ex:LAW-21 ;
+    ex:object ex:D32 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D37 .
+
+ex:D37-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-21,
+        ex:LAW-41 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D37 .
+
+ex:D37-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-21 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D37 .
+
+ex:D37-relies_on-P5 a ex:Fact ;
+    ex:inPaper ex:LAW-34 ;
+    ex:object ex:P5 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D37 .
+
+ex:D38-distinguishes-D33 a ex:Fact ;
+    ex:inPaper ex:LAW-17 ;
+    ex:object ex:D33 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D38 .
+
+ex:D38-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-17,
+        ex:LAW-36,
+        ex:LAW-41 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D38 .
+
+ex:D38-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-17 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D38 .
+
+ex:D39-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-38 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D39 .
+
+ex:D39-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-38 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D39 .
+
+ex:D39-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-38 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D39 .
+
+ex:D4-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-15,
+        ex:LAW-37 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D4 .
+
+ex:D4-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-37 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D4 .
+
+ex:D40-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-40 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D40 .
+
+ex:D41-distinguishes-D36 a ex:Fact ;
+    ex:inPaper ex:LAW-24 ;
+    ex:object ex:D36 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D41 .
+
+ex:D41-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-24 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D41 .
+
+ex:D41-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-24 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D41 .
+
+ex:D42-distinguishes-D37 a ex:Fact ;
+    ex:inPaper ex:LAW-11 ;
+    ex:object ex:D37 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D42 .
+
+ex:D42-distinguishes-D38 a ex:Fact ;
+    ex:inPaper ex:LAW-11 ;
+    ex:object ex:D38 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D42 .
+
+ex:D42-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-11,
+        ex:LAW-41 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D42 .
+
+ex:D42-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-41 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D42 .
+
+ex:D42-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-41 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D42 .
+
+ex:D43-distinguishes-D38 a ex:Fact ;
+    ex:inPaper ex:LAW-10 ;
+    ex:object ex:D38 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D43 .
+
+ex:D43-distinguishes-D39 a ex:Fact ;
+    ex:inPaper ex:LAW-10 ;
+    ex:object ex:D39 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D43 .
+
+ex:D43-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-10,
+        ex:LAW-45 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D43 .
+
+ex:D44-distinguishes-D39 a ex:Fact ;
+    ex:inPaper ex:LAW-24 ;
+    ex:object ex:D39 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D44 .
+
+ex:D44-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-10,
+        ex:LAW-11,
+        ex:LAW-24,
+        ex:LAW-45 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D44 .
+
+ex:D44-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-24,
+        ex:LAW-45 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D44 .
+
+ex:D44-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-45 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D44 .
+
+ex:D45-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-40 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D45 .
+
+ex:D45-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-40 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D45 .
+
+ex:D46-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-07 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D46 .
+
+ex:D47-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-27 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D47 .
+
+ex:D47-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-07 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D47 .
+
+ex:D48-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-23,
+        ex:LAW-27 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D48 .
+
+ex:D48-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-23 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D48 .
+
+ex:D49-distinguishes-D48 a ex:Fact ;
+    ex:inPaper ex:LAW-21 ;
+    ex:object ex:D48 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D49 .
+
+ex:D49-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-21,
+        ex:LAW-37 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D49 .
+
+ex:D49-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-21 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D49 .
+
+ex:D5-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-33 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D5 .
+
+ex:D5-distinguishes-D2 a ex:Fact ;
+    ex:inPaper ex:LAW-33 ;
+    ex:object ex:D2 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D5 .
+
+ex:D5-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-33 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D5 .
+
+ex:D5-relies_on-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-47 ;
+    ex:object ex:P4 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D5 .
+
+ex:D50-distinguishes-D1 a ex:Fact ;
+    ex:inPaper ex:LAW-07 ;
+    ex:object ex:D1 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D50 .
+
+ex:D50-distinguishes-D2 a ex:Fact ;
+    ex:inPaper ex:LAW-07 ;
+    ex:object ex:D2 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D50 .
+
+ex:D50-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-07 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D50 .
+
+ex:D51-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-07,
+        ex:LAW-15,
+        ex:LAW-35 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D51 .
+
+ex:D52-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-15,
+        ex:LAW-35 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D52 .
+
+ex:D53-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-37 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D53 .
+
+ex:D53-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-37 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D53 .
+
+ex:D53-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-37 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D53 .
+
+ex:D54-distinguishes-D52 a ex:Fact ;
+    ex:inPaper ex:LAW-04 ;
+    ex:object ex:D52 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D54 .
+
+ex:D54-distinguishes-D53 a ex:Fact ;
+    ex:inPaper ex:LAW-04 ;
+    ex:object ex:D53 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D54 .
+
+ex:D54-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-04 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D54 .
+
+ex:D55-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-04 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D55 .
+
+ex:D56-distinguishes-D54 a ex:Fact ;
+    ex:inPaper ex:LAW-08 ;
+    ex:object ex:D54 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D56 .
+
+ex:D56-distinguishes-D55 a ex:Fact ;
+    ex:inPaper ex:LAW-08 ;
+    ex:object ex:D55 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D56 .
+
+ex:D56-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-08,
+        ex:LAW-26 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D56 .
+
+ex:D57-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-08,
+        ex:LAW-26 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D57 .
+
+ex:D58-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-08,
+        ex:LAW-33 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D58 .
+
+ex:D59-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-08,
+        ex:LAW-33 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D59 .
+
+ex:D6-distinguishes-D4 a ex:Fact ;
+    ex:inPaper ex:LAW-13 ;
+    ex:object ex:D4 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D6 .
+
+ex:D6-distinguishes-D5 a ex:Fact ;
+    ex:inPaper ex:LAW-13 ;
+    ex:object ex:D5 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D6 .
+
+ex:D6-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-33 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D6 .
+
+ex:D6-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-06 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D6 .
+
+ex:D6-relies_on-P4 a ex:Fact ;
+    ex:inPaper ex:LAW-13,
+        ex:LAW-47 ;
+    ex:object ex:P4 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D6 .
+
+ex:D60-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-05,
+        ex:LAW-11 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D60 .
+
+ex:D61-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-05,
+        ex:LAW-11 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D61 .
+
+ex:D62 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stukreze v. Krepol Health" ;
+    ex:court ex:C2 ;
+    ex:facts "a hospital network used patient data for research collaboration" ;
+    ex:year 2011 .
+
+ex:D63-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-38 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D63 .
+
+ex:D63-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-38 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D63 .
+
+ex:D64-distinguishes-D47 a ex:Fact ;
+    ex:inPaper ex:LAW-02 ;
+    ex:object ex:D47 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D64 .
+
+ex:D64-distinguishes-D48 a ex:Fact ;
+    ex:inPaper ex:LAW-02 ;
+    ex:object ex:D48 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D64 .
+
+ex:D64-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-02 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D64 .
+
+ex:D65-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-02,
+        ex:LAW-42 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D65 .
+
+ex:D66-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-10,
+        ex:LAW-42 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D66 .
+
+ex:D67-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-10 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D67 .
+
+ex:D68-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-14,
+        ex:LAW-17 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D68 .
+
+ex:D68-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-17 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D68 .
+
+ex:D69-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-14,
+        ex:LAW-17 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D69 .
+
+ex:D7-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-06,
+        ex:LAW-13 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D7 .
+
+ex:D70-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-12 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D70 .
+
+ex:D71-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-12,
+        ex:LAW-28,
+        ex:LAW-31 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D71 .
+
+ex:D72-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-18,
+        ex:LAW-28,
+        ex:LAW-31 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D72 .
+
+ex:D73-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-18 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D73 .
+
+ex:D73-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-16,
+        ex:LAW-18 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D73 .
+
+ex:D74 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Dretus v. Ratrethas Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "an insurer used mental health data for care coordination" ;
+    ex:year 2023 .
+
+ex:D75-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-16 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D75 .
+
+ex:D75-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-16 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D75 .
+
+ex:D76-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-36 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D76 .
+
+ex:D76-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-36 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D76 .
+
+ex:D76-relies_on-P3 a ex:Fact ;
+    ex:inPaper ex:LAW-36 ;
+    ex:object ex:P3 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D76 .
+
+ex:D77-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-02 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D77 .
+
+ex:D78-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-02,
+        ex:LAW-04 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D78 .
+
+ex:D79-rejects-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-04 ;
+    ex:object ex:P2 ;
+    ex:relation ex:rejects ;
+    ex:subject ex:D79 .
+
+ex:D8-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-01 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D8 .
+
+ex:D80 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Gregestel v. Geter Systems" ;
+    ex:court ex:C3 ;
+    ex:facts "a government IT system used citizen data for service delivery" ;
+    ex:year 2015 .
+
+ex:D9-distinguishes-D3 a ex:Fact ;
+    ex:inPaper ex:LAW-23 ;
+    ex:object ex:D3 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D9 .
+
+ex:D9-distinguishes-D4 a ex:Fact ;
+    ex:inPaper ex:LAW-23 ;
+    ex:object ex:D4 ;
+    ex:relation ex:distinguishes ;
+    ex:subject ex:D9 .
+
+ex:D9-relies_on-P1 a ex:Fact ;
+    ex:inPaper ex:LAW-01,
+        ex:LAW-23 ;
+    ex:object ex:P1 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D9 .
+
+ex:D9-relies_on-P2 a ex:Fact ;
+    ex:inPaper ex:LAW-23 ;
+    ex:object ex:P2 ;
+    ex:relation ex:relies_on ;
+    ex:subject ex:D9 .
+
+ex:P6 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 1 of the Tetre Digital Rights Ordinance" ;
+    ex:topic "access to digital records" .
+
+ex:P7 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 2 of the Tetre Digital Rights Ordinance" ;
+    ex:topic "automated decision making" .
+
+ex:D15 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Roham v. Polotrim Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "a cloud provider failed to secure backup data" ;
+    ex:year 2024 .
+
+ex:D23 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Thepas v. Zireto Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a social media platform allowed targeted ads based on political views" ;
+    ex:year 2017 .
+
+ex:D32 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Bemebi v. Dronir Health" ;
+    ex:court ex:C3 ;
+    ex:facts "a national health database was accessed without consent" ;
+    ex:year 2012 .
+
+ex:D40 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Gagan v. Famogras Systems" ;
+    ex:court ex:C3 ;
+    ex:facts "a national ID system failed to secure biometric data" ;
+    ex:year 2020 .
+
+ex:D51 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Drudetos v. Grostum Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank used location data for targeted offers" ;
+    ex:year 2015 .
+
+ex:D57 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Truvodrim v. Stetrehon Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a hospital used patient data for AI model training" ;
+    ex:year 2021 .
+
+ex:D58 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stebrin v. Gamor Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a streaming service used viewing data for content recommendations" ;
+    ex:year 2022 .
+
+ex:D59 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Sostothu v. Betham Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurer used health data for dynamic pricing" ;
+    ex:year 2023 .
+
+ex:D60 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Sostohen v. Vatros Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "a tech company used user data for ad targeting" ;
+    ex:year 2024 .
+
+ex:D61 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stegrepor v. Hakruze Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank used biometric data for transaction verification" ;
+    ex:year 2025 .
+
+ex:D65 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Krizon v. Thela Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a tech company used user data for service improvement" ;
+    ex:year 2014 .
+
+ex:D66 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stades v. Kolin Bank" ;
+    ex:court ex:C2 ;
+    ex:facts "a bank used transaction data for fraud prevention" ;
+    ex:year 2015 .
+
+ex:D67 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Trumadu v. Zetruhal Health" ;
+    ex:court ex:C2 ;
+    ex:facts "a clinic used patient data for clinical trials" ;
+    ex:year 2016 .
+
+ex:D69 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Fakes v. Sebovim Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "an insurer used driving data for telematics insurance" ;
+    ex:year 2018 .
+
+ex:D70 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Bronu v. Bibrer Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a gaming company used player data for game balancing" ;
+    ex:year 2019 .
+
+ex:D71 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Bretha v. Ladem Bank" ;
+    ex:court ex:C2 ;
+    ex:facts "a bank used employee data for performance monitoring" ;
+    ex:year 2020 .
+
+ex:D72 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Tredrer v. Rikrus Health" ;
+    ex:court ex:C2 ;
+    ex:facts "a fitness tracker used health data for wellness insights" ;
+    ex:year 2021 .
+
+ex:D77 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Krugrama v. Basolem Health" ;
+    ex:court ex:C3 ;
+    ex:facts "a national health database used patient data for public health surveillance" ;
+    ex:year 2012 .
+
+ex:D78 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Nevatrun v. Lerenu Media" ;
+    ex:court ex:C3 ;
+    ex:facts "a state broadcaster used viewer data for programming decisions" ;
+    ex:year 2013 .
+
+ex:D79 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Kozos v. Tenin Insurance" ;
+    ex:court ex:C3 ;
+    ex:facts "a national insurer used census data for actuarial modeling" ;
+    ex:year 2014 .
+
+ex:D8 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Laper v. Dravun Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a magazine used facial recognition to identify readers" ;
+    ex:year 2017 .
+
+ex:D10 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Mokrol v. Vubravum Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "a platform transferred user data to a foreign server" ;
+    ex:year 2019 .
+
+ex:D26 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Hosom v. Tavul Bank" ;
+    ex:court ex:C2 ;
+    ex:facts "a bank used AI to monitor employee emails" ;
+    ex:year 2020 .
+
+ex:D31 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Dibres v. Hastas Bank" ;
+    ex:court ex:C2 ;
+    ex:facts "a bank used geolocation data for fraud detection" ;
+    ex:year 2025 .
+
+ex:D33 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Krodos v. Pavus Media" ;
+    ex:court ex:C3 ;
+    ex:facts "a state broadcaster used surveillance data for news stories" ;
+    ex:year 2013 .
+
+ex:D45 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Dregor v. Tetron Systems" ;
+    ex:court ex:C3 ;
+    ex:facts "a national cloud service failed to protect government data" ;
+    ex:year 2025 .
+
+ex:D52 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Fogol v. Kufen Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a clinic used patient data for quality improvement" ;
+    ex:year 2016 .
+
+ex:D55 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Thotrun v. Brotem Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "a platform used user data for algorithmic training" ;
+    ex:year 2019 .
+
+ex:D63 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Budrem v. Gokraka Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a news outlet used reader data for content personalization" ;
+    ex:year 2012 .
+
+ex:D68 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Dogekrem v. Gikriso Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a social media platform used user data for ad optimization" ;
+    ex:year 2017 .
+
+ex:D7 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Pugram v. Povul Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a clinic refused to delete patient files upon request" ;
+    ex:year 2016 .
+
+ex:D73 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Gathana v. Kristur Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a podcast network used listener data for content curation" ;
+    ex:year 2022 .
+
+ex:D75 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Rapol v. Grememor Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a smart home device used audio data for voice control" ;
+    ex:year 2024 .
+
+ex:P5 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 5 of the Tetre Data Privacy Act" ;
+    ex:topic "cross-border data transfer" .
+
+ex:Court rdfs:subClassOf ex:Entity .
+
+ex:D14 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stogretron v. Stadrer Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurer used wearable device data to adjust premiums" ;
+    ex:year 2023 .
+
+ex:D16 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Medar v. Truvin Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank used biometric data for identity verification" ;
+    ex:year 2025 .
+
+ex:D20 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Fepogre v. Kragrehom Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a software company failed to encrypt user passwords" ;
+    ex:year 2014 .
+
+ex:D24 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zothopar v. Bramotrer Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "an insurer used driving data from a connected car" ;
+    ex:year 2018 .
+
+ex:D25 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Setrisas v. Tribrim Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a gaming company sold player behavior data to marketers" ;
+    ex:year 2019 .
+
+ex:D29 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Depogras v. Gumar Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "an insurer used mental health app data for underwriting" ;
+    ex:year 2023 .
+
+ex:D30 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Desamur v. Vebopes Systems" ;
+    ex:court ex:C2 ;
+    ex:facts "a smart home device leaked audio recordings" ;
+    ex:year 2024 .
+
+ex:D34 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stonan v. Tredum Insurance" ;
+    ex:court ex:C3 ;
+    ex:facts "a national insurer used census data for risk assessment" ;
+    ex:year 2014 .
+
+ex:D35 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zibrogre v. Lifur Systems" ;
+    ex:court ex:C3 ;
+    ex:facts "a government IT system failed to protect citizen records" ;
+    ex:year 2015 .
+
+ex:D36 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zefes v. Gabrustim Bank" ;
+    ex:court ex:C3 ;
+    ex:facts "a central bank shared financial data with foreign agencies" ;
+    ex:year 2016 .
+
+ex:D41 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zuman v. Stotros Bank" ;
+    ex:court ex:C3 ;
+    ex:facts "a state bank used transaction data for social scoring" ;
+    ex:year 2021 .
+
+ex:D43 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Retron v. Nosor Media" ;
+    ex:court ex:C3 ;
+    ex:facts "a state broadcaster used voice data for content moderation" ;
+    ex:year 2023 .
+
+ex:D46 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Drabren v. Borel Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank used customer data for marketing without consent" ;
+    ex:year 2010 .
+
+ex:D47 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Lolahan v. Rikroben Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a hospital used patient data for internal research" ;
+    ex:year 2011 .
+
+ex:D49 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stagelol v. Bikrem Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurer used health data from a wearable device" ;
+    ex:year 2013 .
+
+ex:D50 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Thalul v. Loritom Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "a tech company used user data for product development" ;
+    ex:year 2014 .
+
+ex:D56 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zapas v. Rathovin Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank used transaction data for credit scoring" ;
+    ex:year 2020 .
+
+ex:D64 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Kehetral v. Soves Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "an insurer used health data for risk stratification" ;
+    ex:year 2013 .
+
+ex:D76 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Stodol v. Zelis Bank" ;
+    ex:court ex:C2 ;
+    ex:facts "a bank used geolocation data for branch optimization" ;
+    ex:year 2025 .
+
+ex:D11 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Begon v. Bomebros Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank used automated systems to deny loans without explanation" ;
+    ex:year 2020 .
+
+ex:D17 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Sunen v. Thegom Health" ;
+    ex:court ex:C2 ;
+    ex:facts "a hospital network shared anonymized data with a pharma company" ;
+    ex:year 2011 .
+
+ex:D27 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Grestin v. Gesum Health" ;
+    ex:court ex:C2 ;
+    ex:facts "a fitness tracker shared heart rate data with an employer" ;
+    ex:year 2021 .
+
+ex:D28 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Levahe v. Lithapal Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a podcast network used voice recognition to identify guests" ;
+    ex:year 2022 .
+
+ex:D3 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Pomuthel v. Hemem Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a news outlet published private emails of a public figure" ;
+    ex:year 2012 .
+
+ex:D44 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Trabror v. Dikikris Insurance" ;
+    ex:court ex:C3 ;
+    ex:facts "a national insurer used travel data for risk assessment" ;
+    ex:year 2024 .
+
+ex:D48 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Brufegro v. Zogrus Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a news site used reader data for personalized ads" ;
+    ex:year 2012 .
+
+ex:D53 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Gonustor v. Hekris Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a magazine used subscriber data for cross-promotion" ;
+    ex:year 2017 .
+
+ex:D54 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Bakiko v. Treham Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurer used driving data for usage-based insurance" ;
+    ex:year 2018 .
+
+ex:D13 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Graro v. Drede Media" ;
+    ex:court ex:C1 ;
+    ex:facts "a streaming service retained viewing habits after account deletion" ;
+    ex:year 2022 .
+
+ex:D18 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Lofilom v. Rizal Media" ;
+    ex:court ex:C2 ;
+    ex:facts "a newspaper used metadata to track a journalist's movements" ;
+    ex:year 2012 .
+
+ex:D37 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Mizun v. Manostal Health" ;
+    ex:court ex:C3 ;
+    ex:facts "a public health agency used contact tracing data for research" ;
+    ex:year 2017 .
+
+ex:D38 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Pedim v. Detam Media" ;
+    ex:court ex:C3 ;
+    ex:facts "a state media outlet used facial recognition in public spaces" ;
+    ex:year 2018 .
+
+ex:D39 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Hapar v. Brapil Insurance" ;
+    ex:court ex:C3 ;
+    ex:facts "a national insurer used tax data for premium calculation" ;
+    ex:year 2019 .
+
+ex:D4 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Kuhizun v. Trefezer Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurer used genetic data to deny coverage" ;
+    ex:year 2013 .
+
+ex:D42 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Trostotham v. Grefesel Health" ;
+    ex:court ex:C3 ;
+    ex:facts "a national health service used genetic data for population studies" ;
+    ex:year 2022 .
+
+ex:D6 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Hutheno v. Pagre Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank sold transaction history to third parties" ;
+    ex:year 2015 .
+
+ex:D9 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Gothukur v. Didota Insurance" ;
+    ex:court ex:C1 ;
+    ex:facts "an insurer accessed social media posts to assess claims" ;
+    ex:year 2018 .
+
+ex:D12 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Thisas v. Ribror Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a health app shared location data with advertisers" ;
+    ex:year 2021 .
+
+ex:D19 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Drusethis v. Thuthiki Insurance" ;
+    ex:court ex:C2 ;
+    ex:facts "an insurer used credit scores to determine life insurance rates" ;
+    ex:year 2013 .
+
+ex:D2 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Zudur v. Stupus Health" ;
+    ex:court ex:C1 ;
+    ex:facts "a hospital shared patient records with a research group" ;
+    ex:year 2011 .
+
+ex:D22 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Hemis v. Hador Health" ;
+    ex:court ex:C2 ;
+    ex:facts "a telemedicine service stored data on unsecured servers" ;
+    ex:year 2016 .
+
+ex:D5 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Bruse v. Kikom Systems" ;
+    ex:court ex:C1 ;
+    ex:facts "a tech company failed to notify users of a data breach" ;
+    ex:year 2014 .
+
+ex:LAW-01 a ex:Paper .
+
+ex:LAW-02 a ex:Paper .
+
+ex:LAW-03 a ex:Paper .
+
+ex:LAW-04 a ex:Paper .
+
+ex:LAW-05 a ex:Paper .
+
+ex:LAW-06 a ex:Paper .
+
+ex:LAW-07 a ex:Paper .
+
+ex:LAW-08 a ex:Paper .
+
+ex:LAW-09 a ex:Paper .
+
+ex:LAW-10 a ex:Paper .
+
+ex:LAW-11 a ex:Paper .
+
+ex:LAW-12 a ex:Paper .
+
+ex:LAW-13 a ex:Paper .
+
+ex:LAW-14 a ex:Paper .
+
+ex:LAW-15 a ex:Paper .
+
+ex:LAW-16 a ex:Paper .
+
+ex:LAW-17 a ex:Paper .
+
+ex:LAW-18 a ex:Paper .
+
+ex:LAW-20 a ex:Paper .
+
+ex:LAW-21 a ex:Paper .
+
+ex:LAW-23 a ex:Paper .
+
+ex:LAW-24 a ex:Paper .
+
+ex:LAW-26 a ex:Paper .
+
+ex:LAW-27 a ex:Paper .
+
+ex:LAW-28 a ex:Paper .
+
+ex:LAW-29 a ex:Paper .
+
+ex:LAW-31 a ex:Paper .
+
+ex:LAW-33 a ex:Paper .
+
+ex:LAW-34 a ex:Paper .
+
+ex:LAW-35 a ex:Paper .
+
+ex:LAW-36 a ex:Paper .
+
+ex:LAW-37 a ex:Paper .
+
+ex:LAW-38 a ex:Paper .
+
+ex:LAW-40 a ex:Paper .
+
+ex:LAW-41 a ex:Paper .
+
+ex:LAW-42 a ex:Paper .
+
+ex:LAW-43 a ex:Paper .
+
+ex:LAW-44 a ex:Paper .
+
+ex:LAW-45 a ex:Paper .
+
+ex:LAW-47 a ex:Paper .
+
+ex:D21 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Tagustu v. Satritrul Bank" ;
+    ex:court ex:C2 ;
+    ex:facts "a bank used dark patterns to collect extra data" ;
+    ex:year 2015 .
+
+ex:Provision rdfs:subClassOf ex:Entity .
+
+ex:D1 a ex:Decision,
+        ex:Entity ;
+    skos:prefLabel "Sadepo v. Rubrothes Bank" ;
+    ex:court ex:C1 ;
+    ex:facts "a bank retained customer data after account closure" ;
+    ex:year 2010 .
+
+ex:P4 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 4 of the Tetre Data Privacy Act" ;
+    ex:topic "data breach notification" .
+
+ex:P3 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 3 of the Tetre Data Privacy Act" ;
+    ex:topic "right to erasure" .
+
+ex:C3 a ex:Court,
+        ex:Entity ;
+    skos:altLabel "Supreme Court" ;
+    skos:prefLabel "Tetre Supreme Court" ;
+    ex:level 3 .
+
+ex:C2 a ex:Court,
+        ex:Entity ;
+    skos:altLabel "Court of Appeal" ;
+    skos:prefLabel "Tetre Court of Appeal" ;
+    ex:level 2 .
+
+ex:C1 a ex:Court,
+        ex:Entity ;
+    skos:altLabel "District Court" ;
+    skos:prefLabel "Tetre District Court" ;
+    ex:level 1 .
+
+ex:P1 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 1 of the Tetre Data Privacy Act" ;
+    ex:topic "definition of personal data" .
+
+ex:P2 a ex:Entity,
+        ex:Provision ;
+    skos:prefLabel "section 2 of the Tetre Data Privacy Act" ;
+    ex:topic "lawful basis for processing" .
+
+ex:Decision rdfs:subClassOf ex:Entity .
+

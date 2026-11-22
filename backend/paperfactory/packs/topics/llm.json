@@ -1,0 +1,206 @@
+{
+ "source": "OpenAlex topics API",
+ "fetched": "2026-11-22",
+ "query": {
+  "subfields": [
+   "1702"
+  ],
+  "include": [
+   "language",
+   "nlp",
+   "text",
+   "translation",
+   "question answering",
+   "dialogue",
+   "summariz",
+   "sentiment",
+   "semantic",
+   "named entity",
+   "speech"
+  ],
+  "exclude": [
+   "image",
+   "vision",
+   "robot",
+   "semantic web",
+   "ontolog",
+   "multi-agent",
+   "healthcare",
+   "law,",
+   "explainable",
+   "negotiation"
+  ]
+ },
+ "topics": [
+  {
+   "id": "T10181",
+   "name": "Natural Language Processing Techniques",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on statistical machine translation, neural machine translation, dependency parsing, word sense disambiguation, and part-of-speech tagging. It also covers topics such as corpus linguistics, syntax-based translation models, multilingual neural machine translation, and language modeling.",
+   "keywords": [
+    "machine translation",
+    "low-resource languages",
+    "part-of-speech tagging",
+    "word sense disambiguation",
+    "statistical machine translation",
+    "morphological analysis",
+    "neural machine translation",
+    "parallel corpus"
+   ],
+   "works": 202848
+  },
+  {
+   "id": "T10028",
+   "name": "Topic Modeling",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers covers a wide range of advancements in natural language processing, including neural network architectures, word representation models, machine translation techniques, text classification algorithms, semantic similarity measures, named entity recognition methods, pretrained language models, sequence-to-sequence learning approaches, topic modeling strategies, and information retrieval systems.",
+   "keywords": [
+    "named entity recognition",
+    "retrieval-augmented generation",
+    "BERT",
+    "word embeddings",
+    "question answering",
+    "pre-trained language models",
+    "intermediate-task training",
+    "sentence retrieval"
+   ],
+   "works": 173830
+  },
+  {
+   "id": "T10201",
+   "name": "Speech Recognition and Synthesis",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on the advances in speech recognition technology, covering topics such as acoustic modeling using deep neural networks, speaker verification, convolutional neural networks for speech recognition, end-to-end speech recognition systems, hidden Markov models, sequence-to-sequence models, automatic speech recognition, speaker diarization, and statistical language modeling.",
+   "keywords": [
+    "speech recognition",
+    "speech synthesis",
+    "text-to-speech",
+    "speaker recognition",
+    "speaker verification",
+    "Mel-frequency cepstral coefficients",
+    "speaker identification",
+    "word error rate"
+   ],
+   "works": 143559
+  },
+  {
+   "id": "T10664",
+   "name": "Sentiment Analysis and Opinion Mining",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on sentiment analysis and opinion mining, particularly in the context of social media and text mining. It covers various techniques such as lexicon-based methods, deep learning, aspect-based sentiment analysis, and machine learning for analyzing emotions and opinions in textual data from platforms like Twitter. The research also delves into emotion recognition and the impact of sentiment analysis on public perception.",
+   "keywords": [
+    "sentiment analysis",
+    "sentiment classification",
+    "online reviews",
+    "aspect-based sentiment analysis",
+    "tweets",
+    "social media text",
+    "product reviews",
+    "TF-IDF"
+   ],
+   "works": 105915
+  },
+  {
+   "id": "T10667",
+   "name": "Emotion and Mood Recognition",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on the recognition and analysis of emotions from various modalities such as facial expressions, physiological signals, and speech. It explores the use of deep learning, affective computing, and multimodal data for emotion recognition in applications including human-computer interaction.",
+   "keywords": [
+    "emotion recognition",
+    "facial expression recognition",
+    "speech emotion recognition",
+    "affective computing",
+    "emotion classification",
+    "physiological signals",
+    "multimodal emotion recognition",
+    "facial expression analysis"
+   ],
+   "works": 76697
+  },
+  {
+   "id": "T12031",
+   "name": "Speech and dialogue systems",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on the modeling and optimization of dialogue acts in spoken language systems, utilizing techniques such as Markov decision processes, user simulation, multimodal interaction, reinforcement learning, natural language generation, and the hidden information state model. The research also delves into semantic processing, referring expressions, and the management of dialogues in various contexts.",
+   "keywords": [
+    "spoken dialogue systems",
+    "dialogue systems",
+    "dialogue management",
+    "task-oriented dialogue systems",
+    "task-oriented dialogue",
+    "intent classification",
+    "spoken language understanding",
+    "multi-turn dialogue"
+   ],
+   "works": 51860
+  },
+  {
+   "id": "T11550",
+   "name": "Text and Document Classification Technologies",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on the application of machine learning algorithms for multi-label text classification, with an emphasis on techniques such as feature selection, Naive Bayes classifier, K-nearest Neighbor (KNN), hierarchical classification, and support vector machines (SVM). The research covers various aspects of document categorization and information retrieval in the context of text mining and natural language processing.",
+   "keywords": [
+    "text classification",
+    "multi-label classification",
+    "document classification",
+    "web page classification",
+    "news classification",
+    "label correlation",
+    "multi-label text classification",
+    "term weighting"
+   ],
+   "works": 37630
+  },
+  {
+   "id": "T13083",
+   "name": "Advanced Text Analysis Techniques",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on the automatic extraction of keywords from textual data using various techniques such as graph-based methods, unsupervised approaches, and neural networks. The research explores the application of linguistic knowledge and statistical information to improve the accuracy of keyword extraction from documents.",
+   "keywords": [
+    "text summarization",
+    "keyword extraction",
+    "extractive summarization",
+    "multi-document summarization",
+    "abstractive summarization",
+    "automatic summarization",
+    "ROUGE evaluation",
+    "term extraction"
+   ],
+   "works": 26196
+  },
+  {
+   "id": "T12262",
+   "name": "Hate Speech and Cyberbullying Detection",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on the automated detection of hate speech, offensive language, and cyberbullying in social media platforms such as Twitter. It explores various techniques including machine learning, natural language processing, and deep learning to identify and categorize abusive content, with a specific emphasis on mitigating online harassment and promoting online safety.",
+   "keywords": [
+    "hate speech detection",
+    "cyberbullying detection",
+    "offensive language detection",
+    "online hate speech",
+    "offensive language",
+    "social media content moderation",
+    "multilingual text classification",
+    "online abuse"
+   ],
+   "works": 23142
+  },
+  {
+   "id": "T12380",
+   "name": "Authorship Attribution and Profiling",
+   "subfield": "Artificial Intelligence",
+   "description": "This cluster of papers focuses on authorship attribution, stylometry, and user profiling in text, utilizing techniques such as text classification, machine learning, and forensic linguistics to analyze gender differences and language use in social media. The research aims to identify authors of anonymous texts, predict demographic attributes from online content, and study the linguistic uniqueness of individuals across different genres and languages.",
+   "keywords": [
+    "stylometry",
+    "AI-generated text detection",
+    "forensic linguistics",
+    "author profiling",
+    "authorship verification",
+    "authorship analysis",
+    "gender prediction",
+    "LLM-generated text detection"
+   ],
+   "works": 15690
+  }
+ ]
+}

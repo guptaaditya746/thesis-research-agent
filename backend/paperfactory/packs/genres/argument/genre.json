@@ -1,15 +1,99 @@
 {
  "genre": "argument",
- "numeric_facts": false,
- "about": "A paper that argues for one thesis by analysing what earlier sources did (decisions, trials, studies). Facts are holdings: subject --relation--> source. PaperOrchestra reads genre.json in the template folder and skips its number-fact gate when numeric_facts is false.",
- "words_per_page": [450, 550],
+ "numeric_facts": true,
+ "about": "A paper that argues for one thesis by analysing what earlier sources did (decisions, trials, studies). Facts are holdings: subject --relation--> source; entity numbers (awards, hearing days) are made by code and checked by PaperOrchestra (row ids).",
+ "words_per_page": [
+  450,
+  550
+ ],
  "claims_per_paper": 3,
  "decoys_per_paper": 3,
  "max_mentions_per_fact": 3,
- "log_sections": ["Setting", "Sources", "Holdings (data)", "Conflict", "Argument Plan", "Rules"],
+ "log_sections": [
+  "Setting",
+  "Sources",
+  "Holdings (data)",
+  "Conflict",
+  "Argument Plan",
+  "Rules"
+ ],
  "argument_plan": [
   "Set out the issue and the relevant sources.",
   "Analyse the {SUBJECT_PLURAL} in time order and what each did with each source.",
   "Defend the thesis; then state the strongest counter-argument and answer it from the {FACTS}."
+ ],
+ "version": "v2 (22 Nov 2026): numbers, 2+ tables, templates, style cards",
+ "min_tables": 2,
+ "templates": {
+  "law": [
+   {
+    "name": "numbered_parts",
+    "paper_kind": "a doctrinal law review article in numbered parts"
+   },
+   {
+    "name": "case_comment",
+    "paper_kind": "a case comment comparing decisions"
+   },
+   {
+    "name": "empirical_legal",
+    "paper_kind": "an empirical legal study of decided cases"
+   }
+  ]
+ },
+ "style": {
+  "tone": [
+   "measured and precise, careful about how far each result goes",
+   "direct and confident, with short verdicts",
+   "sceptical: it tests each claim against the numbers before accepting it",
+   "explanatory, for readers from a neighbouring field",
+   "dense and technical, for specialists"
+  ],
+  "voice": [
+   "first person plural (\"we\")",
+   "impersonal (no \"we\" and no \"I\")"
+  ],
+  "opening": [
+   "the size of the problem, in one concrete sentence",
+   "the disagreement between two of the studies, named",
+   "a short history of the question",
+   "the practical decision a reader faces",
+   "one precise question that the paper answers"
+  ],
+  "rhythm": [
+   "a mix of short and long sentences",
+   "mostly long sentences with subordinate clauses",
+   "mostly short declarative sentences"
+  ],
+  "pages": [
+   5,
+   6,
+   7
+  ]
+ },
+ "banned_phrases": [
+  "highlight",
+  "highlights",
+  "highlighted",
+  "highlighting",
+  "nuanced",
+  "nuance",
+  "threefold",
+  "delve",
+  "delves",
+  "underscore",
+  "underscores",
+  "underscored",
+  "pivotal",
+  "multifaceted",
+  "landscape",
+  "tapestry",
+  "intricate",
+  "it is worth noting",
+  "plays a crucial role",
+  "shed light",
+  "sheds light",
+  "paves the way",
+  "a testament to",
+  "in the realm of"
  ]
 }

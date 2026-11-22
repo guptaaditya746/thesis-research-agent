@@ -9,6 +9,7 @@ from typing import Any
 from rdflib import Graph
 
 from evqa.paths import REPO, SEED, domain_dir
+from evqa.seed import pfview
 from evqa.seed.check import full_graph
 from evqa.seed.rdf import query as locked_query
 
@@ -65,6 +66,8 @@ def unit_symbols(g: Graph) -> dict[str, str]:
 
 
 def overview(domain: str) -> dict[str, Any]:
+    if pfview.is_pf(domain):
+        return pfview.overview(domain)
     g = graph_of(domain)
     sym = unit_symbols(g)
     rows = [{"id": local(r.r), "paper": str(r.paper), "split": str(r.split), "subject": str(r.subject),

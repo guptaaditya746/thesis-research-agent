@@ -1,0 +1,1066 @@
+{
+ "source": "OpenAlex topics API",
+ "fetched": "2026-11-22",
+ "query": {
+  "subfields": [
+   "2705",
+   "2730",
+   "2725",
+   "2728",
+   "2740",
+   "2712",
+   "2720",
+   "2715",
+   "2727",
+   "2745",
+   "2738",
+   "2721",
+   "2708"
+  ],
+  "include": [
+   "treatment",
+   "therapy",
+   "therapies",
+   "management",
+   "trial",
+   "drug",
+   "inhibitor",
+   "antibod",
+   "vaccine"
+  ],
+  "exclude": [
+   "surgical",
+   "surgery",
+   "imaging",
+   "diagnos",
+   "epidemiolog",
+   "covid",
+   "sars",
+   "education",
+   "nursing",
+   "veterin"
+  ]
+ },
+ "topics": [
+  {
+   "id": "T10023",
+   "name": "Schizophrenia research and treatment",
+   "subfield": "Psychiatry and Mental health",
+   "description": "This cluster of papers focuses on the research, treatment, and various aspects of schizophrenia, including the effectiveness of antipsychotic drugs, neurocognitive deficits, genetic association studies, metabolic syndrome, neurodevelopmental models, cognitive therapy, social cognition, prodromal symptoms, dopamine dysfunction, and neuroanatomical abnormalities in individuals with schizophrenia.",
+   "keywords": [
+    "schizophrenia",
+    "antipsychotic drugs",
+    "psychosis",
+    "atypical antipsychotics",
+    "antipsychotic adverse effects",
+    "clozapine",
+    "negative symptoms",
+    "risperidone"
+   ],
+   "works": 285317
+  },
+  {
+   "id": "T10082",
+   "name": "HIV/AIDS Research and Interventions",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers focuses on the prevention, treatment, and epidemiology of HIV/AIDS. It covers topics such as antiretroviral therapy, preexposure prophylaxis, stigma and discrimination, viral load, mother-to-child transmission, adherence to medication, mortality rates, and health-related stigma.",
+   "keywords": [
+    "HIV prevention",
+    "HIV",
+    "HIV/AIDS",
+    "antiretroviral therapy",
+    "AIDS",
+    "HIV testing",
+    "people living with HIV",
+    "men who have sex with men"
+   ],
+   "works": 276813
+  },
+  {
+   "id": "T10134",
+   "name": "Inflammatory Bowel Disease",
+   "subfield": "Gastroenterology",
+   "description": "This cluster of papers explores the genetics, epidemiology, pathogenesis, and treatment of inflammatory bowel diseases such as Crohn's disease and ulcerative colitis. It covers topics such as host-microbe interactions, genetic susceptibility loci, immune system involvement, therapeutic targets, and the global burden of these diseases.",
+   "keywords": [
+    "inflammatory bowel disease",
+    "Crohn's disease",
+    "ulcerative colitis",
+    "infliximab",
+    "intestinal inflammation",
+    "anti-TNF therapy",
+    "DSS-induced colitis",
+    "pediatric inflammatory bowel disease"
+   ],
+   "works": 220325
+  },
+  {
+   "id": "T10293",
+   "name": "Thyroid Disorders and Treatments",
+   "subfield": "Endocrinology, Diabetes and Metabolism",
+   "description": "This cluster of papers explores various aspects of thyroid disease, including the regulation of thyroid hormones, the impact of thyroid dysfunction during pregnancy, cardiovascular risks associated with thyroid disorders, the role of iodine deficiency, and the relationship between thyroid function and neurodevelopment. It also covers topics such as autoimmune thyroid disease and the effects of thyroid hormones on different physiological systems.",
+   "keywords": [
+    "hyperthyroidism",
+    "hypothyroidism",
+    "thyroid-stimulating hormone",
+    "thyroid hormones",
+    "thyroid dysfunction",
+    "Graves' disease",
+    "thyroid function",
+    "thyroxine"
+   ],
+   "works": 217413
+  },
+  {
+   "id": "T10217",
+   "name": "Cardiac electrophysiology and arrhythmias",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on the molecular mechanisms, genetic testing, and clinical aspects of cardiac arrhythmias, including Long-QT Syndrome, Brugada Syndrome, and Sudden Cardiac Death. It explores the role of ion channels, calcium signaling, and arrhythmogenic ion-channel remodeling in the heart.",
+   "keywords": [
+    "cardiac arrhythmias",
+    "sudden cardiac death",
+    "ventricular arrhythmias",
+    "cardiac electrophysiology",
+    "antiarrhythmic drugs",
+    "ventricular fibrillation",
+    "Brugada syndrome",
+    "QT prolongation"
+   ],
+   "works": 210872
+  },
+  {
+   "id": "T10143",
+   "name": "Chronic Obstructive Pulmonary Disease (COPD) Research",
+   "subfield": "Pulmonary and Respiratory Medicine",
+   "description": "This cluster of papers focuses on the standardisation, diagnosis, and management of Chronic Obstructive Pulmonary Disease (COPD), including the use of spirometry for lung function testing, global burden analysis, exacerbation frequency, and the development of guidelines for treatment and prevention. It also explores the relationship between COPD and systemic inflammation, comorbidities, and mortality.",
+   "keywords": [
+    "chronic obstructive pulmonary disease",
+    "COPD exacerbations",
+    "lung function",
+    "emphysema",
+    "pulmonary rehabilitation",
+    "FEV1",
+    "spirometry",
+    "pulmonary function tests"
+   ],
+   "works": 207925
+  },
+  {
+   "id": "T10227",
+   "name": "Acute Ischemic Stroke Management",
+   "subfield": "Clinical Neurology",
+   "description": "This cluster of papers focuses on the epidemiology, management, and treatment of stroke, with an emphasis on ischemic stroke. It covers topics such as thrombolysis, endovascular therapy, risk factors, prevention guidelines, clinical outcomes, neuroprotection, infarction treatment, revascularization, and the global burden of stroke.",
+   "keywords": [
+    "acute ischemic stroke",
+    "ischemic stroke",
+    "mechanical thrombectomy",
+    "thrombolysis",
+    "modified Rankin Scale",
+    "intravenous thrombolysis",
+    "cerebral infarction",
+    "large vessel occlusion"
+   ],
+   "works": 204989
+  },
+  {
+   "id": "T10073",
+   "name": "Hepatocellular Carcinoma Treatment and Prognosis",
+   "subfield": "Hepatology",
+   "description": "This cluster of papers focuses on the management, diagnosis, and treatment of hepatocellular carcinoma (HCC), also known as liver cancer. It covers various aspects including clinical practice guidelines, radiofrequency ablation, use of sorafenib, liver resection, and survival rates.",
+   "keywords": [
+    "hepatocellular carcinoma",
+    "hepatectomy",
+    "transarterial chemoembolization",
+    "alpha-fetoprotein",
+    "liver cancer",
+    "radiofrequency ablation",
+    "liver tumors",
+    "sorafenib"
+   ],
+   "works": 187643
+  },
+  {
+   "id": "T10200",
+   "name": "Rheumatoid Arthritis Research and Therapies",
+   "subfield": "Rheumatology",
+   "description": "This cluster of papers focuses on the pathogenesis, classification, management, and treatment outcomes of rheumatoid arthritis. It covers topics such as the role of inflammation, biological and disease-modifying therapies, autoantibodies, joint inflammation, cytokines, cardiovascular risk, synoviocytes, and the genetic contribution to the disease.",
+   "keywords": [
+    "rheumatoid arthritis",
+    "disease activity",
+    "rheumatoid factor",
+    "disease-modifying antirheumatic drugs",
+    "synovitis",
+    "rheumatic diseases",
+    "TNF-alpha inhibitors",
+    "DAS28"
+   ],
+   "works": 186984
+  },
+  {
+   "id": "T10085",
+   "name": "Parkinson's Disease Mechanisms and Treatments",
+   "subfield": "Clinical Neurology",
+   "description": "This cluster of papers explores the pathophysiology, clinical features, diagnosis, genetic risk factors, and management of Parkinson's disease. It delves into the role of a-synuclein, neurodegeneration, dopaminergic neurons, oxidative stress, and mitochondrial dysfunction in the development and progression of the disease. Additionally, it discusses the non-motor symptoms and Lewy body pathology associated with Parkinson's disease.",
+   "keywords": [
+    "Parkinson's disease",
+    "alpha-synuclein",
+    "dopaminergic neurons",
+    "parkinsonism",
+    "substantia nigra",
+    "non-motor symptoms",
+    "levodopa",
+    "Lewy bodies"
+   ],
+   "works": 180124
+  },
+  {
+   "id": "T10137",
+   "name": "Multiple Sclerosis Research Studies",
+   "subfield": "Clinical Neurology",
+   "description": "This cluster of papers focuses on the diagnosis, pathogenesis, and treatment of multiple sclerosis (MS) and related disorders such as neuromyelitis optica. It covers topics such as the diagnostic criteria for MS, genetic risk factors, immune mechanisms involved in MS, cognitive impairment, axonal injury, and the autoimmune pathology underlying the disease. The papers also discuss the use of various therapies and their effects on MS patients.",
+   "keywords": [
+    "multiple sclerosis",
+    "relapsing-remitting multiple sclerosis",
+    "demyelination",
+    "disease-modifying therapy",
+    "experimental autoimmune encephalomyelitis",
+    "disability progression",
+    "Expanded Disability Status Scale",
+    "demyelinating disease"
+   ],
+   "works": 176562
+  },
+  {
+   "id": "T10158",
+   "name": "Cancer Immunotherapy and Biomarkers",
+   "subfield": "Oncology",
+   "description": "This cluster of papers focuses on the advances in cancer immunotherapy research, particularly in the context of immune checkpoint blockade targeting PD-1 and PD-L1, the impact of tumor microenvironment, biomarkers for immunotherapy response, T-cell exhaustion, neoantigens, tumor mutational burden, immune-related adverse events, and the exploration of combination therapies. The research also delves into the intricate mechanisms of cancer immunoediting.",
+   "keywords": [
+    "immune checkpoint inhibitors",
+    "cancer immunotherapy",
+    "immune-related adverse events",
+    "nivolumab",
+    "pembrolizumab",
+    "tumor immune microenvironment",
+    "PD-L1",
+    "immune checkpoint blockade"
+   ],
+   "works": 174632
+  },
+  {
+   "id": "T10291",
+   "name": "Dialysis and Renal Disease Management",
+   "subfield": "Nephrology",
+   "description": "This cluster of papers focuses on chronic kidney disease, dialysis treatment, and associated complications such as inflammation, cardiovascular disease, and malnutrition. It explores the impact of dialysis dose, intradialytic hypotension, uremic toxins, and the role of nutrition in improving outcomes and quality of life for patients. The cluster also addresses the epidemiology of kidney disease and mortality risk factors in hemodialysis and peritoneal dialysis patients.",
+   "keywords": [
+    "end-stage renal disease",
+    "hemodialysis",
+    "peritoneal dialysis",
+    "dialysis",
+    "renal replacement therapy",
+    "continuous ambulatory peritoneal dialysis",
+    "maintenance hemodialysis",
+    "dialysis patients"
+   ],
+   "works": 172059
+  },
+  {
+   "id": "T10308",
+   "name": "Systemic Lupus Erythematosus Research",
+   "subfield": "Rheumatology",
+   "description": "This cluster of papers focuses on the systemic lupus erythematosus (SLE) and antiphospholipid syndrome (APS), covering topics such as classification criteria, autoantibody development, interferon-inducible genes, nephritis, B lymphocyte depletion therapy, thrombosis risk, immunopathogenesis, toll-like receptors, and the epidemiology of autoimmune diseases. The research aims to improve understanding, diagnosis, classification, and management of SLE and APS.",
+   "keywords": [
+    "systemic lupus erythematosus",
+    "lupus nephritis",
+    "antiphospholipid syndrome",
+    "antiphospholipid antibodies",
+    "anti-dsDNA antibodies",
+    "antinuclear antibodies",
+    "anticardiolipin antibodies",
+    "lupus anticoagulant"
+   ],
+   "works": 163673
+  },
+  {
+   "id": "T10337",
+   "name": "Liver Disease and Transplantation",
+   "subfield": "Hepatology",
+   "description": "This cluster of papers focuses on the management, prognosis, and complications of liver cirrhosis, including topics such as hepatic encephalopathy, portal hypertension, ascites, hepatorenal syndrome, variceal hemorrhage, MELD score, transjugular intrahepatic portosystemic shunt (TIPS), acute-on-chronic liver failure, and coagulopathy.",
+   "keywords": [
+    "liver cirrhosis",
+    "portal hypertension",
+    "variceal bleeding",
+    "hepatic encephalopathy",
+    "esophageal varices",
+    "ascites",
+    "Child-Pugh score",
+    "transjugular intrahepatic portosystemic shunt"
+   ],
+   "works": 162325
+  },
+  {
+   "id": "T10292",
+   "name": "Acute Myocardial Infarction Research",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on the management, diagnosis, and treatment of acute myocardial infarction (heart attacks), including topics such as ST-segment elevation, troponin assays, thrombolytic therapy, primary angioplasty, and risk assessment. It also includes guidelines and recommendations for the management of acute coronary syndromes and cardiovascular disease.",
+   "keywords": [
+    "acute myocardial infarction",
+    "ST-elevation myocardial infarction",
+    "acute coronary syndrome",
+    "thrombolysis",
+    "primary percutaneous coronary intervention",
+    "non-ST-elevation myocardial infarction",
+    "cardiac biomarkers",
+    "unstable angina"
+   ],
+   "works": 157540
+  },
+  {
+   "id": "T10065",
+   "name": "Atrial Fibrillation Management and Outcomes",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on the management, treatment, and risk assessment of atrial fibrillation (AF). It covers topics such as anticoagulant therapy, catheter ablation, stroke prevention, risk stratification, and guidelines for managing AF. The papers also compare different medications such as warfarin, rivaroxaban, and dabigatran for the treatment of AF.",
+   "keywords": [
+    "atrial fibrillation",
+    "catheter ablation",
+    "stroke prevention",
+    "direct oral anticoagulants",
+    "warfarin",
+    "paroxysmal atrial fibrillation",
+    "bleeding risk",
+    "pulmonary vein isolation"
+   ],
+   "works": 155781
+  },
+  {
+   "id": "T10105",
+   "name": "Osteoarthritis Treatment and Mechanisms",
+   "subfield": "Rheumatology",
+   "description": "This cluster of papers focuses on the pathophysiology of osteoarthritis, with an emphasis on cartilage degradation, inflammation, joint mechanics, and potential therapeutic approaches such as cartilage regeneration using mesenchymal stem cells. It also covers the role of chondrocytes, matrix metalloproteinases, and synovitis in the development and progression of osteoarthritis.",
+   "keywords": [
+    "osteoarthritis",
+    "knee osteoarthritis",
+    "articular cartilage",
+    "chondrocytes",
+    "cartilage degeneration",
+    "cartilage repair",
+    "cartilage regeneration",
+    "type II collagen"
+   ],
+   "works": 155574
+  },
+  {
+   "id": "T10150",
+   "name": "Antifungal resistance and susceptibility",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers covers the diagnosis, management, epidemiology, and treatment of various fungal infections such as candidiasis, aspergillosis, mucormycosis, and biofilm-related infections. It also discusses antifungal therapy, resistance mechanisms, and the impact of these infections on immunocompromised patients.",
+   "keywords": [
+    "Candida albicans",
+    "antifungal therapy",
+    "fungal infection",
+    "invasive fungal infections",
+    "antifungal resistance",
+    "amphotericin B",
+    "antifungal agents",
+    "Candida"
+   ],
+   "works": 151773
+  },
+  {
+   "id": "T10394",
+   "name": "Lipoproteins and Cardiovascular Health",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on the efficacy and safety of cholesterol-lowering treatments, particularly statins, in the prevention and management of cardiovascular diseases. It includes meta-analyses, clinical trials, guidelines, and genetic studies related to LDL cholesterol, atherosclerotic cardiovascular risk, hypercholesterolemia, and the role of C-reactive protein. The cluster also explores the impact of statins on various patient populations and their pleiotropic effects.",
+   "keywords": [
+    "statins",
+    "LDL cholesterol",
+    "lipid-lowering therapy",
+    "hypercholesterolemia",
+    "familial hypercholesterolemia",
+    "lipoprotein(a)",
+    "LDL cholesterol lowering",
+    "statin therapy"
+   ],
+   "works": 151310
+  },
+  {
+   "id": "T10837",
+   "name": "Dermatology and Skin Diseases",
+   "subfield": "Dermatology",
+   "description": "This cluster of papers focuses on atopic dermatitis, exploring topics such as the role of filaggrin mutations, the skin microbiome, immune dysregulation, pruritus, and the use of dupilumab in treatment. It also delves into the impact of Staphylococcus aureus and the role of TSLP in allergic inflammation.",
+   "keywords": [
+    "atopic dermatitis",
+    "skin diseases",
+    "pruritus",
+    "dermatology",
+    "topical corticosteroids",
+    "pediatric dermatology",
+    "dupilumab",
+    "skin microbiome"
+   ],
+   "works": 149741
+  },
+  {
+   "id": "T11000",
+   "name": "Infection Control in Healthcare",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers focuses on infection control in healthcare settings, with a specific emphasis on hand hygiene, healthcare-associated infections, environmental contamination, and prevention strategies. It explores the role of hospital surfaces and the transmission of nosocomial pathogens, while also addressing the importance of adherence to guidelines for healthcare workers and the impact on patient safety.",
+   "keywords": [
+    "infection control",
+    "nosocomial infections",
+    "hand hygiene",
+    "hospital infection control",
+    "needlestick injuries",
+    "hand hygiene compliance",
+    "hand washing",
+    "infection surveillance"
+   ],
+   "works": 147890
+  },
+  {
+   "id": "T10309",
+   "name": "Acute Myeloid Leukemia Research",
+   "subfield": "Hematology",
+   "description": "This cluster of papers focuses on the diagnosis, management, and genomic classification of Acute Myeloid Leukemia (AML). It covers topics such as prognostic factors, clonal hematopoiesis, FLT3 mutations, epigenetic landscapes, therapeutic trials, and the role of hematopoietic stem cells in AML.",
+   "keywords": [
+    "acute myeloid leukemia",
+    "myelodysplastic syndrome",
+    "complete remission",
+    "FLT3-ITD",
+    "acute leukemia",
+    "azacitidine",
+    "hypomethylating agents",
+    "cytarabine"
+   ],
+   "works": 147489
+  },
+  {
+   "id": "T10276",
+   "name": "Helicobacter pylori-related gastroenterology studies",
+   "subfield": "Gastroenterology",
+   "description": "This cluster of papers focuses on the relationship between Helicobacter pylori infection and the development of gastric cancer. It covers topics such as the pathogenesis of H. pylori infection, management strategies, antibiotic resistance, inflammatory mechanisms, and genetic polymorphisms associated with increased risk of gastric cancer. Additionally, it explores the potential for eradication therapy and preventive measures.",
+   "keywords": [
+    "Helicobacter pylori",
+    "peptic ulcer",
+    "Helicobacter pylori infection",
+    "duodenal ulcer",
+    "Helicobacter pylori eradication",
+    "gastric ulcer",
+    "gastritis",
+    "gastric mucosa"
+   ],
+   "works": 144763
+  },
+  {
+   "id": "T10151",
+   "name": "Hepatitis C virus research",
+   "subfield": "Hepatology",
+   "description": "This cluster of papers focuses on the epidemiology, treatment, and outcomes of hepatitis C virus infection. It covers topics such as antiviral therapy, genetic variation in viral clearance, global epidemiology, liver-related mortality, immune responses, and the impact of comorbidities like HIV and diabetes.",
+   "keywords": [
+    "hepatitis C virus",
+    "chronic hepatitis C",
+    "hepatitis C",
+    "sustained virological response",
+    "ribavirin",
+    "direct-acting antivirals",
+    "HCV genotypes",
+    "HCV genotype 1"
+   ],
+   "works": 133422
+  },
+  {
+   "id": "T10401",
+   "name": "Diabetes Treatment and Management",
+   "subfield": "Endocrinology, Diabetes and Metabolism",
+   "description": "This cluster of papers focuses on the management of diabetes mellitus, with a particular emphasis on cardiovascular outcomes, glucose control, and the use of incretin hormones, SGLT2 inhibitors, and dipeptidyl peptidase-4 inhibitors. It also covers topics such as heart failure, glycemic control, insulin therapy, and clinical guidelines for the treatment of type 2 diabetes.",
+   "keywords": [
+    "GLP-1 receptor agonists",
+    "SGLT2 inhibitors",
+    "metformin",
+    "DPP-4 inhibitors",
+    "antidiabetic drugs",
+    "sulfonylureas",
+    "oral antidiabetic drugs",
+    "diabetes treatment"
+   ],
+   "works": 126806
+  },
+  {
+   "id": "T10746",
+   "name": "Platelet Disorders and Treatments",
+   "subfield": "Hematology",
+   "description": "This cluster of papers focuses on platelet disorders, thrombosis mechanisms, and related conditions such as immune thrombocytopenic purpura and von Willebrand disease. It covers topics including platelet function, hemostasis, inflammation, megakaryocyte development, and the molecular mechanisms underlying thrombus formation.",
+   "keywords": [
+    "platelet aggregation",
+    "idiopathic thrombocytopenic purpura",
+    "platelet activation",
+    "platelet function",
+    "platelets",
+    "von Willebrand factor",
+    "megakaryopoiesis",
+    "platelet adhesion"
+   ],
+   "works": 120268
+  },
+  {
+   "id": "T10459",
+   "name": "Sexual function and dysfunction studies",
+   "subfield": "Psychiatry and Mental health",
+   "description": "This cluster of papers focuses on the epidemiology, risk factors, and management of sexual dysfunction, including erectile dysfunction, female sexual function, hypoactive sexual desire disorder, and the association with cardiovascular disease. It also explores the impact of menopause, psychological interventions, and endothelial function on sexual health. The Global Study of Sexual Attitudes and Behaviors is a prominent research focus.",
+   "keywords": [
+    "erectile dysfunction",
+    "sexual dysfunction",
+    "sexual health",
+    "sexual desire",
+    "sexual function",
+    "female sexual dysfunction",
+    "sexual satisfaction",
+    "phosphodiesterase-5 inhibitors"
+   ],
+   "works": 117852
+  },
+  {
+   "id": "T10684",
+   "name": "Acute Kidney Injury Research",
+   "subfield": "Nephrology",
+   "description": "This cluster of papers focuses on the management, outcomes, and biomarkers of acute kidney injury (AKI), including its association with critical care, sepsis, chronic kidney disease, and contrast-induced nephropathy. The papers also discuss the use of hemodialysis and the prognosis of patients with AKI.",
+   "keywords": [
+    "acute kidney injury",
+    "contrast-induced nephropathy",
+    "renal replacement therapy",
+    "drug-induced nephrotoxicity",
+    "renal ischemia-reperfusion injury",
+    "continuous renal replacement therapy",
+    "neutrophil gelatinase-associated lipocalin",
+    "renal function recovery"
+   ],
+   "works": 116766
+  },
+  {
+   "id": "T10693",
+   "name": "Blood transfusion and management",
+   "subfield": "Hematology",
+   "description": "This cluster of papers focuses on the effects of blood transfusion, including the use of tranexamic acid, in various clinical scenarios such as trauma, cardiac surgery, and critical care. It explores the impact of transfusion on outcomes such as mortality, morbidity, and complications related to anemia and hemorrhage. Additionally, it delves into strategies for perioperative management and the occurrence of transfusion-related acute lung injury.",
+   "keywords": [
+    "blood transfusion",
+    "transfusion safety",
+    "tranexamic acid",
+    "red blood cell transfusion",
+    "autologous blood transfusion",
+    "platelet transfusion",
+    "transfusion reactions",
+    "platelet concentrates"
+   ],
+   "works": 115923
+  },
+  {
+   "id": "T10498",
+   "name": "Migraine and Headache Studies",
+   "subfield": "Clinical Neurology",
+   "description": "This cluster of papers focuses on the pathophysiology, burden, diagnosis, treatment, and prevention of migraine and other headache disorders. It covers topics such as the role of calcitonin gene-related peptide, brain activation, trigeminal nerve function, cortical spreading depression, genetic influences, and various treatment modalities for migraine.",
+   "keywords": [
+    "migraine",
+    "headache",
+    "migraine prophylaxis",
+    "tension-type headache",
+    "chronic migraine",
+    "headache treatment",
+    "cluster headache",
+    "primary headache"
+   ],
+   "works": 112618
+  },
+  {
+   "id": "T10516",
+   "name": "Parathyroid Disorders and Treatments",
+   "subfield": "Nephrology",
+   "description": "This cluster of papers focuses on the complex interplay of FGF23, phosphate, calcification, and mineral metabolism in the context of chronic kidney disease. It explores the role of parathyroid hormone, vascular health, and the impact of Klotho deficiency on mineral homeostasis. The cluster also delves into the implications of hyperphosphatemia and calcification on cardiovascular risk in patients with chronic kidney disease.",
+   "keywords": [
+    "parathyroid hormone",
+    "hypercalcemia",
+    "secondary hyperparathyroidism",
+    "primary hyperparathyroidism",
+    "parathyroidectomy",
+    "hyperphosphatemia",
+    "hypocalcemia",
+    "fibroblast growth factor 23"
+   ],
+   "works": 104349
+  },
+  {
+   "id": "T10598",
+   "name": "Cardiac pacing and defibrillation studies",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on the use of Cardiac Resynchronization Therapy (CRT) in the management of heart failure, particularly in patients with left ventricular dysfunction and ventricular arrhythmias. The cluster covers topics such as the use of implantable cardioverter-defibrillators, echocardiography-guided lead placement, remote monitoring, and the impact of CRT on dyssynchrony and sudden cardiac death.",
+   "keywords": [
+    "cardiac resynchronization therapy",
+    "implantable cardioverter-defibrillator",
+    "cardiac pacing",
+    "cardiac pacemaker",
+    "cardiac implantable electronic devices",
+    "pacemaker implantation",
+    "left bundle branch block",
+    "QRS duration"
+   ],
+   "works": 103981
+  },
+  {
+   "id": "T10697",
+   "name": "Vasculitis and related conditions",
+   "subfield": "Rheumatology",
+   "description": "This cluster of papers focuses on the classification, diagnosis, and management of various vasculitides, including ANCA-associated vasculitis, giant cell arteritis, polyarteritis nodosa, Churg-Strauss syndrome, and Takayasu arteritis. It discusses the use of rituximab and other therapies, as well as EULAR recommendations for the management of vasculitis. Additionally, it explores the role of imaging in diagnosing and monitoring vasculitic diseases.",
+   "keywords": [
+    "vasculitis",
+    "giant cell arteritis",
+    "ANCA-associated vasculitis",
+    "granulomatosis with polyangiitis",
+    "Takayasu arteritis",
+    "IgA vasculitis",
+    "eosinophilic granulomatosis with polyangiitis",
+    "large-vessel vasculitis"
+   ],
+   "works": 103093
+  },
+  {
+   "id": "T10748",
+   "name": "Growth Hormone and Insulin-like Growth Factors",
+   "subfield": "Endocrinology, Diabetes and Metabolism",
+   "description": "This cluster of papers explores the role of insulin-like growth factors (IGFs) in various aspects of health and disease, including their involvement in cancer development and progression, regulation of metabolism, impact on bone growth, neuroendocrine control, and association with conditions like hypopituitarism. It also discusses the signaling pathways and potential therapeutic implications related to IGFs.",
+   "keywords": [
+    "insulin-like growth factor I",
+    "growth hormone",
+    "growth hormone deficiency",
+    "growth hormone therapy",
+    "short stature",
+    "growth hormone secretion",
+    "insulin-like growth factor II",
+    "IGF-1 receptor"
+   ],
+   "works": 101915
+  },
+  {
+   "id": "T11334",
+   "name": "Psychosomatic Disorders and Their Treatments",
+   "subfield": "Psychiatry and Mental health",
+   "description": "This cluster of papers focuses on the study of interoception, the sense of the internal state of the body, and its association with somatic symptoms, including alexithymia, health anxiety, psychogenic nonepileptic seizures, and depersonalization disorder. The papers also explore the relationship between interoception, emotion regulation, and various mental health conditions such as anxiety and dissociation.",
+   "keywords": [
+    "psychosomatic medicine",
+    "psychosomatic disorders",
+    "alexithymia",
+    "conversion disorder",
+    "somatization",
+    "hysteria",
+    "somatoform disorders",
+    "somatic symptom disorder"
+   ],
+   "works": 98031
+  },
+  {
+   "id": "T10675",
+   "name": "Mechanical Circulatory Support Devices",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on advancements in mechanical circulatory support systems, including the use of left ventricular assist devices, extracorporeal membrane oxygenation, and ventricular assist devices for patients with cardiogenic shock and heart failure. It also covers topics such as cardiac resuscitation, percutaneous coronary intervention, thrombosis, and hemodynamic support.",
+   "keywords": [
+    "mechanical circulatory support",
+    "left ventricular assist device",
+    "extracorporeal membrane oxygenation",
+    "cardiogenic shock",
+    "ventricular assist devices",
+    "intra-aortic balloon pump",
+    "bridge to transplant",
+    "venoarterial extracorporeal membrane oxygenation"
+   ],
+   "works": 96720
+  },
+  {
+   "id": "T10625",
+   "name": "Herpesvirus Infections and Treatments",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers covers the epidemiology, pathogenesis, and management of herpesviruses, including herpes zoster, varicella, and herpes simplex. It explores topics such as vaccine development, HIV interaction, antiviral drugs, immune response, encephalitis, and postherpetic neuralgia.",
+   "keywords": [
+    "herpes simplex virus",
+    "herpes zoster",
+    "herpes simplex virus type 1",
+    "varicella-zoster virus",
+    "herpes simplex virus type 2",
+    "varicella",
+    "acyclovir",
+    "postherpetic neuralgia"
+   ],
+   "works": 94689
+  },
+  {
+   "id": "T10728",
+   "name": "Pulmonary Hypertension Research and Treatments",
+   "subfield": "Pulmonary and Respiratory Medicine",
+   "description": "This cluster of papers focuses on the diagnosis, assessment, and treatment guidelines for pulmonary hypertension, with an emphasis on right heart assessment using echocardiography. It covers topics such as survival prediction, vascular remodeling, endothelial dysfunction, BMPR2 mutations, and hemodynamic classification.",
+   "keywords": [
+    "pulmonary hypertension",
+    "pulmonary arterial hypertension",
+    "pulmonary vascular resistance",
+    "idiopathic pulmonary arterial hypertension",
+    "chronic thromboembolic pulmonary hypertension",
+    "right heart failure",
+    "pulmonary vascular remodeling",
+    "right heart catheterization"
+   ],
+   "works": 94275
+  },
+  {
+   "id": "T10870",
+   "name": "Interstitial Lung Diseases and Idiopathic Pulmonary Fibrosis",
+   "subfield": "Pulmonary and Respiratory Medicine",
+   "description": "This cluster of papers focuses on the diagnosis, management, and pathogenesis of idiopathic pulmonary fibrosis (IPF), a progressive and fatal lung disease. It covers evidence-based guidelines, cellular and molecular mechanisms of fibrosis, therapeutic translation, treatment trials with drugs like pirfenidone and nintedanib, as well as the role of myofibroblasts and epithelial-mesenchymal transition in lung fibrosis.",
+   "keywords": [
+    "idiopathic pulmonary fibrosis",
+    "interstitial lung disease",
+    "pulmonary fibrosis",
+    "hypersensitivity pneumonitis",
+    "antifibrotic therapy",
+    "high-resolution computed tomography",
+    "drug-induced lung injury",
+    "usual interstitial pneumonia"
+   ],
+   "works": 94029
+  },
+  {
+   "id": "T10417",
+   "name": "Lung Cancer Treatments and Mutations",
+   "subfield": "Pulmonary and Respiratory Medicine",
+   "description": "This cluster of papers focuses on the advancements in lung cancer research, particularly in understanding EGFR and ALK mutations, targeted therapy, resistance mechanisms to tyrosine kinase inhibitors, clinical trials evaluating different treatment regimens, genomic profiling for personalized medicine, and the development of treatment guidelines based on molecular biomarkers. The research also explores the concept of oncogene addiction and its implications for targeted therapies.",
+   "keywords": [
+    "non-small cell lung cancer",
+    "EGFR tyrosine kinase inhibitors",
+    "EGFR mutation",
+    "gefitinib",
+    "advanced non-small cell lung cancer",
+    "osimertinib",
+    "erlotinib",
+    "EGFR-mutant non-small cell lung cancer"
+   ],
+   "works": 93701
+  },
+  {
+   "id": "T11001",
+   "name": "Renin-Angiotensin System Studies",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers explores the role of the Renin-Angiotensin System in cardiovascular physiology and pathology, focusing on the mechanisms of action, physiological effects, and pathological implications of components such as Angiotensin, Renin, ACE2, and Angiotensin II Receptors. It covers topics including hypertension, cardiovascular disease, inflammation, fibrosis, and the potential therapeutic interventions such as Aliskiren in conditions like diabetes.",
+   "keywords": [
+    "renin-angiotensin system",
+    "angiotensin II",
+    "angiotensin II type 1 receptor",
+    "angiotensin-converting enzyme",
+    "plasma renin activity",
+    "renin",
+    "renin-angiotensin-aldosterone system",
+    "angiotensin II type 2 receptor"
+   ],
+   "works": 92347
+  },
+  {
+   "id": "T11153",
+   "name": "Streptococcal Infections and Treatments",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers focuses on the global burden, pathogenesis, and management of Group A Streptococcal diseases, including necrotizing fasciitis, rheumatic heart disease, and soft tissue infections. It covers topics such as streptococcal virulence factors, immunoglobulin therapy, and the epidemiology of streptococcal infections.",
+   "keywords": [
+    "Streptococcus pyogenes",
+    "rheumatic fever",
+    "necrotizing fasciitis",
+    "streptococcal infection",
+    "rheumatic heart disease",
+    "scarlet fever",
+    "acute rheumatic fever",
+    "pharyngitis"
+   ],
+   "works": 90499
+  },
+  {
+   "id": "T10665",
+   "name": "Cystic Fibrosis Research Advances",
+   "subfield": "Pulmonary and Respiratory Medicine",
+   "description": "This cluster of papers encompasses a wide range of topics related to cystic fibrosis, including therapeutic interventions, pulmonary infections, bronchiectasis, primary ciliary dyskinesia, mutation analysis, lung disease, microbiota, and nutrition management. The papers cover advancements in understanding the genetic and molecular basis of cystic fibrosis, as well as the development of novel treatments and management strategies.",
+   "keywords": [
+    "cystic fibrosis",
+    "bronchiectasis",
+    "CFTR",
+    "CFTR mutations",
+    "primary ciliary dyskinesia",
+    "CFTR modulators",
+    "CFTR modulator therapy",
+    "F508del mutation"
+   ],
+   "works": 90150
+  },
+  {
+   "id": "T12421",
+   "name": "Adrenal Hormones and Disorders",
+   "subfield": "Endocrinology, Diabetes and Metabolism",
+   "description": "This cluster of papers focuses on the diagnosis and management of adrenal insufficiency, particularly in the context of septic shock and autoimmune polyendocrine syndrome. It covers topics such as corticosteroid therapy, hydrocortisone treatment, AIRE gene mutations, cortisol response, and the impact on the hypothalamic-pituitary-adrenal axis. The research also delves into glucocorticoid replacement, autoimmune disorders, and endocrine dysfunction.",
+   "keywords": [
+    "adrenal insufficiency",
+    "ACTH",
+    "adrenal cortex",
+    "Addison's disease",
+    "ACTH stimulation test",
+    "cortisone",
+    "adrenal crisis",
+    "adrenal function"
+   ],
+   "works": 89348
+  },
+  {
+   "id": "T10549",
+   "name": "Neonatal Respiratory Health Research",
+   "subfield": "Pulmonary and Respiratory Medicine",
+   "description": "This cluster of papers focuses on neonatal lung development, respiratory morbidity, and the impact of various interventions on outcomes for preterm infants. It covers topics such as bronchopulmonary dysplasia, lung stem cells, surfactant proteins, pulmonary hypertension, and the use of antenatal corticosteroids. The research also delves into neonatal resuscitation, oxygen saturation targeting, and the potential for lung regeneration in this population.",
+   "keywords": [
+    "bronchopulmonary dysplasia",
+    "respiratory distress syndrome",
+    "neonatal resuscitation",
+    "pulmonary surfactant",
+    "surfactant therapy",
+    "neonatal respiratory distress",
+    "neonatal respiratory distress syndrome",
+    "lung development"
+   ],
+   "works": 86765
+  },
+  {
+   "id": "T10570",
+   "name": "Drug Transport and Resistance Mechanisms",
+   "subfield": "Oncology",
+   "description": "This cluster of papers explores the mechanisms of multidrug resistance in cancer, focusing on the role of ATP-dependent transporters, P-glycoprotein, bile acids, ABC transporters, and drug efflux pumps. It also delves into the involvement of nuclear receptors, metabolic regulation, and the impact on intestinal barrier function.",
+   "keywords": [
+    "P-glycoprotein",
+    "ABC transporters",
+    "drug efflux",
+    "ABCG2",
+    "drug transporters",
+    "MDR1",
+    "efflux pumps",
+    "MRP1"
+   ],
+   "works": 84606
+  },
+  {
+   "id": "T11112",
+   "name": "Viral Infections and Immunology Research",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers focuses on the aetiology, diagnosis, and management of myocarditis, with an emphasis on viral infections such as enterovirus and poliovirus. It discusses the use of cardiovascular magnetic resonance and endomyocardial biopsy in diagnosing myocarditis, as well as the role of immunosuppressive therapy in its management. The cluster also covers the epidemiology of viral myocarditis and its association with inflammatory cardiomyopathy and heart failure.",
+   "keywords": [
+    "poliomyelitis",
+    "myocarditis",
+    "poliovirus",
+    "viral myocarditis",
+    "enterovirus",
+    "hand, foot and mouth disease",
+    "oral polio vaccine",
+    "polio eradication"
+   ],
+   "works": 78080
+  },
+  {
+   "id": "T10925",
+   "name": "Spinal Cord Injury Research",
+   "subfield": "Clinical Neurology",
+   "description": "This cluster of papers focuses on the pathophysiology, epidemiology, and treatment strategies for spinal cord injury. It covers topics such as neurological classification, recovery priorities, epidemiological trends, inflammation, neuroprotection, physical activity participation, and clinical trial guidelines. The papers also explore neuromodulation, functional recovery, and the role of various therapeutic interventions in improving outcomes for individuals with spinal cord injury.",
+   "keywords": [
+    "spinal cord injury",
+    "paraplegia",
+    "traumatic spinal cord injury",
+    "tetraplegia",
+    "cervical spinal cord injury",
+    "locomotor recovery",
+    "incomplete spinal cord injury",
+    "acute spinal cord injury"
+   ],
+   "works": 77696
+  },
+  {
+   "id": "T10854",
+   "name": "Bipolar Disorder and Treatment",
+   "subfield": "Psychiatry and Mental health",
+   "description": "This cluster of papers covers a wide range of topics related to bipolar disorder, including prevalence, natural history, neurobiology, genetics, cognitive function, treatment guidelines, neuroimaging findings, suicide risk, inflammation, and medication effects. The papers provide insights into the epidemiology and management of bipolar disorder.",
+   "keywords": [
+    "bipolar disorder",
+    "lithium",
+    "mood stabilizers",
+    "mania",
+    "bipolar I disorder",
+    "bipolar depression",
+    "manic episodes",
+    "bipolar II disorder"
+   ],
+   "works": 76824
+  },
+  {
+   "id": "T11253",
+   "name": "Nail Diseases and Treatments",
+   "subfield": "Dermatology",
+   "description": "This cluster of papers covers the epidemiological trends, diagnosis, and management of fungal skin infections, with a focus on onychomycosis, dermatophytes, Malassezia, and associated conditions such as seborrheic dermatitis and tinea capitis. It also discusses antifungal susceptibility patterns, virulence traits, and the global burden of these infections.",
+   "keywords": [
+    "dermatophytosis",
+    "dermatophytes",
+    "fungal skin infection",
+    "onychomycosis",
+    "tinea capitis",
+    "Trichophyton rubrum",
+    "Trichophyton mentagrophytes",
+    "nail disorders"
+   ],
+   "works": 76164
+  },
+  {
+   "id": "T11660",
+   "name": "Blood groups and transfusion",
+   "subfield": "Hematology",
+   "description": "This cluster of papers explores the relationship between blood group variants, such as ABO and Rh, and various diseases including autoimmune hemolytic anemia, fetal anemia, COVID-19 susceptibility, and pancreatic cancer. It also investigates the impact of alloimmunization and RBC antigens on transfusion outcomes and disease risk.",
+   "keywords": [
+    "hemolytic disease of the newborn",
+    "ABO blood group system",
+    "Rh isoimmunization",
+    "Rh blood group system",
+    "blood group antigens",
+    "alloimmunization",
+    "autoimmune hemolytic anemia",
+    "direct antiglobulin test"
+   ],
+   "works": 76039
+  },
+  {
+   "id": "T11067",
+   "name": "Colorectal Cancer Treatments and Studies",
+   "subfield": "Oncology",
+   "description": "This cluster of papers represents advancements in the research and treatment of colorectal cancer, focusing on topics such as the use of cetuximab and bevacizumab, the impact of KRAS and BRAF mutations, the efficacy of chemotherapy, and the development of molecular subtypes for precision medicine. It also explores the role of EGFR inhibitors and the molecular mechanisms underlying metastatic colorectal cancer.",
+   "keywords": [
+    "metastatic colorectal cancer",
+    "oxaliplatin",
+    "irinotecan",
+    "colorectal liver metastases",
+    "cetuximab",
+    "leucovorin",
+    "advanced colorectal cancer",
+    "anti-EGFR therapy"
+   ],
+   "works": 75560
+  },
+  {
+   "id": "T10583",
+   "name": "Cancer-related Molecular Pathways",
+   "subfield": "Oncology",
+   "description": "This cluster of papers focuses on the p53 signaling network, exploring its role in cell cycle regulation, tumor suppression, cancer therapy, apoptosis, and the impact of mutations. The papers cover various aspects of p53-MDM2 interaction, cyclin-dependent kinases, and the intricate mechanisms of p53 regulation in the context of cancer research.",
+   "keywords": [
+    "MDM2",
+    "retinoblastoma protein",
+    "cyclin-dependent kinases",
+    "cyclin-dependent kinase inhibitors",
+    "mutant p53",
+    "CDK2",
+    "tumor suppressor proteins",
+    "E2F1"
+   ],
+   "works": 75338
+  },
+  {
+   "id": "T10163",
+   "name": "Metal complexes synthesis and properties",
+   "subfield": "Oncology",
+   "description": "This cluster of papers explores the advancements and challenges in platinum-based cancer chemotherapy, focusing on the molecular mechanisms of action, resistance, and toxicity associated with platinum drugs. It also delves into the development of new metal complexes as potential therapeutics, DNA interactions of metal compounds, and the exploration of ruthenium compounds as anticancer agents.",
+   "keywords": [
+    "DNA binding",
+    "platinum(II) complexes",
+    "zinc(II) complexes",
+    "DNA intercalation",
+    "platinum complexes",
+    "DNA cleavage",
+    "ruthenium(II) complexes",
+    "platinum anticancer drugs"
+   ],
+   "works": 74190
+  },
+  {
+   "id": "T10526",
+   "name": "HIV/AIDS drug development and treatment",
+   "subfield": "Infectious Diseases",
+   "description": "This cluster of papers focuses on the efficacy and safety of antiretroviral therapy for HIV infection, including the development of drug resistance, the use of integrase inhibitors and reverse transcriptase inhibitors, and the adverse effects such as hepatotoxicity and renal toxicity. It also explores the use of nucleoside analogues for treating viral diseases.",
+   "keywords": [
+    "antiretroviral therapy",
+    "non-nucleoside reverse transcriptase inhibitors",
+    "zidovudine",
+    "antiretroviral drugs",
+    "nucleoside reverse transcriptase inhibitors",
+    "viral suppression",
+    "efavirenz",
+    "antiretroviral resistance"
+   ],
+   "works": 72180
+  },
+  {
+   "id": "T11139",
+   "name": "Gout, Hyperuricemia, Uric Acid",
+   "subfield": "Nephrology",
+   "description": "This cluster of papers explores the role of uric acid in cardiovascular and renal health, focusing on its association with hyperuricemia, gout, hypertension, endothelial dysfunction, and metabolic syndrome. The papers also discuss the impact of xanthine oxidase inhibitors and the inflammatory pathways related to uric acid.",
+   "keywords": [
+    "hyperuricemia",
+    "gout",
+    "serum uric acid",
+    "uric acid",
+    "urate-lowering therapy",
+    "allopurinol",
+    "gout treatment",
+    "tophi"
+   ],
+   "works": 64712
+  },
+  {
+   "id": "T11092",
+   "name": "Spondyloarthritis Studies and Treatments",
+   "subfield": "Rheumatology",
+   "description": "This cluster of papers focuses on the classification, diagnosis, and treatment of spondyloarthritis, including ankylosing spondylitis and psoriatic arthritis. It covers the development of new classification criteria, assessment of disease activity, use of biologic therapies such as tumor necrosis factor inhibitors and interleukin-17 inhibitors, and the impact of genetic factors like HLA-B27.",
+   "keywords": [
+    "ankylosing spondylitis",
+    "psoriatic arthritis",
+    "axial spondyloarthritis",
+    "spondyloarthritis",
+    "HLA-B27",
+    "sacroiliitis",
+    "reactive arthritis",
+    "enthesitis"
+   ],
+   "works": 62392
+  },
+  {
+   "id": "T11064",
+   "name": "Antiplatelet Therapy and Cardiovascular Diseases",
+   "subfield": "Cardiology and Cardiovascular Medicine",
+   "description": "This cluster of papers focuses on the use of antiplatelet therapy, including aspirin, clopidogrel, and ticagrelor, in the prevention of cardiovascular events, especially in the context of percutaneous coronary intervention. It also explores the impact of genetic polymorphisms, platelet reactivity, and bleeding risk on the efficacy and safety of antiplatelet drugs.",
+   "keywords": [
+    "antiplatelet therapy",
+    "aspirin",
+    "clopidogrel",
+    "bleeding risk",
+    "dual antiplatelet therapy",
+    "ticagrelor",
+    "antiplatelet agents",
+    "P2Y12 inhibitors"
+   ],
+   "works": 61864
+  },
+  {
+   "id": "T11735",
+   "name": "Peripheral Neuropathies and Disorders",
+   "subfield": "Clinical Neurology",
+   "description": "This cluster of papers focuses on Guillain-Barré syndrome and related neuropathies, including chronic inflammatory demyelinating polyradiculoneuropathy. It covers the pathogenesis, diagnosis, treatment, and prognosis of these neurological disorders, with a particular emphasis on the role of intravenous immunoglobulin therapy. The cluster also explores the autoimmune nature of these neuropathies and their association with specific antibodies and infections.",
+   "keywords": [
+    "Guillain-Barré syndrome",
+    "chronic inflammatory demyelinating polyneuropathy",
+    "autoimmune neuropathy",
+    "polyneuropathy",
+    "Miller Fisher syndrome",
+    "demyelinating neuropathy",
+    "acute inflammatory demyelinating polyneuropathy",
+    "post-infectious neuropathy"
+   ],
+   "works": 57985
+  }
+ ]
+}

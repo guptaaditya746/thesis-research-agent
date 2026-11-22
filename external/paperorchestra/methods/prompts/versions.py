@@ -38,6 +38,10 @@ Example. Not allowed: "This analysis records no treatment of X in Y." Allowed: l
 PROMPT_SETS["v1n"] = PROMPT_SETS["v1"] | {k: PROMPT_SETS["v1"][k] + "\n" + NOTES_RULE
                                           for k in ("literature", "section", "refine")}
 
+# paperfactory v2 (22 Nov 2026): v1n + ONE repair call for numbers found in no input text (papers with numbers:
+# synthesis and argument v2 genres). v1n stays for the papers written before.
+PROMPT_SETS["v1nn"] = PROMPT_SETS["v1n"] | {"number_repair": writer_v2.NUMBER_REPAIR_V2}
+
 
 def prompt_set(version: str) -> dict:
     if version not in PROMPT_SETS:

@@ -50,22 +50,22 @@ def test_leak_with_nothing_tagged_is_skipped(tmp_path: Path) -> None:
     assert r["trials"] == 0 and r["skipped"]
 
 
-def test_a_batch_that_never_passes_keeps_its_good_papers(tmp_path: Path) -> None:
-    ents = {"entities": [{"id": k, **v} for k, v in PILOT["entities"].items()]}
+def test_a_batch_that_never_passes_keeps_its_good_papers(tmp_path: Path, pilot_focus) -> None:
+    from paperfactory.tests.test_world import ents_answer, model_entities
+    ents = model_entities(PILOT)
     papers = copy.deepcopy(list(PILOT["papers"].values()))
     bad = copy.deepcopy(papers)
-    bad[1]["decoys"][0] = [bad[1]["claims"][0][0], "rejects", bad[1]["claims"][0][2]]
-    if bad[1]["claims"][0][1] == "rejects":
-        bad[1]["decoys"][0][1] = "relies_on"
+    bad[1]["claims"][1] = [bad[1]["claims"][1][0], bad[1]["claims"][1][1], "NOPE"]   # code cannot fix this one
     seen = []
 
     def call(role, step, system, user, schema, check=None, cache=True):
         seen.append((step, cache))
-        return copy.deepcopy(ents) if step == "world:entities" else {"papers": copy.deepcopy(bad)}
+        return ents_answer(step, ents) if step.startswith("world:entities") else {"papers": copy.deepcopy(bad)}
     w = world.draft(config.Settings("law", "argument", papers=3, out=str(tmp_path)), LAW, ARG, call)
-    assert list(w["dropped_papers"]) == ["LAW-02"] and sorted(w["papers"]) == ["LAW-01", "LAW-03"]
+    # LAW-02 dropped; the refill papers (LAW-04..) repeat the pilot papers here, so they are dropped too
+    assert "LAW-02" in w["dropped_papers"] and sorted(w["papers"]) == ["LAW-01", "LAW-03"]
     assert world.check(w, LAW, ARG, n_papers=2) == []
-    assert [c for st, c in seen if "repair" in st] == [False, False]           # repairs never replay the cache
+    assert not any(c for st, c in seen if "repair" in st)                        # repairs never replay the cache
 
 
 def test_one_paper_that_breaks_the_check_does_not_stop_the_step(tmp_path: Path, monkeypatch) -> None:

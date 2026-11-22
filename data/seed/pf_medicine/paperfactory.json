@@ -1,0 +1,3817 @@
+{
+ "source": "paperfactory",
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/runs/paperfactory/qwen40-medicine",
+ "field": "medicine",
+ "genre": "argument",
+ "planned": 40,
+ "papers": [
+  {
+   "id": "MED-01",
+   "title": "Divergent Efficacy of Tyrosine Kinase Inhibitors in Type 2 Diabetes: A Comparative Analysis of BRUMON-6 and ZIMOR-3",
+   "issue": "The conflicting results regarding the efficacy of tyrosine kinase inhibitors in type 2 diabetes management.",
+   "thesis": "While the BRUMON-6 trial demonstrated a significant benefit of tukrapurtinib, the subsequent ZIMOR-3 trial found no effect of the same treatment, suggesting potential variability in patient response or trial design.",
+   "facts": [
+    {
+     "id": "TR32-finds_benefit-T3",
+     "kind": "claim",
+     "subject": "the BRUMON-6 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       434,
+       637
+      ],
+      [
+       5213,
+       5345
+      ],
+      [
+       6755,
+       6918
+      ],
+      [
+       10094,
+       10229
+      ]
+     ]
+    },
+    {
+     "id": "TR37-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the ZIMOR-3 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       434,
+       637
+      ],
+      [
+       5346,
+       5462
+      ],
+      [
+       7400,
+       7555
+      ],
+      [
+       10094,
+       10229
+      ]
+     ]
+    },
+    {
+     "id": "TR37-contradicts-TR32",
+     "kind": "claim",
+     "subject": "the ZIMOR-3 trial",
+     "relation": "contradicts",
+     "object": "the BRUMON-6 trial",
+     "spans": [
+      [
+       7049,
+       7113
+      ],
+      [
+       7682,
+       7833
+      ],
+      [
+       10094,
+       10229
+      ]
+     ]
+    },
+    {
+     "id": "TR32-finds_benefit-T4",
+     "kind": "decoy",
+     "subject": "the BRUMON-6 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       434,
+       637
+      ],
+      [
+       5213,
+       5345
+      ],
+      [
+       6919,
+       7048
+      ],
+      [
+       10094,
+       10229
+      ]
+     ]
+    },
+    {
+     "id": "TR37-finds_no_effect-T4",
+     "kind": "decoy",
+     "subject": "the ZIMOR-3 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       434,
+       637
+      ],
+      [
+       5346,
+       5462
+      ],
+      [
+       7556,
+       7681
+      ],
+      [
+       10094,
+       10229
+      ]
+     ]
+    },
+    {
+     "id": "TR37-contradicts-TR31",
+     "kind": "decoy",
+     "subject": "the ZIMOR-3 trial",
+     "relation": "contradicts",
+     "object": "the SUTHO-5 trial",
+     "spans": [
+      [
+       6517,
+       6580
+      ],
+      [
+       7834,
+       7961
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-06",
+   "title": "Divergent Efficacy of SGLT2 Inhibitors in Early-Stage Type 2 Diabetes",
+   "issue": "The KUSOBRER-3 and MOBIMEN-5 trials report conflicting results regarding the efficacy of SGLT2 inhibitors, with the latter explicitly contradicting the former's predecessor.",
+   "thesis": "While the KUSOBRER-3 trial found a benefit for potrogliflozin, the MOBIMEN-5 trial found no effect for katrogresgliflozin, highlighting inconsistency in SGLT2 inhibitor outcomes across different trial designs and patient populations.",
+   "facts": [
+    {
+     "id": "TR3-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the DROME-5 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       485,
+       594
+      ],
+      [
+       2242,
+       2386
+      ],
+      [
+       6199,
+       6339
+      ],
+      [
+       10307,
+       10441
+      ]
+     ]
+    },
+    {
+     "id": "TR68-finds_no_effect-T2",
+     "kind": "claim",
+     "subject": "the MOBIMEN-5 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       485,
+       594
+      ],
+      [
+       2242,
+       2386
+      ],
+      [
+       7159,
+       7251
+      ],
+      [
+       10442,
+       10585
+      ]
+     ]
+    },
+    {
+     "id": "TR68-finds_no_effect-T1",
+     "kind": "claim",
+     "subject": "the MOBIMEN-5 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       485,
+       594
+      ],
+      [
+       2242,
+       2386
+      ],
+      [
+       7252,
+       7331
+      ],
+      [
+       10442,
+       10585
+      ]
+     ]
+    },
+    {
+     "id": "TR3-finds_benefit-T2",
+     "kind": "decoy",
+     "subject": "the DROME-5 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       485,
+       594
+      ],
+      [
+       2242,
+       2386
+      ],
+      [
+       6340,
+       6546
+      ],
+      [
+       10307,
+       10441
+      ]
+     ]
+    },
+    {
+     "id": "TR68-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the MOBIMEN-5 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": []
+    },
+    {
+     "id": "TR69-contradicts-TR68",
+     "kind": "decoy",
+     "subject": "the KAVINON-5 trial",
+     "relation": "contradicts",
+     "object": "the MOBIMEN-5 trial",
+     "spans": [
+      [
+       595,
+       714
+      ],
+      [
+       2387,
+       2526
+      ],
+      [
+       8157,
+       8254
+      ],
+      [
+       9027,
+       9191
+      ],
+      [
+       9342,
+       9518
+      ],
+      [
+       9519,
+       9665
+      ],
+      [
+       10586,
+       10736
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-07",
+   "title": "Tyrosine Kinase Inhibitors in Type 2 Diabetes: A Re-evaluation of Efficacy",
+   "issue": "The STABROR-5 and PEGROSTOL-7 trials provide evidence on the efficacy of tyrosine kinase inhibitors, specifically tukrapurtinib and drebrabestinib.",
+   "thesis": "Both the STABROR-5 and PEGROSTOL-7 trials found no effect of tukrapurtinib and drebrabestinib on the main outcome in type 2 diabetes, suggesting a lack of efficacy for this drug class in this condition.",
+   "facts": [
+    {
+     "id": "TR58-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the STABROR-5 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       868,
+       985
+      ],
+      [
+       7439,
+       7558
+      ],
+      [
+       9268,
+       9405
+      ],
+      [
+       13268,
+       13425
+      ]
+     ]
+    },
+    {
+     "id": "TR73-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the PEGROSTOL-7 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       9406,
+       9519
+      ],
+      [
+       13268,
+       13425
+      ]
+     ]
+    },
+    {
+     "id": "TR58-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the STABROR-5 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       868,
+       985
+      ],
+      [
+       7559,
+       7681
+      ],
+      [
+       9406,
+       9519
+      ],
+      [
+       13268,
+       13425
+      ]
+     ]
+    },
+    {
+     "id": "TR58-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the STABROR-5 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": []
+    },
+    {
+     "id": "TR73-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the PEGROSTOL-7 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       9268,
+       9405
+      ],
+      [
+       13268,
+       13425
+      ]
+     ]
+    },
+    {
+     "id": "TR73-finds_no_effect-T2",
+     "kind": "decoy",
+     "subject": "the PEGROSTOL-7 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MED-08",
+   "title": "Safety and Efficacy of Tyrosine Kinase Inhibitors: Contradictory Findings",
+   "issue": "The SEGER-8 and MABRA-6 trials present conflicting data on the safety and efficacy of tyrosine kinase inhibitors, with one reporting harm and the other no effect.",
+   "thesis": "The SEGER-8 trial found harm from tukrapurtinib, whereas the MABRA-6 trial found no effect of drebrabestinib, indicating a potential safety signal for one agent but not the other.",
+   "facts": [
+    {
+     "id": "TR45-finds_harm-T3",
+     "kind": "claim",
+     "subject": "the SEGER-8 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       462,
+       648
+      ],
+      [
+       2556,
+       2658
+      ],
+      [
+       3327,
+       3458
+      ],
+      [
+       5557,
+       5695
+      ],
+      [
+       6223,
+       6407
+      ],
+      [
+       7941,
+       8029
+      ],
+      [
+       9306,
+       9473
+      ],
+      [
+       10076,
+       10183
+      ]
+     ]
+    },
+    {
+     "id": "TR48-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the MABRA-6 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       649,
+       833
+      ],
+      [
+       2803,
+       2894
+      ],
+      [
+       5557,
+       5695
+      ]
+     ]
+    },
+    {
+     "id": "TR45-finds_harm-T4",
+     "kind": "claim",
+     "subject": "the SEGER-8 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       462,
+       648
+      ],
+      [
+       2556,
+       2658
+      ],
+      [
+       5557,
+       5695
+      ],
+      [
+       6408,
+       6528
+      ],
+      [
+       7941,
+       8029
+      ],
+      [
+       9306,
+       9473
+      ],
+      [
+       10076,
+       10183
+      ]
+     ]
+    },
+    {
+     "id": "TR45-finds_harm-T1",
+     "kind": "decoy",
+     "subject": "the SEGER-8 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       462,
+       648
+      ],
+      [
+       2556,
+       2658
+      ],
+      [
+       5557,
+       5695
+      ],
+      [
+       6529,
+       6659
+      ],
+      [
+       7941,
+       8029
+      ],
+      [
+       9306,
+       9473
+      ],
+      [
+       10076,
+       10183
+      ]
+     ]
+    },
+    {
+     "id": "TR48-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the MABRA-6 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       649,
+       833
+      ],
+      [
+       2803,
+       2894
+      ],
+      [
+       3327,
+       3458
+      ],
+      [
+       5557,
+       5695
+      ],
+      [
+       8030,
+       8104
+      ],
+      [
+       10184,
+       10265
+      ]
+     ]
+    },
+    {
+     "id": "TR48-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the MABRA-6 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       649,
+       833
+      ],
+      [
+       2803,
+       2894
+      ],
+      [
+       5557,
+       5695
+      ],
+      [
+       8030,
+       8104
+      ],
+      [
+       10184,
+       10265
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-10",
+   "title": "Early Trials of SGLT2 Inhibitors: Consistent Benefits Observed",
+   "issue": "The LETHITHE-8 and THAGRAM-3 trials, both conducted in the mid-2010s, report consistent benefits for SGLT2 inhibitors.",
+   "thesis": "Both the LETHITHE-8 and THAGRAM-3 trials found a benefit of katrogresgliflozin, supporting the early positive signal for this SGLT2 inhibitor in type 2 diabetes management.",
+   "facts": [
+    {
+     "id": "TR34-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the LETHITHE-8 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       555,
+       719
+      ],
+      [
+       2939,
+       3152
+      ],
+      [
+       6761,
+       6912
+      ],
+      [
+       7349,
+       7463
+      ],
+      [
+       10714,
+       10853
+      ]
+     ]
+    },
+    {
+     "id": "TR71-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the THAGRAM-3 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       555,
+       719
+      ],
+      [
+       2939,
+       3152
+      ],
+      [
+       5873,
+       6011
+      ],
+      [
+       7349,
+       7463
+      ],
+      [
+       10714,
+       10853
+      ]
+     ]
+    },
+    {
+     "id": "TR34-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the LETHITHE-8 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       720,
+       872
+      ],
+      [
+       6913,
+       7037
+      ],
+      [
+       7600,
+       7721
+      ],
+      [
+       11051,
+       11190
+      ]
+     ]
+    },
+    {
+     "id": "TR34-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the LETHITHE-8 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       720,
+       872
+      ],
+      [
+       7038,
+       7205
+      ],
+      [
+       7600,
+       7721
+      ],
+      [
+       11051,
+       11190
+      ]
+     ]
+    },
+    {
+     "id": "TR71-finds_benefit-T1",
+     "kind": "decoy",
+     "subject": "the THAGRAM-3 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       720,
+       872
+      ],
+      [
+       6012,
+       6210
+      ],
+      [
+       7600,
+       7721
+      ],
+      [
+       11051,
+       11190
+      ]
+     ]
+    },
+    {
+     "id": "TR71-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the THAGRAM-3 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       720,
+       872
+      ],
+      [
+       6211,
+       6443
+      ],
+      [
+       7600,
+       7721
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-11",
+   "title": "Early SGLT2 Inhibitor Efficacy and the 2025 Contradiction",
+   "issue": "The consistency of early SGLT2 inhibitor trial results with recent contradictory findings.",
+   "thesis": "The KUSOBRER-3 trial established a benefit for potrogliflozin, while the KATHA-5 trial confirmed benefits for both SGLT2 inhibitors, a narrative that is complicated by the NESENAM-7 trial's contradiction of KATHA-5.",
+   "facts": [
+    {
+     "id": "TR1-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the KUSOBRER-3 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       908,
+       1150
+      ],
+      [
+       3363,
+       3487
+      ],
+      [
+       4542,
+       4810
+      ],
+      [
+       6063,
+       6202
+      ],
+      [
+       8250,
+       8378
+      ],
+      [
+       12689,
+       12846
+      ],
+      [
+       13989,
+       14128
+      ],
+      [
+       15334,
+       15481
+      ]
+     ]
+    },
+    {
+     "id": "TR12-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the KATHA-5 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       6959,
+       7112
+      ],
+      [
+       9345,
+       9463
+      ],
+      [
+       9942,
+       10148
+      ],
+      [
+       12689,
+       12846
+      ]
+     ]
+    },
+    {
+     "id": "TR12-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the KATHA-5 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       6959,
+       7112
+      ],
+      [
+       9464,
+       9625
+      ],
+      [
+       9942,
+       10148
+      ],
+      [
+       12689,
+       12846
+      ]
+     ]
+    },
+    {
+     "id": "TR1-finds_benefit-T2",
+     "kind": "decoy",
+     "subject": "the KUSOBRER-3 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       6203,
+       6370
+      ],
+      [
+       8531,
+       8738
+      ],
+      [
+       12689,
+       12846
+      ],
+      [
+       13989,
+       14128
+      ]
+     ]
+    },
+    {
+     "id": "TR12-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the KATHA-5 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       7113,
+       7211
+      ],
+      [
+       9626,
+       9778
+      ],
+      [
+       14129,
+       14241
+      ]
+     ]
+    },
+    {
+     "id": "TR14-contradicts-TR13",
+     "kind": "decoy",
+     "subject": "the NESENAM-7 trial",
+     "relation": "contradicts",
+     "object": "the GOGRE-3 trial",
+     "spans": [
+      [
+       7516,
+       7680
+      ],
+      [
+       10700,
+       10843
+      ],
+      [
+       10928,
+       11196
+      ],
+      [
+       11197,
+       11406
+      ],
+      [
+       11657,
+       11883
+      ],
+      [
+       14242,
+       14378
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-12",
+   "title": "Tyrosine Kinase Inhibitors in Type 2 Diabetes: A Mixed Bag",
+   "issue": "The efficacy of tyrosine kinase inhibitors tukrapurtinib and drebrabestinib in recent trials.",
+   "thesis": "The DREGREL-9 trial found no effect of tukrapurtinib, whereas the KRETHEBRU-7 trial found a benefit for drebrabestinib, suggesting divergent outcomes for this drug class.",
+   "facts": [
+    {
+     "id": "TR20-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the DREGREL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       2705,
+       2810
+      ],
+      [
+       4984,
+       5145
+      ],
+      [
+       7246,
+       7360
+      ],
+      [
+       8712,
+       8814
+      ],
+      [
+       12804,
+       12930
+      ]
+     ]
+    },
+    {
+     "id": "TR7-finds_benefit-T4",
+     "kind": "claim",
+     "subject": "the KRETHEBRU-7 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       2811,
+       2915
+      ],
+      [
+       6075,
+       6228
+      ],
+      [
+       7738,
+       7869
+      ],
+      [
+       8992,
+       9110
+      ],
+      [
+       11421,
+       11547
+      ]
+     ]
+    },
+    {
+     "id": "TR20-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the DREGREL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       5146,
+       5288
+      ],
+      [
+       8992,
+       9110
+      ],
+      [
+       12804,
+       12930
+      ]
+     ]
+    },
+    {
+     "id": "TR20-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the DREGREL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       5289,
+       5392
+      ],
+      [
+       7361,
+       7447
+      ],
+      [
+       9414,
+       9513
+      ],
+      [
+       12804,
+       12930
+      ]
+     ]
+    },
+    {
+     "id": "TR7-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the KRETHEBRU-7 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       6229,
+       6336
+      ],
+      [
+       7870,
+       7974
+      ],
+      [
+       8712,
+       8814
+      ],
+      [
+       11421,
+       11547
+      ],
+      [
+       12931,
+       13041
+      ]
+     ]
+    },
+    {
+     "id": "TR7-finds_benefit-T1",
+     "kind": "decoy",
+     "subject": "the KRETHEBRU-7 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       656,
+       808
+      ],
+      [
+       9414,
+       9513
+      ],
+      [
+       11421,
+       11547
+      ],
+      [
+       12931,
+       13041
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-13",
+   "title": "Conflicting Signals for Potrogliflozin in 2019",
+   "issue": "Disagreement between the KAKRES-3 and TEZUDOR-7 trials regarding the safety and efficacy of potrogliflozin.",
+   "thesis": "The KAKRES-3 trial reported harm from potrogliflozin, directly conflicting with the TEZUDOR-7 trial which found a benefit for the same treatment.",
+   "facts": [
+    {
+     "id": "TR78-finds_harm-T1",
+     "kind": "claim",
+     "subject": "the KAKRES-3 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       620,
+       756
+      ],
+      [
+       2965,
+       3137
+      ],
+      [
+       6340,
+       6443
+      ],
+      [
+       6444,
+       6635
+      ]
+     ]
+    },
+    {
+     "id": "TR8-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the TEZUDOR-7 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       620,
+       756
+      ],
+      [
+       3138,
+       3273
+      ],
+      [
+       6636,
+       6739
+      ]
+     ]
+    },
+    {
+     "id": "TR78-finds_harm-T2",
+     "kind": "claim",
+     "subject": "the KAKRES-3 trial",
+     "relation": "finds_harm",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       3498,
+       3682
+      ],
+      [
+       8058,
+       8216
+      ]
+     ]
+    },
+    {
+     "id": "TR78-finds_harm-T3",
+     "kind": "decoy",
+     "subject": "the KAKRES-3 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       3498,
+       3682
+      ],
+      [
+       8217,
+       8345
+      ]
+     ]
+    },
+    {
+     "id": "TR8-finds_benefit-T2",
+     "kind": "decoy",
+     "subject": "the TEZUDOR-7 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       3498,
+       3682
+      ],
+      [
+       8348,
+       8464
+      ],
+      [
+       8597,
+       8773
+      ]
+     ]
+    },
+    {
+     "id": "TR8-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the TEZUDOR-7 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       3498,
+       3682
+      ],
+      [
+       8597,
+       8773
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-14",
+   "title": "Null Results for SGLT2 Inhibitors in 2013 and 2020",
+   "issue": "The lack of observed benefit for SGLT2 inhibitors in the TEGOL-9 and GELEVO-8 trials.",
+   "thesis": "Both the TEGOL-9 and GELEVO-8 trials found no effect of katrogresgliflozin, indicating a consistent null result for this specific agent across different trial designs and years.",
+   "facts": [
+    {
+     "id": "TR44-finds_no_effect-T2",
+     "kind": "claim",
+     "subject": "the TEGOL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       770,
+       894
+      ],
+      [
+       2566,
+       2684
+      ],
+      [
+       9206,
+       9416
+      ],
+      [
+       11813,
+       11903
+      ],
+      [
+       13394,
+       13559
+      ],
+      [
+       14527,
+       14611
+      ]
+     ]
+    },
+    {
+     "id": "TR79-finds_no_effect-T2",
+     "kind": "claim",
+     "subject": "the GELEVO-8 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       770,
+       894
+      ],
+      [
+       2685,
+       2831
+      ],
+      [
+       10577,
+       10694
+      ],
+      [
+       11813,
+       11903
+      ],
+      [
+       13394,
+       13559
+      ],
+      [
+       14527,
+       14611
+      ],
+      [
+       14847,
+       15036
+      ]
+     ]
+    },
+    {
+     "id": "TR44-finds_no_effect-T1",
+     "kind": "claim",
+     "subject": "the TEGOL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       895,
+       1061
+      ],
+      [
+       9536,
+       9678
+      ],
+      [
+       11330,
+       11555
+      ],
+      [
+       11904,
+       12053
+      ],
+      [
+       13680,
+       13778
+      ],
+      [
+       14727,
+       14845
+      ]
+     ]
+    },
+    {
+     "id": "TR44-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the TEGOL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       895,
+       1061
+      ],
+      [
+       9821,
+       9942
+      ],
+      [
+       11330,
+       11555
+      ],
+      [
+       11904,
+       12053
+      ],
+      [
+       13680,
+       13778
+      ],
+      [
+       14727,
+       14845
+      ]
+     ]
+    },
+    {
+     "id": "TR79-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the GELEVO-8 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       895,
+       1061
+      ],
+      [
+       10869,
+       10988
+      ],
+      [
+       11904,
+       12053
+      ]
+     ]
+    },
+    {
+     "id": "TR79-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the GELEVO-8 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "MED-16",
+   "title": "The 2024 GOGRE-3 Trial: A Re-evaluation of Tukrapurtinib and Drebrabestinib Efficacy",
+   "issue": "Discrepancies in recent tyrosine kinase inhibitor trials for type 2 diabetes",
+   "thesis": "The GOGRE-3 trial (2024) confirms the benefit of tukrapurtinib and drebrabestinib, while the RATHIRA-6 trial (2015) found no effect for tukrapurtinib, highlighting a temporal shift in efficacy data.",
+   "facts": [
+    {
+     "id": "TR13-finds_benefit-T3",
+     "kind": "claim",
+     "subject": "the GOGRE-3 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       618,
+       772
+      ],
+      [
+       2796,
+       2952
+      ],
+      [
+       5783,
+       5887
+      ],
+      [
+       8658,
+       8735
+      ],
+      [
+       10463,
+       10611
+      ],
+      [
+       12071,
+       12232
+      ]
+     ]
+    },
+    {
+     "id": "TR13-finds_benefit-T4",
+     "kind": "claim",
+     "subject": "the GOGRE-3 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       618,
+       772
+      ],
+      [
+       2953,
+       3137
+      ],
+      [
+       5888,
+       5994
+      ],
+      [
+       8736,
+       8850
+      ],
+      [
+       12071,
+       12232
+      ]
+     ]
+    },
+    {
+     "id": "TR18-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the RATHIRA-6 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       472,
+       617
+      ],
+      [
+       2206,
+       2344
+      ],
+      [
+       4849,
+       5038
+      ],
+      [
+       7028,
+       7149
+      ],
+      [
+       10152,
+       10325
+      ],
+      [
+       11918,
+       12070
+      ]
+     ]
+    },
+    {
+     "id": "TR13-finds_benefit-T1",
+     "kind": "decoy",
+     "subject": "the GOGRE-3 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       618,
+       772
+      ],
+      [
+       8851,
+       8959
+      ]
+     ]
+    },
+    {
+     "id": "TR18-finds_no_effect-T4",
+     "kind": "decoy",
+     "subject": "the RATHIRA-6 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       472,
+       617
+      ],
+      [
+       5039,
+       5194
+      ],
+      [
+       7150,
+       7232
+      ],
+      [
+       11918,
+       12070
+      ]
+     ]
+    },
+    {
+     "id": "TR14-contradicts-TR12",
+     "kind": "decoy",
+     "subject": "the NESENAM-7 trial",
+     "relation": "contradicts",
+     "object": "the KATHA-5 trial",
+     "spans": [
+      [
+       773,
+       917
+      ],
+      [
+       6194,
+       6417
+      ],
+      [
+       7935,
+       8022
+      ],
+      [
+       9605,
+       9736
+      ],
+      [
+       10839,
+       10935
+      ],
+      [
+       10936,
+       11099
+      ],
+      [
+       12233,
+       12378
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-17",
+   "title": "Divergent Outcomes for SGLT2 Inhibitors: DUGRA-6 vs KANIME-2",
+   "issue": "Inconsistent safety profiles of SGLT2 inhibitors in mid-2020s trials",
+   "thesis": "The DUGRA-6 trial (2023) reported harm from potrogliflozin, whereas the KANIME-2 trial (2017) found no effect for katrogresgliflozin, suggesting class-specific variability in adverse events.",
+   "facts": [
+    {
+     "id": "TR40-finds_harm-T1",
+     "kind": "claim",
+     "subject": "the DUGRA-6 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       452,
+       554
+      ],
+      [
+       2515,
+       2695
+      ],
+      [
+       7444,
+       7631
+      ],
+      [
+       8487,
+       8583
+      ],
+      [
+       10451,
+       10650
+      ],
+      [
+       11372,
+       11562
+      ]
+     ]
+    },
+    {
+     "id": "TR76-finds_no_effect-T2",
+     "kind": "claim",
+     "subject": "the KANIME-2 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       555,
+       745
+      ],
+      [
+       2515,
+       2695
+      ],
+      [
+       6892,
+       7072
+      ],
+      [
+       8241,
+       8366
+      ],
+      [
+       8778,
+       8896
+      ],
+      [
+       10790,
+       10923
+      ],
+      [
+       11372,
+       11562
+      ]
+     ]
+    },
+    {
+     "id": "TR40-finds_harm-T2",
+     "kind": "claim",
+     "subject": "the DUGRA-6 trial",
+     "relation": "finds_harm",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       452,
+       554
+      ],
+      [
+       7632,
+       7783
+      ],
+      [
+       8241,
+       8366
+      ],
+      [
+       8778,
+       8896
+      ],
+      [
+       10451,
+       10650
+      ],
+      [
+       11372,
+       11562
+      ]
+     ]
+    },
+    {
+     "id": "TR40-finds_harm-T3",
+     "kind": "decoy",
+     "subject": "the DUGRA-6 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       7784,
+       8005
+      ],
+      [
+       9029,
+       9114
+      ],
+      [
+       10451,
+       10650
+      ],
+      [
+       11372,
+       11562
+      ]
+     ]
+    },
+    {
+     "id": "TR76-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the KANIME-2 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       555,
+       745
+      ],
+      [
+       7073,
+       7258
+      ],
+      [
+       8487,
+       8583
+      ],
+      [
+       11372,
+       11562
+      ]
+     ]
+    },
+    {
+     "id": "TR68-finds_no_effect-T2",
+     "kind": "decoy",
+     "subject": "the MOBIMEN-5 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       555,
+       745
+      ],
+      [
+       8159,
+       8240
+      ],
+      [
+       8778,
+       8896
+      ],
+      [
+       10790,
+       10923
+      ],
+      [
+       11372,
+       11562
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-19",
+   "title": "Early vs Late Phase Efficacy: KRORIVEL-6 and LEGES-9 Trials",
+   "issue": "Consistency of SGLT2 inhibitor benefits across different trial sizes and years",
+   "thesis": "Both the KRORIVEL-6 (2021) and LEGES-9 (2016) trials found a benefit of katrogresgliflozin, supporting the robustness of this SGLT2 inhibitor's efficacy in type 2 diabetes management.",
+   "facts": [
+    {
+     "id": "TR10-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the KRORIVEL-6 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       757,
+       909
+      ],
+      [
+       3457,
+       3664
+      ],
+      [
+       8550,
+       8716
+      ],
+      [
+       9493,
+       9611
+      ],
+      [
+       12560,
+       12690
+      ],
+      [
+       13734,
+       13890
+      ],
+      [
+       14328,
+       14505
+      ],
+      [
+       14506,
+       14694
+      ],
+      [
+       14695,
+       14849
+      ]
+     ]
+    },
+    {
+     "id": "TR33-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the LEGES-9 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       757,
+       909
+      ],
+      [
+       3457,
+       3664
+      ],
+      [
+       5700,
+       5822
+      ],
+      [
+       7729,
+       7908
+      ],
+      [
+       9493,
+       9611
+      ],
+      [
+       12560,
+       12690
+      ],
+      [
+       13734,
+       13890
+      ],
+      [
+       14328,
+       14505
+      ],
+      [
+       14506,
+       14694
+      ],
+      [
+       14695,
+       14849
+      ]
+     ]
+    },
+    {
+     "id": "TR10-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the KRORIVEL-6 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       8717,
+       8833
+      ],
+      [
+       10206,
+       10307
+      ]
+     ]
+    },
+    {
+     "id": "TR10-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the KRORIVEL-6 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       8834,
+       9026
+      ],
+      [
+       10429,
+       10550
+      ]
+     ]
+    },
+    {
+     "id": "TR33-finds_benefit-T1",
+     "kind": "decoy",
+     "subject": "the LEGES-9 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       5700,
+       5822
+      ],
+      [
+       7909,
+       8039
+      ],
+      [
+       10206,
+       10307
+      ]
+     ]
+    },
+    {
+     "id": "TR3-finds_benefit-T1",
+     "kind": "decoy",
+     "subject": "the DROME-5 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       7199,
+       7348
+      ],
+      [
+       10206,
+       10307
+      ],
+      [
+       13452,
+       13556
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-20",
+   "title": "Safety Signals in Tyrosine Kinase Inhibitors: DRURON-4 and NITOROR-5",
+   "issue": "Emerging safety concerns for tukrapurtinib and drebrabestinib in recent trials",
+   "thesis": "The DRURON-4 trial (2013) found no effect for tukrapurtinib, while the NITOROR-5 trial (2021) found harm from drebrabestinib, suggesting that while early efficacy was neutral, later safety profiles may be concerning for specific TKIs.",
+   "facts": [
+    {
+     "id": "TR72-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the DRURON-4 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       605,
+       729
+      ],
+      [
+       7618,
+       7707
+      ],
+      [
+       9913,
+       10038
+      ],
+      [
+       12937,
+       13088
+      ]
+     ]
+    },
+    {
+     "id": "TR80-finds_harm-T4",
+     "kind": "claim",
+     "subject": "the NITOROR-5 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       605,
+       729
+      ],
+      [
+       3000,
+       3213
+      ],
+      [
+       8841,
+       8967
+      ],
+      [
+       9913,
+       10038
+      ],
+      [
+       12388,
+       12519
+      ],
+      [
+       12937,
+       13088
+      ]
+     ]
+    },
+    {
+     "id": "TR72-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the DRURON-4 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": []
+    },
+    {
+     "id": "TR72-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the DRURON-4 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": []
+    },
+    {
+     "id": "TR80-finds_harm-T3",
+     "kind": "decoy",
+     "subject": "the NITOROR-5 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       3000,
+       3213
+      ],
+      [
+       8968,
+       9162
+      ],
+      [
+       12388,
+       12519
+      ]
+     ]
+    },
+    {
+     "id": "TR58-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the STABROR-5 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       7117,
+       7224
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-21",
+   "title": "Divergent Safety Profiles of Tyrosine Kinase Inhibitors in Late-Stage Type 2 Diabetes Trials",
+   "issue": "The safety and efficacy of tyrosine kinase inhibitors (tukrapurtinib and drebrabestinib) in recent large-scale trials.",
+   "thesis": "Recent trials (2019, 2025) indicate that while some TKIs show no effect, others may pose significant safety risks, highlighting a need for careful patient selection.",
+   "facts": [
+    {
+     "id": "TR36-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the ZITHEM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       353,
+       572
+      ],
+      [
+       11675,
+       11866
+      ]
+     ]
+    },
+    {
+     "id": "TR36-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the ZITHEM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       353,
+       572
+      ],
+      [
+       11675,
+       11866
+      ]
+     ]
+    },
+    {
+     "id": "TR70-finds_harm-T3",
+     "kind": "claim",
+     "subject": "the BRATHU-4 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       573,
+       771
+      ],
+      [
+       11675,
+       11866
+      ]
+     ]
+    },
+    {
+     "id": "TR36-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the ZITHEM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       353,
+       572
+      ],
+      [
+       11675,
+       11866
+      ]
+     ]
+    },
+    {
+     "id": "TR70-finds_harm-T4",
+     "kind": "decoy",
+     "subject": "the BRATHU-4 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       573,
+       771
+      ],
+      [
+       11675,
+       11866
+      ]
+     ]
+    },
+    {
+     "id": "TR70-finds_harm-T1",
+     "kind": "decoy",
+     "subject": "the BRATHU-4 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       573,
+       771
+      ],
+      [
+       11675,
+       11866
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-22",
+   "title": "Efficacy of SGLT2 Inhibitors in Mid-2010s Randomised Controlled Trials",
+   "issue": "The therapeutic benefit of SGLT2 inhibitors (potrogliflozin and katrogresgliflozin) in trials conducted between 2015 and 2019.",
+   "thesis": "Trials from this period consistently demonstrate a beneficial effect of SGLT2 inhibitors on primary outcomes in type 2 diabetes.",
+   "facts": [
+    {
+     "id": "TR22-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       604,
+       761
+      ],
+      [
+       8038,
+       8209
+      ],
+      [
+       9807,
+       9954
+      ],
+      [
+       10595,
+       10825
+      ],
+      [
+       11352,
+       11558
+      ]
+     ]
+    },
+    {
+     "id": "TR22-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       604,
+       761
+      ],
+      [
+       8038,
+       8209
+      ],
+      [
+       9807,
+       9954
+      ],
+      [
+       10595,
+       10825
+      ],
+      [
+       11352,
+       11558
+      ]
+     ]
+    },
+    {
+     "id": "TR74-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the SOKROS-7 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       604,
+       761
+      ],
+      [
+       8038,
+       8209
+      ],
+      [
+       9638,
+       9806
+      ],
+      [
+       10595,
+       10825
+      ],
+      [
+       11352,
+       11558
+      ]
+     ]
+    },
+    {
+     "id": "TR22-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the LEFOKOL-5 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       9807,
+       9954
+      ]
+     ]
+    },
+    {
+     "id": "TR74-finds_benefit-T2",
+     "kind": "decoy",
+     "subject": "the SOKROS-7 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       604,
+       761
+      ],
+      [
+       8038,
+       8209
+      ],
+      [
+       9638,
+       9806
+      ],
+      [
+       10595,
+       10825
+      ],
+      [
+       11352,
+       11558
+      ]
+     ]
+    },
+    {
+     "id": "TR74-finds_benefit-T4",
+     "kind": "decoy",
+     "subject": "the SOKROS-7 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       9638,
+       9806
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-23",
+   "title": "Contradictory Findings on SGLT2 Inhibitor and Tyrosine Kinase Inhibitor Safety: A Comparative Review of BRIGRAHIN-4 and BORAVEN-8",
+   "issue": "The conflicting safety data regarding SGLT2 inhibitors in the KATHA-5 (2023) and GOGRE-3 (2024) trials.",
+   "thesis": "The GOGRE-3 trial contradicts the KATHA-5 trial, reporting harm where the earlier trial reported benefit, suggesting potential long-term safety concerns for SGLT2 inhibitors.",
+   "facts": [
+    {
+     "id": "TR54-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the BORAVEN-8 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       2811,
+       3014
+      ],
+      [
+       7026,
+       7131
+      ],
+      [
+       14203,
+       14376
+      ]
+     ]
+    },
+    {
+     "id": "TR54-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the BORAVEN-8 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       14203,
+       14376
+      ]
+     ]
+    },
+    {
+     "id": "TR75-finds_harm-T1",
+     "kind": "claim",
+     "subject": "the BRIGRAHIN-4 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       2606,
+       2810
+      ],
+      [
+       5919,
+       6100
+      ],
+      [
+       14203,
+       14376
+      ]
+     ]
+    },
+    {
+     "id": "TR54-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the BORAVEN-8 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       14203,
+       14376
+      ]
+     ]
+    },
+    {
+     "id": "TR75-finds_harm-T2",
+     "kind": "decoy",
+     "subject": "the BRIGRAHIN-4 trial",
+     "relation": "finds_harm",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       14203,
+       14376
+      ]
+     ]
+    },
+    {
+     "id": "TR75-finds_harm-T3",
+     "kind": "decoy",
+     "subject": "the BRIGRAHIN-4 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       14203,
+       14376
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-24",
+   "title": "Neutral Outcomes for Tyrosine Kinase Inhibitors in 2023-2025 Diabetes Management",
+   "issue": "The lack of significant efficacy for tyrosine kinase inhibitors in the most recent trials (2023, 2025).",
+   "thesis": "Recent evidence suggests that tyrosine kinase inhibitors do not provide a clear benefit over standard care in type 2 diabetes, as indicated by null results in the MOTIFO-7 and THOKAM-7 trials.",
+   "facts": [
+    {
+     "id": "TR26-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the MOTIFO-7 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       827,
+       1000
+      ]
+     ]
+    },
+    {
+     "id": "TR26-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the MOTIFO-7 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       827,
+       1000
+      ]
+     ]
+    },
+    {
+     "id": "TR28-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the THOKAM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       1001,
+       1162
+      ]
+     ]
+    },
+    {
+     "id": "TR26-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the MOTIFO-7 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       827,
+       1000
+      ]
+     ]
+    },
+    {
+     "id": "TR28-finds_no_effect-T4",
+     "kind": "decoy",
+     "subject": "the THOKAM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       1001,
+       1162
+      ]
+     ]
+    },
+    {
+     "id": "TR28-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the THOKAM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       1001,
+       1162
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-26",
+   "title": "Divergent Efficacy of Tyrosine Kinase Inhibitors in Type 2 Diabetes: A Comparative Analysis of GREREBRAS-3 and PUKADRA-2",
+   "issue": "The conflicting results regarding the efficacy of tyrosine kinase inhibitors (tukrapurtinib and drebrabestinib) in type 2 diabetes management.",
+   "thesis": "While the GREREBRAS-3 trial (2016) reported no effect for both tyrosine kinase inhibitors, the subsequent PUKADRA-2 trial (2015) found a benefit for tukrapurtinib, suggesting potential variability in trial design or patient population that influences outcome detection.",
+   "facts": [
+    {
+     "id": "TR19-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the GREREBRAS-3 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       725,
+       860
+      ],
+      [
+       1233,
+       1482
+      ],
+      [
+       2950,
+       3087
+      ],
+      [
+       3564,
+       3796
+      ],
+      [
+       5209,
+       5333
+      ],
+      [
+       7292,
+       7407
+      ],
+      [
+       9131,
+       9425
+      ],
+      [
+       9507,
+       9713
+      ],
+      [
+       10804,
+       10963
+      ],
+      [
+       11110,
+       11304
+      ]
+     ]
+    },
+    {
+     "id": "TR19-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the GREREBRAS-3 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       725,
+       860
+      ],
+      [
+       2950,
+       3087
+      ],
+      [
+       5209,
+       5333
+      ],
+      [
+       7408,
+       7533
+      ],
+      [
+       10804,
+       10963
+      ]
+     ]
+    },
+    {
+     "id": "TR46-finds_benefit-T3",
+     "kind": "claim",
+     "subject": "the PUKADRA-2 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       725,
+       860
+      ],
+      [
+       1233,
+       1482
+      ],
+      [
+       3088,
+       3186
+      ],
+      [
+       5881,
+       5965
+      ],
+      [
+       6317,
+       6475
+      ],
+      [
+       9507,
+       9713
+      ],
+      [
+       10804,
+       10963
+      ]
+     ]
+    },
+    {
+     "id": "TR19-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the GREREBRAS-3 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       7534,
+       7680
+      ]
+     ]
+    },
+    {
+     "id": "TR46-finds_benefit-T4",
+     "kind": "decoy",
+     "subject": "the PUKADRA-2 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       6476,
+       6634
+      ]
+     ]
+    },
+    {
+     "id": "TR12-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the KATHA-5 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       1233,
+       1482
+      ],
+      [
+       8472,
+       8524
+      ],
+      [
+       8525,
+       8717
+      ],
+      [
+       9507,
+       9713
+      ],
+      [
+       10132,
+       10311
+      ],
+      [
+       10804,
+       10963
+      ],
+      [
+       11305,
+       11488
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-28",
+   "title": "Re-evaluating Tyrosine Kinase Inhibitors: Consistent Lack of Efficacy in DROKRAL-8 and KROROM-7",
+   "issue": "The consistent failure of tyrosine kinase inhibitors to show benefit in type 2 diabetes across mid-phase trials.",
+   "thesis": "Both the DROKRAL-8 (2018) and KROROM-7 (2014) trials found no effect for tukrapurtinib and drebrabestinib, reinforcing the hypothesis that this drug class is ineffective for glycemic control in type 2 diabetes.",
+   "facts": [
+    {
+     "id": "TR21-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the DROKRAL-8 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       885,
+       999
+      ],
+      [
+       9941,
+       10014
+      ],
+      [
+       10609,
+       10719
+      ],
+      [
+       13921,
+       14006
+      ]
+     ]
+    },
+    {
+     "id": "TR21-finds_no_effect-T4",
+     "kind": "claim",
+     "subject": "the DROKRAL-8 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       885,
+       999
+      ],
+      [
+       10015,
+       10072
+      ],
+      [
+       10609,
+       10719
+      ],
+      [
+       13921,
+       14006
+      ]
+     ]
+    },
+    {
+     "id": "TR59-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the KROROM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       722,
+       820
+      ],
+      [
+       8652,
+       8787
+      ],
+      [
+       8902,
+       8998
+      ],
+      [
+       10441,
+       10533
+      ],
+      [
+       13783,
+       13867
+      ]
+     ]
+    },
+    {
+     "id": "TR21-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the DROKRAL-8 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       1000,
+       1106
+      ],
+      [
+       10073,
+       10157
+      ],
+      [
+       10609,
+       10719
+      ]
+     ]
+    },
+    {
+     "id": "TR59-finds_no_effect-T4",
+     "kind": "decoy",
+     "subject": "the KROROM-7 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       722,
+       820
+      ],
+      [
+       8788,
+       8901
+      ],
+      [
+       8902,
+       8998
+      ],
+      [
+       10441,
+       10533
+      ],
+      [
+       13783,
+       13867
+      ]
+     ]
+    },
+    {
+     "id": "TR48-finds_no_effect-T4",
+     "kind": "decoy",
+     "subject": "the MABRA-6 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       821,
+       884
+      ],
+      [
+       9354,
+       9439
+      ],
+      [
+       10534,
+       10608
+      ],
+      [
+       13868,
+       13920
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-29",
+   "title": "The Efficacy Paradox of Potrogliflozin: Contradictory Outcomes in DRETE-4 and GRUTHU-9",
+   "issue": "The conflicting efficacy data for the SGLT2 inhibitor potrogliflozin in type 2 diabetes.",
+   "thesis": "The DRETE-4 trial (2012) found no effect for potrogliflozin, while the GRUTHU-9 trial (2020) found a benefit, creating a direct conflict in the evidence base for this specific treatment.",
+   "facts": [
+    {
+     "id": "TR57-finds_no_effect-T1",
+     "kind": "claim",
+     "subject": "the DRETE-4 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       340,
+       422
+      ],
+      [
+       2687,
+       2811
+      ],
+      [
+       8223,
+       8374
+      ],
+      [
+       8845,
+       9013
+      ]
+     ]
+    },
+    {
+     "id": "TR57-finds_no_effect-T2",
+     "kind": "claim",
+     "subject": "the DRETE-4 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": []
+    },
+    {
+     "id": "TR9-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the GRUTHU-9 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       423,
+       468
+      ],
+      [
+       2812,
+       2956
+      ],
+      [
+       7486,
+       7635
+      ],
+      [
+       8223,
+       8374
+      ],
+      [
+       8845,
+       9013
+      ]
+     ]
+    },
+    {
+     "id": "TR57-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the DRETE-4 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       5552,
+       5693
+      ],
+      [
+       6433,
+       6586
+      ]
+     ]
+    },
+    {
+     "id": "TR9-finds_benefit-T2",
+     "kind": "decoy",
+     "subject": "the GRUTHU-9 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": []
+    },
+    {
+     "id": "TR44-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the TEGOL-9 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       598,
+       712
+      ],
+      [
+       2957,
+       3067
+      ],
+      [
+       7027,
+       7131
+      ],
+      [
+       8223,
+       8374
+      ],
+      [
+       8845,
+       9013
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-30",
+   "title": "Safety Concerns with Tyrosine Kinase Inhibitors: Harm Signals in LABREL-3 and MUPAZIR-5",
+   "issue": "The safety profile of tyrosine kinase inhibitors in type 2 diabetes, specifically regarding adverse outcomes.",
+   "thesis": "Both the LABREL-3 (2013) and MUPAZIR-5 (2018) trials reported harm from tukrapurtinib and drebrabestinib, suggesting a consistent safety signal for this drug class that warrants further investigation.",
+   "facts": [
+    {
+     "id": "TR16-finds_harm-T3",
+     "kind": "claim",
+     "subject": "the LABREL-3 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       548,
+       689
+      ],
+      [
+       3113,
+       3275
+      ],
+      [
+       7445,
+       7560
+      ],
+      [
+       8673,
+       8926
+      ],
+      [
+       9449,
+       9551
+      ],
+      [
+       13382,
+       13477
+      ]
+     ]
+    },
+    {
+     "id": "TR16-finds_harm-T4",
+     "kind": "claim",
+     "subject": "the LABREL-3 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       548,
+       689
+      ],
+      [
+       3113,
+       3275
+      ],
+      [
+       7561,
+       7740
+      ],
+      [
+       9552,
+       9662
+      ],
+      [
+       13478,
+       13571
+      ]
+     ]
+    },
+    {
+     "id": "TR49-finds_harm-T3",
+     "kind": "claim",
+     "subject": "the MUPAZIR-5 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       774,
+       866
+      ],
+      [
+       3113,
+       3275
+      ],
+      [
+       9449,
+       9551
+      ],
+      [
+       9663,
+       9817
+      ],
+      [
+       9818,
+       10052
+      ],
+      [
+       13382,
+       13477
+      ],
+      [
+       14051,
+       14265
+      ]
+     ]
+    },
+    {
+     "id": "TR16-finds_harm-T1",
+     "kind": "decoy",
+     "subject": "the LABREL-3 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       7843,
+       8101
+      ],
+      [
+       10442,
+       10543
+      ],
+      [
+       13572,
+       13692
+      ]
+     ]
+    },
+    {
+     "id": "TR49-finds_harm-T4",
+     "kind": "decoy",
+     "subject": "the MUPAZIR-5 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       774,
+       866
+      ],
+      [
+       3113,
+       3275
+      ],
+      [
+       9552,
+       9662
+      ],
+      [
+       9663,
+       9817
+      ],
+      [
+       13478,
+       13571
+      ],
+      [
+       14051,
+       14265
+      ]
+     ]
+    },
+    {
+     "id": "TR45-finds_harm-T3",
+     "kind": "decoy",
+     "subject": "the SEGER-8 trial",
+     "relation": "finds_harm",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       690,
+       773
+      ],
+      [
+       8577,
+       8672
+      ],
+      [
+       8673,
+       8926
+      ],
+      [
+       8927,
+       9182
+      ],
+      [
+       13382,
+       13477
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-31",
+   "title": "Divergent Signals for Tyrosine Kinase Inhibitors: NITOROR-5 and PANER-8",
+   "issue": "Whether tukrapurtinib and drebrabestinib provide metabolic benefits or cause harm in type 2 diabetes, specifically addressing conflicting signals from recent large-scale trials.",
+   "thesis": "The NITOROR-5 trial (2020) and PANER-8 trial (2018) demonstrate that while tukrapurtinib shows no significant effect on primary outcomes, drebrabestinib is associated with harm, contradicting earlier optimistic findings.",
+   "facts": [
+    {
+     "id": "TR65-finds_no_effect-T3",
+     "kind": "claim",
+     "subject": "the HEVUNUR-2 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       630,
+       864
+      ],
+      [
+       8993,
+       9103
+      ],
+      [
+       10792,
+       10917
+      ]
+     ]
+    },
+    {
+     "id": "TR65-finds_harm-T4",
+     "kind": "claim",
+     "subject": "the HEVUNUR-2 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       630,
+       864
+      ],
+      [
+       2830,
+       3000
+      ],
+      [
+       8698,
+       8825
+      ],
+      [
+       11813,
+       11990
+      ]
+     ]
+    },
+    {
+     "id": "TR77-finds_benefit-T4",
+     "kind": "claim",
+     "subject": "the PANER-8 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       460,
+       562
+      ],
+      [
+       2707,
+       2829
+      ],
+      [
+       6952,
+       7108
+      ]
+     ]
+    },
+    {
+     "id": "TR65-finds_no_effect-T1",
+     "kind": "decoy",
+     "subject": "the HEVUNUR-2 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       630,
+       864
+      ],
+      [
+       5992,
+       6267
+      ],
+      [
+       9208,
+       9308
+      ]
+     ]
+    },
+    {
+     "id": "TR77-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the PANER-8 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       460,
+       562
+      ],
+      [
+       7109,
+       7271
+      ]
+     ]
+    },
+    {
+     "id": "TR37-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the ZIMOR-3 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       630,
+       864
+      ],
+      [
+       7903,
+       8011
+      ],
+      [
+       10792,
+       10917
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-32",
+   "title": "Early Phase Evidence for SGLT2 Inhibitors: Insights from THOGREBROS-3 and BAZAN-2",
+   "issue": "The initial safety and efficacy profiles of SGLT2 inhibitors (potrogliflozin and katrogresgliflozin) in type 2 diabetes as established by early 2010s trials.",
+   "thesis": "The THOGREBROS-3 (2012) and BAZAN-2 (2016) trials consistently found benefits for both potrogliflozin and katrogresgliflozin, establishing a positive early evidence base for this drug class.",
+   "facts": [
+    {
+     "id": "TR29-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the THOGREBROS-3 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       650,
+       848
+      ],
+      [
+       11640,
+       11808
+      ]
+     ]
+    },
+    {
+     "id": "TR29-finds_benefit-T2",
+     "kind": "claim",
+     "subject": "the THOGREBROS-3 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       650,
+       848
+      ],
+      [
+       11640,
+       11808
+      ]
+     ]
+    },
+    {
+     "id": "TR5-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the BAZAN-2 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       1021,
+       1237
+      ],
+      [
+       11809,
+       11995
+      ]
+     ]
+    },
+    {
+     "id": "TR29-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the THOGREBROS-3 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       6943,
+       7025
+      ]
+     ]
+    },
+    {
+     "id": "TR29-finds_benefit-T4",
+     "kind": "decoy",
+     "subject": "the THOGREBROS-3 trial",
+     "relation": "finds_benefit",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       849,
+       1020
+      ]
+     ]
+    },
+    {
+     "id": "TR5-finds_benefit-T2",
+     "kind": "decoy",
+     "subject": "the BAZAN-2 trial",
+     "relation": "finds_benefit",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       1021,
+       1237
+      ],
+      [
+       7810,
+       7936
+      ],
+      [
+       10103,
+       10245
+      ],
+      [
+       11492,
+       11639
+      ],
+      [
+       11809,
+       11995
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-35",
+   "title": "Long-term Safety and Efficacy of SGLT2 Inhibitors: BAKROSTO-3 and HOPEM-6 Trials",
+   "issue": "The long-term safety profile of SGLT2 inhibitors (potrogliflozin and katrogresgliflozin) as assessed in the BAKROSTO-3 (2018) and HOPEM-6 (2025) trials.",
+   "thesis": "The BAKROSTO-3 trial found no effect for potrogliflozin, whereas the HOPEM-6 trial found harm for katrogresgliflozin, indicating potential long-term safety concerns for this drug class.",
+   "facts": [
+    {
+     "id": "TR35-finds_no_effect-T1",
+     "kind": "claim",
+     "subject": "the BAKROSTO-3 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       441,
+       642
+      ],
+      [
+       2304,
+       2521
+      ],
+      [
+       4957,
+       5092
+      ],
+      [
+       6774,
+       6918
+      ],
+      [
+       7015,
+       7168
+      ],
+      [
+       9074,
+       9191
+      ],
+      [
+       13279,
+       13428
+      ]
+     ]
+    },
+    {
+     "id": "TR35-finds_no_effect-T2",
+     "kind": "claim",
+     "subject": "the BAKROSTO-3 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       441,
+       642
+      ],
+      [
+       2304,
+       2521
+      ],
+      [
+       4957,
+       5092
+      ],
+      [
+       6919,
+       7014
+      ],
+      [
+       7015,
+       7168
+      ],
+      [
+       9074,
+       9191
+      ],
+      [
+       13279,
+       13428
+      ]
+     ]
+    },
+    {
+     "id": "TR42-finds_harm-T2",
+     "kind": "claim",
+     "subject": "the HOPEM-6 trial",
+     "relation": "finds_harm",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       643,
+       789
+      ],
+      [
+       2522,
+       2719
+      ],
+      [
+       3307,
+       3536
+      ],
+      [
+       5741,
+       5922
+      ],
+      [
+       8091,
+       8236
+      ],
+      [
+       8450,
+       8574
+      ],
+      [
+       9192,
+       9251
+      ],
+      [
+       12059,
+       12245
+      ],
+      [
+       13429,
+       13636
+      ]
+     ]
+    },
+    {
+     "id": "TR35-finds_no_effect-T3",
+     "kind": "decoy",
+     "subject": "the BAKROSTO-3 trial",
+     "relation": "finds_no_effect",
+     "object": "tukrapurtinib",
+     "spans": []
+    },
+    {
+     "id": "TR35-finds_no_effect-T4",
+     "kind": "decoy",
+     "subject": "the BAKROSTO-3 trial",
+     "relation": "finds_no_effect",
+     "object": "drebrabestinib",
+     "spans": []
+    },
+    {
+     "id": "TR42-finds_harm-T1",
+     "kind": "decoy",
+     "subject": "the HOPEM-6 trial",
+     "relation": "finds_harm",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       643,
+       789
+      ],
+      [
+       2522,
+       2719
+      ],
+      [
+       3307,
+       3536
+      ],
+      [
+       5741,
+       5922
+      ],
+      [
+       8311,
+       8449
+      ],
+      [
+       8450,
+       8574
+      ],
+      [
+       9192,
+       9251
+      ],
+      [
+       12059,
+       12245
+      ],
+      [
+       13429,
+       13636
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "MED-43",
+   "title": "Safety and Efficacy Conflicts in SGLT2 Inhibitor Trials: A Case Study of TODOSTAR-5 and HEVUNUR-2",
+   "issue": "The TODOSTAR-5 trial (2022) found benefits for potrogliflozin and katrogresgliflozin, while the HEVUNUR-2 trial (2020) found no effect for potrogliflozin and harm from drebrabestinib. This paper analyzes the conflicting signals regarding safety and efficacy.",
+   "thesis": "The conflict between the beneficial outcomes in TODOSTAR-5 and the neutral/harmful outcomes in HEVUNUR-2 for overlapping treatments highlights the need for standardized safety monitoring protocols in SGLT2 inhibitor trials to resolve apparent contradictions in clinical data.",
+   "facts": [
+    {
+     "id": "TR53-finds_benefit-T1",
+     "kind": "claim",
+     "subject": "the TODOSTAR-5 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       467,
+       589
+      ],
+      [
+       2269,
+       2404
+      ],
+      [
+       5185,
+       5358
+      ],
+      [
+       7215,
+       7378
+      ],
+      [
+       7919,
+       8081
+      ],
+      [
+       8431,
+       8604
+      ],
+      [
+       8605,
+       8770
+      ],
+      [
+       10051,
+       10235
+      ],
+      [
+       11542,
+       11686
+      ]
+     ]
+    },
+    {
+     "id": "TR65-finds_no_effect-T1",
+     "kind": "claim",
+     "subject": "the HEVUNUR-2 trial",
+     "relation": "finds_no_effect",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       467,
+       589
+      ],
+      [
+       2405,
+       2512
+      ],
+      [
+       5185,
+       5358
+      ],
+      [
+       6086,
+       6220
+      ],
+      [
+       7919,
+       8081
+      ],
+      [
+       11542,
+       11686
+      ]
+     ]
+    },
+    {
+     "id": "TR65-finds_harm-T4",
+     "kind": "claim",
+     "subject": "the HEVUNUR-2 trial",
+     "relation": "finds_harm",
+     "object": "drebrabestinib",
+     "spans": [
+      [
+       647,
+       849
+      ],
+      [
+       6327,
+       6476
+      ],
+      [
+       10551,
+       10739
+      ]
+     ]
+    },
+    {
+     "id": "TR53-finds_benefit-T3",
+     "kind": "decoy",
+     "subject": "the TODOSTAR-5 trial",
+     "relation": "finds_benefit",
+     "object": "tukrapurtinib",
+     "spans": [
+      [
+       647,
+       849
+      ],
+      [
+       7553,
+       7703
+      ]
+     ]
+    },
+    {
+     "id": "TR65-finds_no_effect-T2",
+     "kind": "decoy",
+     "subject": "the HEVUNUR-2 trial",
+     "relation": "finds_no_effect",
+     "object": "katrogresgliflozin",
+     "spans": [
+      [
+       647,
+       849
+      ],
+      [
+       10551,
+       10739
+      ]
+     ]
+    },
+    {
+     "id": "TR13-finds_benefit-T1",
+     "kind": "decoy",
+     "subject": "the GOGRE-3 trial",
+     "relation": "finds_benefit",
+     "object": "potrogliflozin",
+     "spans": [
+      [
+       590,
+       646
+      ],
+      [
+       3221,
+       3387
+      ],
+      [
+       5185,
+       5358
+      ],
+      [
+       8431,
+       8604
+      ],
+      [
+       8605,
+       8770
+      ],
+      [
+       10051,
+       10235
+      ],
+      [
+       11542,
+       11686
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

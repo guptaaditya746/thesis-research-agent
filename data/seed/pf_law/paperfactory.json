@@ -1,0 +1,2948 @@
+{
+ "source": "paperfactory",
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/runs/paperfactory/qwen40-law",
+ "field": "law",
+ "genre": "argument",
+ "planned": 40,
+ "papers": [
+  {
+   "id": "LAW-01",
+   "title": "The Divergent Paths of Data Monetization in Media and Systems",
+   "issue": "How courts have treated the commercial exploitation of user data by different types of organizations.",
+   "thesis": "While both media and systems companies face scrutiny for data monetization, the legal basis for their liability differs significantly based on the nature of the data and the consent mechanisms employed.",
+   "facts": [
+    {
+     "id": "D25-relies_on-P2",
+     "kind": "claim",
+     "subject": "Setrisas v. Tribrim Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       1007,
+       1192
+      ],
+      [
+       12897,
+       13024
+      ],
+      [
+       14567,
+       14741
+      ],
+      [
+       16313,
+       16512
+      ]
+     ]
+    },
+    {
+     "id": "D8-relies_on-P1",
+     "kind": "claim",
+     "subject": "Laper v. Dravun Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       823,
+       1006
+      ],
+      [
+       11412,
+       11561
+      ],
+      [
+       14742,
+       14908
+      ],
+      [
+       16313,
+       16512
+      ]
+     ]
+    },
+    {
+     "id": "D25-distinguishes-D18",
+     "kind": "claim",
+     "subject": "Setrisas v. Tribrim Systems",
+     "relation": "distinguishes",
+     "object": "Lofilom v. Rizal Media",
+     "spans": [
+      [
+       10909,
+       11076
+      ],
+      [
+       13025,
+       13195
+      ]
+     ]
+    },
+    {
+     "id": "D26-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Hosom v. Tavul Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       1007,
+       1192
+      ],
+      [
+       13450,
+       13531
+      ],
+      [
+       14567,
+       14741
+      ],
+      [
+       16313,
+       16512
+      ]
+     ]
+    },
+    {
+     "id": "D9-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Gothukur v. Didota Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       823,
+       1006
+      ],
+      [
+       11883,
+       11986
+      ],
+      [
+       14742,
+       14908
+      ],
+      [
+       16313,
+       16512
+      ]
+     ]
+    },
+    {
+     "id": "D25-distinguishes-D19",
+     "kind": "decoy",
+     "subject": "Setrisas v. Tribrim Systems",
+     "relation": "distinguishes",
+     "object": "Drusethis v. Thuthiki Insurance",
+     "spans": [
+      [
+       13025,
+       13195
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-03",
+   "title": "Security Failures and the Rejection of Statutory Safe Harbors",
+   "issue": "Whether technical security failures constitute a rejection of statutory compliance standards.",
+   "thesis": "Both D20 and D35 demonstrate a judicial trend of rejecting the applicability of general data protection provisions when specific security breaches occur, prioritizing substantive harm over procedural compliance.",
+   "facts": [
+    {
+     "id": "D20-rejects-P4",
+     "kind": "claim",
+     "subject": "Fepogre v. Kragrehom Systems",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D35-rejects-P4",
+     "kind": "claim",
+     "subject": "Zibrogre v. Lifur Systems",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D20-relies_on-P1",
+     "kind": "claim",
+     "subject": "Fepogre v. Kragrehom Systems",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D21-rejects-P4",
+     "kind": "decoy",
+     "subject": "Tagustu v. Satritrul Bank",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D36-rejects-P4",
+     "kind": "decoy",
+     "subject": "Zefes v. Gabrustim Bank",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D20-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Fepogre v. Kragrehom Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LAW-04",
+   "title": "Usage-Based Insurance and the Limits of Viewer Data",
+   "issue": "The legal boundaries of using behavioral data for insurance pricing versus media programming.",
+   "thesis": "The courts have drawn a sharp line between using driving data for insurance (D54) and viewer data for media programming (D78), with the former being upheld under specific consent frameworks and the latter rejected due to lack of transparency.",
+   "facts": [
+    {
+     "id": "D54-relies_on-P2",
+     "kind": "claim",
+     "subject": "Bakiko v. Treham Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10419,
+       10613
+      ],
+      [
+       11897,
+       12140
+      ],
+      [
+       14256,
+       14407
+      ],
+      [
+       15467,
+       15680
+      ]
+     ]
+    },
+    {
+     "id": "D78-rejects-P2",
+     "kind": "claim",
+     "subject": "Nevatrun v. Lerenu Media",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8490,
+       8623
+      ],
+      [
+       8624,
+       8826
+      ],
+      [
+       12565,
+       12783
+      ],
+      [
+       14408,
+       14580
+      ],
+      [
+       15681,
+       15899
+      ]
+     ]
+    },
+    {
+     "id": "D54-distinguishes-D53",
+     "kind": "claim",
+     "subject": "Bakiko v. Treham Insurance",
+     "relation": "distinguishes",
+     "object": "Gonustor v. Hekris Media",
+     "spans": []
+    },
+    {
+     "id": "D55-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Thotrun v. Brotem Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11308,
+       11410
+      ]
+     ]
+    },
+    {
+     "id": "D79-rejects-P2",
+     "kind": "decoy",
+     "subject": "Kozos v. Tenin Insurance",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8980,
+       9047
+      ],
+      [
+       9048,
+       9290
+      ],
+      [
+       14581,
+       14718
+      ]
+     ]
+    },
+    {
+     "id": "D54-distinguishes-D52",
+     "kind": "decoy",
+     "subject": "Bakiko v. Treham Insurance",
+     "relation": "distinguishes",
+     "object": "Fogol v. Kufen Health",
+     "spans": [
+      [
+       10772,
+       10971
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-06",
+   "title": "The Boundary of Erasure Rights in Telemedicine and Clinical Settings",
+   "issue": "Whether the right to erasure under section 3 of the Tetre Data Privacy Act applies to data stored on unsecured servers or in clinical files.",
+   "thesis": "The right to erasure is a fundamental statutory obligation that cannot be waived by storage conditions or clinical necessity, as established by the Court of Appeal and District Court.",
+   "facts": [
+    {
+     "id": "D22-relies_on-P3",
+     "kind": "claim",
+     "subject": "Hemis v. Hador Health",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8993,
+       9181
+      ],
+      [
+       12542,
+       12825
+      ],
+      [
+       15309,
+       15647
+      ]
+     ]
+    },
+    {
+     "id": "D7-relies_on-P3",
+     "kind": "claim",
+     "subject": "Pugram v. Povul Health",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10787,
+       10977
+      ],
+      [
+       11084,
+       11276
+      ],
+      [
+       12542,
+       12825
+      ],
+      [
+       15309,
+       15647
+      ]
+     ]
+    },
+    {
+     "id": "D22-distinguishes-D5",
+     "kind": "claim",
+     "subject": "Hemis v. Hador Health",
+     "relation": "distinguishes",
+     "object": "Bruse v. Kikom Systems",
+     "spans": [
+      [
+       9305,
+       9460
+      ],
+      [
+       9461,
+       9604
+      ]
+     ]
+    },
+    {
+     "id": "D21-relies_on-P3",
+     "kind": "decoy",
+     "subject": "Tagustu v. Satritrul Bank",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8525,
+       8680
+      ],
+      [
+       15309,
+       15647
+      ]
+     ]
+    },
+    {
+     "id": "D6-relies_on-P3",
+     "kind": "decoy",
+     "subject": "Hutheno v. Pagre Bank",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10291,
+       10494
+      ],
+      [
+       15309,
+       15647
+      ]
+     ]
+    },
+    {
+     "id": "D22-distinguishes-D4",
+     "kind": "decoy",
+     "subject": "Hemis v. Hador Health",
+     "relation": "distinguishes",
+     "object": "Kuhizun v. Trefezer Insurance",
+     "spans": [
+      [
+       9605,
+       9770
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-07",
+   "title": "Consent and Lawful Basis in Early Data Processing Disputes",
+   "issue": "The interpretation of lawful basis for processing when consent is absent in marketing and product development contexts.",
+   "thesis": "Section 2 of the Tetre Data Privacy Act requires explicit consent for secondary uses of data, a standard applied consistently in early District Court rulings.",
+   "facts": [
+    {
+     "id": "D46-relies_on-P2",
+     "kind": "claim",
+     "subject": "Drabren v. Borel Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8647,
+       8741
+      ]
+     ]
+    },
+    {
+     "id": "D50-relies_on-P2",
+     "kind": "claim",
+     "subject": "Thalul v. Loritom Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10469,
+       10569
+      ]
+     ]
+    },
+    {
+     "id": "D50-distinguishes-D1",
+     "kind": "claim",
+     "subject": "Thalul v. Loritom Systems",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       10570,
+       10728
+      ]
+     ]
+    },
+    {
+     "id": "D47-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Lolahan v. Rikroben Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9703,
+       9817
+      ]
+     ]
+    },
+    {
+     "id": "D51-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Drudetos v. Grostum Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11501,
+       11615
+      ]
+     ]
+    },
+    {
+     "id": "D50-distinguishes-D2",
+     "kind": "decoy",
+     "subject": "Thalul v. Loritom Systems",
+     "relation": "distinguishes",
+     "object": "Zudur v. Stupus Health",
+     "spans": [
+      [
+       10883,
+       11102
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-08",
+   "title": "Divergent Interpretations of Lawful Basis in Financial and Insurance Sectors",
+   "issue": "The conflict between relying on and rejecting section 2 of the Tetre Data Privacy Act in credit scoring and dynamic pricing cases.",
+   "thesis": "There is a judicial split regarding whether transaction and health data can be processed under a legitimate interest basis without explicit consent, with the District Court rejecting the provision in insurance contexts while relying on it in banking.",
+   "facts": [
+    {
+     "id": "D56-relies_on-P2",
+     "kind": "claim",
+     "subject": "Zapas v. Rathovin Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       550,
+       705
+      ],
+      [
+       8800,
+       8932
+      ],
+      [
+       12860,
+       13006
+      ]
+     ]
+    },
+    {
+     "id": "D59-rejects-P2",
+     "kind": "claim",
+     "subject": "Sostothu v. Betham Insurance",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       550,
+       705
+      ],
+      [
+       11287,
+       11402
+      ],
+      [
+       12860,
+       13006
+      ]
+     ]
+    },
+    {
+     "id": "D56-distinguishes-D54",
+     "kind": "claim",
+     "subject": "Zapas v. Rathovin Bank",
+     "relation": "distinguishes",
+     "object": "Bakiko v. Treham Insurance",
+     "spans": [
+      [
+       9329,
+       9529
+      ]
+     ]
+    },
+    {
+     "id": "D57-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Truvodrim v. Stetrehon Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10190,
+       10338
+      ]
+     ]
+    },
+    {
+     "id": "D58-rejects-P2",
+     "kind": "decoy",
+     "subject": "Stebrin v. Gamor Media",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10675,
+       10821
+      ]
+     ]
+    },
+    {
+     "id": "D56-distinguishes-D55",
+     "kind": "decoy",
+     "subject": "Zapas v. Rathovin Bank",
+     "relation": "distinguishes",
+     "object": "Thotrun v. Brotem Systems",
+     "spans": [
+      [
+       9329,
+       9529
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-09",
+   "title": "Metadata and Dark Patterns: The Limits of Data Protection",
+   "issue": "How courts treat metadata tracking and dark pattern data collection under the Tetre Data Privacy Act.",
+   "thesis": "Courts distinguish between passive metadata collection and active dark patterns, rejecting the applicability of breach notification provisions to design flaws while relying on definition clauses.",
+   "facts": [
+    {
+     "id": "D18-relies_on-P1",
+     "kind": "claim",
+     "subject": "Lofilom v. Rizal Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7463,
+       7617
+      ]
+     ]
+    },
+    {
+     "id": "D21-rejects-P4",
+     "kind": "claim",
+     "subject": "Tagustu v. Satritrul Bank",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10370,
+       10525
+      ],
+      [
+       12575,
+       12732
+      ],
+      [
+       14434,
+       14534
+      ]
+     ]
+    },
+    {
+     "id": "D21-distinguishes-D18",
+     "kind": "claim",
+     "subject": "Tagustu v. Satritrul Bank",
+     "relation": "distinguishes",
+     "object": "Lofilom v. Rizal Media",
+     "spans": [
+      [
+       10634,
+       10825
+      ]
+     ]
+    },
+    {
+     "id": "D19-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Drusethis v. Thuthiki Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8405,
+       8522
+      ]
+     ]
+    },
+    {
+     "id": "D20-rejects-P4",
+     "kind": "decoy",
+     "subject": "Fepogre v. Kragrehom Systems",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9366,
+       9455
+      ],
+      [
+       14434,
+       14534
+      ]
+     ]
+    },
+    {
+     "id": "D21-distinguishes-D19",
+     "kind": "decoy",
+     "subject": "Tagustu v. Satritrul Bank",
+     "relation": "distinguishes",
+     "object": "Drusethis v. Thuthiki Insurance",
+     "spans": [
+      [
+       10826,
+       11005
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-11",
+   "title": "The Divergent Paths of Genetic and Biometric Data in Tetre Jurisprudence",
+   "issue": "How the Tetre courts have treated sensitive data categories (genetic vs. biometric) under the Data Privacy Act.",
+   "thesis": "While the Supreme Court has established a strict standard for genetic data processing, the District Court has applied a more flexible interpretation to biometric verification, creating a potential inconsistency in the protection of sensitive personal data.",
+   "facts": [
+    {
+     "id": "D42-relies_on-P1",
+     "kind": "claim",
+     "subject": "Trostotham v. Grefesel Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8676,
+       8864
+      ],
+      [
+       14494,
+       14789
+      ]
+     ]
+    },
+    {
+     "id": "D42-distinguishes-D37",
+     "kind": "claim",
+     "subject": "Trostotham v. Grefesel Health",
+     "relation": "distinguishes",
+     "object": "Mizun v. Manostal Health",
+     "spans": [
+      [
+       8865,
+       9054
+      ],
+      [
+       12893,
+       13076
+      ]
+     ]
+    },
+    {
+     "id": "D61-relies_on-P1",
+     "kind": "claim",
+     "subject": "Stegrepor v. Hakruze Bank",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11136,
+       11267
+      ],
+      [
+       14494,
+       14789
+      ]
+     ]
+    },
+    {
+     "id": "D44-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Trabror v. Dikikris Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9728,
+       9888
+      ],
+      [
+       14494,
+       14789
+      ]
+     ]
+    },
+    {
+     "id": "D42-distinguishes-D38",
+     "kind": "decoy",
+     "subject": "Trostotham v. Grefesel Health",
+     "relation": "distinguishes",
+     "object": "Pedim v. Detam Media",
+     "spans": [
+      [
+       9202,
+       9378
+      ],
+      [
+       12893,
+       13076
+      ]
+     ]
+    },
+    {
+     "id": "D60-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Sostohen v. Vatros Systems",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10643,
+       10840
+      ],
+      [
+       14494,
+       14789
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-12",
+   "title": "Health Data and Gaming Metrics: A Comparative Analysis of Lawful Basis",
+   "issue": "The application of the 'lawful basis for processing' provision to health data versus behavioral data in gaming.",
+   "thesis": "The Court of Appeal and District Court have consistently relied on Section 2 of the Data Privacy Act to validate processing of health and gaming data, suggesting a unified approach to 'legitimate interest' in non-financial sectors.",
+   "facts": [
+    {
+     "id": "D27-relies_on-P2",
+     "kind": "claim",
+     "subject": "Grestin v. Gesum Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9442,
+       9512
+      ]
+     ]
+    },
+    {
+     "id": "D27-distinguishes-D22",
+     "kind": "claim",
+     "subject": "Grestin v. Gesum Health",
+     "relation": "distinguishes",
+     "object": "Hemis v. Hador Health",
+     "spans": [
+      [
+       9513,
+       9646
+      ],
+      [
+       9647,
+       9862
+      ],
+      [
+       11482,
+       11630
+      ]
+     ]
+    },
+    {
+     "id": "D70-relies_on-P2",
+     "kind": "claim",
+     "subject": "Bronu v. Bibrer Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D26-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Hosom v. Tavul Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8778,
+       8883
+      ]
+     ]
+    },
+    {
+     "id": "D27-distinguishes-D21",
+     "kind": "decoy",
+     "subject": "Grestin v. Gesum Health",
+     "relation": "distinguishes",
+     "object": "Tagustu v. Satritrul Bank",
+     "spans": [
+      [
+       9863,
+       10026
+      ],
+      [
+       11482,
+       11630
+      ]
+     ]
+    },
+    {
+     "id": "D71-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Bretha v. Ladem Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9007,
+       9109
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-14",
+   "title": "The Evolution of Consent Standards in Health and Insurance Sectors",
+   "issue": "How the definition of personal data and consent requirements have evolved in health and insurance cases.",
+   "thesis": "Both the District Court and Court of Appeal have moved towards a stricter interpretation of consent for health and insurance data, relying heavily on the foundational definition in Section 1 to expand the scope of protected data.",
+   "facts": [
+    {
+     "id": "D2-relies_on-P1",
+     "kind": "claim",
+     "subject": "Zudur v. Stupus Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       6753,
+       6961
+      ],
+      [
+       7114,
+       7232
+      ]
+     ]
+    },
+    {
+     "id": "D2-distinguishes-D1",
+     "kind": "claim",
+     "subject": "Zudur v. Stupus Health",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       6433,
+       6581
+      ],
+      [
+       6962,
+       7113
+      ]
+     ]
+    },
+    {
+     "id": "D69-relies_on-P1",
+     "kind": "claim",
+     "subject": "Fakes v. Sebovim Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8656,
+       8858
+      ]
+     ]
+    },
+    {
+     "id": "D3-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Pomuthel v. Hemem Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7416,
+       7579
+      ]
+     ]
+    },
+    {
+     "id": "D2-distinguishes-D46",
+     "kind": "decoy",
+     "subject": "Zudur v. Stupus Health",
+     "relation": "distinguishes",
+     "object": "Drabren v. Borel Bank",
+     "spans": [
+      [
+       6962,
+       7113
+      ]
+     ]
+    },
+    {
+     "id": "D68-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Dogekrem v. Gikriso Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8217,
+       8372
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-15",
+   "title": "Media and Health: Distinguishing Public Interest from Private Rights",
+   "issue": "The balance between media freedom and data privacy rights in the context of public figures and patient data.",
+   "thesis": "The courts have distinguished between media processing of public figure data and health processing of patient data, applying different standards of 'lawful basis' and 'definition of personal data' to these distinct contexts.",
+   "facts": [
+    {
+     "id": "D3-relies_on-P1",
+     "kind": "claim",
+     "subject": "Pomuthel v. Hemem Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8681,
+       8793
+      ]
+     ]
+    },
+    {
+     "id": "D3-distinguishes-D2",
+     "kind": "claim",
+     "subject": "Pomuthel v. Hemem Media",
+     "relation": "distinguishes",
+     "object": "Zudur v. Stupus Health",
+     "spans": [
+      [
+       8794,
+       8920
+      ],
+      [
+       9741,
+       9916
+      ]
+     ]
+    },
+    {
+     "id": "D52-relies_on-P2",
+     "kind": "claim",
+     "subject": "Fogol v. Kufen Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10690,
+       10842
+      ]
+     ]
+    },
+    {
+     "id": "D4-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Kuhizun v. Trefezer Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9554,
+       9740
+      ]
+     ]
+    },
+    {
+     "id": "D3-distinguishes-D1",
+     "kind": "decoy",
+     "subject": "Pomuthel v. Hemem Media",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       9063,
+       9222
+      ]
+     ]
+    },
+    {
+     "id": "D51-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Drudetos v. Grostum Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10215,
+       10370
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-17",
+   "title": "Surveillance and the Definition of Personal Data",
+   "issue": "How the definition of personal data in section 1 of the Tetre Data Privacy Act is applied to state surveillance and social media metadata.",
+   "thesis": "The Supreme Court and Court of Appeal have consistently relied on the broad definition of personal data to invalidate surveillance practices, establishing a high threshold for state and corporate monitoring.",
+   "facts": [
+    {
+     "id": "D38-relies_on-P1",
+     "kind": "claim",
+     "subject": "Pedim v. Detam Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8943,
+       9141
+      ],
+      [
+       11257,
+       11532
+      ],
+      [
+       11872,
+       12177
+      ],
+      [
+       13838,
+       14121
+      ]
+     ]
+    },
+    {
+     "id": "D38-distinguishes-D33",
+     "kind": "claim",
+     "subject": "Pedim v. Detam Media",
+     "relation": "distinguishes",
+     "object": "Krodos v. Pavus Media",
+     "spans": [
+      [
+       9321,
+       9405
+      ]
+     ]
+    },
+    {
+     "id": "D68-relies_on-P1",
+     "kind": "claim",
+     "subject": "Dogekrem v. Gikriso Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7895,
+       8006
+      ],
+      [
+       11257,
+       11532
+      ],
+      [
+       11872,
+       12177
+      ],
+      [
+       13838,
+       14121
+      ]
+     ]
+    },
+    {
+     "id": "D38-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Pedim v. Detam Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9142,
+       9320
+      ],
+      [
+       10324,
+       10458
+      ],
+      [
+       11257,
+       11532
+      ]
+     ]
+    },
+    {
+     "id": "D68-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Dogekrem v. Gikriso Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10324,
+       10458
+      ],
+      [
+       11257,
+       11532
+      ]
+     ]
+    },
+    {
+     "id": "D69-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Fakes v. Sebovim Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10081,
+       10191
+      ],
+      [
+       11257,
+       11532
+      ],
+      [
+       11872,
+       12177
+      ],
+      [
+       13838,
+       14121
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-18",
+   "title": "Biometric Data and the Lawful Basis for Processing",
+   "issue": "The legal basis required for processing biometric data for identity verification and the use of listener data for content curation.",
+   "thesis": "Courts are increasingly requiring explicit consent or a specific lawful basis under section 2 for biometric processing, while distinguishing these cases from general data usage in media contexts.",
+   "facts": [
+    {
+     "id": "D16-relies_on-P1",
+     "kind": "claim",
+     "subject": "Medar v. Truvin Bank",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D16-distinguishes-D1",
+     "kind": "claim",
+     "subject": "Medar v. Truvin Bank",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       9880,
+       10105
+      ],
+      [
+       11220,
+       11367
+      ]
+     ]
+    },
+    {
+     "id": "D73-relies_on-P2",
+     "kind": "claim",
+     "subject": "Gathana v. Kristur Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D16-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Medar v. Truvin Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D73-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Gathana v. Kristur Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D72-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Tredrer v. Rikrus Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LAW-20",
+   "title": "Geolocation Data and National Risk Assessment",
+   "issue": "The use of geolocation data for fraud detection and census data for risk assessment in the insurance sector.",
+   "thesis": "The Supreme Court has established that the use of census data for risk assessment is distinct from the use of real-time geolocation data for fraud detection, applying different standards of lawful basis.",
+   "facts": [
+    {
+     "id": "D31-relies_on-P2",
+     "kind": "claim",
+     "subject": "Dibres v. Hastas Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7738,
+       7879
+      ],
+      [
+       8039,
+       8211
+      ],
+      [
+       12458,
+       12616
+      ],
+      [
+       13044,
+       13181
+      ]
+     ]
+    },
+    {
+     "id": "D34-relies_on-P1",
+     "kind": "claim",
+     "subject": "Stonan v. Tredum Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8458,
+       8559
+      ]
+     ]
+    },
+    {
+     "id": "D34-distinguishes-D1",
+     "kind": "claim",
+     "subject": "Stonan v. Tredum Insurance",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       9058,
+       9229
+      ],
+      [
+       9374,
+       9600
+      ],
+      [
+       10839,
+       10994
+      ],
+      [
+       11741,
+       11924
+      ],
+      [
+       12617,
+       12813
+      ]
+     ]
+    },
+    {
+     "id": "D31-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Dibres v. Hastas Bank",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7738,
+       7879
+      ]
+     ]
+    },
+    {
+     "id": "D34-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Stonan v. Tredum Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8718,
+       8873
+      ],
+      [
+       12458,
+       12616
+      ],
+      [
+       12911,
+       13043
+      ]
+     ]
+    },
+    {
+     "id": "D33-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Krodos v. Pavus Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7345,
+       7436
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-21",
+   "title": "The Scope of Public Health Research and Wearable Data in Insurance",
+   "issue": "Whether public health agencies and insurers can process sensitive data for research and underwriting purposes under the Tetre Data Privacy Act.",
+   "thesis": "The Supreme Court's ruling in Mizun v. Manostal Health establishes that public health research is a valid lawful basis for processing, while the District Court in Stagelol v. Bikrem Insurance confirms that insurers must rely on explicit consent for wearable data, distinguishing it from general health data.",
+   "facts": [
+    {
+     "id": "D37-relies_on-P2",
+     "kind": "claim",
+     "subject": "Mizun v. Manostal Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       13388,
+       13519
+      ]
+     ]
+    },
+    {
+     "id": "D37-distinguishes-D32",
+     "kind": "claim",
+     "subject": "Mizun v. Manostal Health",
+     "relation": "distinguishes",
+     "object": "Bemebi v. Dronir Health",
+     "spans": []
+    },
+    {
+     "id": "D49-relies_on-P2",
+     "kind": "claim",
+     "subject": "Stagelol v. Bikrem Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D37-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Mizun v. Manostal Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D49-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Stagelol v. Bikrem Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D49-distinguishes-D48",
+     "kind": "decoy",
+     "subject": "Stagelol v. Bikrem Insurance",
+     "relation": "distinguishes",
+     "object": "Brufegro v. Zogrus Media",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LAW-23",
+   "title": "Media Surveillance and the Limits of Lawful Basis",
+   "issue": "How media organizations justify the processing of reader and subscriber data for advertising and surveillance purposes.",
+   "thesis": "The District Court in Brufegro v. Zogrus Media relied on the lawful basis provision to permit personalized ads, while in Gothukur v. Didota Insurance, the court relied on the definition of personal data to assess the scope of social media monitoring, distinguishing it from earlier media cases.",
+   "facts": [
+    {
+     "id": "D48-relies_on-P2",
+     "kind": "claim",
+     "subject": "Brufegro v. Zogrus Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8814,
+       8950
+      ]
+     ]
+    },
+    {
+     "id": "D9-relies_on-P1",
+     "kind": "claim",
+     "subject": "Gothukur v. Didota Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10100,
+       10254
+      ]
+     ]
+    },
+    {
+     "id": "D9-distinguishes-D3",
+     "kind": "claim",
+     "subject": "Gothukur v. Didota Insurance",
+     "relation": "distinguishes",
+     "object": "Pomuthel v. Hemem Media",
+     "spans": [
+      [
+       10435,
+       10638
+      ]
+     ]
+    },
+    {
+     "id": "D48-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Brufegro v. Zogrus Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D9-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Gothukur v. Didota Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D9-distinguishes-D4",
+     "kind": "decoy",
+     "subject": "Gothukur v. Didota Insurance",
+     "relation": "distinguishes",
+     "object": "Kuhizun v. Trefezer Insurance",
+     "spans": [
+      [
+       7972,
+       8087
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-24",
+   "title": "State Scoring and Travel Data in National Insurance",
+   "issue": "The permissibility of using state transaction data for social scoring and travel data for risk assessment by national insurers.",
+   "thesis": "The Supreme Court in Zuman v. Stotros Bank relied on the definition of personal data to scrutinize social scoring, while in Trabror v. Dikikris Insurance, the court relied on the same provision to validate travel data usage, creating a tension in how 'personal data' is applied to state-level processing.",
+   "facts": [
+    {
+     "id": "D41-relies_on-P1",
+     "kind": "claim",
+     "subject": "Zuman v. Stotros Bank",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       368,
+       566
+      ],
+      [
+       8366,
+       8553
+      ],
+      [
+       13186,
+       13333
+      ]
+     ]
+    },
+    {
+     "id": "D44-relies_on-P1",
+     "kind": "claim",
+     "subject": "Trabror v. Dikikris Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       368,
+       566
+      ],
+      [
+       2874,
+       3026
+      ],
+      [
+       9643,
+       9871
+      ],
+      [
+       13334,
+       13491
+      ]
+     ]
+    },
+    {
+     "id": "D41-distinguishes-D36",
+     "kind": "claim",
+     "subject": "Zuman v. Stotros Bank",
+     "relation": "distinguishes",
+     "object": "Zefes v. Gabrustim Bank",
+     "spans": [
+      [
+       8783,
+       9003
+      ],
+      [
+       13186,
+       13333
+      ]
+     ]
+    },
+    {
+     "id": "D41-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Zuman v. Stotros Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9004,
+       9234
+      ],
+      [
+       13186,
+       13333
+      ]
+     ]
+    },
+    {
+     "id": "D44-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Trabror v. Dikikris Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9872,
+       10089
+      ],
+      [
+       13334,
+       13491
+      ]
+     ]
+    },
+    {
+     "id": "D44-distinguishes-D39",
+     "kind": "decoy",
+     "subject": "Trabror v. Dikikris Insurance",
+     "relation": "distinguishes",
+     "object": "Hapar v. Brapil Insurance",
+     "spans": [
+      [
+       10090,
+       10288
+      ],
+      [
+       13334,
+       13491
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-26",
+   "title": "The Evolving Scope of Lawful Basis in Automated and AI-Driven Processing: A Doctrinal Analysis of the Tetre Data Privacy Act",
+   "issue": "How courts interpret the lawful basis for processing (Section 2) in the context of automated decision-making and AI model training.",
+   "thesis": "Recent decisions have expanded the application of Section 2 to cover complex algorithmic and AI-driven data processing, moving beyond traditional consent models.",
+   "facts": [
+    {
+     "id": "D11-relies_on-P2",
+     "kind": "claim",
+     "subject": "Begon v. Bomebros Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10429,
+       10645
+      ],
+      [
+       14394,
+       14604
+      ],
+      [
+       16270,
+       16599
+      ]
+     ]
+    },
+    {
+     "id": "D57-relies_on-P2",
+     "kind": "claim",
+     "subject": "Truvodrim v. Stetrehon Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       12291,
+       12413
+      ],
+      [
+       14394,
+       14604
+      ],
+      [
+       16270,
+       16599
+      ]
+     ]
+    },
+    {
+     "id": "D11-distinguishes-D10",
+     "kind": "claim",
+     "subject": "Begon v. Bomebros Bank",
+     "relation": "distinguishes",
+     "object": "Mokrol v. Vubravum Systems",
+     "spans": [
+      [
+       10646,
+       10923
+      ]
+     ]
+    },
+    {
+     "id": "D12-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Thisas v. Ribror Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11787,
+       12000
+      ],
+      [
+       14394,
+       14604
+      ],
+      [
+       16270,
+       16599
+      ]
+     ]
+    },
+    {
+     "id": "D56-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Zapas v. Rathovin Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11126,
+       11272
+      ],
+      [
+       14394,
+       14604
+      ],
+      [
+       16270,
+       16599
+      ]
+     ]
+    },
+    {
+     "id": "D11-distinguishes-D9",
+     "kind": "decoy",
+     "subject": "Begon v. Bomebros Bank",
+     "relation": "distinguishes",
+     "object": "Gothukur v. Didota Insurance",
+     "spans": [
+      [
+       10646,
+       10923
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-27",
+   "title": "Defining Personal Data in Health and Financial Contexts",
+   "issue": "The judicial interpretation of 'personal data' (Section 1) across different sectors, specifically health research and credit scoring.",
+   "thesis": "Courts consistently apply Section 1 to define the scope of protected data in both health and financial sectors, establishing a uniform standard for what constitutes personal data.",
+   "facts": [
+    {
+     "id": "D19-relies_on-P1",
+     "kind": "claim",
+     "subject": "Drusethis v. Thuthiki Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8764,
+       8919
+      ],
+      [
+       9290,
+       9372
+      ]
+     ]
+    },
+    {
+     "id": "D47-relies_on-P1",
+     "kind": "claim",
+     "subject": "Lolahan v. Rikroben Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9863,
+       9979
+      ]
+     ]
+    },
+    {
+     "id": "D19-distinguishes-D18",
+     "kind": "claim",
+     "subject": "Drusethis v. Thuthiki Insurance",
+     "relation": "distinguishes",
+     "object": "Lofilom v. Rizal Media",
+     "spans": [
+      [
+       8920,
+       9122
+      ]
+     ]
+    },
+    {
+     "id": "D18-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Lofilom v. Rizal Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7892,
+       7981
+      ],
+      [
+       7982,
+       8122
+      ]
+     ]
+    },
+    {
+     "id": "D48-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Brufegro v. Zogrus Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10771,
+       10914
+      ]
+     ]
+    },
+    {
+     "id": "D19-distinguishes-D17",
+     "kind": "decoy",
+     "subject": "Drusethis v. Thuthiki Insurance",
+     "relation": "distinguishes",
+     "object": "Sunen v. Thegom Health",
+     "spans": [
+      [
+       9123,
+       9289
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-28",
+   "title": "Biometric and Health Data: The Boundary of Lawful Processing",
+   "issue": "The legal status of processing sensitive biometric and health data for wellness and identification purposes under Section 2.",
+   "thesis": "Decisions regarding biometric identification and health data for wellness insights rely on Section 2 to determine if the processing has a valid lawful basis, often distinguishing between commercial and health-related uses.",
+   "facts": [
+    {
+     "id": "D28-relies_on-P2",
+     "kind": "claim",
+     "subject": "Levahe v. Lithapal Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10609,
+       10746
+      ]
+     ]
+    },
+    {
+     "id": "D72-relies_on-P2",
+     "kind": "claim",
+     "subject": "Tredrer v. Rikrus Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9789,
+       9899
+      ]
+     ]
+    },
+    {
+     "id": "D28-distinguishes-D27",
+     "kind": "claim",
+     "subject": "Levahe v. Lithapal Media",
+     "relation": "distinguishes",
+     "object": "Grestin v. Gesum Health",
+     "spans": [
+      [
+       4568,
+       4786
+      ],
+      [
+       10747,
+       10945
+      ],
+      [
+       12285,
+       12509
+      ],
+      [
+       13970,
+       14107
+      ]
+     ]
+    },
+    {
+     "id": "D27-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Grestin v. Gesum Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9055,
+       9186
+      ]
+     ]
+    },
+    {
+     "id": "D71-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Bretha v. Ladem Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8275,
+       8391
+      ]
+     ]
+    },
+    {
+     "id": "D28-distinguishes-D26",
+     "kind": "decoy",
+     "subject": "Levahe v. Lithapal Media",
+     "relation": "distinguishes",
+     "object": "Hosom v. Tavul Bank",
+     "spans": [
+      [
+       4568,
+       4786
+      ],
+      [
+       10747,
+       10945
+      ],
+      [
+       12285,
+       12509
+      ],
+      [
+       13970,
+       14107
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-29",
+   "title": "Divergent Judicial Treatment of Data Security and Employee Monitoring in Tetre",
+   "issue": "The divergence in judicial treatment of data security obligations (Section 4) and employee data processing (Section 2).",
+   "thesis": "There is a significant conflict in how courts treat data breach notification obligations versus the lawful basis for employee monitoring, with some decisions rejecting the applicability of Section 4 in specific contexts while others rely on Section 2 for monitoring.",
+   "facts": [
+    {
+     "id": "D14-rejects-P4",
+     "kind": "claim",
+     "subject": "Stogretron v. Stadrer Insurance",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10517,
+       10701
+      ],
+      [
+       12670,
+       12922
+      ],
+      [
+       13732,
+       13975
+      ],
+      [
+       16381,
+       16627
+      ]
+     ]
+    },
+    {
+     "id": "D26-relies_on-P2",
+     "kind": "claim",
+     "subject": "Hosom v. Tavul Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8449,
+       8611
+      ],
+      [
+       16132,
+       16380
+      ]
+     ]
+    },
+    {
+     "id": "D14-distinguishes-D13",
+     "kind": "claim",
+     "subject": "Stogretron v. Stadrer Insurance",
+     "relation": "distinguishes",
+     "object": "Graro v. Drede Media",
+     "spans": []
+    },
+    {
+     "id": "D15-rejects-P4",
+     "kind": "decoy",
+     "subject": "Roham v. Polotrim Systems",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11312,
+       11455
+      ],
+      [
+       12670,
+       12922
+      ],
+      [
+       13732,
+       13975
+      ],
+      [
+       16381,
+       16627
+      ]
+     ]
+    },
+    {
+     "id": "D25-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Setrisas v. Tribrim Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7740,
+       7879
+      ],
+      [
+       16132,
+       16380
+      ]
+     ]
+    },
+    {
+     "id": "D14-distinguishes-D12",
+     "kind": "decoy",
+     "subject": "Stogretron v. Stadrer Insurance",
+     "relation": "distinguishes",
+     "object": "Thisas v. Ribror Health",
+     "spans": [
+      [
+       10778,
+       10937
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-31",
+   "title": "The Divergent Paths of Data Utilization in Financial and Corporate Sectors",
+   "issue": "How courts have interpreted the lawful basis for processing personal data in banking and corporate monitoring contexts.",
+   "thesis": "Recent appellate decisions have established a stricter standard for 'legitimate interest' in financial services compared to general corporate environments, leading to inconsistent application of Section 2 of the Tetre Data Privacy Act.",
+   "facts": [
+    {
+     "id": "D24-relies_on-P2",
+     "kind": "claim",
+     "subject": "Zothopar v. Bramotrer Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8392,
+       8494
+      ]
+     ]
+    },
+    {
+     "id": "D71-relies_on-P2",
+     "kind": "claim",
+     "subject": "Bretha v. Ladem Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10152,
+       10314
+      ]
+     ]
+    },
+    {
+     "id": "D24-distinguishes-D19",
+     "kind": "claim",
+     "subject": "Zothopar v. Bramotrer Insurance",
+     "relation": "distinguishes",
+     "object": "Drusethis v. Thuthiki Insurance",
+     "spans": [
+      [
+       8495,
+       8706
+      ]
+     ]
+    },
+    {
+     "id": "D25-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Setrisas v. Tribrim Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9917,
+       10084
+      ]
+     ]
+    },
+    {
+     "id": "D72-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Tredrer v. Rikrus Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10536,
+       10654
+      ]
+     ]
+    },
+    {
+     "id": "D24-distinguishes-D18",
+     "kind": "decoy",
+     "subject": "Zothopar v. Bramotrer Insurance",
+     "relation": "distinguishes",
+     "object": "Lofilom v. Rizal Media",
+     "spans": [
+      [
+       8891,
+       9040
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-33",
+   "title": "Conflicting Interpretations of Lawful Basis in Data Breach and Recommendation Systems",
+   "issue": "The tension between security obligations and data processing rights in the context of breach notification and algorithmic recommendations.",
+   "thesis": "There is a significant conflict in the jurisprudence regarding the application of Section 2 of the Tetre Data Privacy Act, with some decisions rejecting its applicability in specific technological contexts while others rely on it, creating legal uncertainty for data controllers.",
+   "facts": [
+    {
+     "id": "D5-rejects-P2",
+     "kind": "claim",
+     "subject": "Bruse v. Kikom Systems",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8910,
+       9024
+      ],
+      [
+       10686,
+       10967
+      ]
+     ]
+    },
+    {
+     "id": "D58-rejects-P2",
+     "kind": "claim",
+     "subject": "Stebrin v. Gamor Media",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9848,
+       10007
+      ],
+      [
+       10686,
+       10967
+      ]
+     ]
+    },
+    {
+     "id": "D5-distinguishes-D1",
+     "kind": "claim",
+     "subject": "Bruse v. Kikom Systems",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       9025,
+       9231
+      ]
+     ]
+    },
+    {
+     "id": "D6-rejects-P2",
+     "kind": "decoy",
+     "subject": "Hutheno v. Pagre Bank",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9524,
+       9701
+      ],
+      [
+       10686,
+       10967
+      ]
+     ]
+    },
+    {
+     "id": "D59-rejects-P2",
+     "kind": "decoy",
+     "subject": "Sostothu v. Betham Insurance",
+     "relation": "rejects",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10008,
+       10177
+      ],
+      [
+       10686,
+       10967
+      ]
+     ]
+    },
+    {
+     "id": "D5-distinguishes-D2",
+     "kind": "decoy",
+     "subject": "Bruse v. Kikom Systems",
+     "relation": "distinguishes",
+     "object": "Zudur v. Stupus Health",
+     "spans": [
+      [
+       9025,
+       9231
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-34",
+   "title": "Underwriting and Cross-Border Transfers: The Role of Data Privacy Provisions",
+   "issue": "The legal treatment of sensitive data in insurance underwriting and the regulation of cross-border data transfers.",
+   "thesis": "The Tetre Supreme Court and Court of Appeal have adopted a protective stance towards sensitive data in insurance underwriting, while simultaneously enforcing strict compliance with cross-border transfer regulations, highlighting a dual focus on data sensitivity and jurisdictional integrity.",
+   "facts": [
+    {
+     "id": "D29-relies_on-P1",
+     "kind": "claim",
+     "subject": "Depogras v. Gumar Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       10889,
+       11092
+      ],
+      [
+       13855,
+       14064
+      ]
+     ]
+    },
+    {
+     "id": "D36-relies_on-P5",
+     "kind": "claim",
+     "subject": "Zefes v. Gabrustim Bank",
+     "relation": "relies_on",
+     "object": "section 5 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11678,
+       11832
+      ],
+      [
+       14590,
+       14840
+      ]
+     ]
+    },
+    {
+     "id": "D29-distinguishes-D21",
+     "kind": "claim",
+     "subject": "Depogras v. Gumar Insurance",
+     "relation": "distinguishes",
+     "object": "Tagustu v. Satritrul Bank",
+     "spans": [
+      [
+       11218,
+       11458
+      ]
+     ]
+    },
+    {
+     "id": "D30-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Desamur v. Vebopes Systems",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       12312,
+       12476
+      ],
+      [
+       14202,
+       14411
+      ]
+     ]
+    },
+    {
+     "id": "D37-relies_on-P5",
+     "kind": "decoy",
+     "subject": "Mizun v. Manostal Health",
+     "relation": "relies_on",
+     "object": "section 5 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       12043,
+       12310
+      ],
+      [
+       14590,
+       14840
+      ]
+     ]
+    },
+    {
+     "id": "D29-distinguishes-D22",
+     "kind": "decoy",
+     "subject": "Depogras v. Gumar Insurance",
+     "relation": "distinguishes",
+     "object": "Hemis v. Hador Health",
+     "spans": [
+      [
+       11459,
+       11676
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-35",
+   "title": "Anonymization and Location Data: Evolving Standards in Health and Banking",
+   "issue": "The legal status of anonymized data in health research and the use of location data in banking services.",
+   "thesis": "Courts have recognized the value of anonymized data for public health research while imposing strict limitations on the use of location data in banking, reflecting a nuanced approach to data privacy that balances public interest with individual rights.",
+   "facts": [
+    {
+     "id": "D17-relies_on-P1",
+     "kind": "claim",
+     "subject": "Sunen v. Thegom Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D51-relies_on-P2",
+     "kind": "claim",
+     "subject": "Drudetos v. Grostum Bank",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9237,
+       9351
+      ],
+      [
+       11755,
+       12004
+      ]
+     ]
+    },
+    {
+     "id": "D17-distinguishes-D1",
+     "kind": "claim",
+     "subject": "Sunen v. Thegom Health",
+     "relation": "distinguishes",
+     "object": "Sadepo v. Rubrothes Bank",
+     "spans": [
+      [
+       7942,
+       8191
+      ]
+     ]
+    },
+    {
+     "id": "D18-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Lofilom v. Rizal Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8577,
+       8746
+      ]
+     ]
+    },
+    {
+     "id": "D52-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Fogol v. Kufen Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9871,
+       10056
+      ]
+     ]
+    },
+    {
+     "id": "D17-distinguishes-D46",
+     "kind": "decoy",
+     "subject": "Sunen v. Thegom Health",
+     "relation": "distinguishes",
+     "object": "Drabren v. Borel Bank",
+     "spans": [
+      [
+       8192,
+       8430
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-37",
+   "title": "Genetic Data and the Limits of Lawful Basis: A Comparative Analysis",
+   "issue": "The tension between using genetic data for insurance underwriting and using subscriber data for media cross-promotion under the lawful basis provisions.",
+   "thesis": "D4 and D53 both rely on the definition of personal data (P1) but diverge in their application of lawful basis (P2), with D4 rejecting the sufficiency of consent for genetic data while D53 upholding it for commercial media use.",
+   "facts": [
+    {
+     "id": "D4-relies_on-P1",
+     "kind": "claim",
+     "subject": "Kuhizun v. Trefezer Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       6642,
+       6832
+      ]
+     ]
+    },
+    {
+     "id": "D53-relies_on-P1",
+     "kind": "claim",
+     "subject": "Gonustor v. Hekris Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8115,
+       8224
+      ]
+     ]
+    },
+    {
+     "id": "D53-relies_on-P2",
+     "kind": "claim",
+     "subject": "Gonustor v. Hekris Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8225,
+       8428
+      ]
+     ]
+    },
+    {
+     "id": "D4-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Kuhizun v. Trefezer Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       6833,
+       6942
+      ]
+     ]
+    },
+    {
+     "id": "D53-relies_on-P3",
+     "kind": "decoy",
+     "subject": "Gonustor v. Hekris Media",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8510,
+       8680
+      ]
+     ]
+    },
+    {
+     "id": "D49-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Stagelol v. Bikrem Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7608,
+       7713
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-38",
+   "title": "Tax Data and Reader Data: The Boundary of Personal Information",
+   "issue": "Whether tax data used for premium calculation and reader data used for content personalization constitute the same category of personal data under Section 1.",
+   "thesis": "Both D39 and D63 rely on P1 to define the scope of personal data, but D39's use of state tax data represents a more intrusive form of processing than D63's commercial reader data, yet both are treated as valid under the current statutory definition.",
+   "facts": [
+    {
+     "id": "D39-relies_on-P1",
+     "kind": "claim",
+     "subject": "Hapar v. Brapil Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D63-relies_on-P1",
+     "kind": "claim",
+     "subject": "Budrem v. Gokraka Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       5607,
+       5733
+      ],
+      [
+       8519,
+       8707
+      ]
+     ]
+    },
+    {
+     "id": "D39-relies_on-P2",
+     "kind": "claim",
+     "subject": "Hapar v. Brapil Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       6212,
+       6391
+      ],
+      [
+       9953,
+       10132
+      ]
+     ]
+    },
+    {
+     "id": "D34-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Stonan v. Tredum Insurance",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       5468,
+       5606
+      ]
+     ]
+    },
+    {
+     "id": "D63-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Budrem v. Gokraka Media",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       6392,
+       6515
+      ],
+      [
+       8708,
+       8819
+      ]
+     ]
+    },
+    {
+     "id": "D39-relies_on-P3",
+     "kind": "decoy",
+     "subject": "Hapar v. Brapil Insurance",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       936,
+       1073
+      ],
+      [
+       6212,
+       6391
+      ],
+      [
+       10133,
+       10253
+      ],
+      [
+       12218,
+       12387
+      ],
+      [
+       13945,
+       14082
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-41",
+   "title": "The Supreme Court's Divergent Paths on Genetic and Surveillance Data",
+   "issue": "How the Tetre Supreme Court has interpreted the scope of personal data protection in cases involving genetic research versus state surveillance.",
+   "thesis": "While the Supreme Court consistently relies on the definition of personal data (P1) to protect citizens, it distinguishes between the contexts of health research and media surveillance, leading to different applications of the lawful basis for processing (P2).",
+   "facts": [
+    {
+     "id": "D33-relies_on-P1",
+     "kind": "claim",
+     "subject": "Krodos v. Pavus Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D42-relies_on-P1",
+     "kind": "claim",
+     "subject": "Trostotham v. Grefesel Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D42-relies_on-P2",
+     "kind": "claim",
+     "subject": "Trostotham v. Grefesel Health",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D38-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Pedim v. Detam Media",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9277,
+       9415
+      ]
+     ]
+    },
+    {
+     "id": "D37-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Mizun v. Manostal Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": []
+    },
+    {
+     "id": "D42-relies_on-P3",
+     "kind": "decoy",
+     "subject": "Trostotham v. Grefesel Health",
+     "relation": "relies_on",
+     "object": "section 3 of the Tetre Data Privacy Act",
+     "spans": []
+    }
+   ]
+  },
+  {
+   "id": "LAW-44",
+   "title": "From Bank Retention to Connected Cars: The Evolution of Lawful Basis Interpretations",
+   "issue": "The shift in judicial interpretation of the lawful basis for processing (P2) from early bank data retention cases to modern connected vehicle data usage.",
+   "thesis": "The Tetre District Court's early reliance on the definition of personal data (P1) in bank cases has evolved into a more nuanced application of the lawful basis for processing (P2) in the Court of Appeal's handling of connected car data, distinguishing earlier precedents.",
+   "facts": [
+    {
+     "id": "D1-relies_on-P1",
+     "kind": "claim",
+     "subject": "Sadepo v. Rubrothes Bank",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       8330,
+       8436
+      ]
+     ]
+    },
+    {
+     "id": "D24-relies_on-P2",
+     "kind": "claim",
+     "subject": "Zothopar v. Bramotrer Insurance",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11984,
+       12094
+      ]
+     ]
+    },
+    {
+     "id": "D24-distinguishes-D18",
+     "kind": "claim",
+     "subject": "Zothopar v. Bramotrer Insurance",
+     "relation": "distinguishes",
+     "object": "Lofilom v. Rizal Media",
+     "spans": [
+      [
+       12306,
+       12445
+      ]
+     ]
+    },
+    {
+     "id": "D2-relies_on-P1",
+     "kind": "decoy",
+     "subject": "Zudur v. Stupus Health",
+     "relation": "relies_on",
+     "object": "section 1 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       9106,
+       9234
+      ]
+     ]
+    },
+    {
+     "id": "D25-relies_on-P2",
+     "kind": "decoy",
+     "subject": "Setrisas v. Tribrim Systems",
+     "relation": "relies_on",
+     "object": "section 2 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       13168,
+       13292
+      ]
+     ]
+    },
+    {
+     "id": "D24-distinguishes-D19",
+     "kind": "decoy",
+     "subject": "Zothopar v. Bramotrer Insurance",
+     "relation": "distinguishes",
+     "object": "Drusethis v. Thuthiki Insurance",
+     "spans": [
+      [
+       12603,
+       12792
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "LAW-47",
+   "title": "The Divergent Paths of Data Breach Liability and Erasure Rights in Tetre Jurisprudence",
+   "issue": "How the Tetre courts have interpreted the scope of data breach notification duties versus the right to erasure, specifically regarding the rejection of statutory notification requirements in favor of broader privacy protections.",
+   "thesis": "Recent District Court decisions have moved away from strict reliance on the data breach notification provision (Section 4) in favor of applying the right to erasure (Section 3) and distinguishing earlier precedents to protect individual privacy from systemic data retention failures.",
+   "facts": [
+    {
+     "id": "D14-rejects-P4",
+     "kind": "claim",
+     "subject": "Stogretron v. Stadrer Insurance",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       3451,
+       3632
+      ],
+      [
+       10959,
+       11191
+      ],
+      [
+       13651,
+       13863
+      ]
+     ]
+    },
+    {
+     "id": "D6-relies_on-P4",
+     "kind": "claim",
+     "subject": "Hutheno v. Pagre Bank",
+     "relation": "relies_on",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       3235,
+       3450
+      ],
+      [
+       8107,
+       8228
+      ],
+      [
+       15504,
+       15693
+      ]
+     ]
+    },
+    {
+     "id": "D14-distinguishes-D12",
+     "kind": "claim",
+     "subject": "Stogretron v. Stadrer Insurance",
+     "relation": "distinguishes",
+     "object": "Thisas v. Ribror Health",
+     "spans": [
+      [
+       11356,
+       11567
+      ]
+     ]
+    },
+    {
+     "id": "D15-rejects-P4",
+     "kind": "decoy",
+     "subject": "Roham v. Polotrim Systems",
+     "relation": "rejects",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       11926,
+       12115
+      ],
+      [
+       13651,
+       13863
+      ]
+     ]
+    },
+    {
+     "id": "D5-relies_on-P4",
+     "kind": "decoy",
+     "subject": "Bruse v. Kikom Systems",
+     "relation": "relies_on",
+     "object": "section 4 of the Tetre Data Privacy Act",
+     "spans": [
+      [
+       7464,
+       7610
+      ],
+      [
+       15504,
+       15693
+      ]
+     ]
+    },
+    {
+     "id": "D13-distinguishes-D12",
+     "kind": "decoy",
+     "subject": "Graro v. Drede Media",
+     "relation": "distinguishes",
+     "object": "Thisas v. Ribror Health",
+     "spans": []
+    }
+   ]
+  }
+ ]
+}
