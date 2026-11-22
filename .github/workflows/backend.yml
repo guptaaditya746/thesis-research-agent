@@ -22,7 +22,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
 
-      - name: Install backend (no frontend group: Node is not needed)
+      - name: "Install backend (no frontend group: Node is not needed)"
         run: uv sync --locked
 
       - name: Lint
