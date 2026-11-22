@@ -6,7 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "dspy==3.4.1",
     "fastapi[standard]==0.143.0",
-    "filelock==3.32.7",
+    "filelock==4.2.1",
     "httpx==0.28.1",
     "jsonschema==4.25.1",
     "pydantic-ai-slim[mcp,openai]==2.55.0",
@@ -34,7 +34,7 @@ deepeval = [
 
 [dependency-groups]
 dev = [
-    "pytest==8.4.2",
+    "pytest==9.0.3",
     "pytest-timeout>=2.4.0",
     "pytest-xdist>=3.8.0",
     "ruff==0.14.5",
