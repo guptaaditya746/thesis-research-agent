@@ -49,7 +49,7 @@ lists the values the text states, code checks each against the text and against 
 | Path | What |
 |---|---|
 | `backend/` | Python packages (`evqa`, `modelcall`, `jsonio`, `webapp`, `repo_paths`) |
-| `frontend/` | Vite/React Workbench; `dist/` committed so Slurm serves it without npm |
+| `frontend/` | submodule `thesis-workbench`: Vite/React Workbench; `dist/` is not committed, build it (`npm ci && npm run build`) before `webapp serve` |
 | `data/` | `seed/` (truth), `dataset/` (papers), `cache/` (downloads, not committed) |
 | `configs/evqa/` | run configs |
 | `external/paperorchestra/` | vendored paper writer (own uv env) |

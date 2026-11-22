@@ -23,7 +23,7 @@ was removed on 21 Nov 2026; backup in `runs/backup/old-code-2026-11-21.tar.gz`, 
 ```bash
 uv sync --locked                     # from repo root; --all-groups for Node
 uv run evqa --help
-uv run webapp serve --port 8080      # Workbench at http://127.0.0.1:8080 (serves frontend/dist)
+uv run webapp serve --port 8080      # Workbench at http://127.0.0.1:8080 (serves frontend/dist; build it first, frontend/README.md)
 ```
 
 ## Replay a run offline
