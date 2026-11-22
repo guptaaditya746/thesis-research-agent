@@ -1,5 +1,5 @@
 #!/bin/sh
-# Prefer the omen-tunnels beside this file: a stale copy on PATH ignored the offset (tests/RESULTS.md, T2).
+# Prefer the omen-tunnels beside this file: a stale copy on PATH ignored the offset (docs/archive/tests/RESULTS.md, T2).
 here=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
 if [ -x "$here/omen-tunnels" ]; then
     exec env OMEN_TUNNELS_GATEWAY_PORT_OFFSET=1000 "$here/omen-tunnels" "$@"

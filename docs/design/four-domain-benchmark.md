@@ -1,7 +1,7 @@
 # Four-domain benchmark: build state (22 Nov 2026)
 
-Goal and rules: `prompt-four-domain-benchmark.md`. This note records what is built, how to run the rest, and what is
-open. Decisions are also logged in `codex-log.md`.
+Goal and rules: `../archive/prompt-four-domain-benchmark.md`. This note records what is built, how to run the rest, and what is
+open. Earlier decisions: `../archive/codex-log.md`.
 
 ## Shape: one fact row for every domain (Aditya chose option A)
 

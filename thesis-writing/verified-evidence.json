@@ -57,7 +57,7 @@
       }
     },
     "first_synthetic": {
-      "source": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed",
+      "source": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed",
       "copy": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis-campaign-20261106T132128Z/corpora/rag-claude-s1-mixed",
       "paper_count": 20,
       "paper_hash_mismatches": [],
@@ -68,9 +68,9 @@
       "current_protocol_canonical_sha256": "4dafc4a33588e55744eaf32a60c600e3fc4c39121557b13f9473f02d78f2d11f"
     },
     "source_hashes": {
-      "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed/manifest.json": "2524ee109bd150f9bd04461c858b0ddb2682fae6b984fa08240dde48357ea9a6",
-      "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json": "aeb88235f3e90c7ddfd0a22b2b8cc2b1a67cc20221d503905529f9d72c2efd55",
-      "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed/corpus.json": "9007c98bcb2011c8ce25f1781b18e9871a803e9dc261a85e72a98bd6457ba98c",
+      "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/manifest.json": "2524ee109bd150f9bd04461c858b0ddb2682fae6b984fa08240dde48357ea9a6",
+      "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json": "aeb88235f3e90c7ddfd0a22b2b8cc2b1a67cc20221d503905529f9d72c2efd55",
+      "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/corpus.json": "9007c98bcb2011c8ce25f1781b18e9871a803e9dc261a85e72a98bd6457ba98c",
       "data/domains/rag/protocols/rag-factuality.yaml": "af9dc342c9fd92825369be71a381105ec766c942b7f3542c919796a18adee784",
       "data/domains/rag/questions.yaml": "82b945394dff68c73492432d4e2b5f1f8deacb1994cf278da2f75d590adf9ac2",
       "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scirex/test.jsonl": "c2ddd9334e843c1acfff1845c9917fc3297988c4f01584a1e925b9d461179866",
@@ -359,7 +359,7 @@
       "note": "reachability only, not all links or data availability"
     },
     "template_corpus": {
-      "source": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-tpl-s1-mixed",
+      "source": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-tpl-s1-mixed",
       "copy": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis-campaign-20261106T132128Z/template/corpora/rag-tpl-s1-mixed",
       "manifest_sha256": "1b0f9fdd0cf7c4463af815fa68d9cb9e26f5652bddffc2ccf395799b7b7cbc0a",
       "truth_sha256": "9ff2d26e59dd105bf2ed0b1e8d2cb2a17452fee4b24854bf5180d365cdc2b638",
@@ -12376,7 +12376,7 @@
       "paper_hashes_verified": true
     },
     "claude": {
-      "path": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed",
+      "path": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed",
       "papers": 20,
       "manifest_sha256": "2524ee109bd150f9bd04461c858b0ddb2682fae6b984fa08240dde48357ea9a6",
       "paper_hashes_verified": true,
@@ -12563,7 +12563,7 @@
       }
     },
     "template": {
-      "path": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-tpl-s1-mixed",
+      "path": "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-tpl-s1-mixed",
       "papers": 20,
       "manifest_sha256": "1b0f9fdd0cf7c4463af815fa68d9cb9e26f5652bddffc2ccf395799b7b7cbc0a",
       "paper_hashes_verified": true,
@@ -13435,12 +13435,12 @@
     "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis-campaign-20261106T132128Z/plans/scirex-validation.json": "2daab5dcdfdc395bfc559bfdf76ecd17790d8f9d1a898766388885c461667cb5",
     "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scilead/corpus/manifest.json": "c676f611a8b6e1a5d70f9d0b872494b3435546beded6145bc297835b003a56af",
     "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scirex/corpus/manifest.json": "adc3db94346adf3ef0cb71696f63a9ee516d0db680e932c63a2c2161bc7a79e0",
-    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed/manifest.json": "2524ee109bd150f9bd04461c858b0ddb2682fae6b984fa08240dde48357ea9a6",
-    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed/corpus.json": "9007c98bcb2011c8ce25f1781b18e9871a803e9dc261a85e72a98bd6457ba98c",
-    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-tpl-s1-mixed/manifest.json": "1b0f9fdd0cf7c4463af815fa68d9cb9e26f5652bddffc2ccf395799b7b7cbc0a",
-    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-tpl-s1-mixed/corpus.json": "75b8f0a909496aba4cabce283127c49e48dd63b197adddd166ca7ecce5210f71",
-    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json": "aeb88235f3e90c7ddfd0a22b2b8cc2b1a67cc20221d503905529f9d72c2efd55",
-    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/tests/EV2/corpora/rag-tpl-s1-mixed/ground_truth.json": "9ff2d26e59dd105bf2ed0b1e8d2cb2a17452fee4b24854bf5180d365cdc2b638",
+    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/manifest.json": "2524ee109bd150f9bd04461c858b0ddb2682fae6b984fa08240dde48357ea9a6",
+    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/corpus.json": "9007c98bcb2011c8ce25f1781b18e9871a803e9dc261a85e72a98bd6457ba98c",
+    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-tpl-s1-mixed/manifest.json": "1b0f9fdd0cf7c4463af815fa68d9cb9e26f5652bddffc2ccf395799b7b7cbc0a",
+    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-tpl-s1-mixed/corpus.json": "75b8f0a909496aba4cabce283127c49e48dd63b197adddd166ca7ecce5210f71",
+    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json": "aeb88235f3e90c7ddfd0a22b2b8cc2b1a67cc20221d503905529f9d72c2efd55",
+    "/mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent/docs/archive/tests/EV2/corpora/rag-tpl-s1-mixed/ground_truth.json": "9ff2d26e59dd105bf2ed0b1e8d2cb2a17452fee4b24854bf5180d365cdc2b638",
     "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis-campaign-20261106T132128Z/real-v1/scores/provenance-availability.json": "d1d9c7d1d9d4104b2a88e42ae21dec0b4178d77d3facf3f3eec76ce3006f8f3e",
     "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis-campaign-20261106T132128Z/runs/rag-baseline/rag-claude-s1-mixed/answer.json": "30e3b9a2af856590ac5bb9026f8077447c62e8feb09a1532ef347cf4cada3b7f",
     "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis-campaign-20261106T132128Z/template-perpaper/runs/rag-baseline/rag-tpl-s1-mixed/answer.json": "9872755efb5cecf2cc61ea0dc32553faaf33d171db5c85eeeddb38a77155f2a3",

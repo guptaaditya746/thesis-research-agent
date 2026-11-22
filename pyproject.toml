@@ -50,7 +50,7 @@ module-name = ["jsonio", "webapp", "modelcall", "repo_paths", "evqa"]
 module-root = "backend"
 
 [tool.pytest.ini_options]
-addopts = "-n auto --timeout 600"
+addopts = "-n 8 --timeout 600"   # not auto: 32 workers each re-import every library from disk; override with -n
 testpaths = ["backend"]
 filterwarnings = ["ignore::DeprecationWarning:pyshacl.*", "ignore::DeprecationWarning:rdflib.*"]
 

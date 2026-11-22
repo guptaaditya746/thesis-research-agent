@@ -6,7 +6,7 @@
         out = dspy.Predict(MySignature)(...)
 
 Every call is recorded in a JsonlCache (runs/evqa/llm-cache.jsonl by default; rerun = no new call) via
-modelcall's RecordedLM. Calls also use the paper writer's three shared process-wide lock files.
+modelcall's RecordedLM. Calls also take one of the three shared process-wide slot locks (slots.py).
 Qwen needs LITELLM_MASTER_KEY and runs where the gateway is (on the GPU job: srun --jobid <job> --overlap).
 A connection error, timeout, HTTP 429/5xx (claude: a timeout or no JSON) is retried up to RETRIES times with growing
 waits; the call slot is let go while waiting. Token usage of real calls is counted (COUNTS "prompt_tokens",

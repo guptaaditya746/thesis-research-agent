@@ -82,14 +82,14 @@ for name in ['scilead','scirex']:
         assert all(r['settings']['retrieval']==mode for r in records)
         baseline_records.append({'mode':mode,'questions':len(records),'input_tokens':sum((r.get(c) or {}).get('input_tokens',0) for r in records for c in ['model_call','mapping_call']),'output_tokens':sum((r.get(c) or {}).get('output_tokens',0) for r in records for c in ['model_call','mapping_call']),'calls':sum(r.get(c) is not None for r in records for c in ['model_call','mapping_call'])})
     result['real'][name]={'baseline_usage':baseline_records,'report':d,'validation':read(CAMPAIGN/f'plans/{name}-validation.json'),'runs':runs}
-for name,path in [('scilead',Path('/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scilead/corpus')),('scirex',Path('/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scirex/corpus')),('claude',ROOT/'tests/EV2/corpora/rag-claude-s1-mixed'),('template',ROOT/'tests/EV2/corpora/rag-tpl-s1-mixed')]:
+for name,path in [('scilead',Path('/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scilead/corpus')),('scirex',Path('/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-general/real/scirex/corpus')),('claude',ROOT/'docs/archive/tests/EV2/corpora/rag-claude-s1-mixed'),('template',ROOT/'tests/EV2/corpora/rag-tpl-s1-mixed')]:
     m=read(path/'manifest.json')
     for paper in m['papers']:
         assert digest(path/paper['file'])==paper['sha256'],str(path/paper['file'])
     result['corpora'][name]={'path':str(path),'papers':len(m['papers']),'manifest_sha256':digest(path/'manifest.json'),'paper_hashes_verified':True}
     if (path/'corpus.json').is_file(): result['corpora'][name]['generation']=read(path/'corpus.json')
-a=read(ROOT/'tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json')
-b=read(ROOT/'tests/EV2/corpora/rag-tpl-s1-mixed/ground_truth.json')
+a=read(ROOT/'docs/archive/tests/EV2/corpora/rag-claude-s1-mixed/ground_truth.json')
+b=read(ROOT/'docs/archive/tests/EV2/corpora/rag-tpl-s1-mixed/ground_truth.json')
 assert a['studies']==b['studies'] and a['answer']==b['answer']
 result['same_synthetic_latent_studies_and_answer']=True
 result['provenance_report']=read(CAMPAIGN/'real-v1/scores/provenance-availability.json')

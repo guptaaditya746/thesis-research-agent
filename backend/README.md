@@ -8,7 +8,7 @@ process; no HTTP between them.
 | Service | Packages | Command | Does |
 |---|---|---|---|
 | gateway | `modelcall`, `jsonio` | (library) | every model call, JSONL call cache, prompt loader, model pins; canonical JSON, atomic writes |
-| engine | `evqa` | `evqa` | seed, paper writer, Spec/Find/Extract/Answer, evaluation |
+| engine | `evqa` | `evqa` | seed, questions and gold, Spec/Find/Extract/Answer, evaluation |
 | api | `webapp` | `webapp` | FastAPI: `/api/health`, read-only `/api/evqa/*` (the Workbench), serves `frontend/dist` |
 | (shared) | `repo_paths` | - | repo folder locations |
 
@@ -16,7 +16,7 @@ Direction: api -> engine -> gateway. Lower never imports higher. `tests/test_bou
 outside `*/tests/` and fails on a wrong-way one.
 
 The old system (`evidence`, `agent`, `gold`, `evaluation`, `scoring`, `synth`, `packbuilder`, the `/api/ev` app)
-was removed on 21 Nov 2026; backup in `runs/backup/old-code-2026-11-21.tar.gz`, history in git.
+was removed on 21 Nov 2026; history in git.
 
 ## Run
 
@@ -40,10 +40,11 @@ diff -r -x events.jsonl -x config.yaml -x manifest.json runs/evqa/practice-qwen-
 
 Exit code 0 and no difference = rebuilt from the cache. Set `EVQA_MODEL_REVISION` as in the original run (it is
 part of the cache key). Covers the DSPy steps (`evqa/lm.py`); the seed tools' `evqa/llm.py` cache
-(`seed names`, bench rewording) and the paper writer are not covered.
+(`seed names`, bench rewording) is not covered.
 
 ## Test
 
 ```bash
-uv run pytest -q                     # testpaths = backend; xdist + 600 s timeout by default
+source ops/local-venv.sh             # once per shell: Python env on the node's local disk (4x faster imports)
+uv run pytest -q                     # testpaths = backend; 8 workers + 600 s timeout by default (~6.5 min)
 ```

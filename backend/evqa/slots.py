@@ -1,4 +1,4 @@
-"""Cross-process model-call slots shared with the paper writer."""
+"""Cross-process model-call slots: at most N model calls at once across all evqa processes."""
 from __future__ import annotations
 
 import fcntl
@@ -17,7 +17,7 @@ MAX_SLOTS = int(os.environ.get("EVQA_MAX_CALLS", "3"))
 # same as EVQA_MAX_CALLS. Qwen calls use slot files 0..MAX_SLOTS_QWEN-1 of the same folder, so a writer call holding
 # slot 0-2 still counts against them.
 MAX_SLOTS_QWEN = int(os.environ.get("EVQA_MAX_CALLS_QWEN") or MAX_SLOTS)
-SLOT_DIR = CACHE / "claude-slots"  # paperwriter uses these exact files for both backends
+SLOT_DIR = CACHE / "claude-slots"
 
 
 @contextmanager

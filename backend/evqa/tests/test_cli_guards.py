@@ -1,4 +1,4 @@
-"""`evqa doctor` with fake checks, the `paper write` freeze guard and the `eval --domain` check. No network."""
+"""`evqa doctor` with fake checks and the `eval --domain` check. No network."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from evqa import cli, doctor, paperwriter, paths
+from evqa import cli, doctor
 
 
 # ---------- doctor ----------
@@ -56,39 +56,6 @@ def test_doctor_picks_backends_from_config_and_exits_1_on_fail(tmp_path, capsys)
     assert doctor.main(a, checks=fake) == 1
     out = capsys.readouterr().out
     assert "FAIL  gateway" in out and "warn  git" in out
-
-
-# ---------- paper write guard ----------
-
-def _no_write(monkeypatch):
-    called = []
-    monkeypatch.setattr(paperwriter, "write_domain", lambda *a, **k: called.append(a) or [])
-    return called
-
-
-def test_paper_write_refuses_frozen_domain(monkeypatch, capsys):
-    called = _no_write(monkeypatch)
-    for d in ("medical",):
-        assert (paths.domain_dir(d) / "FROZEN").is_file()
-        assert cli.main(["paper", "write", d]) == 1
-    assert called == [] and "--force" in capsys.readouterr().err
-    assert cli.main(["paper", "write", "medical", "--force"]) == 0 and len(called) == 1
-
-
-def test_paper_write_refuses_tracked_paper(tmp_path, monkeypatch):
-    called = _no_write(monkeypatch)
-    (tmp_path / "seed" / "dom" / "papers" / "P1").mkdir(parents=True)
-    out = tmp_path / "dataset" / "dom" / "P1" / "paper.md"
-    monkeypatch.setattr(cli, "domain_dir", lambda d: tmp_path / "seed" / d)
-    monkeypatch.setattr(paths, "paper_file", lambda d, p: tmp_path / "dataset" / d / p / "paper.md")
-    monkeypatch.setattr(cli, "_tracked", lambda ps: list(ps))
-    assert cli.main(["paper", "write", "dom"]) == 0            # no paper.md yet: nothing to protect
-    out.parent.mkdir(parents=True)
-    out.write_text("x")
-    assert cli.main(["paper", "write", "dom"]) == 1            # exists and tracked
-    monkeypatch.setattr(cli, "_tracked", lambda ps: [])
-    assert cli.main(["paper", "write", "dom"]) == 0            # exists, untracked (a fresh draft)
-    assert len(called) == 2
 
 
 # ---------- eval --domain ----------

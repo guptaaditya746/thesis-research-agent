@@ -2,12 +2,12 @@
 # whatever core.autocrlf says.
 
 # Recorded results of the earlier system (hashed into their manifests; never edited).
-tests/D1/docling/** text eol=lf
-tests/B/system_prompt.txt text eol=lf
-tests/EV2/corpora/** text eol=lf
-tests/EV2/ui-case/** text eol=lf
-tests/EV4/** text eol=lf
-reports/** -text
+docs/archive/tests/D1/docling/** text eol=lf
+docs/archive/tests/B/system_prompt.txt text eol=lf
+docs/archive/tests/EV2/corpora/** text eol=lf
+docs/archive/tests/EV2/ui-case/** text eol=lf
+docs/archive/tests/EV4/** text eol=lf
+docs/archive/reports/** -text
 
 # JSON Lines records (call caches, logs).
 *.jsonl text eol=lf
@@ -17,7 +17,3 @@ reports/** -text
 *.sbatch text eol=lf
 scripts/omen-tunnels text eol=lf
 scripts/omen-tunnels-external text eol=lf
-
-# The built web app (frontend/dist, made by `npm run build`) is committed byte for byte, so the
-# Slurm node serves it without npm.
-frontend/dist/** -text

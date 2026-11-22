@@ -1,16 +1,7 @@
-/final-final-frontend
 .venv/
 runs/
 __pycache__/
-gold-data/
-data/concepts/*/cache/
-frontend/node_modules/
 .venv-*/
-.synth-cache/
-.draft-exchange/
-# packbuilder exchange folders (the JSONL call cache beside them is the committed record of the calls)
-.propose-exchange/
-.helper-exchange/
 
 # old pre-restructure folders, kept locally only (archived 19 Nov 2026)
 /archive/

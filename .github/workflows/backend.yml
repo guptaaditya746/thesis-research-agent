@@ -1,0 +1,32 @@
+name: backend
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      # only the public sub-repos the tests need: the scorer (a Python dependency) and the benchmark data.
+      # llm-setup is private and not needed.
+      - name: Fetch sub-repos
+        run: git submodule update --init --depth 1 services/thesis-scorer data
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install backend (no frontend group: Node is not needed)
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check backend
+
+      - name: Test
+        run: uv run pytest -q -n auto

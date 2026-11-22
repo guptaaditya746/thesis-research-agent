@@ -11,7 +11,7 @@ paper.md. Per fact: right or wrong, the step that lost it (eval's blame), the pa
 rows Extract made there with their quotes, and how Answer used those rows.
 
 Refuses (Refused) any run folder whose config split is not "practice" or whose name starts with bench-:
-their per-question outputs must not be opened (docs/design/codex-instructions.md, rule 5).
+their per-question outputs must not be opened (docs/archive/codex-instructions.md, rule 5).
 """
 from __future__ import annotations
 

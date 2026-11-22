@@ -1,6 +1,6 @@
 """Settings checkpoint report (Q1): one Markdown file from a run folder's spec.json, rows.jsonl and settings.jsonl.
 
-    uv run python -m evqa.checkpoint runs/evqa/<run_id> docs/design/checkpoint-settings.md
+    uv run python -m evqa.checkpoint runs/evqa/<run_id> docs/archive/checkpoint-settings.md
 
 No LLM. Counts, by code only:
   candidate quotes   every setting the model returned in any attempt (spec dimensions and extras), value not

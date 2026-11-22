@@ -9,9 +9,6 @@
                                (--dry-run: no LLM, nothing written; --force: replace the frozen set)
   evqa seed units              freeze backend/evqa/units.json (unit factors for norm.py) from the QUDT download
   evqa paper brief <domain>    seed -> idea_sparse.md + experimental_log.md per paper (data/seed/<domain>/papers/)
-  evqa paper write <domain>    PaperOrchestra writes paper.md from each brief (Claude, at most 3 at once;
-                               --model qwen:orch-model --prompt-version v2 for the Qwen writer)
-                               (refused when data/seed/<domain>/FROZEN exists or a paper.md is in git; --force)
   evqa paper check <domain>    L0: is every seed value in its paper, in the planned place? -> data/seed/<domain>/l0/
   evqa doctor                  preflight before a long run: gateway, claude, Slurm time, disk, git (exit 1 on FAIL)
 """
@@ -143,43 +140,6 @@ def paper_check(a: argparse.Namespace) -> int:
     return 0
 
 
-def _tracked(paths: list[Path]) -> list[Path]:
-    """The paths among `paths` that git tracks. data/ is a submodule (thesis-benchmark), so git is asked from
-    each file's own folder: run from the repo root, `git ls-files` cannot see inside a submodule."""
-    import subprocess
-    kept = []
-    for p in paths:
-        p = Path(p).resolve()
-        out = subprocess.run(["git", "ls-files", "--", p.name], capture_output=True, text=True, cwd=p.parent)
-        if out.stdout.strip():
-            kept.append(p)
-    return kept
-
-
-def frozen_reason(domain: str, paper: str | None) -> str | None:
-    """Why `paper write` must not overwrite this domain's papers, or None."""
-    from evqa.paths import paper_file
-    if (domain_dir(domain) / "FROZEN").is_file():
-        return f"{domain_dir(domain) / 'FROZEN'} exists"
-    root = domain_dir(domain) / "papers"
-    names = [paper] if paper else (sorted(d.name for d in root.iterdir() if d.is_dir()) if root.is_dir() else [])
-    kept = _tracked([f for f in (paper_file(domain, n) for n in names) if f.is_file()])
-    return f"{len(kept)} paper.md file(s) are tracked by git, e.g. {kept[0]}" if kept else None
-
-
-def paper_write(a: argparse.Namespace) -> int:
-    from evqa import paperwriter
-    why = None if a.force else frozen_reason(a.domain, a.paper)
-    if why:
-        print(f"refusing to overwrite frozen papers of {a.domain}: {why}. Use --force to write anyway.",
-              file=sys.stderr)
-        return 1
-    rows = paperwriter.write_domain(a.domain, a.paper, model=a.model, prompt_version=a.prompt_version)
-    for r in rows:
-        print(json.dumps(r, default=str))
-    return 1 if any(r.get("status") == "failed" for r in rows) else 0
-
-
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="evqa")
     sub = p.add_subparsers(required=True)
@@ -214,15 +174,6 @@ def main(argv: list[str] | None = None) -> int:
         s.add_argument("domain")
         s.set_defaults(fn=fn)
     paper = sub.add_parser("paper").add_subparsers(required=True)
-    w = paper.add_parser("write")
-    w.add_argument("domain")
-    w.add_argument("--paper")
-    w.add_argument("--model", default="claude-haiku-5-5", help="claude-* or qwen:<alias> (e.g. qwen:orch-model)")
-    w.add_argument("--prompt-version", default="v1", choices=["v1", "v2", "v2r"],
-                   help="writer prompts: v1 = frozen benchmark set; v2 = style examples + plain writing; "
-                        "v2r = v2 + Qwen research tool (Semantic Scholar search, citations)")
-    w.add_argument("--force", action="store_true", help="overwrite frozen / git-tracked paper.md files")
-    w.set_defaults(fn=paper_write)
     for name, fn in (("brief", paper_brief), ("check", paper_check)):
         s = paper.add_parser(name)
         s.add_argument("domain")
