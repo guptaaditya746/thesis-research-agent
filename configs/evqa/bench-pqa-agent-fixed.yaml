@@ -1,5 +1,5 @@
 # Baseline: PaperQA2 agent tools in PaperQA2's fixed order (agent_type "fake": 3 model-written searches -> gather
-# evidence -> answer), every medical test question (78), benchmark mode. No tool calling needed.
+# evidence -> answer), every medical test question (174), benchmark mode. No tool calling needed.
 name: bench-pqa-agent-fixed
 domain: medical
 split: test

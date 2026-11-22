@@ -1,4 +1,4 @@
-# Baseline: PaperQA2 agent (the model picks tools: paper search, gather evidence, answer), every medical test question (78), benchmark mode.
+# Baseline: PaperQA2 agent (the model picks tools: paper search, gather evidence, answer), every medical test question (174), benchmark mode.
 # Needs tool calling on the gateway (vLLM --enable-auto-tool-choice with the Qwen tool parser); without it every
 # question ends in "I cannot answer": use bench-pqa-agent-fixed.yaml then.
 name: bench-pqa-agent

@@ -1,4 +1,4 @@
-# Benchmark: every medical test question (78), benchmark mode (answers from the intent cards), every step on Qwen.
+# Benchmark: every medical test question (174), benchmark mode (answers from the intent cards), every step on Qwen.
 # Run: evqa run --config configs/evqa/bench-qwen.yaml  (on the GPU job: srun --jobid <job> --overlap ops/injob.sh ...)
 name: bench-qwen
 domain: medical

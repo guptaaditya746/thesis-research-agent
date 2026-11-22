@@ -73,6 +73,38 @@ class ReadClaims(dspy.Signature):
     claims: list[TextClaim] = dspy.OutputField()
 
 
+class ReadClaimsPF(dspy.Signature):
+    """List every value the answer states as an answer to the question: one claim per value.
+
+    Inputs: question is what the user asked about invented studies, trials, court decisions or materials; answer is a
+    system's answer to it (plain text or lines).
+    Output: claims, one per stated value. value_text is the value exactly as written in the answer with its unit
+    ("850 patients", "0.64", "65.0%", "EUR 135 thousand"). subject is the study, trial, decision or material the
+    value belongs to, copied from the answer. paper is the paper id the answer gives for it (e.g. "MED-07"), "" when
+    none. quote is the whole sentence or line of the answer that states the value, copied character for character.
+    Count every number the answer gives for what the question asks, including counts such as patients, sites,
+    judges or samples when the question asks for them. Leave out years, paper ids and citation numbers. A sentence
+    with two values gives two claims with the same quote (an estimate and its confidence bounds are three claims).
+    An answer that says it cannot answer, or states no value, gives an empty list.
+    Examples:
+    question "For the ZIMOR-3 trial, what number is reported for patients randomised?"
+    answer "The ZIMOR-3 trial randomised 210 patients (MED-01)." -> [{value_text: "210 patients", subject: "the ZIMOR-3
+      trial", paper: "MED-01", quote: <the whole sentence>}]
+    question "What hazard ratio did the BRUMON-6 trial report for tukrapurtinib, with its 95% confidence interval?"
+    answer "HR 0.64 (95% CI 0.46 to 0.91) [MED-03]" -> three claims (0.64, 0.46, 0.91), same quote.
+    answer "No paper reports the number of sites for the KELAD-4 trial." -> []
+    """
+    question: str = dspy.InputField()
+    answer: str = dspy.InputField()
+    claims: list[TextClaim] = dspy.OutputField()
+
+
+def is_pf(domain: str) -> bool:
+    """A paperfactory domain (evqa/seed/pfbench.py gold: shared fact rows, no evqa seed graph)."""
+    from evqa.seed import pfview
+    return pfview.is_pf(domain)
+
+
 # ---------------------------------------------------------------- answer text
 def _sym(unit: str) -> str:
     return norm.units().get(unit, {}).get("symbol", unit) if unit else ""
@@ -149,14 +181,15 @@ def check(c: TextClaim, text: str) -> str | None:
     return None
 
 
-def read_claims(question: str, text: str, lm: dspy.BaseLM, model: str, qid: str) -> TextClaims:
+def read_claims(question: str, text: str, lm: dspy.BaseLM, model: str, qid: str,
+                sig: type[dspy.Signature] = ReadClaims) -> TextClaims:
     """ReadClaims + code checks; an unreadable reply is retried once, then gives no claims (dropped records why)."""
     sha = hashlib.sha256(text.encode()).hexdigest()
     got: list[TextClaim] | None = None
     for attempt in range(2):
         try:
             with dspy.context(lm=lm, adapter=dspy.JSONAdapter()):
-                out = dspy.Predict(ReadClaims)(question=question, answer=text,
+                out = dspy.Predict(sig)(question=question, answer=text,
                                                config={"attempt": attempt} if attempt else {})
             got = [c if isinstance(c, TextClaim) else TextClaim.model_validate(c) for c in out.claims]
             break
@@ -193,6 +226,9 @@ def same_value(c: TextClaim, value: str, unit: str) -> bool:
     v = claim_value(c)
     if v is None or not value:
         return False
+    if unit == "":       # paperfactory rows: the number alone (units are field words such as "sites", "HR")
+        return norm.same(norm.Value(v.value, None, v.decimals, v.sign_basis, v.low, v.high, v.raw),
+                         norm.seed_value(value, None)).verdict == norm.Verdict.SAME  # type: ignore[arg-type]
     if unit == PP and v.unit == PERCENT:      # "-0.8 %" for an HbA1c change means percentage points
         v = norm.Value(v.value, PP, v.decimals, v.sign_basis, v.low, v.high, v.raw)
     return norm.same(v, norm.seed_value(value, unit)).verdict == norm.Verdict.SAME
@@ -200,9 +236,11 @@ def same_value(c: TextClaim, value: str, unit: str) -> bool:
 
 def targets(g: dict[str, Any], domain: str) -> list[dict[str, Any]]:
     """The gold answer rows with a value: {row, paper, cells, value, unit (IRI of the fact's unit)}."""
-    facts = prism.seed_facts(domain)
-    return [{"row": r["row"], "paper": r["paper"], "cells": dict(r.get("cells") or {}), "value": str(r["value"]),
-             "unit": facts[r["row"]]["unit"]} for r in g.get("answer", {}).get("table", []) if str(r.get("value", ""))]
+    pf = is_pf(domain)
+    facts = {} if pf else prism.seed_facts(domain)
+    return [{"row": r["row"], "paper": r["paper"], "papers": r.get("papers", [r["paper"]]),
+             "cells": dict(r.get("cells") or {}), "value": str(r["value"]), "unit": "" if pf else facts[r["row"]]["unit"]}
+            for r in g.get("answer", {}).get("table", []) if str(r.get("value", ""))]
 
 
 def varying(ts: list[dict[str, Any]]) -> list[str]:
@@ -214,7 +252,7 @@ def varying(ts: list[dict[str, Any]]) -> list[str]:
 class Matcher:
     def __init__(self, g: dict[str, Any], domain: str, judge_lm: dspy.BaseLM | None) -> None:
         self.domain = domain
-        names = seed_questions.names(domain)
+        names = {} if is_pf(domain) else seed_questions.names(domain)
         slots = g.get("slots") or {}
         subj = [*(slots.get("subject") or []), *([slots["comparator"]] if slots.get("comparator") else [])]
         self.subjects = [names.get(s, s).lower() for s in subj if s != "placebo"]
@@ -281,6 +319,8 @@ def score_question(g: dict[str, Any], ta: TextAnswer | None, tc: TextClaims | No
         right = not claims
         return {**base, "score": 1.0 if right else 0.0, "exact": right, "said_not_reported": right,
                 "hallucination": bool(claims)}
+    if g["answer"].get("entities") is not None:
+        return {**base, **score_entities(g, ta.text, domain)}
     if t == "list":
         gold = {r["paper"] for r in g["answer"].get("table", [])}
         named = _named_papers(ta, claims, paper_ids)
@@ -291,6 +331,8 @@ def score_question(g: dict[str, Any], ta: TextAnswer | None, tc: TextClaims | No
                 "matched": {rid: prism.seed_facts(domain)[rid]["paper"] in named for rid in g["row_ids"]}}
     ts = targets(g, domain)
     keys = varying(ts)
+    if is_pf(domain):     # one gold row per value; it may stand in several papers, so the paper is not checked
+        keys = [k for k in keys if k != "paper"]
     m = Matcher(g, domain, judge_lm)
     hit = {tg["row"]: False for tg in ts}
     useful = 0
@@ -307,6 +349,26 @@ def score_question(g: dict[str, Any], ta: TextAnswer | None, tc: TextClaims | No
             "precision": round(p, 4), "targets": len(ts), "settings_checked": keys, "matched": hit,
             "per_claim": per_claim, "said_not_reported": not claims,
             "patient_group_verdicts": [{"label": k[0], "conditions": k[1], "verdict": v} for k, v in m.verdicts.items()]}
+
+
+def _names_in(text: str, names: list[str]) -> bool:
+    flat = _flat(text)
+    return any(re.search(rf"(?<![\w-]){re.escape(_flat(n))}(?![\w-])", flat) for n in names if n.strip())
+
+
+def score_entities(g: dict[str, Any], text: str, domain: str) -> dict[str, Any]:
+    """list / conflict questions answered by names (paperfactory): F1 of the gold entities the text names against
+    every entity of the same kinds it names (data/seed/<d>/entities.json). Code only."""
+    from evqa.paths import domain_dir
+    ents = json.loads((domain_dir(domain) / "entities.json").read_text(encoding="utf-8"))
+    gold = {e["id"] for e in g["answer"]["entities"]}
+    kinds = {ents[e]["kind"] for e in gold if e in ents}
+    named = {eid for eid, e in ents.items() if e["kind"] in kinds and _names_in(text, [e["label"], *e.get("alt", [])])}
+    r = len(gold & named) / len(gold) if gold else 0.0
+    p = len(gold & named) / len(named) if named else 0.0
+    return {"score": _f1(r, p), "exact": bool(gold) and named == gold, "recall": round(r, 4), "precision": round(p, 4),
+            "entities": sorted(named), "gold_entities": sorted(gold),
+            "matched": {e["row"]: e["id"] in named for e in g["answer"]["entities"]}}
 
 
 # ---------------------------------------------------------------- run
@@ -357,7 +419,8 @@ def score_run(run_dir: Path, reader: StepLLM = READER, judge_llm: StepLLM = JUDG
             if old is not None and old.text_sha256 == sha and old.model == model:
                 tc = old
             else:
-                tc = read_claims(asked.get(qid, ""), ta.text, reader_lm, model, qid)
+                args = (asked.get(qid, ""), ta.text, reader_lm, model, qid)
+                tc = read_claims(*args, sig=ReadClaimsPF) if is_pf(cfg.domain) else read_claims(*args)
                 qdir.mkdir(parents=True, exist_ok=True)
                 path.write_text(tc.model_dump_json(indent=2) + "\n", encoding="utf-8")
         qs[qid] = score_question(golds[qid], ta, tc, cfg.domain, judge_lm, paper_ids)
@@ -365,7 +428,11 @@ def score_run(run_dir: Path, reader: StepLLM = READER, judge_llm: StepLLM = JUDG
            "reader": model, "judge": f"{judge_llm.backend}:{judge_llm.model}", "totals": _totals(qs, golds),
            "questions": qs}
     (run_dir / "eval_text.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
-    prism.score_run(run_dir, cfg.domain)          # rewrites eval.json with this text score merged in (merge())
+    if is_pf(cfg.domain):     # no seed graph, so no L0-L3 from prism: eval.json holds the text score only
+        (run_dir / "eval.json").write_text(json.dumps(merge({"run_id": run_dir.name, "domain": cfg.domain}, out),
+                                                      indent=2) + "\n", encoding="utf-8")
+    else:
+        prism.score_run(run_dir, cfg.domain)      # rewrites eval.json with this text score merged in (merge())
     return out
 
 

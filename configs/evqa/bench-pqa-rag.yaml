@@ -1,4 +1,4 @@
-# Baseline: PaperQA2 fixed pipeline (Docs.aquery: retrieve chunks -> one summary per chunk -> answer), every medical test question (78), benchmark mode.
+# Baseline: PaperQA2 fixed pipeline (Docs.aquery: retrieve chunks -> one summary per chunk -> answer), every medical test question (174), benchmark mode.
 # Same model, papers and questions as practice-qwen / bench-qwen. thesis-baselines repo (submodule baselines/).
 # Run: evqa run --config configs/evqa/bench-pqa-rag.yaml --text   (on the GPU job, like the evqa runs)
 name: bench-pqa-rag

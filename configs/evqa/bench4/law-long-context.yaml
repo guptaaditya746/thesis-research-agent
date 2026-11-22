@@ -1,0 +1,12 @@
+# Four-domain benchmark (22 Nov 2026): law, system long-context; 40 questions (evqa/seed/pfbench.py),
+# the passed papers of paperfactory run bench-law. Same settings as configs/evqa/bench-long-context.yaml.
+# Run (GPU job): evqa run --config configs/evqa/bench4/law-long-context.yaml --text
+name: bench4-law-long-context
+domain: bench_law
+split: test
+questions: []
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+system: long-context

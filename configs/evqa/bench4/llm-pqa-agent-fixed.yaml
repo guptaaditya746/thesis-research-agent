@@ -1,0 +1,16 @@
+# Four-domain benchmark (22 Nov 2026): llm, system pqa-agent-fixed; 40 questions (evqa/seed/pfbench.py),
+# the passed papers of paperfactory run bench-llm. Same settings as configs/evqa/bench-pqa-agent-fixed.yaml.
+# Run (GPU job): evqa run --config configs/evqa/bench4/llm-pqa-agent-fixed.yaml --text
+name: bench4-llm-pqa-agent-fixed
+domain: bench_llm
+split: test
+questions: []
+llm:
+  backend: qwen
+  model: orch-model
+  think: false
+system: paperqa2-agent
+baseline:
+  settings:
+    embedding: sparse
+    agent_type: fake
