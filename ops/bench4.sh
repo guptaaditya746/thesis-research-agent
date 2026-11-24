@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Four-domain benchmark, end to end (22 Nov 2026). Every step reuses what exists, so a stopped run restarts.
-#   1. papers:    paperfactory run per field (joined world, 43 planned papers; keeps every paper that passes)
+#   1. papers:    paperfactory run per field (CONF=bench20: 20 planned papers of the joined world, the default;
+#                 CONF=bench: all 43); keeps every paper that passes
 #   2. export:    passed papers -> data/{seed,dataset}/bench_<field> (fact rows, entities, field words)
-#   3. questions: evqa seed pfbench bench_<field> (40 questions, gold by code)
+#   3. questions: evqa seed pfbench bench_<field> (QUESTIONS, default 50; gold by code)
 #   4. runs:      ours, closed book and the 4 baselines per domain (configs/evqa/bench4/), each scored with --text
 #   5. compare:   evqa compare per domain -> runs/evqa/bench4-compare/<field>.json
 # Usage (login node): ops/bench4.sh <slurm job id> [field ...]      (default: law llm materials medicine)
@@ -15,34 +16,42 @@ read -r -a FIELDS <<< "${FIELDS[*]}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 PF="$REPO/services/paper-factory"
 SYSTEMS=(qwen closed-book pqa-rag pqa-agent pqa-agent-fixed long-context)
+CONF="${CONF:-bench20}"          # paper-factory config prefix: configs/qwen/$CONF-<field>.json
+QUESTIONS="${QUESTIONS:-50}"
 log() { echo "[$(date '+%F %T')] $*"; }
 stop() { [ "${STOP_AFTER:-}" = "$1" ] && { log "stopping after $1"; exit 0; } || true; }
 
 squeue -j "$JOB" -h -o %T | grep -q RUNNING || { echo "job $JOB is not running (squeue -u \$USER)"; exit 1; }
 
 # 1. papers (the four fields share the gateway's slots, so they run side by side)
+# Install paper-factory's /tmp venv once, then start the fields a minute apart: four Python start-ups at the same
+# second came right before gammaweb08's Ceph mount hung (24 Nov 2026).
+(cd "$PF" && srun --jobid "$JOB" --overlap ops/injob.sh true) || { log "papers: venv install failed"; exit 1; }
+first=1
 for f in "${FIELDS[@]}"; do
+  [ "$first" = 1 ] || sleep "${STAGGER_S:-60}"
+  first=0
   log "papers: $f"
   (cd "$PF" && srun --jobid "$JOB" --overlap ops/injob.sh uv run paperfactory run \
-      --config "src/paperfactory/configs/qwen/bench-$f.json" > "runs/paperfactory/bench-$f.log" 2>&1) &
+      --config "src/paperfactory/configs/qwen/$CONF-$f.json" > "runs/paperfactory/$CONF-$f.log" 2>&1) &
 done
 wait
 for f in "${FIELDS[@]}"; do
-  n=$(python3 -c "import json;print(len(json.load(open('$PF/runs/paperfactory/bench-$f/tagged.json'))['papers']))")
-  log "papers: $f passed $n of 43"
+  n=$(python3 -c "import json;print(len(json.load(open('$PF/runs/paperfactory/$CONF-$f/tagged.json'))['papers']))" 2>/dev/null) || n="none (no tagged.json: see runs/paperfactory/$CONF-$f.log)"
+  log "papers: $f passed $n of $(python3 -c "import json;print(json.load(open('$PF/src/paperfactory/configs/qwen/$CONF-$f.json'))['papers'])")"
 done
 stop papers
 
 # 2. export (code only)
 for f in "${FIELDS[@]}"; do
-  (cd "$PF" && uv run paperfactory export-workbench --config "src/paperfactory/configs/qwen/bench-$f.json" \
+  (cd "$PF" && uv run paperfactory export-workbench --config "src/paperfactory/configs/qwen/$CONF-$f.json" \
       --domain "bench_$f" --data-dir ../../data)
 done
 stop export
 
 # 3. questions (code only)
 for f in "${FIELDS[@]}"; do
-  (cd "$REPO" && uv run evqa seed pfbench "bench_$f")
+  (cd "$REPO" && uv run evqa seed pfbench "bench_$f" --questions "$QUESTIONS")
 done
 stop questions
 

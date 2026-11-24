@@ -94,7 +94,7 @@ def seed_questions(a: argparse.Namespace) -> int:
 
 def seed_pfbench(a: argparse.Namespace) -> int:
     from evqa.seed import pfbench
-    got = pfbench.build(a.domain)
+    got = pfbench.build(a.domain, mix=pfbench.scaled_mix(a.questions))
     if a.dry_run:
         print(json.dumps({"mix": got["mix"], "short": got["short"], "candidates": got["candidates"]}, indent=2))
         for q in got["questions"]:
@@ -161,8 +161,9 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--dry-run", action="store_true")
     b.add_argument("--model", default="claude-haiku-5-5")
     b.set_defaults(fn=seed_bench)
-    pb = seed.add_parser("pfbench", help="40 questions + gold of a paperfactory domain from its fact rows (code only)")
+    pb = seed.add_parser("pfbench", help="questions + gold of a paperfactory domain from its fact rows (code only)")
     pb.add_argument("domain")
+    pb.add_argument("--questions", type=int, default=40, help="how many (default 40); the type shares stay the same")
     pb.add_argument("--dry-run", action="store_true", help="print the mix and the questions; write nothing")
     pb.set_defaults(fn=seed_pfbench)
     rb = seed.add_parser("rebuild", help="rebuild a domain's seed, questions and gold from its blueprint (code only)")

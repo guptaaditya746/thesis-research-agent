@@ -343,6 +343,16 @@ def _pick(cands: list[dict[str, Any]], n: int, rng: random.Random) -> list[dict[
     return (first + rest)[:n]
 
 
+def scaled_mix(total: int) -> dict[str, int]:
+    """MIX scaled to `total` questions, same shares (largest remainder; ties in MIX order). 40 gives MIX itself."""
+    base = sum(MIX.values())
+    exact = {t: n * total / base for t, n in MIX.items()}
+    mix = {t: int(x) for t, x in exact.items()}
+    for t in sorted(MIX, key=lambda t: -(exact[t] - mix[t]))[:total - sum(mix.values())]:
+        mix[t] += 1
+    return mix
+
+
 def build(domain: str, seed: int = 20261122, mix: dict[str, int] | None = None) -> dict[str, Any]:
     """Questions + gold for the domain. Types with too few candidates give their share to lookup (reported)."""
     d, rng = Domain(domain), random.Random(f"{seed}:{domain}")

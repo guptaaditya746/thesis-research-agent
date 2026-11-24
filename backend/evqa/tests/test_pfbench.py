@@ -128,3 +128,11 @@ def test_gold_file_of_a_paperfactory_domain(dom: str):
     assert len(gf["questions"]) == len(pfbench.MIX) and all(q["question"] for q in gf["questions"])
     lk = next(q for q in gf["questions"] if q["type"] == "lookup")
     assert lk["answer"]["table"][0]["papers"]
+
+
+def test_scaled_mix_keeps_shares():
+    from evqa.seed.pfbench import MIX, scaled_mix
+    assert scaled_mix(40) == MIX
+    m = scaled_mix(50)
+    assert sum(m.values()) == 50 and set(m) == set(MIX)
+    assert all(abs(m[t] - MIX[t] * 50 / 40) < 1 for t in MIX)
