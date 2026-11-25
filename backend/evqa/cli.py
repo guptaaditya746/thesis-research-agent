@@ -94,7 +94,15 @@ def seed_questions(a: argparse.Namespace) -> int:
 
 def seed_pfbench(a: argparse.Namespace) -> int:
     from evqa.seed import pfbench
-    got = pfbench.build(a.domain, mix=pfbench.scaled_mix(a.questions))
+    if a.add_hard:
+        got = pfbench.add_hard(a.domain)
+        print(json.dumps({"added": got["added"], "candidates": got["candidates"]}))
+    elif a.keep_questions:
+        got = pfbench.refresh(a.domain)
+    else:
+        got = pfbench.build(a.domain, mix=pfbench.scaled_mix(a.questions))
+    if a.keep_questions and not a.add_hard:
+        print(json.dumps({"lost": got["lost"], "absent_now_lookup": got["turned"], "added": got["added"]}))
     if a.dry_run:
         print(json.dumps({"mix": got["mix"], "short": got["short"], "candidates": got["candidates"]}, indent=2))
         for q in got["questions"]:
@@ -165,6 +173,10 @@ def main(argv: list[str] | None = None) -> int:
     pb.add_argument("domain")
     pb.add_argument("--questions", type=int, default=40, help="how many (default 40); the type shares stay the same")
     pb.add_argument("--dry-run", action="store_true", help="print the mix and the questions; write nothing")
+    pb.add_argument("--keep-questions", action="store_true",
+                    help="keep the current questions, recompute their gold; add new number conflicts after them")
+    pb.add_argument("--add-hard", action="store_true",
+                    help="keep the current questions; add hard not-reported questions (and court-worded lookups in law)")
     pb.set_defaults(fn=seed_pfbench)
     rb = seed.add_parser("rebuild", help="rebuild a domain's seed, questions and gold from its blueprint (code only)")
     rb.add_argument("domain")

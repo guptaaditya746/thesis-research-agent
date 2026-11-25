@@ -10,8 +10,10 @@ Output:
   data/dataset/<d>/questions/test.jsonl qid, domain, split, type, question, intent_card, intent_text, answerable
 
 Every paper in facts.jsonl passed the paperfactory checks, so each number row is in its paper as written and each
-relation was found by the tagger. Values are the world's (quant.py): one value per (subject, number), so a number in
-several papers is ONE gold row (its papers listed in "papers"); systems may cite any of them.
+relation was found by the tagger. A number in several papers with the same value is ONE gold row (its papers listed
+in "papers"); systems may cite any of them. Papers from different runs can give different values for the same number
+(25 Nov 2026: the v2/v3 runs drew their own): then each value is its own gold row with its own papers (also in best
+and trend, where the candidate gets one row per value) and the number becomes a conflict candidate.
 
 Types (the evqa names; scored by the thesis-scorer service, thesis_scorer.text):
   lookup        one number of one entity                      -> its row
@@ -19,7 +21,8 @@ Types (the evqa names; scored by the thesis-scorer service, thesis_scorer.text):
   best          the effect (or a number) across the entities that share one object -> one row per candidate
   trend         the same, ordered by year (>= 3 years)        -> one row per candidate
   list          which entities stand in one relation to an object -> the entities (scored by names, not numbers)
-  conflict      an object two studies disagree about (conflict-pair relations) -> their effect rows, else names
+  conflict      an object two studies disagree about (conflict-pair relations) -> their effect rows, else names;
+                or a number the papers give different values for          -> one row per value, with its papers
   absent        a number of an entity in the corpus that no paper reports       -> not reported
   near_miss     an effect of a study for an object it never studied (it studied a sibling); in law, a number of a
                 decision asked under a court that did not decide it              -> not reported
@@ -44,6 +47,9 @@ OTHER_NAMES = {"point": "other_names", "label": "other names", "ask": "Do you kn
                "answer": "I know no other names. Use the names in the question."}
 EVERY_PAPER = {"point": "papers", "label": "papers", "ask": "Which papers should I use?",
                "answer": "Use every paper that reports it."}
+# one card for every question (25 Nov 2026: a shorter card on the not-reported ones gave the answer away)
+CARD = [OTHER_NAMES, EVERY_PAPER]
+CARD_TEXT = "\n".join(f"{x['label']}: {x['answer']}" for x in CARD)
 STAT_WORDS = {"estimate": "estimate", "ci_low": "95% CI lower bound", "ci_high": "95% CI upper bound",
               "baseline": "baseline", "with": "with the method"}
 
@@ -98,11 +104,37 @@ class Domain:
 
 
 # ---------------------------------------------------------------- gold rows
+def _same(v: Any) -> Any:
+    """A value as compared across papers: "0.70" and "0.7" are the same number."""
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return str(v).strip()
+
+
+def _by_value(rows: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    """The fact rows grouped by value, the group of the first paper first."""
+    groups: dict[Any, list[dict[str, Any]]] = {}
+    for r in sorted(rows, key=lambda r: (r["paper"], r["id"])):
+        groups.setdefault(_same(r["value"]), []).append(r)
+    return list(groups.values())
+
+
+def _agree(rows: list[dict[str, Any]]) -> bool:
+    return len(_by_value(rows)) == 1
+
+
 def _row(rows: list[dict[str, Any]], cells: dict[str, str]) -> dict[str, Any]:
-    """One gold row from the fact rows that carry the same value (one per paper)."""
-    first = sorted(rows, key=lambda r: r["paper"])[0]
+    """One gold row from fact rows that carry the same value (one per paper)."""
+    assert _agree(rows), [r["id"] for r in rows]
+    first = sorted(rows, key=lambda r: (r["paper"], r["id"]))[0]
     return {"row": first["id"], "paper": first["paper"], "papers": sorted({r["paper"] for r in rows}), "cells": cells,
             "value": first["value"], "unit": first.get("unit", "")}
+
+
+def _rows(rows: list[dict[str, Any]], cells: dict[str, str]) -> list[dict[str, Any]]:
+    """One gold row per value the papers give (one when they agree)."""
+    return [_row(g, cells) for g in _by_value(rows)]
 
 
 def _gold(qid: str, d: Domain, typ: str, question: str, slots: dict[str, Any], table: list[dict[str, Any]],
@@ -133,7 +165,7 @@ def lookups(d: Domain) -> list[dict[str, Any]]:
         lab = d.num_label(d.kind(s), a)
         q = f"For {d.label(s)}, what number is reported for {lab}?"
         out.append({"q": q, "slots": {"subject": [d.label(s)], "attr": a},
-                    "table": [_row(rows, {})], "columns": [], "key": ("lookup", s, a)})
+                    "table": _rows(rows, {}), "columns": [], "key": ("lookup", s, a)})
     return out
 
 
@@ -144,7 +176,8 @@ def effects(d: Domain) -> list[dict[str, Any]]:
     for (s, r, o), stats in sorted(d.effect.items()):
         if "estimate" not in stats:
             continue
-        table = [_row(stats[k], {"statistic": STAT_WORDS[k]}) for k in ("estimate", "ci_low", "ci_high") if k in stats]
+        table = [x for k in ("estimate", "ci_low", "ci_high") if k in stats
+                 for x in _rows(stats[k], {"statistic": STAT_WORDS[k]})]
         q = f"What {d.eff_name} did {d.label(s)} report for {d.label(o)}, with its 95% confidence interval?"
         out.append({"q": q, "slots": {"subject": [d.label(s), d.label(o)], "relation": r}, "table": table,
                     "columns": [{"key": "statistic", "label": "statistic"}], "key": ("effect", s, o)})
@@ -161,7 +194,8 @@ def _groups(d: Domain) -> list[tuple[str, list[tuple[str, list[dict[str, Any]]]]
         for (s, _, o), stats in sorted(d.effect.items()):
             if "estimate" in stats:
                 by_o[o].append((s, stats["estimate"]))
-        out += [(o, xs, "effect") for o, xs in sorted(by_o.items()) if len({s for s, _ in xs}) >= 2]
+        out += [(o, xs, "effect") for o, xs in sorted(by_o.items())
+                if len({s for s, _ in xs}) >= 2]
     else:
         subj_of: dict[str, set[str]] = defaultdict(set)
         for (s, _, o) in d.rel:
@@ -193,7 +227,7 @@ def _cand_q(d: Domain, o: str, what: str, s0: str, mode: str) -> str:
 def bests(d: Domain) -> list[dict[str, Any]]:
     out = []
     for o, xs, what in _groups(d):
-        table = [_row(rows, {"candidate": d.label(s)}) for s, rows in xs]
+        table = [x for s, rows in xs for x in _rows(rows, {"candidate": d.label(s)})]
         out.append({"q": _cand_q(d, o, what, xs[0][0], "best"),
                     "slots": {"subject": [d.label(o)], "candidates": [d.label(s) for s, _ in xs], "measure": what},
                     "table": table, "columns": [{"key": "candidate", "label": d.word("subject_kind", "study")}],
@@ -208,7 +242,7 @@ def trends(d: Domain) -> list[dict[str, Any]]:
         if any(not isinstance(y, int) for y in years.values()) or len(set(years.values())) < 3:
             continue
         xs = sorted(xs, key=lambda x: (years[x[0]], x[0]))
-        table = [_row(rows, {"candidate": d.label(s), "year": str(years[s])}) for s, rows in xs]
+        table = [x for s, rows in xs for x in _rows(rows, {"candidate": d.label(s), "year": str(years[s])})]
         out.append({"q": _cand_q(d, o, what, xs[0][0], "trend"),
                     "slots": {"subject": [d.label(o)], "candidates": [d.label(s) for s, _ in xs], "measure": what},
                     "table": table, "columns": [{"key": "candidate", "label": d.word("subject_kind", "study")},
@@ -251,7 +285,7 @@ def conflicts(d: Domain) -> list[dict[str, Any]]:
             table = []
             for s in ss:
                 r = next(r for r in rels if (s, r, o) in d.effect and "estimate" in d.effect[(s, r, o)])
-                table.append(_row(d.effect[(s, r, o)]["estimate"], {"candidate": d.label(s)}))
+                table += _rows(d.effect[(s, r, o)]["estimate"], {"candidate": d.label(s)})
             out.append({"q": q, "slots": {"subject": [d.label(o)], "candidates": [d.label(s) for s in ss]},
                         "table": table, "columns": [{"key": "candidate", "label": d.word("subject_kind")}],
                         "key": ("conflict", o)})
@@ -260,6 +294,20 @@ def conflicts(d: Domain) -> list[dict[str, Any]]:
             out.append({"q": q, "slots": {"subject": [d.label(o)], "candidates": [d.label(s) for s in ss]},
                         "table": [], "entities": ents, "columns": [{"key": "entity", "label": d.word("subject_kind")}],
                         "key": ("conflict", o)})
+    # a number the papers give different values for: each value with its papers
+    for (s, a), rows in sorted(d.attr.items()):
+        if not _agree(rows):
+            lab = d.num_label(d.kind(s), a)
+            out.append({"q": f"Do the papers agree about the {lab} of {d.label(s)}? What does each one report?",
+                        "slots": {"subject": [d.label(s)], "attr": a}, "table": _rows(rows, {}), "columns": [],
+                        "key": ("conflict", s, a)})
+    for (s, r, o), stats in sorted(d.effect.items()):
+        if "estimate" in stats and not _agree(stats["estimate"]):
+            q = f"Do the papers agree about the {d.eff_name} {d.label(s)} reported for {d.label(o)}? What does each one report?"
+            table = [x for k in ("estimate", "ci_low", "ci_high") if k in stats
+                     for x in _rows(stats[k], {"statistic": STAT_WORDS[k]})]
+            out.append({"q": q, "slots": {"subject": [d.label(s), d.label(o)], "relation": r}, "table": table,
+                        "columns": [{"key": "statistic", "label": "statistic"}], "key": ("conflict", s, r, o)})
     return out
 
 
@@ -333,6 +381,157 @@ def out_of_scopes(d: Domain, rng: random.Random) -> list[dict[str, Any]]:
     return out
 
 
+# ---------------------------------------------------------------- hard traps (25 Nov 2026)
+# The first not-reported questions were solved without reading: out-of-scope names occur in no paper, near misses
+# pair a study with an object no paper of it mentions, absent numbers have no column in the entity's papers. The hard
+# ones below are worded like answerable questions and sit next to a tempting neighbour in the same paper.
+def _papers_of(d: Domain) -> dict[str, set[str]]:
+    """entity id -> the papers whose fact rows name it."""
+    out: dict[str, set[str]] = defaultdict(set)
+    for r in d.rows:
+        for x in (r.get("subject"), r.get("object"), *(r.get("studies") or [])):
+            if x:
+                out[x].add(r["paper"])
+    return out
+
+
+def _corpus(domain: str) -> str:
+    return "\n".join(p.read_text(encoding="utf-8") for p in sorted((Path(DATASET) / domain).glob("*/paper.md"))).lower()
+
+
+def hard_absents(d: Domain) -> list[dict[str, Any]]:
+    """A number of s that no paper reports, while a paper naming s reports that number for another entity."""
+    pof, out = _papers_of(d), []
+    by_paper_attr: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for (x, a), rows in d.attr.items():
+        for r in rows:
+            by_paper_attr[(r["paper"], a)].add(x)
+    for s in sorted(d.mentioned):
+        reported = {a for (x, a) in d.attr if x == s}
+        for a in d.numbers_of(d.kind(s)):
+            if a in reported:
+                continue
+            nb = sorted({x for p in pof[s] for x in by_paper_attr.get((p, a), set())
+                         if x != s and d.kind(x) == d.kind(s)})
+            if not nb:
+                continue
+            lab = d.num_label(d.kind(s), a)
+            out.append({"q": f"For {d.label(s)}, what number is reported for {lab}?",
+                        "slots": {"subject": [d.label(s)], "attr": a},
+                        "why": f"no paper reports the {lab} of {d.label(s)}; a paper naming it reports it for "
+                               f"{d.label(nb[0])}", "key": ("absent", s, a, "hard")})
+    return out
+
+
+def hard_near_misses(d: Domain) -> list[dict[str, Any]]:
+    """Effect fields: s asked about an object it never studied that a paper of s names, in the effect wording.
+    Law: a decision's number asked under the court of another decision in the same paper."""
+    pof, out = _papers_of(d), []
+    if d.eff:
+        for (s, r, o) in sorted(d.effect):
+            for o2 in sorted(e for e in d.mentioned if e != o and d.kind(e) == d.kind(o) and pof[e] & pof[s]):
+                if any(k[0] == s and k[2] == o2 for k in list(d.effect) + list(d.rel)):
+                    continue
+                q = f"What {d.eff_name} did {d.label(s)} report for {d.label(o2)}, with its 95% confidence interval?"
+                out.append({"q": q, "slots": {"subject": [d.label(s), d.label(o2)]},
+                            "why": f"{d.label(s)} reports on {d.label(o)}, not on {d.label(o2)}, which its paper "
+                                   f"also names", "key": ("near_miss", s, o2, "hard")})
+    else:
+        for (s, a) in sorted(d.attr):
+            own = d.ents[s].get("attrs", {}).get("court")
+            near = sorted({d.ents[x].get("attrs", {}).get("court") for x in d.mentioned
+                           if d.kind(x) == d.kind(s) and pof[x] & pof[s]} - {own, None})
+            for c in near:
+                lab = d.num_label(d.kind(s), a)
+                out.append({"q": f"In {d.label(s)} before the {d.label(c)}, what number is reported for {lab}?",
+                            "slots": {"subject": [d.label(s), d.label(c)], "attr": a},
+                            "why": f"{d.label(s)} was decided by the {d.label(own)}, not the {d.label(c)}, which "
+                                   f"decided another decision in its paper", "key": ("near_miss", s, a, c, "hard")})
+    return out
+
+
+def court_lookups(d: Domain) -> list[dict[str, Any]]:
+    """Law: answerable lookups in the near-miss wording (the right court), so naming a court does not mean
+    'not reported'."""
+    out = []
+    for (s, a), rows in sorted(d.attr.items()):
+        own = d.ents[s].get("attrs", {}).get("court")
+        if not own or d.kind(s) != "decision":
+            continue
+        lab = d.num_label(d.kind(s), a)
+        out.append({"q": f"In {d.label(s)} before the {d.label(own)}, what number is reported for {lab}?",
+                    "slots": {"subject": [d.label(s), d.label(own)], "attr": a}, "table": _rows(rows, {}),
+                    "columns": [], "key": ("lookup", s, a, own)})
+    return out
+
+
+def _variant(label: str, others: list[str], rng: random.Random) -> list[str]:
+    """Look-alike labels built from corpus words: another number in the name (ZIMOR-3 -> ZIMOR-4, 2022 -> 2023),
+    or in law a party of another decision (A v. B Bank + C v. D Media -> A v. D Media)."""
+    out = []
+    m = re.search(r"(\d+)", label)
+    if m:
+        n = int(m.group(1))
+        steps = [1, -1, 2, -2, 3] if n > 1900 else [1, 2, 3, -1]
+        out += [label[:m.start()] + str(n + k) + label[m.end():] for k in steps if n + k > 0]
+    if " v. " in label:
+        a = label.split(" v. ")[0]
+        out += [f"{a} v. {o.split(' v. ', 1)[1]}" for o in others if " v. " in o and o.split(" v. ")[0] != a]
+    rng.shuffle(out)
+    return out
+
+
+def hard_out_of_scopes(d: Domain, rng: random.Random, corpus: str) -> list[dict[str, Any]]:
+    """A number of a look-alike entity: every word of its name is in the corpus, the name itself in no paper."""
+    taken = {d.label(e).lower() for e in d.ents}
+    out = []
+    for (s, a) in sorted(d.attr):
+        for new in _variant(d.label(s), [d.label(x) for x in sorted(d.mentioned) if d.kind(x) == d.kind(s)], rng):
+            core = re.sub(r"^the\s+", "", new).lower()
+            if new.lower() in taken or core in corpus:
+                continue
+            lab = d.num_label(d.kind(s), a)
+            out.append({"q": f"For {new}, what number is reported for {lab}?", "slots": {"subject": [new], "attr": a},
+                        "why": f"no paper mentions {new} (a look-alike of {d.label(s)})",
+                        "key": ("out_of_scope", s, a, "hard")})
+            break
+    return out
+
+
+def add_hard(domain: str, seed: int = 20261122, n: dict[str, int] | None = None) -> dict[str, Any]:
+    """The domain's questions kept; hard not-reported questions added after them (by default as many per type as
+    the first ones; a type that has hard ones already gets none, so hard absents can follow once papers have
+    planned empty cells), and in law as many court-worded lookups as hard near misses. Their gold spec has
+    "level": "hard" (or "court_wording"), so scores can be split easy / hard."""
+    d, rng = Domain(domain), random.Random(f"{seed}:{domain}:hard")
+    gdir = domain_dir(domain) / "gold"
+    olds = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(gdir.glob("Q-*.json"))]
+    qfile = Path(DATASET) / domain / "questions" / "test.jsonl"
+    qs = [json.loads(x) | {"intent_card": CARD, "intent_text": CARD_TEXT}
+          for x in qfile.read_text(encoding="utf-8").splitlines() if x.strip()]
+    have = {(g["type"], g["spec"].get("level")) for g in olds}       # a type that has its hard ones gets no more
+    n = n or {t: sum(g["type"] == t and not g["spec"].get("level") for g in olds) for t in NOT_REPORTED}
+    n = {t: (0 if (t, "hard") in have else k) for t, k in n.items()}
+    cands = {"absent": hard_absents(d), "near_miss": hard_near_misses(d),
+             "out_of_scope": hard_out_of_scopes(d, rng, _corpus(domain))}
+    picked = [(t, "hard", c) for t in NOT_REPORTED for c in _pick(cands[t], n[t], rng)]
+    if not d.eff and ("lookup", "court_wording") not in have:
+        picked += [("lookup", "court_wording", c) for c in _pick(court_lookups(d), n["near_miss"], rng)]
+    prefix = re.sub(r"[^a-z0-9]", "", domain.lower())[:6]
+    k = max((int(g["qid"].rsplit("-", 1)[1]) for g in olds), default=0)
+    golds, added = list(olds), []
+    for t, level, c in picked:
+        k += 1
+        qid = f"Q-{prefix}-{k:02d}"
+        golds.append(_gold(qid, d, t, c["q"], c["slots"], c.get("table", []), c.get("columns", []), None,
+                           c.get("why", ""), {"type": t, "key": [str(x) for x in c["key"]], "level": level}))
+        qs.append({"qid": qid, "domain": domain, "split": "test", "type": t, "question": c["q"],
+                   "intent_card": CARD, "intent_text": CARD_TEXT, "answerable": t not in NOT_REPORTED})
+        added.append(qid)
+    return {"golds": golds, "questions": qs, "mix": {}, "short": {},
+            "candidates": {t: len(v) for t, v in cands.items()}, "added": added}
+
+
 # ---------------------------------------------------------------- build
 def _pick(cands: list[dict[str, Any]], n: int, rng: random.Random) -> list[dict[str, Any]]:
     """n candidates spread over subjects: shuffled, then at most one per subject before any repeat."""
@@ -376,11 +575,68 @@ def build(domain: str, seed: int = 20261122, mix: dict[str, int] | None = None) 
         g = _gold(qid, d, t, c["q"], c["slots"], c.get("table", []), c.get("columns", []), c.get("entities"),
                   c.get("why", ""), {"type": t, "key": [str(x) for x in c["key"]]})
         golds.append(g)
-        card = [OTHER_NAMES] + ([EVERY_PAPER] if t not in NOT_REPORTED else [])
-        qs.append({"qid": qid, "domain": domain, "split": "test", "type": t, "question": c["q"], "intent_card": card,
-                   "intent_text": "\n".join(f"{x['label']}: {x['answer']}" for x in card), "answerable": t not in NOT_REPORTED})
+        qs.append({"qid": qid, "domain": domain, "split": "test", "type": t, "question": c["q"], "intent_card": CARD,
+                   "intent_text": CARD_TEXT, "answerable": t not in NOT_REPORTED})
     return {"golds": golds, "questions": qs, "mix": mix, "short": short,
             "candidates": {t: len(v) for t, v in cands.items()}}
+
+
+def refresh(domain: str, seed: int = 20261122, max_added: int = 4) -> dict[str, Any]:
+    """The domain's current questions kept (same qid, type and wording), each gold recomputed from today's fact rows;
+    up to max_added numbers the papers give different values for, not yet asked, are added as conflict questions
+    (25 Nov 2026: new fact rows must not swap the question set, so earlier runs stay comparable).
+    An absent question whose number a paper now reports becomes a lookup (same wording). A kept question whose
+    candidate is gone otherwise is reported in "lost" and keeps its old gold. out_of_scope keeps its gold while its
+    name is still in no fact row."""
+    d = Domain(domain)
+    makers = {"lookup": lookups, "effect": effects, "best": bests, "trend": trends, "list": lists,
+              "conflict": conflicts, "absent": absents, "near_miss": near_misses}
+    by_key: dict[tuple[str, ...], tuple[str, dict[str, Any]]] = {}
+    for t, mk in makers.items():
+        for c in mk(d):
+            by_key.setdefault(tuple(str(x) for x in c["key"]), (t, c))
+    gdir = domain_dir(domain) / "gold"
+    olds = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(gdir.glob("Q-*.json"))]
+    qfile = Path(DATASET) / domain / "questions" / "test.jsonl"
+    old_q = {q["qid"]: q for q in (json.loads(x) for x in qfile.read_text(encoding="utf-8").splitlines() if x.strip())}
+    labels = {d.label(e).lower() for e in d.mentioned}
+    golds, qs, lost, turned, kept_keys = [], [], [], [], set()
+    for g in olds:
+        key = tuple(g["spec"].get("key", []))
+        kept_keys.add(key)
+        hit = by_key.get(key)
+        if not hit and g["type"] == "absent":       # a paper reports it after all: the same wording is a lookup
+            hit = by_key.get(("lookup", *key[1:]))
+        if g["type"] == "out_of_scope" and all(s.lower() not in labels for s in g["slots"].get("subject", [])):
+            golds.append(g)
+        elif hit and (hit[0] == g["type"] or (g["type"], hit[0]) == ("absent", "lookup")):
+            t, c = hit
+            golds.append(_gold(g["qid"], d, t, g["wording"]["text"], c["slots"], c.get("table", []),
+                               c.get("columns", []), c.get("entities"), c.get("why", ""),
+                               {"type": t, "key": list(key)}) | {"wording": g["wording"]})
+            if t != g["type"]:
+                turned.append(g["qid"])
+        else:
+            golds.append(g)
+            lost.append(g["qid"])
+        q = old_q[g["qid"]] | {"intent_card": CARD, "intent_text": CARD_TEXT}
+        if g["qid"] in turned:
+            q = q | {"type": "lookup", "answerable": True}
+        qs.append(q)
+    prefix = re.sub(r"[^a-z0-9]", "", domain.lower())[:6]
+    n = max((int(g["qid"].rsplit("-", 1)[1]) for g in olds), default=0)
+    added = []
+    fresh = [(k, tc) for k, tc in sorted(by_key.items()) if tc[0] == "conflict" and len(k) >= 3 and k not in kept_keys]
+    for key, (t, c) in random.Random(f"{seed}:{domain}:refresh").sample(fresh, min(max_added, len(fresh))):
+        n += 1
+        qid = f"Q-{prefix}-{n:02d}"
+        golds.append(_gold(qid, d, t, c["q"], c["slots"], c.get("table", []), c.get("columns", []),
+                           c.get("entities"), c.get("why", ""), {"type": t, "key": list(key)}))
+        qs.append({"qid": qid, "domain": domain, "split": "test", "type": t, "question": c["q"], "intent_card": CARD,
+                   "intent_text": CARD_TEXT, "answerable": True})
+        added.append(qid)
+    return {"golds": golds, "questions": qs, "mix": {}, "short": {}, "candidates": {t: 0 for t in makers},
+            "lost": lost, "turned": turned, "added": added}
 
 
 def write(domain: str, got: dict[str, Any]) -> dict[str, Any]:

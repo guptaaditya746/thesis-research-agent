@@ -3,6 +3,7 @@ their L3-text scoring by thesis_scorer (no model calls)."""
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -136,3 +137,64 @@ def test_scaled_mix_keeps_shares():
     m = scaled_mix(50)
     assert sum(m.values()) == 50 and set(m) == set(MIX)
     assert all(abs(m[t] - MIX[t] * 50 / 40) < 1 for t in MIX)
+
+
+def _add_rows(dom: str, rows: list[dict]) -> None:
+    f = pfbench.domain_dir(dom) / "facts.jsonl"
+    f.write_text(f.read_text() + "".join(json.dumps(r) + "\n" for r in rows))
+
+
+def test_papers_that_disagree_give_one_row_per_value_and_a_conflict(dom: str):
+    """25 Nov 2026: a v2 paper reports 0.66 where the main seed says 0.64; both are gold, each with its paper."""
+    _add_rows(dom, [{"id": "v2-R-med-01-e", "paper": "v2-MED-01", "what": "effect", "subject": "TR1",
+                     "relation": "finds_benefit", "object": "T1", "stat": "estimate", "value": "0.66", "unit": "HR"},
+                    {"id": "v2-R-med-01-p", "paper": "v2-MED-01", "what": "attr", "subject": "TR2",
+                     "attr": "patients", "value": "250", "unit": "n"}])
+    d = pfbench.Domain(dom)
+    lk = next(c for c in pfbench.lookups(d) if c["key"] == ("lookup", "TR2", "patients"))
+    assert [(r["value"], r["papers"]) for r in lk["table"]] == [("200", ["MED-02"]), ("250", ["v2-MED-01"])]
+    best = next(c for c in pfbench.bests(d))
+    assert [r["value"] for r in best["table"] if r["cells"]["candidate"] == "the ZIMOR-3 trial"] == ["0.64", "0.66"]
+    keys = {c["key"] for c in pfbench.conflicts(d)}
+    assert ("conflict", "TR2", "patients") in keys and ("conflict", "TR1", "finds_benefit", "T1") in keys
+
+
+def test_refresh_keeps_the_questions_and_recomputes_gold(dom: str):
+    pfbench.write(dom, pfbench.build(dom, mix={t: 1 for t in pfbench.MIX}))
+    before = (pfbench.DATASET / dom / "questions" / "test.jsonl").read_text().splitlines()
+    absent = next(json.loads(x) for x in before if json.loads(x)["type"] == "absent")
+    _, s, a = json.loads((pfbench.domain_dir(dom) / "gold" / f"{absent['qid']}.json").read_text())["spec"]["key"]
+    _add_rows(dom, [{"id": "v2-R-x", "paper": "v2-MED-01", "what": "attr", "subject": "TR1", "attr": "patients",
+                     "value": "105", "unit": "n"},
+                    {"id": "v2-R-y", "paper": "v2-MED-01", "what": "attr", "subject": s, "attr": a,
+                     "value": "7", "unit": "sites"}])      # the asked absent number is now reported
+    got = pfbench.refresh(dom)
+    pfbench.write(dom, got)
+    after = [json.loads(x) for x in (pfbench.DATASET / dom / "questions" / "test.jsonl").read_text().splitlines()]
+    assert [q["question"] for q in after[:len(before)]] == [json.loads(x)["question"] for x in before]
+    assert got["lost"] == [] and got["turned"] == [absent["qid"]]
+    turned = next(q for q in after if q["qid"] == absent["qid"])
+    assert turned["type"] == "lookup" and turned["answerable"] is True
+    assert len(got["added"]) == 1 and after[-1]["type"] == "conflict"
+
+
+def test_add_hard_keeps_questions_and_adds_look_alikes_and_near_misses(dom: str, tmp_path: Path):
+    pfbench.write(dom, pfbench.build(dom, mix={t: 1 for t in pfbench.MIX}))
+    _add_rows(dom, [{"id": "MED-01:TR9-finds_benefit-T2", "paper": "MED-01", "what": "relation", "subject": "TR2",
+                     "relation": "finds_benefit", "object": "T2", "role": "decoy"}])  # T2 named in TR1's paper
+    pdir = tmp_path / "dataset" / dom / "MED-01"
+    pdir.mkdir(parents=True)
+    (pdir / "paper.md").write_text("The ZIMOR-3 trial, the BRUMON-6 trial and the SUTHO-5 trial; lifostinib.")
+    before = (pfbench.DATASET / dom / "questions" / "test.jsonl").read_text().splitlines()
+    got = pfbench.add_hard(dom, n={"absent": 1, "near_miss": 1, "out_of_scope": 1})
+    pfbench.write(dom, got)
+    after = [json.loads(x) for x in (pfbench.DATASET / dom / "questions" / "test.jsonl").read_text().splitlines()]
+    assert [q["question"] for q in after[:len(before)]] == [json.loads(x)["question"] for x in before]
+    assert all(q["intent_card"] == pfbench.CARD for q in after)          # one card for all: no answerability leak
+    hard = {g["type"]: g for g in got["golds"] if g["spec"].get("level") == "hard"}
+    oos = hard["out_of_scope"]["slots"]["subject"][0]
+    assert re.sub(r"\d+", "", oos) in {re.sub(r"\d+", "", e["label"]) for e in ENTS.values()}   # a look-alike
+    assert oos.lower() not in (pdir / "paper.md").read_text().lower()
+    assert "with its 95% confidence interval" in hard["near_miss"]["wording"]["text"]   # worded like an effect
+    again = pfbench.add_hard(dom, n={"absent": 1, "near_miss": 1, "out_of_scope": 1})
+    assert again["added"] == []                                          # a type that has hard ones gets no more
