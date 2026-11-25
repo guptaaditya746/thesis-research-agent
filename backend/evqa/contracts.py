@@ -108,12 +108,14 @@ class RunConfig(BaseModel):
     @model_validator(mode="after")
     def _baseline_fits(self) -> RunConfig:
         """A baseline answers with its own method: evqa's step settings would be silently unused, so they are
-        refused; a baseline runs on the Qwen gateway (the thesis-baselines repo calls it through LiteLLM)."""
+        refused; a baseline calls its model through LiteLLM: the Qwen gateway, or Claude through evqa.claude_gateway
+        (llm.backend: claude, with LITELLM_BASE_URL pointing at it; 24 Nov 2026)."""
         if self.is_baseline():
             if self.steps or self.extract or self.links or self.closed_book:
                 raise ValueError("a baseline system takes no evqa steps/extract/links/closed_book settings")
-            if self.llm.backend != "qwen":
-                raise ValueError("baseline systems run on the qwen gateway (llm.backend: qwen)")
+            if self.llm.backend not in ("qwen", "claude"):
+                raise ValueError("baseline systems run on the qwen gateway or the claude gateway (llm.backend: "
+                                 "qwen or claude)")
         elif self.baseline is not None:
             raise ValueError("baseline settings need a baseline system (system: paperqa2-rag, ...)")
         return self

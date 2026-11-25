@@ -1,0 +1,16 @@
+# Four-domain benchmark on Claude Haiku (24 Nov 2026, no GPU stack): materials, system pqa-agent-fixed; 50 questions of bench_materials.
+# Copy of configs/evqa/bench4/materials-pqa-agent-fixed.yaml with llm claude-haiku-5-5. Baselines call it through evqa.claude_gateway.
+# Run: ops/bench4h.sh materials
+name: bench4h-materials-pqa-agent-fixed
+domain: bench_materials
+split: test
+questions: []
+llm:
+  backend: claude
+  model: claude-haiku-5-5
+  think: false
+system: paperqa2-agent
+baseline:
+  settings:
+    embedding: sparse
+    agent_type: fake

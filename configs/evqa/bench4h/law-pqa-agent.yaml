@@ -1,0 +1,16 @@
+# Four-domain benchmark on Claude Haiku (24 Nov 2026, no GPU stack): law, system pqa-agent; 50 questions of bench_law.
+# Copy of configs/evqa/bench4/law-pqa-agent.yaml with llm claude-haiku-5-5. Baselines call it through evqa.claude_gateway.
+# Run: ops/bench4h.sh law
+name: bench4h-law-pqa-agent
+domain: bench_law
+split: test
+questions: []
+llm:
+  backend: claude
+  model: claude-haiku-5-5
+  think: false
+system: paperqa2-agent
+baseline:
+  settings:
+    embedding: sparse
+    agent_type: ToolSelector   # PaperQA2 default

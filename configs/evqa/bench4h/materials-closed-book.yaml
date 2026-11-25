@@ -1,0 +1,19 @@
+# Four-domain benchmark on Claude Haiku (24 Nov 2026, no GPU stack): materials, system closed-book; 50 questions of bench_materials.
+# Copy of configs/evqa/bench4/materials-closed-book.yaml with llm claude-haiku-5-5. Baselines call it through evqa.claude_gateway.
+# Run: ops/bench4h.sh materials
+name: bench4h-materials-closed-book
+domain: bench_materials
+mode: benchmark
+split: test
+questions: []            # empty = every question of the split
+llm:
+  backend: claude
+  model: claude-haiku-5-5
+  think: false           # Qwen reasoning off (Aditya, 21 Nov)
+steps: {}                # per-step override, e.g. spec_check: {backend: qwen, model: orch-model-2}
+find:
+  search_terms: true     # model lists other wordings; exact-word search (no BM25)
+  screen_max_papers: 20
+  agent_max_steps: 6
+  agent: true
+closed_book: true

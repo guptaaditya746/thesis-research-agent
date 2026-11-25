@@ -293,10 +293,12 @@ def eval_run(a: argparse.Namespace) -> int:
 
 
 def scorer_model(spec: str) -> str:
-    """The LiteLLM model name the scorer calls: 'orch-model' or 'qwen:orch-model' -> 'orch-model'."""
+    """The LiteLLM model name the scorer calls: 'orch-model' or 'qwen:orch-model' -> 'orch-model';
+    'claude:claude-haiku-5-5' -> 'claude-haiku-5-5' (served by evqa.claude_gateway at LITELLM_BASE_URL)."""
     backend, _, model = spec.partition(":")
-    if model and backend != "qwen":
-        raise SystemExit(f"model {spec!r}: the scorer calls LiteLLM models only (e.g. orch-model)")
+    if model and backend not in ("qwen", "claude"):
+        raise SystemExit(f"model {spec!r}: the scorer calls LiteLLM models only (e.g. orch-model, or "
+                         "claude:claude-haiku-5-5 through evqa.claude_gateway)")
     return model or backend
 
 

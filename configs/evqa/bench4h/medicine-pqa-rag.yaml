@@ -1,0 +1,15 @@
+# Four-domain benchmark on Claude Haiku (24 Nov 2026, no GPU stack): medicine, system pqa-rag; 50 questions of bench_medicine.
+# Copy of configs/evqa/bench4/medicine-pqa-rag.yaml with llm claude-haiku-5-5. Baselines call it through evqa.claude_gateway.
+# Run: ops/bench4h.sh medicine
+name: bench4h-medicine-pqa-rag
+domain: bench_medicine
+split: test
+questions: []            # empty = every question of the split
+llm:
+  backend: claude
+  model: claude-haiku-5-5
+  think: false
+system: paperqa2-rag
+baseline:
+  settings:              # PaperQA2 defaults except embedding (see baselines/thesis_baselines/paperqa2.py DEFAULTS)
+    embedding: sparse    # PaperQA2's keyword embedding: no embedding model (Aditya, 21 Nov: light, no dense model)

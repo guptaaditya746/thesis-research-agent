@@ -1,0 +1,16 @@
+# Four-domain benchmark on Claude Haiku (24 Nov 2026, no GPU stack): medicine, system pqa-agent-fixed; 50 questions of bench_medicine.
+# Copy of configs/evqa/bench4/medicine-pqa-agent-fixed.yaml with llm claude-haiku-5-5. Baselines call it through evqa.claude_gateway.
+# Run: ops/bench4h.sh medicine
+name: bench4h-medicine-pqa-agent-fixed
+domain: bench_medicine
+split: test
+questions: []
+llm:
+  backend: claude
+  model: claude-haiku-5-5
+  think: false
+system: paperqa2-agent
+baseline:
+  settings:
+    embedding: sparse
+    agent_type: fake

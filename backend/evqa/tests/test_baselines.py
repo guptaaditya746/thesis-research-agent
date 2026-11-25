@@ -40,8 +40,9 @@ def test_baseline_config_refuses_evqa_step_settings() -> None:
         _cfg(closed_book=True)
     with pytest.raises(ValidationError):
         _cfg(steps={"spec": {"backend": "qwen", "model": "x"}})
+    assert _cfg(llm={"backend": "claude", "model": "claude-haiku-5-5"}).is_baseline()   # via evqa.claude_gateway
     with pytest.raises(ValidationError):
-        _cfg(llm={"backend": "claude", "model": "claude-haiku-5-5"})
+        _cfg(llm={"backend": "openrouter", "model": "x"})
     with pytest.raises(ValidationError):
         RunConfig.model_validate({"baseline": {"settings": {}}})        # settings without a baseline system
 
@@ -89,7 +90,7 @@ def _gold_chunk(qid: str) -> tuple[str, str]:
 
 
 def _fake_runner(answers: dict[str, dict]):
-    def runner(cmd, cwd, stdout, stderr, check):
+    def runner(cmd, cwd, stdout, stderr, check, env=None):
         out = Path(cmd[cmd.index("--out") + 1])
         qs = [json.loads(x) for x in (out / "questions.jsonl").read_text().splitlines()]
         assert {q["qid"] for q in qs} == set(answers)
@@ -185,3 +186,9 @@ def test_shipped_configs_are_named_like_their_files() -> None:
         data = yaml.safe_load(p.read_text())
         if data.get("system"):
             assert data["name"] == p.stem, p
+
+
+def test_baseline_env_keeps_its_own_venv() -> None:
+    env = baselines.baseline_env({"UV_PROJECT_ENVIRONMENT": "/tmp/u-thesis-venv", "VIRTUAL_ENV": "/x", "A": "1"})
+    assert env == {"UV_PROJECT_ENVIRONMENT": "/tmp/u-thesis-venv-baselines", "A": "1"}
+    assert baselines.baseline_env({"A": "1"}) == {"A": "1"}

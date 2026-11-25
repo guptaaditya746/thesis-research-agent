@@ -55,6 +55,17 @@ def command(cfg: RunConfig, out: Path, baselines_dir: Path = BASELINES_DIR) -> l
             "--settings", json.dumps(settings, sort_keys=True)]
 
 
+def baseline_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    """The environment of the thesis-baselines command. A shared UV_PROJECT_ENVIRONMENT (ops/local-venv.sh puts
+    evqa's venv in /tmp) gets a "-baselines" twin: else `uv run --project baselines` syncs the baselines' packages
+    into evqa's venv and uninstalls evqa's own while evqa runs (24 Nov 2026)."""
+    env = dict(os.environ if env is None else env)
+    env.pop("VIRTUAL_ENV", None)
+    if env.get("UV_PROJECT_ENVIRONMENT"):
+        env["UV_PROJECT_ENVIRONMENT"] = env["UV_PROJECT_ENVIRONMENT"].rstrip("/") + "-baselines"
+    return env
+
+
 def locate(chunk: str, paper: str) -> tuple[int, int]:
     """[start, end) of the chunk in the paper text; the whole paper for an empty chunk; (-1, -1) when not found."""
     if not chunk:
@@ -155,7 +166,7 @@ def run(cfg: RunConfig, root: Path, baselines_dir: Path = BASELINES_DIR, runner=
     events.log("run", "start", run_id=cfg.run_id(), system=cfg.system, questions=[q["qid"] for q in questions],
                command=cmd)
     t0 = time.monotonic()
-    proc = runner(cmd, cwd=baselines_dir, stdout=sys.stdout, stderr=sys.stderr, check=False)
+    proc = runner(cmd, cwd=baselines_dir, stdout=sys.stdout, stderr=sys.stderr, check=False, env=baseline_env())
     counts = import_answers(cfg, out, events)
     failed = [q["qid"] for q in questions if not (out / q["qid"] / "answer_text.json").is_file()]
     events.log("run", "end", seconds=round(time.monotonic() - t0, 3), questions=len(questions),

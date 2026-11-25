@@ -17,7 +17,8 @@ MAX_SLOTS = int(os.environ.get("EVQA_MAX_CALLS", "3"))
 # same as EVQA_MAX_CALLS. Qwen calls use slot files 0..MAX_SLOTS_QWEN-1 of the same folder, so a writer call holding
 # slot 0-2 still counts against them.
 MAX_SLOTS_QWEN = int(os.environ.get("EVQA_MAX_CALLS_QWEN") or MAX_SLOTS)
-SLOT_DIR = CACHE / "claude-slots"
+# EVQA_SLOT_DIR: a separate slot folder, e.g. for runs on a second Claude account (own CLAUDE_CONFIG_DIR, 24 Nov 2026)
+SLOT_DIR = Path(os.environ["EVQA_SLOT_DIR"]) if os.environ.get("EVQA_SLOT_DIR") else CACHE / "claude-slots"
 
 
 @contextmanager
