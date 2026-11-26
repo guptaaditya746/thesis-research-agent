@@ -27,7 +27,11 @@ Types (the evqa names; scored by the thesis-scorer service, thesis_scorer.text):
   near_miss     an effect of a study for an object it never studied (it studied a sibling); in law, a number of a
                 decision asked under a court that did not decide it              -> not reported
   out_of_scope  a number of an entity no paper mentions (a fresh invented name)  -> not reported
-Wording: fixed templates (the model may reword later; a verifier must check the reworded question).
+Wording: fixed templates (the model may reword later; a verifier must check the reworded question). The one-number
+questions (lookup, absent, near_miss, out_of_scope) share one template (_number_q); in law it always names the
+decision's court in the same place (WORDING_VERSION "court-2", 26 Nov 2026): before that only near misses and the
+court-worded lookups named a court, so the court alone gave the trap away in the closed-book test (evqa/shortcut.py).
+`refresh(reword=True)` moves kept questions to today's templates and keeps the old wording under wording.before.
 """
 from __future__ import annotations
 
@@ -50,6 +54,7 @@ EVERY_PAPER = {"point": "papers", "label": "papers", "ask": "Which papers should
 # one card for every question (25 Nov 2026: a shorter card on the not-reported ones gave the answer away)
 CARD = [OTHER_NAMES, EVERY_PAPER]
 CARD_TEXT = "\n".join(f"{x['label']}: {x['answer']}" for x in CARD)
+WORDING_VERSION = "court-2"     # "plain-1" (until 26 Nov 2026): "For <decision>, ..." unless the question was a trap
 STAT_WORDS = {"estimate": "estimate", "ci_low": "95% CI lower bound", "ci_high": "95% CI upper bound",
               "baseline": "baseline", "with": "with the method"}
 
@@ -158,12 +163,26 @@ def _ent(d: Domain, eid: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
             "papers": sorted({r["paper"] for r in rows}), "row": sorted(rows, key=lambda r: r["paper"])[0]["id"]}
 
 
+# ---------------------------------------------------------------- wording of one-number questions
+def _court(d: Domain, eid: str) -> str | None:
+    """Law: the court that decided eid (None outside law or for an entity without one)."""
+    return None if d.eff else d.ents.get(eid, {}).get("attrs", {}).get("court")
+
+
+def _number_q(d: Domain, name: str, lab: str, court: str | None) -> str:
+    """The one template of lookup, absent, near_miss and out_of_scope. In law every such question names a court the
+    same way (the right one, or the wrong one in a near miss), so naming a court does not mean 'not reported'."""
+    if court:
+        return f"In {name} before the {d.label(court)}, what number is reported for {lab}?"
+    return f"For {name}, what number is reported for {lab}?"
+
+
 # ---------------------------------------------------------------- candidates per type
 def lookups(d: Domain) -> list[dict[str, Any]]:
     out = []
     for (s, a), rows in sorted(d.attr.items()):
         lab = d.num_label(d.kind(s), a)
-        q = f"For {d.label(s)}, what number is reported for {lab}?"
+        q = _number_q(d, d.label(s), lab, _court(d, s))
         out.append({"q": q, "slots": {"subject": [d.label(s)], "attr": a},
                     "table": _rows(rows, {}), "columns": [], "key": ("lookup", s, a)})
     return out
@@ -320,7 +339,7 @@ def absents(d: Domain) -> list[dict[str, Any]]:
                 continue
             lab = d.num_label(d.kind(s), a)
             others = ", ".join(sorted(d.num_label(d.kind(s), x) for x in reported))
-            out.append({"q": f"For {d.label(s)}, what number is reported for {lab}?", "slots": {"subject": [d.label(s)], "attr": a},
+            out.append({"q": _number_q(d, d.label(s), lab, _court(d, s)), "slots": {"subject": [d.label(s)], "attr": a},
                         "why": f"no paper reports the {lab} of {d.label(s)} (its papers report: {others})",
                         "key": ("absent", s, a)})
     return out
@@ -345,7 +364,7 @@ def near_misses(d: Domain) -> list[dict[str, Any]]:
                 if c == own or own is None:
                     continue
                 lab = d.num_label(d.kind(s), a)
-                q = f"In {d.label(s)} before the {d.label(c)}, what number is reported for {lab}?"
+                q = _number_q(d, d.label(s), lab, c)
                 out.append({"q": q, "slots": {"subject": [d.label(s), d.label(c)], "attr": a},
                             "why": f"{d.label(s)} was decided by the {d.label(own)}, not the {d.label(c)}",
                             "key": ("near_miss", s, a, c)})
@@ -376,7 +395,7 @@ def out_of_scopes(d: Domain, rng: random.Random) -> list[dict[str, Any]]:
     for (s, a) in sorted(d.attr):
         new = _fresh_label(d, s, rng)
         lab = d.num_label(d.kind(s), a)
-        out.append({"q": f"For {new}, what number is reported for {lab}?", "slots": {"subject": [new], "attr": a},
+        out.append({"q": _number_q(d, new, lab, _court(d, s)), "slots": {"subject": [new], "attr": a},
                     "why": f"no paper mentions {new}", "key": ("out_of_scope", s, a)})
     return out
 
@@ -416,7 +435,7 @@ def hard_absents(d: Domain) -> list[dict[str, Any]]:
             if not nb:
                 continue
             lab = d.num_label(d.kind(s), a)
-            out.append({"q": f"For {d.label(s)}, what number is reported for {lab}?",
+            out.append({"q": _number_q(d, d.label(s), lab, _court(d, s)),
                         "slots": {"subject": [d.label(s)], "attr": a},
                         "why": f"no paper reports the {lab} of {d.label(s)}; a paper naming it reports it for "
                                f"{d.label(nb[0])}", "key": ("absent", s, a, "hard")})
@@ -443,7 +462,7 @@ def hard_near_misses(d: Domain) -> list[dict[str, Any]]:
                            if d.kind(x) == d.kind(s) and pof[x] & pof[s]} - {own, None})
             for c in near:
                 lab = d.num_label(d.kind(s), a)
-                out.append({"q": f"In {d.label(s)} before the {d.label(c)}, what number is reported for {lab}?",
+                out.append({"q": _number_q(d, d.label(s), lab, c),
                             "slots": {"subject": [d.label(s), d.label(c)], "attr": a},
                             "why": f"{d.label(s)} was decided by the {d.label(own)}, not the {d.label(c)}, which "
                                    f"decided another decision in its paper", "key": ("near_miss", s, a, c, "hard")})
@@ -451,15 +470,14 @@ def hard_near_misses(d: Domain) -> list[dict[str, Any]]:
 
 
 def court_lookups(d: Domain) -> list[dict[str, Any]]:
-    """Law: answerable lookups in the near-miss wording (the right court), so naming a court does not mean
-    'not reported'."""
+    """Law: answerable lookups naming the right court (since "court-2" every law lookup does; kept for their keys)."""
     out = []
     for (s, a), rows in sorted(d.attr.items()):
         own = d.ents[s].get("attrs", {}).get("court")
         if not own or d.kind(s) != "decision":
             continue
         lab = d.num_label(d.kind(s), a)
-        out.append({"q": f"In {d.label(s)} before the {d.label(own)}, what number is reported for {lab}?",
+        out.append({"q": _number_q(d, d.label(s), lab, own),
                     "slots": {"subject": [d.label(s), d.label(own)], "attr": a}, "table": _rows(rows, {}),
                     "columns": [], "key": ("lookup", s, a, own)})
     return out
@@ -491,7 +509,7 @@ def hard_out_of_scopes(d: Domain, rng: random.Random, corpus: str) -> list[dict[
             if new.lower() in taken or core in corpus:
                 continue
             lab = d.num_label(d.kind(s), a)
-            out.append({"q": f"For {new}, what number is reported for {lab}?", "slots": {"subject": [new], "attr": a},
+            out.append({"q": _number_q(d, new, lab, _court(d, s)), "slots": {"subject": [new], "attr": a},
                         "why": f"no paper mentions {new} (a look-alike of {d.label(s)})",
                         "key": ("out_of_scope", s, a, "hard")})
             break
@@ -581,13 +599,31 @@ def build(domain: str, seed: int = 20261122, mix: dict[str, int] | None = None) 
             "candidates": {t: len(v) for t, v in cands.items()}}
 
 
-def refresh(domain: str, seed: int = 20261122, max_added: int = 4) -> dict[str, Any]:
+ONE_NUMBER = ("lookup", "absent", "near_miss", "out_of_scope")
+
+
+def _reworded(d: Domain, g: dict[str, Any]) -> dict[str, Any]:
+    """g's wording under today's one-number template (same name, number and court as its key says); other types and
+    unchanged texts keep theirs. A changed text keeps the old wording under "before"."""
+    key = g["spec"].get("key", [])
+    if g["type"] not in ONE_NUMBER or len(key) < 3 or key[1] not in d.ents or not g["slots"].get("subject"):
+        return g["wording"]
+    s, a = key[1], key[2]
+    court = key[3] if len(key) > 3 and key[3] in d.ents and d.kind(key[3]) == "court" else _court(d, s)
+    text = _number_q(d, g["slots"]["subject"][0], d.num_label(d.kind(s), a), court)
+    if text == g["wording"]["text"]:
+        return g["wording"]
+    return {"template": text, "source": "template", "text": text, "version": WORDING_VERSION, "before": g["wording"]}
+
+
+def refresh(domain: str, seed: int = 20261122, max_added: int = 4, reword: bool = False) -> dict[str, Any]:
     """The domain's current questions kept (same qid, type and wording), each gold recomputed from today's fact rows;
     up to max_added numbers the papers give different values for, not yet asked, are added as conflict questions
     (25 Nov 2026: new fact rows must not swap the question set, so earlier runs stay comparable).
     An absent question whose number a paper now reports becomes a lookup (same wording). A kept question whose
     candidate is gone otherwise is reported in "lost" and keeps its old gold. out_of_scope keeps its gold while its
-    name is still in no fact row."""
+    name is still in no fact row. reword: each kept one-number question takes today's template wording (_reworded;
+    qid, type, slots and gold stay), e.g. law questions moved to the "court-2" court naming on 26 Nov 2026."""
     d = Domain(domain)
     makers = {"lookup": lookups, "effect": effects, "best": bests, "trend": trends, "list": lists,
               "conflict": conflicts, "absent": absents, "near_miss": near_misses}
@@ -601,25 +637,29 @@ def refresh(domain: str, seed: int = 20261122, max_added: int = 4) -> dict[str, 
     old_q = {q["qid"]: q for q in (json.loads(x) for x in qfile.read_text(encoding="utf-8").splitlines() if x.strip())}
     labels = {d.label(e).lower() for e in d.mentioned}
     golds, qs, lost, turned, kept_keys = [], [], [], [], set()
+    reworded = []
     for g in olds:
+        wording = _reworded(d, g) if reword else g["wording"]
+        if wording is not g["wording"]:
+            reworded.append(g["qid"])
         key = tuple(g["spec"].get("key", []))
         kept_keys.add(key)
         hit = by_key.get(key)
         if not hit and g["type"] == "absent":       # a paper reports it after all: the same wording is a lookup
             hit = by_key.get(("lookup", *key[1:]))
         if g["type"] == "out_of_scope" and all(s.lower() not in labels for s in g["slots"].get("subject", [])):
-            golds.append(g)
+            golds.append(g | {"wording": wording})
         elif hit and (hit[0] == g["type"] or (g["type"], hit[0]) == ("absent", "lookup")):
             t, c = hit
-            golds.append(_gold(g["qid"], d, t, g["wording"]["text"], c["slots"], c.get("table", []),
+            golds.append(_gold(g["qid"], d, t, wording["text"], c["slots"], c.get("table", []),
                                c.get("columns", []), c.get("entities"), c.get("why", ""),
-                               {"type": t, "key": list(key)}) | {"wording": g["wording"]})
+                               {"type": t, "key": list(key)}) | {"wording": wording})
             if t != g["type"]:
                 turned.append(g["qid"])
         else:
-            golds.append(g)
+            golds.append(g | {"wording": wording})
             lost.append(g["qid"])
-        q = old_q[g["qid"]] | {"intent_card": CARD, "intent_text": CARD_TEXT}
+        q = old_q[g["qid"]] | {"intent_card": CARD, "intent_text": CARD_TEXT, "question": wording["text"]}
         if g["qid"] in turned:
             q = q | {"type": "lookup", "answerable": True}
         qs.append(q)
@@ -636,7 +676,7 @@ def refresh(domain: str, seed: int = 20261122, max_added: int = 4) -> dict[str, 
                    "intent_text": CARD_TEXT, "answerable": True})
         added.append(qid)
     return {"golds": golds, "questions": qs, "mix": {}, "short": {}, "candidates": {t: 0 for t in makers},
-            "lost": lost, "turned": turned, "added": added}
+            "lost": lost, "turned": turned, "added": added, "reworded": reworded}
 
 
 def write(domain: str, got: dict[str, Any]) -> dict[str, Any]:

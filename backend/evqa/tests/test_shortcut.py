@@ -146,3 +146,16 @@ def test_cache_seeded_from_an_earlier_report(tmp_path):
     assert cache.get("abc")["text"] == "unknown"
     cache.put("def", {"model": "m", "text": "x"})
     assert cache.calls == 1 and json.dumps(cache.get("def"))
+
+
+def test_haiku_judged_scores_are_marked_same_model():
+    """26 Nov 2026 rule: no Sonnet; every number judged by Haiku carries "same model as writer"."""
+    mark = sc.judge_mark("claude-haiku-5-5", ["claude-haiku-5-5"])
+    assert mark == {"judge": "claude-haiku-5-5", "note": "same model as writer"}
+    assert sc.judge_mark("claude-haiku-5-5", ["orch-model"]) == mark     # Haiku judging is always marked
+    assert sc.judge_mark("orch-model", ["orch-model"])["note"] == sc.SAME_MODEL_NOTE
+    assert sc.judge_mark("orch-model", ["claude-haiku-5-5"]) == {}
+    qs = [{"type": "lookup", "answers": {"m": {"class": "answer", "strict_right": True, "exact": True, "score": 1.0}}}]
+    row = sc.summarize(qs, ["m"], mark)[0]
+    assert row["judge"] == "claude-haiku-5-5" and row["note"] == "same model as writer"
+    assert "note" not in sc.summarize(qs, ["m"])[0]

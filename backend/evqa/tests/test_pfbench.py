@@ -198,3 +198,72 @@ def test_add_hard_keeps_questions_and_adds_look_alikes_and_near_misses(dom: str,
     assert "with its 95% confidence interval" in hard["near_miss"]["wording"]["text"]   # worded like an effect
     again = pfbench.add_hard(dom, n={"absent": 1, "near_miss": 1, "out_of_scope": 1})
     assert again["added"] == []                                          # a type that has hard ones gets no more
+
+
+# ---------------------------------------------------------------- law: one court naming for every one-number question
+LAW_ENTS = {
+    "C1": {"kind": "court", "label": "Tetre District Court", "alt": [], "attrs": {"level": 1}},
+    "C2": {"kind": "court", "label": "Tetre Court of Appeal", "alt": [], "attrs": {"level": 2}},
+    "D1": {"kind": "decision", "label": "Arno v. Bel Bank", "alt": [], "attrs": {"court": "C1", "year": 2015}},
+    "D2": {"kind": "decision", "label": "Cato v. Dex Media", "alt": [], "attrs": {"court": "C2", "year": 2018}},
+}
+LAW_VOCAB = {"field": "law", "words": {"subject_kind": "decision", "subject_plural": "decisions"}, "effect": None,
+             "relations": {}, "conflict_pairs": [],
+             "kinds": {"court": {"numbers": {}}, "provision": {"numbers": {}},
+                       "decision": {"numbers": {"judges": {"label": "judges", "unit": "judges"},
+                                                "hearing_days": {"label": "hearing days", "unit": "days"}}}}}
+COURT_Q = re.compile(r"^In (.+) before the (Tetre [A-Za-z ]+?), what number is reported for (.+)\?$")
+
+
+@pytest.fixture
+def law(dom: str) -> str:
+    d = pfbench.domain_dir("pf_law")
+    d.mkdir(parents=True)
+    rows = [{"id": f"R-law-0{i}-j", "paper": f"LAW-0{i}", "what": "attr", "subject": s, "attr": "judges",
+             "value": str(i + 2), "unit": "judges"} for i, s in ((1, "D1"), (2, "D2"))]
+    (d / "facts.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (d / "entities.json").write_text(json.dumps(LAW_ENTS))
+    (d / "vocab.json").write_text(json.dumps(LAW_VOCAB))
+    return "pf_law"
+
+
+def test_law_traps_and_normal_questions_name_courts_the_same_way(law: str):
+    """26 Nov 2026 (closed-book test, near_miss above chance): only traps named a court, so the court gave them
+    away. Now lookup, absent, near_miss and out_of_scope all read "In <decision> before the <court>, ..."."""
+    got = pfbench.build(law, mix={"lookup": 1, "absent": 1, "near_miss": 1, "out_of_scope": 1})
+    by = {g["type"]: g for g in got["golds"]}
+    assert set(by) == set(pfbench.ONE_NUMBER), got["short"]
+    for t, g in by.items():
+        m = COURT_Q.match(g["wording"]["text"])
+        assert m, (t, g["wording"]["text"])
+        assert m.group(1) == g["slots"]["subject"][0]
+    own = {LAW_ENTS[e]["label"]: LAW_ENTS[LAW_ENTS[e]["attrs"]["court"]]["label"] for e in ("D1", "D2")}
+    lk, nm = (COURT_Q.match(by[t]["wording"]["text"]) for t in ("lookup", "near_miss"))
+    assert lk.group(2) == own[lk.group(1)] and nm.group(2) != own[nm.group(1)]   # right court vs the trap's wrong one
+
+
+def test_refresh_reword_moves_old_law_wording_and_keeps_the_gold(law: str):
+    pfbench.write(law, pfbench.build(law, mix={"lookup": 1, "absent": 1, "near_miss": 1, "out_of_scope": 1}))
+    gdir, qfile = pfbench.domain_dir(law) / "gold", pfbench.DATASET / law / "questions" / "test.jsonl"
+    old = {}
+    for p in gdir.glob("Q-*.json"):          # back to the "plain-1" wording: a court only in the near miss
+        g = json.loads(p.read_text())
+        if g["type"] != "near_miss":
+            m = COURT_Q.match(g["wording"]["text"])
+            text = f"For {m.group(1)}, what number is reported for {m.group(3)}?"
+            g["wording"] = {"template": text, "source": "template", "text": text}
+            p.write_text(json.dumps(g))
+        old[g["qid"]] = g
+    qfile.write_text("".join(json.dumps(json.loads(x) | {"question": old[json.loads(x)["qid"]]["wording"]["text"]})
+                             + "\n" for x in qfile.read_text().splitlines()))
+    assert pfbench.refresh(law)["reworded"] == []                       # without reword: wording kept
+    got = pfbench.refresh(law, reword=True)
+    assert sorted(got["reworded"]) == sorted(q for q, g in old.items() if g["type"] != "near_miss")
+    for g in got["golds"]:
+        assert {k: v for k, v in g.items() if k != "wording"} == {k: v for k, v in old[g["qid"]].items()
+                                                                  if k != "wording"}
+        assert COURT_Q.match(g["wording"]["text"])
+        if g["qid"] in got["reworded"]:
+            assert g["wording"]["before"] == old[g["qid"]]["wording"]
+            assert g["wording"]["version"] == pfbench.WORDING_VERSION
+    assert [q["question"] for q in got["questions"]] == [g["wording"]["text"] for g in got["golds"]]

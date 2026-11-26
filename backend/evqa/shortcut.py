@@ -21,6 +21,9 @@ view asked for by the spec: abstaining ("unknown") is wrong everywhere; a not-re
 only when the reply is "Not reported." and holds no value claim. Its chance level is the same model's
 "Not reported." rate on the answerable questions of the domain (a reply that cannot tell the types apart).
 The scorer's reader is orch-model; when Qwen is unreachable the reader and judge are the Claude model (recorded).
+Same-model mark (26 Nov 2026 rule: no Sonnet; every number judged by Haiku is marked): when the scorer's claim
+reader is Haiku or one of the answering models, the report, each summary row and each scored answer carry
+"judge": <reader> and "note": "same model as writer" (judge_mark).
 Typical-value baseline (code only, lookup and effect): each gold value is guessed as the most common value of the
 same field (attr, or effect statistic, same unit) over the domain's other subjects in facts.jsonl.
 Intervals: exact Clopper-Pearson 95% on the binary "right" (exact) counts.
@@ -41,6 +44,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+from thesis_scorer.stats import clopper_pearson as _shared_cp
+
 VERSION = "shortcut-1"
 DOMAINS = ("bench_law", "bench_llm", "bench_materials", "bench_medicine")
 CLAUDE = "claude-haiku-5-5"            # evqa.llm.CHEAPEST_CLAUDE, the model of the bench4h runs
@@ -48,6 +53,7 @@ QWEN = "orch-model"
 NOT_REPORTED_TYPES = ("absent", "near_miss", "out_of_scope")
 UNKNOWN = "unknown"
 NOT_REPORTED = "Not reported."
+SAME_MODEL_NOTE = "same model as writer"
 
 PROMPT = """Task: answer the question from what you already know. No papers are given to you.
 
@@ -271,6 +277,14 @@ def strict_right(qtype: str, cls: str, sc: dict[str, Any]) -> bool:
     return bool(sc.get("exact"))
 
 
+def judge_mark(judge: str, models: list[str]) -> dict[str, str]:
+    """{"judge", "note"} when the claim reader is Haiku or one of the answering models (its scores are not
+    independent of the writer); {} otherwise."""
+    if judge.startswith("claude-haiku") or judge in models:
+        return {"judge": judge, "note": SAME_MODEL_NOTE}
+    return {}
+
+
 # ---------------------------------------------------------------- typical-value baseline (code)
 def _num(v: str) -> float | None:
     try:
@@ -317,33 +331,14 @@ def load_facts(domain: str) -> dict[str, dict[str, Any]]:
 
 
 # ---------------------------------------------------------------- statistics
-def _binom_cdf(k: int, n: int, p: float) -> float:
-    if p <= 0:
-        return 1.0
-    if p >= 1:
-        return 1.0 if k >= n else 0.0
-    return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i) for i in range(k + 1))
-
-
 def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float, float]:
-    """Exact two-sided (1 - alpha) interval of a binomial rate, by bisection on the binomial tail."""
-    if n == 0:
-        return (0.0, 1.0)
-
-    def solve(f: Callable[[float], float]) -> float:      # f increasing in p, root in [0, 1]
-        lo, hi = 0.0, 1.0
-        for _ in range(60):
-            mid = (lo + hi) / 2
-            lo, hi = (mid, hi) if f(mid) < 0 else (lo, mid)
-        return (lo + hi) / 2
-    lower = 0.0 if k == 0 else solve(lambda p: (1 - _binom_cdf(k - 1, n, p)) - alpha / 2)
-    upper = 1.0 if k == n else solve(lambda p: alpha / 2 - _binom_cdf(k, n, p))
-    return (round(lower, 4), round(upper, 4))
+    """Exact interval from the one shared version (thesis_scorer.stats.clopper_pearson); (0, 1) when n = 0."""
+    return tuple(_shared_cp(k, n, alpha) or (0.0, 1.0))
 
 
-def summarize(qs: list[dict[str, Any]], models: list[str]) -> list[dict[str, Any]]:
+def summarize(qs: list[dict[str, Any]], models: list[str], mark: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """One row per model and type: n, right (strict), rate, exact CI, chance level, above chance, mean scorer score,
-    scorer-right count, abstain and not-reported shares."""
+    scorer-right count, abstain and not-reported shares; plus the same-model mark (judge_mark) when given."""
     out = []
     for m in models:
         mine = [q for q in qs if m in q["answers"]]
@@ -367,7 +362,7 @@ def summarize(qs: list[dict[str, Any]], models: list[str]) -> list[dict[str, Any
                         "scorer_right": sum(bool(x["exact"]) for x in a),
                         "abstain": sum(x["class"] == "unknown" for x in a),
                         "not_reported": sum(x["class"] == "not_reported" for x in a),
-                        "errors": sum(x["class"] == "error" for x in a)})
+                        "errors": sum(x["class"] == "error" for x in a), **(mark or {})})
     return out
 
 
@@ -406,6 +401,7 @@ def run_domain(domain: str, models: list[str], reader_model: str, judge_model: s
         scores = score_answers(domain, answers, m, reader, judge_chat, parallel)
         per_model[m] = {q: {**a, **scores.get(q, {"score": 0.0, "exact": False, "claims": 0})}
                         for q, a in answers.items()}
+    mark = judge_mark(reader.name, models)
     qs = []
     for rec in recs:
         q = rec["qid"]
@@ -413,6 +409,7 @@ def run_domain(domain: str, models: list[str], reader_model: str, judge_model: s
         for m in models:
             a = per_model[m][q]
             a["strict_right"] = strict_right(rec["type"], a["class"], a)
+            a.update(mark)
             entry["answers"][m] = a
         if q in golds:
             entry["typical_baseline"] = typical_baseline(golds[q], facts)
@@ -425,16 +422,17 @@ def run_domain(domain: str, models: list[str], reader_model: str, judge_model: s
                     tokens[f"{m}:{k}"] += v
     report = {"version": VERSION, "prompt_sha256": PROMPT_SHA, "domain": domain, "split": "test",
               "created": time.strftime("%Y-%m-%d %H:%M:%S"), "models": models, "reader": reader.name,
-              "judge": judge_chat.name, "answer_calls_made": cache.calls, "reader_calls_made": reader.calls,
+              "judge": judge_chat.name, **({"note": mark["note"]} if mark else {}), "answer_calls_made": cache.calls, "reader_calls_made": reader.calls,
               "tokens": dict(tokens), "guess": {t: {"rate": None if math.isnan(g) else g, "why": w}
                                                 for t, (g, w) in GUESS.items()},
-              "summary": summarize(qs, models), "typical_baseline": baseline_rows(qs), "questions": qs}
+              "summary": summarize(qs, models, mark), "typical_baseline": baseline_rows(qs), "questions": qs}
     out_path.write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     return report
 
 
 def table(report: dict[str, Any]) -> str:
-    lines = [f"{report['domain']} (reader {report['reader']})",
+    note = f", {report['note']}" if report.get("note") else ""
+    lines = [f"{report['domain']} (reader {report['reader']}{note})",
              "model | type | n | right | rate | CI95 | guess | above | scorer mean | scorer right | unknown | NR"]
     for r in report["summary"]:
         lines.append(f"{r['model']} | {r['type']} | {r['n']} | {r['right']} | {r['rate']:.2f} | "
